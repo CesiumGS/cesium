@@ -4,20 +4,24 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Rectangle,
         WebMercatorTilingScheme,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -60,8 +64,11 @@ define([
      * var osm = new Cesium.OpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
+     * 
+     * @deprecated
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+    function OpenStreetMapImageryProvider(options) {
+        deprecationWarning('OpenStreetMapImageryProvider', 'OpenStreetMapImageryProvider is deprecated. It will be removed in Cesium 1.18. Use createOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -98,13 +105,14 @@ define([
         this._errorEvent = new Event();
 
         this._ready = true;
+        this._readyPromise = when.resolve(true);
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
         this._credit = credit;
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
@@ -300,6 +308,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

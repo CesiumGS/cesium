@@ -65,7 +65,7 @@ define([
      *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
      */
-    var DataSourceDisplay = function(options) {
+    function DataSourceDisplay(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -96,7 +96,7 @@ define([
         var defaultDataSource = new CustomDataSource();
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
-    };
+    }
 
     /**
      * Gets or sets the default function which creates an array of visualizers used for visualization.
@@ -300,7 +300,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
         var visualizersLength = visualizers.length;

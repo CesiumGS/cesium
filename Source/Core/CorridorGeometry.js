@@ -621,7 +621,7 @@ define([
     }
 
     /**
-     * A description of a corridor.
+     * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias CorridorGeometry
      * @constructor
@@ -648,7 +648,7 @@ define([
      *   width : 100000
      * });
      */
-    var CorridorGeometry = function(options) {
+    function CorridorGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var width = options.width;
@@ -677,11 +677,10 @@ define([
          * @type {Number}
          */
         this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 5;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CorridorGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -843,6 +842,28 @@ define([
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : boundingSphere
+        });
+    };
+
+    /**
+     * @private
+     */
+    CorridorGeometry.createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
+        var granularity = corridorGeometry._granularity;
+        var ellipsoid = corridorGeometry._ellipsoid;
+
+        var minHeight = minHeightFunc(granularity, ellipsoid);
+        var maxHeight = maxHeightFunc(granularity, ellipsoid);
+
+        return new CorridorGeometry({
+            positions : corridorGeometry._positions,
+            width : corridorGeometry._width,
+            cornerType : corridorGeometry._cornerType,
+            ellipsoid : ellipsoid,
+            granularity : granularity,
+            extrudedHeight : minHeight,
+            height : maxHeight,
+            vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
 

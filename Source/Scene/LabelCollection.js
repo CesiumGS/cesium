@@ -320,7 +320,7 @@ define([
      *   text : 'Another label'
      * });
      */
-    var LabelCollection = function(options) {
+    function LabelCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
@@ -381,7 +381,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-    };
+    }
 
     defineProperties(LabelCollection.prototype, {
         /**
@@ -562,11 +562,13 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, frameState, commandList) {
+    LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+        var context = frameState.context;
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
@@ -611,7 +613,7 @@ define([
         }
 
         this._labelsToUpdate.length = 0;
-        billboardCollection.update(context, frameState, commandList);
+        billboardCollection.update(frameState);
     };
 
     /**

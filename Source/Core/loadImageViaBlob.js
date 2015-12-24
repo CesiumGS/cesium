@@ -45,7 +45,7 @@ define([
      *     // images is an array containing all the loaded images
      * });
      */
-    var loadImageViaBlob = function(url) {
+    function loadImageViaBlob(url) {
         if (dataUriRegex.test(url)) {
             return loadImage(url);
         }
@@ -62,7 +62,7 @@ define([
                 return when.reject(error);
             });
         });
-    };
+    }
 
     var xhrBlobSupported = (function() {
         try {

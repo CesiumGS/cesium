@@ -70,7 +70,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
-    var Billboard = function(options, billboardCollection) {
+    function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -103,6 +103,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -151,7 +152,7 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
-    };
+    }
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
     var POSITION_INDEX = Billboard.POSITION_INDEX = 1;
@@ -695,6 +696,25 @@ define([
         },
 
         /**
+         * Gets or sets if the billboard size is in meters or pixels. <code>true</code> to size the billboard in meters;
+         * otherwise, the size is in pixels.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        sizeInMeters : {
+            get : function() {
+                return this._sizeInMeters;
+            },
+            set : function(value) {
+                if (this._sizeInMeters !== value) {
+                    this._sizeInMeters = value;
+                    makeDirty(this, COLOR_INDEX);
+                }
+            }
+        },
+
+        /**
          * Gets or sets the user-defined object returned when the billboard is picked.
          * @memberof Billboard.prototype
          * @type {Object}
@@ -861,7 +881,7 @@ define([
             owner._removeCallbackFunc();
         }
 
-        var updateFunction = function(clampedPosition) {
+        function updateFunction(clampedPosition) {
             if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                 if (owner._mode === SceneMode.SCENE3D) {
                     var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
@@ -872,8 +892,7 @@ define([
                 }
             }
             owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
-        };
-
+        }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
@@ -930,7 +949,6 @@ define([
             that._imageIndexPromise = undefined;
             makeDirty(that, IMAGE_INDEX_INDEX);
         }).otherwise(function(error) {
-            /*global console*/
             console.error('Error loading image for billboard: ' + error);
             that._imageIndexPromise = undefined;
         });

@@ -276,13 +276,13 @@ define([
      *       -75.0, 30.0,
      *       -70.0, 30.0,
      *       -68.0, 40.0
-     *     ]),
-     *     extrudedHeight: 300000
-     *   }
+     *     ])
+     *   },
+     *   extrudedHeight: 300000
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
-    var PolygonOutlineGeometry = function(options) {
+    function PolygonOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
@@ -317,11 +317,10 @@ define([
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 6;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

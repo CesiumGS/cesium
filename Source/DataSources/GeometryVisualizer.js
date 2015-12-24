@@ -25,11 +25,10 @@ define([
 
     var emptyArray = [];
 
-    var DynamicGeometryBatch = function(primitives) {
+    function DynamicGeometryBatch(primitives) {
         this._primitives = primitives;
         this._dynamicUpdaters = new AssociativeArray();
-    };
-
+    }
     DynamicGeometryBatch.prototype.add = function(time, updater) {
         this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives));
     };
@@ -112,7 +111,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var GeometryVisualizer = function(type, scene, entityCollection) {
+    function GeometryVisualizer(type, scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -149,7 +148,7 @@ define([
         this._entityCollection = entityCollection;
         entityCollection.collectionChanged.addEventListener(GeometryVisualizer.prototype._onCollectionChanged, this);
         this._onCollectionChanged(entityCollection, entityCollection.values, emptyArray);
-    };
+    }
 
     /**
      * Updates all of the primitives created by this visualizer to match their
@@ -259,7 +258,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var batches = this._batches;
         var batchesLength = batches.length;

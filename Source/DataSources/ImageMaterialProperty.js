@@ -18,6 +18,7 @@ define([
     "use strict";
 
     var defaultRepeat = new Cartesian2(1, 1);
+    var defaultAlpha = 1.0;
 
     /**
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
@@ -25,10 +26,10 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.image] A Property specifying the Image, URL, or Canvas.
+     * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
      */
-    var ImageMaterialProperty = function(options) {
+    function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -36,10 +37,13 @@ define([
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
+        this._alpha = undefined;
+        this._alphaSubscription = undefined;
 
         this.image = options.image;
         this.repeat = options.repeat;
-    };
+        this.alpha = options.alpha;
+    }
 
     defineProperties(ImageMaterialProperty.prototype, {
         /**
@@ -70,7 +74,7 @@ define([
             }
         },
         /**
-         * Gets or sets the Property specifying Image, URL, or Canvas.
+         * Gets or sets the Property specifying Image, URL, Canvas, or Video to use.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
@@ -81,7 +85,14 @@ define([
          * @type {Property}
          * @default new Cartesian2(1, 1)
          */
-        repeat : createPropertyDescriptor('repeat')
+        repeat : createPropertyDescriptor('repeat'),
+        /**
+         * Gets or sets the Number Property specifying the desired opacity of the overall image.
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Property}
+         * @default 1.0
+         */
+        alpha : createPropertyDescriptor('alpha')
     });
 
     /**
@@ -108,6 +119,8 @@ define([
 
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
+        result.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
+
         return result;
     };
 
@@ -122,6 +135,7 @@ define([
         return this === other || //
                (other instanceof ImageMaterialProperty && //
                 Property.equals(this._image, other._image) && //
+                Property.equals(this._alpha, other._alpha) && //
                 Property.equals(this._repeat, other._repeat));
     };
 

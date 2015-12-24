@@ -9,7 +9,7 @@ define([
         when) {
 	'use strict';
 
-	var pollToPromise = function(f, options) {
+	function pollToPromise(f, options) {
 		options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
 		var pollInterval = defaultValue(options.pollInterval, 1);
@@ -35,7 +35,6 @@ define([
 		poller();
 
 		return deferred.promise;
-	};
-
+	}
 	return pollToPromise;
 });

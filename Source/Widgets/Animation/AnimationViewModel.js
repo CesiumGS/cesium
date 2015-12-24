@@ -81,6 +81,13 @@ define([
             return multiplier * realtimeShuttleRingAngle;
         }
 
+        var fastedMultipler = shuttleRingTicks[shuttleRingTicks.length - 1];
+        if(multiplier > fastedMultipler){
+            multiplier = fastedMultipler;
+        } else if(multiplier < -fastedMultipler){
+            multiplier = -fastedMultipler;
+        }
+
         var minp = realtimeShuttleRingAngle;
         var maxp = maxShuttleRingAngle;
         var maxv;
@@ -88,7 +95,7 @@ define([
         var scale;
 
         if (multiplier > 0) {
-            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+            maxv = Math.log(fastedMultipler);
             scale = (maxv - minv) / (maxp - minp);
             return (Math.log(multiplier) - minv) / scale + minp;
         }
@@ -107,7 +114,7 @@ define([
      *
      * @see Animation
      */
-    var AnimationViewModel = function(clockViewModel) {
+    function AnimationViewModel(clockViewModel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
@@ -362,7 +369,7 @@ define([
                 clockViewModel.multiplier = shuttleRingTicks[index];
             }
         });
-    };
+    }
 
     /**
      * Gets or sets the default date formatter used by new instances.

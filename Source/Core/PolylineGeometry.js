@@ -110,7 +110,7 @@ define([
      * });
      * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
      */
-    var PolylineGeometry = function(options) {
+    function PolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -147,11 +147,10 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -371,10 +370,6 @@ define([
         var expandAndWidthIndex = 0;
         var stIndex = 0;
         var colorIndex = 0;
-
-        var segmentLength;
-        var segmentIndex = 0;
-        var count = 0;
         var position;
 
         for (j = 0; j < positionsLength; ++j) {

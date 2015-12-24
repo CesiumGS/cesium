@@ -30,7 +30,6 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -52,7 +51,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 12;
         var tilerow = 5;
@@ -91,6 +90,48 @@ defineSuite([
         expect(parseInt(queryObject.tilerow, 10)).toEqual(tilerow);
     });
 
+    it('supports subdomains string urls', function() {
+        var options = {
+            url : '{s}',
+            layer : '',
+            style : '',
+            subdomains : '123',
+            tileMatrixSetID : ''
+        };
+
+        var provider = new WebMapTileServiceImageryProvider(options);
+
+        spyOn(ImageryProvider, 'loadImage');
+
+        var tilecol = 1;
+        var tilerow = 1;
+        var level = 1;
+        provider.requestImage(tilecol, tilerow, level);
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        expect('123'.indexOf(url)).toBeGreaterThanOrEqualTo(0);
+    });
+
+    it('supports subdomains array urls', function() {
+        var options = {
+            url : '{s}',
+            layer : '',
+            style : '',
+            subdomains : ['foo', 'bar'],
+            tileMatrixSetID : ''
+        };
+
+        var provider = new WebMapTileServiceImageryProvider(options);
+
+        spyOn(ImageryProvider, 'loadImage');
+
+        var tilecol = 1;
+        var tilerow = 1;
+        var level = 1;
+        provider.requestImage(tilecol, tilerow, level);
+        var url = ImageryProvider.loadImage.calls.mostRecent().args[1];
+        expect(['foo', 'bar'].indexOf(url)).toBeGreaterThanOrEqualTo(0);
+    });
+
     it('generates expected tile urls from template', function() {
         var options = {
             url : 'http://wmts.invalid/{style}/{TileMatrixSet}/{TileMatrix}/{TileRow}/{TileCol}.png',
@@ -103,7 +144,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 12;
         var tilerow = 5;
@@ -155,6 +196,20 @@ defineSuite([
             });
         }
         expect(createWithoutTMS).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid',
+            tileMatrixSetID : 'someTMS'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     // default parameters values

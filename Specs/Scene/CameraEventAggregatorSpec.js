@@ -22,7 +22,6 @@ defineSuite([
         destroyCanvas,
         DomEventSimulator) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var canvas;

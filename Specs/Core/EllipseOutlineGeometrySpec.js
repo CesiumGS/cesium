@@ -10,7 +10,6 @@ defineSuite([
         Ellipsoid,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('throws without a center', function() {
         expect(function() {
@@ -79,8 +78,8 @@ defineSuite([
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 6);
-        expect(m.indices.length).toEqual(2 * 6);
+        expect(m.attributes.position.values.length).toEqual(3 * 8);
+        expect(m.indices.length).toEqual(2 * 8);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -94,8 +93,8 @@ defineSuite([
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 6 * 2);
-        expect(m.indices.length).toEqual(2 * 6 * 2 + 16 * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * 8 * 2);
+        expect(m.indices.length).toEqual(2 * 8 * 2 + 16 * 2);
     });
 
     it('computes positions extruded, no lines drawn between top and bottom', function() {
@@ -109,8 +108,8 @@ defineSuite([
             numberOfVerticalLines : 0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 6 * 2);
-        expect(m.indices.length).toEqual(2 * 6 * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * 8 * 2);
+        expect(m.indices.length).toEqual(2 * 8 * 2);
     });
 
     var center = new Cartesian3(8, 9, 10);

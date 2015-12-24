@@ -30,7 +30,7 @@ define([
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
      */
-    var DiscardMissingTileImagePolicy = function(options) {
+    function DiscardMissingTileImagePolicy(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.missingImageUrl)) {
@@ -87,7 +87,7 @@ define([
         }
 
         when(loadImageViaBlob(options.missingImageUrl), success, failure);
-    };
+    }
 
     /**
      * Determines if the discard policy is ready to process images.

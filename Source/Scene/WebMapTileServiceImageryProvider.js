@@ -13,6 +13,7 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         combine,
@@ -28,6 +29,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         Uri,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -39,7 +41,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server.
+     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
      * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
@@ -54,11 +56,14 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
@@ -91,7 +96,7 @@ define([
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
      */
-    var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
+    function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {
@@ -125,6 +130,8 @@ define([
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
 
+        this._readyPromise = when.resolve(true);
+
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
@@ -139,7 +146,16 @@ define([
 
         var credit = options.credit;
         this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
-    };
+
+        this._subdomains = options.subdomains;
+        if (Array.isArray(this._subdomains)) {
+            this._subdomains = this._subdomains.slice();
+        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
+            this._subdomains = this._subdomains.split('');
+        } else {
+            this._subdomains = ['a', 'b', 'c'];
+        }
+    }
 
     var defaultParameters = freezeObject({
         service : 'WMTS',
@@ -150,6 +166,7 @@ define([
     function buildImageUrl(imageryProvider, col, row, level) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
+        var subdomains = imageryProvider._subdomains;
         var url;
 
         if (imageryProvider._url.indexOf('{') >= 0) {
@@ -160,7 +177,8 @@ define([
                 .replace('{TileMatrixSet}', imageryProvider._tileMatrixSetID)
                 .replace('{TileMatrix}', tileMatrix)
                 .replace('{TileRow}', row.toString())
-                .replace('{TileCol}', col.toString());
+                .replace('{TileCol}', col.toString())
+                .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
         }
         else {
             // build KVP request
@@ -342,6 +360,18 @@ define([
          */
         ready : {
             value: true
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
         },
 
         /**

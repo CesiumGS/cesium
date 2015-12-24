@@ -55,14 +55,14 @@ define([
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
         this.followSurface = undefined;
         this.granularity = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for polylines.
@@ -73,7 +73,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var PolylineGeometryUpdater = function(entity, scene) {
+    function PolylineGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -93,7 +93,7 @@ define([
         this._materialProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
-    };
+    }
 
     defineProperties(PolylineGeometryUpdater, {
         /**
@@ -427,7 +427,14 @@ define([
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    var generateCartesianArcOptions = {
+        positions : undefined,
+        granularity : undefined,
+        height : undefined,
+        ellipsoid : undefined
+    };
+
+    function DynamicGeometryUpdater(primitives, geometryUpdater) {
         var sceneId = geometryUpdater._scene.id;
 
         var polylineCollection = polylineCollections[sceneId];
@@ -446,14 +453,9 @@ define([
         this._primitives = primitives;
         this._geometryUpdater = geometryUpdater;
         this._positions = [];
-    };
 
-    var generateCartesianArcOptions = {
-        positions : undefined,
-        granularity : undefined,
-        height : undefined
-    };
-
+        generateCartesianArcOptions.ellipsoid = geometryUpdater._scene.globe.ellipsoid;
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;

@@ -37,7 +37,7 @@ define([
      * scene.primitives.add(collection);  // Add collection
      * scene.primitives.add(labels);      // Add regular primitive
      */
-    var PrimitiveCollection = function(options) {
+    function PrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._primitives = [];
@@ -76,7 +76,7 @@ define([
          * labels = labels.destroy();    // explicitly destroy
          */
         this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
-    };
+    }
 
     defineProperties(PrimitiveCollection.prototype, {
         /**
@@ -351,7 +351,7 @@ define([
     /**
      * @private
      */
-    PrimitiveCollection.prototype.update = function(context, frameState, commandList) {
+    PrimitiveCollection.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -361,7 +361,7 @@ define([
         // to allow quadtree updates to add and remove primitives in
         // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
-            primitives[i].update(context, frameState, commandList);
+            primitives[i].update(frameState);
         }
     };
 

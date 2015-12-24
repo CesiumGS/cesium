@@ -10,12 +10,11 @@ defineSuite([
         ImageryLayerCollection,
         ProviderViewModel) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var MockGlobe = function() {
+    function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
-    };
+    }
 
     var testProvider = {
         isReady : function() {
@@ -81,7 +80,6 @@ defineSuite([
     it('selecting imagery closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,
             imageryProviderViewModels : imageryViewModels
@@ -95,7 +93,6 @@ defineSuite([
     it('selecting terrain closes the dropDown', function() {
         var imageryViewModels = [testProviderViewModel];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,
             imageryProviderViewModels : imageryViewModels
@@ -110,7 +107,6 @@ defineSuite([
         var imageryViewModels = [testProviderViewModel];
         var terrainViewModels = [testProviderViewModel3];
         var globe = new MockGlobe();
-        var imageryLayers = globe.imageryLayers;
 
         var viewModel = new BaseLayerPickerViewModel({
             globe : globe,

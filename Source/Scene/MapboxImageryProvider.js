@@ -19,7 +19,7 @@ define([
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
-    var defaultCredit2 = new Credit('Improve this map', undefined, 'https://www.mapbox.com/map-feedback/');
+    var defaultCredit2 = [new Credit('Improve this map', undefined, 'https://www.mapbox.com/map-feedback/')];
 
     /**
      * Provides tiled imagery hosted by Mapbox.
@@ -39,7 +39,7 @@ define([
      *                 to result in rendering problems.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
-
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
      * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
@@ -51,12 +51,12 @@ define([
      *     accessToken: 'thisIsMyAccessToken'
      * });
      */
-    var MapboxImageryProvider = function MapboxImageryProvider(options) {
+    function MapboxImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var mapId = options.mapId;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(mapId)) {
-            throw new DeveloperError('options.url is required.');
+            throw new DeveloperError('options.mapId is required.');
         }
         //>>includeEnd('debug');
 
@@ -76,6 +76,15 @@ define([
             templateUrl += '?access_token=' + this._accessToken;
         }
 
+        if (defined(options.credit)) {
+            var credit = options.credit;
+            if (typeof credit === 'string') {
+                credit = new Credit(credit);
+            }
+            defaultCredit1 = credit;
+            defaultCredit2.length = 0;
+        }
+
         this._imageryProvider = new UrlTemplateImageryProvider({
             url: templateUrl,
             proxy: options.proxy,
@@ -85,7 +94,7 @@ define([
             maximumLevel: options.maximumLevel,
             rectangle: options.rectangle
         });
-    };
+    }
 
     defineProperties(MapboxImageryProvider.prototype, {
         /**
@@ -109,6 +118,18 @@ define([
         ready : {
             get : function() {
                 return this._imageryProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof MapboxImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._imageryProvider.readyPromise;
             }
         },
 
@@ -277,7 +298,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     MapboxImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return [defaultCredit2];
+        return defaultCredit2;
     };
 
     /**
@@ -303,7 +324,6 @@ define([
      * a tile.  This function should not be called before {@link MapboxImageryProvider#ready} returns true.
      * This function is optional, so it may not exist on all ImageryProviders.
      *
-     * @function
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

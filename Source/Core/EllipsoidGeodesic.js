@@ -205,7 +205,7 @@ define([
      * @param {Cartographic} [end] The final planetodetic point on the path.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
      */
-    var EllipsoidGeodesic = function(start, end, ellipsoid) {
+    function EllipsoidGeodesic(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = e;
         this._start = new Cartographic();
@@ -220,13 +220,14 @@ define([
         if (defined(start) && defined(end)) {
             computeProperties(this, start, end, e);
         }
-    };
+    }
 
     defineProperties(EllipsoidGeodesic.prototype, {
         /**
          * Gets the ellipsoid.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Ellipsoid}
+         * @readonly
          */
         ellipsoid : {
             get : function() {
@@ -238,6 +239,7 @@ define([
          * Gets the surface distance between the start and end point
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         surfaceDistance : {
             get : function() {
@@ -255,6 +257,7 @@ define([
          * Gets the initial planetodetic point on the path.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Cartographic}
+         * @readonly
          */
         start : {
             get : function() {
@@ -266,6 +269,7 @@ define([
          * Gets the final planetodetic point on the path.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Cartographic}
+         * @readonly
          */
         end : {
             get : function() {
@@ -277,6 +281,7 @@ define([
          * Gets the heading at the initial point.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         startHeading : {
             get : function() {
@@ -294,6 +299,7 @@ define([
          * Gets the heading at the final point.
          * @memberof EllipsoidGeodesic.prototype
          * @type {Number}
+         * @readonly
          */
         endHeading : {
             get : function() {

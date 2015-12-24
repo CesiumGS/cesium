@@ -62,7 +62,7 @@ define([
      * });
      * viewer.terrainProvider = terrainProvider;
      */
-    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(options) {
+    function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -100,7 +100,8 @@ define([
             credit = new Credit(credit);
         }
         this._credit = credit;
-    };
+        this._readyPromise = when.resolve(true);
+    }
 
     defineProperties(ArcGisImageServerTerrainProvider.prototype, {
         /**
@@ -148,6 +149,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisImageServerTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

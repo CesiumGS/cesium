@@ -32,8 +32,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
-     * @param {Cartesian3} options.maximumCorner The maximum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.minimum The minimum x, y, and z coordinates of the box.
+     * @param {Cartesian3} options.maximum The maximum x, y, and z coordinates of the box.
      *
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
@@ -43,30 +43,30 @@ define([
      *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
-     *   maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
-     *   minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
+     *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
+     *   minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
      */
-    var BoxOutlineGeometry = function(options) {
+    function BoxOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var min = options.minimumCorner;
-        var max = options.maximumCorner;
+        var min = options.minimum;
+        var max = options.maximum;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
-            throw new DeveloperError('options.minimumCorner is required.');
+            throw new DeveloperError('options.minimum is required.');
         }
         if (!defined(max)) {
-            throw new DeveloperError('options.maximumCorner is required');
+            throw new DeveloperError('options.maximum is required');
         }
         //>>includeEnd('debug');
 
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
         this._workerName = 'createBoxOutlineGeometry';
-    };
+    }
 
     /**
      * Creates an outline of a cube centered at the origin given its dimensions.
@@ -99,14 +99,42 @@ define([
         //>>includeEnd('debug');
 
         var corner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-        var min = Cartesian3.negate(corner, new Cartesian3());
-        var max = corner;
 
-        var newOptions = {
-            minimumCorner : min,
-            maximumCorner : max
-        };
-        return new BoxOutlineGeometry(newOptions);
+        return new BoxOutlineGeometry({
+            minimum : Cartesian3.negate(corner, new Cartesian3()),
+            maximum : corner
+        });
+    };
+
+    /**
+     * Creates an outline of a cube from the dimensions of an AxisAlignedBoundingBox.
+     *
+     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
+     * @returns {BoxOutlineGeometry}
+     *
+     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
+     *
+     * @see BoxOutlineGeometry.createGeometry
+     *
+     * @example
+     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
+     *      -72.0, 40.0,
+     *      -70.0, 35.0,
+     *      -75.0, 30.0,
+     *      -70.0, 30.0,
+     *      -68.0, 40.0
+     * ]));
+     * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     */
+    BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
+        if (!defined(boundingBox)) {
+            throw new DeveloperError('boundingBox is required.');
+        }
+
+        return new BoxOutlineGeometry({
+            minimum : boundingBox.minimum,
+            maximum : boundingBox.maximum
+        });
     };
 
     /**
@@ -117,7 +145,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {BoxOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -142,8 +169,8 @@ define([
     var scratchMin = new Cartesian3();
     var scratchMax = new Cartesian3();
     var scratchOptions = {
-        minimumCorner : scratchMin,
-        maximumCorner : scratchMax
+        minimum : scratchMin,
+        maximum : scratchMax
     };
 
     /**

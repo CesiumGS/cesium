@@ -29,8 +29,8 @@ define([
      *   geometry : new Cesium.BoxGeometry({
      *     vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0),
-     *     minimumCorner : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
-     *     maximumCorner : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)  
+     *     minimum : new Cesium.Cartesian3(-250000.0, -250000.0, -250000.0),
+     *     maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
@@ -40,7 +40,7 @@ define([
      *   }
      * });
      */
-    var ShowGeometryInstanceAttribute = function(show) {
+    function ShowGeometryInstanceAttribute(show) {
         show = defaultValue(show, true);
 
         /**
@@ -51,7 +51,7 @@ define([
          * @default [1.0]
          */
         this.value = ShowGeometryInstanceAttribute.toValue(show);
-    };
+    }
 
     defineProperties(ShowGeometryInstanceAttribute.prototype, {
         /**
@@ -101,7 +101,7 @@ define([
          */
         normalize : {
             get : function() {
-                return true;
+                return false;
             }
         }
     });

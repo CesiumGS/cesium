@@ -11,7 +11,7 @@ define([
      * @alias ImageryLayerFeatureInfo
      * @constructor
      */
-    var ImageryLayerFeatureInfo = function() {
+    function ImageryLayerFeatureInfo() {
         /**
          * Gets or sets the name of the feature.
          * @type {String}
@@ -38,14 +38,20 @@ define([
          * @type {Object}
          */
         this.data = undefined;
-    };
+
+        /**
+         * Gets or sets the image layer of the feature.
+         * @type {Object}
+         */
+        this.imageryLayer = undefined;
+    }
 
     /**
      * Configures the name of this feature by selecting an appropriate property.  The name will be obtained from
      * one of the following sources, in this order: 1) the property with the name 'name', 2) the property with the name 'title',
      * 3) the first property containing the word 'name', 4) the first property containing the word 'title'.  If
      * the name cannot be obtained from any of these sources, the existing name will be left unchanged.
-     * 
+     *
      * @param {Object} properties An object literal containing the properties of the feature.
      */
     ImageryLayerFeatureInfo.prototype.configureNameFromProperties = function(properties) {
@@ -79,7 +85,7 @@ define([
 
     /**
      * Configures the description of this feature by creating an HTML table of properties and their values.
-     * 
+     *
      * @param {Object} properties An object literal containing the properties of the feature.
      */
     ImageryLayerFeatureInfo.prototype.configureDescriptionFromProperties = function(properties) {

@@ -8,8 +8,10 @@ defineSuite([
         'Core/Visibility',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
-        'Specs/createFrameState'
-    ], function(
+        'Specs/createFrameState',
+        'Core/EventHelper',
+        'Scene/QuadtreeTile'
+], function(
         QuadtreePrimitive,
         Cartesian3,
         Cartographic,
@@ -18,9 +20,11 @@ defineSuite([
         Visibility,
         QuadtreeTileLoadState,
         createContext,
-        createFrameState) {
+        createFrameState,
+        EventHelper,
+        QuadtreeTile) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    /*global jasmine,it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;
     var frameState;
@@ -34,7 +38,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState();
+        frameState = createFrameState(context);
     });
 
     afterEach(function() {
@@ -42,11 +46,11 @@ defineSuite([
 
     it('must be constructed with a tileProvider', function() {
         expect(function() {
-            var primitive = new QuadtreePrimitive();
+            return new QuadtreePrimitive();
         }).toThrowDeveloperError();
 
         expect(function() {
-            var primitive = new QuadtreePrimitive({});
+            return new QuadtreePrimitive({});
         }).toThrowDeveloperError();
     });
 
@@ -86,7 +90,7 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         expect(tileProvider.beginUpdate).toHaveBeenCalled();
         expect(tileProvider.loadTile).toHaveBeenCalled();
@@ -97,7 +101,7 @@ defineSuite([
         var tileProvider = createSpyTileProvider();
         tileProvider.getReady.and.returnValue(true);
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.renderable = true;
         });
 
@@ -105,8 +109,8 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        quadtree.update(context, frameState, []);
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
+        quadtree.update(frameState);
 
         expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
     });
@@ -117,7 +121,7 @@ defineSuite([
         tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
 
         var calls = 0;
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             ++calls;
             tile.state = QuadtreeTileLoadState.DONE;
         });
@@ -126,11 +130,52 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
         expect(calls).toBe(2);
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
         expect(calls).toBe(2);
+    });
+
+    it('tileLoadProgressEvent is raised when tile loaded and when new children discovered', function() {
+        var eventHelper = new EventHelper();
+
+        var tileProvider = createSpyTileProvider();
+        tileProvider.getReady.and.returnValue(true);
+        tileProvider.computeTileVisibility.and.returnValue(Visibility.FULL);
+
+        var quadtree = new QuadtreePrimitive({
+            tileProvider : tileProvider
+        });
+
+        var progressEventSpy = jasmine.createSpy('progressEventSpy');
+        eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
+
+        // Initial update to get the zero-level tiles set up.
+        quadtree.update(frameState);
+
+        // There will now be two zero-level tiles in the load queue.
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
+
+        // Change one to loaded and update again
+        quadtree._levelZeroTiles[0].state = QuadtreeTileLoadState.DONE;
+        quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.LOADING;
+        quadtree.update(frameState);
+
+        // Now there should only be one left in the update queue
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
+
+        // Simulate the second zero-level child having loaded with two children.
+        quadtree._levelZeroTiles[1]._children = [
+            buildEmptyQuadtreeTile(tileProvider),
+            buildEmptyQuadtreeTile(tileProvider)
+        ];
+        quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
+        quadtree._levelZeroTiles[1].renderable = true;
+        quadtree.update(frameState);
+
+        // Now this should be back to 2.
+        expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
     });
 
     it('forEachLoadedTile does not enumerate tiles in the START state', function() {
@@ -140,7 +185,7 @@ defineSuite([
         tileProvider.computeDistanceToTile.and.returnValue(1e-15);
 
         // Load the root tiles.
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.state = QuadtreeTileLoadState.DONE;
             tile.renderable = true;
         });
@@ -149,14 +194,14 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         // Don't load further tiles.
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.state = QuadtreeTileLoadState.START;
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         quadtree.forEachLoadedTile(function(tile) {
             expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
@@ -170,7 +215,7 @@ defineSuite([
         tileProvider.computeDistanceToTile.and.returnValue(1e-15);
 
         // Load the root tiles.
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.state = QuadtreeTileLoadState.DONE;
             tile.renderable = true;
         });
@@ -179,22 +224,23 @@ defineSuite([
             tileProvider : tileProvider
         });
 
-        var removeFunc = quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(position) {});
+        var removeFunc = quadtree.updateHeight(Cartographic.fromDegrees(-72.0, 40.0), function(position) {
+        });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         var addedCallback = false;
-        quadtree.forEachLoadedTile(function (tile) {
+        quadtree.forEachLoadedTile(function(tile) {
             addedCallback = addedCallback || tile.customData.length > 0;
         });
 
         expect(addedCallback).toEqual(true);
 
         removeFunc();
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         var removedCallback = true;
-        quadtree.forEachLoadedTile(function (tile) {
+        quadtree.forEachLoadedTile(function(tile) {
             removedCallback = removedCallback && tile.customData.length === 0;
         });
 
@@ -214,7 +260,7 @@ defineSuite([
         };
 
         // Load the root tiles.
-        tileProvider.loadTile.and.callFake(function(context, frameState, tile) {
+        tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.state = QuadtreeTileLoadState.DONE;
             tile.renderable = true;
         });
@@ -230,10 +276,10 @@ defineSuite([
             Cartesian3.clone(p, position);
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
         expect(position).toEqual(Cartesian3.ZERO);
 
-        quadtree.forEachLoadedTile(function (tile) {
+        quadtree.forEachLoadedTile(function(tile) {
             tile.data = {
                 pick : function() {
                     return updatedPosition;
@@ -241,8 +287,17 @@ defineSuite([
             };
         });
 
-        quadtree.update(context, frameState, []);
+        quadtree.update(frameState);
 
         expect(position).toEqual(updatedPosition);
     });
-});
+
+    function buildEmptyQuadtreeTile(tileProvider) {
+        return new QuadtreeTile({
+            x : 0,
+            y : 0,
+            level : 0,
+            tilingScheme : tileProvider.tilingScheme
+        });
+    }
+}, 'WebGL');

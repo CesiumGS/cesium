@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Browse Cesium's built in materials and define new ones using the Fabric schema.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -33,7 +33,7 @@ var polyline;
 
 function applyAlphaMapMaterial(primitive, scene) {
     Sandcastle.declare(applyAlphaMapMaterial);  // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             materials : {
                 alphaMaterial : {
@@ -54,7 +54,7 @@ function applyAlphaMapMaterial(primitive, scene) {
 
 function applyBumpMapMaterial(primitive, scene) {
     Sandcastle.declare(applyBumpMapMaterial);   // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             materials : {
                 diffuseMaterial : {
@@ -82,17 +82,17 @@ function applyBumpMapMaterial(primitive, scene) {
 
 function applyCheckerboardMaterial(primitive, scene) {
     Sandcastle.declare(applyCheckerboardMaterial);  // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('Checkerboard');
+    primitive.appearance.material = Cesium.Material.fromType('Checkerboard');
 }
 
 function applyColorMaterial(primitive, scene) {
     Sandcastle.declare(applyColorMaterial); // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('Color');
+    primitive.appearance.material = Cesium.Material.fromType('Color');
 }
 
 function applyCompositeMaterial(primitive, scene) {
     Sandcastle.declare(applyCompositeMaterial);    // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
             fabric: {
                 uniforms : {
                     image: '../images/earthspec1k.jpg',
@@ -123,12 +123,12 @@ function applyCompositeMaterial(primitive, scene) {
 
 function applyDotMaterial(primitive, scene) {
     Sandcastle.declare(applyDotMaterial);   // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('Dot');
+    primitive.appearance.material = Cesium.Material.fromType('Dot');
 }
 
 function applyDiffuseMaterial(primitive, scene) {
     Sandcastle.declare(applyDiffuseMaterial);   // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             type : 'DiffuseMap',
             uniforms : {
@@ -140,7 +140,7 @@ function applyDiffuseMaterial(primitive, scene) {
 
 function applyEmissionMapMaterial(primitive, scene) {
     Sandcastle.declare(applyEmissionMapMaterial);   // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             materials : {
                 diffuseMaterial : {
@@ -171,7 +171,7 @@ function applyEmissionMapMaterial(primitive, scene) {
 function applyWaterMaterial(primitive, scene) {
     Sandcastle.declare(applyWaterMaterial); // For highlighting in Sandcastle.
 
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             type : 'Water',
             uniforms : {
@@ -187,12 +187,12 @@ function applyWaterMaterial(primitive, scene) {
 
 function applyGridMaterial(primitive, scene) {
     Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('Grid');
+    primitive.appearance.material = Cesium.Material.fromType('Grid');
 }
 
 function applyImageMaterial(primitive, scene) {
     Sandcastle.declare(applyImageMaterial); // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             type : 'Image',
             uniforms : {
@@ -204,7 +204,7 @@ function applyImageMaterial(primitive, scene) {
 
 function applyNormalMapMaterial(primitive, scene) {
     Sandcastle.declare(applyNormalMapMaterial); // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             materials : {
                 diffuseMaterial : {
@@ -232,7 +232,7 @@ function applyNormalMapMaterial(primitive, scene) {
 
 function applySpecularMapMaterial(primitive, scene) {
     Sandcastle.declare(applySpecularMapMaterial);   // For highlighting in Sandcastle.
-    primitive.material = new Cesium.Material({
+    primitive.appearance.material = new Cesium.Material({
         fabric : {
             type : 'SpecularMap',
             uniforms : {
@@ -245,12 +245,12 @@ function applySpecularMapMaterial(primitive, scene) {
 
 function applyStripeMaterial(primitive, scene) {
     Sandcastle.declare(applyStripeMaterial);    // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('Stripe');
+    primitive.appearance.material = Cesium.Material.fromType('Stripe');
 }
 
 function applyRimLightingMaterial(primitive, scene) {
     Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
-    primitive.material = Cesium.Material.fromType('RimLighting');
+    primitive.appearance.material = Cesium.Material.fromType('RimLighting');
 }
 
 function applyPolylineArrowMaterial(primitive, scene) {
@@ -448,12 +448,28 @@ function createButtons(scene) {
 }
 
 function createPrimitives(scene) {
-    rectangle = scene.primitives.add(new Cesium.RectanglePrimitive({
-        rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0)
+    rectangle = scene.primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-120.0, 20.0, -60.0, 40.0),
+                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            })
+        }),
+        appearance : new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround : false
+        })
     }));
 
-    worldRectangle = scene.primitives.add(new Cesium.RectanglePrimitive({
-        rectangle : Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
+    worldRectangle = scene.primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0),
+                vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+            })
+        }),
+        appearance : new Cesium.EllipsoidSurfaceAppearance({
+            aboveGround : false
+        }),
         show : false
     }));
 

@@ -31,7 +31,7 @@ define([
      * @see Geometry#attributes
      * @see Packable
      */
-    var VertexFormat = function(options) {
+    function VertexFormat(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -105,7 +105,7 @@ define([
          * @default false
          */
         this.color = defaultValue(options.color, false);
-    };
+    }
 
     /**
      * An immutable vertex format with only a position attribute.
@@ -223,7 +223,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {VertexFormat} value The value to pack.
      * @param {Number[]} array The array to pack into.

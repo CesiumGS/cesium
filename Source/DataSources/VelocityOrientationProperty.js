@@ -46,7 +46,7 @@ define([
      *   orientation : new Cesium.VelocityOrientationProperty(position)
      * }));
      */
-    var VelocityOrientationProperty = function(position, ellipsoid) {
+    function VelocityOrientationProperty(position, ellipsoid) {
         this._position = undefined;
         this._subscription = undefined;
         this._ellipsoid = undefined;
@@ -54,7 +54,7 @@ define([
 
         this.position = position;
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-    };
+    }
 
     defineProperties(VelocityOrientationProperty.prototype, {
         /**
@@ -181,7 +181,7 @@ define([
         var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
         Cartesian3.normalize(velocity, velocity);
 
-        var rotation = Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
+        Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
         return Quaternion.fromRotationMatrix(rotationScratch, result);
     };
 

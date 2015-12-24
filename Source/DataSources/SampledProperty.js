@@ -67,7 +67,7 @@ define([
     var timesSpliceArgs = [];
     var valuesSpliceArgs = [];
 
-    var mergeNewSamples = function(epoch, times, values, newData, packedLength) {
+    function mergeNewSamples(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
@@ -119,7 +119,7 @@ define([
                 newDataIndex++;
             }
         }
-    };
+    }
 
     /**
      * A {@link Property} whose value is interpolated for a given time from the
@@ -164,7 +164,7 @@ define([
      * //Retrieve an interpolated value
      * var result = property.getValue(Cesium.JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
-    var SampledProperty = function(type, derivativeTypes) {
+    function SampledProperty(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -217,7 +217,7 @@ define([
         this._forwardExtrapolationDuration = 0;
         this._backwardExtrapolationType = ExtrapolationType.NONE;
         this._backwardExtrapolationDuration = 0;
-    };
+    }
 
     defineProperties(SampledProperty.prototype, {
         /**
@@ -440,9 +440,7 @@ define([
             var lastIndex = timesLength - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
-            if (pointsInCollection < degree + 1) {
-                // Use the entire range.
-            } else {
+            if (pointsInCollection >= degree + 1) {
                 var computedFirstIndex = index - ((degree / 2) | 0) - 1;
                 if (computedFirstIndex < firstIndex) {
                     computedFirstIndex = firstIndex;

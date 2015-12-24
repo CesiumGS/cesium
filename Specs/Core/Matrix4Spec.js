@@ -5,16 +5,17 @@ defineSuite([
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix3',
-        'Core/Quaternion'
+        'Core/Quaternion',
+        'Core/TranslationRotationScale'
     ], function(
         Matrix4,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix3,
-        Quaternion) {
+        Quaternion,
+        TranslationRotationScale) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -221,6 +222,40 @@ defineSuite([
             Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)), // rotation
             new Cartesian3(7.0, 8.0, 9.0),                                            // scale
             result);
+        expect(returnedResult).toBe(result);
+        expect(returnedResult).not.toBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('fromTranslationRotationScale works without a result parameter', function() {
+        var expected = new Matrix4(
+            7.0,  0.0, 0.0, 1.0,
+            0.0,  0.0, 9.0, 2.0,
+            0.0, -8.0, 0.0, 3.0,
+            0.0,  0.0, 0.0, 1.0);
+
+        var trs = new TranslationRotationScale(new Cartesian3(1.0, 2.0, 3.0),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
+            new Cartesian3(7.0, 8.0, 9.0));
+
+        var returnedResult = Matrix4.fromTranslationRotationScale(trs);
+        expect(returnedResult).not.toBe(expected);
+        expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('fromTranslationRotationScale works with a result parameter', function() {
+        var expected = new Matrix4(
+            7.0,  0.0, 0.0, 1.0,
+            0.0,  0.0, 9.0, 2.0,
+            0.0, -8.0, 0.0, 3.0,
+            0.0,  0.0, 0.0, 1.0);
+
+        var trs = new TranslationRotationScale(new Cartesian3(1.0, 2.0, 3.0),
+            Quaternion.fromAxisAngle(Cartesian3.UNIT_X, CesiumMath.toRadians(-90.0)),
+            new Cartesian3(7.0, 8.0, 9.0));
+
+        var result = new Matrix4();
+        var returnedResult = Matrix4.fromTranslationRotationScale(trs, result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).not.toBe(expected);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -1681,14 +1716,13 @@ defineSuite([
 
     it('computeInfinitePerspectiveOffCenter throws without near', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
+            var left = 0, right = 0, bottom = 0, top = 0;
             Matrix4.computeInfinitePerspectiveOffCenter (left, right, bottom, top, 0);
         }).toThrowDeveloperError();
     });
 
     it('computeViewportTransformation works', function() {
         expect(function() {
-            var left = 0, right = 0, bottom = 0, top = 0, far = 0;
             Matrix4.computeViewportTransformation ({
                 x : 0,
                 y : 0,

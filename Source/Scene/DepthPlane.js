@@ -10,6 +10,9 @@ define([
         '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
+        '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
         './DepthFunction',
@@ -26,6 +29,9 @@ define([
         PrimitiveType,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
+        VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
         DepthFunction,
@@ -36,13 +42,13 @@ define([
     /**
      * @private
      */
-    var DepthPlane = function() {
+    function DepthPlane() {
         this._rs = undefined;
         this._sp = undefined;
         this._va = undefined;
         this._command = undefined;
         this._mode = undefined;
-    };
+    }
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
     var scratchCartesian1 = new Cartesian3();
@@ -97,16 +103,17 @@ define([
         return depthQuadScratch;
     }
 
-    DepthPlane.prototype.update = function(context, frameState) {
+    DepthPlane.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
         }
 
+        var context = frameState.context;
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
         if (!defined(this._command)) {
-            this._rs = context.createRenderState({ // Write depth, not color
+            this._rs = RenderState.fromCache({ // Write depth, not color
                 cull : {
                     enabled : true
                 },
@@ -122,8 +129,13 @@ define([
                 }
             });
 
-            this._sp = context.createShaderProgram(DepthPlaneVS, DepthPlaneFS, {
-                position : 0
+            this._sp = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : DepthPlaneVS,
+                fragmentShaderSource : DepthPlaneFS,
+                attributeLocations : {
+                    position : 0
+                }
             });
 
             this._command = new DrawCommand({
@@ -152,7 +164,8 @@ define([
                 primitiveType : PrimitiveType.TRIANGLES
             });
 
-            this._va = context.createVertexArrayFromGeometry({
+            this._va = VertexArray.fromGeometry({
+                context : context,
                 geometry : geometry,
                 attributeLocations : {
                     position : 0

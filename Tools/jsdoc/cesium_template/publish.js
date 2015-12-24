@@ -81,7 +81,7 @@ function addSignatureReturns(f) {
 function addSignatureTypes(f) {
     var types = helper.getSignatureTypes(f);
 
-    f.signature = (f.signature || '') + '<span class="type-signature">'+(types.length? ' :'+types.join('|') : '')+'</span>';
+    f.signature = (f.signature || '') + '<span class="type-signature">'+(types.length? ' : '+types.join('|') : '')+'</span>';
 }
 
 function addAttribs(f) {

@@ -156,7 +156,7 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-    var CreditDisplay = function(container, delimiter) {
+    function CreditDisplay(container, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
@@ -185,7 +185,7 @@ define([
             imageCredits : [],
             textCredits : []
         };
-    };
+    }
 
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container

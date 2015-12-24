@@ -12,7 +12,6 @@ define([
         DeveloperError,
         PerformanceWatchdog) {
     "use strict";
-    /*global console*/
 
     /**
      * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.
@@ -33,7 +32,7 @@ define([
      *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
      * });
      */
-    var viewerPerformanceWatchdogMixin = function(viewer, options) {
+    function viewerPerformanceWatchdogMixin(viewer, options) {
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -53,7 +52,7 @@ define([
                 }
             }
         });
-    };
+    }
 
     return viewerPerformanceWatchdogMixin;
 });

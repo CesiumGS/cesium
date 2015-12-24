@@ -47,8 +47,11 @@ define([
      * An observable collection of {@link Entity} instances where each entity has a unique id.
      * @alias EntityCollection
      * @constructor
+     *
+     * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
      */
-    var EntityCollection = function() {
+    function EntityCollection(owner) {
+        this._owner = owner;
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
         this._removedEntities = new AssociativeArray();
@@ -56,7 +59,7 @@ define([
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
-    };
+    }
 
     /**
      * Prevents {@link EntityCollection#collectionChanged} events from being raised
@@ -136,6 +139,17 @@ define([
             get : function() {
                 return this._entities.values;
             }
+        },
+        /**
+         * Gets the owner of this entity collection, ie. the data source or composite entity collection which created it.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {DataSource|CompositeEntityCollection}
+         */
+        owner : {
+            get : function() {
+                return this._owner;
+            }
         }
     });
 
@@ -202,9 +216,9 @@ define([
             throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
         }
 
+        entity.entityCollection = this;
         entities.set(id, entity);
 
-        var removedEntities = this._removedEntities;
         if (!this._removedEntities.remove(id)) {
             this._addedEntities.set(id, entity);
         }

@@ -1,16 +1,20 @@
 /*global define*/
 define([
+        './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
         './freezeObject',
-        './Math'
+        './Math',
+        './scaleToGeodeticSurface'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
         freezeObject,
-        CesiumMath) {
+        CesiumMath,
+        scaleToGeodeticSurface) {
     "use strict";
 
     /**
@@ -24,7 +28,7 @@ define([
      *
      * @see Ellipsoid
      */
-    var Cartographic = function(longitude, latitude, height) {
+    function Cartographic(longitude, latitude, height) {
         /**
          * The longitude, in radians.
          * @type {Number}
@@ -45,7 +49,7 @@ define([
          * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
-    };
+    }
 
     /**
      * Creates a new Cartographic instance from longitude and latitude
@@ -103,6 +107,52 @@ define([
         latitude = CesiumMath.toRadians(latitude);
 
         return Cartographic.fromRadians(longitude, latitude, height, result);
+    };
+
+    var cartesianToCartographicN = new Cartesian3();
+    var cartesianToCartographicP = new Cartesian3();
+    var cartesianToCartographicH = new Cartesian3();
+    var wgs84OneOverRadii = new Cartesian3(1.0 / 6378137.0, 1.0 / 6378137.0, 1.0 / 6356752.3142451793);
+    var wgs84OneOverRadiiSquared = new Cartesian3(1.0 / (6378137.0 * 6378137.0), 1.0 / (6378137.0 * 6378137.0), 1.0 / (6356752.3142451793 * 6356752.3142451793));
+    var wgs84CenterToleranceSquared = CesiumMath.EPSILON1;
+
+    /**
+     * Creates a new Cartographic instance from a Cartesian position. The values in the
+     * resulting object will be in radians.
+     *
+     * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartographic} [result] The object onto which to store the result.
+     * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
+     */
+    Cartographic.fromCartesian = function(cartesian, ellipsoid, result) {
+        var oneOverRadii = defined(ellipsoid) ? ellipsoid.oneOverRadii : wgs84OneOverRadii;
+        var oneOverRadiiSquared = defined(ellipsoid) ? ellipsoid.oneOverRadiiSquared : wgs84OneOverRadiiSquared;
+        var centerToleranceSquared = defined(ellipsoid) ? ellipsoid._centerToleranceSquared : wgs84CenterToleranceSquared;
+
+        //`cartesian is required.` is thrown from scaleToGeodeticSurface
+        var p = scaleToGeodeticSurface(cartesian, oneOverRadii, oneOverRadiiSquared, centerToleranceSquared, cartesianToCartographicP);
+
+        if (!defined(p)) {
+            return undefined;
+        }
+
+        var n = Cartesian3.multiplyComponents(cartesian, oneOverRadiiSquared, cartesianToCartographicN);
+        n = Cartesian3.normalize(n, n);
+
+        var h = Cartesian3.subtract(cartesian, p, cartesianToCartographicH);
+
+        var longitude = Math.atan2(n.y, n.x);
+        var latitude = Math.asin(n.z);
+        var height = CesiumMath.sign(Cartesian3.dot(h, cartesian)) * Cartesian3.magnitude(h);
+
+        if (!defined(result)) {
+            return new Cartographic(longitude, latitude, height);
+        }
+        result.longitude = longitude;
+        result.latitude = latitude;
+        result.height = height;
+        return result;
     };
 
     /**

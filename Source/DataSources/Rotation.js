@@ -46,7 +46,6 @@ define([
 
         /**
          * Stores the provided instance into the provided array.
-         * @function
          *
          * @param {Rotation} value The value to pack.
          * @param {Number[]} array The array to pack into.
@@ -69,7 +68,6 @@ define([
 
         /**
          * Retrieves an instance from a packed array.
-         * @function
          *
          * @param {Number[]} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
@@ -89,7 +87,6 @@ define([
 
         /**
          * Converts a packed array into a form suitable for interpolation.
-         * @function
          *
          * @param {Number[]} packedArray The packed array.
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
@@ -120,7 +117,6 @@ define([
 
         /**
          * Retrieves an instance from a packed array converted with {@link Rotation.convertPackedArrayForInterpolation}.
-         * @function
          *
          * @param {Number[]} array The array previously packed for interpolation.
          * @param {Number[]} sourceArray The original packed array.

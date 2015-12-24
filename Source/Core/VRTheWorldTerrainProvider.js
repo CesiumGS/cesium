@@ -66,7 +66,7 @@ define([
      * });
      * viewer.terrainProvider = terrainProvider;
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
+    function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -79,6 +79,7 @@ define([
 
         this._errorEvent = new Event();
         this._ready = false;
+        this._readyPromise = when.defer();
 
         this._proxy = options.proxy;
 
@@ -133,6 +134,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(e) {
@@ -145,7 +147,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**
@@ -197,6 +199,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof VRTheWorldTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

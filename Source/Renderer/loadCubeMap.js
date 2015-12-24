@@ -3,12 +3,14 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/loadImage',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './CubeMap'
     ], function(
         defined,
         DeveloperError,
         loadImage,
-        when) {
+        when,
+        CubeMap) {
     "use strict";
 
     /**
@@ -46,7 +48,7 @@ define([
      *
      * @private
      */
-    var loadCubeMap = function(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
@@ -78,7 +80,8 @@ define([
         ];
 
         return when.all(facePromises, function(images) {
-            return context.createCubeMap({
+            return new CubeMap({
+                context : context,
                 source : {
                     positiveX : images[0],
                     negativeX : images[1],
@@ -89,7 +92,7 @@ define([
                 }
             });
         });
-    };
+    }
 
     return loadCubeMap;
 });

@@ -4,7 +4,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/combine',
-        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -17,6 +16,7 @@ define([
         '../Core/loadText',
         '../Core/loadWithXhr',
         '../Core/loadXML',
+        '../Core/Math',
         '../Core/Rectangle',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
@@ -27,7 +27,6 @@ define([
         Cartesian3,
         Cartographic,
         combine,
-        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -40,6 +39,7 @@ define([
         loadText,
         loadWithXhr,
         loadXML,
+        CesiumMath,
         Rectangle,
         TileProviderError,
         WebMercatorTilingScheme,
@@ -62,6 +62,7 @@ define([
      *     <li><code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
      *     <li><code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
      *     <li><code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+     *     <li><code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
      *     <li><code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
      *     <li><code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
      *     <li><code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -114,11 +115,18 @@ define([
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
      *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+     *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+     *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+     *        features) without communicating with the server.  Set this property to false if you know your data
+     *        source does not support picking features or if you don't want this provider's features to be pickable. Note
+     *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
+     *        property.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
@@ -148,7 +156,7 @@ define([
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
      * });
      */
-    var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
+    function UrlTemplateImageryProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -160,9 +168,9 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._getFeatureInfoFormats = options.getFeatureInfoFormats;
-        
+
         this._errorEvent = new Event();
-        
+
         this._subdomains = options.subdomains;
         if (Array.isArray(this._subdomains)) {
             this._subdomains = this._subdomains.slice();
@@ -181,6 +189,17 @@ define([
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
 
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+         * request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+         * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @type {Boolean}
+         * @default true
+         */
+        this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+
         var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
@@ -189,7 +208,9 @@ define([
 
         this._urlParts = urlTemplateToParts(this._url, tags);
         this._pickFeaturesUrlParts = urlTemplateToParts(this._pickFeaturesUrl, pickFeaturesTags);
-    };
+
+        this._readyPromise = when.resolve(true);
+    }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
@@ -201,6 +222,7 @@ define([
          *  <li> <code>{s}</code>: One of the available subdomains, used to overcome browser limits on the number of simultaneous requests per host.</li>
          *  <li> <code>{reverseX}</code>: The tile X coordinate in the tiling scheme, where 0 is the Easternmost tile.</li>
          *  <li> <code>{reverseY}</code>: The tile Y coordinate in the tiling scheme, where 0 is the Southernmost tile.</li>
+         *  <li> <code>{reverseZ}</code>: The level of the tile in the tiling scheme, where level zero is the maximum level of the quadtree pyramid.  In order to use reverseZ, maximumLevel must be defined.</li>
          *  <li> <code>{westDegrees}</code>: The Western edge of the tile in geodetic degrees.</li>
          *  <li> <code>{southDegrees}</code>: The Southern edge of the tile in geodetic degrees.</li>
          *  <li> <code>{eastDegrees}</code>: The Eastern edge of the tile in geodetic degrees.</li>
@@ -387,6 +409,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof UrlTemplateImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link UrlTemplateImageryProvider#ready} returns true.
          * @memberof UrlTemplateImageryProvider.prototype
@@ -450,8 +484,8 @@ define([
     };
 
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -464,7 +498,7 @@ define([
      *                   It may also be undefined if picking is not supported.
      */
     UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        if (!defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
+        if (!this.enablePickFeatures || !defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 
@@ -596,6 +630,11 @@ define([
 
     function reverseYTag(imageryProvider, x, y, level) {
         return imageryProvider.tilingScheme.getNumberOfYTilesAtLevel(level) - y - 1;
+    }
+
+    function reverseZTag(imageryProvider, x, y, level) {
+        var maximumLevel = imageryProvider.maximumLevel;
+        return defined(maximumLevel) && level < maximumLevel ? maximumLevel - level - 1 : level;
     }
 
     function zTag(imageryProvider, x, y, level) {
@@ -777,6 +816,7 @@ define([
         '{s}': sTag,
         '{reverseX}': reverseXTag,
         '{reverseY}': reverseYTag,
+        '{reverseZ}': reverseZTag,
         '{westDegrees}': westDegreesTag,
         '{southDegrees}': southDegreesTag,
         '{eastDegrees}': eastDegreesTag,

@@ -10,7 +10,6 @@ defineSuite([
         loadArrayBuffer,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor,fail*/
 
     it('can load an image', function() {
         return loadArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {

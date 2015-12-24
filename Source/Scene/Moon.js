@@ -47,7 +47,7 @@ define([
      * @example
      * scene.moon = new Cesium.Moon();
      */
-    var Moon = function(options) {
+    function Moon(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.textureUrl;
@@ -88,7 +88,7 @@ define([
         this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
-    };
+    }
 
     defineProperties(Moon.prototype, {
         /**
@@ -116,7 +116,7 @@ define([
     /**
      * @private
      */
-    Moon.prototype.update = function(context, frameState) {
+    Moon.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -139,8 +139,11 @@ define([
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
 
+        var savedCommandList = frameState.commandList;
+        frameState.commandList = scratchCommandList;
         scratchCommandList.length = 0;
-        ellipsoidPrimitive.update(context, frameState, scratchCommandList);
+        ellipsoidPrimitive.update(frameState);
+        frameState.commandList = savedCommandList;
         return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
     };
 

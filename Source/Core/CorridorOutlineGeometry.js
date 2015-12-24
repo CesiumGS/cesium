@@ -325,7 +325,7 @@ define([
      *   width : 100000
      * });
      */
-    var CorridorOutlineGeometry = function(options) {
+    function CorridorOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var width = options.width;
@@ -353,11 +353,10 @@ define([
          * @type {Number}
          */
         this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + 5;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CorridorOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

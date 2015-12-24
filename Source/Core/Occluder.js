@@ -41,7 +41,7 @@ define([
      * var occluderBoundingSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -1), 1);
      * var occluder = new Cesium.Occluder(occluderBoundingSphere, cameraPosition);
      */
-    var Occluder = function(occluderBoundingSphere, cameraPosition) {
+    function Occluder(occluderBoundingSphere, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(occluderBoundingSphere)) {
             throw new DeveloperError('occluderBoundingSphere is required.');
@@ -61,7 +61,7 @@ define([
 
         // cameraPosition fills in the above values
         this.cameraPosition = cameraPosition;
-    };
+    }
 
     var scratchCartesian3 = new Cartesian3();
 

@@ -1,38 +1,39 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/UrlTemplateImageryProvider',
-    'Core/DefaultProxy',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/loadImage',
-    'Core/Math',
-    'Core/Rectangle',
-    'Core/WebMercatorProjection',
-    'Core/WebMercatorTilingScheme',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    UrlTemplateImageryProvider,
-    DefaultProxy,
-    Ellipsoid,
-    GeographicTilingScheme,
-    loadImage,
-    CesiumMath,
-    Rectangle,
-    WebMercatorProjection,
-    WebMercatorTilingScheme,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    when) {
+        'Scene/UrlTemplateImageryProvider',
+        'Core/DefaultProxy',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'ThirdParty/when',
+        'Scene/GetFeatureInfoFormat'
+    ], function(
+        UrlTemplateImageryProvider,
+        DefaultProxy,
+        Ellipsoid,
+        GeographicTilingScheme,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        when,
+        GetFeatureInfoFormat) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -47,6 +48,17 @@ defineSuite([
             return new UrlTemplateImageryProvider({});
         }
         expect(createWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {
@@ -223,17 +235,18 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern X Y reverseX reverseY Z', function() {
+    it('evaluation of pattern X Y reverseX reverseY Z reverseZ', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{z}/{reverseY}/{y}/{reverseX}/{x}.PNG',
-            tilingScheme: new GeographicTilingScheme()
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/2/1/4/3.PNG');
+                expect(url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -525,15 +538,63 @@ defineSuite([
         });
     });
 
-    it('pickFeatures returns undefined', function() {
-        var provider = new UrlTemplateImageryProvider({
-            url: 'foo/bar'
+    describe('pickFeatures', function() {
+        it('returns undefined when enablePickFeatures is false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
         });
 
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+        it('does not return undefined when enablePickFeatures is subsequently set to true', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).not.toBeUndefined();
+            });
+        });
+
+        it('returns undefined when enablePickFeatures is initialized as true and set to false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
         });
     });
 });

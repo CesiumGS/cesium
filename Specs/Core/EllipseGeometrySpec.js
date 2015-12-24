@@ -14,7 +14,6 @@ defineSuite([
         VertexFormat,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('throws without a center', function() {
         expect(function() {
@@ -84,8 +83,8 @@ defineSuite([
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        expect(m.attributes.position.values.length).toEqual(3 * 16);
+        expect(m.indices.length).toEqual(3 * 22);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -99,12 +98,12 @@ defineSuite([
             semiMinorAxis : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 12);
-        expect(m.attributes.st.values.length).toEqual(2 * 12);
-        expect(m.attributes.normal.values.length).toEqual(3 * 12);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 12);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        expect(m.attributes.position.values.length).toEqual(3 * 16);
+        expect(m.attributes.st.values.length).toEqual(2 * 16);
+        expect(m.attributes.normal.values.length).toEqual(3 * 16);
+        expect(m.attributes.tangent.values.length).toEqual(3 * 16);
+        expect(m.attributes.binormal.values.length).toEqual(3 * 16);
+        expect(m.indices.length).toEqual(3 * 22);
     });
 
     it('compute texture coordinates with rotation', function() {
@@ -122,9 +121,9 @@ defineSuite([
         var st = m.attributes.st.values;
         var length = st.length;
 
-        expect(positions.length).toEqual(3 * 12);
-        expect(length).toEqual(2 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        expect(positions.length).toEqual(3 * 16);
+        expect(length).toEqual(2 * 16);
+        expect(m.indices.length).toEqual(3 * 22);
 
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
@@ -141,8 +140,8 @@ defineSuite([
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
+        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -156,12 +155,12 @@ defineSuite([
             extrudedHeight : 50000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.st.values.length).toEqual(2 * (12 + 6) * 2);
-        expect(m.attributes.normal.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.tangent.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.binormal.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
+        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
+        expect(m.attributes.st.values.length).toEqual(2 * (16 + 8) * 2);
+        expect(m.attributes.normal.values.length).toEqual(3 * (16 + 8) * 2);
+        expect(m.attributes.tangent.values.length).toEqual(3 * (16 + 8) * 2);
+        expect(m.attributes.binormal.values.length).toEqual(3 * (16 + 8) * 2);
+        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
     });
 
     var center = Cartesian3.fromDegrees(0,0);

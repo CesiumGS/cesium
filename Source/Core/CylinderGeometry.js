@@ -72,7 +72,7 @@ define([
      * });
      * var geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
      */
-    var CylinderGeometry = function(options) {
+    function CylinderGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -105,7 +105,7 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._slices = slices;
         this._workerName = 'createCylinderGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -115,7 +115,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CylinderGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
