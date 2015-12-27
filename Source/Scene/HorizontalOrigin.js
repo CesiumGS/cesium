@@ -10,8 +10,7 @@ define([
      * For example, the horizontal origin is used to display a billboard to the left or right (in
      * screen space) of the actual position.
      *
-     * @namespace
-     * @alias HorizontalOrigin
+     * @exports HorizontalOrigin
      *
      * @see Billboard#horizontalOrigin
      */

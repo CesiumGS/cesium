@@ -11,8 +11,7 @@ define([
      * it has no visibility, may partially block an occludee from view, or may not block it at all,
      * leading to full visibility.
      *
-     * @namespace
-     * @alias Visibility
+     * @exports Visibility
      */
     var Visibility = {
         /**

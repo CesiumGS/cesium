@@ -17,8 +17,7 @@ define([
      * but is instead passed to the constructor of {@link SampledProperty}
      * in order to represent a two-dimensional angle of rotation.
      *
-     * @namespace
-     * @alias Rotation
+     * @exports Rotation
      *
      * @see PackableForInterpolation
      *

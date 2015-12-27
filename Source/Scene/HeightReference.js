@@ -8,8 +8,7 @@ define([
     /**
      * Represents the position relative to the terrain.
      *
-     * @namespace
-     * @alias HeightReference
+     * @exports HeightReference
      */
     var HeightReference = {
         /**

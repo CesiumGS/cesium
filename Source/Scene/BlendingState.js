@@ -17,8 +17,7 @@ define([
      * This is a helper when using custom render states with {@link Appearance#renderState}.
      * </p>
      *
-     * @namespace
-     * @alias BlendingState
+     * @exports BlendingState
      */
     var BlendingState = {
         /**

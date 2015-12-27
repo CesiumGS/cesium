@@ -8,8 +8,8 @@ define([
     /**
      * Constants to determine how an interpolated value is extrapolated
      * when querying outside the bounds of available data.
-     * @namespace
-     * @alias ExtrapolationType
+     * 
+     * @exports ExtrapolationType
      *
      * @see SampledProperty
      */
