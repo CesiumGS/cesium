@@ -67,7 +67,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * // Construct a terrain provider that uses per vertex normals for lighting
@@ -76,7 +75,8 @@ define([
      *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
-     *
+     * @see TerrainProvider
+     * 
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
      * var imageryProvider = new Cesium.TileMapServiceImageryProvider({
