@@ -227,7 +227,7 @@ define([
             //(including a check, because some boolean flags should not be used as shader parameters)
             if (parameterValues.hasOwnProperty(name) &&
                 name !== "transparent" && name !== "doubleSided") {
-                var valType = getKHRMaterialsCommonValueType(name);
+                var valType = getKHRMaterialsCommonValueType(name, parameterValues[name]);
                 lowerCase = name.toLowerCase();
                 if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
@@ -612,18 +612,46 @@ define([
         return techniqueId;
     }
 
-    function getKHRMaterialsCommonValueType(paramName)
+    function getKHRMaterialsCommonValueType(paramName, paramValue)
     {
+        var value;
+        
+        // for compatibility with old glb files, encoding materials using
+        // KHR_materials_common with explicit "type" / "value" members
+        if (paramValue.value != undefined)
+        {
+            value = paramValue.value;
+        }
+        else
+        {
+            value = paramValue;
+        }
+     
         switch (paramName)
         {
-            case "ambient"      : return WebGLConstants.FLOAT_VEC4;
-            case "diffuse"      : return WebGLConstants.FLOAT_VEC4;
-            case "doubleSided"  : return WebGLConstants.BOOL;
-            case "emission"     : return WebGLConstants.FLOAT_VEC4;
-            case "specular"     : return WebGLConstants.FLOAT_VEC4;
-            case "shininess"    : return WebGLConstants.FLOAT;
-            case "transparency" : return WebGLConstants.FLOAT;
-            case "transparent"  : return WebGLConstants.BOOL;
+            case "ambient" :
+                return WebGLConstants.FLOAT_VEC4;
+                
+            case "diffuse" :
+                return (value instanceof String || typeof value === "string") ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                                
+            case "doubleSided" :
+                return WebGLConstants.BOOL;
+                
+            case "emission" :
+                return (value instanceof String || typeof value === "string") ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                                
+            case "specular" :
+                return (value instanceof String || typeof value === "string") ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+                                
+            case "shininess" :
+                return WebGLConstants.FLOAT;
+                
+            case "transparency" :
+                return WebGLConstants.FLOAT;
+                
+            case "transparent" :
+                return WebGLConstants.BOOL;
         }
     }
 
@@ -640,7 +668,7 @@ define([
             //(including a check, because some boolean flags should not be used as shader parameters)
             if (values.hasOwnProperty(name) &&
                 name !== "transparent" && name !== "doubleSided") {
-                techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name).toString();
+                techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name, values[name]);
                 techniqueKey += ';';
             }
         }
@@ -712,7 +740,17 @@ define([
                         for (var valueName in values) {
                             if (values.hasOwnProperty(valueName)) {
                                 var value = values[valueName];
-                                material.values[valueName] = value;
+                                
+                                // for compatibility with old glb files, encoding materials using
+                                // KHR_materials_common with explicit "type" / "value" members
+                                if (value.value != undefined)
+                                {
+                                    material.values[valueName] = value.value;
+                                }
+                                else
+                                {
+                                    material.values[valueName] = value;
+                                }
                             }
                         }
 
