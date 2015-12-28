@@ -13,8 +13,7 @@ define([
      * Uses the Tridiagonal Matrix Algorithm, also known as the Thomas Algorithm, to solve
      * a system of linear equations where the coefficient matrix is a tridiagonal matrix.
      *
-     * @namespace
-     * @alias TridiagonalSystemSolver
+     * @exports TridiagonalSystemSolver
      */
     var TridiagonalSystemSolver = {};
 
