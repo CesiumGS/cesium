@@ -25,8 +25,3 @@ npm-debug.log
 # WebStorm user-specific
 .idea/workspace.xml
 .idea/tasks.xml
-.idea/cesium.iml
-.idea/encodings.xml
-.idea/inspectionProfiles/Project_Default.xml
-.idea/jsLinters/jshint.xml
-.idea/misc.xml
