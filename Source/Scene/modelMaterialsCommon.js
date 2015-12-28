@@ -634,10 +634,7 @@ define([
                 
             case "diffuse" :
                 return (value instanceof String || typeof value === "string") ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
-                                
-            case "doubleSided" :
-                return WebGLConstants.BOOL;
-                
+          
             case "emission" :
                 return (value instanceof String || typeof value === "string") ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
                                 
@@ -650,8 +647,12 @@ define([
             case "transparency" :
                 return WebGLConstants.FLOAT;
                 
+            // these two are usually not used directly within shaders,
+            // they are just added here for completeness
             case "transparent" :
-                return WebGLConstants.BOOL;
+                return WebGLConstants.BOOL;                
+            case "doubleSided" :
+                return WebGLConstants.BOOL;                
         }
     }
 
