@@ -26,8 +26,6 @@ define([
      * @param {Number} [blue=1.0] The blue component.
      * @param {Number} [alpha=1.0] The alpha component.
      *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
@@ -41,6 +39,8 @@ define([
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
+     * @see GeometryInstance
+     * @see GeometryInstanceAttribute
      */
     function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
         red = defaultValue(red, 1.0);
