@@ -15,7 +15,6 @@ define([
      * @alias EventHelper
      * @constructor
      *
-     * @see Event
      *
      * @example
      * var helper = new Cesium.EventHelper();
@@ -25,6 +24,7 @@ define([
      *
      * // later...
      * helper.removeAll();
+     * @see Event
      */
     function EventHelper() {
         this._removalFunctions = [];
