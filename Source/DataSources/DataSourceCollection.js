@@ -201,10 +201,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceCollection#isDestroyed
      *
      * @example
      * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
+     * @see DataSourceCollection#isDestroyed
      */
     DataSourceCollection.prototype.destroy = function() {
         this.removeAll(true);
