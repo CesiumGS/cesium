@@ -204,10 +204,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreeTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
 
