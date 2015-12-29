@@ -47,7 +47,6 @@ define([
 
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
-     * @see ShaderCache#getShaderProgram
      *
      * @example
      * this._shaderProgram = context.shaderCache.replaceShaderProgram({
@@ -56,6 +55,7 @@ define([
      *     fragmentShaderSource : fs,
      *     attributeLocations : attributeLocations
      * });
+     * @see ShaderCache#getShaderProgram
      */
     ShaderCache.prototype.replaceShaderProgram = function(options) {
         if (defined(options.shaderProgram)) {
