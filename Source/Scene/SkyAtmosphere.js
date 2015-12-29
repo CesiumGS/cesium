@@ -236,10 +236,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyAtmosphere#isDestroyed
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
+     * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {
         var command = this._command;
