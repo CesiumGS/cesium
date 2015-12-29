@@ -341,10 +341,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayer#isDestroyed
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
+     * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
         return destroyObject(this);
