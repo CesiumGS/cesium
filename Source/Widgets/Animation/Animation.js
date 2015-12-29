@@ -312,8 +312,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see AnimationViewModel
-     * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
@@ -329,6 +327,8 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
+     * @see AnimationViewModel
+     * @see Clock
      */
     function Animation(container, viewModel) {
         //>>includeStart('debug', pragmas.debug);
