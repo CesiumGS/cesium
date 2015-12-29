@@ -495,10 +495,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Material#isDestroyed
      *
      * @example
      * material = material && material.destroy();
+     * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {
         var textures = this._textures;
