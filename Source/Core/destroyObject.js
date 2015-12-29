@@ -28,7 +28,6 @@ define([
      * @param {String} [message] The message to include in the exception that is thrown if
      *                           a destroyed object's function is called.
      *
-     * @see DeveloperError
      *
      * @example
      * // How a texture would destroy itself.
@@ -36,6 +35,7 @@ define([
      *     _gl.deleteTexture(_texture);
      *     return Cesium.destroyObject(this);
      * };
+     * @see DeveloperError
      */
     function destroyObject(object, message) {
         message = defaultValue(message, 'This object was destroyed, i.e., destroy() was called.');
