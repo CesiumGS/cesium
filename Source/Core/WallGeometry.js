@@ -285,7 +285,6 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @returns {WallGeometry}
      *
-     * @see WallGeometry#createGeometry
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
@@ -301,6 +300,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
