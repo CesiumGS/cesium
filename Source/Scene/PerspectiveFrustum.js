@@ -20,7 +20,6 @@ define([
      * @alias PerspectiveFrustum
      * @constructor
      *
-     * @see PerspectiveOffCenterFrustum
      *
      * @example
      * var frustum = new Cesium.PerspectiveFrustum();
@@ -28,6 +27,7 @@ define([
      * frustum.fov = Cesium.Math.PI_OVER_THREE;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * @see PerspectiveOffCenterFrustum
      */
     function PerspectiveFrustum() {
         this._offCenterFrustum = new PerspectiveOffCenterFrustum();
