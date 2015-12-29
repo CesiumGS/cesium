@@ -324,7 +324,6 @@ define([
      * a tile.  This function should not be called before {@link MapboxImageryProvider#ready} returns true.
      * This function is optional, so it may not exist on all ImageryProviders.
      *
-     * @function
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

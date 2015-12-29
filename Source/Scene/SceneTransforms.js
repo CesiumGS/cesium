@@ -26,8 +26,7 @@ define([
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
-     * @namespace
-     * @alias SceneTransforms
+     * @exports SceneTransforms
      */
     var SceneTransforms = {};
 

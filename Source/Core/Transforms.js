@@ -42,8 +42,7 @@ define([
     /**
      * Contains functions for transforming positions to various reference frames.
      *
-     * @namespace
-     * @alias Transforms
+     * @exports Transforms
      */
     var Transforms = {};
 

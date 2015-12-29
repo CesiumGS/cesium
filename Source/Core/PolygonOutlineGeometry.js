@@ -321,7 +321,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
