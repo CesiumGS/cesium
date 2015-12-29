@@ -89,13 +89,13 @@ define([
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
      *     url : '//earth.localdomain',
      *     channel : 1008
      * });
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function GoogleEarthImageryProvider(options) {
         options = defaultValue(options, {});
