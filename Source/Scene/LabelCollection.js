@@ -412,8 +412,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#remove
-     * @see LabelCollection#removeAll
      *
      * @example
      * // Example 1:  Add a label, specifying all the default values.
@@ -440,6 +438,8 @@ define([
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
+     * @see LabelCollection#remove
+     * @see LabelCollection#removeAll
      */
     LabelCollection.prototype.add = function(options) {
         var label = new Label(options, this);
@@ -464,13 +464,13 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#removeAll
-     * @see Label#show
      *
      * @example
      * var l = labels.add(...);
      * labels.remove(l);  // Returns true
+     * @see LabelCollection#add
+     * @see LabelCollection#removeAll
+     * @see Label#show
      */
     LabelCollection.prototype.remove = function(label) {
         if (defined(label) && label._labelCollection === this) {
@@ -492,13 +492,13 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#remove
      *
      * @example
      * labels.add(...);
      * labels.add(...);
      * labels.removeAll();
+     * @see LabelCollection#add
+     * @see LabelCollection#remove
      */
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
@@ -539,7 +539,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#length
      *
      * @example
      * // Toggle the show property of every label in the collection
@@ -548,6 +547,7 @@ define([
      *   var l = billboards.get(i);
      *   l.show = !l.show;
      * }
+     * @see LabelCollection#length
      */
     LabelCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -642,10 +642,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#isDestroyed
      *
      * @example
      * labels = labels && labels.destroy();
+     * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
         this.removeAll();
