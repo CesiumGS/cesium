@@ -58,13 +58,13 @@ define([
      *                    specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
      *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * viewer.terrainProvider = terrainProvider;
+     * @see TerrainProvider
      */
     function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
