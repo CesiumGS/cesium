@@ -680,12 +680,12 @@ define([
      * @param {Matrix2} result The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter.
      *
-     * @see Matrix2.fromScale
-     * @see Matrix2.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
      * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     * @see Matrix2.fromScale
+     * @see Matrix2.multiplyByUniformScale
      */
     Matrix2.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
