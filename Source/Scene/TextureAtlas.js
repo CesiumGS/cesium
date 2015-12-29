@@ -476,10 +476,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see TextureAtlas#isDestroyed
      *
      * @example
      * atlas = atlas && atlas.destroy();
+     * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {
         this._texture = this._texture && this._texture.destroy();
