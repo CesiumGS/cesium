@@ -14,8 +14,7 @@ define([
     /**
      * Math functions.
      *
-     * @namespace
-     * @alias CesiumMath
+     * @exports CesiumMath
      */
     var CesiumMath = {};
 

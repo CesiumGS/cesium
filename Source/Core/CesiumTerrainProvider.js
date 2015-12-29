@@ -256,8 +256,7 @@ define([
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
      * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
      *
-     * @namespace
-     * @alias QuantizedMeshExtensionIds
+     * @exports QuantizedMeshExtensionIds
      * @see CesiumTerrainProvider
      * @private
      */

@@ -10,8 +10,7 @@ define([
      * different representation than their packed value.  These methods and
      * properties are expected to be defined on a constructor function.
      *
-     * @namespace
-     * @alias PackableForInterpolation
+     * @exports PackableForInterpolation
      *
      * @see Packable
      */
