@@ -28,7 +28,7 @@ if (/\.0$/.test(version)) {
     version = version.substring(0, version.length - 2);
 }
 
-var karmaConfigFile = path.join(__dirname, 'karma.conf.js');
+var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
 
 //Manually patch list of karma binary files until bug https://github.com/karma-runner/karma/issues/1070 is addressed
 var extensionsObject = require('./node_modules/karma/lib/binary-extensions.json');
