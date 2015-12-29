@@ -486,10 +486,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);
