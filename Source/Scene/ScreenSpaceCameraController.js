@@ -270,7 +270,6 @@ define([
         this._lastInertiaSpinMovement = undefined;
         this._lastInertiaZoomMovement = undefined;
         this._lastInertiaTranslateMovement = undefined;
-        this._lastInertiaWheelZoomMovement = undefined;
         this._lastInertiaTiltMovement = undefined;
 
         this._tweens = new TweenCollection();
@@ -301,7 +300,6 @@ define([
         this._rotateRateRangeAdjustment = undefined;
         this._maximumRotateRate = 1.77;
         this._minimumRotateRate = 1.0 / 5000.0;
-        this._translateFactor = 1.0;
         this._minimumZoomRate = 20.0;
         this._maximumZoomRate = 5906376272000.0;  // distance from the Sun to Pluto in meters.
     }

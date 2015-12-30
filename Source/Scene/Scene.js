@@ -1900,6 +1900,8 @@ define([
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
+        // TODO: Add credits to both viewports
+        frameState.creditDisplay.beginFrame();
         frameState.creditDisplay.endFrame();
 
         if (scene.debugShowFramesPerSecond) {
