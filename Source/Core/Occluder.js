@@ -172,6 +172,7 @@ define([
      * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
      * var point = new Cesium.Cartesian3(0, 0, -3);
      * occluder.isPointVisible(point); //returns true
+     * 
      * @see Occluder#computeVisibility
      */
     Occluder.prototype.isPointVisible = function(occludee) {
@@ -203,6 +204,7 @@ define([
     * var occluder = new Cesium.Occluder(littleSphere, cameraPosition);
     * var bigSphere = new Cesium.BoundingSphere(new Cesium.Cartesian3(0, 0, -3), 1);
     * occluder.isBoundingSphereVisible(bigSphere); //returns true
+    * 
     * @see Occluder#computeVisibility
     */
     Occluder.prototype.isBoundingSphereVisible = function(occludee) {
@@ -261,6 +263,7 @@ define([
      * var cameraPosition = new Cesium.Cartesian3(0, 0, 0);
      * var occluder = new Cesium.Occluder(sphere1, cameraPosition);
      * occluder.computeVisibility(sphere2); //returns Visibility.NONE
+     * 
      * @see Occluder#isVisible
      */
     Occluder.prototype.computeVisibility = function(occludeeBS) {
