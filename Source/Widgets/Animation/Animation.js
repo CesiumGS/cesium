@@ -327,6 +327,7 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
+     * 
      * @see AnimationViewModel
      * @see Clock
      */
