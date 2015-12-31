@@ -3343,6 +3343,7 @@ define([
      *
      * @example
      * model = model && model.destroy();
+     * 
      * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
