@@ -102,6 +102,7 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
      * @see TerrainData
      * @see HeightmapTerrainData
      */
