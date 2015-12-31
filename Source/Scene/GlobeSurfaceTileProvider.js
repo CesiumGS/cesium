@@ -634,6 +634,7 @@ define([
      *
      * @example
      * provider = provider && provider();
+     * 
      * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
