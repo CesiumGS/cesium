@@ -41,6 +41,7 @@ define([
      *     })
      *   }
      * });
+     * 
      * @see ColorGeometryInstanceAttribute
      * @see ShowGeometryInstanceAttribute
      */
