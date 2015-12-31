@@ -55,6 +55,7 @@ define([
      *     fragmentShaderSource : fs,
      *     attributeLocations : attributeLocations
      * });
+     * 
      * @see ShaderCache#getShaderProgram
      */
     ShaderCache.prototype.replaceShaderProgram = function(options) {
