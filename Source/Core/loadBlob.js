@@ -25,6 +25,7 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
