@@ -502,6 +502,7 @@ define([
      *
      * @example
      * globe = globe && globe.destroy();
+     * 
      * @see Globe#isDestroyed
      */
     Globe.prototype.destroy = function() {
