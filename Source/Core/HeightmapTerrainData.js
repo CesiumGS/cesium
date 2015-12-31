@@ -91,6 +91,7 @@ define([
      *   structure : structure,
      *   waterMask : waterMask
      * });
+     * 
      * @see TerrainData
      * @see QuantizedMeshTerrainData
      */
