@@ -64,6 +64,7 @@ define([
      *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * viewer.terrainProvider = terrainProvider;
+     * 
      * @see TerrainProvider
      */
     function VRTheWorldTerrainProvider(options) {
