@@ -95,6 +95,7 @@ define([
      *     url : '//earth.localdomain',
      *     channel : 1008
      * });
+     * 
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function GoogleEarthImageryProvider(options) {
