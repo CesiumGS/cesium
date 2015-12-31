@@ -105,6 +105,7 @@ define([
      * scene.primitives.add(new Cesium.GroundPrimitive({
      *   geometryInstance : rectangleInstance
      * }));
+     * 
      * @see Primitive
      * @see GeometryInstance
      * @see Appearance
@@ -795,6 +796,7 @@ define([
      *
      * @example
      * e = e && e.destroy();
+     * 
      * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
