@@ -51,6 +51,7 @@ define([
      * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+     * 
      * @see BoundingSphere
      * @see BoundingRectangle
      */
