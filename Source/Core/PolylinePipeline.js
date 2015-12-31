@@ -138,6 +138,7 @@ define([
      * var positions = polyline.positions;
      * var modelMatrix = polylines.modelMatrix;
      * var segments = Cesium.PolylinePipeline.wrapLongitude(positions, modelMatrix);
+     * 
      * @see PolygonPipeline.wrapLongitude
      * @see Polyline
      * @see PolylineCollection
