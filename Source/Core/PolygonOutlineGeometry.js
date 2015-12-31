@@ -428,6 +428,7 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+     * 
      * @see PolygonOutlineGeometry#createGeometry
      */
     PolygonOutlineGeometry.fromPositions = function(options) {
