@@ -104,6 +104,7 @@ define([
          * @example
          * // A sphere with a radius of 2.0
          * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
+         * 
          * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = Cartesian3.clone(options.radii);
@@ -154,6 +155,7 @@ define([
          *
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
+         * 
          * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
@@ -461,6 +463,7 @@ define([
      *
      * @example
      * e = e && e.destroy();
+     * 
      * @see EllipsoidPrimitive#isDestroyed
      */
     EllipsoidPrimitive.prototype.destroy = function() {
