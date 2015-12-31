@@ -53,6 +53,7 @@ define([
      * var osm = Cesium.createOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
+     * 
      * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
