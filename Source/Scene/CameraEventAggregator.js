@@ -500,6 +500,7 @@ define([
      *
      * @example
      * handler = handler && handler.destroy();
+     * 
      * @see CameraEventAggregator#isDestroyed
      */
     CameraEventAggregator.prototype.destroy = function() {
