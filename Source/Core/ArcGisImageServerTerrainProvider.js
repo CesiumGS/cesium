@@ -60,6 +60,7 @@ define([
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
      * viewer.terrainProvider = terrainProvider;
+     * 
      *  @see TerrainProvider
      */
     function ArcGisImageServerTerrainProvider(options) {
