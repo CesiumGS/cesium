@@ -498,6 +498,7 @@ define([
      *
      * @example
      * material = material && material.destroy();
+     * 
      * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {
