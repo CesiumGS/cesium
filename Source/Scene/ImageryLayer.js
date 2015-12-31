@@ -344,6 +344,7 @@ define([
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
+     * 
      * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
