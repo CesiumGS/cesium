@@ -53,6 +53,7 @@ define([
      *   },
      *   id : 'top'
      * });
+     * 
      * @see Geometry
      */
     function GeometryInstance(options) {
