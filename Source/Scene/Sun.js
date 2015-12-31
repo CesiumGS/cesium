@@ -75,6 +75,7 @@ define([
      *
      * @example
      * scene.sun = new Cesium.Sun();
+     * 
      * @see Scene#sun
      */
     function Sun() {
@@ -342,6 +343,7 @@ define([
      *
      * @example
      * sun = sun && sun.destroy();
+     * 
      *  @see Sun#isDestroyed
      */
     Sun.prototype.destroy = function() {
