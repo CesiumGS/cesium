@@ -175,6 +175,7 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
+     * 
      * @see GeometryInstance
      * @see Appearance
      */
@@ -1541,6 +1542,7 @@ define([
      *
      * @example
      * e = e && e.destroy();
+     * 
      * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
