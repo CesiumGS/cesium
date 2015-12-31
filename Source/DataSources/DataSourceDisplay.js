@@ -189,6 +189,7 @@ define([
      *
      * @example
      * dataSourceDisplay = dataSourceDisplay.destroy();
+     * 
      * @see DataSourceDisplay#isDestroyed
      */
     DataSourceDisplay.prototype.destroy = function() {
