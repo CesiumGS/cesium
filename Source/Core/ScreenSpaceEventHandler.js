@@ -759,6 +759,7 @@ define([
      *
      * @example
      * handler = handler && handler.destroy();
+     * 
      * @see ScreenSpaceEventHandler#isDestroyed
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
