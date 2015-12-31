@@ -27,6 +27,7 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
