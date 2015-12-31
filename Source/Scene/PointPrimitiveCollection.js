@@ -106,6 +106,7 @@ define([
      *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   color : Cesium.Color.CYAN
      * });
+     * 
      * @see PointPrimitiveCollection#add
      * @see PointPrimitiveCollection#remove
      * @see PointPrimitive
@@ -174,6 +175,7 @@ define([
          *   color : Cesium.Color.CYAN,
          *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
          * });
+         * 
          * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -270,6 +272,7 @@ define([
      * var p = pointPrimitives.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
+     * 
      * @see PointPrimitiveCollection#remove
      * @see PointPrimitiveCollection#removeAll
      */
@@ -301,6 +304,7 @@ define([
      * @example
      * var p = pointPrimitives.add(...);
      * pointPrimitives.remove(p);  // Returns true
+     * 
      * @see PointPrimitiveCollection#add
      * @see PointPrimitiveCollection#removeAll
      * @see PointPrimitive#show
@@ -330,6 +334,7 @@ define([
      * pointPrimitives.add(...);
      * pointPrimitives.add(...);
      * pointPrimitives.removeAll();
+     * 
      * @see PointPrimitiveCollection#add
      * @see PointPrimitiveCollection#remove
      */
@@ -406,6 +411,7 @@ define([
      *   var p = pointPrimitives.get(i);
      *   p.show = !p.show;
      * }
+     * 
      * @see PointPrimitiveCollection#length
      */
     PointPrimitiveCollection.prototype.get = function(index) {
@@ -962,6 +968,7 @@ define([
      *
      * @example
      * pointPrimitives = pointPrimitives && pointPrimitives.destroy();
+     * 
      * @see PointPrimitiveCollection#isDestroyed
      */
     PointPrimitiveCollection.prototype.destroy = function() {
