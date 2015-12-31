@@ -705,6 +705,7 @@ define([
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
+     * 
      * @see Label#eyeOffset
      * @see Label#pixelOffset
      */
