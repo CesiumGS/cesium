@@ -975,6 +975,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromScale(scale), m);
      * Cesium.Matrix3.multiplyByScale(m, scale, m);
+     * 
      * @see Matrix3.fromScale
      * @see Matrix3.multiplyByUniformScale
      */
