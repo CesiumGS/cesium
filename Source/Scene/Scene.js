@@ -2233,6 +2233,7 @@ define([
      *
      * @example
      * scene = scene && scene.destroy();
+     * 
      * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {
