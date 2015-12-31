@@ -75,6 +75,7 @@ define([
      *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
+     * 
      * @see TerrainProvider
      * 
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
