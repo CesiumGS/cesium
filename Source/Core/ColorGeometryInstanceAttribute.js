@@ -39,6 +39,7 @@ define([
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
+     * 
      * @see GeometryInstance
      * @see GeometryInstanceAttribute
      */
