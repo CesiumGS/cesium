@@ -479,6 +479,7 @@ define([
      *
      * @example
      * atlas = atlas && atlas.destroy();
+     * 
      * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {
