@@ -310,6 +310,7 @@ define([
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     * 
      * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
