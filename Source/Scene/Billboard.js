@@ -1134,6 +1134,7 @@ define([
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
+     * 
      * @see Billboard#eyeOffset
      * @see Billboard#pixelOffset
      */
