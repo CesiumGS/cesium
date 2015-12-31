@@ -184,6 +184,7 @@ define([
      *
      * @example
      * quad = quad && quad.destroy();
+     * 
      * @see ViewportQuad#isDestroyed
      */
     ViewportQuad.prototype.destroy = function() {
