@@ -1900,6 +1900,7 @@ define([
      *
      * @example
      * controller = controller && controller.destroy();
+     * 
      * @see ScreenSpaceCameraController#isDestroyed
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
