@@ -1103,6 +1103,7 @@ define([
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
+     * 
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
@@ -1153,6 +1154,7 @@ define([
      *   primitive : this,
      *   id : this.id
      * });
+     * 
      * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {
