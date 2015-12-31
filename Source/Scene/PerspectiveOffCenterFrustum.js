@@ -39,6 +39,7 @@ define([
      * frustum.bottom = -1.0;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * 
      * @see PerspectiveFrustum
      */
     function PerspectiveOffCenterFrustum() {
