@@ -48,6 +48,7 @@ define([
      *     mapId: 'mapbox.streets',
      *     accessToken: 'thisIsMyAccessToken'
      * });
+     * 
      * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
      * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
      */
