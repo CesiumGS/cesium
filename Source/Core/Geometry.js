@@ -114,6 +114,7 @@ define([
          *   componentsPerAttribute : 3,
          *   values : new Float32Array(0)
          * });
+         * 
          * @see GeometryAttribute
          * @see VertexFormat
          */
