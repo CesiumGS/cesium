@@ -60,6 +60,7 @@ define([
      *     isStopIncluded : false,
      *     data : sampledProperty
      * }));
+     * 
      * @see CompositeMaterialProperty
      * @see CompositePositionProperty
      */
