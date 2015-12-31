@@ -43,6 +43,7 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
      * @see loadArrayBuffer
      * @see loadBlob
      * @see loadJson
