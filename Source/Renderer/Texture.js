@@ -213,6 +213,7 @@ define([
      * var t = Texture.fromFramebuffer({
      *     context : context
      * });
+     * 
      * @see Sampler
      * 
      * @private
