@@ -514,6 +514,7 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * 
      * @see PolygonGeometry#createGeometry
      */
     PolygonGeometry.fromPositions = function(options) {
