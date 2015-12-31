@@ -639,6 +639,7 @@ define([
      *   rotation : Cesium.Math.toRadians(60.0)
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+     * 
      * @see EllipseGeometry.createGeometry
      */
     function EllipseGeometry(options) {
