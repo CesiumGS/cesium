@@ -47,6 +47,7 @@ define([
      *    clockRange : Cesium.ClockRange.LOOP_STOP,
      *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
      * });
+     * 
      * @see ClockStep
      * @see ClockRange
      * @see JulianDate
