@@ -256,6 +256,7 @@ define([
      *     context : context,
      *     attributes : attributes
      * });
+     * 
      * @see Buffer#createVertexBuffer
      * @see Buffer#createIndexBuffer
      * @see Context#draw
@@ -514,6 +515,7 @@ define([
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
+     * 
      * @see Buffer#createVertexBuffer
      * @see Buffer#createIndexBuffer
      * @see GeometryPipeline.createAttributeLocations
