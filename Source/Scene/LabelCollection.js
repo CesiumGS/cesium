@@ -438,6 +438,7 @@ define([
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
+     * 
      * @see LabelCollection#remove
      * @see LabelCollection#removeAll
      */
@@ -468,6 +469,7 @@ define([
      * @example
      * var l = labels.add(...);
      * labels.remove(l);  // Returns true
+     * 
      * @see LabelCollection#add
      * @see LabelCollection#removeAll
      * @see Label#show
@@ -497,6 +499,7 @@ define([
      * labels.add(...);
      * labels.add(...);
      * labels.removeAll();
+     * 
      * @see LabelCollection#add
      * @see LabelCollection#remove
      */
@@ -547,6 +550,7 @@ define([
      *   var l = billboards.get(i);
      *   l.show = !l.show;
      * }
+     * 
      * @see LabelCollection#length
      */
     LabelCollection.prototype.get = function(index) {
@@ -645,6 +649,7 @@ define([
      *
      * @example
      * labels = labels && labels.destroy();
+     * 
      * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
