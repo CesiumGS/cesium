@@ -323,7 +323,6 @@ define([
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * 
-     *
      * @example
      * // Compute the bounding sphere from 3 positions, each specified relative to a center.
      * // In addition to the X, Y, and Z coordinates, the points array contains two additional
@@ -333,6 +332,7 @@ define([
      *               4.0, 5.0, 6.0, 0.1, 0.2,
      *               7.0, 8.0, 9.0, 0.1, 0.2];
      * var sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
+     * 
      * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      */
     BoundingSphere.fromVertices = function(positions, center, stride, result) {
