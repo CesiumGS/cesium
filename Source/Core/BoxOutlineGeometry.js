@@ -78,12 +78,12 @@ define([
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
      * 
-     *
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * 
      * @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
@@ -116,7 +116,6 @@ define([
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
      *
-     *
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
@@ -126,6 +125,7 @@ define([
      *      -68.0, 40.0
      * ]));
      * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     * 
      *  @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
