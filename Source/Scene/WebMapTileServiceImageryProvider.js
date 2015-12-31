@@ -87,6 +87,7 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
+     * 
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
