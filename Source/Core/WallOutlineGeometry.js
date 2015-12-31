@@ -279,6 +279,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
+     * 
      * @see WallOutlineGeometry#createGeometry
      */
     WallOutlineGeometry.fromConstantHeights = function(options) {
