@@ -684,6 +684,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
      * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     * 
      * @see Matrix2.fromScale
      * @see Matrix2.multiplyByUniformScale
      */
