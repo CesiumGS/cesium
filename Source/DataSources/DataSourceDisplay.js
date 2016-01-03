@@ -186,10 +186,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceDisplay#isDestroyed
      *
      * @example
      * dataSourceDisplay = dataSourceDisplay.destroy();
+     * 
+     * @see DataSourceDisplay#isDestroyed
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();

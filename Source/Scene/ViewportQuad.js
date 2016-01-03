@@ -181,10 +181,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ViewportQuad#isDestroyed
      *
      * @example
      * quad = quad && quad.destroy();
+     * 
+     * @see ViewportQuad#isDestroyed
      */
     ViewportQuad.prototype.destroy = function() {
         if (defined(this._overlayCommand)) {

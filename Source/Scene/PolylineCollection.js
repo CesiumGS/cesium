@@ -229,9 +229,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
      *
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
@@ -242,6 +239,10 @@ define([
            Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
      *   width : 1
      * });
+     * 
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.add = function(polyline) {
         var p = new Polyline(polyline, this);
@@ -265,14 +266,15 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
-     * @see Polyline#show
      *
      * @example
      * var p = polylines.add(...);
      * polylines.remove(p);  // Returns true
+     * 
+     * @see PolylineCollection#add
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
+     * @see Polyline#show
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
@@ -299,14 +301,15 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#update
      *
      * @example
      * polylines.add(...);
      * polylines.add(...);
      * polylines.removeAll();
+     * 
+     * @see PolylineCollection#add
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.removeAll = function() {
         releaseShaders(this);
@@ -638,10 +641,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#isDestroyed
      *
      * @example
      * polylines = polylines && polylines.destroy();
+     * 
+     * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
         destroyVertexArrays(this);
