@@ -756,10 +756,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ScreenSpaceEventHandler#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     * 
+     * @see ScreenSpaceEventHandler#isDestroyed
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
         unregisterListeners(this);

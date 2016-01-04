@@ -109,8 +109,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see GeometryInstance
-     * @see Appearance
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -177,6 +175,9 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
+     * 
+     * @see GeometryInstance
+     * @see Appearance
      */
     function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1538,10 +1539,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Primitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
         var length;

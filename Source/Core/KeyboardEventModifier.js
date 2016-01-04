@@ -9,8 +9,7 @@ define([
      * This enumerated type is for representing keyboard modifiers. These are keys
      * that are held down in addition to other event types.
      *
-     * @namespace
-     * @alias KeyboardEventModifier
+     * @exports KeyboardEventModifier
      */
     var KeyboardEventModifier = {
         /**

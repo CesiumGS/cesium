@@ -629,7 +629,6 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseGeometry.createGeometry
      *
      * @example
      * // Create an ellipse.
@@ -640,6 +639,8 @@ define([
      *   rotation : Cesium.Math.toRadians(60.0)
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+     * 
+     * @see EllipseGeometry.createGeometry
      */
     function EllipseGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -697,7 +698,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipseGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

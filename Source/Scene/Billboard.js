@@ -1131,11 +1131,12 @@ define([
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      *
-     * @see Billboard#eyeOffset
-     * @see Billboard#pixelOffset
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
+     * 
+     * @see Billboard#eyeOffset
+     * @see Billboard#pixelOffset
      */
     Billboard.prototype.computeScreenSpacePosition = function(scene, result) {
         var billboardCollection = this._billboardCollection;

@@ -1897,10 +1897,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ScreenSpaceCameraController#isDestroyed
      *
      * @example
      * controller = controller && controller.destroy();
+     * 
+     * @see ScreenSpaceCameraController#isDestroyed
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
         this._tweens.removeAll();

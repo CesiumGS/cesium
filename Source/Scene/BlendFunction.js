@@ -10,8 +10,7 @@ define([
     /**
      * Determines how blending factors are computed.
      *
-     * @namespace
-     * @alias BlendFunction
+     * @exports BlendFunction
      */
     var BlendFunction = {
         /**
