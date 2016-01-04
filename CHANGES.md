@@ -1,6 +1,8 @@
 Change Log
 ==========
 
+* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
+
 ### 1.17 - 2016-01-04
 
 * Breaking changes
