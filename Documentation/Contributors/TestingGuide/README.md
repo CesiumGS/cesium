@@ -13,7 +13,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
-   * [Run All Tests on the Command Line with Karma]
+   * [Run All Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -141,7 +141,7 @@ The number of linearly independent paths (four in this case) is called the **cyc
 
 ### Run All Tests on the Command Line with Karma
 
-[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser, runs tests against that browser, and displays the results on the command line.
+[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
 
 To run all tests with Karma, run `npm run test`.
 
@@ -151,7 +151,7 @@ When all tests pass, output looks like this:
 
 When one or more tests fail, output looks like this:
 
-![](test-all.jpg)
+![](test-fail.jpg)
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
