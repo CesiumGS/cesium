@@ -111,42 +111,6 @@ defineSuite([
         expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
 
-    it('removes duplicates within absolute epsilon 7', function() {
-        var positions = [
-            new Cartesian3(1.0, 0.0, 0.0),
-            new Cartesian3(1.0, 0.0, 0.0),
-            new Cartesian3(1.0 + CesiumMath.EPSILON7, 0.0, 0.0),
-            new Cartesian3(0.0, 1.0, 0.0),
-            new Cartesian3(0.0, 0.0, 1.0)];
-        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            followSurface : false
-        }));
-
-        var numVertices = ((positions.length - 2) * 4 - 4);
-        expect(line.attributes.position.values.length).toEqual(numVertices * 3);
-    });
-
-    it('removes duplicates within relative epsilon 7', function() {
-        var positions = [
-            new Cartesian3(3000000.0, 0.0, 0.0),
-            new Cartesian3(3000000.0, 0.0, 0.0),
-            new Cartesian3(3000000.2, 0.0, 0.0),
-            new Cartesian3(0.0, 3000000.0, 0.0),
-            new Cartesian3(0.0, 0.0, 3000000.0)];
-        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
-            positions : positions,
-            width : 10.0,
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            followSurface : false
-        }));
-
-        var numVertices = ((positions.length - 2) * 4 - 4);
-        expect(line.attributes.position.values.length).toEqual(numVertices * 3);
-    });
-
     it('createGeometry returns undefined without at least 2 unique positions', function() {
         var position = new Cartesian3(100000.0, -200000.0, 300000.0);
         var positions = [position, Cartesian3.clone(position)];

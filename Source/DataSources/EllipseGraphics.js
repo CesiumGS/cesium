@@ -44,7 +44,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
-    var EllipseGraphics = function(options) {
+    function EllipseGraphics(options) {
         this._semiMajorAxis = undefined;
         this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
@@ -76,7 +76,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(EllipseGraphics.prototype, {
         /**

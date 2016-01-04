@@ -210,13 +210,13 @@ define([
     //
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
-    var CachedGltf = function(options) {
+    function CachedGltf(options) {
         this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
         this.count = 0;
-    };
+    }
 
     defineProperties(CachedGltf.prototype, {
         gltf : {
@@ -315,7 +315,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
-    var Model = function(options) {
+    function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var cacheKey = options.cacheKey;
@@ -343,9 +343,9 @@ define([
                     var result = parseBinaryGltfHeader(gltf);
 
                     // CESIUM_binary_glTF is from the beginning of the file but
-                    //  KHR_binary_glTF is from the beginning of the binary section
+                    // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
-                        gltf = new Uint8Array(gltf.buffer, result.binaryOffset);
+                        gltf = gltf.subarray(result.binaryOffset);
                     }
 
                     cachedGltf = new CachedGltf({
@@ -519,11 +519,11 @@ define([
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
-        this._loadError = undefined;
         this._loadResources = undefined;
 
-        this._perNodeShowDirty = false;             // true when the Cesium API was used to change a node's show property
+        this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
+        this._dirty = false;                       // true when the model was transformed this frame
         this._maxDirtyNumber = 0;                  // Used in place of a dirty boolean flag to avoid an extra graph traversal
 
         this._runtime = {
@@ -557,7 +557,7 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
-    };
+    }
 
     defineProperties(Model.prototype, {
         /**
@@ -791,6 +791,22 @@ define([
             get : function() {
                 return defined(this._loadResources) ? this._loadResources.pendingTextureLoads : 0;
             }
+        },
+
+        /**
+         * Returns true if the model was transformed this frame
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @private
+         */
+        dirty : {
+            get : function() {
+                return this._dirty;
+            }
         }
     });
 
@@ -961,7 +977,7 @@ define([
                     // CESIUM_binary_glTF is from the beginning of the file but
                     //  KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
-                        array = new Uint8Array(arrayBuffer, result.binaryOffset);
+                        array = array.subarray(result.binaryOffset);
                     }
                     cachedGltf.makeReady(result.glTF, array);
                 } else {
@@ -1113,8 +1129,8 @@ define([
 
     function getFailedLoadFunction(model, type, path) {
         return function() {
-            model._loadError = new RuntimeError('Failed to load ' + type + ': ' + path);
             model._state = ModelState.FAILED;
+            model._readyPromise.reject(new RuntimeError('Failed to load ' + type + ': ' + path));
         };
     }
 
@@ -1264,7 +1280,7 @@ define([
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
 
-    function getTransform(node, version) {
+    function getTransform(node) {
         if (defined(node.matrix)) {
             return Matrix4.fromArray(node.matrix);
         }
@@ -2243,11 +2259,11 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var DelayLoadedTextureUniform = function(value, model) {
+    function DelayLoadedTextureUniform(value, model) {
         this._value = undefined;
         this._textureId = value;
         this._model = model;
-    };
+    }
 
     defineProperties(DelayLoadedTextureUniform.prototype, {
         value : {
@@ -3038,8 +3054,7 @@ define([
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'CESIUM_binary_glTF' &&
                     extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
-                    model._loadError = new RuntimeError('Unsupported glTF Extension: ' + extension);
-                    model._state = ModelState.FAILED;
+                    throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
                 else if(extension === 'CESIUM_binary_glTF') {
                     deprecationWarning('CESIUM_binary_glTF extension', 'Use of the CESIUM_binary_glTF extension has been deprecated. Use the KHR_binary_glTF extension instead.');
@@ -3050,7 +3065,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var CachedRendererResources = function(context, cacheKey) {
+    function CachedRendererResources(context, cacheKey) {
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
@@ -3063,7 +3078,7 @@ define([
         this.context = context;
         this.cacheKey = cacheKey;
         this.count = 0;
-    };
+    }
 
     function destroy(property) {
         for (var name in property) {
@@ -3162,10 +3177,6 @@ define([
             }
         }
 
-        if (this._state === ModelState.FAILED) {
-            throw this._loadError;
-        }
-
         var loadResources = this._loadResources;
         var incrementallyLoadTextures = this._incrementallyLoadTextures;
         var justLoaded = false;
@@ -3221,6 +3232,7 @@ define([
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
+            this._dirty = false;
 
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
@@ -3243,6 +3255,7 @@ define([
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
                 updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                this._dirty = true;
 
                 if (animated || justLoaded) {
                     // Apply skins if animation changed any node transforms
@@ -3327,10 +3340,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Model#isDestroyed
      *
      * @example
      * model = model && model.destroy();
+     * 
+     * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
         // Vertex arrays are unique to this model, destroy here.

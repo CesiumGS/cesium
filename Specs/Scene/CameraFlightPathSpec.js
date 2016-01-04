@@ -381,5 +381,4 @@ defineSuite([
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
     });
-
-});
+}, 'WebGL');

@@ -168,9 +168,6 @@ define([
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Buffer#createVertexBuffer
-     * @see Buffer#createIndexBuffer
-     * @see Context#draw
      *
      * @example
      * // Example 1. Create a vertex array with vertices made up of three floating point
@@ -259,10 +256,14 @@ define([
      *     context : context,
      *     attributes : attributes
      * });
-     *
+     * 
+     * @see Buffer#createVertexBuffer
+     * @see Buffer#createIndexBuffer
+     * @see Context#draw
+     * 
      * @private
      */
-    var VertexArray = function(options) {
+    function VertexArray(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -338,7 +339,7 @@ define([
         this._vao = vao;
         this._attributes = vaAttributes;
         this._indexBuffer = indexBuffer;
-    };
+    }
 
     function computeNumberOfVertices(attribute) {
         return attribute.values.length / attribute.componentsPerAttribute;
@@ -487,10 +488,6 @@ define([
      * @exception {DeveloperError} The geometry must have zero or one index lists.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Buffer#createVertexBuffer
-     * @see Buffer#createIndexBuffer
-     * @see GeometryPipeline.createAttributeLocations
-     * @see ShaderProgram
      *
      * @example
      * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
@@ -518,6 +515,11 @@ define([
      * // Example 3.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
+     * 
+     * @see Buffer#createVertexBuffer
+     * @see Buffer#createIndexBuffer
+     * @see GeometryPipeline.createAttributeLocations
+     * @see ShaderProgram
      */
     VertexArray.fromGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

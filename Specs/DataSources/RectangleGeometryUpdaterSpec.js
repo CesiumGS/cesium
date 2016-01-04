@@ -545,4 +545,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(RectangleGeometryUpdater, entity, entity.rectangle, function() {
         return scene;
     });
-});
+}, 'WebGL');

@@ -540,4 +540,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(CylinderGeometryUpdater, entity, entity.cylinder, function() {
         return scene;
     });
-});
+}, 'WebGL');

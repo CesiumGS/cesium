@@ -510,4 +510,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(WallGeometryUpdater, entity, entity.wall, function() {
         return scene;
     });
-});
+}, 'WebGL');

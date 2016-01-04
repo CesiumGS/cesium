@@ -126,7 +126,7 @@ define([
      *
      * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.
      */
-    var CompositeEntityCollection = function(collections) {
+    function CompositeEntityCollection(collections) {
         this._composite = new EntityCollection(this);
         this._suspendCount = 0;
         this._collections = defined(collections) ? collections.slice() : [];
@@ -135,7 +135,7 @@ define([
         this._eventHash = {};
         recomposite(this);
         this._shouldRecomposite = false;
-    };
+    }
 
     defineProperties(CompositeEntityCollection.prototype, {
         /**

@@ -10,12 +10,11 @@ define(function() {
      * except that they are expressed in radians.
      * </p>
      *
-     * @namespace
-     * @alias IauOrientationParameters
+     * @exports IauOrientationParameters
      *
      * @private
      */
-    var IauOrientationParameters = function(rightAscension, declination, rotation, rotationRate) {
+    function IauOrientationParameters(rightAscension, declination, rotation, rotationRate) {
         /**
          * The right ascension of the north pole of the body with respect to
          * the International Celestial Reference Frame, in radians.
@@ -50,7 +49,7 @@ define(function() {
          * @private
          */
         this.rotationRate = rotationRate;
-    };
+    }
 
     return IauOrientationParameters;
 });

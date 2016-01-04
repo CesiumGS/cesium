@@ -5,7 +5,6 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Geometry',
         './GeometryAttribute',
@@ -18,7 +17,6 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Geometry,
         GeometryAttribute,
@@ -54,20 +52,11 @@ define([
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
      */
-    var BoxGeometry = function(options) {
+    function BoxGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var min = options.minimum;
         var max = options.maximum;
-
-        if (!defined(min) && defined(options.minimumCorner)) {
-            min = options.minimumCorner;
-            deprecationWarning('BoxGeometry', 'options.minimumCorner is deprecated. Use options.minimum instead.');
-        }
-        if (!defined(max) && defined(options.maximumCorner)) {
-            max = options.maximumCorner;
-            deprecationWarning('BoxGeometry', 'options.maximumCorner is deprecated. Use options.maximum instead.');
-        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(min)) {
@@ -84,7 +73,7 @@ define([
         this._maximum = Cartesian3.clone(max);
         this._vertexFormat = vertexFormat;
         this._workerName = 'createBoxGeometry';
-    };
+    }
 
     /**
      * Creates a cube centered at the origin given its dimensions.
@@ -96,14 +85,15 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxGeometry.createGeometry
-     *
+     * 
      * @example
      * var box = Cesium.BoxGeometry.fromDimensions({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
+     * 
+     * @see BoxGeometry.createGeometry
      */
     BoxGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -135,8 +125,7 @@ define([
      *
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
-     * @see BoxGeometry.createGeometry
-     *
+     * 
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
@@ -148,6 +137,8 @@ define([
      * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
      *      boundingBox: aabb
      * });
+     * 
+     * @see BoxGeometry.createGeometry
      */
     BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
         if (!defined(boundingBox)) {
@@ -168,8 +159,7 @@ define([
      *
      * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
-     * @see BoxGeometry.createGeometry
-     *
+     * 
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
@@ -181,6 +171,8 @@ define([
      * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
      *      boundingBox: aabb
      * });
+     * 
+     * @see BoxGeometry.createGeometry
      */
     BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
         if (!defined(boundingBox)) {
@@ -201,7 +193,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {BoxGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

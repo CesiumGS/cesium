@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/AttributeCompression',
+        '../Core/AxisAlignedBoundingBox',
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -10,12 +11,15 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/TerrainEncoding',
         '../Core/Transforms',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
+        AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -25,23 +29,19 @@ define([
         EllipsoidalOccluder,
         IndexDatatype,
         CesiumMath,
+        Matrix3,
         Matrix4,
         OrientedBoundingBox,
+        TerrainEncoding,
         Transforms,
         createTaskProcessorWorker) {
     "use strict";
 
     var maxShort = 32767;
 
-    var xIndex = 0;
-    var yIndex = 1;
-    var zIndex = 2;
-    var hIndex = 3;
-    var uIndex = 4;
-    var vIndex = 5;
-    var nIndex = 6;
-
     var cartesian3Scratch = new Cartesian3();
+    var scratchMinimum = new Cartesian3();
+    var scratchMaximum = new Cartesian3();
     var cartographicScratch = new Cartographic();
     var toPack = new Cartesian2();
     var scratchNormal = new Cartesian3();
@@ -54,13 +54,6 @@ define([
         var octEncodedNormals = parameters.octEncodedNormals;
         var edgeVertexCount = parameters.westIndices.length + parameters.eastIndices.length +
                               parameters.southIndices.length + parameters.northIndices.length;
-        var minimumHeight = parameters.minimumHeight;
-        var maximumHeight = parameters.maximumHeight;
-        var center = parameters.relativeToCenter;
-
-        var exaggeration = parameters.exaggeration;
-        minimumHeight *= exaggeration;
-        maximumHeight *= exaggeration;
 
         var rectangle = parameters.rectangle;
         var west = rectangle.west;
@@ -70,19 +63,34 @@ define([
 
         var ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
 
+        var exaggeration = parameters.exaggeration;
+        var minimumHeight = parameters.minimumHeight * exaggeration;
+        var maximumHeight = parameters.maximumHeight * exaggeration;
+
+        var center = parameters.relativeToCenter;
+        var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
+        var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+
         var uBuffer = quantizedVertices.subarray(0, quantizedVertexCount);
         var vBuffer = quantizedVertices.subarray(quantizedVertexCount, 2 * quantizedVertexCount);
         var heightBuffer = quantizedVertices.subarray(quantizedVertexCount * 2, 3 * quantizedVertexCount);
         var hasVertexNormals = defined(octEncodedNormals);
 
-        var vertexStride = 6;
-        if (hasVertexNormals) {
-            vertexStride += 1;
-        }
+        var uvs = new Array(quantizedVertexCount);
+        var heights = new Array(quantizedVertexCount);
+        var positions = new Array(quantizedVertexCount);
 
-        var vertexBuffer = new Float32Array(quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride);
+        var minimum = scratchMinimum;
+        minimum.x = Number.POSITIVE_INFINITY;
+        minimum.y = Number.POSITIVE_INFINITY;
+        minimum.z = Number.POSITIVE_INFINITY;
 
-        for (var i = 0, bufferIndex = 0, n = 0; i < quantizedVertexCount; ++i, bufferIndex += vertexStride, n += 2) {
+        var maximum = scratchMaximum;
+        maximum.x = Number.NEGATIVE_INFINITY;
+        maximum.y = Number.NEGATIVE_INFINITY;
+        maximum.z = Number.NEGATIVE_INFINITY;
+
+        for (var i = 0; i < quantizedVertexCount; ++i) {
             var u = uBuffer[i] / maxShort;
             var v = vBuffer[i] / maxShort;
             var height = CesiumMath.lerp(minimumHeight, maximumHeight, heightBuffer[i] / maxShort);
@@ -91,41 +99,17 @@ define([
             cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
             cartographicScratch.height = height;
 
-            ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+            var position = ellipsoid.cartographicToCartesian(cartographicScratch);
 
-            vertexBuffer[bufferIndex + xIndex] = cartesian3Scratch.x - center.x;
-            vertexBuffer[bufferIndex + yIndex] = cartesian3Scratch.y - center.y;
-            vertexBuffer[bufferIndex + zIndex] = cartesian3Scratch.z - center.z;
-            vertexBuffer[bufferIndex + hIndex] = height;
-            vertexBuffer[bufferIndex + uIndex] = u;
-            vertexBuffer[bufferIndex + vIndex] = v;
-            if (hasVertexNormals) {
-                toPack.x = octEncodedNormals[n];
-                toPack.y = octEncodedNormals[n + 1];
+            uvs[i] = new Cartesian2(u, v);
+            heights[i] = height;
+            positions[i] = position;
 
-                if (exaggeration !== 1.0) {
-                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
-                    var fromENU = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
-                    var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+            Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
-                    Matrix4.multiplyByPointAsVector(toENU, normal, normal);
-                    normal.z *= exaggeration;
-                    Cartesian3.normalize(normal, normal);
-
-                    Matrix4.multiplyByPointAsVector(fromENU, normal, normal);
-                    Cartesian3.normalize(normal, normal);
-
-                    AttributeCompression.octEncode(normal, toPack);
-                }
-
-                vertexBuffer[bufferIndex + nIndex] = AttributeCompression.octPackFloat(toPack);
-            }
+            Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
+            Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
-
-        var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
-        var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
-        var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
-        indexBuffer.set(parameters.indices, 0);
 
         var occludeePointInScaledSpace;
         var orientedBoundingBox;
@@ -133,24 +117,66 @@ define([
 
         if (exaggeration !== 1.0) {
             // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
-            boundingSphere = BoundingSphere.fromVertices(vertexBuffer, center, vertexStride);
+            boundingSphere = BoundingSphere.fromPoints(positions);
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
 
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(center, vertexBuffer, vertexStride);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromPoints(center, positions);
         }
+
+        var hMin = minimumHeight;
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.westIndices, parameters.westSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.southIndices, parameters.southSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.eastIndices, parameters.eastSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        hMin = Math.min(hMin, findMinMaxSkirts(parameters.northIndices, parameters.northSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
+        
+        var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals);
+        var vertexStride = encoding.getStride();
+        var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
+        var vertexBuffer = new Float32Array(size);
+
+        var bufferIndex = 0;
+        for (var j = 0; j < quantizedVertexCount; ++j) {
+            if (hasVertexNormals) {
+                var n = j * 2.0;
+                toPack.x = octEncodedNormals[n];
+                toPack.y = octEncodedNormals[n + 1];
+
+                if (exaggeration !== 1.0) {
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
+                    var fromENUNormal = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var toENUNormal = Matrix4.inverseTransformation(fromENUNormal, scratchToENU);
+
+                    Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
+                    normal.z *= exaggeration;
+                    Cartesian3.normalize(normal, normal);
+
+                    Matrix4.multiplyByPointAsVector(fromENUNormal, normal, normal);
+                    Cartesian3.normalize(normal, normal);
+
+                    AttributeCompression.octEncode(normal, toPack);
+                }
+            }
+
+            bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack);
+        }
+
+        var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
+        var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
+        var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
+        indexBuffer.set(parameters.indices, 0);
 
         // Add skirts.
         var vertexBufferIndex = quantizedVertexCount * vertexStride;
         var indexBufferIndex = parameters.indices.length;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, center, ellipsoid, rectangle, parameters.westSkirtHeight, true, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.westIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.westSkirtHeight, true, exaggeration);
         vertexBufferIndex += parameters.westIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, center, ellipsoid, rectangle, parameters.southSkirtHeight, false, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.southIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.southSkirtHeight, false, exaggeration);
         vertexBufferIndex += parameters.southIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, center, ellipsoid, rectangle, parameters.eastSkirtHeight, false, hasVertexNormals);
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.eastIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.eastSkirtHeight, false, exaggeration);
         vertexBufferIndex += parameters.eastIndices.length * vertexStride;
-        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, center, ellipsoid, rectangle, parameters.northSkirtHeight, true, hasVertexNormals);
-        vertexBufferIndex += parameters.northIndices.length * vertexStride;
+        addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, parameters.northIndices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, parameters.northSkirtHeight, true, exaggeration);
 
         transferableObjects.push(vertexBuffer.buffer, indexBuffer.buffer);
 
@@ -163,16 +189,46 @@ define([
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
+            encoding : encoding
         };
     }
 
-    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, hasVertexNormals) {
-        var start, end, increment;
-        var vertexStride = 6;
-        if (hasVertexNormals) {
-            vertexStride += 1;
+    function findMinMaxSkirts(edgeIndices, edgeHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum) {
+        var hMin = Number.POSITIVE_INFINITY;
+
+        var north = rectangle.north;
+        var south = rectangle.south;
+        var east = rectangle.east;
+        var west = rectangle.west;
+
+        if (east < west) {
+            east += CesiumMath.TWO_PI;
         }
+
+        var length = edgeIndices.length;
+        for (var i = 0; i < length; ++i) {
+            var index = edgeIndices[i];
+            var h = heights[index];
+            var uv = uvs[index];
+
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y);
+            cartographicScratch.height = h - edgeHeight;
+
+            var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+            Matrix4.multiplyByPoint(toENU, position, position);
+
+            Cartesian3.minimumByComponent(position, minimum, minimum);
+            Cartesian3.maximumByComponent(position, maximum, maximum);
+
+            hMin = Math.min(hMin, cartographicScratch.height);
+        }
+        return hMin;
+    }
+
+    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, encoding, heights, uvs, octEncodedNormals, ellipsoid, rectangle, skirtLength, isWestOrNorthEdge, exaggeration) {
+        var start, end, increment;
         if (isWestOrNorthEdge) {
             start = edgeVertices.length - 1;
             end = -1;
@@ -185,6 +241,8 @@ define([
 
         var previousIndex = -1;
 
+        var hasVertexNormals = defined(octEncodedNormals);
+        var vertexStride = encoding.getStride();
         var vertexIndex = vertexBufferIndex / vertexStride;
 
         var north = rectangle.north;
@@ -198,27 +256,37 @@ define([
 
         for (var i = start; i !== end; i += increment) {
             var index = edgeVertices[i];
-            var offset = index * vertexStride;
-            var u = vertexBuffer[offset + uIndex];
-            var v = vertexBuffer[offset + vIndex];
-            var h = vertexBuffer[offset + hIndex];
+            var h = heights[index];
+            var uv = uvs[index];
 
-            cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
-            cartographicScratch.latitude = CesiumMath.lerp(south, north, v);
+            cartographicScratch.longitude = CesiumMath.lerp(west, east, uv.x);
+            cartographicScratch.latitude = CesiumMath.lerp(south, north, uv.y);
             cartographicScratch.height = h - skirtLength;
 
             var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
-            Cartesian3.subtract(position, center, position);
 
-            vertexBuffer[vertexBufferIndex++] = position.x;
-            vertexBuffer[vertexBufferIndex++] = position.y;
-            vertexBuffer[vertexBufferIndex++] = position.z;
-            vertexBuffer[vertexBufferIndex++] = cartographicScratch.height;
-            vertexBuffer[vertexBufferIndex++] = u;
-            vertexBuffer[vertexBufferIndex++] = v;
             if (hasVertexNormals) {
-                vertexBuffer[vertexBufferIndex++] = vertexBuffer[offset + nIndex];
+                var n = index * 2.0;
+                toPack.x = octEncodedNormals[n];
+                toPack.y = octEncodedNormals[n + 1];
+
+                if (exaggeration !== 1.0) {
+                    var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
+                    var fromENUNormal = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var toENUNormal = Matrix4.inverseTransformation(fromENUNormal, scratchToENU);
+
+                    Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
+                    normal.z *= exaggeration;
+                    Cartesian3.normalize(normal, normal);
+
+                    Matrix4.multiplyByPointAsVector(fromENUNormal, normal, normal);
+                    Cartesian3.normalize(normal, normal);
+
+                    AttributeCompression.octEncode(normal, toPack);
+                }
             }
+
+            vertexBufferIndex = encoding.encode(vertexBuffer, vertexBufferIndex, position, uv, cartographicScratch.height, toPack);
 
             if (previousIndex !== -1) {
                 indexBuffer[indexBufferIndex++] = previousIndex;

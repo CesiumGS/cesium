@@ -106,5 +106,4 @@ defineSuite([
             return new SceneModePickerViewModel();
         }).toThrowDeveloperError();
     });
-
-});
+}, 'WebGL');

@@ -36,12 +36,11 @@ define([
      * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
      *
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // throttle requests for an image
      * var url = 'http://madeupserver.example.com/myImage.png';
-     * var requestFunction = function(url) {
+     * function requestFunction(url) {
      *   // in this simple example, loadImage could be used directly as requestFunction.
      *   return Cesium.loadImage(url);
      * };
@@ -53,8 +52,10 @@ define([
      *     // handle loaded image
      *   });
      * }
+     * 
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var throttleRequestByServer = function(url, requestFunction) {
+    function throttleRequestByServer(url, requestFunction) {
         var server = getServer(url);
 
         var activeRequestsForServer = defaultValue(activeRequests[server], 0);
@@ -71,7 +72,7 @@ define([
             activeRequests[server]--;
             return when.reject(error);
         });
-    };
+    }
 
     /**
      * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than

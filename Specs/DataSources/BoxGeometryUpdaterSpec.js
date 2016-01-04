@@ -466,4 +466,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(BoxGeometryUpdater, entity, entity.box, function() {
         return scene;
     });
-});
+}, 'WebGL');

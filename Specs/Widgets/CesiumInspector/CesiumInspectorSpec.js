@@ -55,4 +55,4 @@ defineSuite([
             return new CesiumInspector(document.body);
         }).toThrowDeveloperError();
     });
-});
+}, 'WebGL');

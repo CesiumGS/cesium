@@ -206,7 +206,7 @@ define([
 
     //This is a private class for treating an SVG element like a button.
     //If we ever need a general purpose SVG button, we can make this generic.
-    var SvgButton = function(svgElement, viewModel) {
+    function SvgButton(svgElement, viewModel) {
         this._viewModel = viewModel;
         this.svgElement = svgElement;
         this._enabled = undefined;
@@ -231,7 +231,7 @@ define([
         subscribeAndEvaluate(viewModel, 'toggled', this.setToggled, this),//
         subscribeAndEvaluate(viewModel, 'tooltip', this.setTooltip, this),//
         subscribeAndEvaluate(viewModel.command, 'canExecute', this.setEnabled, this)];
-    };
+    }
 
     SvgButton.prototype.destroy = function() {
         this.svgElement.removeEventListener('click', this._clickFunction, true);
@@ -312,8 +312,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see AnimationViewModel
-     * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
@@ -329,8 +327,11 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
+     * 
+     * @see AnimationViewModel
+     * @see Clock
      */
-    var Animation = function(container, viewModel) {
+    function Animation(container, viewModel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -504,9 +505,9 @@ define([
         container.appendChild(svg);
 
         var that = this;
-        var mouseCallback = function(e) {
+        function mouseCallback(e) {
             setShuttleRingFromMouseOrTouch(that, e);
-        };
+        }
         this._mouseCallback = mouseCallback;
 
         shuttleRingBackPanel.addEventListener('mousedown', mouseCallback, true);
@@ -567,7 +568,7 @@ define([
 
         this.applyThemeChanges();
         this.resize();
-    };
+    }
 
     defineProperties(Animation.prototype, {
         /**

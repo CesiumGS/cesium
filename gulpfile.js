@@ -31,7 +31,6 @@ if (/\.0$/.test(version)) {
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
-var copyUnminified = taskName === 'combine' || taskName === 'default' || taskName === undefined;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
 var sourceFiles = ['Source/**/*.js',
@@ -152,11 +151,6 @@ gulp.task('combine', ['generateStubs'], function() {
         removePragmas : false,
         optimizer : 'none',
         outputDirectory : outputDirectory
-    }).then(function() {
-        if (!copyUnminified) {
-            return;
-        }
-        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
@@ -166,11 +160,6 @@ gulp.task('combineRelease', ['generateStubs'], function() {
         removePragmas : true,
         optimizer : 'none',
         outputDirectory : outputDirectory
-    }).then(function() {
-        if (!copyUnminified) {
-            return;
-        }
-        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
@@ -701,12 +690,6 @@ function createCesiumJs() {
         }
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
-
-        //Ignore the deprecated Scene version of HeadingPitchRange
-        //until it is removed with #3097
-        if (moduleId === 'Scene/HeadingPitchRange') {
-            return;
-        }
 
         moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);

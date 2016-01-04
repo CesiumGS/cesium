@@ -180,7 +180,7 @@ define([
     /**
      * @private
      */
-    var Context = function(canvas, options) {
+    function Context(canvas, options) {
         // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
         if (typeof WebGLRenderingContext === 'undefined') {
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
@@ -408,7 +408,7 @@ define([
 
 
         RenderState.apply(gl, rs, ps);
-    };
+    }
 
     var defaultFramebufferMarker = {};
 
@@ -1100,10 +1100,11 @@ define([
      * @param {Color} pickColor The pick color.
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
      *
-     * @see Context#createPickId
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);
+     * 
+     * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
@@ -1147,13 +1148,14 @@ define([
      *
      * @exception {RuntimeError} Out of unique Pick IDs.
      *
-     * @see Context#getObjectByPickColor
      *
      * @example
      * this._pickId = context.createPickId({
      *   primitive : this,
      *   id : this.id
      * });
+     * 
+     * @see Context#getObjectByPickColor
      */
     Context.prototype.createPickId = function(object) {
         //>>includeStart('debug', pragmas.debug);

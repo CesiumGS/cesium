@@ -25,11 +25,12 @@ define([
       *                     scaled space, and used for horizon culling.  If this point is below the horizon,
       *                     the tile is considered to be entirely below the horizon.
       * @param {Number} [vertexStride=6] The number of components in each vertex.
-      * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding sphere that completely contains the tile.
+      * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
+      * @param {TerrainEncoding} encoding Information used to decode the mesh.
       *
-      * @deprecated
+      * @private
       */
-    var TerrainMesh = function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox) {
+    function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox, encoding) {
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}
@@ -91,7 +92,13 @@ define([
          * @type {OrientedBoundingBox}
          */
         this.orientedBoundingBox = orientedBoundingBox;
-    };
+
+        /**
+         * Information for decoding the mesh vertices.
+         * @type {TerrainEncoding}
+         */
+        this.encoding = encoding;
+    }
 
     return TerrainMesh;
 });

@@ -135,7 +135,7 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
-        
+
         expect(entity.entityCollection).toBeUndefined();
     });
 
@@ -288,10 +288,24 @@ defineSuite([
     it('can add and remove custom properties.', function() {
         var entity = new Entity();
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+
         entity.addProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
+
         entity.removeProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+    });
+
+    it('can re-add removed properties', function() {
+        var entity = new Entity();
+        entity.addProperty('bob');
+        entity.removeProperty('bob');
+        entity.addProperty('bob');
+        expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
     });
 
     it('addProperty throws with no property specified.', function() {

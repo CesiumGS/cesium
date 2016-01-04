@@ -272,7 +272,7 @@ defineSuite([
         }
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         var rectanglePrimitive = createRectangle(rectangle);
         rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
@@ -298,7 +298,7 @@ defineSuite([
         primitives.add(rectanglePrimitive1);
         primitives.add(rectanglePrimitive2);
 
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
@@ -326,7 +326,7 @@ defineSuite([
         primitives.add(rectanglePrimitive1);
         primitives.add(rectanglePrimitive2);
 
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
@@ -350,7 +350,7 @@ defineSuite([
         var primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
 
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
@@ -367,7 +367,7 @@ defineSuite([
         var primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
 
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         scene.fxaa = false;
 
@@ -426,7 +426,7 @@ defineSuite([
         var primitives = s.primitives;
         primitives.add(rectanglePrimitive);
 
-        s.camera.viewRectangle(rectangle);
+        s.camera.setView({ destination : rectangle });
 
         var pixels = s.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
@@ -491,7 +491,7 @@ defineSuite([
                 var primitives = s.primitives;
                 primitives.add(rectanglePrimitive);
 
-                s.camera.viewRectangle(rectangle);
+                s.camera.setView({ destination : rectangle });
 
                 var pixels = s.renderForSpecs();
                 expect(pixels[0]).not.toEqual(0);
@@ -520,7 +520,7 @@ defineSuite([
             var primitives = s.primitives;
             primitives.add(rectanglePrimitive);
 
-            s.camera.viewRectangle(rectangle);
+            s.camera.setView({ destination : rectangle });
 
             var pixels = s.renderForSpecs();
             expect(pixels[0]).not.toEqual(0);
@@ -541,7 +541,7 @@ defineSuite([
             var primitives = scene.primitives;
             primitives.add(rectanglePrimitive);
 
-            scene.camera.viewRectangle(rectangle);
+            scene.camera.setView({ destination : rectangle });
 
             var uniformState = scene.context.uniformState;
 
@@ -562,7 +562,7 @@ defineSuite([
         }
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         scene.renderForSpecs();
 

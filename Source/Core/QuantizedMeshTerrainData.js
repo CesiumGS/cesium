@@ -12,6 +12,7 @@ define([
         './Math',
         './OrientedBoundingBox',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh'
     ], function(
         when,
@@ -26,6 +27,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh) {
     "use strict";
 
@@ -74,8 +76,6 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
-     * @see TerrainData
-     * @see HeightmapTerrainData
      *
      * @example
      * var data = new Cesium.QuantizedMeshTerrainData({
@@ -102,8 +102,11 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
+     * @see TerrainData
+     * @see HeightmapTerrainData
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -189,7 +192,7 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
@@ -298,6 +301,7 @@ define([
             var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
             var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
             var stride = result.vertexStride;
+            var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
             return new TerrainMesh(
                     rtc,
@@ -308,7 +312,8 @@ define([
                     boundingSphere,
                     occlusionPoint,
                     stride,
-                    obb);
+                    obb,
+                    terrainEncoding);
         });
     };
 

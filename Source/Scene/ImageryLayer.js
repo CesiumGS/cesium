@@ -150,7 +150,7 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
-    var ImageryLayer = function ImageryLayer(imageryProvider, options) {
+    function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
         options = defaultValue(options, {});
@@ -235,7 +235,7 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
-    };
+    }
 
     defineProperties(ImageryLayer.prototype, {
 
@@ -341,10 +341,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayer#isDestroyed
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
+     * 
+     * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
         return destroyObject(this);

@@ -23,7 +23,7 @@ define([
      *
      * @param {Cartesian4[]} planes An array of clipping planes.
      */
-    var CullingVolume = function(planes) {
+    function CullingVolume(planes) {
         /**
          * Each plane is represented by a Cartesian4 object, where the x, y, and z components
          * define the unit vector normal to the plane, and the w component is the distance of the
@@ -32,7 +32,7 @@ define([
          * @default []
          */
         this.planes = defaultValue(planes, []);
-    };
+    }
 
     var scratchPlane = new Plane(new Cartesian3(), 0.0);
     /**

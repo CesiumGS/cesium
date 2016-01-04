@@ -121,30 +121,6 @@ defineSuite([
         expect(projectionMatrix).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 
-    it('get pixel size throws without canvas dimensions', function() {
-        expect(function() {
-            return frustum.getPixelSize();
-        }).toThrowDeveloperError();
-    });
-
-    it('get pixel size throws without canvas width less than or equal to zero', function() {
-        expect(function() {
-            return frustum.getPixelSize(new Cartesian2(0.0, 1.0));
-        }).toThrowDeveloperError();
-    });
-
-    it('get pixel size throws without canvas height less than or equal to zero', function() {
-        expect(function() {
-            return frustum.getPixelSize(new Cartesian2(1.0, 0.0));
-        }).toThrowDeveloperError();
-    });
-
-    it('get pixel size', function() {
-        var pixelSize = frustum.getPixelSize(new Cartesian2(1.0, 1.0));
-        expect(pixelSize.x).toEqual(2.0);
-        expect(pixelSize.y).toEqual(2.0);
-    });
-
     it('get pixel dimensions throws without canvas height', function() {
        expect(function() {
             return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());

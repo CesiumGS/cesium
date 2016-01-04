@@ -35,7 +35,7 @@ define([
         WebGLConstants) {
     "use strict";
     
-    var Texture = function(options) {
+    function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -183,7 +183,7 @@ define([
         this._sampler = undefined;
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
-    };
+    }
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
@@ -207,14 +207,15 @@ define([
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
      * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
-     * @see Sampler
      *
      * @example
      * // Create a texture with the contents of the framebuffer.
      * var t = Texture.fromFramebuffer({
      *     context : context
      * });
-     *
+     * 
+     * @see Sampler
+     * 
      * @private
      */
     Texture.fromFramebuffer = function(options) {

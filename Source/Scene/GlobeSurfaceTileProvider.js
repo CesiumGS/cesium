@@ -102,7 +102,7 @@ define([
      *
      * @private
      */
-    var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
+    function GlobeSurfaceTileProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -156,7 +156,7 @@ define([
         this._baseColor = undefined;
         this._firstPassInitialColor = undefined;
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
-    };
+    }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
@@ -540,41 +540,54 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
+        var camera = frameState.camera;
+        var cameraCartesianPosition = camera.positionWC;
+        var cameraCartographicPosition = camera.positionCartographic;
 
-        var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
-        var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
-        var westNormal = surfaceTile.westNormal;
-        var southNormal = surfaceTile.southNormal;
-        var eastNormal = surfaceTile.eastNormal;
-        var northNormal = surfaceTile.northNormal;
-        var maximumHeight = surfaceTile.maximumHeight;
+        var result = 0.0;
+        if (!Rectangle.contains(tile.rectangle, cameraCartographicPosition)) {
+            var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
+            var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
+            var westNormal = surfaceTile.westNormal;
+            var southNormal = surfaceTile.southNormal;
+            var eastNormal = surfaceTile.eastNormal;
+            var northNormal = surfaceTile.northNormal;
 
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(tile.rectangle), southwestCornerScratch);
-            southwestCornerCartesian.z = southwestCornerCartesian.y;
-            southwestCornerCartesian.y = southwestCornerCartesian.x;
-            southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(tile.rectangle), northeastCornerScratch);
-            northeastCornerCartesian.z = northeastCornerCartesian.y;
-            northeastCornerCartesian.y = northeastCornerCartesian.x;
-            northeastCornerCartesian.x = 0.0;
-            westNormal = negativeUnitY;
-            eastNormal = Cartesian3.UNIT_Y;
-            southNormal = negativeUnitZ;
-            northNormal = Cartesian3.UNIT_Z;
-            maximumHeight = 0.0;
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(tile.rectangle), southwestCornerScratch);
+                southwestCornerCartesian.z = southwestCornerCartesian.y;
+                southwestCornerCartesian.y = southwestCornerCartesian.x;
+                southwestCornerCartesian.x = 0.0;
+                northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(tile.rectangle), northeastCornerScratch);
+                northeastCornerCartesian.z = northeastCornerCartesian.y;
+                northeastCornerCartesian.y = northeastCornerCartesian.x;
+                northeastCornerCartesian.x = 0.0;
+                westNormal = negativeUnitY;
+                eastNormal = Cartesian3.UNIT_Y;
+                southNormal = negativeUnitZ;
+                northNormal = Cartesian3.UNIT_Z;
+            }
+
+            var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
+            var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
+            var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
+
+            var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
+            var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
+            var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
+
+            if (distanceToWestPlane > 0.0) {
+                result += distanceToWestPlane * distanceToWestPlane;
+            } else if (distanceToEastPlane > 0.0) {
+                result += distanceToEastPlane * distanceToEastPlane;
+            }
+
+            if (distanceToSouthPlane > 0.0) {
+                result += distanceToSouthPlane * distanceToSouthPlane;
+            } else if (distanceToNorthPlane > 0.0) {
+                result += distanceToNorthPlane * distanceToNorthPlane;
+            }
         }
-
-        var cameraCartesianPosition = frameState.camera.positionWC;
-        var cameraCartographicPosition = frameState.camera.positionCartographic;
-
-        var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
-        var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
-        var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
-
-        var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
-        var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
-        var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
 
         var cameraHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -582,22 +595,9 @@ define([
         } else {
             cameraHeight = cameraCartesianPosition.x;
         }
+
+        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? surfaceTile.maximumHeight : 0.0;
         var distanceFromTop = cameraHeight - maximumHeight;
-
-        var result = 0.0;
-
-        if (distanceToWestPlane > 0.0) {
-            result += distanceToWestPlane * distanceToWestPlane;
-        } else if (distanceToEastPlane > 0.0) {
-            result += distanceToEastPlane * distanceToEastPlane;
-        }
-
-        if (distanceToSouthPlane > 0.0) {
-            result += distanceToSouthPlane * distanceToSouthPlane;
-        } else if (distanceToNorthPlane > 0.0) {
-            result += distanceToNorthPlane * distanceToNorthPlane;
-        }
-
         if (distanceFromTop > 0.0) {
             result += distanceFromTop * distanceFromTop;
         }
@@ -631,10 +631,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see GlobeSurfaceTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     * 
+     * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
@@ -765,6 +766,13 @@ define([
             u_waterMaskTranslationAndScale : function() {
                 return this.waterMaskTranslationAndScale;
             },
+            u_minMaxHeight : function() {
+                return this.minMaxHeight;
+            },
+            u_scaleAndBias : function() {
+                return this.scaleAndBias;
+            },
+
 
             initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
             zoomedOutOceanSpecularIntensity : 0.5,
@@ -790,7 +798,10 @@ define([
             southMercatorYAndOneOverHeight : new Cartesian2(),
 
             waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4()
+            waterMaskTranslationAndScale : new Cartesian4(),
+
+            minMaxHeight : new Cartesian2(),
+            scaleAndBias : new Matrix4()
         };
 
         return uniformMap;
@@ -1129,7 +1140,12 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(context, frameState.mode, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            var encoding = surfaceTile.pickTerrain.mesh.encoding;
+            uniformMap.minMaxHeight.x = encoding.minimumHeight;
+            uniformMap.minMaxHeight.y = encoding.maximumHeight;
+            Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
+
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
@@ -1179,9 +1195,10 @@ define([
 
         ++tileProvider._usedPickCommands;
 
+        var surfaceTile = drawCommand.owner.data;
         var useWebMercatorProjection = frameState.projection instanceof WebMercatorProjection;
 
-        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState.context, frameState.mode, useWebMercatorProjection);
+        pickCommand.shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState, surfaceTile, useWebMercatorProjection);
         pickCommand.renderState = tileProvider._pickRenderState;
 
         pickCommand.owner = drawCommand.owner;

@@ -190,7 +190,7 @@ define([
      *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      */
-    var CesiumWidget = function(container, options) {
+    function CesiumWidget(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -350,7 +350,7 @@ define([
             }
             throw error;
         }
-    };
+    }
 
     defineProperties(CesiumWidget.prototype, {
         /**
@@ -568,9 +568,9 @@ define([
         var errorPanelScroller = document.createElement('div');
         errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
         content.appendChild(errorPanelScroller);
-        var resizeCallback = function() {
+        function resizeCallback() {
             errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
-        };
+        }
         resizeCallback();
         if (defined(window.addEventListener)) {
             window.addEventListener('resize', resizeCallback, false);

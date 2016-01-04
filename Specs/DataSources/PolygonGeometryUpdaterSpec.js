@@ -544,4 +544,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(PolygonGeometryUpdater, entity, entity.polygon, function() {
         return scene;
     });
-});
+}, 'WebGL');
