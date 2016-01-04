@@ -5,14 +5,16 @@ define([
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
-        '../Core/RequestScheduler'
+        '../Core/RequestScheduler',
+        '../Core/RequestType'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
         loadImage,
         loadImageViaBlob,
-        RequestScheduler) {
+        RequestScheduler,
+        RequestType) {
     "use strict";
 
     /**
@@ -307,9 +309,9 @@ define([
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
         if (defined(imageryProvider.tileDiscardPolicy)) {
-            return RequestScheduler.throttleRequest(url, loadImageViaBlob);
+            return RequestScheduler.throttleRequest(url, loadImageViaBlob, RequestType.IMAGERY, 0.0);
         }
-        return RequestScheduler.throttleRequest(url, loadImage);
+        return RequestScheduler.throttleRequest(url, loadImage, RequestType.IMAGERY, 0.0);
     };
 
     return ImageryProvider;

@@ -16,6 +16,7 @@ define([
         './Math',
         './Rectangle',
         './RequestScheduler',
+        './RequestType',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -35,6 +36,7 @@ define([
         CesiumMath,
         Rectangle,
         RequestScheduler,
+        RequestType,
         TerrainProvider,
         TileProviderError) {
     "use strict";
@@ -274,7 +276,7 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = RequestScheduler.throttleRequest(url, loadImage);
+            promise = RequestScheduler.throttleRequest(url, loadImage, RequestType.TERRAIN, 0.0);
             if (!defined(promise)) {
                 return undefined;
             }

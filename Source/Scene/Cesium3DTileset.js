@@ -11,6 +11,7 @@ define([
         '../Core/loadJson',
         '../Core/Math',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
@@ -30,6 +31,7 @@ define([
         loadJson,
         CesiumMath,
         RequestScheduler,
+        RequestType,
         Uri,
         when,
         Cesium3DTile,
@@ -226,7 +228,7 @@ define([
      */
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
-        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson);
+        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson, RequestType.TILES3D, 0.0);
 
         if (!defined(promise)) {
             return undefined;

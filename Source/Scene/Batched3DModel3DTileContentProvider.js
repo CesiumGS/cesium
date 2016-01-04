@@ -9,6 +9,7 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/when',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
@@ -24,6 +25,7 @@ define([
         getStringFromTypedArray,
         loadArrayBuffer,
         RequestScheduler,
+        RequestType,
         when,
         BatchedModel,
         Cesium3DTileBatchTableResources,
@@ -121,7 +123,7 @@ define([
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, 0.0);
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

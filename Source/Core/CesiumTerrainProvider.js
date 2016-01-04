@@ -21,6 +21,7 @@ define([
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './RequestScheduler',
+        './RequestType',
         './RuntimeError',
         './TerrainProvider',
         './TileProviderError'
@@ -46,6 +47,7 @@ define([
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
         RequestScheduler,
+        RequestType,
         RuntimeError,
         TerrainProvider,
         TileProviderError) {
@@ -522,7 +524,7 @@ define([
         }
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = RequestScheduler.throttleRequest(url, tileLoader);
+            promise = RequestScheduler.throttleRequest(url, tileLoader, RequestType.TERRAIN, 0.0);
             if (!defined(promise)) {
                 return undefined;
             }

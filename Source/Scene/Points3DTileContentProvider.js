@@ -12,6 +12,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
@@ -29,6 +30,7 @@ define([
         loadArrayBuffer,
         PointGeometry,
         RequestScheduler,
+        RequestType,
         when,
         Cesium3DTileContentState,
         PointAppearance,
@@ -73,7 +75,7 @@ define([
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, 0.0);
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

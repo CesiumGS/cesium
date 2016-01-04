@@ -15,8 +15,27 @@ define([
         DeveloperError) {
     "use strict";
 
+    var RequestTypeBudget = function(type) {
+        /**
+         * Total requests allowed this frame
+         */
+        this.total = 0;
+
+        /**
+         * Total requests used this frame
+         */
+        this.used = 0;
+
+        /**
+         * Type of request. Used for more fine-grained priority sorting
+         */
+        this.type = type;
+    };
+
     var activeRequestsByServer = {};
     var activeRequests = 0;
+    var budgets = {};
+    var leftoverRequests = [];
 
     /**
      * Because browsers throttle the number of parallel requests allowed to each server
@@ -31,6 +50,52 @@ define([
      */
     function RequestScheduler() {
     }
+
+    function handleLeftoverRequest(url, type, distance) {
+        // TODO : don't create a new object, reuse instead
+        leftoverRequests.push({
+            url : url,
+            type : type,
+            distance : defaultValue(distance, 0.0)
+        });
+    }
+
+    function distanceSortFunction(a, b) {
+        return a.distance - b.distance;
+    }
+
+    RequestScheduler.resetBudgets = function() {
+        // TODO : Right now, assume that requests made the previous frame will probably be issued again the current frame
+        // TODO : If this assumption changes, we should introduce stealing from other budgets.
+
+        // Reset budget totals
+        for (var name in budgets) {
+            if (budgets.hasOwnProperty(name)) {
+                budgets[name].total = 0;
+                budgets[name].used = 0;
+            }
+        }
+
+        // Sort all requests made this frame by distance
+        var requests = leftoverRequests;
+        requests.sort(distanceSortFunction);
+
+        // Allocate new budgets based on the distances of leftover requests
+        var availableRequests = RequestScheduler.getNumberOfAvailableRequests();
+        var requestsLength = requests.length;
+        for (var j = 0; (j < requestsLength) && (availableRequests > 0); ++j) {
+            var request = requests[j];
+            var server = RequestScheduler.getServer(request.url);
+            var budget = budgets[server];
+            var budgetAvailable = RequestScheduler.getNumberOfAvailableRequestsByServer(request.url);
+            if (budget.total < budgetAvailable) {
+                ++budget.total;
+                --availableRequests;
+            }
+        }
+
+        requests.length = 0;
+    };
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
 
@@ -109,6 +174,9 @@ define([
      * @param {String} url The URL to request.
      * @param {RequestScheduler~RequestFunction} requestFunction The actual function that
      *        makes the request.
+     * @param {RequestType} [requestType] The type of request being issued.
+     * @param {Number} [distance] The distance from the camera, used to prioritize requests.
+     *
      * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
      *
@@ -129,7 +197,7 @@ define([
      * }
      *
      */
-    RequestScheduler.throttleRequest = function(url, requestFunction) {
+    RequestScheduler.throttleRequest = function(url, requestFunction, requestType, distance) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -141,13 +209,28 @@ define([
         //>>includeEnd('debug');
 
         if (activeRequests >= RequestScheduler.maximumRequests) {
+            handleLeftoverRequest(url, requestType, distance);
             return undefined;
         }
 
         var server = RequestScheduler.getServer(url);
         var activeRequestsForServer = defaultValue(activeRequestsByServer[server], 0);
         if (activeRequestsForServer >= RequestScheduler.maximumRequestsPerServer) {
+            handleLeftoverRequest(url, requestType, distance);
             return undefined;
+        }
+
+        if (defined(requestType)) {
+            var budget = budgets[server];
+            if (!defined(budget)) {
+                budget = new RequestTypeBudget(requestType);
+                budgets[server] = budget;
+            }
+            if (budget.used >= budget.total) {
+                handleLeftoverRequest(url, requestType, distance);
+                return undefined;
+            }
+            ++budget.used;
         }
 
         ++activeRequests;

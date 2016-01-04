@@ -14,6 +14,7 @@ define([
         './loadImage',
         './Math',
         './RequestScheduler',
+        './RequestType',
         './TerrainProvider'
     ], function(
         when,
@@ -30,6 +31,7 @@ define([
         loadImage,
         CesiumMath,
         RequestScheduler,
+        RequestType,
         TerrainProvider) {
     "use strict";
 
@@ -231,7 +233,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = RequestScheduler.throttleRequest(url, loadImage);
+        var promise = RequestScheduler.throttleRequest(url, loadImage, RequestType.TERRAIN, 0.0);
         if (!defined(promise)) {
             return undefined;
         }

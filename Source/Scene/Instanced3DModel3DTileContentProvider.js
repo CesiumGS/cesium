@@ -12,6 +12,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../Core/Transforms',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -32,6 +33,7 @@ define([
         loadArrayBuffer,
         Matrix4,
         RequestScheduler,
+        RequestType,
         Transforms,
         Uri,
         when,
@@ -130,7 +132,7 @@ define([
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, 0.0);
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {
