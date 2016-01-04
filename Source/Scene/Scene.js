@@ -39,6 +39,7 @@ define([
         './CreditDisplay',
         './CullingVolume',
         './DepthPlane',
+        './DeviceOrientationCameraController',
         './Fog',
         './FrameState',
         './FrustumCommands',
@@ -100,6 +101,7 @@ define([
         CreditDisplay,
         CullingVolume,
         DepthPlane,
+        DeviceOrientationCameraController,
         Fog,
         FrameState,
         FrustumCommands,
@@ -569,6 +571,8 @@ define([
 
             cameraR = new Camera(this);
             cameraR.frustum = new PerspectiveOffCenterFrustum();
+
+            this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
         }
 
         this._cameraVRL = cameraL;
@@ -1779,6 +1783,7 @@ define([
         this._tweens.update();
         this._camera.update(this._mode);
         this._screenSpaceCameraController.update();
+        this._deviceOrientationCameraController.update();
     };
 
     var scratchEyeTranslation = new Cartesian3();
