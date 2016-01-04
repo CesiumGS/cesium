@@ -13,6 +13,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+   * [Run All Tests on the Command Line with Karma]
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -137,6 +138,26 @@ if (b) {
 It is possible to have 100% code coverage with two tests: one test where `a` and `b` are both `true`, and another where both are `false`; however, this only takes into account the case when `// Code block a.1` and `// Code block b.1` run together or when `// Code block a.2` and `// Code block b.2` run.  There could be an issue when, for example, `// Code block a.1` and `// Code block b.2` run together.
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**.  Be mindful of this when writing tests.  On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable.  Use your knowledge of the implementation to devise the best strategy.
+
+### Run All Tests on the Command Line with Karma
+
+[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser, runs tests against that browser, and displays the results on the command line.
+
+To run all tests with Karma, run `npm run test`.
+
+When all tests pass, output looks like this:
+
+![](test.jpg)
+
+When one or more tests fail, output looks like this:
+
+![](test-all.jpg)
+
+The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
+
+In order to modify testing configurations, such as default browser or excluding certain tests, modify the [Karma configuration file](http://karma-runner.github.io/0.13/config/configuration-file.html), located at `Specs\karma.conf.js`.
+
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
 
 ## Testing Previous Versions of Cesium
 
