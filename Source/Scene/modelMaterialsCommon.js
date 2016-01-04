@@ -618,7 +618,7 @@ define([
         
         // for compatibility with old glb files, encoding materials using
         // KHR_materials_common with explicit "type" / "value" members
-        if (paramValue.value != undefined)
+        if (defined(paramValue.value))
         {
             value = paramValue.value;
         }
@@ -744,7 +744,7 @@ define([
                                 
                                 // for compatibility with old glb files, encoding materials using
                                 // KHR_materials_common with explicit "type" / "value" members
-                                if (value.value != undefined)
+                                if (defined(value.value))
                                 {
                                     material.values[valueName] = value.value;
                                 }
