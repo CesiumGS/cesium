@@ -307,10 +307,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreePrimitive#isDestroyed
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     * 
+     * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();

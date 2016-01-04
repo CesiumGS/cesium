@@ -319,10 +319,11 @@ define([
      *
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
-     * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -405,12 +406,13 @@ define([
      *
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
-     * @see GeometryPipeline.reorderForPreVertexCache
-     * @see {@link http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
-     * by Sander, Nehab, and Barczak
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPreVertexCache
+     * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
+     * by Sander, Nehab, and Barczak
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
@@ -1008,13 +1010,14 @@ define([
      * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
-     * @see GeometryPipeline.transformToWorldCoordinates
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
      *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
      * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * 
+     * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combineInstances = function(instances) {
         //>>includeStart('debug', pragmas.debug);

@@ -94,9 +94,6 @@ define([
      * change should be in one collection; points that change every frame should be in another
      * collection; and so on.
      *
-     * @see PointPrimitiveCollection#add
-     * @see PointPrimitiveCollection#remove
-     * @see PointPrimitive
      *
      * @example
      * // Create a pointPrimitive collection with two points
@@ -109,6 +106,10 @@ define([
      *   position : new Cesium.Cartesian3(4.0, 5.0, 6.0),
      *   color : Cesium.Color.CYAN
      * });
+     * 
+     * @see PointPrimitiveCollection#add
+     * @see PointPrimitiveCollection#remove
+     * @see PointPrimitive
      */
     function PointPrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -154,7 +155,6 @@ define([
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
          *
-         * @see Transforms.eastNorthUpToFixedFrame
          *
          * @example
          * var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
@@ -175,6 +175,8 @@ define([
          *   color : Cesium.Color.CYAN,
          *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
          * });
+         * 
+         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(Matrix4.IDENTITY);
@@ -252,8 +254,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PointPrimitiveCollection#remove
-     * @see PointPrimitiveCollection#removeAll
      *
      * @example
      * // Example 1:  Add a point, specifying all the default values.
@@ -272,6 +272,9 @@ define([
      * var p = pointPrimitives.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
+     * 
+     * @see PointPrimitiveCollection#remove
+     * @see PointPrimitiveCollection#removeAll
      */
     PointPrimitiveCollection.prototype.add = function(pointPrimitive) {
         var p = new PointPrimitive(pointPrimitive, this);
@@ -297,13 +300,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PointPrimitiveCollection#add
-     * @see PointPrimitiveCollection#removeAll
-     * @see PointPrimitive#show
      *
      * @example
      * var p = pointPrimitives.add(...);
      * pointPrimitives.remove(p);  // Returns true
+     * 
+     * @see PointPrimitiveCollection#add
+     * @see PointPrimitiveCollection#removeAll
+     * @see PointPrimitive#show
      */
     PointPrimitiveCollection.prototype.remove = function(pointPrimitive) {
         if (this.contains(pointPrimitive)) {
@@ -325,13 +329,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PointPrimitiveCollection#add
-     * @see PointPrimitiveCollection#remove
      *
      * @example
      * pointPrimitives.add(...);
      * pointPrimitives.add(...);
      * pointPrimitives.removeAll();
+     * 
+     * @see PointPrimitiveCollection#add
+     * @see PointPrimitiveCollection#remove
      */
     PointPrimitiveCollection.prototype.removeAll = function() {
         destroyPointPrimitives(this._pointPrimitives);
@@ -398,7 +403,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PointPrimitiveCollection#length
      *
      * @example
      * // Toggle the show property of every point in the collection
@@ -407,6 +411,8 @@ define([
      *   var p = pointPrimitives.get(i);
      *   p.show = !p.show;
      * }
+     * 
+     * @see PointPrimitiveCollection#length
      */
     PointPrimitiveCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -959,10 +965,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PointPrimitiveCollection#isDestroyed
      *
      * @example
      * pointPrimitives = pointPrimitives && pointPrimitives.destroy();
+     * 
+     * @see PointPrimitiveCollection#isDestroyed
      */
     PointPrimitiveCollection.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();

@@ -3340,10 +3340,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Model#isDestroyed
      *
      * @example
      * model = model && model.destroy();
+     * 
+     * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
         // Vertex arrays are unique to this model, destroy here.

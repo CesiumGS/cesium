@@ -702,11 +702,12 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the label.
      *
-     * @see Label#eyeOffset
-     * @see Label#pixelOffset
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
+     * 
+     * @see Label#eyeOffset
+     * @see Label#pixelOffset
      */
     Label.prototype.computeScreenSpacePosition = function(scene, result) {
         //>>includeStart('debug', pragmas.debug);

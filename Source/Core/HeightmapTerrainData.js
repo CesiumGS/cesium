@@ -76,8 +76,6 @@ define([
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
-     * @see TerrainData
-     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
@@ -93,6 +91,9 @@ define([
      *   structure : structure,
      *   waterMask : waterMask
      * });
+     * 
+     * @see TerrainData
+     * @see QuantizedMeshTerrainData
      */
     function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);

@@ -354,11 +354,12 @@ define([
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
      *
-     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      *
      * @example
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
+     * 
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -622,10 +623,11 @@ define([
      *
      * @returns {Number} A single numeric unsigned 32-bit RGBA value.
      *
-     * @see Color.fromRgba
      *
      * @example
      * var rgba = Cesium.Color.BLUE.toRgba();
+     * 
+     * @see Color.fromRgba
      */
     Color.prototype.toRgba = function() {
         // scratchUint32Array and scratchUint8Array share an underlying array buffer
