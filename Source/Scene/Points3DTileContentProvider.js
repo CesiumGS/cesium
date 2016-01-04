@@ -11,6 +11,7 @@ define([
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
+        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
@@ -27,6 +28,7 @@ define([
         getMagic,
         loadArrayBuffer,
         PointGeometry,
+        RequestScheduler,
         when,
         Cesium3DTileContentState,
         PointAppearance,
@@ -71,17 +73,19 @@ define([
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {

@@ -13,8 +13,8 @@ define([
         './HeightmapTerrainData',
         './loadImage',
         './Math',
-        './TerrainProvider',
-        './throttleRequestByServer'
+        './RequestScheduler',
+        './TerrainProvider'
     ], function(
         when,
         Credit,
@@ -29,8 +29,8 @@ define([
         HeightmapTerrainData,
         loadImage,
         CesiumMath,
-        TerrainProvider,
-        throttleRequestByServer) {
+        RequestScheduler,
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -230,7 +230,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = throttleRequestByServer(url, loadImage);
+        var promise = RequestScheduler.throttleRequest(url, loadImage);
         if (!defined(promise)) {
             return undefined;
         }

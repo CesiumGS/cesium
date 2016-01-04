@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/destroyObject',
         '../ThirdParty/when',
         './Cesium3DTileContentState'
     ], function(
+        defined,
         destroyObject,
         when,
         Cesium3DTileContentState) {
@@ -41,17 +43,20 @@ define([
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
+        var promise = this._tileset.loadTilesJson(this._url, this._tile);
 
-        this._tileset.loadTilesJson(this._url, this._tile).then(function() {
-            that.state = Cesium3DTileContentState.PROCESSING;
-            that.processingPromise.resolve(that);
-            that.state = Cesium3DTileContentState.READY;
-            that.readyPromise.resolve(that);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function() {
+                that.state = Cesium3DTileContentState.PROCESSING;
+                that.processingPromise.resolve(that);
+                that.state = Cesium3DTileContentState.READY;
+                that.readyPromise.resolve(that);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     Tileset3DTileContentProvider.prototype.update = function(owner, frameState) {

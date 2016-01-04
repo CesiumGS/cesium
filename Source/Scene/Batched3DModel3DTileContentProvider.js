@@ -8,6 +8,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
@@ -22,6 +23,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
+        RequestScheduler,
         when,
         BatchedModel,
         Cesium3DTileBatchTableResources,
@@ -119,17 +121,19 @@ define([
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            if (that.isDestroyed()) {
-                return when.reject('tileset is destroyed');
-            }
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     /**

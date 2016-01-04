@@ -4,24 +4,30 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/RequestScheduler',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTilesetState',
         'Scene/CullingVolume',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
+        'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         Cesium3DTileset,
         Cartesian3,
         defined,
         HeadingPitchRange,
+        RequestScheduler,
         Cesium3DTile,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        Cesium3DTilesetState,
         CullingVolume,
         Cesium3DTilesTester,
         createScene,
+        pollToPromise,
         when) {
     "use strict";
 
@@ -49,6 +55,8 @@ defineSuite([
     // tiles3.json: root with b3dm content
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
 
+    var originalMaximumRequests;
+
     beforeAll(function() {
         scene = createScene();
     });
@@ -58,19 +66,17 @@ defineSuite([
     });
 
     beforeEach(function() {
+        originalMaximumRequests = RequestScheduler.maximumRequests;
         viewAllTiles();
     });
 
     afterEach(function() {
+        RequestScheduler.maximumRequests = originalMaximumRequests;
+        scene.primitives.removeAll();
+
         // Wait for any pending requests to complete before ending each test
-        var promises = [];
-        var length = scene.primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var tileset = scene.primitives.get(i);
-            promises.push(Cesium3DTilesTester.waitForPendingRequests(scene, tileset));
-        }
-        return when.all(promises, function() {
-            scene.primitives.removeAll();
+        return pollToPromise(function() {
+            return RequestScheduler.getNumberOfAvailableRequests() === RequestScheduler.maximumRequests;
         });
     });
 
@@ -99,9 +105,10 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tiles.json', function() {
-        var tileset = new Cesium3DTileset({
+        var tileset = scene.primitives.add(new Cesium3DTileset({
             url : 'invalid'
-        });
+        }));
+        scene.renderForSpecs();
         return tileset.readyPromise.then(function(tileset) {
             fail('should not resolve');
         }).otherwise(function(error) {
@@ -126,6 +133,31 @@ defineSuite([
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
+        });
+    });
+
+    it('loads tiles.json once request scheduler has available slots', function() {
+        RequestScheduler.maximumRequests = 2;
+        viewNothing();
+
+        var options = {
+            url : tilesetUrl
+        };
+        var tileset1 = scene.primitives.add(new Cesium3DTileset(options));
+        var tileset2 = scene.primitives.add(new Cesium3DTileset(options));
+        var tileset3 = scene.primitives.add(new Cesium3DTileset(options));
+
+        scene.renderForSpecs();
+        expect(tileset1._state).toEqual(Cesium3DTilesetState.LOADING);
+        expect(tileset2._state).toEqual(Cesium3DTilesetState.LOADING);
+        expect(tileset3._state).toEqual(Cesium3DTilesetState.UNLOADED);
+
+        return pollToPromise(function() {
+            // Once the first tileset is ready, the third tileset should begin loading
+            scene.renderForSpecs();
+            return tileset1._state === Cesium3DTilesetState.READY;
+        }).then(function() {
+            expect(tileset3._state).toEqual(Cesium3DTilesetState.LOADING);
         });
     });
 
@@ -187,7 +219,7 @@ defineSuite([
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
-
+        scene.renderForSpecs();
         return tileset.readyPromise.then(function(tileset) {
             // Verify initial values
             var stats = tileset._statistics;
@@ -631,6 +663,7 @@ defineSuite([
             // and the second tileset to use the remaining two
             expect(tilesets[0]._statistics.numberOfPendingRequests).toEqual(4);
             expect(tilesets[1]._statistics.numberOfPendingRequests).toEqual(2);
+            expect(RequestScheduler.hasAvailableRequests(tilesets[0]._url)).toEqual(false);
         });
     });
 
@@ -688,6 +721,7 @@ defineSuite([
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
+        scene.renderForSpecs();
         scene.primitives.remove(tileset);
         return tileset.readyPromise.then(function(tileset) {
             fail('should not resolve');
@@ -713,7 +747,7 @@ defineSuite([
             }).otherwise(function(error) {
                 // Expect the root to not have added any children from the external tiles.json
                 expect(root.children.length).toEqual(0);
-                // TODO : check that request scheduler is empty
+                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });
         });
     });
@@ -732,7 +766,7 @@ defineSuite([
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-                // TODO : check that request scheduler is empty
+                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });
         });
     });
