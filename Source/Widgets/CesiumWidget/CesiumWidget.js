@@ -465,7 +465,7 @@ define([
          * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
          * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
          * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
-         * than the underlying requestAnimationFrame implementation will have no affect.
+         * than the underlying requestAnimationFrame implementation will have no effect.
          * @memberof CesiumWidget.prototype
          *
          * @type {Number}
