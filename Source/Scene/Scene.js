@@ -525,9 +525,6 @@ define([
          */
         this.fog = new Fog();
 
-        // TODO: default to false
-        this._useWebVR = defaultValue(options.useWebVR, true);
-
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -562,21 +559,8 @@ define([
             useFXAA : false
         };
 
-        var cameraL;
-        var cameraR;
-
-        if (this._useWebVR) {
-            cameraL = new Camera(this);
-            cameraL.frustum = new PerspectiveOffCenterFrustum();
-
-            cameraR = new Camera(this);
-            cameraR.frustum = new PerspectiveOffCenterFrustum();
-
-            this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
-        }
-
-        this._cameraVRL = cameraL;
-        this._cameraVRR = cameraR;
+        this._useWebVR = false;
+        this._cameraVR = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -996,6 +980,17 @@ define([
         useWebVR : {
             get : function() {
                 return this._useWebVR;
+            },
+            set : function(value) {
+                this._useWebVR = value;
+
+                if (this._useWebVR) {
+                    this._cameraVR = new Camera(this);
+                    this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
+                } else {
+                    this._cameraVR = undefined;
+                    this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
+                }
             }
         }
     });
@@ -1782,8 +1777,12 @@ define([
 
         this._tweens.update();
         this._camera.update(this._mode);
-        this._screenSpaceCameraController.update();
-        this._deviceOrientationCameraController.update();
+
+        if (!this._useWebVR) {
+            this._screenSpaceCameraController.update();
+        } else {
+            this._deviceOrientationCameraController.update();
+        }
     };
 
     var scratchEyeTranslation = new Cartesian3();
@@ -1858,48 +1857,33 @@ define([
             viewport.width = context.drawingBufferWidth * 0.5;
             viewport.height = context.drawingBufferHeight;
 
-            // TODO
-            var frustum = camera.frustum;
-            var fo = frustum.near * 5.0;
+            var savedCamera = Camera.clone(camera, scene._cameraVR);
+            var savedFrustum = camera.frustum;
+
+            var fo = savedFrustum.near * 5.0;
             var eyeSeparation = fo / 30.0;
-            var eyeTranslation = Cartesian3.multiplyByScalar(scene._camera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
-            var aspectRatio = context.drawingBufferWidth / context.drawingBufferHeight;
-            var widthdiv2 = frustum.near * Math.tan(frustum.fov * 0.5);
+            camera.frustum.aspectRatio = viewport.width / viewport.height;
 
-            var cameraL = Camera.clone(scene._camera, scene._cameraVRL);
-            Cartesian3.add(cameraL.position, eyeTranslation, cameraL.position);
+            var offset = 0.5 * eyeSeparation * savedFrustum.near / fo;
 
-            var frustumL = cameraL.frustum;
-            frustumL.near = frustum.near;
-            frustumL.far = frustum.far;
-            frustumL.top = widthdiv2;
-            frustumL.bottom = -frustumL.top;
-            frustumL.right = aspectRatio * widthdiv2 + 0.5 * eyeSeparation * frustum.near / fo;
-            frustumL.left = -frustumL.right;
+            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = offset;
 
-            frameState.camera = cameraL;
             us.update(frameState);
-
             executeCommands(scene, passState);
 
             viewport.x = passState.viewport.width;
 
-            var cameraR = Camera.clone(scene._camera, scene._cameraVRR);
-            Cartesian3.subtract(cameraR.position, eyeTranslation, cameraR.position);
+            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = -offset;
 
-            var frustumR = cameraR.frustum;
-            frustumR.near = frustum.near;
-            frustumR.far = frustum.far;
-            frustumR.top = widthdiv2;
-            frustumR.bottom = -frustum.top;
-            frustumR.right = aspectRatio * widthdiv2 - 0.5 * eyeSeparation * frustum.near / fo;
-            frustumR.left = -frustumR.right;
-
-            frameState.camera = cameraR;
             us.update(frameState);
-
             executeCommands(scene, passState);
+
+            Camera.clone(savedCamera, camera);
+            camera.frustum = savedFrustum;
         }
 
         resolveFramebuffers(scene, passState);
@@ -2335,6 +2319,7 @@ define([
         this._tweens.removeAll();
         this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
+        this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();

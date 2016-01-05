@@ -69,6 +69,12 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        this.xOffset = 0.0;
+        this._xOffset = this.xOffset;
+
+        this.yOffset = 0.0;
+        this._yOffset = this.yOffset;
     }
 
     function update(frustum) {
@@ -81,7 +87,8 @@ define([
         var f = frustum._offCenterFrustum;
 
         if (frustum.fov !== frustum._fov || frustum.aspectRatio !== frustum._aspectRatio ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
+                frustum.near !== frustum._near || frustum.far !== frustum._far ||
+                frustum.xOffset !== frustum._xOffset || frustum.yOffset !== frustum._yOffset) {
             //>>includeStart('debug', pragmas.debug);
             if (frustum.fov < 0 || frustum.fov >= Math.PI) {
                 throw new DeveloperError('fov must be in the range [0, PI).');
@@ -102,6 +109,8 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
             frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);
+            frustum._xOffset = frustum.xOffset;
+            frustum._yOffset = frustum.yOffset;
 
             f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
             f.bottom = -f.top;
@@ -109,6 +118,11 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            f.right += frustum.xOffset;
+            f.left += frustum.xOffset;
+            f.top += frustum.yOffset;
+            f.bottom += frustum.yOffset;
         }
     }
 
