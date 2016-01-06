@@ -24,7 +24,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Composite3DTileContentProvider = function(tileset, tile, url, factory) {
+    function Composite3DTileContentProvider(tileset, tile, url, factory) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -45,7 +45,7 @@ define([
          * @type {Promise}
          */
         this.readyPromise = when.defer();
-    };
+    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

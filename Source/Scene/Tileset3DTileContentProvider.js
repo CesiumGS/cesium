@@ -14,7 +14,7 @@ define([
     /**
      * @private
      */
-    var Tileset3DTileContentProvider = function(tileset, tile, url) {
+    function Tileset3DTileContentProvider(tileset, tile, url) {
         this._tileset = tileset;
         this._tile = tile;
         this._url = url;
@@ -33,7 +33,7 @@ define([
          * @type {Promise}
          */
         this.readyPromise = when.defer();
-    };
+    }
 
     /**
      * DOC_TBA

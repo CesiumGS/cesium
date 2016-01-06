@@ -10,7 +10,7 @@ define([
      *
      * DOC_TBA
      */
-    var Cesium3DTileContentProvider = function(tileset, tile, url) {
+    function Cesium3DTileContentProvider(tileset, tile, url) {
         /**
          * @type {Cesium3DTileContentState}
          * @readonly
@@ -26,7 +26,7 @@ define([
          * @type {Promise}
          */
         this.readyPromise = undefined;
-    };
+    }
 
     Cesium3DTileContentProvider.prototype.request = function() {
         DeveloperError.throwInstantiationError();

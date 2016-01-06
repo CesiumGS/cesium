@@ -19,8 +19,8 @@ define([
         pollToPromise) {
     "use strict";
 
-    var Cesium3DTilesTester = function() {
-    };
+    function Cesium3DTilesTester() {
+    }
 
     function expectRender(scene, tileset) {
         tileset.show = false;

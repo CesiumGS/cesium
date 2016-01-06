@@ -38,7 +38,7 @@ define([
     /**
      * @private
      */
-    var Points3DTileContentProvider = function(tileset, tile, url) {
+    function Points3DTileContentProvider(tileset, tile, url) {
         this._primitive = undefined;
         this._url = url;
 
@@ -61,7 +61,7 @@ define([
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
-    };
+    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

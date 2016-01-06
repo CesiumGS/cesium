@@ -54,7 +54,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Cesium3DTile = function(tileset, baseUrl, header, parent) {
+    function Cesium3DTile(tileset, baseUrl, header, parent) {
         this._header = header;
         var contentHeader = header.content;
 
@@ -215,7 +215,7 @@ define([
         this._debugcontentBox = undefined;
         this._debugOrientedBoundingBox = undefined;
         this._debugContentsOrientedBoundingBox = undefined;
-    };
+    }
 
     defineProperties(Cesium3DTile.prototype, {
         /**

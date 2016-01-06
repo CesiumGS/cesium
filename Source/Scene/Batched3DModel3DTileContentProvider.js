@@ -34,7 +34,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Batched3DModel3DTileContentProvider = function(tileset, tile, url) {
+    function Batched3DModel3DTileContentProvider(tileset, tile, url) {
         this._model = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -57,7 +57,7 @@ define([
         this._batchLength = 0;
         this._batchTableResources = undefined;
         this._models = undefined;
-    };
+    }
 
     defineProperties(Batched3DModel3DTileContentProvider.prototype, {
         /**
