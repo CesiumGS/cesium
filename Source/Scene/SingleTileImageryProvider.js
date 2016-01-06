@@ -50,7 +50,7 @@ define([
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
-    var SingleTileImageryProvider = function(options) {
+    function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
 
@@ -125,8 +125,7 @@ define([
         }
 
         doRequest();
-    };
-
+    }
 
     defineProperties(SingleTileImageryProvider.prototype, {
         /**

@@ -57,8 +57,6 @@ define([
      * @param {Object} [options.sources] The source URL or <code>Image</code> object for each of the six cube map faces.  See the example below.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      *
-     * @see Scene#skyBox
-     * @see Transforms.computeTemeToPseudoFixedMatrix
      *
      * @example
      * scene.skyBox = new Cesium.SkyBox({
@@ -71,8 +69,11 @@ define([
      *     negativeZ : 'skybox_nz.png'
      *   }
      * });
+     * 
+     * @see Scene#skyBox
+     * @see Transforms.computeTemeToPseudoFixedMatrix
      */
-    var SkyBox = function(options) {
+    function SkyBox(options) {
         /**
          * The sources used to create the cube map faces: an object
          * with <code>positiveX</code>, <code>negativeX</code>, <code>positiveY</code>,
@@ -98,7 +99,7 @@ define([
             owner : this
         });
         this._cubeMap = undefined;
-    };
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -235,10 +236,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyBox#isDestroyed
      *
      * @example
      * skyBox = skyBox && skyBox.destroy();
+     * 
+     * @see SkyBox#isDestroyed
      */
     SkyBox.prototype.destroy = function() {
         var command = this._command;

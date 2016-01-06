@@ -32,7 +32,7 @@ define([
      *     lowFrameRateMessage : 'Why is this going so <em>slowly</em>?'
      * });
      */
-    var viewerPerformanceWatchdogMixin = function(viewer, options) {
+    function viewerPerformanceWatchdogMixin(viewer, options) {
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -52,7 +52,7 @@ define([
                 }
             }
         });
-    };
+    }
 
     return viewerPerformanceWatchdogMixin;
 });

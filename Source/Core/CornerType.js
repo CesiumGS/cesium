@@ -11,8 +11,7 @@ define([
      * @demo The {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
      * demonstrates the three corner types, as used by {@link CorridorGraphics}.
      *
-     * @namespace
-     * @alias CornerType
+     * @exports CornerType
      */
     var CornerType = {
         /**

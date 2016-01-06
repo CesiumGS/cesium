@@ -9,8 +9,7 @@ define([
      * Constants to determine how much time advances with each call
      * to {@link Clock#tick}.
      *
-     * @namespace
-     * @alias ClockStep
+     * @exports ClockStep
      *
      * @see Clock
      * @see ClockRange

@@ -39,7 +39,7 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    var OrthographicFrustum = function() {
+    function OrthographicFrustum() {
         /**
          * The left clipping plane.
          * @type {Number}
@@ -90,7 +90,7 @@ define([
 
         this._cullingVolume = new CullingVolume();
         this._orthographicMatrix = new Matrix4();
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);

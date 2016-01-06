@@ -14,7 +14,7 @@ define([
      * @param {Boolean} [deep=false] If true, all properties will be deep cloned recursively.
      * @returns {Object} The cloned object.
      */
-    var clone = function(object, deep) {
+    function clone(object, deep) {
         if (object === null || typeof object !== 'object') {
             return object;
         }
@@ -33,7 +33,7 @@ define([
         }
 
         return result;
-    };
+    }
 
     return clone;
 });

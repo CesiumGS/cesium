@@ -18,7 +18,7 @@ define([
      * // basePath will be "/Gallery/";
      * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
      */
-    var getBaseUri = function(uri) {
+    function getBaseUri(uri) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uri)) {
             throw new DeveloperError('uri is required.');
@@ -32,7 +32,7 @@ define([
         }
 
         return basePath;
-    };
+    }
 
     return getBaseUri;
 });

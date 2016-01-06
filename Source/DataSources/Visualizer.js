@@ -21,9 +21,9 @@ define([
      * @see PointVisualizer
      * @see GeometryVisualizer
      */
-    var Visualizer = function() {
+    function Visualizer() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Updates the visualization to the provided time.

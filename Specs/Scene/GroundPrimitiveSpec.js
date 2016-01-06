@@ -85,10 +85,9 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    var MockGlobePrimitive = function(primitive) {
+    function MockGlobePrimitive(primitive) {
         this._primitive = primitive;
-    };
-
+    }
     MockGlobePrimitive.prototype.update = function(frameState) {
         var commandList = frameState.commandList;
         var startLength = commandList.length;

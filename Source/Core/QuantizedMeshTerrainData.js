@@ -76,8 +76,6 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
-     * @see TerrainData
-     * @see HeightmapTerrainData
      *
      * @example
      * var data = new Cesium.QuantizedMeshTerrainData({
@@ -104,8 +102,11 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
+     * @see TerrainData
+     * @see HeightmapTerrainData
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -191,7 +192,7 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**

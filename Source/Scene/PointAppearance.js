@@ -54,7 +54,7 @@ define([
      *
      * @private
      */
-    var PointAppearance = function(options) {
+    function PointAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._vertexShaderSource = defaultValue(options.vertexShaderSource, PointAppearanceVS);
@@ -93,7 +93,7 @@ define([
         // Combine default uniforms and additional uniforms
         var optionsUniforms = options.uniforms;
         this.uniforms = combine(this.uniforms, optionsUniforms, true);
-    };
+    }
 
     defineProperties(PointAppearance.prototype, {
         /**

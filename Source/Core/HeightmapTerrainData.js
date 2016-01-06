@@ -76,8 +76,6 @@ define([
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
-     * @see TerrainData
-     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
@@ -93,8 +91,11 @@ define([
      *   structure : structure,
      *   waterMask : waterMask
      * });
+     * 
+     * @see TerrainData
+     * @see QuantizedMeshTerrainData
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(options) {
+    function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.buffer)) {
             throw new DeveloperError('options.buffer is required.');
@@ -128,7 +129,7 @@ define([
         this._structure = structure;
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(HeightmapTerrainData.prototype, {
         /**

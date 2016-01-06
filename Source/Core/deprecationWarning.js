@@ -21,7 +21,7 @@ define([
      *
      * @example
      * // Deprecated function or class
-     * var Foo = function() {
+     * function Foo() {
      *    deprecationWarning('Foo', 'Foo was deprecated in Cesium 1.01.  It will be removed in 1.03.  Use newFoo instead.');
      *    // ...
      * }
@@ -48,7 +48,7 @@ define([
      *
      * @private
      */
-    var deprecationWarning = function(identifier, message) {
+    function deprecationWarning(identifier, message) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(identifier) || !defined(message)) {
             throw new DeveloperError('identifier and message are required.');
@@ -59,7 +59,7 @@ define([
             warnings[identifier] = true;
             console.log(message);
         }
-    };
+    }
 
     return deprecationWarning;
 });

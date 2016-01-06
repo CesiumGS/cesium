@@ -37,9 +37,6 @@ define([
      *
      * @exception {DeveloperError} startTime must come before stopTime.
      *
-     * @see ClockStep
-     * @see ClockRange
-     * @see JulianDate
      *
      * @example
      * // Create a clock that loops on Christmas day 2013 and runs in real-time.
@@ -50,8 +47,12 @@ define([
      *    clockRange : Cesium.ClockRange.LOOP_STOP,
      *    clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER
      * });
+     * 
+     * @see ClockStep
+     * @see ClockRange
+     * @see JulianDate
      */
-    var Clock = function(options) {
+    function Clock(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var startTime = options.startTime;
@@ -155,7 +156,7 @@ define([
         this.onTick = new Event();
 
         this._lastSystemTime = getTimestamp();
-    };
+    }
 
     /**
      * Advances the clock from the currentTime based on the current configuration options.

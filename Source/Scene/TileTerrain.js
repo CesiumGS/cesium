@@ -43,7 +43,7 @@ define([
      * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
      * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
      */
-    var TileTerrain = function TileTerrain(upsampleDetails) {
+    function TileTerrain(upsampleDetails) {
         /**
          * The current state of the terrain in the terrain processing pipeline.
          * @type {TerrainState}
@@ -54,7 +54,7 @@ define([
         this.mesh = undefined;
         this.vertexArray = undefined;
         this.upsampleDetails = upsampleDetails;
-    };
+    }
 
     TileTerrain.prototype.freeResources = function() {
         this.state = TerrainState.UNLOADED;
