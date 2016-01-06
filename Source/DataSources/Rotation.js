@@ -19,7 +19,6 @@ define([
      *
      * @exports Rotation
      *
-     * @see PackableForInterpolation
      *
      * @example
      * var time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
@@ -35,6 +34,8 @@ define([
      * //a SampledProperty(Number) instead.  Note, the actual
      * //return value is in radians, not degrees.
      * property.getValue(time2);
+     * 
+     * @see PackableForInterpolation
      */
     var Rotation = {
         /**

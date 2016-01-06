@@ -501,7 +501,6 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @returns {PolygonGeometry}
      *
-     * @see PolygonGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
@@ -515,6 +514,8 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * 
+     * @see PolygonGeometry#createGeometry
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

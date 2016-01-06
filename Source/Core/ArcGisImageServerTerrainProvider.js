@@ -52,7 +52,6 @@ define([
      *                    If neither parameter is specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] The credit, which will is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
@@ -61,6 +60,8 @@ define([
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
      * viewer.terrainProvider = terrainProvider;
+     * 
+     *  @see TerrainProvider
      */
     function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);

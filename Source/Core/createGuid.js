@@ -9,10 +9,11 @@ define(function() {
      *
      * @returns {String}
      *
-     * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
      *
      * @example
      * this.guid = Cesium.createGuid();
+     * 
+     * @see {@link http://www.ietf.org/rfc/rfc4122.txt|RFC 4122 A Universally Unique IDentifier (UUID) URN Namespace}
      */
     function createGuid() {
         // http://stackoverflow.com/questions/105034/how-to-create-a-guid-uuid-in-javascript
