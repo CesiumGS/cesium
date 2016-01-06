@@ -4,6 +4,7 @@ Change Log
 ### 1.18 - 2016-02-01
 
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+* Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
 * Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
 
 ### 1.17 - 2016-01-04
