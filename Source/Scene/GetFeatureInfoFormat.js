@@ -194,11 +194,11 @@ define([
 
                 properties = {};
 
-                // node.children is not supported in IE (not even IE11), so use childNodes and check that child.nodeType is an element
+                // node.children is not supported in IE9-11, so use childNodes and check that child.nodeType is an element
                 var featureInfoChildren = featureInfoElement.childNodes;
                 for (var childIndex = 0; childIndex < featureInfoChildren.length; ++childIndex) {
                     var child = featureInfoChildren[childIndex];
-                    if (child.nodeType === 1) {  // type 1 is Node.ELEMENT_NODE
+                    if (child.nodeType === Node.ELEMENT_NODE) {
                         properties[child.localName] = child.textContent;
                     }
                 }
@@ -238,7 +238,7 @@ define([
         var layer;
         var children = xml.documentElement.childNodes;
         for (var i = 0; i < children.length; i++) {
-            if (children[i].nodeType === 1) {
+            if (children[i].nodeType === Node.ELEMENT_NODE) {
                 layer = children[i];
                 break;
             }
@@ -247,7 +247,7 @@ define([
         var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
             var featureMember = featureMembers[featureIndex];
-            if (featureMember.nodeType === 1) {
+            if (featureMember.nodeType === Node.ELEMENT_NODE) {
                 var properties = {};
                 getGmlPropertiesRecursively(featureMember, properties);
                 result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
@@ -260,8 +260,8 @@ define([
     function getGmlPropertiesRecursively(gmlNode, properties) {
         var isSingleValue = true;
 
-        for (var i = 0; i < gmlNode.children.length; ++i) {
-            var child = gmlNode.children[i];
+        for (var i = 0; i < gmlNode.childNodes.length; ++i) {
+            var child = gmlNode.childNodes[i];
 
             if (child.nodeType === Node.ELEMENT_NODE) {
                 isSingleValue = false;
