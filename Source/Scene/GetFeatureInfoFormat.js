@@ -242,7 +242,7 @@ define([
                 layer = children[i];
                 break;
             }
-        };
+        }
 
         var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
