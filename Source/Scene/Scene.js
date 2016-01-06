@@ -587,6 +587,7 @@ define([
 
         this._useWebVR = false;
         this._cameraVR = undefined;
+        this._frustumVR = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1013,9 +1014,11 @@ define([
 
                 if (this._useWebVR) {
                     this._cameraVR = new Camera(this);
+                    this._frustumVR = new PerspectiveFrustum();
                     this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
                 } else {
                     this._cameraVR = undefined;
+                    this._frustumVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
                 }
             }
@@ -1885,7 +1888,7 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             var savedCamera = Camera.clone(camera, scene._cameraVR);
-            var savedFrustum = camera.frustum;
+            var savedFrustum = camera.frustum.clone(scene._frustumVR);
 
             var fo = savedFrustum.near * 5.0;
             var eyeSeparation = fo / 30.0;
@@ -1910,7 +1913,7 @@ define([
             executeCommands(scene, passState);
 
             Camera.clone(savedCamera, camera);
-            camera.frustum = savedFrustum;
+            savedFrustum.clone(camera.frustum);
         }
 
         resolveFramebuffers(scene, passState);
