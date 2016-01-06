@@ -57,7 +57,7 @@ define([
      * @alias Cesium3DTileset
      * @constructor
      */
-    var Cesium3DTileset = function(options) {
+    function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.url;
@@ -153,7 +153,7 @@ define([
         this.tileVisible = new Event();
 
         this._readyPromise = when.defer();
-    };
+    }
 
     defineProperties(Cesium3DTileset.prototype, {
         /**

@@ -44,7 +44,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Instanced3DModel3DTileContentProvider = function(tileset, tile, url) {
+    function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -67,7 +67,7 @@ define([
 
         this._batchTableResources = undefined;
         this._models = undefined;
-    };
+    }
 
     defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
         /**

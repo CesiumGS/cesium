@@ -17,7 +17,7 @@ define([
      * @alias DistanceDisplayCondition
      * @constructor
      */
-    var DistanceDisplayCondition = function(near, far) {
+    function DistanceDisplayCondition(near, far) {
         /**
          * DOC_TBA
          */
@@ -31,7 +31,7 @@ define([
         far = defaultValue(far, Number.MAX_VALUE);
         this._far = far;
         this._far2 = far * far;
-    };
+    }
 
     defineProperties(DistanceDisplayCondition.prototype, {
         near : {

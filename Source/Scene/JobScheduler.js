@@ -13,7 +13,7 @@ define([
         JobType) {
     "use strict";
 
-    var JobTypeBudget = function(total) {
+    function JobTypeBudget(total) {
         /**
          * Total budget, in milliseconds, allowed for one frame
          */
@@ -40,7 +40,7 @@ define([
          * from being stolen from this frame.
          */
         this.starvedLastFrame = false;
-    };
+    }
 
     defineProperties(JobTypeBudget.prototype, {
         total : {

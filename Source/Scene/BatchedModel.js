@@ -10,7 +10,7 @@ define([
     /**
      * DOC_TBA
      */
-    var BatchedModel = function(tileset, batchTableResources, batchId) {
+    function BatchedModel(tileset, batchTableResources, batchId) {
         this._batchTableResources = batchTableResources;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
@@ -21,7 +21,7 @@ define([
          * All objects returned by {@link Scene#pick} have a <code>primitive</code> property.
          */
         this.primitive = tileset;
-    };
+    }
 
     defineProperties(BatchedModel.prototype, {
         /**

@@ -29,8 +29,8 @@ define([
      *
      * @private
      */
-    var RequestScheduler = function() {
-    };
+    function RequestScheduler() {
+    }
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
 
