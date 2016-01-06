@@ -196,6 +196,8 @@ define([
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
+        var leftCreditContainer = options.leftCreditContainer;
+        var rightCreditContainer = options.rightCreditContainer;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -215,8 +217,32 @@ define([
             canvas.parentNode.appendChild(creditContainer);
         }
 
+        if (!defined(leftCreditContainer) || !defined(rightCreditContainer)) {
+            leftCreditContainer = document.createElement('div');
+            leftCreditContainer.style.position = 'absolute';
+            leftCreditContainer.style.bottom = '0';
+            leftCreditContainer.style.left = '0';
+            leftCreditContainer.style.width = '50%';
+            leftCreditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            leftCreditContainer.style.color = '#ffffff';
+            leftCreditContainer.style['font-size'] = '10px';
+            leftCreditContainer.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(leftCreditContainer);
+
+            rightCreditContainer = document.createElement('div');
+            rightCreditContainer.style.position = 'absolute';
+            rightCreditContainer.style.bottom = '0';
+            rightCreditContainer.style.left = '50%';
+            rightCreditContainer.style.width = '50%';
+            rightCreditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            rightCreditContainer.style.color = '#ffffff';
+            rightCreditContainer.style['font-size'] = '10px';
+            rightCreditContainer.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(rightCreditContainer);
+        }
+
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, leftCreditContainer, rightCreditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
@@ -983,6 +1009,7 @@ define([
             },
             set : function(value) {
                 this._useWebVR = value;
+                this._frameState.creditDisplay.useWebVR = this._useWebVR;
 
                 if (this._useWebVR) {
                     this._cameraVR = new Camera(this);
@@ -1889,8 +1916,6 @@ define([
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
-        // TODO: Add credits to both viewports
-        frameState.creditDisplay.beginFrame();
         frameState.creditDisplay.endFrame();
 
         if (scene.debugShowFramesPerSecond) {

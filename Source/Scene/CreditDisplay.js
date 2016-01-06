@@ -3,68 +3,106 @@ define([
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError'
     ], function(
         Credit,
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError) {
     "use strict";
 
-    function displayTextCredit(credit, container, delimiter) {
-        if (!defined(credit.element)) {
-            var text = credit.text;
-            var link = credit.link;
-            var span = document.createElement('span');
-            if (credit.hasLink()) {
-                var a = document.createElement('a');
-                a.textContent = text;
-                a.href = link;
-                a.target = '_blank';
-                span.appendChild(a);
-            } else {
-                span.textContent = text;
-            }
-            span.className = 'cesium-credit-text';
-            credit.element = span;
-        }
-        if (container.hasChildNodes()) {
-            var del = document.createElement('span');
-            del.textContent = delimiter;
-            del.className = 'cesium-credit-delimiter';
-            container.appendChild(del);
-        }
-        container.appendChild(credit.element);
+    function createDelimiterElement(delimiter) {
+        var del = document.createElement('span');
+        del.textContent = delimiter;
+        del.className = 'cesium-credit-delimiter';
+        return del;
     }
 
-    function displayImageCredit(credit, container) {
-        if (!defined(credit.element)) {
-            var text = credit.text;
-            var link = credit.link;
-            var span = document.createElement('span');
-            var content = document.createElement('img');
-            content.src = credit.imageUrl;
-            content.style['vertical-align'] = 'bottom';
-            if (defined(text)) {
-                content.alt = text;
-                content.title = text;
-            }
-
-            if (credit.hasLink()) {
-                var a = document.createElement('a');
-                a.appendChild(content);
-                a.href = link;
-                a.target = '_blank';
-                span.appendChild(a);
-            } else {
-                span.appendChild(content);
-            }
-            span.className = 'cesium-credit-image';
-            credit.element = span;
+    function createTextElement(credit) {
+        var text = credit.text;
+        var link = credit.link;
+        var span = document.createElement('span');
+        if (credit.hasLink()) {
+            var a = document.createElement('a');
+            a.textContent = text;
+            a.href = link;
+            a.target = '_blank';
+            span.appendChild(a);
+        } else {
+            span.textContent = text;
         }
-        container.appendChild(credit.element);
+        span.className = 'cesium-credit-text';
+        return span;
+    }
+
+    function displayTextCredit(creditDisplay, credit) {
+        var delimiter = creditDisplay._delimiter;
+
+        if (!creditDisplay.useWebVR) {
+            if (!defined(credit.element)) {
+                credit.element = createTextElement(credit);
+            }
+            if (creditDisplay._textContainer.hasChildNodes()) {
+                creditDisplay._textContainer.appendChild(createDelimiterElement(delimiter));
+            }
+            creditDisplay._textContainer.appendChild(credit.element);
+        } else {
+            if (!defined(credit.leftElement)) {
+                credit.leftElement = createTextElement(credit);
+                credit.rightElement = createTextElement(credit);
+            }
+            if (creditDisplay._leftTextContainer.hasChildNodes()) {
+                creditDisplay._leftTextContainer.appendChild(createDelimiterElement(delimiter));
+                creditDisplay._rightTextContainer.appendChild(createDelimiterElement(delimiter));
+            }
+            creditDisplay._leftTextContainer.appendChild(credit.leftElement);
+            creditDisplay._rightTextContainer.appendChild(credit.rightElement);
+        }
+    }
+
+    function createImageElement(credit) {
+        var text = credit.text;
+        var link = credit.link;
+        var span = document.createElement('span');
+        var content = document.createElement('img');
+        content.src = credit.imageUrl;
+        content.style['vertical-align'] = 'bottom';
+        if (defined(text)) {
+            content.alt = text;
+            content.title = text;
+        }
+
+        if (credit.hasLink()) {
+            var a = document.createElement('a');
+            a.appendChild(content);
+            a.href = link;
+            a.target = '_blank';
+            span.appendChild(a);
+        } else {
+            span.appendChild(content);
+        }
+        span.className = 'cesium-credit-image';
+        return span;
+    }
+
+    function displayImageCredit(creditDisplay, credit) {
+        if (!creditDisplay.useWebVR) {
+            if (!defined(credit.element)) {
+                credit.element = createImageElement(credit);
+            }
+            creditDisplay._imageContainer.appendChild(credit.element);
+        } else {
+            if (!defined(credit.leftElement)) {
+                credit.leftElement = createImageElement(credit);
+                credit.rightElement = createImageElement(credit);
+            }
+            creditDisplay._leftImageContainer.appendChild(credit.leftElement);
+            creditDisplay._rightImageContainer.appendChild(credit.rightElement);
+        }
     }
 
     function contains(credits, credit) {
@@ -78,20 +116,30 @@ define([
         return false;
     }
 
-    function removeCreditDomElement(credit) {
+    function removeCreditDomElement(credit, element) {
+        var container = element.parentNode;
+        if (!credit.hasImage()) {
+            var delimiter = element.previousSibling;
+            if (delimiter === null) {
+                delimiter = element.nextSibling;
+            }
+            if (delimiter !== null) {
+                container.removeChild(delimiter);
+            }
+        }
+        container.removeChild(element);
+    }
+
+    function removeCredit(credit) {
         var element = credit.element;
         if (defined(element)) {
-            var container = element.parentNode;
-            if (!credit.hasImage()) {
-                var delimiter = element.previousSibling;
-                if (delimiter === null) {
-                    delimiter = element.nextSibling;
-                }
-                if (delimiter !== null) {
-                    container.removeChild(delimiter);
-                }
-            }
-            container.removeChild(element);
+            removeCreditDomElement(credit, element);
+        }
+
+        var leftElement = credit.leftElement;
+        if (defined(leftElement)) {
+            removeCreditDomElement(credit, leftElement);
+            removeCreditDomElement(credit, credit.rightElement);
         }
     }
 
@@ -105,7 +153,7 @@ define([
             if (defined(credit)) {
                 index = displayedTextCredits.indexOf(credit);
                 if (index === -1) {
-                    displayTextCredit(credit, creditDisplay._textContainer, creditDisplay._delimiter);
+                    displayTextCredit(creditDisplay, credit);
                 } else {
                     displayedTextCredits.splice(index, 1);
                 }
@@ -114,7 +162,7 @@ define([
         for (i = 0; i < displayedTextCredits.length; i++) {
             credit = displayedTextCredits[i];
             if (defined(credit)) {
-                removeCreditDomElement(credit);
+                removeCredit(credit);
             }
         }
 
@@ -130,7 +178,7 @@ define([
             if (defined(credit)) {
                 index = displayedImageCredits.indexOf(credit);
                 if (index === -1) {
-                    displayImageCredit(credit, creditDisplay._imageContainer);
+                    displayImageCredit(creditDisplay, credit);
                 } else {
                     displayedImageCredits.splice(index, 1);
                 }
@@ -139,9 +187,21 @@ define([
         for (i = 0; i < displayedImageCredits.length; i++) {
             credit = displayedImageCredits[i];
             if (defined(credit)) {
-                removeCreditDomElement(credit);
+                removeCredit(credit);
             }
         }
+    }
+
+    function createImageContainer() {
+        var imageContainer = document.createElement('span');
+        imageContainer.className = 'cesium-credit-imageContainer';
+        return imageContainer;
+    }
+
+    function createTextContainer() {
+        var textContainer = document.createElement('span');
+        textContainer.className = 'cesium-credit-textContainer';
+        return textContainer;
     }
 
     /**
@@ -156,24 +216,41 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-    function CreditDisplay(container, delimiter) {
+    function CreditDisplay(container, leftContainer, rightContainer, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
         }
         //>>includeEnd('debug');
 
-        var imageContainer = document.createElement('span');
-        imageContainer.className = 'cesium-credit-imageContainer';
-        var textContainer = document.createElement('span');
-        textContainer.className = 'cesium-credit-textContainer';
+        var imageContainer = createImageContainer();
+        var textContainer = createTextContainer();
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
-        this._delimiter = defaultValue(delimiter, ' • ');
         this._container = container;
         this._textContainer = textContainer;
         this._imageContainer = imageContainer;
+
+        var leftImageContainer = createImageContainer();
+        var leftTextContainer = createTextContainer();
+        leftContainer.appendChild(leftImageContainer);
+        leftContainer.appendChild(leftTextContainer);
+
+        this._leftContainer = leftContainer;
+        this._leftImageContainer = leftImageContainer;
+        this._leftTextContainer = leftTextContainer;
+
+        var rightImageContainer = createImageContainer();
+        var rightTextContainer = createTextContainer();
+        rightContainer.appendChild(rightImageContainer);
+        rightContainer.appendChild(rightTextContainer);
+
+        this._rightContainer = rightContainer;
+        this._rightImageContainer = rightImageContainer;
+        this._rightTextContainer = rightTextContainer;
+
+        this._delimiter = defaultValue(delimiter, ' • ');
         this._defaultImageCredits = [];
         this._defaultTextCredits = [];
 
@@ -185,7 +262,31 @@ define([
             imageCredits : [],
             textCredits : []
         };
+
+        this._useWebVR = false;
+        this._leftContainer.style.display = 'none';
+        this._rightContainer.style.display = 'none';
     }
+
+    defineProperties(CreditDisplay.prototype, {
+        useWebVR : {
+            get : function() {
+                return this._useWebVR;
+            },
+            set : function(value) {
+                this._useWebVR = value;
+                if (this._useWebVR) {
+                    this._container.style.display = 'none';
+                    this._leftContainer.style.display = 'block';
+                    this._rightContainer.style.display = 'block';
+                } else {
+                    this._container.style.display = 'block';
+                    this._leftContainer.style.display = 'none';
+                    this._rightContainer.style.display = 'none';
+                }
+            }
+        }
+    });
 
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container
@@ -304,7 +405,10 @@ define([
     CreditDisplay.prototype.destroy = function() {
         this._container.removeChild(this._textContainer);
         this._container.removeChild(this._imageContainer);
-
+        this._leftContainer.removeChild(this._leftTextContainer);
+        this._leftContainer.removeChild(this._leftImageContainer);
+        this._rightContainer.removeChild(this._rightTextContainer);
+        this._rightContainer.removeChild(this._rightImageContainer);
         return destroyObject(this);
     };
 
