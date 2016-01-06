@@ -194,10 +194,13 @@ define([
 
                 properties = {};
 
-                var featureInfoChildren = featureInfoElement.children;
+                // node.children is not supported in IE (not even IE11), so use childNodes and check that child.nodeType is an element
+                var featureInfoChildren = featureInfoElement.childNodes;
                 for (var childIndex = 0; childIndex < featureInfoChildren.length; ++childIndex) {
                     var child = featureInfoChildren[childIndex];
-                    properties[child.localName] = child.textContent;
+                    if (child.nodeType === 1) {  // type 1 is Node.ELEMENT_NODE
+                        properties[child.localName] = child.textContent;
+                    }
                 }
 
                 result.push(imageryLayerFeatureInfoFromDataAndProperties(featureInfoElement, properties));
@@ -230,15 +233,25 @@ define([
     function msGmlToFeatureInfo(xml) {
         var result = [];
 
-        var layer = xml.documentElement.children[0];
+        // Find the first child. Except for IE, this would work:
+        // var layer = xml.documentElement.children[0];
+        var layer;
+        var children = xml.documentElement.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].nodeType === 1) {
+                layer = children[i];
+                break;
+            }
+        };
 
-        var featureMembers = layer.children;
+        var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
             var featureMember = featureMembers[featureIndex];
-
-            var properties = {};
-            getGmlPropertiesRecursively(featureMember, properties);
-            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            if (featureMember.nodeType === 1) {
+                var properties = {};
+                getGmlPropertiesRecursively(featureMember, properties);
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            }
         }
 
         return result;
