@@ -587,7 +587,6 @@ define([
 
         this._useWebVR = false;
         this._cameraVR = undefined;
-        this._frustumVR = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1014,11 +1013,9 @@ define([
 
                 if (this._useWebVR) {
                     this._cameraVR = new Camera(this);
-                    this._frustumVR = new PerspectiveFrustum();
                     this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
                 } else {
                     this._cameraVR = undefined;
-                    this._frustumVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
                 }
             }
@@ -1808,11 +1805,11 @@ define([
         this._tweens.update();
         this._camera.update(this._mode);
 
-        if (!this._useWebVR) {
+        //if (!this._useWebVR) {
             this._screenSpaceCameraController.update();
-        } else {
-            this._deviceOrientationCameraController.update();
-        }
+        //} else {
+        //    this._deviceOrientationCameraController.update();
+        //}
     };
 
     var scratchEyeTranslation = new Cartesian3();
@@ -1871,49 +1868,62 @@ define([
 
         var viewport = passState.viewport;
 
-        if (!scene._useWebVR) {
+        if (scene._useWebVR) {
+            if (frameState.mode !== SceneMode.SCENE2D) {
+                // Based on Calculating Stereo pairs by Paul Bourke
+                // http://paulbourke.net/stereographics/stereorender/
+
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth * 0.5;
+                viewport.height = context.drawingBufferHeight;
+
+                var savedCamera = Camera.clone(camera, scene._cameraVR);
+
+                var near = camera.frustum.near;
+                var fo = near * 5.0;
+                var eyeSeparation = fo / 30.0;
+                var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+
+                camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+                var offset = 0.5 * eyeSeparation * near / fo;
+
+                Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = offset;
+
+                executeCommands(scene, passState);
+
+                viewport.x = passState.viewport.width;
+
+                Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = -offset;
+
+                executeCommands(scene, passState);
+
+                Camera.clone(savedCamera, camera);
+            } else {
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth * 0.5;
+                viewport.height = context.drawingBufferHeight;
+
+                camera.frustum.top = camera.frustum.right * (viewport.height / viewport.width);
+                camera.frustum.bottom = -camera.frustum.top;
+
+                executeCommands(scene, passState);
+
+                viewport.x = passState.viewport.width;
+
+                executeCommands(scene, passState);
+            }
+        } else {
             viewport.x = 0;
             viewport.y = 0;
             viewport.width = context.drawingBufferWidth;
             viewport.height = context.drawingBufferHeight;
 
             executeCommands(scene, passState);
-        } else {
-            // Based on Calculating Stereo pairs by Paul Bourke
-            // http://paulbourke.net/stereographics/stereorender/
-
-            viewport.x = 0;
-            viewport.y = 0;
-            viewport.width = context.drawingBufferWidth * 0.5;
-            viewport.height = context.drawingBufferHeight;
-
-            var savedCamera = Camera.clone(camera, scene._cameraVR);
-            var savedFrustum = camera.frustum.clone(scene._frustumVR);
-
-            var fo = savedFrustum.near * 5.0;
-            var eyeSeparation = fo / 30.0;
-            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
-
-            camera.frustum.aspectRatio = viewport.width / viewport.height;
-
-            var offset = 0.5 * eyeSeparation * savedFrustum.near / fo;
-
-            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = offset;
-
-            us.update(frameState);
-            executeCommands(scene, passState);
-
-            viewport.x = passState.viewport.width;
-
-            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-            camera.frustum.xOffset = -offset;
-
-            us.update(frameState);
-            executeCommands(scene, passState);
-
-            Camera.clone(savedCamera, camera);
-            savedFrustum.clone(camera.frustum);
         }
 
         resolveFramebuffers(scene, passState);
