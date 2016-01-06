@@ -19,8 +19,6 @@ define([
         SceneMode) {
     "use strict";
 
-// TODO: replace code in GlobeSurfaceTile.js and GlobeSurfaceTileProvider.js
-
     /**
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.rectangle
@@ -31,6 +29,8 @@ define([
      * @private
      */
     var TileBoundingBox = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.rectangle)) {
             throw new DeveloperError('options.url is required.');
@@ -147,6 +147,13 @@ define([
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
 
+    /**
+     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
+     *
+     * @param {FrameState} frameState The state information of the current rendering frame.
+     *
+     * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+     */
     TileBoundingBox.prototype.distanceToCamera = function(frameState) {
         var camera = frameState.camera;
         var cameraCartesianPosition = camera.positionWC;
