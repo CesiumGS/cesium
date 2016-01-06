@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.18 - 2016-02-01
+
+* Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+
 ### 1.17 - 2016-01-04
 
 * Breaking changes
