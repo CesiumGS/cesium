@@ -1805,11 +1805,11 @@ define([
         this._tweens.update();
         this._camera.update(this._mode);
 
-        //if (!this._useWebVR) {
+        if (!this._useWebVR || this._mode === SceneMode.SCENE2D) {
             this._screenSpaceCameraController.update();
-        //} else {
-        //    this._deviceOrientationCameraController.update();
-        //}
+        } else {
+            this._deviceOrientationCameraController.update();
+        }
     };
 
     var scratchEyeTranslation = new Cartesian3();
