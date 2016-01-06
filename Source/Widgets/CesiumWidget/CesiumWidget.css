@@ -24,6 +24,40 @@
     color: #fff;
 }
 
+.cesium-widget-credits-left {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+    color: #fff;
+    font-size: 10px;
+    text-shadow: 0px 0px 2px #000000;
+    padding-right: 5px;
+}
+
+.cesium-widget-credits-left a,
+.cesium-widget-credits-left a:visited {
+    color: #fff;
+}
+
+.cesium-widget-credits-right {
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 50%;
+    color: #fff;
+    font-size: 10px;
+    text-shadow: 0px 0px 2px #000000;
+    padding-right: 5px;
+}
+
+.cesium-widget-credits-right a,
+.cesium-widget-credits-right a:visited {
+    color: #fff;
+}
+
 .cesium-widget-errorPanel {
     position: absolute;
     top: 0;
