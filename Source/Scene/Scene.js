@@ -1493,7 +1493,6 @@ define([
 
         if (environmentState.isSunVisible) {
             environmentState.sunDrawCommand.execute(context, passState);
-            // TODO: fix with WebVR
             if (scene.sunBloom && !scene._useWebVR) {
                 var framebuffer;
                 if (environmentState.useGlobeDepthFramebuffer) {
@@ -1678,7 +1677,6 @@ define([
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            // TODO: fix with WebVR
             if (scene.sunBloom && !scene._useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();
             } else if(defined(scene._sunPostProcess)){
@@ -1729,7 +1727,6 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        // TODO: fix with WebVR
         if (environmentState.isSunVisible && scene.sunBloom && !scene._useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
