@@ -501,6 +501,14 @@ define([
         this.fxaa = true;
 
         /**
+         * When <code>true</code>, enables picking using the depth buffer.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.useDepthPicking = true;
+
+        /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
          * @type {Number}
          * @default 500.0
@@ -1555,7 +1563,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -2013,6 +2021,10 @@ define([
      * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
+        if (!this.useDepthPicking) {
+            return undefined;
+        }
+
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
