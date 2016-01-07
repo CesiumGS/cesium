@@ -365,7 +365,6 @@ define([
 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.loadedTerrain = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -402,7 +401,6 @@ define([
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,

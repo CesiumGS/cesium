@@ -1565,7 +1565,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking ) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1995,13 +1995,13 @@ define([
 
         us.update(frameState);
 
+        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+
         var passState = this._pickFramebuffer.begin(scratchRectangle);
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
         updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-
-        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, passState);
         resolveFramebuffers(this, passState);
@@ -2250,7 +2250,7 @@ define([
      *
      * @example
      * scene = scene && scene.destroy();
-     * 
+     *
      * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {

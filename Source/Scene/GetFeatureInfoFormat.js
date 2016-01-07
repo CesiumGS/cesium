@@ -194,10 +194,13 @@ define([
 
                 properties = {};
 
-                var featureInfoChildren = featureInfoElement.children;
+                // node.children is not supported in IE9-11, so use childNodes and check that child.nodeType is an element
+                var featureInfoChildren = featureInfoElement.childNodes;
                 for (var childIndex = 0; childIndex < featureInfoChildren.length; ++childIndex) {
                     var child = featureInfoChildren[childIndex];
-                    properties[child.localName] = child.textContent;
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        properties[child.localName] = child.textContent;
+                    }
                 }
 
                 result.push(imageryLayerFeatureInfoFromDataAndProperties(featureInfoElement, properties));
@@ -230,15 +233,25 @@ define([
     function msGmlToFeatureInfo(xml) {
         var result = [];
 
-        var layer = xml.documentElement.children[0];
+        // Find the first child. Except for IE, this would work:
+        // var layer = xml.documentElement.children[0];
+        var layer;
+        var children = xml.documentElement.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].nodeType === Node.ELEMENT_NODE) {
+                layer = children[i];
+                break;
+            }
+        }
 
-        var featureMembers = layer.children;
+        var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
             var featureMember = featureMembers[featureIndex];
-
-            var properties = {};
-            getGmlPropertiesRecursively(featureMember, properties);
-            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            if (featureMember.nodeType === Node.ELEMENT_NODE) {
+                var properties = {};
+                getGmlPropertiesRecursively(featureMember, properties);
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            }
         }
 
         return result;
@@ -247,8 +260,8 @@ define([
     function getGmlPropertiesRecursively(gmlNode, properties) {
         var isSingleValue = true;
 
-        for (var i = 0; i < gmlNode.children.length; ++i) {
-            var child = gmlNode.children[i];
+        for (var i = 0; i < gmlNode.childNodes.length; ++i) {
+            var child = gmlNode.childNodes[i];
 
             if (child.nodeType === Node.ELEMENT_NODE) {
                 isSingleValue = false;
