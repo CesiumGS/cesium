@@ -44,7 +44,7 @@ define([
             throw new DeveloperError('positions is required.');
         }
         if (!defined(terrainProvider.getMaximumTileLevel)) {
-            throw new DeveloperError('getMaximumTileLevel must not be called before the terrain provider is ready.');
+            throw new DeveloperError('getMaximumTileLevel() must be supported by the terrain provider.');
         }
 
         return terrainProvider.readyPromise.then(function() {
