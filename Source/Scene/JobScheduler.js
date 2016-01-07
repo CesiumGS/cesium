@@ -69,7 +69,7 @@ define([
      *
      * @private
      */
-    var JobScheduler = function(budgets) {
+    function JobScheduler(budgets) {
         if (defined(budgets) && (budgets.length !== JobType.NUMBER_OF_JOB_TYPES)) {
             throw new DeveloperError('A budget must be specified for each job type; budgets.length should equal JobType.NUMBER_OF_JOB_TYPES.');
         }
@@ -98,7 +98,7 @@ define([
         this._totalUsedThisFrame = 0.0;
         this._budgets = jobBudgets;
         this._executedThisFrame = executedThisFrame;
-    };
+    }
 
     // For unit testing
     JobScheduler.getTimestamp = getTimestamp;
