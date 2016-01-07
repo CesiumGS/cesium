@@ -749,5 +749,33 @@ define([
         }
     };
 
+    /**
+     * Determines the maximum tile level available for a position.
+     *
+     * @param {Cartographic} position The cartographic query position.
+     * @returns {Number} The maximum tile level available for this terrain dataset.
+     */
+    CesiumTerrainProvider.prototype.getMaximumTileLevel = function(position) {
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumTileLevel must not be called before the terrain provider is ready.');
+        }
+
+        var available = this._availableTiles;
+        if (!available || available.length === 0) {
+            throw new DeveloperError('getMaximumTileLevel must only be called on terrain datasets that can calculate availability.');
+        }
+
+        for (var level = available.length - 1; level >= 0; level--) {
+            var xy = this._tilingScheme.positionToTileXY(position, level);
+            if (defined(xy)) {
+                if (this.getTileDataAvailable(xy.x, xy.y, level)) {
+                    return level;
+                }
+            }
+        }
+
+        return 0;
+    };
+
     return CesiumTerrainProvider;
 });
