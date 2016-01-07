@@ -59,7 +59,8 @@ define([
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, 0.0);
+        var distance = this._tile.distanceToCamera;
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, distance);
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

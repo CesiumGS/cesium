@@ -37,6 +37,10 @@ define([
     var budgets = {};
     var leftoverRequests = [];
 
+    var stats = {
+        numberOfRequestsThisFrame : 0
+    };
+
     /**
      * Because browsers throttle the number of parallel requests allowed to each server
      * and across all servers, this class tracks the number of active requests in progress
@@ -60,6 +64,17 @@ define([
         });
     }
 
+    function printStats() {
+        if (stats.numberOfRequestsThisFrame > 0) {
+            console.log('Number of requests attempted: ' + stats.numberOfRequestsThisFrame);
+        }
+
+        var numberOfActiveRequests = RequestScheduler.maximumRequests - RequestScheduler.getNumberOfAvailableRequests();
+        if (numberOfActiveRequests > 0) {
+            console.log('Number of active requests: ' + numberOfActiveRequests);
+        }
+    }
+
     function distanceSortFunction(a, b) {
         return a.distance - b.distance;
     }
@@ -67,6 +82,13 @@ define([
     RequestScheduler.resetBudgets = function() {
         // TODO : Right now, assume that requests made the previous frame will probably be issued again the current frame
         // TODO : If this assumption changes, we should introduce stealing from other budgets.
+
+        if (!RequestScheduler.prioritize) {
+            return;
+        }
+
+        printStats();
+        stats.numberOfRequestsThisFrame = 0;
 
         // Reset budget totals
         for (var name in budgets) {
@@ -208,6 +230,8 @@ define([
         }
         //>>includeEnd('debug');
 
+        ++stats.numberOfRequestsThisFrame;
+
         if (activeRequests >= RequestScheduler.maximumRequests) {
             handleLeftoverRequest(url, requestType, distance);
             return undefined;
@@ -220,7 +244,7 @@ define([
             return undefined;
         }
 
-        if (defined(requestType)) {
+        if (RequestScheduler.prioritize && defined(requestType)) {
             var budget = budgets[server];
             if (!defined(budget)) {
                 budget = new RequestTypeBudget(requestType);
@@ -264,6 +288,13 @@ define([
      * @default 10
      */
     RequestScheduler.maximumRequests = 10;
+
+    /**
+     * Specifies if the request scheduler should prioritize incoming requests
+     * @type {Boolean}
+     * @default true
+     */
+    RequestScheduler.prioritize = true;
 
     return RequestScheduler;
 });

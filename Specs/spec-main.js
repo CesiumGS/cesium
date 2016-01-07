@@ -58,6 +58,8 @@
 
         /*global jasmineRequire,jasmine,exports,specs*/
 
+        Cesium.RequestScheduler.prioritize = false;
+
         var when = Cesium.when;
 
         if (typeof paths !== 'undefined') {

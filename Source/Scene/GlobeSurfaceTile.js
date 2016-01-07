@@ -245,6 +245,13 @@ define([
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
+            surfaceTile.tileBoundingBox = new TileBoundingBox({
+                rectangle : tile.rectangle,
+                ellipsoid : tile.tilingScheme.ellipsoid
+            });
+            // Set the distance of the tile now in order to prioritize the request later.
+            // Rough estimate, since the tile height isn't known until the terrain is loaded.
+            tile._distance = surfaceTile.tileBoundingBox.distanceToCamera(frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -343,7 +350,7 @@ define([
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level, tile._distance);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.

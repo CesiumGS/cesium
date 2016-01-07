@@ -479,6 +479,8 @@ define([
      * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
      *                  or false if the request should be initiated regardless of the number of requests
      *                  already in progress.
+     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
+     *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
@@ -486,7 +488,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests, distance) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -524,7 +526,7 @@ define([
         }
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = RequestScheduler.throttleRequest(url, tileLoader, RequestType.TERRAIN, 0.0);
+            promise = RequestScheduler.throttleRequest(url, tileLoader, RequestType.TERRAIN, distance);
             if (!defined(promise)) {
                 return undefined;
             }

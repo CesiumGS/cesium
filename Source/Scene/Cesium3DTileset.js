@@ -228,7 +228,9 @@ define([
      */
     Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
         var tileset = this;
-        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson, RequestType.TILES3D, 0.0);
+
+        // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
+        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson, RequestType.TILES3D);
 
         if (!defined(promise)) {
             return undefined;
