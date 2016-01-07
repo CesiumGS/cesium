@@ -321,14 +321,17 @@ define([
             return;
         }
 
-        var stats = tiles3D._statistics;
-        ++stats.numberOfPendingRequests;
-        addLoadProgressEvent(tiles3D);
-
         tile.requestContent();
-        var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
-        when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
+
+        if (!tile.isContentUnloaded()) {
+            var stats = tiles3D._statistics;
+            ++stats.numberOfPendingRequests;
+            addLoadProgressEvent(tiles3D);
+
+            var removeFunction = removeFromProcessingQueue(tiles3D, tile);
+            when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
+            when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
+        }
     }
 
     function hasAvailableRequests(tiles3D) {
