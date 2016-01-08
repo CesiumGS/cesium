@@ -41,7 +41,7 @@ define([
      * });
      * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
      */
-    var SphereGeometry = function(options) {
+    function SphereGeometry(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -53,7 +53,7 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
         this._workerName = 'createSphereGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -63,9 +63,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {SphereGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -94,6 +93,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {SphereGeometry} [result] The object into which to store the result.
+     * @returns {SphereGeometry} The modified result parameter or a new SphereGeometry instance if one was not provided.
      */
     SphereGeometry.unpack = function(array, startingIndex, result) {
         var ellipsoidGeometry = EllipsoidGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);

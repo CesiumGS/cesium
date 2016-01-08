@@ -18,14 +18,23 @@ define([
         '../Core/Rectangle',
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ClearCommand',
+        '../Renderer/ComputeCommand',
+        '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/MipmapHint',
+        '../Renderer/RenderState',
+        '../Renderer/Sampler',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/VertexArray',
         '../Shaders/ReprojectWebMercatorFS',
         '../Shaders/ReprojectWebMercatorVS',
         '../ThirdParty/when',
@@ -51,14 +60,23 @@ define([
         Rectangle,
         TerrainProvider,
         TileProviderError,
+        Buffer,
         BufferUsage,
         ClearCommand,
+        ComputeCommand,
+        ContextLimits,
         DrawCommand,
+        Framebuffer,
         MipmapHint,
+        RenderState,
+        Sampler,
+        ShaderProgram,
         ShaderSource,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        VertexArray,
         ReprojectWebMercatorFS,
         ReprojectWebMercatorVS,
         when,
@@ -132,7 +150,7 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
-    var ImageryLayer = function ImageryLayer(imageryProvider, options) {
+    function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
         options = defaultValue(options, {});
@@ -217,7 +235,7 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
-    };
+    }
 
     defineProperties(ImageryLayer.prototype, {
 
@@ -323,10 +341,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayer#isDestroyed
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
+     * 
+     * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
         return destroyObject(this);
@@ -654,7 +673,8 @@ define([
         }
 
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : context,
             source : imagery.image,
             pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
         });
@@ -664,41 +684,18 @@ define([
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
-    /**
-     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
-     * mipmaps for the geographic texture.
-     *
-     * @private
-     *
-     * @param {Context} context The rendered context to use.
-     * @param {Imagery} imagery The imagery instance to reproject.
-     */
-    ImageryLayer.prototype._reprojectTexture = function(context, imagery) {
-        var texture = imagery.texture;
-        var rectangle = imagery.rectangle;
-
-        // Reproject this texture if it is not already in a geographic projection and
-        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
-        // avoids precision problems in the reprojection transformation while making
-        // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
-            rectangle.width / texture.width > 1e-5) {
-                var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.rectangle);
-                texture.destroy();
-                imagery.texture = texture = reprojectedTexture;
-        }
-
+    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = context.maximumTextureFilterAnisotropy;
-                mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
+                var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
+                mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR,
-                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
+                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
@@ -706,7 +703,7 @@ define([
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
             if (!defined(nonMipmapSampler)) {
-                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = context.createSampler({
+                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR,
@@ -717,6 +714,47 @@ define([
         }
 
         imagery.state = ImageryState.READY;
+    }
+
+    /**
+     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
+     * mipmaps for the geographic texture.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     * @param {Imagery} imagery The imagery instance to reproject.
+     */
+    ImageryLayer.prototype._reprojectTexture = function(frameState, imagery) {
+        var texture = imagery.texture;
+        var rectangle = imagery.rectangle;
+        var context = frameState.context;
+
+        // Reproject this texture if it is not already in a geographic projection and
+        // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
+        // avoids precision problems in the reprojection transformation while making
+        // no noticeable difference in the georeferencing of the image.
+        if (!(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            rectangle.width / texture.width > 1e-5) {
+                var that = this;
+                var computeCommand = new ComputeCommand({
+                    persists : true,
+                    owner : this,
+                    // Update render resources right before execution instead of now.
+                    // This allows different ImageryLayers to share the same vao and buffers.
+                    preExecute : function(command) {
+                        reprojectToGeographic(command, context, texture, imagery.rectangle);
+                    },
+                    postExecute : function(outputTexture) {
+                        texture.destroy();
+                        imagery.texture = outputTexture;
+                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                    }
+                });
+                frameState.commandList.push(computeCommand);
+        } else {
+            finalizeReprojectTexture(this, context, imagery, texture);
+        }
     };
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryRectangle) {
@@ -755,7 +793,7 @@ define([
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 
-    function reprojectToGeographic(imageryLayer, context, texture, rectangle) {
+    function reprojectToGeographic(command, context, texture, rectangle) {
         // This function has gone through a number of iterations, because GPUs are awesome.
         //
         // Originally, we had a very simple vertex shader and computed the Web Mercator texture coordinates
@@ -795,10 +833,8 @@ define([
 
         if (!defined(reproject)) {
             reproject = context.cache.imageryLayer_reproject = {
-                framebuffer : undefined,
                 vertexArray : undefined,
                 shaderProgram : undefined,
-                renderState : undefined,
                 sampler : undefined,
                 destroy : function() {
                     if (defined(this.framebuffer)) {
@@ -829,28 +865,47 @@ define([
             };
 
             var indices = TerrainProvider.getRegularGridIndices(2, 64);
-            var indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
 
-            reproject.vertexArray = context.createVertexArray([
-                {
+            reproject.vertexArray = new VertexArray({
+                context : context,
+                attributes : [{
                     index : reprojectAttributeIndices.position,
-                    vertexBuffer : context.createVertexBuffer(positions, BufferUsage.STATIC_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : positions,
+                        usage : BufferUsage.STATIC_DRAW
+                    }),
                     componentsPerAttribute : 2
-                },
-                {
+                },{
                     index : reprojectAttributeIndices.webMercatorT,
-                    vertexBuffer : context.createVertexBuffer(64 * 2 * 4, BufferUsage.STREAM_DRAW),
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        sizeInBytes : 64 * 2 * 4,
+                        usage : BufferUsage.STREAM_DRAW
+                    }),
                     componentsPerAttribute : 1
-                }
-            ], indexBuffer);
+                }],
+                indexBuffer : indexBuffer
+            });
 
             var vs = new ShaderSource({
                 sources : [ReprojectWebMercatorVS]
             });
 
-            reproject.shaderProgram = context.createShaderProgram(vs, ReprojectWebMercatorFS, reprojectAttributeIndices);
+            reproject.shaderProgram = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : ReprojectWebMercatorFS,
+                attributeLocations : reprojectAttributeIndices
+            });
 
-            reproject.sampler = context.createSampler({
+            reproject.sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -874,7 +929,8 @@ define([
         var northMercatorY = 0.5 * Math.log((1 + sinLatitude) / (1 - sinLatitude));
         var oneOverMercatorHeight = 1.0 / (northMercatorY - southMercatorY);
 
-        var outputTexture = context.createTexture2D({
+        var outputTexture = new Texture({
+            context : context,
             width : width,
             height : height,
             pixelFormat : texture.pixelFormat,
@@ -889,15 +945,6 @@ define([
         if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
             outputTexture.generateMipmap(MipmapHint.NICEST);
         }
-
-        if (defined(reproject.framebuffer)) {
-            reproject.framebuffer.destroy();
-        }
-
-        reproject.framebuffer = context.createFramebuffer({
-            colorTextures : [outputTexture]
-        });
-        reproject.framebuffer.destroyAttachments = false;
 
         var south = rectangle.south;
         var north = rectangle.north;
@@ -917,32 +964,10 @@ define([
 
         reproject.vertexArray.getAttribute(1).vertexBuffer.copyFromArrayView(webMercatorT);
 
-        var command = new ClearCommand({
-            color : Color.BLACK,
-            framebuffer : reproject.framebuffer
-        });
-        command.execute(context);
-
-        if ((!defined(reproject.renderState)) ||
-                (reproject.renderState.viewport.width !== width) ||
-                (reproject.renderState.viewport.height !== height)) {
-
-            reproject.renderState = context.createRenderState({
-                viewport : new BoundingRectangle(0, 0, width, height)
-            });
-        }
-
-        var drawCommand = new DrawCommand({
-            framebuffer : reproject.framebuffer,
-            shaderProgram : reproject.shaderProgram,
-            renderState : reproject.renderState,
-            primitiveType : PrimitiveType.TRIANGLES,
-            vertexArray : reproject.vertexArray,
-            uniformMap : uniformMap
-        });
-        drawCommand.execute(context);
-
-        return outputTexture;
+        command.shaderProgram = reproject.shaderProgram;
+        command.outputTexture = outputTexture;
+        command.uniformMap = uniformMap;
+        command.vertexArray = reproject.vertexArray;
     }
 
     /**

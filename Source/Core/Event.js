@@ -29,18 +29,19 @@ define([
      * evt.raiseEvent('1', '2');
      * evt.removeEventListener(MyObject.prototype.myListener);
      */
-    var Event = function() {
+    function Event() {
         this._listeners = [];
         this._scopes = [];
         this._toRemove = [];
         this._insideRaiseEvent = false;
-    };
+    }
 
     defineProperties(Event.prototype, {
         /**
          * The number of listeners currently subscribed to the event.
          * @memberof Event.prototype
          * @type {Number}
+         * @readonly
          */
         numberOfListeners : {
             get : function() {

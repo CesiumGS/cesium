@@ -320,7 +320,7 @@ define([
      *   text : 'Another label'
      * });
      */
-    var LabelCollection = function(options) {
+    function LabelCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._scene = options.scene;
@@ -381,7 +381,7 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
-    };
+    }
 
     defineProperties(LabelCollection.prototype, {
         /**
@@ -412,8 +412,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#remove
-     * @see LabelCollection#removeAll
      *
      * @example
      * // Example 1:  Add a label, specifying all the default values.
@@ -440,6 +438,9 @@ define([
      *   text : 'Hello World',
      *   font : '24px Helvetica',
      * });
+     * 
+     * @see LabelCollection#remove
+     * @see LabelCollection#removeAll
      */
     LabelCollection.prototype.add = function(options) {
         var label = new Label(options, this);
@@ -464,13 +465,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#removeAll
-     * @see Label#show
      *
      * @example
      * var l = labels.add(...);
      * labels.remove(l);  // Returns true
+     * 
+     * @see LabelCollection#add
+     * @see LabelCollection#removeAll
+     * @see Label#show
      */
     LabelCollection.prototype.remove = function(label) {
         if (defined(label) && label._labelCollection === this) {
@@ -492,13 +494,14 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#add
-     * @see LabelCollection#remove
      *
      * @example
      * labels.add(...);
      * labels.add(...);
      * labels.removeAll();
+     * 
+     * @see LabelCollection#add
+     * @see LabelCollection#remove
      */
     LabelCollection.prototype.removeAll = function() {
         var labels = this._labels;
@@ -539,7 +542,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#length
      *
      * @example
      * // Toggle the show property of every label in the collection
@@ -548,6 +550,8 @@ define([
      *   var l = billboards.get(i);
      *   l.show = !l.show;
      * }
+     * 
+     * @see LabelCollection#length
      */
     LabelCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -562,11 +566,13 @@ define([
     /**
      * @private
      */
-    LabelCollection.prototype.update = function(context, frameState, commandList) {
+    LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;
 
         billboardCollection.modelMatrix = this.modelMatrix;
         billboardCollection.debugShowBoundingVolume = this.debugShowBoundingVolume;
+
+        var context = frameState.context;
 
         if (!defined(this._textureAtlas)) {
             this._textureAtlas = new TextureAtlas({
@@ -611,7 +617,7 @@ define([
         }
 
         this._labelsToUpdate.length = 0;
-        billboardCollection.update(context, frameState, commandList);
+        billboardCollection.update(frameState);
     };
 
     /**
@@ -640,10 +646,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see LabelCollection#isDestroyed
      *
      * @example
      * labels = labels && labels.destroy();
+     * 
+     * @see LabelCollection#isDestroyed
      */
     LabelCollection.prototype.destroy = function() {
         this.removeAll();

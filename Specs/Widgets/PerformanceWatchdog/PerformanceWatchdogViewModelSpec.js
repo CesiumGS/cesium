@@ -12,7 +12,6 @@ defineSuite([
         FrameRateMonitor,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     beforeAll(function() {
@@ -34,6 +33,7 @@ defineSuite([
     });
 
     function spinWait(milliseconds) {
+        /*jshint noempty: false*/
         var endTime = getTimestamp() + milliseconds;
         while (getTimestamp() < endTime) {
         }

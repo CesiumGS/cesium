@@ -17,9 +17,13 @@ define([
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/Plane',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/RenderState',
+        '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineVS',
@@ -46,9 +50,13 @@ define([
         CesiumMath,
         Matrix4,
         Plane,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        ShaderProgram,
         ShaderSource,
+        VertexArray,
         PolylineCommon,
         PolylineFS,
         PolylineVS,
@@ -136,7 +144,7 @@ define([
      *   width : 4
      * });
      */
-    var PolylineCollection = function(options) {
+    function PolylineCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -190,7 +198,7 @@ define([
         this._positionBuffer = undefined;
         this._pickColorBuffer = undefined;
         this._texCoordExpandWidthAndShowBuffer = undefined;
-    };
+    }
 
     defineProperties(PolylineCollection.prototype, {
         /**
@@ -221,19 +229,20 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
      *
      * @example
      * // Example 1:  Add a polyline, specifying all the default values.
      * var p = polylines.add({
      *   show : true,
-     *   positions : ellipsoid.cartographicDegreesToCartesians([
-     *     new Cesium.Cartographic2(-75.10, 39.57),
-     *     new Cesium.Cartographic2(-77.02, 38.53)]),
-     *     width : 1
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+           Cesium.Cartographic.fromDegrees(-75.10, 39.57),
+           Cesium.Cartographic.fromDegrees(-77.02, 38.53)]),
+     *   width : 1
      * });
+     * 
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.add = function(polyline) {
         var p = new Polyline(polyline, this);
@@ -257,14 +266,15 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#removeAll
-     * @see PolylineCollection#update
-     * @see Polyline#show
      *
      * @example
      * var p = polylines.add(...);
      * polylines.remove(p);  // Returns true
+     * 
+     * @see PolylineCollection#add
+     * @see PolylineCollection#removeAll
+     * @see PolylineCollection#update
+     * @see Polyline#show
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
@@ -291,14 +301,15 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#add
-     * @see PolylineCollection#remove
-     * @see PolylineCollection#update
      *
      * @example
      * polylines.add(...);
      * polylines.add(...);
      * polylines.removeAll();
+     * 
+     * @see PolylineCollection#add
+     * @see PolylineCollection#remove
+     * @see PolylineCollection#update
      */
     PolylineCollection.prototype.removeAll = function() {
         releaseShaders(this);
@@ -362,7 +373,7 @@ define([
     /**
      * @private
      */
-    PolylineCollection.prototype.update = function(context, frameState, commandList) {
+    PolylineCollection.prototype.update = function(frameState, commandList) {
         removePolylines(this);
 
         if (this._polylines.length === 0) {
@@ -371,6 +382,7 @@ define([
 
         updateMode(this, frameState);
 
+        var context = frameState.context;
         var projection = frameState.mapProjection;
         var polyline;
         var properties = this._propertiesChanged;
@@ -432,7 +444,7 @@ define([
         var useDepthTest = (frameState.morphTime !== 0.0);
 
         if (!defined(this._opaqueRS) || this._opaqueRS.depthTest.enabled !== useDepthTest) {
-            this._opaqueRS = context.createRenderState({
+            this._opaqueRS = RenderState.fromCache({
                 depthMask : useDepthTest,
                 depthTest : {
                     enabled : useDepthTest
@@ -441,7 +453,7 @@ define([
         }
 
         if (!defined(this._translucentRS) || this._translucentRS.depthTest.enabled !== useDepthTest) {
-            this._translucentRS = context.createRenderState({
+            this._translucentRS = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
                 depthTest : {
@@ -452,19 +464,22 @@ define([
 
         if (pass.render) {
             var colorList = this._colorCommands;
-            createCommandLists(this, context, frameState, colorList, commandList, modelMatrix, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
-            createCommandLists(this, context, frameState, pickList, commandList, modelMatrix, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, false);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, context, frameState, commands, commandList, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+        var context = frameState.context;
+        var commandList = frameState.commandList;
+
         var commandsLength = commands.length;
         var commandIndex = 0;
         var cloneBoundingSphere = true;
@@ -626,10 +641,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PolylineCollection#isDestroyed
      *
      * @example
      * polylines = polylines && polylines.destroy();
+     * 
+     * @see PolylineCollection#isDestroyed
      */
     PolylineCollection.prototype.destroy = function() {
         destroyVertexArrays(this);
@@ -735,13 +751,29 @@ define([
             var widthBufferUsage = collection._buffersUsage[WIDTH_INDEX].bufferUsage;
             var texCoordExpandWidthAndShowBufferUsage = (showBufferUsage === BufferUsage.STREAM_DRAW || widthBufferUsage === BufferUsage.STREAM_DRAW) ? BufferUsage.STREAM_DRAW : BufferUsage.STATIC_DRAW;
 
-            collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
+            collection._positionBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positionArray,
+                usage : positionBufferUsage
+            });
             var position3DBuffer;
             if (defined(position3DArray)) {
-                position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
+                position3DBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : position3DArray,
+                    usage : positionBufferUsage
+                });
             }
-            collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
-            collection._texCoordExpandWidthAndShowBuffer = context.createVertexBuffer(texCoordExpandWidthAndShowArray, texCoordExpandWidthAndShowBufferUsage);
+            collection._pickColorBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : pickColorArray,
+                usage : BufferUsage.STATIC_DRAW
+            });
+            collection._texCoordExpandWidthAndShowBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : texCoordExpandWidthAndShowArray,
+                usage : texCoordExpandWidthAndShowBufferUsage
+            });
 
             var pickColorSizeInBytes = 4 * Uint8Array.BYTES_PER_ELEMENT;
             var positionSizeInBytes = 3 * Float32Array.BYTES_PER_ELEMENT;
@@ -754,7 +786,12 @@ define([
 
                 if (indices.length > 0) {
                     var indicesArray = new Uint16Array(indices);
-                    var indexBuffer = context.createIndexBuffer(indicesArray, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                    var indexBuffer = Buffer.createIndexBuffer({
+                        context : context,
+                        typedArray : indicesArray,
+                        usage : BufferUsage.STATIC_DRAW,
+                        indexDatatype : IndexDatatype.UNSIGNED_SHORT
+                    });
 
                     vbo += vertexBufferOffset[k];
 
@@ -889,7 +926,11 @@ define([
                     attributes[10][bufferProperty2D] = buffer2D;
                     attributes[11][bufferProperty2D] = buffer2D;
 
-                    var va = context.createVertexArray(attributes, indexBuffer);
+                    var va = new VertexArray({
+                        context : context,
+                        attributes : attributes,
+                        indexBuffer : indexBuffer
+                    });
                     collection._vertexArrays.push({
                         va : va,
                         buckets : vertexArrayBuckets[k]
@@ -1009,7 +1050,7 @@ define([
         this.bucket = bucket;
     }
 
-    var PolylineBucket = function(material, mode, modelMatrix) {
+    function PolylineBucket(material, mode, modelMatrix) {
         this.polylines = [];
         this.lengthOfPositions = 0;
         this.material = material;
@@ -1017,8 +1058,7 @@ define([
         this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
-    };
-
+    }
     PolylineBucket.prototype.addPolyline = function(p) {
         var polylines = this.polylines;
         polylines.push(p);
@@ -1042,8 +1082,20 @@ define([
             sources : fs.sources,
             pickColorQualifier : 'varying'
         });
-        this.shaderProgram = context.createShaderProgram(vs, fs, attributeLocations);
-        this.pickShaderProgram = context.createShaderProgram(vs, fsPick, attributeLocations);
+
+        this.shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        this.pickShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fsPick,
+            attributeLocations : attributeLocations
+        });
     };
 
     function intersectsIDL(polyline) {
@@ -1278,7 +1330,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1310,7 +1362,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
+                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

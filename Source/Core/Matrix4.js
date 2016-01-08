@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslationRotationScale
      * @see Matrix4.fromTranslationQuaternionRotationScale
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
@@ -61,7 +62,7 @@ define([
      * @see Matrix3
      * @see Packable
      */
-    var Matrix4 = function(column0Row0, column1Row0, column2Row0, column3Row0,
+    function Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
                            column0Row1, column1Row1, column2Row1, column3Row1,
                            column0Row2, column1Row2, column2Row2, column3Row2,
                            column0Row3, column1Row3, column2Row3, column3Row3) {
@@ -81,7 +82,7 @@ define([
         this[13] = defaultValue(column3Row1, 0.0);
         this[14] = defaultValue(column3Row2, 0.0);
         this[15] = defaultValue(column3Row3, 0.0);
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -133,6 +134,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix4} [result] The object into which to store the result.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
     Matrix4.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -232,7 +234,7 @@ define([
      *
      * @param {Number[]} values The column-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -250,7 +252,7 @@ define([
      *
      * @param {Number[]} values The row-major order array.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -291,7 +293,7 @@ define([
      * @param {Matrix3} rotation The upper left portion of the matrix representing the rotation.
      * @param {Cartesian3} [translation=Cartesian3.ZERO] The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -336,7 +338,7 @@ define([
      * @param {Quaternion} rotation The rotation transformation.
      * @param {Cartesian3} scale The non-uniform scale transformation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * var result = Cesium.Matrix4.fromTranslationQuaternionRotationScale(
@@ -410,11 +412,28 @@ define([
     };
 
     /**
+     * Creates a Matrix4 instance from a {@link TranslationRotationScale} instance.
+     *
+     * @param {TranslationRotationScale} translationRotationScale The instance.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
+     */
+    Matrix4.fromTranslationRotationScale = function(translationRotationScale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(translationRotationScale)) {
+            throw new DeveloperError('translationRotationScale is required.');
+        }
+        //>>includeEnd('debug');
+
+        return Matrix4.fromTranslationQuaternionRotationScale(translationRotationScale.translation, translationRotationScale.rotation, translationRotationScale.scale, result);
+    };
+
+    /**
      * Creates a Matrix4 instance from a Cartesian3 representing the translation.
      *
      * @param {Cartesian3} translation The upper right portion of the matrix representing the translation.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @see Matrix4.multiplyByTranslation
      */
@@ -433,7 +452,7 @@ define([
      *
      * @param {Cartesian3} scale The x, y, and z scale factors.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -482,7 +501,7 @@ define([
      *
      * @param {Number} scale The uniform scale factor.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      *
      * @example
      * // Creates
@@ -534,7 +553,7 @@ define([
      *
      * @param {Camera} camera The camera to use.
      * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
-     * @returns The modified result parameter, or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
      */
     Matrix4.fromCamera = function(camera, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -629,7 +648,7 @@ define([
       * @param {Number} near The distance to the near plane in meters.
       * @param {Number} far The distance to the far plane in meters.
       * @param {Matrix4} result The object in which the result will be stored.
-      * @returns The modified result parameter.
+      * @returns {Matrix4} The modified result parameter.
       *
       * @exception {DeveloperError} fovY must be in [0, PI).
       * @exception {DeveloperError} aspectRatio must be greater than zero.
@@ -691,7 +710,7 @@ define([
     * @param {Number} near The distance to the near plane in meters.
     * @param {Number} far The distance to the far plane in meters.
     * @param {Matrix4} result The object in which the result will be stored.
-    * @returns The modified result parameter.
+    * @returns {Matrix4} The modified result parameter.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -758,7 +777,7 @@ define([
      * @param {Number} near The distance to the near plane in meters.
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -822,7 +841,7 @@ define([
      * @param {Number} near The distance to the near plane in meters.
      * @param {Number} far The distance to the far plane in meters.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -880,7 +899,7 @@ define([
      * @param {Number}[nearDepthRange=0.0] The near plane distance in window coordinates.
      * @param {Number}[farDepthRange=1.0] The far plane distance in window coordinates.
      * @param {Matrix4} result The object in which the result will be stored.
-     * @returns The modified result parameter.
+     * @returns {Matrix4} The modified result parameter.
      *
      * @example
      * // Create viewport transformation using an explicit viewport and depth range.
@@ -1723,12 +1742,13 @@ define([
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromUniformScale
-     * @see Matrix4.multiplyByScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
+     * 
+     * @see Matrix4.fromUniformScale
+     * @see Matrix4.multiplyByScale
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1761,12 +1781,13 @@ define([
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromScale
-     * @see Matrix4.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
+     * 
+     * @see Matrix4.fromScale
+     * @see Matrix4.multiplyByUniformScale
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);

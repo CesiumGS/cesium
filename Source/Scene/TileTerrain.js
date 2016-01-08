@@ -8,10 +8,12 @@ define([
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
         '../Core/TileProviderError',
+        '../Renderer/Buffer',
         '../Renderer/BufferUsage',
+        '../Renderer/VertexArray',
         '../ThirdParty/when',
-        './terrainAttributeLocations',
-        './TerrainState'
+        './TerrainState',
+        './TileBoundingBox'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -21,10 +23,12 @@ define([
         IndexDatatype,
         OrientedBoundingBox,
         TileProviderError,
+        Buffer,
         BufferUsage,
+        VertexArray,
         when,
-        terrainAttributeLocations,
-        TerrainState) {
+        TerrainState,
+        TileBoundingBox) {
     "use strict";
 
     /**
@@ -39,7 +43,7 @@ define([
      * @param {Number} [upsampleDetails.y] The Y coordinate of the tile being upsampled.
      * @param {Number} [upsampleDetails.level] The level coordinate of the tile being upsampled.
      */
-    var TileTerrain = function TileTerrain(upsampleDetails) {
+    function TileTerrain(upsampleDetails) {
         /**
          * The current state of the terrain in the terrain processing pipeline.
          * @type {TerrainState}
@@ -50,7 +54,7 @@ define([
         this.mesh = undefined;
         this.vertexArray = undefined;
         this.upsampleDetails = upsampleDetails;
-    };
+    }
 
     TileTerrain.prototype.freeResources = function() {
         this.state = TerrainState.UNLOADED;
@@ -81,6 +85,12 @@ define([
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
         surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
+        surfaceTile.tileBoundingBox = new TileBoundingBox({
+            rectangle : tile.rectangle,
+            minimumHeight : mesh.minimumHeight,
+            maximumHeight : mesh.maximumHeight,
+            ellipsoid : tile.tilingScheme.ellipsoid
+        });
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
 
@@ -92,17 +102,17 @@ define([
         this.vertexArray = undefined;
     };
 
-    TileTerrain.prototype.processLoadStateMachine = function(context, terrainProvider, x, y, level) {
+    TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             requestTileGeometry(this, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.RECEIVED) {
-            transform(this, context, terrainProvider, x, y, level);
+            transform(this, frameState, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, context, terrainProvider, x, y, level);
+            createResources(this, frameState.context, terrainProvider, x, y, level);
         }
     };
 
@@ -146,7 +156,7 @@ define([
         doRequest();
     }
 
-    TileTerrain.prototype.processUpsampleStateMachine = function(context, terrainProvider, x, y, level) {
+    TileTerrain.prototype.processUpsampleStateMachine = function(frameState, terrainProvider, x, y, level) {
         if (this.state === TerrainState.UNLOADED) {
             var upsampleDetails = this.upsampleDetails;
 
@@ -179,19 +189,19 @@ define([
         }
 
         if (this.state === TerrainState.RECEIVED) {
-            transform(this, context, terrainProvider, x, y, level);
+            transform(this, frameState, terrainProvider, x, y, level);
         }
 
         if (this.state === TerrainState.TRANSFORMED) {
-            createResources(this, context, terrainProvider, x, y, level);
+            createResources(this, frameState.context, terrainProvider, x, y, level);
         }
     };
 
-    function transform(tileTerrain, context, terrainProvider, x, y, level) {
+    function transform(tileTerrain, frameState, terrainProvider, x, y, level) {
         var tilingScheme = terrainProvider.tilingScheme;
 
         var terrainData = tileTerrain.data;
-        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level);
+        var meshPromise = terrainData.createMesh(tilingScheme, x, y, level, frameState.terrainExaggeration);
 
         if (!defined(meshPromise)) {
             // Postponed.
@@ -209,43 +219,25 @@ define([
     }
 
     function createResources(tileTerrain, context, terrainProvider, x, y, level) {
-        var datatype = ComponentDatatype.FLOAT;
-        var stride;
-        var numTexCoordComponents;
         var typedArray = tileTerrain.mesh.vertices;
-        var buffer = context.createVertexBuffer(typedArray, BufferUsage.STATIC_DRAW);
-        if (terrainProvider.hasVertexNormals) {
-            stride = 7 * ComponentDatatype.getSizeInBytes(datatype);
-            numTexCoordComponents = 3;
-        } else {
-            stride = 6 * ComponentDatatype.getSizeInBytes(datatype);
-            numTexCoordComponents = 2;
-        }
-
-        var position3DAndHeightLength = 4;
-
-        var attributes = [{
-            index : terrainAttributeLocations.position3DAndHeight,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : position3DAndHeightLength,
-            offsetInBytes : 0,
-            strideInBytes : stride
-        }, {
-            index : terrainAttributeLocations.textureCoordAndEncodedNormals,
-            vertexBuffer : buffer,
-            componentDatatype : datatype,
-            componentsPerAttribute : numTexCoordComponents,
-            offsetInBytes : position3DAndHeightLength * ComponentDatatype.getSizeInBytes(datatype),
-            strideInBytes : stride
-        }];
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : typedArray,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var attributes = tileTerrain.mesh.encoding.getAttributes(buffer);
 
         var indexBuffers = tileTerrain.mesh.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.id];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = tileTerrain.mesh.indices;
             var indexDatatype = (indices.BYTES_PER_ELEMENT === 2) ?  IndexDatatype.UNSIGNED_SHORT : IndexDatatype.UNSIGNED_INT;
-            indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, indexDatatype);
+            indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : indices,
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : indexDatatype
+            });
             indexBuffer.vertexArrayDestroyable = false;
             indexBuffer.referenceCount = 1;
             indexBuffers[context.id] = indexBuffer;
@@ -254,7 +246,11 @@ define([
             ++indexBuffer.referenceCount;
         }
 
-        tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+        tileTerrain.vertexArray = new VertexArray({
+            context : context,
+            attributes : attributes,
+            indexBuffer : indexBuffer
+        });
 
         tileTerrain.state = TerrainState.READY;
     }

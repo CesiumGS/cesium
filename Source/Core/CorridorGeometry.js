@@ -621,7 +621,7 @@ define([
     }
 
     /**
-     * A description of a corridor.
+     * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias CorridorGeometry
      * @constructor
@@ -648,7 +648,7 @@ define([
      *   width : 100000
      * });
      */
-    var CorridorGeometry = function(options) {
+    function CorridorGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var width = options.width;
@@ -677,13 +677,12 @@ define([
          * @type {Number}
          */
         this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 5;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CorridorGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -739,6 +738,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CorridorGeometry} [result] The object into which to store the result.
+     * @returns {CorridorGeometry} The modified result parameter or a new CorridorGeometry instance if one was not provided.
      */
     CorridorGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -845,7 +845,10 @@ define([
         });
     };
 
-    CorridorGeometry._createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    CorridorGeometry.createShadowVolume = function(corridorGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = corridorGeometry._granularity;
         var ellipsoid = corridorGeometry._ellipsoid;
 

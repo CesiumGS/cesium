@@ -26,23 +26,24 @@ define([
      * @param {Number} [blue=1.0] The blue component.
      * @param {Number} [alpha=1.0] The alpha component.
      *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : new Cesium.BoxGeometry({
+     *   geometry : Cesium.BoxGeometry.fromDimensions({
      *     dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
      *   }),
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
+     *     Cesium.Cartesian3.fromDegrees(0.0, 0.0)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   id : 'box',
      *   attributes : {
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
+     * 
+     * @see GeometryInstance
+     * @see GeometryInstanceAttribute
      */
-    var ColorGeometryInstanceAttribute = function(red, green, blue, alpha) {
+    function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
         red = defaultValue(red, 1.0);
         green = defaultValue(green, 1.0);
         blue = defaultValue(blue, 1.0);
@@ -61,7 +62,7 @@ define([
             Color.floatToByte(blue),
             Color.floatToByte(alpha)
         ]);
-    };
+    }
 
     defineProperties(ColorGeometryInstanceAttribute.prototype, {
         /**
@@ -124,7 +125,7 @@ define([
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
-     *   geometry : // ...
+     *   geometry : geometry,
      *   attributes : {
      *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.CORNFLOWERBLUE),
      *   }

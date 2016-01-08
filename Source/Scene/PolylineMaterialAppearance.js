@@ -57,7 +57,7 @@ define([
      *   })
      * });
      */
-    var PolylineMaterialAppearance = function(options) {
+    function PolylineMaterialAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -94,7 +94,7 @@ define([
         // Non-derived members
 
         this._vertexFormat = vertexFormat;
-    };
+    }
 
     defineProperties(PolylineMaterialAppearance.prototype, {
         /**
@@ -197,7 +197,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     PolylineMaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

@@ -1,5 +1,8 @@
 /*global define*/
-define(function() {
+define([
+        '../Core/defineProperties'
+    ], function(
+        defineProperties) {
     "use strict";
 
     /**
@@ -8,15 +11,27 @@ define(function() {
      * @alias Queue
      * @constructor
      */
-    var Queue = function() {
+    function Queue() {
         this._array = [];
         this._offset = 0;
+        this._length = 0;
+    }
 
+    defineProperties(Queue.prototype, {
         /**
          * The length of the queue.
+         *
+         * @memberof Queue.prototype
+         *
+         * @type {Number}
+         * @readonly
          */
-        this.length = 0;
-    };
+        length : {
+            get : function() {
+                return this._length;
+            }
+        }
+    });
 
     /**
      * Enqueues the specified item.
@@ -25,14 +40,16 @@ define(function() {
      */
     Queue.prototype.enqueue = function(item) {
         this._array.push(item);
-        this.length++;
+        this._length++;
     };
 
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
+     *
+     * @returns {Object} The the dequeued item.
      */
     Queue.prototype.dequeue = function() {
-        if (this.length === 0) {
+        if (this._length === 0) {
             return undefined;
         }
 
@@ -42,22 +59,35 @@ define(function() {
         array[offset] = undefined;
 
         offset++;
-        if (offset > 10 && offset * 2 > array.length) {
+        if ((offset > 10) && (offset * 2 > array.length)) {
             //compact array
             this._array = array.slice(offset);
             offset = 0;
         }
 
         this._offset = offset;
-        this.length--;
+        this._length--;
 
         return item;
     };
 
     /**
+     * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
+     *
+     * @returns {Object} The item at the front of the queue.
+     */
+    Queue.prototype.peek = function() {
+        if (this._length === 0) {
+            return undefined;
+        }
+
+        return this._array[this._offset];
+    };
+
+    /**
      * Check whether this queue contains the specified item.
      *
-     * @param {Object} item the item to search for.
+     * @param {Object} item The item to search for.
      */
     Queue.prototype.contains = function(item) {
         return this._array.indexOf(item) !== -1;
@@ -67,7 +97,7 @@ define(function() {
      * Remove all items from the queue.
      */
     Queue.prototype.clear = function() {
-        this._array.length = this._offset = this.length = 0;
+        this._array.length = this._offset = this._length = 0;
     };
 
     /**

@@ -15,10 +15,10 @@ define([
      * @alias AssociativeArray
      * @constructor
      */
-    var AssociativeArray = function() {
+    function AssociativeArray() {
         this._array = [];
         this._hash = {};
-    };
+    }
 
     defineProperties(AssociativeArray.prototype, {
         /**
@@ -117,7 +117,7 @@ define([
         if (hasValue) {
             var array = this._array;
             array.splice(array.indexOf(value), 1);
-            this._hash[key] = undefined;
+            delete this._hash[key];
         }
         return hasValue;
     };

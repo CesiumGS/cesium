@@ -20,7 +20,6 @@ defineSuite([
         TerrainMesh,
         when) {
      "use strict";
-     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
      it('conforms to TerrainData interface', function() {
          expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);
@@ -96,12 +95,13 @@ defineSuite([
 
              var tilingScheme = new GeographicTilingScheme();
 
-             var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
-             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-
-             return when.all([swPromise, sePromise, nwPromise, nePromise], function(upsampleResults) {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+                 var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+                 var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+                 var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+                 var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
+                 return when.join(swPromise, sePromise, nwPromise, nePromise);
+             }).then(function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
                  for (var i = 0; i < upsampleResults.length; ++i) {
@@ -174,12 +174,13 @@ defineSuite([
 
              var tilingScheme = new GeographicTilingScheme();
 
-             var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
-             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-
-             return when.all([swPromise, sePromise, nwPromise, nePromise], function(upsampleResults) {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+                 var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+                 var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+                 var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
+                 var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
+                 return when.join(swPromise, sePromise, nwPromise, nePromise);
+             }).then(function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
                  for (var i = 0; i < upsampleResults.length; ++i) {
@@ -230,7 +231,9 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1).then(function(upsampled) {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             }).then(function(upsampled) {
                  var uBuffer = upsampled._uValues;
                  var vBuffer = upsampled._vValues;
                  var ib = upsampled._indices;
@@ -302,10 +305,11 @@ defineSuite([
              });
 
              var tilingScheme = new GeographicTilingScheme();
-             var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
-             var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-
-             return when.all([nwPromise, nePromise], function(upsampleResults) {
+             return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
+                 var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+                 var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+                 return when.join(nwPromise, nePromise);
+             }).then(function(upsampleResults){
                  expect(upsampleResults.length).toBe(2);
                  var uBuffer, vBuffer;
                  for (var i = 0; i < upsampleResults.length; i++) {
@@ -420,51 +424,62 @@ defineSuite([
          it('creates specified vertices plus skirt vertices', function() {
              return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
                  expect(mesh).toBeInstanceOf(TerrainMesh);
-                 expect(mesh.vertices.length).toBe(12 * 6); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
                  expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
                  expect(mesh.minimumHeight).toBe(data._minimumHeight);
                  expect(mesh.maximumHeight).toBe(data._maximumHeight);
                  expect(mesh.boundingSphere3D).toEqual(data._boundingSphere);
              });
          });
-     });
 
-     it('createMesh requires 32bit indices for large meshes', function() {
-         var tilingScheme = new GeographicTilingScheme();
-         var quantizedVertices = [];
-         var i;
-         for (i = 0; i < 65 * 1024; i++) {
-             quantizedVertices.push(i % 32767); // u
-         }
-         for (i = 0; i < 65 * 1024; i++) {
-             quantizedVertices.push(Math.floor(i / 32767)); // v
-         }
-         for (i = 0; i < 65 * 1024; i++) {
-             quantizedVertices.push(0.0);       // height
-         }
-         var data = new QuantizedMeshTerrainData({
-             minimumHeight : 0.0,
-             maximumHeight : 4.0,
-             quantizedVertices : new Uint16Array(quantizedVertices),
-             indices : new Uint32Array([ 0, 3, 1,
-                                         0, 2, 3,
-                                         65000, 65002, 65003]),
-             boundingSphere : new BoundingSphere(),
-             horizonOcclusionPoint : new Cartesian3(),
-             westIndices : [0, 1],
-             southIndices : [0, 1],
-             eastIndices : [2, 3],
-             northIndices : [1, 3],
-             westSkirtHeight : 1.0,
-             southSkirtHeight : 1.0,
-             eastSkirtHeight : 1.0,
-             northSkirtHeight : 1.0,
-             childTileMask : 15
+         it('exaggerates mesh', function() {
+             return data.createMesh(tilingScheme, 0, 0, 0, 2).then(function(mesh) {
+                 expect(mesh).toBeInstanceOf(TerrainMesh);
+                 expect(mesh.vertices.length).toBe(12 * mesh.encoding.getStride()); // 4 regular vertices, 8 skirt vertices.
+                 expect(mesh.indices.length).toBe(10 * 3); // 2 regular triangles, 8 skirt triangles.
+                 expect(mesh.minimumHeight).toBe(data._minimumHeight);
+                 expect(mesh.maximumHeight).toBeGreaterThan(data._maximumHeight);
+                 expect(mesh.boundingSphere3D.radius).toBeGreaterThan(data._boundingSphere.radius);
+             });
          });
 
-         return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
-             expect(mesh).toBeInstanceOf(TerrainMesh);
-             expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
+         it('requires 32bit indices for large meshes', function() {
+             var tilingScheme = new GeographicTilingScheme();
+             var quantizedVertices = [];
+             var i;
+             for (i = 0; i < 65 * 1024; i++) {
+                 quantizedVertices.push(i % 32767); // u
+             }
+             for (i = 0; i < 65 * 1024; i++) {
+                 quantizedVertices.push(Math.floor(i / 32767)); // v
+             }
+             for (i = 0; i < 65 * 1024; i++) {
+                 quantizedVertices.push(0.0);       // height
+             }
+             var data = new QuantizedMeshTerrainData({
+                 minimumHeight : 0.0,
+                 maximumHeight : 4.0,
+                 quantizedVertices : new Uint16Array(quantizedVertices),
+                 indices : new Uint32Array([ 0, 3, 1,
+                                             0, 2, 3,
+                                             65000, 65002, 65003]),
+                 boundingSphere : new BoundingSphere(),
+                 horizonOcclusionPoint : new Cartesian3(),
+                 westIndices : [0, 1],
+                 southIndices : [0, 1],
+                 eastIndices : [2, 3],
+                 northIndices : [1, 3],
+                 westSkirtHeight : 1.0,
+                 southSkirtHeight : 1.0,
+                 eastSkirtHeight : 1.0,
+                 northSkirtHeight : 1.0,
+                 childTileMask : 15
+             });
+
+             return data.createMesh(tilingScheme, 0, 0, 0).then(function(mesh) {
+                 expect(mesh).toBeInstanceOf(TerrainMesh);
+                 expect(mesh.indices.BYTES_PER_ELEMENT).toBe(4);
+             });
          });
      });
 

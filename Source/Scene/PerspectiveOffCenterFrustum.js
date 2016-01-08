@@ -30,7 +30,6 @@ define([
      * @alias PerspectiveOffCenterFrustum
      * @constructor
      *
-     * @see PerspectiveFrustum
      *
      * @example
      * var frustum = new Cesium.PerspectiveOffCenterFrustum();
@@ -40,8 +39,10 @@ define([
      * frustum.bottom = -1.0;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * 
+     * @see PerspectiveFrustum
      */
-    var PerspectiveOffCenterFrustum = function() {
+    function PerspectiveOffCenterFrustum() {
         /**
          * Defines the left clipping plane.
          * @type {Number}
@@ -93,7 +94,7 @@ define([
         this._cullingVolume = new CullingVolume();
         this._perspectiveMatrix = new Matrix4();
         this._infinitePerspective = new Matrix4();
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
@@ -137,6 +138,7 @@ define([
          * Gets the perspective projection matrix computed from the view frustum.
          * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveOffCenterFrustum#infiniteProjectionMatrix
          */
@@ -151,6 +153,7 @@ define([
          * Gets the perspective projection matrix computed from the view frustum with an infinite far plane.
          * @memberof PerspectiveOffCenterFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          *
          * @see PerspectiveOffCenterFrustum#projectionMatrix
          */
@@ -307,18 +310,19 @@ define([
     /**
      * Returns the pixel's width and height in meters.
      *
-     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
-     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @param {Number} drawingBufferWidth The width of the drawing buffer.
+     * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} distance The distance to the near plane in meters.
+     * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
-     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
+     * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
+     * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, new Cartesian2());
      *
      * @example
      * // Example 2
@@ -329,41 +333,34 @@ define([
      * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
      * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
      * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight), distance);
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, new Cartesian2());
      */
-    PerspectiveOffCenterFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
+    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawingBufferDimensions)) {
-            throw new DeveloperError('drawingBufferDimensions is required.');
+        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
+            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
+        }
+        if (drawingBufferWidth <= 0) {
+            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
+        }
+        if (drawingBufferHeight <= 0) {
+            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
+        }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('A result object is required.');
         }
         //>>includeEnd('debug');
-
-        var width = drawingBufferDimensions.x;
-        var height = drawingBufferDimensions.y;
-
-        //>>includeStart('debug', pragmas.debug);
-        if (width <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        distance = defaultValue(distance, this.near);
 
         var inverseNear = 1.0 / this.near;
         var tanTheta = this.top * inverseNear;
-        var pixelHeight = 2.0 * distance * tanTheta / height;
+        var pixelHeight = 2.0 * distance * tanTheta / drawingBufferHeight;
         tanTheta = this.right * inverseNear;
-        var pixelWidth = 2.0 * distance * tanTheta / width;
-
-        if (!defined(result)) {
-            return new Cartesian2(pixelWidth, pixelHeight);
-        }
+        var pixelWidth = 2.0 * distance * tanTheta / drawingBufferWidth;
 
         result.x = pixelWidth;
         result.y = pixelHeight;

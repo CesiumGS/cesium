@@ -3,7 +3,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
-        '../Core/Math',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,9 +11,11 @@ define([
         '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
-        '../Core/jsonp',
         '../Core/loadJson',
+        '../Core/loadJsonp',
+        '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -26,7 +27,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Credit,
         defaultValue,
         defined,
@@ -35,9 +35,11 @@ define([
         Event,
         GeographicProjection,
         GeographicTilingScheme,
-        jsonp,
         loadJson,
+        loadJsonp,
+        CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -78,7 +80,7 @@ define([
      *        the Identify service on the MapServer and return the features included in the response.  If false,
      *        {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you don't want this provider's features to
-     *        be pickable.
+     *        be pickable. Can be overridden by setting the {@link ArcGisMapServerImageryProvider#enablePickFeatures} property on the object.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.  This parameter is ignored when accessing
      *                    a tiled layer.
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme to use to divide the world into tiles.
@@ -93,22 +95,23 @@ define([
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
+     * 
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(options) {
+    function ArcGisMapServerImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -130,11 +133,21 @@ define([
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
-        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
+         * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
+         * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
+         * without communicating with the server.
+         * @type {Boolean}
+         * @default true
+         */
+        this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         // Grab the details of this MapServer.
         var that = this;
@@ -198,12 +211,14 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + that._url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -215,7 +230,7 @@ define([
                 parameters.token = that._token;
             }
 
-            var metadata = jsonp(that._url, {
+            var metadata = loadJsonp(that._url, {
                 parameters : parameters,
                 proxy : that._proxy
             });
@@ -226,8 +241,9 @@ define([
             requestMetadata();
         } else {
             this._ready = true;
+            this._readyPromise.resolve(true);
         }
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url;
@@ -256,6 +272,9 @@ define([
         if (defined(token)) {
             if (url.indexOf('?') === -1) {
                 url += '?';
+            }
+            if (url[url.length - 1] !== '?'){
+                url += '&';
             }
             url += 'token=' + token;
         }
@@ -467,6 +486,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link ArcGisMapServerImageryProvider#ready} returns true.
          * @memberof ArcGisMapServerImageryProvider.prototype
@@ -521,21 +552,6 @@ define([
         layers : {
             get : function() {
                 return this._layers;
-            }
-        },
-
-        /**
-         * Gets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will
-         * invoke the "identify" operation on the ArcGIS server and return the features included in the response.  If false,
-         * {@link ArcGisMapServerImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
-         * without communicating with the server.
-         * @type {Boolean}
-         * @readonly
-         * @default true
-         */
-        enablePickFeatures : {
-            get : function() {
-                return this._enablePickFeatures;
             }
         }
     });
@@ -603,7 +619,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!this._enablePickFeatures) {
+        if (!this.enablePickFeatures) {
             return undefined;
         }
 

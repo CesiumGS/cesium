@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="A custom DataSource implementation.">
     <meta name="cesium-sandcastle-labels" content="Showcases, DataSources, Tutorials">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -41,7 +41,7 @@ function startup(Cesium) {
  * dataSource.loadUrl('sample.json');
  * viewer.dataSources.add(dataSource);
  */
-var WebGLGlobeDataSource = function(name) {
+function WebGLGlobeDataSource(name) {
     //All public configuration is defined as ES5 properties
     //These are just the "private" variables and their defaults.
     this._name = name;
@@ -53,7 +53,7 @@ var WebGLGlobeDataSource = function(name) {
     this._seriesNames = [];
     this._seriesToDisplay = undefined;
     this._heightScale = 10000000;
-};
+}
 
 Object.defineProperties(WebGLGlobeDataSource.prototype, {
     //The below properties must be implemented by all DataSource instances

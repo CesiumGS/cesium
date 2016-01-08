@@ -19,10 +19,11 @@ define([
         BoundingSphereState) {
     "use strict";
 
-    var Batch = function(primitives, translucent, width) {
+    function Batch(primitives, translucent, width) {
         this.translucent = translucent;
         this.primitives = primitives;
         this.createPrimitive = false;
+        this.waitingOnCreate = false;
         this.primitive = undefined;
         this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
@@ -33,8 +34,7 @@ define([
         this.width = width;
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
-    };
-
+    }
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
         this.createPrimitive = true;
@@ -75,16 +75,17 @@ define([
         var i;
 
         if (this.createPrimitive) {
-            if (defined(primitive)) {
-                if (!defined(this.oldPrimitive)) {
-                    this.oldPrimitive = primitive;
-                } else {
-                    primitives.remove(primitive);
-                }
-            }
             var geometries = this.geometry.values;
             var geometriesLength = geometries.length;
             if (geometriesLength > 0) {
+                if (defined(primitive)) {
+                    if (!defined(this.oldPrimitive)) {
+                        this.oldPrimitive = primitive;
+                    } else {
+                        primitives.remove(primitive);
+                    }
+                }
+
                 for (i = 0; i < geometriesLength; i++) {
                     var geometryItem = geometries[i];
                     var originalAttributes = geometryItem.attributes;
@@ -114,11 +115,22 @@ define([
 
                 primitives.add(primitive);
                 isUpdated = false;
+            } else {
+                if (defined(primitive)) {
+                    primitives.remove(primitive);
+                    primitive = undefined;
+                }
+                var oldPrimitive = this.oldPrimitive;
+                if (defined(oldPrimitive)) {
+                    primitives.remove(oldPrimitive);
+                    this.oldPrimitive = undefined;
+                }
             }
 
             this.attributes.removeAll();
             this.primitive = primitive;
             this.createPrimitive = false;
+            this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
@@ -127,6 +139,7 @@ define([
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
+            var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.entity.id);
@@ -137,7 +150,7 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (!updater.outlineColorProperty.isConstant) {
+                if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
                     var outlineColorProperty = updater.outlineColorProperty;
                     outlineColorProperty.getValue(time, colorScratch);
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
@@ -157,6 +170,7 @@ define([
             }
 
             this.updateShows(primitive);
+            this.waitingOnCreate = false;
         } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }
@@ -226,13 +240,12 @@ define([
     /**
      * @private
      */
-    var StaticOutlineGeometryBatch = function(primitives, scene) {
+    function StaticOutlineGeometryBatch(primitives, scene) {
         this._primitives = primitives;
         this._scene = scene;
         this._solidBatches = new AssociativeArray();
         this._translucentBatches = new AssociativeArray();
-    };
-
+    }
     StaticOutlineGeometryBatch.prototype.add = function(time, updater) {
         var instance = updater.createOutlineGeometryInstance(time);
         var width = this._scene.clampLineWidth(updater.outlineWidth);

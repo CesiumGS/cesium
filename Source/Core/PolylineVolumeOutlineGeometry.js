@@ -16,6 +16,7 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
+        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './WindingOrder'
@@ -36,6 +37,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
+        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         WindingOrder) {
@@ -101,7 +103,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.polylinePositions An array of positions that define the center of the polyline volume.
-     * @param {Number} options.shapePositions An array of positions that define the shape to be extruded along the polyline
+     * @param {Cartesian2[]} options.shapePositions An array of positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
@@ -128,7 +130,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    var PolylineVolumeOutlineGeometry = function(options) {
+    function PolylineVolumeOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -157,13 +159,12 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 2;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {PolylineVolumeOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -220,6 +221,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolylineVolumeOutlineGeometry} [result] The object into which to store the result.
+     * @returns {PolylineVolumeOutlineGeometry} The modified result parameter or a new PolylineVolumeOutlineGeometry instance if one was not provided.
      */
     PolylineVolumeOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -279,7 +281,7 @@ define([
      */
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
-        var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeOutlineGeometry._ellipsoid);
+        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
         var shape2D = polylineVolumeOutlineGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

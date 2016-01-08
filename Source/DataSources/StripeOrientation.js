@@ -8,8 +8,7 @@ define([
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
      *
-     * @namespace
-     * @alias StripeOrientation
+     * @exports StripeOrientation
      */
     var StripeOrientation = {
         /**

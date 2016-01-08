@@ -1,7 +1,6 @@
 (function() {
     "use strict";
-    /*global console,require,__dirname,process*/
-    /*jshint es3:false*/
+    /*jshint node:true*/
 
     var express = require('express');
     var compression = require('compression');
@@ -37,11 +36,12 @@
 
     // eventually this mime type configuration will need to change
     // https://github.com/visionmedia/send/commit/d2cb54658ce65948b0ed6e5fb5de69d022bef941
+    // *NOTE* Any changes you make here must be mirrored in web.config.
     var mime = express.static.mime;
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
         'model/vnd.gltf+json' : ['gltf'],
-        'model/vnd.gltf.binary' : ['bgltf'],
+        'model/vnd.gltf.binary' : ['bgltf', 'glb'],
         'text/plain' : ['glsl']
     });
 

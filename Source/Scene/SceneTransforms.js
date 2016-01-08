@@ -26,8 +26,7 @@ define([
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
-     * @namespace
-     * @alias SceneTransforms
+     * @exports SceneTransforms
      */
     var SceneTransforms = {};
 
@@ -42,13 +41,13 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
@@ -92,7 +91,7 @@ define([
      * @param {Scene} scene The scene.
      * @param {Cartesian3} position The position in WGS84 (world) coordinates.
      * @param {Cartesian2} [result] An optional object to return the input position transformed to window coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian3 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
@@ -205,8 +204,7 @@ define([
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
         // Assuming viewport takes up the entire canvas...
-        viewport.width = scene.drawingBufferWidth;
-        viewport.height = scene.drawingBufferHeight;
+        BoundingRectangle.clone(scene._passState.viewport, viewport);
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
@@ -235,9 +233,7 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
 
-        var viewport = uniformState.viewport;
-        var viewportTransformation = uniformState.viewportTransformation;
-
+        var viewport = scene._passState.viewport;
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;

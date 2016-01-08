@@ -16,12 +16,12 @@ define([
     /**
      * @private
      */
-    var ShaderCache = function(context) {
+    function ShaderCache(context) {
         this._context = context;
         this._shaders = {};
         this._numberOfShaders = 0;
         this._shadersToRelease = {};
-    };
+    }
 
     defineProperties(ShaderCache.prototype, {
         numberOfShaders : {
@@ -39,38 +39,51 @@ define([
      * replace an existing reference to a shader program, which is passed as the first argument.
      * </p>
      *
-     * @param {ShaderProgram} shaderProgram The shader program that is being reassigned.  This can be <code>undefined</code>.
-     * @param {String|ShaderSource} vertexShaderSource The GLSL source for the vertex shader.
-     * @param {String|ShaderSource} fragmentShaderSource The GLSL source for the fragment shader.
-     * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
+     * @param {Object} options Object with the following properties:
+     * @param {ShaderProgram} [options.shaderProgram] The shader program that is being reassigned.
+     * @param {String|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
+     * @param {String|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {Object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
+
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
-     * @see ShaderCache#getShaderProgram
      *
      * @example
-     * this._shaderProgram = context.shaderCache.replaceShaderProgram(this._shaderProgram, vs, fs, attributeLocations);
+     * this._shaderProgram = context.shaderCache.replaceShaderProgram({
+     *     shaderProgram : this._shaderProgram,
+     *     vertexShaderSource : vs,
+     *     fragmentShaderSource : fs,
+     *     attributeLocations : attributeLocations
+     * });
+     * 
+     * @see ShaderCache#getShaderProgram
      */
-    ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        if (defined(shaderProgram)) {
-            shaderProgram.destroy();
+    ShaderCache.prototype.replaceShaderProgram = function(options) {
+        if (defined(options.shaderProgram)) {
+            options.shaderProgram.destroy();
         }
 
-        return this.getShaderProgram(vertexShaderSource, fragmentShaderSource, attributeLocations);
+        return this.getShaderProgram(options);
     };
 
     /**
      * Returns a shader program from the cache, or creates and caches a new shader program,
      * given the GLSL vertex and fragment shader source and attribute locations.
      *
-     * @param {String|ShaderSource} vertexShaderSource The GLSL source for the vertex shader.
-     * @param {String|ShaderSource} fragmentShaderSource The GLSL source for the fragment shader.
-     * @param {Object} attributeLocations Indices for the attribute inputs to the vertex shader.
+     * @param {Object} options Object with the following properties:
+     * @param {String|ShaderSource} options.vertexShaderSource The GLSL source for the vertex shader.
+     * @param {String|ShaderSource} options.fragmentShaderSource The GLSL source for the fragment shader.
+     * @param {Object} options.attributeLocations Indices for the attribute inputs to the vertex shader.
      *
      * @returns {ShaderProgram} The cached or newly created shader program.
      */
-    ShaderCache.prototype.getShaderProgram = function(vertexShaderSource, fragmentShaderSource, attributeLocations) {
+    ShaderCache.prototype.getShaderProgram = function(options) {
         // convert shaders which are provided as strings into ShaderSource objects
         // because ShaderSource handles all the automatic including of built-in functions, etc.
+
+        var vertexShaderSource = options.vertexShaderSource;
+        var fragmentShaderSource = options.fragmentShaderSource;
+        var attributeLocations = options.attributeLocations;
 
         if (typeof vertexShaderSource === 'string') {
             vertexShaderSource = new ShaderSource({
@@ -141,7 +154,7 @@ define([
     };
 
     ShaderCache.prototype.releaseShaderProgram = function(shaderProgram) {
-        if (shaderProgram) {
+        if (defined(shaderProgram)) {
             var cachedShader = shaderProgram._cachedShader;
             if (cachedShader && (--cachedShader.count === 0)) {
                 this._shadersToRelease[cachedShader.keyword] = cachedShader;

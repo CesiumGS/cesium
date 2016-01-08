@@ -48,7 +48,7 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Material.html|Cesium Sandcastle Material Appearance Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -65,7 +65,7 @@ define([
      *
      * });
      */
-    var MaterialAppearance = function(options) {
+    function MaterialAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -104,7 +104,7 @@ define([
         this._vertexFormat = materialSupport.vertexFormat;
         this._flat = defaultValue(options.flat, false);
         this._faceForward = defaultValue(options.faceForward, !closed);
-    };
+    }
 
     defineProperties(MaterialAppearance.prototype, {
         /**
@@ -254,7 +254,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

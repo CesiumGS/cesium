@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Layer imagery from multiple sources, including WMS servers, Bing Maps, ArcGIS Online, OpenStreetMaps, and more, and adjust the alpha of each independently.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -124,15 +124,15 @@ function setupLayers() {
             }));
     addBaseLayerOption(
             'OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider());
+            Cesium.createOpenStreetMapImageryProvider());
     addBaseLayerOption(
             'MapQuest OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider({
+            Cesium.createOpenStreetMapImageryProvider({
                 url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
             }));
     addBaseLayerOption(
             'Stamen Maps',
-            new Cesium.OpenStreetMapImageryProvider({
+            Cesium.createOpenStreetMapImageryProvider({
                 url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                 fileExtension: 'jpg',
                 credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'

@@ -8,7 +8,6 @@ defineSuite([
         JulianDate,
         TimeStandard) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('compute moon', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);

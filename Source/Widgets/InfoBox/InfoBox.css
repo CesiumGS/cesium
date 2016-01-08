@@ -101,18 +101,6 @@ button.cesium-infoBox-close:active {
     display: none;
 }
 
-.cesium-infoBox-loadingContainer {
-    margin: 5px;
-    text-align: center;
-}
-
-.cesium-infoBox-loading {
-    display: inline-block;
-    background-image: url(../Images/info-loading.gif);
-    width: 16px;
-    height: 11px;
-}
-
 .cesium-infoBox-iframe {
     border: none;
     width: 100%; /* Fallback */

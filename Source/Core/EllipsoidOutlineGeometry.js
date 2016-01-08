@@ -59,7 +59,7 @@ define([
      * });
      * var geometry = Cesium.EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
-    var EllipsoidOutlineGeometry = function(options) {
+    function EllipsoidOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
@@ -84,7 +84,7 @@ define([
         this._slicePartitions = slicePartitions;
         this._subdivisions = subdivisions;
         this._workerName = 'createEllipsoidOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -94,9 +94,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {EllipsoidOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -134,6 +133,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {EllipsoidOutlineGeometry} [result] The object into which to store the result.
+     * @returns {EllipsoidOutlineGeometry} The modified result parameter or a new EllipsoidOutlineGeometry instance if one was not provided.
      */
     EllipsoidOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

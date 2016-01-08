@@ -58,8 +58,7 @@ define([
     /**
      * Content pipeline functions for geometries.
      *
-     * @namespace
-     * @alias GeometryPipeline
+     * @exports GeometryPipeline
      *
      * @see Geometry
      */
@@ -184,7 +183,7 @@ define([
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
+     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0);
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         attributeName = defaultValue(attributeName, 'normal');
@@ -320,10 +319,11 @@ define([
      *
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
-     * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -406,12 +406,13 @@ define([
      *
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
-     * @see GeometryPipeline.reorderForPreVertexCache
-     * @see {@link http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
-     * by Sander, Nehab, and Barczak
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPreVertexCache
+     * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
+     * by Sander, Nehab, and Barczak
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
@@ -510,7 +511,7 @@ define([
         // If there's an index list and more than 64K attributes, it is possible that
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        if (defined(geometry.indices) && (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES)) {
+        if (defined(geometry.indices) && (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
@@ -541,7 +542,7 @@ define([
                     newIndices.push(i);
                 }
 
-                if (currentIndex + indicesPerPrimitive > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+                if (currentIndex + indicesPerPrimitive >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
@@ -765,8 +766,7 @@ define([
     var normalMatrix = new Matrix3();
 
     /**
-     * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
-     * to batch together several instances with {@link GeometryPipeline.combineInstances}.  This changes
+     * Transforms a geometry instance to world coordinates.  This changes
      * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.
@@ -774,13 +774,8 @@ define([
      * @param {GeometryInstance} instance The geometry instance to modify.
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
      *
-     * @see GeometryPipeline.combineInstances
-     *
      * @example
-     * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
-     * }
-     * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * Cesium.GeometryPipeline.transformToWorldCoordinates(instance);
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         //>>includeStart('debug', pragmas.debug);
@@ -1005,7 +1000,7 @@ define([
      * <p>
      * This is used by {@link Primitive} to efficiently render a large amount of static data.
      * </p>
-     *
+     * 
      * @private
      *
      * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
@@ -1015,13 +1010,14 @@ define([
      * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
-     * @see GeometryPipeline.transformToWorldCoordinates
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
      *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
      * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * 
+     * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combineInstances = function(instances) {
         //>>includeStart('debug', pragmas.debug);
@@ -2085,7 +2081,6 @@ define([
         var westGeometry = copyGeometryForSplit(geometry);
 
         var i;
-        var index;
         var length = indices.length;
 
         var westGeometryIndexMap = [];
@@ -2187,7 +2182,6 @@ define([
     var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
-    var cartesian4Scratch1 = new Cartesian4();
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
@@ -2196,7 +2190,6 @@ define([
         var prevPositions = attributes.prevPosition.values;
         var nextPositions = attributes.nextPosition.values;
         var expandAndWidths = attributes.expandAndWidth.values;
-        var indices = geometry.indices;
 
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var colors = (defined(attributes.color)) ? attributes.color.values : undefined;

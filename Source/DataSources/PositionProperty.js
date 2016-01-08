@@ -30,9 +30,9 @@ define([
      * @see SampledPositionProperty
      * @see TimeIntervalCollectionPositionProperty
      */
-    var PositionProperty = function() {
+    function PositionProperty() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(PositionProperty.prototype, {
         /**
@@ -92,6 +92,7 @@ define([
     /**
      * Compares this property to the provided property and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @function
      *
      * @param {Property} [other] The other property.
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.

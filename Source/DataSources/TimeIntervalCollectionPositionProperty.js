@@ -29,12 +29,12 @@ define([
      *
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
-    var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
+    function TimeIntervalCollectionPositionProperty(referenceFrame) {
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
         this._intervals.changedEvent.addEventListener(TimeIntervalCollectionPositionProperty.prototype._intervalsChanged, this);
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
-    };
+    }
 
     defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
         /**

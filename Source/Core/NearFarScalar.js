@@ -21,7 +21,7 @@ define([
      *
      * @see Packable
      */
-    var NearFarScalar = function(near, nearValue, far, farValue) {
+    function NearFarScalar(near, nearValue, far, farValue) {
         /**
          * The lower bound of the camera range.
          * @type {Number}
@@ -46,7 +46,7 @@ define([
          * @default 0.0
          */
         this.farValue = defaultValue(farValue, 0.0);
-    };
+    }
 
     /**
      * Duplicates a NearFarScalar instance.
@@ -109,6 +109,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {NearFarScalar} [result] The object into which to store the result.
+     * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
      */
     NearFarScalar.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

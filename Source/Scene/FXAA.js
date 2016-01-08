@@ -1,35 +1,48 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/RenderState',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/FXAA'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Color,
         defined,
         destroyObject,
         PixelFormat,
         ClearCommand,
+        Framebuffer,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
+        RenderState,
+        Texture,
         FXAAFS) {
     "use strict";
 
     /**
      * @private
      */
-    var FXAA = function(context) {
+    function FXAA(context) {
         this._texture = undefined;
         this._depthTexture = undefined;
         this._depthRenderbuffer = undefined;
         this._fbo = undefined;
         this._command = undefined;
+
+        this._viewport = new BoundingRectangle();
+        this._rs = undefined;
 
         var clearCommand = new ClearCommand({
             color : new Color(0.0, 0.0, 0.0, 0.0),
@@ -37,7 +50,7 @@ define([
             owner : this
         });
         this._clearCommand = clearCommand;
-    };
+    }
 
     function destroyResources(fxaa) {
         fxaa._fbo = fxaa._fbo && fxaa._fbo.destroy();
@@ -67,7 +80,8 @@ define([
             this._depthTexture = this._depthTexture && this._depthTexture.destroy();
             this._depthRenderbuffer = this._depthRenderbuffer && this._depthRenderbuffer.destroy();
 
-            this._texture = context.createTexture2D({
+            this._texture = new Texture({
+                context : context,
                 width : width,
                 height : height,
                 pixelFormat : PixelFormat.RGBA,
@@ -75,14 +89,16 @@ define([
             });
 
             if (context.depthTexture) {
-                this._depthTexture = context.createTexture2D({
+                this._depthTexture = new Texture({
+                    context : context,
                     width : width,
                     height : height,
                     pixelFormat : PixelFormat.DEPTH_COMPONENT,
                     pixelDatatype : PixelDatatype.UNSIGNED_SHORT
                 });
             } else {
-                this._depthRenderbuffer = context.createRenderbuffer({
+                this._depthRenderbuffer = new Renderbuffer({
+                    context : context,
                     width : width,
                     height : height,
                     format : RenderbufferFormat.DEPTH_COMPONENT16
@@ -93,7 +109,8 @@ define([
         if (!defined(this._fbo) || textureChanged) {
             this._fbo = this._fbo && this._fbo.destroy();
 
-            this._fbo = context.createFramebuffer({
+            this._fbo = new Framebuffer({
+                context : context,
                 colorTextures : [this._texture],
                 depthTexture : this._depthTexture,
                 depthRenderbuffer : this._depthRenderbuffer,
@@ -103,10 +120,20 @@ define([
 
         if (!defined(this._command)) {
             this._command = context.createViewportQuadCommand(FXAAFS, {
-                renderState : context.createRenderState(),
                 owner : this
             });
         }
+
+        this._viewport.width = width;
+        this._viewport.height = height;
+
+        if (!defined(this._rs) || !BoundingRectangle.equals(this._rs.viewport, this._viewport)) {
+            this._rs = RenderState.fromCache({
+                viewport : this._viewport
+            });
+        }
+
+        this._command.renderState = this._rs;
 
         if (textureChanged) {
             var that = this;

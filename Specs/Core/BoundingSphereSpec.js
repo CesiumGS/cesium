@@ -10,6 +10,7 @@ defineSuite([
         'Core/Interval',
         'Core/Math',
         'Core/Matrix4',
+        'Core/OrientedBoundingBox',
         'Core/Plane',
         'Core/Rectangle',
         'Specs/createPackableSpecs'
@@ -24,11 +25,11 @@ defineSuite([
         Interval,
         CesiumMath,
         Matrix4,
+        OrientedBoundingBox,
         Plane,
         Rectangle,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);
@@ -386,6 +387,21 @@ defineSuite([
         expect(sphere).toEqual(expected);
     });
 
+    it('fromOrientedBoundingBox works with a result', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
+        var sphere = new BoundingSphere();
+        BoundingSphere.fromOrientedBoundingBox(box, sphere);
+        expect(sphere).toEqual(expected);
+    });
+
+    it('fromOrientedBoundingBox works without a result parameter', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
+        var sphere = BoundingSphere.fromOrientedBoundingBox(box);
+        expect(sphere).toEqual(expected);
+    });
+
     it('intersectPlane with sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
@@ -408,14 +424,6 @@ defineSuite([
         var position = Cartesian3.UNIT_X;
         var plane = new Plane(normal, -Cartesian3.dot(normal, position));
         expect(sphere.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
-    });
-
-    it('intersect works the same as intersectPlane in one case', function() {
-        var sphere = new BoundingSphere(Cartesian3.UNIT_X, 0.5);
-        var normal = Cartesian3.UNIT_X;
-        var position = Cartesian3.UNIT_X;
-        var plane = new Plane(normal, -Cartesian3.dot(normal, position));
-        expect(sphere.intersect(new Cartesian4(1.0, 0.0, 0.0, -1.0))).toEqual(sphere.intersectPlane(plane));
     });
 
     it('expands to contain another sphere', function() {
@@ -690,6 +698,18 @@ defineSuite([
     it('computePlaneDistances throws without a direction', function() {
         expect(function() {
             BoundingSphere.computePlaneDistances(new BoundingSphere(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without a sphere', function() {
+        expect(function() {
+            BoundingSphere.isOccluded();
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without an occluder', function() {
+        expect(function() {
+            BoundingSphere.isOccluded(new BoundingSphere());
         }).toThrowDeveloperError();
     });
 

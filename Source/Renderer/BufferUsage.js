@@ -1,17 +1,19 @@
 /*global define*/
 define([
-        '../Core/freezeObject'
+        '../Core/freezeObject',
+        './WebGLConstants'
     ], function(
-        freezeObject) {
+        freezeObject,
+        WebGLConstants) {
     "use strict";
 
     /**
      * @private
      */
     var BufferUsage = {
-        STREAM_DRAW : 0x88E0,
-        STATIC_DRAW : 0x88E4,
-        DYNAMIC_DRAW : 0x88E8,
+        STREAM_DRAW : WebGLConstants.STREAM_DRAW,
+        STATIC_DRAW : WebGLConstants.STATIC_DRAW,
+        DYNAMIC_DRAW : WebGLConstants.DYNAMIC_DRAW,
 
         validate : function(bufferUsage) {
             return ((bufferUsage === BufferUsage.STREAM_DRAW) ||

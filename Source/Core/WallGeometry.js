@@ -81,7 +81,7 @@ define([
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
-    var WallGeometry = function(options) {
+    function WallGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -128,13 +128,12 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 1;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {WallGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -206,6 +205,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {WallGeometry} [result] The object into which to store the result.
+     * @returns {WallGeometry} The modified result parameter or a new WallGeometry instance if one was not provided.
      */
     WallGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -275,15 +275,16 @@ define([
      * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
-     * @param {Cartesian3[]} positions An array of Cartesian objects, which are the points of the wall.
-     * @param {Number} [maximumHeight] A constant that defines the maximum height of the
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Number} [options.maximumHeight] A constant that defines the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Number} [minimumHeight] A constant that defines the minimum height of the
+     * @param {Number} [options.minimumHeight] A constant that defines the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @returns {WallGeometry}
      *
-     * @see WallGeometry#createGeometry
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
@@ -299,6 +300,8 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * 
+     * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

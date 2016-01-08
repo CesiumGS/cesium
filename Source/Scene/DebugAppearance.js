@@ -41,7 +41,7 @@ define([
      *   })
      * });
      */
-    var DebugAppearance = function(options) {
+    function DebugAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var attributeName = options.attributeName;
 
@@ -129,7 +129,7 @@ define([
 
         this._attributeName = attributeName;
         this._glslDatatype = glslDatatype;
-    };
+    }
 
     defineProperties(DebugAppearance.prototype, {
         /**
@@ -227,7 +227,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     DebugAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

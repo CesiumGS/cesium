@@ -28,9 +28,9 @@ define([
      * @see PositionProperty
      * @see ReferenceProperty
      */
-    var Property = function() {
+    function Property() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(Property.prototype, {
         /**

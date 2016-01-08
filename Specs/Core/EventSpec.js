@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         Event) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var event;
     var spyListener;

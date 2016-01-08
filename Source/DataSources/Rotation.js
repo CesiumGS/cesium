@@ -17,25 +17,25 @@ define([
      * but is instead passed to the constructor of {@link SampledProperty}
      * in order to represent a two-dimensional angle of rotation.
      *
-     * @namespace
-     * @alias Rotation
+     * @exports Rotation
      *
-     * @see PackableForInterpolation
      *
      * @example
-     * var time1 = JulianDate.fromIso8601('2010-05-07T00:00:00');
-     * var time2 = JulianDate.fromIso8601('2010-05-07T00:01:00');
-     * var time3 = JulianDate.fromIso8601('2010-05-07T00:02:00');
+     * var time1 = Cesium.JulianDate.fromIso8601('2010-05-07T00:00:00');
+     * var time2 = Cesium.JulianDate.fromIso8601('2010-05-07T00:01:00');
+     * var time3 = Cesium.JulianDate.fromIso8601('2010-05-07T00:02:00');
      *
-     * var property = new SampledProperty(Rotation);
+     * var property = new Cesium.SampledProperty(Cesium.Rotation);
      * property.addSample(time1, 0);
-     * property.addSample(time3, CesiumMath.toRadians(350));
+     * property.addSample(time3, Cesium.Math.toRadians(350));
      *
      * //Getting the value at time2 will equal 355 degrees instead
      * //of 175 degrees (which is what you get if you construct
      * //a SampledProperty(Number) instead.  Note, the actual
      * //return value is in radians, not degrees.
      * property.getValue(time2);
+     * 
+     * @see PackableForInterpolation
      */
     var Rotation = {
         /**
@@ -46,9 +46,8 @@ define([
 
         /**
          * Stores the provided instance into the provided array.
-         * @function
          *
-         * @param {Object} value The value to pack.
+         * @param {Rotation} value The value to pack.
          * @param {Number[]} array The array to pack into.
          * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
          */
@@ -69,11 +68,11 @@ define([
 
         /**
          * Retrieves an instance from a packed array.
-         * @function
          *
          * @param {Number[]} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-         * @param {Object} [result] The object into which to store the result.
+         * @param {Rotation} [result] The object into which to store the result.
+         * @returns {Rotation} The modified result parameter or a new Rotation instance if one was not provided.
          */
         unpack : function(array, startingIndex, result) {
             //>>includeStart('debug', pragmas.debug);
@@ -88,7 +87,6 @@ define([
 
         /**
          * Converts a packed array into a form suitable for interpolation.
-         * @function
          *
          * @param {Number[]} packedArray The packed array.
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
@@ -119,13 +117,13 @@ define([
 
         /**
          * Retrieves an instance from a packed array converted with {@link Rotation.convertPackedArrayForInterpolation}.
-         * @function
          *
          * @param {Number[]} array The array previously packed for interpolation.
          * @param {Number[]} sourceArray The original packed array.
          * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
-         * @param {Object} [result] The object into which to store the result.
+         * @param {Rotation} [result] The object into which to store the result.
+         * @returns {Rotation} The modified result parameter or a new Rotation instance if one was not provided.
          */
         unpackInterpolationResult : function(array, sourceArray, firstIndex, lastIndex, result) {
             //>>includeStart('debug', pragmas.debug);

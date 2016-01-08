@@ -116,7 +116,7 @@ define([
         var minHeight = Math.min(extrudedHeight, surfaceHeight);
         var maxHeight = Math.max(extrudedHeight, surfaceHeight);
         var geo = constructRectangle(options);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return geo;
         }
         var height = options.height;
@@ -193,7 +193,7 @@ define([
      * });
      * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
      */
-    var RectangleOutlineGeometry = function(options) {
+    function RectangleOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
@@ -220,7 +220,7 @@ define([
         this._rotation = rotation;
         this._extrudedHeight = extrudedHeight;
         this._workerName = 'createRectangleOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -231,7 +231,7 @@ define([
     /**
      * Stores the provided instance into the provided array.
      *
-     * @param {BoundingSphere} value The value to pack.
+     * @param {RectangleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -277,7 +277,8 @@ define([
      *
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
-     * @param {RectangleGeometry} [result] The object into which to store the result.
+     * @param {RectangleOutlineGeometry} [result] The object into which to store the result.
+     * @returns {RectangleOutlineGeometry} The modified result parameter or a new Quaternion instance if one was not provided.
      */
     RectangleOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

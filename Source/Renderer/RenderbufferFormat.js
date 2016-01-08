@@ -1,20 +1,22 @@
 /*global define*/
 define([
-        '../Core/freezeObject'
+        '../Core/freezeObject',
+        './WebGLConstants'
     ], function(
-        freezeObject) {
+        freezeObject,
+        WebGLConstants) {
     "use strict";
 
     /**
      * @private
      */
     var RenderbufferFormat = {
-        RGBA4 : 0x8056,
-        RGB5_A1 : 0x8057,
-        RGB565 : 0x8D62,
-        DEPTH_COMPONENT16 : 0x81A5,
-        STENCIL_INDEX8 : 0x8D48,
-        DEPTH_STENCIL : 0x84F9,
+        RGBA4 : WebGLConstants.RGBA4,
+        RGB5_A1 : WebGLConstants.RGB5_A1,
+        RGB565 : WebGLConstants.RGB565,
+        DEPTH_COMPONENT16 : WebGLConstants.DEPTH_COMPONENT16,
+        STENCIL_INDEX8 : WebGLConstants.STENCIL_INDEX8,
+        DEPTH_STENCIL : WebGLConstants.DEPTH_STENCIL,
 
         validate : function(renderbufferFormat) {
             return ((renderbufferFormat === RenderbufferFormat.RGBA4) ||

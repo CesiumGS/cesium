@@ -47,7 +47,7 @@ define([
      *
      * @see Packable
      */
-    var Color = function(red, green, blue, alpha) {
+    function Color(red, green, blue, alpha) {
         /**
          * The red component.
          * @type {Number}
@@ -72,7 +72,7 @@ define([
          * @default 1.0
          */
         this.alpha = defaultValue(alpha, 1.0);
-    };
+    }
 
     /**
      * Creates a Color instance from a {@link Cartesian4}. <code>x</code>, <code>y</code>, <code>z</code>,
@@ -137,7 +137,7 @@ define([
      * @param {Color} [result] The object onto which to store the result.
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      *
-     * @example var translucentRed = Cesium.Color.fromColor(Cesium.Color.RED, 0.9);
+     * @example var translucentRed = Cesium.Color.fromAlpha(Cesium.Color.RED, 0.9);
      */
     Color.fromAlpha = function(color, alpha, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -354,11 +354,12 @@ define([
      * @param {String} color The CSS color value in #rgb, #rrggbb, rgb(), rgba(), hsl(), or hsla() format.
      * @returns {Color} The color object, or undefined if the string was not a valid CSS color.
      *
-     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      *
      * @example
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
+     * 
+     * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color) {
         //>>includeStart('debug', pragmas.debug);
@@ -441,6 +442,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Color} [result] The object into which to store the result.
+     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
     Color.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -621,10 +623,11 @@ define([
      *
      * @returns {Number} A single numeric unsigned 32-bit RGBA value.
      *
-     * @see Color.fromRgba
      *
      * @example
      * var rgba = Cesium.Color.BLUE.toRgba();
+     * 
+     * @see Color.fromRgba
      */
     Color.prototype.toRgba = function() {
         // scratchUint32Array and scratchUint8Array share an underlying array buffer
@@ -643,7 +646,7 @@ define([
      * @returns {Color} The modified result parameter.
      *
      * @example
-     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Color());
+     * var brightBlue = Cesium.Color.BLUE.brighten(0.5, new Cesium.Color());
      */
     Color.prototype.brighten = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -674,7 +677,7 @@ define([
      * @returns {Color} The modified result parameter.
      *
      * @example
-     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Color());
+     * var darkBlue = Cesium.Color.BLUE.darken(0.5, new Cesium.Color());
      */
     Color.prototype.darken = function(magnitude, result) {
         //>>includeStart('debug', pragmas.debug);

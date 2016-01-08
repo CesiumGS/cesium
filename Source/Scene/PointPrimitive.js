@@ -51,7 +51,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
-    var PointPrimitive = function(options, pointPrimitiveCollection) {
+    function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -79,7 +79,7 @@ define([
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
         this._index = -1; //Used only by PointPrimitiveCollection
-    };
+    }
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX = 0;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX = 1;
@@ -262,7 +262,7 @@ define([
          * <code>blue</code>, and <code>alpha</code> properties as shown in Example 1.  These components range from <code>0.0</code>
          * (no intensity) to <code>1.0</code> (full intensity).
          * @memberof PointPrimitive.prototype
-         * @param {Color}
+         * @type {Color}
          *
          * @example
          * // Example 1. Assign yellow.
@@ -294,7 +294,7 @@ define([
         /**
          * Gets or sets the outline color of the point.
          * @memberof PointPrimitive.prototype
-         * @param {Color}
+         * @type {Color}
          */
         outlineColor : {
             get : function() {

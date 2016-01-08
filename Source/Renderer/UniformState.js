@@ -34,7 +34,7 @@ define([
     /**
      * @private
      */
-    var UniformState = function() {
+    function UniformState() {
         /**
          * @type {Texture}
          */
@@ -53,6 +53,7 @@ define([
         this._infiniteProjection = Matrix4.clone(Matrix4.IDENTITY);
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
+        this._frustumPlanes = new Cartesian4();
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -145,7 +146,9 @@ define([
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
         this._resolutionScale = 1.0;
-    };
+
+        this._fogDensity = undefined;
+    }
 
     defineProperties(UniformState.prototype, {
         /**
@@ -292,15 +295,7 @@ define([
          */
         view3D : {
             get : function() {
-                if (this._view3DDirty) {
-                    if (this._mode === SceneMode.SCENE3D) {
-                        Matrix4.clone(this._view, this._view3D);
-                    } else {
-                        view2Dto3D(this._cameraPosition, this._cameraDirection, this._cameraRight, this._cameraUp, this._frustum2DWidth, this._mode, this._mapProjection, this._view3D);
-                    }
-                    Matrix4.getRotation(this._view3D, this._viewRotation3D);
-                    this._view3DDirty = false;
-                }
+                updateView3D(this);
                 return this._view3D;
             }
         },
@@ -312,6 +307,7 @@ define([
          */
         viewRotation : {
             get : function() {
+                updateView3D(this);
                 return this._viewRotation;
             }
         },
@@ -322,7 +318,7 @@ define([
          */
         viewRotation3D : {
             get : function() {
-                var view3D = this.view3D;
+                updateView3D(this);
                 return this._viewRotation3D;
             }
         },
@@ -346,11 +342,7 @@ define([
          */
         inverseView3D : {
             get : function() {
-                if (this._inverseView3DDirty) {
-                    Matrix4.inverseTransformation(this.view3D, this._inverseView3D);
-                    Matrix4.getRotation(this._inverseView3D, this._inverseViewRotation3D);
-                    this._inverseView3DDirty = false;
-                }
+                updateInverseView3D(this);
                 return this._inverseView3D;
             }
         },
@@ -372,7 +364,7 @@ define([
          */
         inverseViewRotation3D : {
             get : function() {
-                var inverseView = this.inverseView3D;
+                updateInverseView3D(this);
                 return this._inverseViewRotation3D;
             }
         },
@@ -633,6 +625,18 @@ define([
         },
 
         /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
+         * @memberof UniformState.prototype
+         * @type {Cartesian4}
+         */
+        frustumPlanes : {
+            get : function() {
+                return this._frustumPlanes;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -751,6 +755,17 @@ define([
             get : function() {
                 return this._resolutionScale;
             }
+        },
+
+        /**
+         * A scalar used to mix a color with the fog color based on the distance to the camera.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        fogDensity : {
+            get : function() {
+                return this._fogDensity;
+            }
         }
     });
 
@@ -844,6 +859,15 @@ define([
         }
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
+
+        if (!defined(frustum.top)) {
+            frustum = frustum._offCenterFrustum;
+        }
+
+        this._frustumPlanes.x = frustum.top;
+        this._frustumPlanes.y = frustum.bottom;
+        this._frustumPlanes.z = frustum.left;
+        this._frustumPlanes.w = frustum.right;
     };
 
     /**
@@ -853,11 +877,11 @@ define([
      *
      * @param {FrameState} frameState The frameState to synchronize with.
      */
-    UniformState.prototype.update = function(context, frameState) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = context._canvas;
+        var canvas = frameState.context._canvas;
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
@@ -881,6 +905,8 @@ define([
         this._entireFrustum.x = camera.frustum.near;
         this._entireFrustum.y = camera.frustum.far;
         this.updateFrustum(camera.frustum);
+
+        this._fogDensity = frameState.fog.density;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
@@ -1147,6 +1173,26 @@ define([
         result[15] = 1.0;
 
         return result;
+    }
+
+    function updateView3D(that) {
+        if (that._view3DDirty) {
+            if (that._mode === SceneMode.SCENE3D) {
+                Matrix4.clone(that._view, that._view3D);
+            } else {
+                view2Dto3D(that._cameraPosition, that._cameraDirection, that._cameraRight, that._cameraUp, that._frustum2DWidth, that._mode, that._mapProjection, that._view3D);
+            }
+            Matrix4.getRotation(that._view3D, that._viewRotation3D);
+            that._view3DDirty = false;
+        }
+    }
+
+    function updateInverseView3D(that){
+        if (that._inverseView3DDirty) {
+            Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
+            Matrix4.getRotation(that._inverseView3D, that._inverseViewRotation3D);
+            that._inverseView3DDirty = false;
+        }
     }
 
     return UniformState;

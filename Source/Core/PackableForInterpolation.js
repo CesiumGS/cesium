@@ -10,8 +10,7 @@ define([
      * different representation than their packed value.  These methods and
      * properties are expected to be defined on a constructor function.
      *
-     * @namespace
-     * @alias PackableForInterpolation
+     * @exports PackableForInterpolation
      *
      * @see Packable
      */
@@ -42,6 +41,7 @@ define([
          * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
          * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
          * @param {Object} [result] The object into which to store the result.
+         * @returns {Object} The modified result parameter or a new Object instance if one was not provided.
          */
         unpackInterpolationResult : DeveloperError.throwInstantiationError
     };

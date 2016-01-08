@@ -63,14 +63,18 @@ define([
      *   geometry : new Cesium.RectangleGeometry({
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
-     *   color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *   attributes : {
+     *     color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *   }
      * });
      *
      * var anotherInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.RectangleGeometry({
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
-     *   color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *   attributes : {
+     *     color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *   }
      * });
      *
      * var rectanglePrimitive = new Cesium.Primitive({
@@ -78,7 +82,7 @@ define([
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * });
      */
-    var PerInstanceColorAppearance = function(options) {
+    function PerInstanceColorAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -118,7 +122,7 @@ define([
         this._vertexFormat = vertexFormat;
         this._flat = flat;
         this._faceForward = defaultValue(options.faceForward, !closed);
-    };
+    }
 
     defineProperties(PerInstanceColorAppearance.prototype, {
         /**
@@ -268,7 +272,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     PerInstanceColorAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

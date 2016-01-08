@@ -63,7 +63,7 @@ define([
      * });
      * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
-    var CylinderOutlineGeometry = function(options) {
+    function CylinderOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -96,7 +96,7 @@ define([
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
         this._workerName = 'createCylinderOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -106,9 +106,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CylinderOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -145,6 +144,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CylinderOutlineGeometry} [result] The object into which to store the result.
+     * @returns {CylinderOutlineGeometry} The modified result parameter or a new CylinderOutlineGeometry instance if one was not provided.
      */
     CylinderOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="CZML Polygon - Interpolating References">
+  <meta name="cesium-sandcastle-labels" content="CZML">
+  <title>Cesium Demo</title>
+  <script type="text/javascript" src="../Sandcastle-header.js"></script>
+  <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+  <script type="text/javascript">
+  require.config({
+    baseUrl : '../../../Source',
+    waitSeconds : 60
+  });
+  </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+  "use strict";
+  //Sandcastle_Begin
+var czml = [
+  {
+    "id" : "document",
+    "name" : "CZML Polygon - Interpolating References",
+    "version" : "1.0"
+  }, {
+    "id" : "dynamicPolygon",
+    "name": "Dynamic Polygon with Reference Properties",
+    "availability":"2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+    "polygon": {
+      "positions": {
+        "references": [
+          "v1#position",
+          "v2#position",
+          "v3#position"
+        ]
+      },
+      "perPositionHeight" : true,
+      "material": {
+        "solidColor": {
+          "color": [
+            {
+              "interval" : "2012-08-04T16:00:00Z/2012-08-04T16:25:00Z",
+              "rgbaf" : [1, 0, 1, 1]
+            }, {
+              "interval" : "2012-08-04T16:30:00Z/2012-08-04T17:00:00Z",
+              "rgbaf" : [0, 1, 1, 1]
+            }
+          ]
+        }
+      }
+    }
+  }, {
+    "id": "v1",
+    "position": {
+      "interpolationAlgorithm": "LINEAR",
+      "interpolationDegree": 1,
+      "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+      "epoch" : "2012-08-04T16:00:00Z",
+      "cartographicDegrees": [
+        0, -60, 35, 30000,
+        160, -65, 35, 5000000,
+        400, -70, 40, 20000,
+        800, -62, 45, 200000,
+        1800, -65, 40, 650000,
+        3600, -60, 35, 3000
+      ]
+    }
+  }, {
+    "id": "v2",
+    "position": {
+      "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+      "cartographicDegrees": [
+        -45.0, 20, 4000000
+      ]
+    }
+  }, {
+    "id": "v3",
+    "position": {
+      "interpolationAlgorithm": "LINEAR",
+      "interpolationDegree": 1,
+      "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+      "epoch" : "2012-08-04T16:00:00Z",
+      "cartographicDegrees": [
+        0, -45, 60, 4000,
+        400, -40, 70, 2000000,
+        1000, -35, 75, 100000,
+        3600, -45, 65, 3000
+      ]
+    }
+  }
+];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+
+  //Sandcastle_End
+  Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+  startup(Cesium);
+} else if (typeof require === "function") {
+  require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

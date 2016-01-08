@@ -31,15 +31,15 @@ define([
      *
      * viewer.dataSources.add(dataSource);
      */
-    var CustomDataSource = function(name) {
+    function CustomDataSource(name) {
         this._name = name;
         this._clock = undefined;
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
         this._loading = new Event();
-        this._entityCollection = new EntityCollection();
-    };
+        this._entityCollection = new EntityCollection(this);
+    }
 
     defineProperties(CustomDataSource.prototype, {
         /**

@@ -14,8 +14,7 @@ define([
     /**
      * Math functions.
      *
-     * @namespace
-     * @alias CesiumMath
+     * @exports CesiumMath
      */
     var CesiumMath = {};
 
@@ -259,7 +258,7 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic sine is to be returned.
-     * @returns The hyperbolic sine of <code>value</code>.
+     * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
     CesiumMath.sinh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -285,7 +284,7 @@ define([
      *</p>
      *
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
-     * @returns The hyperbolic cosine of <code>value</code>.
+     * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
     CesiumMath.cosh = function(value) {
         var part1 = Math.pow(Math.E, value);
@@ -564,11 +563,12 @@ define([
      *
      * @exception {DeveloperError} A number greater than or equal to 0 is required.
      *
-     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      *
      * @example
      * //Compute 7!, which is equal to 5040
      * var computedFactorial = Cesium.Math.factorial(7);
+     * 
+     * @see {@link http://en.wikipedia.org/wiki/Factorial|Factorial on Wikipedia}
      */
     CesiumMath.factorial = function(n) {
         //>>includeStart('debug', pragmas.debug);
@@ -778,6 +778,14 @@ define([
         }
         //>>includeEnd('debug');
         return 2.0 * radius * Math.sin(angle * 0.5);
+    };
+
+    /**
+     * @private
+     */
+    CesiumMath.fog = function(distanceToCamera, density) {
+        var scalar = distanceToCamera * density;
+        return 1.0 - Math.exp(-(scalar * scalar));
     };
 
     return CesiumMath;

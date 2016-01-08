@@ -25,6 +25,7 @@ define([
         createCommand) {
     "use strict";
 
+    var pitchScratch = new Cartesian3();
     function viewHome(scene, duration) {
         var mode = scene.mode;
 
@@ -48,11 +49,6 @@ define([
 
             scene.camera.flyTo({
                 destination : destination,
-                orientation : {
-                    heading : 0.0,
-                    pitch : -Math.PI * 0.5,
-                    roll : 0.0
-                },
                 duration : duration,
                 endTransform : Matrix4.IDENTITY
             });
@@ -60,14 +56,12 @@ define([
             var maxRadii = scene.globe.ellipsoid.maximumRadius;
             var position = new Cartesian3(0.0, -1.0, 1.0);
             position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
-            var pitch = -Math.acos(Cartesian3.normalize(position, new Cartesian3()).z);
-
             scene.camera.flyTo({
                 destination : position,
                 duration : duration,
                 orientation : {
                     heading : 0.0,
-                    pitch : pitch,
+                    pitch : -Math.acos(Cartesian3.normalize(position, pitchScratch).z),
                     roll : 0.0
                 },
                 endTransform : Matrix4.IDENTITY,
@@ -84,7 +78,7 @@ define([
      * @param {Scene} scene The scene instance to use.
      * @param {Number} [duration] The duration of the camera flight in seconds.
      */
-    var HomeButtonViewModel = function(scene, duration) {
+    function HomeButtonViewModel(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -107,7 +101,7 @@ define([
         this.tooltip = 'View Home';
 
         knockout.track(this, ['tooltip']);
-    };
+    }
 
     defineProperties(HomeButtonViewModel.prototype, {
         /**

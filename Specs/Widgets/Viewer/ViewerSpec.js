@@ -18,6 +18,7 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
+        'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
         'Specs/pollToPromise',
@@ -28,6 +29,7 @@ defineSuite([
         'Widgets/FullscreenButton/FullscreenButton',
         'Widgets/Geocoder/Geocoder',
         'Widgets/HomeButton/HomeButton',
+        'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
         'Widgets/Timeline/Timeline'
@@ -50,6 +52,7 @@ defineSuite([
         CameraFlightPath,
         ImageryLayerCollection,
         SceneMode,
+        createViewer,
         DomEventSimulator,
         MockDataSource,
         pollToPromise,
@@ -60,11 +63,11 @@ defineSuite([
         FullscreenButton,
         Geocoder,
         HomeButton,
+        NavigationHelpButton,
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var testProvider = {
         isReady : function() {
@@ -102,13 +105,14 @@ defineSuite([
     });
 
     it('constructor sets default values', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         expect(viewer.container).toBe(container);
         expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
         expect(viewer.geocoder).toBeInstanceOf(Geocoder);
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -127,19 +131,19 @@ defineSuite([
     });
 
     it('renders without errors', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         spyOn(viewer.scene.renderError, 'raiseEvent');
         viewer.render();
         expect(viewer.scene.renderError.raiseEvent).not.toHaveBeenCalled();
     });
 
     it('constructor works with container id string', function() {
-        viewer = new Viewer('container');
+        viewer = createViewer('container');
         expect(viewer.container).toBe(container);
     });
 
     it('can shut off HomeButton', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             homeButton : false
         });
         expect(viewer.container).toBe(container);
@@ -148,6 +152,7 @@ defineSuite([
         expect(viewer.homeButton).toBeUndefined();
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -157,7 +162,7 @@ defineSuite([
     });
 
     it('can shut off SceneModePicker', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             sceneModePicker : false
         });
         expect(viewer.container).toBe(container);
@@ -166,6 +171,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeUndefined();
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -175,7 +181,7 @@ defineSuite([
     });
 
     it('can shut off BaseLayerPicker', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             baseLayerPicker : false
         });
         expect(viewer.container).toBe(container);
@@ -184,6 +190,26 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeUndefined();
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeInstanceOf(Timeline);
+        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.selectionIndicator).toBeInstanceOf(SelectionIndicator);
+        viewer.resize();
+        viewer.render();
+    });
+
+    it('can shut off NavigationHelpButton', function() {
+        viewer = createViewer(container, {
+            navigationHelpButton : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.geocoder).toBeInstanceOf(Geocoder);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeUndefined();
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -193,7 +219,7 @@ defineSuite([
     });
 
     it('can shut off Animation', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             animation : false
         });
         expect(viewer.container).toBe(container);
@@ -202,6 +228,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -211,7 +238,7 @@ defineSuite([
     });
 
     it('can shut off Timeline', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             timeline : false
         });
         expect(viewer.container).toBe(container);
@@ -220,6 +247,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -229,7 +257,7 @@ defineSuite([
     });
 
     it('can shut off FullscreenButton', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             fullscreenButton : false
         });
         expect(viewer.container).toBe(container);
@@ -238,6 +266,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -247,7 +276,7 @@ defineSuite([
     });
 
     it('can shut off FullscreenButton and Timeline', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             timeline : false,
             fullscreenButton : false
         });
@@ -257,6 +286,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -266,7 +296,7 @@ defineSuite([
     });
 
     it('can shut off FullscreenButton, Timeline, and Animation', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             timeline : false,
             fullscreenButton : false,
             animation : false
@@ -277,6 +307,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeUndefined(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeUndefined();
@@ -286,7 +317,7 @@ defineSuite([
     });
 
     it('can shut off Geocoder', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             geocoder : false
         });
         expect(viewer.container).toBe(container);
@@ -295,6 +326,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -304,7 +336,7 @@ defineSuite([
     });
 
     it('can shut off SelectionIndicator', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             selectionIndicator : false
         });
         expect(viewer.container).toBe(container);
@@ -313,6 +345,7 @@ defineSuite([
         expect(viewer.homeButton).toBeInstanceOf(HomeButton);
         expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
         expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.navigationHelpButton).toBeInstanceOf(NavigationHelpButton);
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
@@ -324,7 +357,7 @@ defineSuite([
     it('can set terrainProvider', function() {
         var provider = new EllipsoidTerrainProvider();
 
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             baseLayerPicker : false,
             terrainProvider : provider
         });
@@ -338,7 +371,7 @@ defineSuite([
     it('can set fullScreenElement', function() {
         var testElement = document.createElement('span');
 
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             fullscreenElement : testElement
         });
         expect(viewer.fullscreenButton.viewModel.fullscreenElement).toBe(testElement);
@@ -358,7 +391,7 @@ defineSuite([
             webgl : webglOptions
         };
 
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             contextOptions : contextOptions
         });
 
@@ -375,14 +408,14 @@ defineSuite([
     });
 
     it('can disable Order Independent Translucency', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             orderIndependentTranslucency : false
         });
         expect(viewer.scene.orderIndependentTranslucency).toBe(false);
     });
 
     it('can set scene mode', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
         viewer.scene.completeMorph();
@@ -392,14 +425,14 @@ defineSuite([
     it('can set map projection', function() {
         var mapProjection = new WebMercatorProjection();
 
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             mapProjection : mapProjection
         });
         expect(viewer.scene.mapProjection).toEqual(mapProjection);
     });
 
     it('can set selectedImageryProviderViewModel', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
         expect(viewer.scene.imageryLayers.length).toEqual(1);
@@ -408,7 +441,7 @@ defineSuite([
     });
 
     it('can set imageryProvider when BaseLayerPicker is disabled', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             baseLayerPicker : false,
             imageryProvider : testProvider
         });
@@ -419,7 +452,7 @@ defineSuite([
     it('can set imageryProviderViewModels', function() {
         var models = [testProviderViewModel];
 
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             imageryProviderViewModels : models
         });
         expect(viewer.scene.imageryLayers.length).toEqual(1);
@@ -430,35 +463,35 @@ defineSuite([
     });
 
     it('can disable render loop', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             useDefaultRenderLoop : false
         });
         expect(viewer.useDefaultRenderLoop).toBe(false);
     });
 
     it('can set target frame rate', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             targetFrameRate : 23
         });
         expect(viewer.targetFrameRate).toBe(23);
     });
 
     it('does not create a globe if option is false', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             globe : false
         });
         expect(viewer.scene.globe).not.toBeDefined();
     });
 
     it('does not create a skyBox if option is false', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             skyBox : false
         });
         expect(viewer.scene.skyBox).not.toBeDefined();
     });
 
     it('does not create a skyAtmosphere if option is false', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             skyAtmosphere : false
         });
         expect(viewer.scene.skyAtmosphere).not.toBeDefined();
@@ -466,14 +499,14 @@ defineSuite([
 
     it('can set dataSources at construction', function() {
         var collection = new DataSourceCollection();
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             dataSources : collection
         });
         expect(viewer.dataSources).toBe(collection);
     });
 
     it('default DataSourceCollection is destroyed when Viewer is destroyed', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         var dataSources = viewer.dataSources;
         viewer.destroy();
         expect(dataSources.isDestroyed()).toBe(true);
@@ -481,7 +514,7 @@ defineSuite([
 
     it('specified DataSourceCollection is not destroyed when Viewer is destroyed', function() {
         var collection = new DataSourceCollection();
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             dataSources : collection
         });
         viewer.destroy();
@@ -489,20 +522,20 @@ defineSuite([
     });
 
     it('throws if targetFrameRate less than 0', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         expect(function() {
             viewer.targetFrameRate = -1;
         }).toThrowDeveloperError();
     });
 
     it('can set resolutionScale', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.resolutionScale = 0.5;
         expect(viewer.resolutionScale).toBe(0.5);
     });
 
     it('throws if resolutionScale is less than 0', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         expect(function() {
             viewer.resolutionScale = -1;
         }).toThrowDeveloperError();
@@ -510,19 +543,19 @@ defineSuite([
 
     it('constructor throws with undefined container', function() {
         expect(function() {
-            return new Viewer(undefined);
+            return createViewer(undefined);
         }).toThrowDeveloperError();
     });
 
     it('constructor throws with non-existant string container', function() {
         expect(function() {
-            return new Viewer('doesNotExist');
+            return createViewer('doesNotExist');
         }).toThrowDeveloperError();
     });
 
     it('constructor throws if using selectedImageryProviderViewModel with BaseLayerPicker disabled', function() {
         expect(function() {
-            return new Viewer(container, {
+            return createViewer(container, {
                 baseLayerPicker : false,
                 selectedImageryProviderViewModel : testProviderViewModel
             });
@@ -531,21 +564,21 @@ defineSuite([
 
     it('constructor throws if using imageryProvider with BaseLayerPicker enabled', function() {
         expect(function() {
-            return new Viewer(container, {
+            return createViewer(container, {
                 imageryProvider : testProvider
             });
         }).toThrowDeveloperError();
     });
 
     it('extend throws with undefined mixin', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         expect(function() {
             return viewer.extend(undefined);
         }).toThrowDeveloperError();
     });
 
     it('stops the render loop when render throws', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         expect(viewer.useDefaultRenderLoop).toEqual(true);
 
         var error = 'foo';
@@ -568,7 +601,7 @@ defineSuite([
         dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
         dataSource.clock.multiplier = 20.0;
 
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.dataSources.add(dataSource);
 
         expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
@@ -586,7 +619,7 @@ defineSuite([
         dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
 
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.dataSources.add(dataSource1);
 
         expect(viewer.clockTrackedDataSource).toBe(dataSource1);
@@ -633,7 +666,7 @@ defineSuite([
         dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
         dataSource.clock.multiplier = 20.0;
 
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
         viewer.dataSources.add(dataSource);
 
         dataSource.clock.startTime = JulianDate.fromIso8601('2014-08-01T18:00Z');
@@ -660,7 +693,7 @@ defineSuite([
         dataSource1.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
         dataSource1.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
 
-        viewer = new Viewer(container, { automaticallyTrackDataSourceClocks : false });
+        viewer = createViewer(container, { automaticallyTrackDataSourceClocks : false });
         viewer.dataSources.add(dataSource1);
 
         // Because of the above Viewer option, data sources are not automatically
@@ -692,7 +725,7 @@ defineSuite([
     });
 
     it('shows the error panel when render throws', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         var error = 'foo';
         viewer.scene.primitives.update = function() {
@@ -723,7 +756,7 @@ defineSuite([
     });
 
     it('does not show the error panel if disabled', function() {
-        viewer = new Viewer(container, {
+        viewer = createViewer(container, {
             showRenderLoopErrors : false
         });
 
@@ -740,7 +773,7 @@ defineSuite([
     });
 
     it('can get and set trackedEntity', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
@@ -753,7 +786,7 @@ defineSuite([
     });
 
     it('can get and set selectedEntity', function() {
-        var viewer = new Viewer(container);
+        var viewer = createViewer(container);
 
         var dataSource = new MockDataSource();
         viewer.dataSources.add(dataSource);
@@ -773,7 +806,7 @@ defineSuite([
     });
 
     it('selectedEntity sets InfoBox properties', function() {
-        var viewer = new Viewer(container);
+        var viewer = createViewer(container);
 
         var entity = new Entity();
 
@@ -806,7 +839,7 @@ defineSuite([
     });
 
     it('home button resets tracked object', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
@@ -826,7 +859,7 @@ defineSuite([
     });
 
     it('stops tracking when tracked object is removed', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
@@ -867,7 +900,7 @@ defineSuite([
     });
 
     it('does not crash when tracking an object with a position property whose value is undefined.', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         var entity = new Entity();
         entity.position = new ConstantProperty(undefined);
@@ -888,7 +921,7 @@ defineSuite([
     });
 
     it('removes data source listeners when destroyed', function() {
-        viewer = new Viewer(container);
+        viewer = createViewer(container);
 
         //one data source that is added before mixing in
         var preMixinDataSource = new MockDataSource();

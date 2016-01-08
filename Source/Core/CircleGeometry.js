@@ -20,7 +20,7 @@ define([
     "use strict";
 
     /**
-     * A description of a circle on the ellipsoid.
+     * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
      * @alias CircleGeometry
      * @constructor
@@ -51,7 +51,7 @@ define([
      * });
      * var geometry = Cesium.CircleGeometry.createGeometry(circle);
      */
-    var CircleGeometry = function(options) {
+    function CircleGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
@@ -77,7 +77,7 @@ define([
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -87,9 +87,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CircleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -126,6 +125,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CircleGeometry} [result] The object into which to store the result.
+     * @returns {CircleGeometry} The modified result parameter or a new CircleGeometry instance if one was not provided.
      */
     CircleGeometry.unpack = function(array, startingIndex, result) {
         var ellipseGeometry = EllipseGeometry.unpack(array, startingIndex, scratchEllipseGeometry);
@@ -158,7 +158,10 @@ define([
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
-    CircleGeometry._createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
+    /**
+     * @private
+     */
+    CircleGeometry.createShadowVolume = function(circleGeometry, minHeightFunc, maxHeightFunc) {
         var granularity = circleGeometry._ellipseGeometry._granularity;
         var ellipsoid = circleGeometry._ellipseGeometry._ellipsoid;
 

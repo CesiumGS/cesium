@@ -39,7 +39,7 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    var OrthographicFrustum = function() {
+    function OrthographicFrustum() {
         /**
          * The left clipping plane.
          * @type {Number}
@@ -90,7 +90,7 @@ define([
 
         this._cullingVolume = new CullingVolume();
         this._orthographicMatrix = new Matrix4();
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
@@ -132,6 +132,7 @@ define([
          * Gets the orthographic projection matrix computed from the view frustum.
          * @memberof OrthographicFrustum.prototype
          * @type {Matrix4}
+         * @readonly
          */
         projectionMatrix : {
             get : function() {
@@ -268,42 +269,45 @@ define([
     /**
      * Returns the pixel's width and height in meters.
      *
-     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
-     * @param {Cartesian2} [result] The object onto which to store the result.
+     * @param {Number} drawingBufferWidth The width of the drawing buffer.
+     * @param {Number} drawingBufferHeight The height of the drawing buffer.
+     * @param {Number} distance The distance to the near plane in meters.
+     * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
-     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
-     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
+     * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
+     * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(canvas.clientWidth, canvas.clientHeight));
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, new Cartesian2());
      */
-    OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawingBufferDimensions)) {
-            throw new DeveloperError('drawingBufferDimensions is required.');
+        if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
+            throw new DeveloperError('Both drawingBufferWidth and drawingBufferHeight are required.');
         }
-        if (drawingBufferDimensions.x <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
+        if (drawingBufferWidth <= 0) {
+            throw new DeveloperError('drawingBufferWidth must be greater than zero.');
         }
-        if (drawingBufferDimensions.y <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
+        if (drawingBufferHeight <= 0) {
+            throw new DeveloperError('drawingBufferHeight must be greater than zero.');
+        }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('A result object is required.');
         }
         //>>includeEnd('debug');
 
         var frustumWidth = this.right - this.left;
         var frustumHeight = this.top - this.bottom;
-        var pixelWidth = frustumWidth / drawingBufferDimensions.x;
-        var pixelHeight = frustumHeight / drawingBufferDimensions.y;
-
-        if (!defined(result)) {
-            return new Cartesian2(pixelWidth, pixelHeight);
-        }
+        var pixelWidth = frustumWidth / drawingBufferWidth;
+        var pixelHeight = frustumHeight / drawingBufferHeight;
 
         result.x = pixelWidth;
         result.y = pixelHeight;

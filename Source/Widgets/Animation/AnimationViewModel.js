@@ -81,6 +81,13 @@ define([
             return multiplier * realtimeShuttleRingAngle;
         }
 
+        var fastedMultipler = shuttleRingTicks[shuttleRingTicks.length - 1];
+        if(multiplier > fastedMultipler){
+            multiplier = fastedMultipler;
+        } else if(multiplier < -fastedMultipler){
+            multiplier = -fastedMultipler;
+        }
+
         var minp = realtimeShuttleRingAngle;
         var maxp = maxShuttleRingAngle;
         var maxv;
@@ -88,7 +95,7 @@ define([
         var scale;
 
         if (multiplier > 0) {
-            maxv = Math.log(shuttleRingTicks[shuttleRingTicks.length - 1]);
+            maxv = Math.log(fastedMultipler);
             scale = (maxv - minv) / (maxp - minp);
             return (Math.log(multiplier) - minv) / scale + minp;
         }
@@ -107,7 +114,7 @@ define([
      *
      * @see Animation
      */
-    var AnimationViewModel = function(clockViewModel) {
+    function AnimationViewModel(clockViewModel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
@@ -362,7 +369,7 @@ define([
                 clockViewModel.multiplier = shuttleRingTicks[index];
             }
         });
-    };
+    }
 
     /**
      * Gets or sets the default date formatter used by new instances.
@@ -377,6 +384,7 @@ define([
 
     /**
      * Gets or sets the default array of known clock multipliers associated with new instances of the shuttle ring.
+     * @type {Number[]}
      */
     AnimationViewModel.defaultTicks = [//
     0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0,//
@@ -401,7 +409,7 @@ define([
     /**
      * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
      *
-     * @returns The array of known clock multipliers associated with the shuttle ring.
+     * @returns {Number[]} The array of known clock multipliers associated with the shuttle ring.
      */
     AnimationViewModel.prototype.getShuttleRingTicks = function() {
         return this._sortedFilteredPositiveTicks.slice(0);

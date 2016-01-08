@@ -17,13 +17,14 @@ define([
      * @alias DynamicGeometryUpdater
      * @constructor
      */
-    var DynamicGeometryUpdater = function() {
+    function DynamicGeometryUpdater() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Updates the geometry to the specified time.
      * @memberof DynamicGeometryUpdater
+     * @function
      *
      * @param {JulianDate} time The current time.
      */
@@ -32,6 +33,7 @@ define([
     /**
      * Computes a bounding sphere which encloses the visualization produced for the specified entity.
      * The bounding sphere is in the fixed frame of the scene's globe.
+     * @function
      *
      * @param {Entity} entity The entity whose bounding sphere to compute.
      * @param {BoundingSphere} result The bounding sphere onto which to store the result.
@@ -45,6 +47,7 @@ define([
     /**
      * Returns true if this object was destroyed; otherwise, false.
      * @memberof DynamicGeometryUpdater
+     * @function
      *
      * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
@@ -53,6 +56,7 @@ define([
     /**
      * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
      * @memberof DynamicGeometryUpdater
+     * @function
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */

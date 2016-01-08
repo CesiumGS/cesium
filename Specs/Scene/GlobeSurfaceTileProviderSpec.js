@@ -9,8 +9,11 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
+        'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
+        'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Scene/BlendingState',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
@@ -20,7 +23,6 @@ defineSuite([
         'Scene/QuadtreeTileProvider',
         'Scene/SceneMode',
         'Scene/SingleTileImageryProvider',
-        'Scene/terrainAttributeLocations',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -36,8 +38,11 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
+        CesiumMath,
         Rectangle,
         WebMercatorProjection,
+        ContextLimits,
+        RenderState,
         BlendingState,
         Globe,
         GlobeSurfaceShaderSet,
@@ -47,14 +52,12 @@ defineSuite([
         QuadtreeTileProvider,
         SceneMode,
         SingleTileImageryProvider,
-        terrainAttributeLocations,
         WebMapServiceImageryProvider,
         createContext,
         createFrameState,
         pollToPromise,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
 
@@ -85,8 +88,7 @@ defineSuite([
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
-            var commandList = [];
-            globe.update(context, frameState, commandList);
+            globe.update(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
@@ -100,7 +102,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
         frameState.camera.frustum = frustum;
         frameState.camera.update(frameState.mode);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), frameState.mapProjection);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
     }
 
     beforeAll(function() {
@@ -112,7 +114,7 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState();
+        frameState = createFrameState(context);
         globe = new Globe();
         surface = globe._surface;
     });
@@ -130,7 +132,7 @@ defineSuite([
             function constructWithoutTerrainProvider() {
                 return new GlobeSurfaceTileProvider({
                     imageryLayers : new ImageryLayerCollection(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet()
                 });
             }
             expect(constructWithoutTerrainProvider).toThrowDeveloperError();
@@ -140,7 +142,7 @@ defineSuite([
             function constructWithoutImageryLayerCollection() {
                 return new GlobeSurfaceTileProvider({
                     terrainProvider : new EllipsoidTerrainProvider(),
-                    surfaceShaderSet : new GlobeSurfaceShaderSet(terrainAttributeLocations)
+                    surfaceShaderSet : new GlobeSurfaceShaderSet()
                 });
             }
             expect(constructWithoutImageryLayerCollection).toThrowDeveloperError();
@@ -318,7 +320,7 @@ defineSuite([
         frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -333,7 +335,7 @@ defineSuite([
         frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -348,10 +350,10 @@ defineSuite([
         frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -366,10 +368,10 @@ defineSuite([
         frameState.mapProjection = new WebMercatorProjection(Ellipsoid.WGS84);
 
         frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -380,10 +382,83 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
+        });
+    });
+
+    it('renders in 3D (2)', function() {
+        var layerCollection = globe.imageryLayers;
+        layerCollection.removeAll();
+        layerCollection.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+
+        frameState.camera.setView({ destination : new Rectangle(0.0000001, 0.0000001, 0.0000025, 0.0000025) });
+
+        return pollToPromise(function() {
+            globe.update(frameState);
+            return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0 && globe._surface._debug.maxDepth >= 11;
+        }).then(function() {
+            expect(render(frameState, globe)).toBeGreaterThan(0);
+        });
+    });
+
+    describe('fog', function() {
+        it('culls tiles in full fog', function() {
+            var layerCollection = globe.imageryLayers;
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            frameState.camera.setView({
+                destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+                orientation : {
+                    pitch : CesiumMath.toRadians(-20.0)
+                }
+            });
+
+            return updateUntilDone(globe).then(function() {
+                expect(render(frameState, globe)).toBeGreaterThan(0);
+                frameState.fog.enabled = true;
+                frameState.fog.density = 0.001;
+                frameState.fog.sse = 0.0;
+                globe.update(frameState);
+                expect(render(frameState, globe)).toEqual(0);
+            });
+        });
+
+        it('culls tiles because of increased SSE', function() {
+            var layerCollection = globe.imageryLayers;
+            layerCollection.removeAll();
+            layerCollection.addImageryProvider(new SingleTileImageryProvider({
+                url : 'Data/Images/Red16x16.png'
+            }));
+
+            frameState.camera.setView({
+                destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025),
+                orientation : {
+                    pitch : CesiumMath.toRadians(-20.0)
+                }
+            });
+
+            return updateUntilDone(globe).then(function() {
+                expect(render(frameState, globe)).toBeGreaterThan(0);
+
+                frameState.fog.enabled = true;
+                frameState.fog.density = 0.0002;
+                frameState.fog.sse = 0.0;
+                globe.update(frameState);
+                var renderCount = render(frameState, globe);
+                expect(renderCount).toBeGreaterThan(0);
+
+                frameState.fog.sse = 2.0;
+                globe.update(frameState);
+                expect(render(frameState, globe)).toBeLessThan(renderCount);
+            });
         });
     });
 
@@ -391,10 +466,10 @@ defineSuite([
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
         globe.baseColor = Color.RED;
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
             expect(context.readPixels()).toEqual([255, 0, 0, 255]);
         });
     });
@@ -406,19 +481,19 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             frameState.mode = SceneMode.COLUMBUS_VIEW;
             frameState.mapProjection = new GeographicProjection(Ellipsoid.WGS84);
 
             frameState.camera.update(SceneMode.COLUMBUS_VIEW);
-            frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0030, 0.0030), Ellipsoid.WGS84);
+            frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030) });
 
             return updateUntilDone(globe).then(function() {
-                expect(render(context, frameState, globe)).toBeGreaterThan(0);
+                expect(render(frameState, globe)).toBeGreaterThan(0);
             });
         });
     });
@@ -434,10 +509,10 @@ defineSuite([
 
         layerCollection.addImageryProvider(providerWithInvalidRootTiles);
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            expect(render(context, frameState, globe)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
         });
     });
 
@@ -455,13 +530,13 @@ defineSuite([
         layer.saturation = 0.123;
         layer.hue = 0.456;
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];
@@ -494,13 +569,13 @@ defineSuite([
 
         layer.alpha = 0.0;
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
             var tileCommandCount = 0;
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];
@@ -523,23 +598,23 @@ defineSuite([
         var layerCollection = globe.imageryLayers;
         layerCollection.removeAll();
 
-        for (var i = 0; i < context.maximumTextureImageUnits + 1; ++i) {
+        for (var i = 0; i < ContextLimits.maximumTextureImageUnits + 1; ++i) {
             layerCollection.addImageryProvider(new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png'
             }));
         }
 
-        frameState.camera.viewRectangle(new Rectangle(0.0001, 0.0001, 0.0025, 0.0025), Ellipsoid.WGS84);
+        frameState.camera.setView({ destination : new Rectangle(0.0001, 0.0001, 0.0025, 0.0025) });
 
         return updateUntilDone(globe).then(function() {
-            var commandList = [];
-            expect(render(context, frameState, globe, commandList)).toBeGreaterThan(0);
+            expect(render(frameState, globe)).toBeGreaterThan(0);
 
-            var renderStateWithAlphaBlending = context.createRenderState({
+            var renderStateWithAlphaBlending = RenderState.fromCache({
                 blending : BlendingState.ALPHA_BLEND
             });
 
             var drawCommandsPerTile = {};
+            var commandList = frameState.commandList;
 
             for (var i = 0; i < commandList.length; ++i) {
                 var command = commandList[i];
@@ -612,42 +687,42 @@ defineSuite([
         it('recreates the level zero tiles', function() {
             var surface = globe._surface;
 
-            return updateUntilDone(globe).then(function() {
-                var levelZeroTiles = surface._levelZeroTiles;
-                expect(levelZeroTiles.length).toBe(2);
+            globe.update(frameState);
 
-                var levelZero0 = levelZeroTiles[0];
-                var levelZero1 = levelZeroTiles[1];
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
 
-                surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
 
-                return updateUntilDone(globe).then(function() {
-                    levelZeroTiles = surface._levelZeroTiles;
-                    expect(levelZeroTiles[0]).not.toBe(levelZero0);
-                    expect(levelZeroTiles[1]).not.toBe(levelZero1);
-                });
-            });
+            surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+            globe.update(frameState);
+
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).not.toBe(levelZero0);
+            expect(levelZeroTiles[1]).not.toBe(levelZero1);
         });
 
         it('does nothing if the new provider is the same as the old', function() {
             var surface = globe._surface;
             var provider = surface.tileProvider.terrainProvider;
 
-            return updateUntilDone(globe).then(function() {
-                var levelZeroTiles = surface._levelZeroTiles;
-                expect(levelZeroTiles.length).toBe(2);
+            globe.update(frameState);
 
-                var levelZero0 = levelZeroTiles[0];
-                var levelZero1 = levelZeroTiles[1];
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
 
-                surface.tileProvider.terrainProvider = provider;
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
 
-                return updateUntilDone(globe).then(function() {
-                    levelZeroTiles = surface._levelZeroTiles;
-                    expect(levelZeroTiles[0]).toBe(levelZero0);
-                    expect(levelZeroTiles[1]).toBe(levelZero1);
-                });
-            });
+            surface.tileProvider.terrainProvider = provider;
+
+            globe.update(frameState);
+
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).toBe(levelZero0);
+            expect(levelZeroTiles[1]).toBe(levelZero1);
         });
     }, 'WebGL');
 

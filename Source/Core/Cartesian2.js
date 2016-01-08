@@ -25,7 +25,7 @@ define([
      * @see Cartesian4
      * @see Packable
      */
-    var Cartesian2 = function(x, y) {
+    function Cartesian2(x, y) {
         /**
          * The X component.
          * @type {Number}
@@ -39,7 +39,7 @@ define([
          * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
-    };
+    }
 
     /**
      * Creates a Cartesian2 instance from x and y coordinates.
@@ -136,6 +136,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Cartesian2} [result] The object into which to store the result.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);

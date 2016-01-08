@@ -56,7 +56,7 @@ define([
      *   })
      * });
      */
-    var EllipsoidSurfaceAppearance = function(options) {
+    function EllipsoidSurfaceAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -93,7 +93,7 @@ define([
         this._flat = defaultValue(options.flat, false);
         this._faceForward = defaultValue(options.faceForward, aboveGround);
         this._aboveGround = aboveGround;
-    };
+    }
 
     defineProperties(EllipsoidSurfaceAppearance.prototype, {
         /**
@@ -256,7 +256,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

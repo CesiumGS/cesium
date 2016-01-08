@@ -32,7 +32,7 @@ define([
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
-    var ImageryLayerCollection = function ImageryLayerCollection() {
+    function ImageryLayerCollection() {
         this._layers = [];
 
         /**
@@ -69,7 +69,7 @@ define([
          * @default Event()
          */
         this.layerShownOrHidden = new Event();
-    };
+    }
 
     defineProperties(ImageryLayerCollection.prototype, {
         /**
@@ -359,8 +359,7 @@ define([
      *         console.log('Number of features: ' + features.length);
      *         if (features.length > 0) {
      *             console.log('First feature name: ' + features[0].name);
-     *             }
-     *         });
+     *         }
      *     });
      * }
      */
@@ -375,7 +374,6 @@ define([
 
         // Find the terrain tile containing the picked location.
         var tilesToRender = scene.globe._surface._tilesToRender;
-        var length = tilesToRender.length;
         var pickedTile;
 
         for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
@@ -390,10 +388,10 @@ define([
         }
 
         // Pick against all attached imagery tiles containing the pickedLocation.
-        var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
+        var imageryLayers = [];
         for (var i = imageryTiles.length - 1; i >= 0; --i) {
             var terrainImagery = imageryTiles[i];
             var imagery = terrainImagery.readyImagery;
@@ -428,6 +426,7 @@ define([
             }
 
             promises.push(promise);
+            imageryLayers.push(imagery.imageryLayer);
         }
 
         if (promises.length === 0) {
@@ -439,10 +438,12 @@ define([
 
             for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
                 var result = results[resultIndex];
+                var image = imageryLayers[resultIndex];
 
                 if (defined(result) && result.length > 0) {
                     for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
                         var feature = result[featureIndex];
+                        feature.imageryLayer = image;
 
                         // For features without a position, use the picked location.
                         if (!defined(feature.position)) {
@@ -485,10 +486,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * 
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);

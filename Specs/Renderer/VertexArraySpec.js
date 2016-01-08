@@ -1,18 +1,23 @@
 /*global defineSuite*/
 defineSuite([
+        'Renderer/VertexArray',
         'Core/ComponentDatatype',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
         'Specs/createContext'
-    ], 'Renderer/VertexArray', function(
+    ], function(
+        VertexArray,
         ComponentDatatype,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         DrawCommand,
+        ShaderProgram,
         createContext) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
 
@@ -25,7 +30,11 @@ defineSuite([
     });
 
     it('binds', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             index : 0,
@@ -35,24 +44,36 @@ defineSuite([
             componentDatatype : ComponentDatatype.FLOAT,
             normalize : false,
             offsetInBytes : 0,
-            strideInBytes : 0
+            strideInBytes : 0,
+            instanceDivisor : 0
         // tightly packed
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
         va._bind();
         va._unBind();
         va = va.destroy();
     });
 
     it('binds with default values', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : positionBuffer,
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
 
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
@@ -63,6 +84,7 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va._bind();
         va._unBind();
@@ -71,8 +93,16 @@ defineSuite([
 
     it('binds with multiple buffers', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-        var positionBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
-        var normalBuffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : attributeSize,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var normalBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : attributeSize,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             index : 0,
@@ -86,7 +116,11 @@ defineSuite([
             componentDatatype : ComponentDatatype.FLOAT
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
@@ -95,7 +129,11 @@ defineSuite([
 
     it('binds with interleaved buffer', function() {
         var attributeSize = 3 * Float32Array.BYTES_PER_ELEMENT;
-        var buffer = context.createVertexBuffer(attributeSize, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : attributeSize,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -112,7 +150,11 @@ defineSuite([
             strideInBytes : 2 * attributeSize
         }];
 
-        var va = context.createVertexArray(attributes);
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(2);
         va._bind();
         va._unBind();
@@ -120,12 +162,19 @@ defineSuite([
     });
 
     it('adds attributes', function() {
-        var positionBuffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : positionBuffer,
-            componentsPerAttribute : 3
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : positionBuffer,
+                componentsPerAttribute : 3
+            }]
+        });
 
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).index).toEqual(0);
@@ -136,18 +185,28 @@ defineSuite([
         expect(va.getAttribute(0).normalize).toEqual(false);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0);
+        expect(va.getAttribute(0).instanceDivisor).toEqual(0);
 
         va = va.destroy();
     });
 
     it('modifies attributes', function() {
-        var buffer = context.createVertexBuffer(6, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 6,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer,
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         expect(va.numberOfAttributes).toEqual(1);
         expect(va.getAttribute(0).enabled).toEqual(true);
 
@@ -179,17 +238,29 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.5]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.5]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -218,17 +289,29 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.25, 0.75]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.25, 0.75]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -257,17 +340,29 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.25, 0.5, 0.75]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.25, 0.5, 0.75]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -296,17 +391,29 @@ defineSuite([
         var fs =
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
-        var sp = context.createShaderProgram(vs, fs, {
-            firefoxWorkaround : 0,
-            attr : 1
+        var sp = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : {
+                firefoxWorkaround : 0,
+                attr : 1
+            }
         });
 
-        var va = context.createVertexArray([{
-            vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 1
-        }, {
-            value : [0.2, 0.4, 0.6, 0.8]
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 1
+            }, {
+                value : [0.2, 0.4, 0.6, 0.8]
+            }]
+        });
 
         var command = new DrawCommand({
             primitiveType : PrimitiveType.POINTS,
@@ -323,7 +430,18 @@ defineSuite([
     });
 
     it('destroys', function() {
-        var va = context.createVertexArray({});
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    sizeInBytes : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
+
         expect(va.isDestroyed()).toEqual(false);
         va.destroy();
         expect(va.isDestroyed()).toEqual(true);
@@ -335,12 +453,19 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create (provides both vertexBuffer and value)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -349,12 +474,19 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create with duplicate indices', function() {
-        var buffer = context.createVertexBuffer(1, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 1,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             index : 1,
@@ -367,19 +499,29 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create (componentsPerAttribute missing)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -389,7 +531,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -399,7 +544,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -409,7 +557,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -419,12 +570,19 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create (componentDatatype)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -433,12 +591,19 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
     it('fails to create (strideInBytes)', function() {
-        var buffer = context.createVertexBuffer(3, BufferUsage.STATIC_DRAW);
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
 
         var attributes = [{
             vertexBuffer : buffer,
@@ -447,7 +612,10 @@ defineSuite([
         }];
 
         expect(function() {
-            return context.createVertexArray(attributes);
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
         }).toThrowDeveloperError();
     });
 
@@ -456,7 +624,11 @@ defineSuite([
             value : [0.0, 0.0, 0.0],
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
 
         expect(function() {
             return va.getAttribute();
@@ -468,11 +640,125 @@ defineSuite([
             value : [0.0, 0.0, 0.0],
             componentsPerAttribute : 3
         }];
-        var va = context.createVertexArray(attributes);
+
+        var va = new VertexArray({
+            context : context,
+            attributes : attributes
+        });
+
         va.destroy();
 
         expect(function() {
             va.destroy();
         }).toThrowDeveloperError();
+    });
+
+    it('throws when there is no context', function() {
+        expect(function() {
+            return new VertexArray();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if instanceDivisor is less than zero', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : -1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    // Direct3D 9 requires vertex attribute zero to not be instanced. While ANGLE can work around this, it is best
+    // to follow this convention. This test also guarantees that not all vertex attributes are instanced.
+    it('throws if vertex attribute zero is instanced', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }, {
+            index : 1,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if an attribute has an instanceDivisor and is not backed by a buffer', function() {
+        var buffer = Buffer.createVertexBuffer({
+            context : context,
+            sizeInBytes : 3,
+            usage : BufferUsage.STATIC_DRAW
+        });
+
+        var attributes = [{
+            index : 0,
+            vertexBuffer : buffer,
+            componentsPerAttribute : 3
+        }, {
+            index : 1,
+            value : [0.0, 0.0, 1.0],
+            componentsPerAttribute : 3,
+            instanceDivisor : 1
+        }];
+
+        expect(function() {
+            return new VertexArray({
+                context : context,
+                attributes : attributes
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws when instanceDivisor is greater than zero and the instanced arrays extension is not supported.', function() {
+        if (!context.instancedArrays) {
+            var buffer = Buffer.createVertexBuffer({
+                context : context,
+                sizeInBytes : 3,
+                usage : BufferUsage.STATIC_DRAW
+            });
+
+            var attributes = [{
+                index : 0,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3
+            }, {
+                index : 1,
+                vertexBuffer : buffer,
+                componentsPerAttribute : 3,
+                instanceDivisor : 1
+            }];
+
+            expect(function() {
+                return new VertexArray({
+                    context : context,
+                    attributes : attributes
+                });
+            }).toThrowDeveloperError();
+        }
     });
 }, 'WebGL');

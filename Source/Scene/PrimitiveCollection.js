@@ -37,7 +37,7 @@ define([
      * scene.primitives.add(collection);  // Add collection
      * scene.primitives.add(labels);      // Add regular primitive
      */
-    var PrimitiveCollection = function(options) {
+    function PrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._primitives = [];
@@ -76,7 +76,7 @@ define([
          * labels = labels.destroy();    // explicitly destroy
          */
         this.destroyPrimitives = defaultValue(options.destroyPrimitives, true);
-    };
+    }
 
     defineProperties(PrimitiveCollection.prototype, {
         /**
@@ -131,11 +131,12 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#destroyPrimitives
      *
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
+     * 
+     * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.remove = function(primitive) {
         // PERFORMANCE_IDEA:  We can obviously make this a lot faster.
@@ -327,7 +328,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#length
      *
      * @example
      * // Toggle the show property of every primitive in the collection.
@@ -337,6 +337,8 @@ define([
      *   var p = primitives.get(i);
      *   p.show = !p.show;
      * }
+     * 
+     * @see PrimitiveCollection#length
      */
     PrimitiveCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -351,7 +353,7 @@ define([
     /**
      * @private
      */
-    PrimitiveCollection.prototype.update = function(context, frameState, commandList) {
+    PrimitiveCollection.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -361,7 +363,7 @@ define([
         // to allow quadtree updates to add and remove primitives in
         // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
-            primitives[i].update(context, frameState, commandList);
+            primitives[i].update(frameState);
         }
     };
 
@@ -395,10 +397,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#isDestroyed
      *
      * @example
      * primitives = primitives && primitives.destroy();
+     * 
+     * @see PrimitiveCollection#isDestroyed
      */
     PrimitiveCollection.prototype.destroy = function() {
         this.removeAll();

@@ -18,7 +18,6 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -119,7 +118,7 @@ defineSuite([
     });
 
     it('creates an animation in Columbus view', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -147,7 +146,7 @@ defineSuite([
     });
 
     it('creates an animation in 2D', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -202,26 +201,26 @@ defineSuite([
     it('does not create a path to the same point', function() {
         var camera = scene.camera;
         camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position, new Cartesian3()), new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, camera.up, new Cartesian3()), new Cartesian3());
 
         var startPosition = Cartesian3.clone(camera.position);
-        var startDirection = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
+        var startHeading= camera.heading;
+        var startPitch = camera.pitch;
+        var startRoll = camera.roll;
 
         var duration = 3.0;
         var flight = CameraFlightPath.createTween(scene, {
             destination : startPosition,
-            direction : startDirection,
-            up : startUp,
+            heading : startHeading,
+            pitch : startPitch,
+            roll: startRoll,
             duration : duration
         });
 
         expect(flight.duration).toEqual(0);
         expect(camera.position).toEqual(startPosition);
-        expect(camera.direction).toEqual(startDirection);
-        expect(camera.up).toEqual(startUp);
+        expect(camera.heading).toEqual(startHeading);
+        expect(camera.pitch).toEqual(startPitch);
+        expect(camera.roll).toEqual(startRoll);
     });
 
     it('creates an animation with 0 duration', function() {
@@ -246,7 +245,7 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in 2D', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -269,13 +268,17 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in 3D', function() {
-        scene.mode = SceneMode.SCENE3D;
+        scene._mode = SceneMode.SCENE3D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+        camera.setView({
+            orientation: {
+                heading: 0,
+                pitch: -CesiumMath.PI_OVER_TWO,
+                roll: 0
+            }
+        });
         camera.frustum = createOrthographicFrustum();
 
         var flight = CameraFlightPath.createTween(scene, {
@@ -286,13 +289,17 @@ defineSuite([
     });
 
     it('duration is 0 when destination is the same as camera position in CV', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+        camera.setView({
+            orientation: {
+                heading: 0,
+                pitch: -CesiumMath.PI_OVER_TWO,
+                roll: 0
+            }
+        });
 
         var projection = scene.mapProjection;
         var endPosition = projection.ellipsoid.cartographicToCartesian(projection.unproject(camera.position));
@@ -305,7 +312,7 @@ defineSuite([
     });
 
     it('creates an animation in 2D 0 duration', function() {
-        scene.mode = SceneMode.SCENE2D;
+        scene._mode = SceneMode.SCENE2D;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -316,7 +323,6 @@ defineSuite([
 
         camera.update(scene.mode);
 
-        var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
 
         var projection = scene.mapProjection;
@@ -336,7 +342,7 @@ defineSuite([
     });
 
     it('creates an animation in Columbus view 0 duration', function() {
-        scene.mode = SceneMode.COLUMBUS_VIEW;
+        scene._mode = SceneMode.COLUMBUS_VIEW;
         var camera = scene.camera;
 
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
@@ -375,5 +381,4 @@ defineSuite([
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
     });
-
-});
+}, 'WebGL');

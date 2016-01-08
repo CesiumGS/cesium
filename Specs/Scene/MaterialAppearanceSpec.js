@@ -28,7 +28,6 @@ defineSuite([
         createFrameState,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -37,11 +36,14 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState();
+    });
 
-        frameState.camera.viewRectangle(rectangle);
+    beforeEach(function() {
+        frameState = createFrameState(context);
+
+        frameState.camera.setView({ destination : rectangle });
         var us = context.uniformState;
-        us.update(context, frameState);
+        us.update(frameState);
     });
 
     afterAll(function() {
@@ -93,7 +95,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
+        render(frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -109,7 +111,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
+        render(frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
@@ -125,7 +127,7 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
+        render(frameState, primitive);
         expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 

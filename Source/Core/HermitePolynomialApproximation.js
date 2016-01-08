@@ -58,8 +58,7 @@ define([
     /**
      * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
      *
-     * @namespace
-     * @alias HermitePolynomialApproximation
+     * @exports HermitePolynomialApproximation
      */
     var HermitePolynomialApproximation = {
         type : 'Hermite'
@@ -70,7 +69,7 @@ define([
      *
      * @param {Number} degree The desired degree of interpolation.
      * @param {Number} [inputOrder=0]  The order of the inputs (0 means just the data, 1 means the data and its derivative, etc).
-     * @returns The number of required data points needed for the desired degree of interpolation.
+     * @returns {Number} The number of required data points needed for the desired degree of interpolation.
      * @exception {DeveloperError} degree must be 0 or greater.
      * @exception {DeveloperError} inputOrder must be 0 or greater.
      */

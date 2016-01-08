@@ -140,12 +140,12 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
-     * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians.
+     * @param {Number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
      *
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
-     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
+     * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see EllipseOutlineGeometry.createGeometry
@@ -161,7 +161,7 @@ define([
      * });
      * var geometry = Cesium.EllipseOutlineGeometry.createGeometry(ellipse);
      */
-    var EllipseOutlineGeometry = function(options) {
+    function EllipseOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
@@ -187,7 +187,7 @@ define([
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
         if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
+            throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
         }
         if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
@@ -205,7 +205,7 @@ define([
         this._extrude = extrude;
         this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
         this._workerName = 'createEllipseOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -215,9 +215,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {EllipseOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -270,6 +269,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {EllipseOutlineGeometry} [result] The object into which to store the result.
+     * @returns {EllipseOutlineGeometry} The modified result parameter or a new EllipseOutlineGeometry instance if one was not provided.
      */
     EllipseOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
