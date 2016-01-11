@@ -1,4 +1,5 @@
 /**
+ * @license
  * NoSleep.js v0.5.0 - git.io/vfn01
  * Rich Tibbett
  * MIT license
