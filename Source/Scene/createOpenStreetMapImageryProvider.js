@@ -48,15 +48,16 @@ define([
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var osm = Cesium.createOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
+     * 
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var createOpenStreetMapImageryProvider = function createOpenStreetMapImageryProvider(options) {
+    function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -105,7 +106,7 @@ define([
             maximumLevel: maximumLevel,
             rectangle: rectangle
         });
-    };
+    }
 
     return createOpenStreetMapImageryProvider;
 });

@@ -27,7 +27,7 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerCesiumInspectorMixin);
      */
-    var viewerCesiumInspectorMixin = function(viewer) {
+    function viewerCesiumInspectorMixin(viewer) {
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
@@ -48,7 +48,7 @@ define([
         viewer.scene.postRender.addEventListener(function() {
             viewer.cesiumInspector.viewModel.update();
         });
-    };
+    }
 
     return viewerCesiumInspectorMixin;
 });

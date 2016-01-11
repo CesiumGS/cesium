@@ -188,7 +188,7 @@ define([
      *     mapProjection : new Cesium.WebMercatorProjection()
      * });
      */
-    var CesiumWidget = function(container, options) {
+    function CesiumWidget(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -345,7 +345,7 @@ define([
             }
             throw error;
         }
-    };
+    }
 
     defineProperties(CesiumWidget.prototype, {
         /**
@@ -464,8 +464,8 @@ define([
         /**
          * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
          * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
-         * determines the frame rate.  This value must be greater than 0 and a value higher than
-         * the underlying requestAnimationFrame implementatin will have no affect.
+         * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
+         * than the underlying requestAnimationFrame implementation will have no effect.
          * @memberof CesiumWidget.prototype
          *
          * @type {Number}
@@ -476,7 +476,7 @@ define([
             },
             set : function(value) {
                 if (value <= 0) {
-                    throw new DeveloperError('targetFrameRate must be greater than 0.');
+                    throw new DeveloperError('targetFrameRate must be greater than 0, or undefined.');
                 }
                 this._targetFrameRate = value;
             }
@@ -563,9 +563,9 @@ define([
         var errorPanelScroller = document.createElement('div');
         errorPanelScroller.className = 'cesium-widget-errorPanel-scroll';
         content.appendChild(errorPanelScroller);
-        var resizeCallback = function() {
+        function resizeCallback() {
             errorPanelScroller.style.maxHeight = Math.max(Math.round(element.clientHeight * 0.9 - 100), 30) + 'px';
-        };
+        }
         resizeCallback();
         if (defined(window.addEventListener)) {
             window.addEventListener('resize', resizeCallback, false);

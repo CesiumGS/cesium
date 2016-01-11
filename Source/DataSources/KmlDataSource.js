@@ -1670,7 +1670,7 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
-    var KmlDataSource = function(proxy) {
+    function KmlDataSource(proxy) {
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
@@ -1681,7 +1681,7 @@ define([
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
         this._promises = [];
-    };
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided KML data.
@@ -1853,7 +1853,7 @@ define([
      * @alias KmlFeatureData
      * @constructor
      */
-    var KmlFeatureData = function() {
+    function KmlFeatureData() {
         /**
          * Gets the atom syndication format author field.
          * @type Object
@@ -1962,7 +1962,7 @@ define([
          * @type String
          */
         this.extendedData = undefined;
-    };
+    }
 
     return KmlDataSource;
 });

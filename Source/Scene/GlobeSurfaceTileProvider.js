@@ -102,7 +102,7 @@ define([
      *
      * @private
      */
-    var GlobeSurfaceTileProvider = function GlobeSurfaceTileProvider(options) {
+    function GlobeSurfaceTileProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -156,7 +156,7 @@ define([
         this._baseColor = undefined;
         this._firstPassInitialColor = undefined;
         this.baseColor = new Color(0.0, 0.0, 0.5, 1.0);
-    };
+    }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
         /**
@@ -522,87 +522,18 @@ define([
         debug.texturesRendered += readyTextureCount;
     };
 
-    var southwestCornerScratch = new Cartesian3();
-    var northeastCornerScratch = new Cartesian3();
-    var negativeUnitY = new Cartesian3(0.0, -1.0, 0.0);
-    var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
-    var vectorScratch = new Cartesian3();
-
     /**
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {Cartesian3} cameraCartesianPosition The position of the camera in world coordinates.
-     * @param {Cartographic} cameraCartographicPosition The position of the camera in cartographic / geodetic coordinates.
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
-
-        var southwestCornerCartesian = surfaceTile.southwestCornerCartesian;
-        var northeastCornerCartesian = surfaceTile.northeastCornerCartesian;
-        var westNormal = surfaceTile.westNormal;
-        var southNormal = surfaceTile.southNormal;
-        var eastNormal = surfaceTile.eastNormal;
-        var northNormal = surfaceTile.northNormal;
-        var maximumHeight = surfaceTile.maximumHeight;
-
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(tile.rectangle), southwestCornerScratch);
-            southwestCornerCartesian.z = southwestCornerCartesian.y;
-            southwestCornerCartesian.y = southwestCornerCartesian.x;
-            southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(tile.rectangle), northeastCornerScratch);
-            northeastCornerCartesian.z = northeastCornerCartesian.y;
-            northeastCornerCartesian.y = northeastCornerCartesian.x;
-            northeastCornerCartesian.x = 0.0;
-            westNormal = negativeUnitY;
-            eastNormal = Cartesian3.UNIT_Y;
-            southNormal = negativeUnitZ;
-            northNormal = Cartesian3.UNIT_Z;
-            maximumHeight = 0.0;
-        }
-
-        var cameraCartesianPosition = frameState.camera.positionWC;
-        var cameraCartographicPosition = frameState.camera.positionCartographic;
-
-        var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
-        var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
-        var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
-
-        var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
-        var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
-        var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
-
-        var cameraHeight;
-        if (frameState.mode === SceneMode.SCENE3D) {
-            cameraHeight = cameraCartographicPosition.height;
-        } else {
-            cameraHeight = cameraCartesianPosition.x;
-        }
-        var distanceFromTop = cameraHeight - maximumHeight;
-
-        var result = 0.0;
-
-        if (distanceToWestPlane > 0.0) {
-            result += distanceToWestPlane * distanceToWestPlane;
-        } else if (distanceToEastPlane > 0.0) {
-            result += distanceToEastPlane * distanceToEastPlane;
-        }
-
-        if (distanceToSouthPlane > 0.0) {
-            result += distanceToSouthPlane * distanceToSouthPlane;
-        } else if (distanceToNorthPlane > 0.0) {
-            result += distanceToNorthPlane * distanceToNorthPlane;
-        }
-
-        if (distanceFromTop > 0.0) {
-            result += distanceFromTop * distanceFromTop;
-        }
-
-        return Math.sqrt(result);
+        var tileBoundingBox = surfaceTile.tileBoundingBox;
+        return tileBoundingBox.distanceToCamera(frameState);
     };
 
     /**
@@ -631,10 +562,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see GlobeSurfaceTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     * 
+     * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();

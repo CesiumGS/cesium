@@ -46,7 +46,8 @@ define([
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
-     *        GetFeatureInfo or if you don't want this provider's features to be pickable.
+     *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
+     *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -89,7 +90,7 @@ define([
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -114,12 +115,11 @@ define([
 
         var pickFeaturesUri;
         var pickFeaturesQueryOptions;
-        if (defaultValue(options.enablePickFeatures, true)) {
-            pickFeaturesUri = new Uri(options.url);
-            pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-            var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-            pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
-        }
+
+        pickFeaturesUri = new Uri(options.url);
+        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
 
         function setParameter(name, value) {
             if (!defined(queryOptions[name])) {
@@ -178,9 +178,10 @@ define([
             subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : getFeatureInfoFormats
+            getFeatureInfoFormats : getFeatureInfoFormats,
+            enablePickFeatures: options.enablePickFeatures
         });
-    };
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -376,6 +377,24 @@ define([
         hasAlphaChannel : {
             get : function() {
                 return this._tileProvider.hasAlphaChannel;
+            }
+        },
+
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapServiceImageryProvider#pickFeatures} will
+         * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+         * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @type {Boolean}
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._tileProvider.enablePickFeatures;
+            },
+            set : function(enablePickFeatures)  {
+                this._tileProvider.enablePickFeatures = enablePickFeatures;
             }
         }
     });

@@ -689,7 +689,7 @@ define([
      *
      * @private
      */
-    var modelMaterialsCommon = function(gltf) {
+    function modelMaterialsCommon(gltf) {
         if (!defined(gltf)) {
             return undefined;
         }
@@ -768,7 +768,7 @@ define([
         }
 
         return gltf;
-    };
+    }
 
     return modelMaterialsCommon;
 });

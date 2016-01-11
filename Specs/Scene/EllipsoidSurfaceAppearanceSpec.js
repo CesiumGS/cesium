@@ -53,7 +53,7 @@ defineSuite([
     beforeEach(function() {
         frameState = createFrameState(context);
 
-        frameState.camera.viewRectangle(rectangle);
+        frameState.camera.setView({ destination : rectangle });
         var us = context.uniformState;
         us.update(frameState);
     });

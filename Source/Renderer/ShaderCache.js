@@ -16,12 +16,12 @@ define([
     /**
      * @private
      */
-    var ShaderCache = function(context) {
+    function ShaderCache(context) {
         this._context = context;
         this._shaders = {};
         this._numberOfShaders = 0;
         this._shadersToRelease = {};
-    };
+    }
 
     defineProperties(ShaderCache.prototype, {
         numberOfShaders : {
@@ -47,7 +47,6 @@ define([
 
      * @returns {ShaderProgram} The cached or newly created shader program.
      *
-     * @see ShaderCache#getShaderProgram
      *
      * @example
      * this._shaderProgram = context.shaderCache.replaceShaderProgram({
@@ -56,6 +55,8 @@ define([
      *     fragmentShaderSource : fs,
      *     attributeLocations : attributeLocations
      * });
+     * 
+     * @see ShaderCache#getShaderProgram
      */
     ShaderCache.prototype.replaceShaderProgram = function(options) {
         if (defined(options.shaderProgram)) {
@@ -153,7 +154,7 @@ define([
     };
 
     ShaderCache.prototype.releaseShaderProgram = function(shaderProgram) {
-        if (shaderProgram) {
+        if (defined(shaderProgram)) {
             var cachedShader = shaderProgram._cachedShader;
             if (cachedShader && (--cachedShader.count === 0)) {
                 this._shadersToRelease[cachedShader.keyword] = cachedShader;

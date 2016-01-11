@@ -1,12 +1,43 @@
 Change Log
 ==========
 
-### 1.17 - 2015-01-04
+### 1.18 - 2016-02-01
+
+* Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+* Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
+* Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
+* Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
+
+### 1.17 - 2016-01-04
 
 * Breaking changes
-    * Removed `HeightmapTessellator` from the public API. It is now private and subject to change without notice.
-    * Removed `TerrainMesh` from the public API. It is now private and subject to change without notice.
-* Reduced the amount of both GPU and CPU memory used by terrain. The CPU memory was reduced by up to 40%.
+    * Removed `Camera.viewRectangle`. Use `Camera.setView({destination: rectangle})` instead.
+    * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
+    * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
+    * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveFrustum.getPixelSize`. Use `PerspectiveFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveOffCenterFrustum.getPixelSize`. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
+    * Removed `Scene\HeadingPitchRange`. Use `Core\HeadingPitchRange` instead.
+    * Removed `jsonp`. Use `loadJsonp` instead.
+    * Removed `HeightmapTessellator` from the public API. It is an implementation details.
+    * Removed `TerrainMesh` from the public API. It is an implementation details.
+* Reduced the amount of GPU and CPU memory used by terrain by using [compression](http://cesiumjs.org/2015/12/18/Terrain-Quantization/). The CPU memory was reduced by up to 40%.
+* Added the ability to manipulate `Model` node transformations via CZML and the Entity API. See the new Sandcastle example: [CZML Model - Node Transformations](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML%20Model%20-%20Node%20Transformations.html&label=CZML). [#3316](https://github.com/AnalyticalGraphicsInc/cesium/pull/3316)
+* Added `Globe.tileLoadProgressEvent`, which is raised when the length of the tile load queue changes, enabling incremental loading indicators.
+* Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
+* Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
+* Fixed disappearing terrain while fog is active. [#3335](https://github.com/AnalyticalGraphicsInc/cesium/issues/3335)
+* Fixed short segments in `CorridorGeometry` and `PolylineVolumeGeometry`.  [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
+* Fixed `CorridorGeometry` with nearly colinear points. [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
+* Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry`. [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
+* `Rectangle.fromCartographicArray` now uses the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
+* Added `TranslationRotationScale` property, which represents an affine transformation defined by a translation, rotation, and scale.
+* Added `Matrix4.fromTranslationRotationScale`.
+* Added `NodeTransformationProperty`, which is a `Property` value that is defined by independent `translation`, `rotation`, and `scale` `Property` instances.
+* Added `PropertyBag`, which is a `Property` whose value is a key-value mapping of property names to the computed value of other properties.
+* Added `ModelGraphics.runAnimations` which is a boolean `Property` indicating if all model animations should be started after the model is loaded.
+* Added `ModelGraphics.nodeTransformations` which is a `PropertyBag` of `TranslationRotationScale` properties to be applied to a loaded model.
+* Added CZML support for new `runAnimations` and `nodeTransformations` properties on the `model` packet.
 
 ### 1.16 - 2015-12-01
 

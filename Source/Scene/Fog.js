@@ -18,7 +18,7 @@ define([
      * @alias Fog
      * @constructor
      */
-    var Fog = function() {
+    function Fog() {
         /**
          * <code>true</code> if fog is enabled, <code>false</code> otherwise.
          * @type {Boolean}
@@ -45,7 +45,7 @@ define([
          * @default 2.0
          */
         this.screenSpaceErrorFactor = 2.0;
-    };
+    }
 
     // These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
     var heightsTable = [359.393, 800.749, 1275.6501, 2151.1192, 3141.7763, 4777.5198, 6281.2493, 12364.307, 15900.765, 49889.0549, 78026.8259, 99260.7344, 120036.3873, 151011.0158, 156091.1953, 203849.3112, 274866.9803, 319916.3149, 493552.0528, 628733.5874];

@@ -48,7 +48,7 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
-    var GeocoderViewModel = function(options) {
+    function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
@@ -139,7 +139,7 @@ define([
                 this._flightDuration = value;
             }
         });
-    };
+    }
 
     defineProperties(GeocoderViewModel.prototype, {
         /**

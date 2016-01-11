@@ -1,29 +1,35 @@
 /*global define*/
 define([
         './AxisAlignedBoundingBox',
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
         './DeveloperError',
         './Ellipsoid',
+        './EllipsoidalOccluder',
         './freezeObject',
         './Math',
         './Matrix4',
+        './OrientedBoundingBox',
         './Rectangle',
         './TerrainEncoding',
         './Transforms'
     ], function(
         AxisAlignedBoundingBox,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
+        EllipsoidalOccluder,
         freezeObject,
         CesiumMath,
         Matrix4,
+        OrientedBoundingBox,
         Rectangle,
         TerrainEncoding,
         Transforms) {
@@ -32,8 +38,7 @@ define([
     /**
      * Contains functions to create a mesh from a heightmap image.
      *
-     * @namespace
-     * @alias HeightmapTessellator
+     * @exports HeightmapTessellator
      *
      * @private
      */
@@ -348,6 +353,21 @@ define([
             }
         }
 
+        var boundingSphere3D = BoundingSphere.fromPoints(positions);
+        var orientedBoundingBox;
+        if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            // Here, rectangle.width < pi/2, and rectangle.height < pi
+            // (though it would still work with rectangle.width up to pi)
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+        }
+
+        var occludeePointInScaledSpace;
+        var center = options.relativetoCenter;
+        if (defined(center)) {
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromPoints(center, positions);
+        }
+
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);
         var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, false);
         var vertices = new Float32Array(size * encoding.getStride());
@@ -361,7 +381,10 @@ define([
             vertices : vertices,
             maximumHeight : maximumHeight,
             minimumHeight : minimumHeight,
-            encoding : encoding
+            encoding : encoding,
+            boundingSphere3D : boundingSphere3D,
+            orientedBoundingBox : orientedBoundingBox,
+            occludeePointInScaledSpace : occludeePointInScaledSpace
         };
     };
 

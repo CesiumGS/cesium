@@ -111,6 +111,19 @@ define([
             Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
 
+        var occludeePointInScaledSpace;
+        var orientedBoundingBox;
+        var boundingSphere;
+
+        if (exaggeration !== 1.0) {
+            // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
+            boundingSphere = BoundingSphere.fromPoints(positions);
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
+
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromPoints(center, positions);
+        }
+
         var hMin = minimumHeight;
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.westIndices, parameters.westSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.southIndices, parameters.southSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
@@ -149,19 +162,6 @@ define([
             bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack);
         }
 
-        var occludeePointInScaledSpace;
-        var orientedBoundingBox;
-        var boundingSphere;
-
-        if (exaggeration !== 1.0) {
-            // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
-            boundingSphere = BoundingSphere.fromVertices(vertexBuffer, center, vertexStride);
-            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
-
-            var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(center, vertexBuffer, vertexStride);
-        }
-
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);
         var indexBufferLength = parameters.indices.length + edgeTriangleCount * 3;
         var indexBuffer = IndexDatatype.createTypedArray(quantizedVertexCount + edgeVertexCount, indexBufferLength);
@@ -190,7 +190,8 @@ define([
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
-            encoding : encoding
+            encoding : encoding,
+            skirtIndex : parameters.indices.length
         };
     }
 

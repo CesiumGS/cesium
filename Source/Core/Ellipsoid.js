@@ -77,7 +77,7 @@ define([
      * @see Ellipsoid.WGS84
      * @see Ellipsoid.UNIT_SPHERE
      */
-    var Ellipsoid = function(x, y, z) {
+    function Ellipsoid(x, y, z) {
         this._radii = undefined;
         this._radiiSquared = undefined;
         this._radiiToTheFourth = undefined;
@@ -88,7 +88,7 @@ define([
         this._centerToleranceSquared = undefined;
 
         initialize(this, x, y, z);
-    };
+    }
 
     defineProperties(Ellipsoid.prototype, {
         /**
@@ -267,7 +267,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {Ellipsoid} value The value to pack.
      * @param {Number[]} array The array to pack into.

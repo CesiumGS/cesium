@@ -61,14 +61,14 @@ define([
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for ellipsoids.
@@ -79,7 +79,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var EllipsoidGeometryUpdater = function(entity, scene) {
+    function EllipsoidGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -104,7 +104,7 @@ define([
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'ellipsoid', entity.ellipsoid, undefined);
-    };
+    }
 
     defineProperties(EllipsoidGeometryUpdater, {
         /**
@@ -507,7 +507,7 @@ define([
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, geometryUpdater) {
         this._entity = geometryUpdater._entity;
         this._scene = geometryUpdater._scene;
         this._primitives = primitives;
@@ -524,8 +524,7 @@ define([
         this._lastOutlineShow = undefined;
         this._lastOutlineWidth = undefined;
         this._lastOutlineColor = undefined;
-    };
-
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {

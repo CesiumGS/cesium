@@ -132,7 +132,7 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
                     Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                 }
                 if (vertexFormat.normal) {
@@ -158,7 +158,7 @@ define([
                 }
 
                 if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormal);
+                    binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                     binormals[i] = binormal.x;
                     binormals[i1] = binormal.y;
                     binormals[i2] = binormal.z;
@@ -226,26 +226,32 @@ define([
 
 
     function topIndices(numPts) {
-        // The number of triangles in the ellipse on the positive x half-space and for
-        // the column of triangles in the middle is:
-        //
-        // numTriangles = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
-        //              = 4 * ((n * ( n + 1)) / 2)
-        // numColumnTriangles = 2 * 2 * n
-        // total = 2 * numTrangles + numcolumnTriangles
-        //
-        // Substitute (numPts - 1.0) for n above
-        var indices = new Array(2 * numPts * (numPts + 1));
+        // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
+        //              = -1 + 4 * ((n * ( n + 1)) / 2)
+        // total triangles = 2 * numTrangles in half
+        // indices = total triangles * 3;
+        // Substitute numPts for n above
+
+        var indices = new Array(12 * (numPts * ( numPts + 1)) - 6);
         var indicesIndex = 0;
         var prevIndex;
         var numInterior;
         var positionIndex;
         var i;
         var j;
-        // Indices triangles to the 'left' of the north vector
-        for (i = 1; i < numPts; ++i) {
-            positionIndex = i * (i + 1);
-            prevIndex = (i - 1) * i;
+        // Indices triangles to the 'right' of the north vector
+
+        prevIndex = 0;
+        positionIndex = 1;
+        for (i = 0; i < 3; i++) {
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
+        }
+
+        for (i = 2; i < numPts + 1; ++i) {
+            positionIndex = i * (i + 1) - 1;
+            prevIndex = (i - 1) * i - 1;
 
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = prevIndex;
@@ -268,7 +274,7 @@ define([
             indices[indicesIndex++] = positionIndex;
         }
 
-        // Indices for central column of triangles
+        // Indices for center column of triangles
         numInterior = numPts * 2;
         ++positionIndex;
         ++prevIndex;
@@ -282,10 +288,18 @@ define([
             indices[indicesIndex++] = positionIndex;
         }
 
-        // Reverse the process creating indices to the 'right' of the north vector
+        indices[indicesIndex++] = positionIndex;
+        indices[indicesIndex++] = prevIndex++;
+        indices[indicesIndex++] = prevIndex;
+
+        indices[indicesIndex++] = positionIndex++;
+        indices[indicesIndex++] = prevIndex++;
+        indices[indicesIndex++] = prevIndex;
+
+
+        // Reverse the process creating indices to the 'left' of the north vector
         ++prevIndex;
-        ++positionIndex;
-        for (i = numPts - 1; i > 0; --i) {
+        for (i = numPts - 1; i > 1; --i) {
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex;
             indices[indicesIndex++] = positionIndex;
@@ -304,6 +318,12 @@ define([
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = positionIndex++;
+        }
+
+        for (i = 0; i < 3; i++) {
+            indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
         }
         return indices;
     }
@@ -609,7 +629,6 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseGeometry.createGeometry
      *
      * @example
      * // Create an ellipse.
@@ -620,8 +639,10 @@ define([
      *   rotation : Cesium.Math.toRadians(60.0)
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+     * 
+     * @see EllipseGeometry.createGeometry
      */
-    var EllipseGeometry = function(options) {
+    function EllipseGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var center = options.center;
@@ -667,7 +688,7 @@ define([
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
         this._workerName = 'createEllipseGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -677,7 +698,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipseGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

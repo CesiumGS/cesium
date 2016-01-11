@@ -46,7 +46,7 @@ define([
      * });
      * var geometry = Cesium.CircleOutlineGeometry.createGeometry(circle);
      */
-    var CircleOutlineGeometry = function(options) {
+    function CircleOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
@@ -71,7 +71,7 @@ define([
         };
         this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -81,7 +81,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CircleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

@@ -41,7 +41,7 @@ define([
      * @see BoundingRectangle
      * @see Packable
      */
-    var BoundingSphere = function(center, radius) {
+    function BoundingSphere(center, radius) {
         /**
          * The center point of the sphere.
          * @type {Cartesian3}
@@ -55,7 +55,7 @@ define([
          * @default 0.0
          */
         this.radius = defaultValue(radius, 0.0);
-    };
+    }
 
     var fromPointsXMin = new Cartesian3();
     var fromPointsYMin = new Cartesian3();
@@ -322,8 +322,7 @@ define([
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
-     *
+     * 
      * @example
      * // Compute the bounding sphere from 3 positions, each specified relative to a center.
      * // In addition to the X, Y, and Z coordinates, the points array contains two additional
@@ -333,6 +332,8 @@ define([
      *               4.0, 5.0, 6.0, 0.1, 0.2,
      *               7.0, 8.0, 9.0, 0.1, 0.2];
      * var sphere = Cesium.BoundingSphere.fromVertices(points, center, 5);
+     * 
+     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
      */
     BoundingSphere.fromVertices = function(positions, center, stride, result) {
         if (!defined(result)) {
@@ -973,6 +974,7 @@ define([
     for (var n = 0; n < 8; ++n) {
         projectTo2DPositionsScratch[n] = new Cartesian3();
     }
+
     var projectTo2DProjection = new GeographicProjection();
     /**
      * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.

@@ -31,7 +31,7 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline, in pixels.
      */
-    var PolylineOutlineMaterialProperty = function(options) {
+    function PolylineOutlineMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -45,7 +45,7 @@ define([
         this.color = options.color;
         this.outlineColor = options.outlineColor;
         this.outlineWidth = options.outlineWidth;
-    };
+    }
 
     defineProperties(PolylineOutlineMaterialProperty.prototype, {
         /**

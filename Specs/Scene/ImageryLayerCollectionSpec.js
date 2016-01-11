@@ -552,7 +552,7 @@ defineSuite([
 
             globe.imageryLayers.addImageryProvider(provider);
 
-            camera.viewRectangle(Rectangle.fromDegrees(-180.0, 0, 0, 90));
+            camera.setView({ destination : Rectangle.fromDegrees(-180.0, 0, 0, 90) });
 
             return updateUntilDone(globe).then(function() {
                 var ray = new Ray(camera.position, camera.direction);

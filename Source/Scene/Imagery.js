@@ -15,7 +15,7 @@ define([
      * @alias Imagery
      * @private
      */
-    var Imagery = function(imageryLayer, x, y, level, rectangle) {
+    function Imagery(imageryLayer, x, y, level, rectangle) {
         this.imageryLayer = imageryLayer;
         this.x = x;
         this.y = y;
@@ -41,8 +41,7 @@ define([
         }
 
         this.rectangle = rectangle;
-    };
-
+    }
     Imagery.createPlaceholder = function(imageryLayer) {
         var result = new Imagery(imageryLayer, 0, 0, 0);
         result.addReference();

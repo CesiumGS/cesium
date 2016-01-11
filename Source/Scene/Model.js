@@ -210,13 +210,13 @@ define([
     //
     // Note that this is a global cache, compared to renderer resources, which
     // are cached per context.
-    var CachedGltf = function(options) {
+    function CachedGltf(options) {
         this._gltf = modelMaterialsCommon(gltfDefaults(options.gltf));
         this._bgltf = options.bgltf;
         this.ready = options.ready;
         this.modelsToLoad = [];
         this.count = 0;
-    };
+    }
 
     defineProperties(CachedGltf.prototype, {
         gltf : {
@@ -315,7 +315,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
-    var Model = function(options) {
+    function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var cacheKey = options.cacheKey;
@@ -557,7 +557,7 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
-    };
+    }
 
     defineProperties(Model.prototype, {
         /**
@@ -1282,7 +1282,7 @@ define([
     var nodeQuaternionScratch = new Quaternion();
     var nodeScaleScratch = new Cartesian3();
 
-    function getTransform(node, version) {
+    function getTransform(node) {
         if (defined(node.matrix)) {
             return Matrix4.fromArray(node.matrix);
         }
@@ -2261,11 +2261,11 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var DelayLoadedTextureUniform = function(value, model) {
+    function DelayLoadedTextureUniform(value, model) {
         this._value = undefined;
         this._textureId = value;
         this._model = model;
-    };
+    }
 
     defineProperties(DelayLoadedTextureUniform.prototype, {
         value : {
@@ -3067,7 +3067,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var CachedRendererResources = function(context, cacheKey) {
+    function CachedRendererResources(context, cacheKey) {
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
@@ -3080,7 +3080,7 @@ define([
         this.context = context;
         this.cacheKey = cacheKey;
         this.count = 0;
-    };
+    }
 
     function destroy(property) {
         for (var name in property) {
@@ -3342,10 +3342,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Model#isDestroyed
      *
      * @example
      * model = model && model.destroy();
+     * 
+     * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
         // Vertex arrays are unique to this model, destroy here.

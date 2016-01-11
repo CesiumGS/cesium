@@ -35,6 +35,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Keith Grochow](https://github.com/kgrochow)
    * [Chloe Chen](https://github.com/chloeleichen)
    * [Arthur Street](https://github.com/RacingTadpole)
+   * [Alex Gilleran](https://github.com/AlexGilleran)
 * [EU Edge](http://euedge.com/)
    * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
@@ -78,6 +79,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Denver Pierce](https://github.com/denverpierce)
 * [Tucker Tibbetts](https://github.com/cttibbetts)
 * [Eric Putnam](https://github.com/eputnam)
+* [Dmitriy Pushkov](https://github.com/ezze)
 * [Max Limper](https://github.com/mlimper)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
