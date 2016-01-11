@@ -14,6 +14,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -66,6 +67,7 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getExtensionFromUri,
         getFilenameFromUri,
         Iso8601,
         JulianDate,
@@ -171,7 +173,7 @@ define([
 
         detectFromFilename : function(filename) {
             var ext = filename.toLowerCase();
-            ext = ext.substr(ext.lastIndexOf('.') + 1);
+            ext = getExtensionFromUri(ext);
             return MimeTypes[ext];
         }
     };
