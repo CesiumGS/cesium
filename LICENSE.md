@@ -80,7 +80,7 @@ https://github.com/gregjacobs/Autolinker.js
 
 The MIT License (MIT)
 
-> Copyright (c) 2016 Gregory Jacobs (http://greg-jacobs.com)
+> Copyright (c) 2015 Gregory Jacobs (http://greg-jacobs.com)
 
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -146,7 +146,7 @@ https://github.com/jrburke/almond
 
 https://github.com/jrburke/requirejs
 
-> Copyright (c) 2010-2016, The Dojo Foundation
+> Copyright (c) 2010-2015, The Dojo Foundation
 >
 > Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 >
@@ -283,7 +283,7 @@ The Cesium example applications include the following third-party libraries and 
 
 http://dojotoolkit.org/
 
-> Copyright (c) 2005-2016, The Dojo Foundation
+> Copyright (c) 2005-2015, The Dojo Foundation
 >
 > All rights reserved.
 >
