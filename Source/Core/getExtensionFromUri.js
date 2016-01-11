@@ -18,7 +18,7 @@ define([
      *
      * @example
      * //extension will be "czml";
-     * var fileName = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
+     * var extension = Cesium.getExtensionFromUri('/Gallery/simple.czml?value=true&example=false');
      */
     function getExtensionFromUri(uri) {
         //>>includeStart('debug', pragmas.debug);
