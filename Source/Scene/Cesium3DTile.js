@@ -10,6 +10,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
@@ -35,6 +36,7 @@ define([
         destroyObject,
         DeveloperError,
         GeometryInstance,
+        getExtensionFromUri,
         Intersect,
         Matrix4,
         OrientedBoundingBox,
@@ -146,7 +148,7 @@ define([
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
-            var type = url.substring(url.lastIndexOf('.') + 1);
+            var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
