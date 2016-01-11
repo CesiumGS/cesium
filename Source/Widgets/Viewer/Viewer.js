@@ -369,6 +369,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
         //>>includeEnd('debug')
 
+        var that = this;
+
         var viewerContainer = document.createElement('div');
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
@@ -590,7 +592,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             viewerContainer.appendChild(vrContainer);
             vrButton = new VRButton(vrContainer, options.fullScreenElement, cesiumWidget.scene);
 
-            var that = this;
             vrSubscription = subscribeAndEvaluate(vrButton.viewModel, 'isVREnabled', function(isVREnabled) {
                 vrContainer.style.display = isVREnabled ? 'block' : 'none';
                 if (defined(fullscreenButton)) {
@@ -680,7 +681,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         eventHelper.add(dataSourceCollection.dataSourceAdded, Viewer.prototype._dataSourceAdded, this);
         eventHelper.add(dataSourceCollection.dataSourceRemoved, Viewer.prototype._dataSourceRemoved, this);
 
-        var that = this;
         // Subscribe to left clicks and zoom to the picked object.
         function pickAndTrackObject(e) {
             var entity = pickEntity(that, e);
