@@ -459,6 +459,10 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
+        this._onTerrain = (!defined(height) && !defined(extrudedHeight));
+        // When used on terrain we will pretend to be dynamic but may actually be constant.
+        this._isConstant = true;
+
         if (!coordinates.isConstant || //
             !Property.isConstant(height) || //
             !Property.isConstant(extrudedHeight) || //
@@ -467,8 +471,13 @@ define([
             !Property.isConstant(rotation) || //
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
-            !Property.isConstant(closeTop) ||
-            (!defined(height) && !defined(extrudedHeight))) {
+            !Property.isConstant(closeTop)) {
+            if (!this._dynamic) {
+                this._dynamic = true;
+                this._isConstant = false;
+                this._geometryChanged.raiseEvent(this);
+            }
+        } else if(this._onTerrain) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -532,9 +541,15 @@ define([
         }
         //>>includeEnd('debug');
 
+        var geometryUpdater = this._geometryUpdater;
+        var onTerrain = geometryUpdater._onTerrain;
+        if (defined(this._primitive) && geometryUpdater._isConstant) {
+            return;
+        }
+
         var primitives = this._primitives;
         var groundPrimitives = this._groundPrimitives;
-        if (this._primitive instanceof GroundPrimitive) {
+        if (onTerrain) {
             groundPrimitives.removeAndDestroy(this._primitive);
         }
         else {
@@ -544,7 +559,6 @@ define([
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
 
-        var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
         var isAvailable = entity.isAvailable(time);
@@ -568,26 +582,46 @@ define([
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
+            if (onTerrain) {
+                var currentColor = Color.WHITE;
+                if (defined(fillMaterialProperty.color)) {
+                    currentColor = fillMaterialProperty.color.getValue(time);
+                }
 
-            options.vertexFormat = appearance.vertexFormat;
+                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                    geometryInstance : new GeometryInstance({
+                        id : entity,
+                        geometry : new RectangleGeometry(options),
+                        attributes: {
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                        }
+                    }),
+                    asynchronous : false
+                }));
+            }
+            else {
+                var appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
 
-            this._primitive = groundPrimitives.add(new GroundPrimitive({
-            //this._primitive = primitives.add(new Primitive({
-                geometryInstance : new GeometryInstance({
-                    id : entity,
-                    geometry : new RectangleGeometry(options)
-                }),
-                appearance : appearance,
-                asynchronous : false
-            }));
+                options.vertexFormat = appearance.vertexFormat;
+
+                this._primitive = primitives.add(new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new RectangleGeometry(options)
+                    }),
+                    appearance : appearance,
+                    asynchronous : false
+                }));
+            }
+
         }
 
         if (Property.getValueOrDefault(rectangle.outline, time, false)) {
