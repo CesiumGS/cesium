@@ -118,6 +118,10 @@ define([
 
     function removeCreditDomElement(credit, element) {
         var container = element.parentNode;
+        if (!container) {
+            return;
+        }
+
         if (!credit.hasImage()) {
             var delimiter = element.previousSibling;
             if (delimiter === null) {
