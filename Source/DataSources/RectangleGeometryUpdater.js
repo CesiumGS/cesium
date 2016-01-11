@@ -495,11 +495,12 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use for GroundPrimitives.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    RectangleGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    RectangleGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -510,14 +511,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        return new DynamicGeometryUpdater(primitives, this);
+        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
     };
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
@@ -531,7 +533,13 @@ define([
         //>>includeEnd('debug');
 
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (this._primitive instanceof GroundPrimitive) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        }
+        else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
@@ -563,42 +571,19 @@ define([
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
 
-            var attributes;
-            var appearance;
-            if (geometryUpdater._materialProperty instanceof ColorMaterialProperty) {
-                appearance = new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : material.isTranslucent(),
-                    closed : defined(options.extrudedHeight)
-                });
-
-                var currentColor = Color.WHITE;
-                if (defined(geometryUpdater._materialProperty.color) && (geometryUpdater._materialProperty.color.isConstant)) {
-                    currentColor = geometryUpdater._materialProperty.color.getValue(time);
-                }
-                attributes = {
-                    show : true,
-                    color : ColorGeometryInstanceAttribute.fromColor(currentColor)
-                };
-            }
-            else {
-                appearance = new MaterialAppearance({
-                    material : material,
-                    translucent : material.isTranslucent(),
-                    closed : defined(options.extrudedHeight)
-                });
-                attributes = {
-                    show : true
-                };
-            }
+            var appearance = new MaterialAppearance({
+                material : material,
+                translucent : material.isTranslucent(),
+                closed : defined(options.extrudedHeight)
+            });
 
             options.vertexFormat = appearance.vertexFormat;
 
-            this._primitive = primitives.add(new GroundPrimitive({
-                geometryInstances : new GeometryInstance({
+            this._primitive = groundPrimitives.add(new GroundPrimitive({
+            //this._primitive = primitives.add(new Primitive({
+                geometryInstance : new GeometryInstance({
                     id : entity,
-                    geometry : new RectangleGeometry(options),
-                    attributes: attributes
+                    geometry : new RectangleGeometry(options)
                 }),
                 appearance : appearance,
                 asynchronous : false
