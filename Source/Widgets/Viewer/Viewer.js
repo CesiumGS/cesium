@@ -9,6 +9,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
+        '../../Core/Fullscreen',
         '../../Core/isArray',
         '../../Core/Matrix4',
         '../../Core/ScreenSpaceEventType',
@@ -50,6 +51,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        Fullscreen,
         isArray,
         Matrix4,
         ScreenSpaceEventType,
@@ -581,6 +583,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var vrButton;
         var vrSubscription;
         var vrModeSubscription;
+        var vrCallback;
         if (options.vrButton === true) {
             var vrContainer = document.createElement('div');
             vrContainer.className = 'cesium-viewer-vrContainer';
@@ -602,6 +605,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             vrModeSubscription = subscribeAndEvaluate(vrButton.viewModel, 'isVRMode', function(isVRMode) {
                 enableVRUI(that, isVRMode);
             });
+
+            vrCallback = function() {
+                enableVRUI(that, false);
+            };
+            document.addEventListener(Fullscreen.changeEventName, vrCallback);
         }
 
         //Assign all properties to this instance.  No "this" assignments should
