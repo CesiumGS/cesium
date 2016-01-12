@@ -207,7 +207,8 @@ define([
 
         var context = new Context(canvas, contextOptions);
         if (!defined(creditContainer)) {
-            canvas.parentNode.appendChild(CreditDisplay.createDefaultContainer());
+            creditContainer = CreditDisplay.createDefaultContainer();
+            canvas.parentNode.appendChild(creditContainer);
         }
 
         if (!defined(leftCreditContainer) || !defined(rightCreditContainer)) {

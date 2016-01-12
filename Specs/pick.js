@@ -33,8 +33,12 @@ define([
         var pickFramebuffer = context.createPickFramebuffer();
         var passState = pickFramebuffer.begin(rectangle);
 
+        var container = document.createElement('div');
+        var leftContainer = document.createElement('div');
+        var rightContainer = document.createElement('div');
+
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')))).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(container, leftContainer, rightContainer))).passes;
         frameState.passes.pick = true;
 
         primitives.update(frameState);

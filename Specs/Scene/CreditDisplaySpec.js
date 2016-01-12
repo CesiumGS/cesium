@@ -8,6 +8,8 @@ defineSuite([
     "use strict";
 
     var container;
+    var leftContainer;
+    var rightContainer;
 
     var imageContainer = 'cesium-credit-imageContainer';
     var textContainer = 'cesium-credit-textContainer';
@@ -19,31 +21,47 @@ defineSuite([
     beforeEach(function() {
         container = document.createElement('div');
         container.id = 'credit-container';
+        leftContainer = document.createElement('div');
+        leftContainer.id = 'credit-container';
+        rightContainer = document.createElement('div');
+        rightContainer.id = 'credit-container';
     });
 
     it('credit display throws with no container', function() {
         expect(function() {
-            return new CreditDisplay();
+            return new CreditDisplay(undefined, leftContainer, rightContainer);
+        }).toThrowDeveloperError();
+    });
+
+    it('credit display throws with no leftContainer', function() {
+        expect(function() {
+            return new CreditDisplay(container, undefined, rightContainer);
+        }).toThrowDeveloperError();
+    });
+
+    it('credit display throws with no rightContainer', function() {
+        expect(function() {
+            return new CreditDisplay(container, leftContainer, undefined);
         }).toThrowDeveloperError();
     });
 
     it('credit display addCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay();
+            var creditDisplay = new CreditDisplay(container);
             creditDisplay.addCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display addDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay();
+            var creditDisplay = new CreditDisplay(container);
             creditDisplay.addDefaultCredit();
         }).toThrowDeveloperError();
     });
 
     it('credit display removeDefaultCredit throws when credit is undefined', function() {
         expect(function() {
-            var creditDisplay = new CreditDisplay();
+            var creditDisplay = new CreditDisplay(container);
             creditDisplay.removeDevaultCredit();
         }).toThrowDeveloperError();
     });
@@ -58,7 +76,7 @@ defineSuite([
     });
 
     it('credit display displays text credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         var credit = new Credit('credit1');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
@@ -75,7 +93,7 @@ defineSuite([
     });
 
     it('credit display displays image credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         var credit = new Credit(undefined, imgSrc);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
@@ -95,7 +113,7 @@ defineSuite([
     });
 
     it('credit display displays hyperlink credit', function() {
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         var link = 'http://cesiumjs.org/';
         var credit = new Credit(undefined, undefined, link);
         creditDisplay.beginFrame();
@@ -120,7 +138,7 @@ defineSuite([
         var credit1 = new Credit('credit1');
         var credit2 = new Credit(undefined, imgSrc);
 
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -166,7 +184,7 @@ defineSuite([
     it('credit display uses delimeter for text credits', function() {
         var credit1 = new Credit('credit1');
         var credit2 = new Credit('credit2');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -192,7 +210,7 @@ defineSuite([
         var credit2 = new Credit('credit2');
         var credit3 = new Credit('credit3');
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -244,7 +262,7 @@ defineSuite([
 
     it('credit display uses text as title for image credit', function() {
         var credit1 = new Credit('credit text', imgSrc);
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -262,7 +280,7 @@ defineSuite([
 
     it('credit display creates image credit with hyperlink', function() {
         var credit1 = new Credit(undefined, imgSrc, 'link.com');
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
@@ -282,7 +300,7 @@ defineSuite([
     it('credit display displays default credit', function() {
         var defaultCredit = new Credit('defaultCredit');
         var credit1 = new Credit('credit1');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -312,7 +330,7 @@ defineSuite([
         var defaultCredit = new Credit('defaultCredit');
         var credit1 = new Credit('credit1');
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -342,7 +360,7 @@ defineSuite([
     it('credit display displays default image credit', function() {
         var defaultCredit = new Credit(undefined, imgSrc);
         var credit1 = new Credit('credit1');
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -368,7 +386,7 @@ defineSuite([
         var defaultCredit = new Credit(undefined, imgSrc);
         var credit1 = new Credit('credit1');
 
-        var creditDisplay = new CreditDisplay(container, ', ');
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer, ', ');
         creditDisplay.addDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
@@ -395,7 +413,7 @@ defineSuite([
     it('credit display only displays one if two image credits are equal', function() {
         var credit1 = new Credit(undefined, imgSrc);
         var credit2 = new Credit(undefined, imgSrc);
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
@@ -417,7 +435,7 @@ defineSuite([
     it('credit display only displays one if two text credits are equal', function() {
         var credit1 = new Credit('text');
         var credit2 = new Credit('text');
-        var creditDisplay = new CreditDisplay(container);
+        var creditDisplay = new CreditDisplay(container, leftContainer, rightContainer);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);

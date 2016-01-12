@@ -227,6 +227,12 @@ define([
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
         }
+        if (!defined(leftContainer)) {
+            throw new DeveloperError('leftContainer container is required');
+        }
+        if (!defined(rightContainer)) {
+            throw new DeveloperError('rightContainer container is required');
+        }
         //>>includeEnd('debug');
 
         var imageContainer = createImageContainer();
@@ -301,6 +307,9 @@ define([
         }
     });
 
+    /**
+     * @private
+     */
     CreditDisplay.createDefaultContainer = function() {
         var creditContainer = document.createElement('div');
         creditContainer.style.position = 'absolute';
