@@ -15,7 +15,7 @@ define([], function() {
      * 
      * @private
      */
-    var parseResponseHeaders = function(headerString) {
+    function parseResponseHeaders(headerString) {
         var headers = {};
 
         if (!headerString) {
@@ -37,7 +37,7 @@ define([], function() {
         }
 
         return headers;
-    };
+    }
 
     return parseResponseHeaders;
 });

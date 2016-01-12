@@ -17,9 +17,9 @@ define([
      * @see Entity
      * @see DataSourceDisplay
      */
-    var DataSource = function() {
+    function DataSource() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(DataSource.prototype, {
         /**

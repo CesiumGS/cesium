@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         AssociativeArray) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor has expected default values', function() {
         var associativeArray = new AssociativeArray();

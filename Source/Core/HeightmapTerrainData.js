@@ -10,6 +10,7 @@ define([
         './Math',
         './Rectangle',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh',
         './TerrainProvider'
     ], function(
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         Rectangle,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
     "use strict";
@@ -74,8 +76,6 @@ define([
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
-     * @see TerrainData
-     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
@@ -91,8 +91,11 @@ define([
      *   structure : structure,
      *   waterMask : waterMask
      * });
+     * 
+     * @see TerrainData
+     * @see QuantizedMeshTerrainData
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(options) {
+    function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.buffer)) {
             throw new DeveloperError('options.buffer is required.');
@@ -126,7 +129,7 @@ define([
         this._structure = structure;
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(HeightmapTerrainData.prototype, {
         /**
@@ -153,11 +156,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -176,6 +180,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
@@ -195,7 +200,8 @@ define([
             relativeToCenter : center,
             ellipsoid : ellipsoid,
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
-            isGeographic : tilingScheme instanceof GeographicTilingScheme
+            isGeographic : tilingScheme instanceof GeographicTilingScheme,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {
@@ -213,7 +219,8 @@ define([
                     result.boundingSphere3D,
                     result.occludeePointInScaledSpace,
                     6,
-                    result.orientedBoundingBox);
+                    result.orientedBoundingBox,
+                    TerrainEncoding.clone(result.encoding));
         });
     };
 

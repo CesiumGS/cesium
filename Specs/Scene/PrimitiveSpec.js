@@ -60,7 +60,6 @@ defineSuite([
         createScene,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     var scene;
     var context;
@@ -326,7 +325,7 @@ defineSuite([
     function verifyPrimitiveRender(primitive, rectangle) {
         scene.primitives.removeAll();
         if (defined(rectangle)){
-            scene.camera.viewRectangle(rectangle);
+            scene.camera.setView({ destination : rectangle });
         }
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
@@ -412,7 +411,7 @@ defineSuite([
 
     it('RTC throws with more than one instance', function() {
         expect(function() {
-            var primitive = new Primitive({
+            return new Primitive({
                 geometryInstances : [rectangleInstance1, rectangleInstance2],
                 appearance : new PerInstanceColorAppearance({
                     closed: true
@@ -588,7 +587,7 @@ defineSuite([
         });
 
         scene.primitives.add(primitive);
-        scene.camera.viewRectangle(rectangle1);
+        scene.camera.setView({ destination : rectangle1 });
         var pixels = scene.renderForSpecs();
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
@@ -656,7 +655,7 @@ defineSuite([
             asynchronous : false
         });
 
-        scene.camera.viewRectangle(rectangle1);
+        scene.camera.setView({ destination : rectangle1 });
         scene.primitives.add(primitive);
         var pixels = scene.renderForSpecs();
         expect(pixels).not.toEqual([0, 0, 0, 255]);
@@ -678,7 +677,7 @@ defineSuite([
         });
 
         scene.primitives.add(primitive);
-        scene.camera.viewRectangle(rectangle1);
+        scene.camera.setView({ destination : rectangle1 });
         var pixels = scene.renderForSpecs();
         expect(pixels).not.toEqual([0, 0, 0, 255]);
 

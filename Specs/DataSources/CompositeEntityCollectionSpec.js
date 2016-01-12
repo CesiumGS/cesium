@@ -24,14 +24,12 @@ defineSuite([
         Entity,
         EntityCollection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var CollectionListener = function() {
+    function CollectionListener() {
         this.timesCalled = 0;
         this.added = [];
         this.removed = [];
-    };
-
+    }
     CollectionListener.prototype.onCollectionChanged = function(collection, added, removed) {
         this.timesCalled++;
         this.added = added.slice(0);

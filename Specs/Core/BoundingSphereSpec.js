@@ -30,7 +30,6 @@ defineSuite([
         Rectangle,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);

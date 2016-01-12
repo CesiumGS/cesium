@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         HeadingPitchRange) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('construct with default values', function() {
         var hpr = new HeadingPitchRange();

@@ -14,7 +14,7 @@ define([
     /**
      * @private
      */
-    var CubeMapFace = function(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
+    function CubeMapFace(gl, texture, textureTarget, targetFace, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY) {
         this._gl = gl;
         this._texture = texture;
         this._textureTarget = textureTarget;
@@ -24,7 +24,7 @@ define([
         this._size = size;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
-    };
+    }
 
     defineProperties(CubeMapFace.prototype, {
         pixelFormat : {

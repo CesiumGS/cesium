@@ -32,7 +32,7 @@ define([
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      * @param {Number} [numberOfDerivatives=0] The number of derivatives that accompany each position; i.e. velocity, acceleration, etc...
      */
-    var SampledPositionProperty = function(referenceFrame, numberOfDerivatives) {
+    function SampledPositionProperty(referenceFrame, numberOfDerivatives) {
         numberOfDerivatives = defaultValue(numberOfDerivatives, 0);
 
         var derivativeTypes;
@@ -51,7 +51,7 @@ define([
         this._property._definitionChanged.addEventListener(function() {
             this._definitionChanged.raiseEvent(this);
         }, this);
-    };
+    }
 
     defineProperties(SampledPositionProperty.prototype, {
         /**

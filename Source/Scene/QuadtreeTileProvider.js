@@ -16,9 +16,9 @@ define([
      * @constructor
      * @private
      */
-    var QuadtreeTileProvider = function QuadtreeTileProvider() {
+    function QuadtreeTileProvider() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Computes the default geometric error for level zero of the quadtree.
@@ -204,10 +204,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreeTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     * 
+     * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
 

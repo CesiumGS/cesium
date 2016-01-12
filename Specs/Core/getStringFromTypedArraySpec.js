@@ -1,10 +1,9 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'Core/getStringFromTypedArray'
     ], function(
         getStringFromTypedArray) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     function verifyString() {
         var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);

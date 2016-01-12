@@ -48,7 +48,6 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
@@ -880,6 +879,38 @@ defineSuite([
                 return provider.ready;
             }).then(function() {
                 expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('returns undefined if enablePickFeatures is dynamically set to false', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                enablePickFeatures : true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).toBeUndefined();
+            });
+        });
+
+        it('does not return undefined if enablePickFeatures is dynamically set to true', function() {
+            var provider = new ArcGisMapServerImageryProvider({
+                url : 'made/up/map/server',
+                usePreCachedTilesIfAvailable : false,
+                enablePickFeatures : false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.5, 0.5)).not.toBeUndefined();
             });
         });
 

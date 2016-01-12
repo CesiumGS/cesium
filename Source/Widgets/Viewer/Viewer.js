@@ -218,7 +218,8 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added to the bottom of the widget itself.
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
-                                     the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+     *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
+     * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -249,7 +250,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
+     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
      *         url : '//a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -276,7 +277,7 @@ define([
      *     window.alert(error);
      * });
      */
-    var Viewer = function(container, options) {
+    function Viewer(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -348,7 +349,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
-            scene3DOnly : scene3DOnly
+            scene3DOnly : scene3DOnly,
+            terrainExaggeration : options.terrainExaggeration
         });
 
         var dataSourceCollection = options.dataSources;
@@ -368,6 +370,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var eventHelper = new EventHelper();
 
         eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
+        eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
         var selectionIndicator;
@@ -610,7 +613,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    };
+    }
 
     defineProperties(Viewer.prototype, {
         /**

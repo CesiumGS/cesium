@@ -124,15 +124,15 @@ function setupLayers() {
             }));
     addBaseLayerOption(
             'OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider());
+            Cesium.createOpenStreetMapImageryProvider());
     addBaseLayerOption(
             'MapQuest OpenStreetMaps',
-            new Cesium.OpenStreetMapImageryProvider({
+            Cesium.createOpenStreetMapImageryProvider({
                 url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
             }));
     addBaseLayerOption(
             'Stamen Maps',
-            new Cesium.OpenStreetMapImageryProvider({
+            Cesium.createOpenStreetMapImageryProvider({
                 url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                 fileExtension: 'jpg',
                 credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'

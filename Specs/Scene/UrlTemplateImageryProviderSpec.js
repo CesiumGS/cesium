@@ -14,7 +14,8 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Scene/GetFeatureInfoFormat'
     ], function(
         UrlTemplateImageryProvider,
         DefaultProxy,
@@ -30,9 +31,9 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when) {
+        when,
+        GetFeatureInfoFormat) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -537,15 +538,63 @@ defineSuite([
         });
     });
 
-    it('pickFeatures returns undefined', function() {
-        var provider = new UrlTemplateImageryProvider({
-            url: 'foo/bar'
+    describe('pickFeatures', function() {
+        it('returns undefined when enablePickFeatures is false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
         });
 
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+        it('does not return undefined when enablePickFeatures is subsequently set to true', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).not.toBeUndefined();
+            });
+        });
+
+        it('returns undefined when enablePickFeatures is initialized as true and set to false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
         });
     });
 });

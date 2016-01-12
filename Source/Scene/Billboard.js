@@ -70,7 +70,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
-    var Billboard = function(options, billboardCollection) {
+    function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -152,7 +152,7 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
-    };
+    }
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
     var POSITION_INDEX = Billboard.POSITION_INDEX = 1;
@@ -881,7 +881,7 @@ define([
             owner._removeCallbackFunc();
         }
 
-        var updateFunction = function(clampedPosition) {
+        function updateFunction(clampedPosition) {
             if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                 if (owner._mode === SceneMode.SCENE3D) {
                     var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
@@ -892,8 +892,7 @@ define([
                 }
             }
             owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
-        };
-
+        }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
@@ -950,7 +949,6 @@ define([
             that._imageIndexPromise = undefined;
             makeDirty(that, IMAGE_INDEX_INDEX);
         }).otherwise(function(error) {
-            /*global console*/
             console.error('Error loading image for billboard: ' + error);
             that._imageIndexPromise = undefined;
         });
@@ -1133,11 +1131,12 @@ define([
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      *
-     * @see Billboard#eyeOffset
-     * @see Billboard#pixelOffset
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
+     * 
+     * @see Billboard#eyeOffset
+     * @see Billboard#pixelOffset
      */
     Billboard.prototype.computeScreenSpacePosition = function(scene, result) {
         var billboardCollection = this._billboardCollection;

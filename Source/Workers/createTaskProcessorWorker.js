@@ -20,9 +20,6 @@ define([
      * @returns {createTaskProcessorWorker~TaskProcessorWorkerFunction} A function that adapts the
      *          calculation function to work as a Web Worker onmessage listener with TaskProcessor.
      *
-     * @see TaskProcessor
-     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
-     * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
      *
      * @example
      * function doCalculation(parameters, transferableObjects) {
@@ -32,8 +29,12 @@ define([
      *
      * return Cesium.createTaskProcessorWorker(doCalculation);
      * // the resulting function is compatible with TaskProcessor
+     * 
+     * @see TaskProcessor
+     * @see {@link http://www.w3.org/TR/workers/|Web Workers}
+     * @see {@link http://www.w3.org/TR/html5/common-dom-interfaces.html#transferable-objects|Transferable objects}
      */
-    var createTaskProcessorWorker = function(workerFunction) {
+    function createTaskProcessorWorker(workerFunction) {
         var postMessage;
         var transferableObjects = [];
         var responseMessage = {
@@ -84,7 +85,7 @@ define([
                 postMessage(responseMessage);
             }
         };
-    };
+    }
 
     /**
      * A function that performs a calculation in a Web Worker.

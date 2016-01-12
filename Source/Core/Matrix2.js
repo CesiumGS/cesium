@@ -31,12 +31,12 @@ define([
      * @see Matrix3
      * @see Matrix4
      */
-    var Matrix2 = function(column0Row0, column1Row0, column0Row1, column1Row1) {
+    function Matrix2(column0Row0, column1Row0, column0Row1, column1Row1) {
         this[0] = defaultValue(column0Row0, 0.0);
         this[1] = defaultValue(column0Row1, 0.0);
         this[2] = defaultValue(column1Row0, 0.0);
         this[3] = defaultValue(column1Row1, 0.0);
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -680,12 +680,13 @@ define([
      * @param {Matrix2} result The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter.
      *
-     * @see Matrix2.fromScale
-     * @see Matrix2.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
      * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     * 
+     * @see Matrix2.fromScale
+     * @see Matrix2.multiplyByUniformScale
      */
     Matrix2.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);

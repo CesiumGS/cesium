@@ -15,9 +15,9 @@ define([
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
      */
-    var TileDiscardPolicy = function(options) {
+    function TileDiscardPolicy(options) {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Determines if the discard policy is ready to process images.
