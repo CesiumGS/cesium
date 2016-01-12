@@ -34,7 +34,6 @@ defineSuite([
         VerticalOrigin,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -1694,7 +1693,7 @@ defineSuite([
             }
 
             scene.globe = createMockGlobe();
-            var l = labelsWithHeight.add({
+            labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });

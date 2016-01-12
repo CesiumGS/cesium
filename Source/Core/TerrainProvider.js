@@ -23,9 +23,9 @@ define([
      * @see CesiumTerrainProvider
      * @see ArcGisImageServerTerrainProvider
      */
-    var TerrainProvider = function() {
+    function TerrainProvider() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainProvider.prototype, {
         /**

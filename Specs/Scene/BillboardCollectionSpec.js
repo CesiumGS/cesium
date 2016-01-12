@@ -42,7 +42,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -1601,7 +1600,7 @@ defineSuite([
 
         it('creating with a height reference creates a height update callback', function() {
             scene.globe = createMockGlobe();
-            var b = billboardsWithHeight.add({
+            billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });

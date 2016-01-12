@@ -22,7 +22,7 @@ define([
      * @param {Boolean} [appendSlash=true] The boolean determining whether there should be a forward slash between first and second.
      * @private
      */
-    var joinUrls = function(first, second, appendSlash) {
+    function joinUrls(first, second, appendSlash) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(first)) {
             throw new DeveloperError('first is required');
@@ -102,7 +102,7 @@ define([
         }
 
         return url;
-    };
+    }
 
     return joinUrls;
 });

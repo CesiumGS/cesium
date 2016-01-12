@@ -15,9 +15,9 @@ define(function() {
      *      doSomethingElse();
      * }
      */
-    var definedNotNull = function(value) {
+    function definedNotNull(value) {
         return value !== undefined && value !== null;
-    };
+    }
 
     return definedNotNull;
 });

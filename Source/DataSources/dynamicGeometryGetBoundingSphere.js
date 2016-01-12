@@ -14,7 +14,7 @@ define([
     /**
      * @private
      */
-    var dynamicGeometryGetBoundingSphere = function(entity, primitive, outlinePrimitive, result) {
+    function dynamicGeometryGetBoundingSphere(entity, primitive, outlinePrimitive, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required.');
@@ -48,7 +48,7 @@ define([
         }
 
         return BoundingSphereState.FAILED;
-    };
+    }
 
     return dynamicGeometryGetBoundingSphere;
 });

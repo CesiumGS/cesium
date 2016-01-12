@@ -73,7 +73,7 @@ define([
      *
      * @private
      */
-    var EllipsoidPrimitive = function(options) {
+    function EllipsoidPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -100,11 +100,12 @@ define([
          * @type {Cartesian3}
          * @default undefined
          *
-         * @see EllipsoidPrimitive#modelMatrix
          *
          * @example
          * // A sphere with a radius of 2.0
          * e.radii = new Cesium.Cartesian3(2.0, 2.0, 2.0);
+         * 
+         * @see EllipsoidPrimitive#modelMatrix
          */
         this.radii = Cartesian3.clone(options.radii);
         this._radii = new Cartesian3();
@@ -147,7 +148,6 @@ define([
          * @type {Material}
          * @default Material.fromType(Material.ColorType)
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          *
          * @example
          * // 1. Change the color of the default material to yellow
@@ -155,6 +155,8 @@ define([
          *
          * // 2. Change material to horizontal stripes
          * e.material = Cesium.Material.fromType(Cesium.Material.StripeType);
+         * 
+         * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
          */
         this.material = defaultValue(options.material, Material.fromType(Material.ColorType));
         this._material = undefined;
@@ -224,7 +226,7 @@ define([
                 return that._pickId.color;
             }
         };
-    };
+    }
 
     function getVertexArray(context) {
         var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
@@ -343,7 +345,6 @@ define([
         this._onlySunLighting = this.onlySunLighting;
 
         var colorCommand = this._colorCommand;
-        var vs;
         var fs;
 
         // Recompile shader when material, lighting, or translucency changes
@@ -459,10 +460,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see EllipsoidPrimitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see EllipsoidPrimitive#isDestroyed
      */
     EllipsoidPrimitive.prototype.destroy = function() {
         this._sp = this._sp && this._sp.destroy();

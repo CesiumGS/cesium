@@ -42,7 +42,7 @@ define([
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
      */
-    var GridImageryProvider = function GridImageryProvider(options) {
+    function GridImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
@@ -64,7 +64,7 @@ define([
         this._canvas = this._createGridCanvas();
 
         this._readyPromise = when.resolve(true);
-    };
+    }
 
     defineProperties(GridImageryProvider.prototype, {
         /**

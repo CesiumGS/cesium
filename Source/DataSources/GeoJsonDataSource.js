@@ -87,8 +87,6 @@ define([
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
     'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
 
-    var stringifyScratch = new Array(4);
-
     function defaultDescribe(properties, nameProperty) {
         var html = '';
         for ( var key in properties) {
@@ -266,11 +264,6 @@ define([
                 symbol = markerSymbol;
             }
         }
-
-        stringifyScratch[0] = symbol;
-        stringifyScratch[1] = color;
-        stringifyScratch[2] = size;
-        var id = JSON.stringify(stringifyScratch);
 
         var canvasOrPromise;
         if (defined(symbol)) {
@@ -494,7 +487,7 @@ define([
      *   markerSymbol: '?'
      * }));
      */
-    var GeoJsonDataSource = function(name) {
+    function GeoJsonDataSource(name) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
@@ -503,7 +496,7 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._promises = [];
         this._pinBuilder = new PinBuilder();
-    };
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
@@ -782,7 +775,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
-            window.console.log(error);
+            console.log(error);
             return when.reject(error);
         });
     };

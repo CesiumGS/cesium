@@ -10,7 +10,7 @@ define(function() {
      *
      * @see JulianDate#toGregorianDate
      */
-    var GregorianDate = function(year, month, day, hour, minute, second, millisecond, isLeapSecond) {
+    function GregorianDate(year, month, day, hour, minute, second, millisecond, isLeapSecond) {
         /**
          * Gets or sets the year as a whole number.
          * @type {Number}
@@ -51,7 +51,7 @@ define(function() {
          * @type {Boolean}
          */
         this.isLeapSecond = isLeapSecond;
-    };
+    }
 
     return GregorianDate;
 });

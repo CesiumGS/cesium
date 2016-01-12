@@ -30,7 +30,7 @@ define([
      *
      * @private
      */
-    var Tween = function(tweens, tweenjs, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
+    function Tween(tweens, tweenjs, startObject, stopObject, duration, delay, easingFunction, update, complete, cancel) {
         this._tweens = tweens;
         this._tweenjs = tweenjs;
 
@@ -56,7 +56,7 @@ define([
          * @private
          */
         this.needsStart = true;
-    };
+    }
 
     defineProperties(Tween.prototype, {
         /**
@@ -178,9 +178,9 @@ define([
      *
      * @private
      */
-    var TweenCollection = function() {
+    function TweenCollection() {
         this._tweens = [];
-    };
+    }
 
     defineProperties(TweenCollection.prototype, {
         /**

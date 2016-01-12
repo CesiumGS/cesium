@@ -38,7 +38,7 @@ define([
      *
      * @see TerrainProvider
      */
-    var EllipsoidTerrainProvider = function EllipsoidTerrainProvider(options) {
+    function EllipsoidTerrainProvider(options) {
         options = defaultValue(options, {});
 
         this._tilingScheme = options.tilingScheme;
@@ -62,7 +62,7 @@ define([
 
         this._errorEvent = new Event();
         this._readyPromise = when.resolve(true);
-    };
+    }
 
     defineProperties(EllipsoidTerrainProvider.prototype, {
         /**

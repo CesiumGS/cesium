@@ -51,7 +51,7 @@ define([
      *   width : 10.0
      * }));
      */
-    var DebugModelMatrixPrimitive = function(options) {
+    function DebugModelMatrixPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -101,7 +101,7 @@ define([
         this._id = undefined;
 
         this._primitive = undefined;
-    };
+    }
 
     /**
      * @private

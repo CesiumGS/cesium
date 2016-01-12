@@ -18,7 +18,6 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
 
@@ -324,7 +323,6 @@ defineSuite([
 
         camera.update(scene.mode);
 
-        var startHeight = camera.frustum.right - camera.frustum.left;
         var startPosition = Cartesian3.clone(camera.position);
 
         var projection = scene.mapProjection;
@@ -383,5 +381,4 @@ defineSuite([
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
     });
-
-});
+}, 'WebGL');

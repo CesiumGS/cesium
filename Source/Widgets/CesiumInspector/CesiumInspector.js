@@ -31,7 +31,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
-    var CesiumInspector = function(container, scene) {
+    function CesiumInspector(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -336,7 +336,7 @@ define([
         tileCoords.appendChild(document.createTextNode('Show tile coordinates'));
 
         knockout.applyBindings(viewModel, this._element);
-    };
+    }
 
     defineProperties(CesiumInspector.prototype, {
         /**

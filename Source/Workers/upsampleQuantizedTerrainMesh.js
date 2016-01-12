@@ -12,6 +12,7 @@ define([
         '../Core/Intersections2D',
         '../Core/Math',
         '../Core/OrientedBoundingBox',
+        '../Core/TerrainEncoding',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -26,6 +27,7 @@ define([
         Intersections2D,
         CesiumMath,
         OrientedBoundingBox,
+        TerrainEncoding,
         createTaskProcessorWorker) {
     "use strict";
 
@@ -45,6 +47,8 @@ define([
     var horizonOcclusionPointScratch = new Cartesian3();
     var boundingSphereScratch = new BoundingSphere();
     var orientedBoundingBoxScratch = new OrientedBoundingBox();
+    var decodeTexCoordsScratch = new Cartesian2();
+    var octEncodedNormalScratch = new Cartesian3();
 
     function upsampleQuantizedTerrainMesh(parameters, transferableObjects) {
         var isEastChild = parameters.isEastChild;
@@ -71,18 +75,59 @@ define([
         var vertexMap = {};
 
         var parentVertices = parameters.vertices;
-        var parentNormalBuffer = parameters.encodedNormals;
         var parentIndices = parameters.indices;
+        parentIndices = parentIndices.subarray(0, parameters.skirtIndex);
 
-        var quantizedVertexCount = parentVertices.length / 3;
-        var parentUBuffer = parentVertices.subarray(0, quantizedVertexCount);
-        var parentVBuffer = parentVertices.subarray(quantizedVertexCount, 2 * quantizedVertexCount);
-        var parentHeightBuffer = parentVertices.subarray(quantizedVertexCount * 2, 3 * quantizedVertexCount);
+        var encoding = TerrainEncoding.clone(parameters.encoding);
+        var hasVertexNormals = encoding.hasVertexNormals;
 
         var vertexCount = 0;
-        var hasVertexNormals = defined(parentNormalBuffer);
+        var quantizedVertexCount = parameters.vertexCountWithoutSkirts;
 
-        var i, n, u, v;
+        var parentMinimumHeight = parameters.minimumHeight;
+        var parentMaximumHeight = parameters.maximumHeight;
+
+        var parentUBuffer = new Array(quantizedVertexCount);
+        var parentVBuffer = new Array(quantizedVertexCount);
+        var parentHeightBuffer = new Array(quantizedVertexCount);
+        var parentNormalBuffer = hasVertexNormals ? new Array(quantizedVertexCount * 2) : undefined;
+
+        var threshold = 20;
+        var height;
+
+        var i, n;
+        for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
+            var texCoords = encoding.decodeTextureCoordinates(parentVertices, i, decodeTexCoordsScratch);
+            height  = encoding.decodeHeight(parentVertices, i);
+
+            parentUBuffer[i] = CesiumMath.clamp((texCoords.x * maxShort) | 0, 0, maxShort);
+            parentVBuffer[i] = CesiumMath.clamp((texCoords.y * maxShort) | 0, 0, maxShort);
+            parentHeightBuffer[i] = CesiumMath.clamp((((height - parentMinimumHeight) / (parentMaximumHeight - parentMinimumHeight)) * maxShort) | 0, 0, maxShort);
+
+            if (parentUBuffer[i] < threshold) {
+                parentUBuffer[i] = 0;
+            }
+
+            if (parentVBuffer[i] < threshold) {
+                parentVBuffer[i] = 0;
+            }
+
+            if (maxShort - parentUBuffer[i] < threshold) {
+                parentUBuffer[i] = maxShort;
+            }
+
+            if (maxShort - parentVBuffer[i] < threshold) {
+                parentVBuffer[i] = maxShort;
+            }
+
+            if (hasVertexNormals) {
+                var encodedNormal = encoding.getOctEncodedNormal(parentVertices, i, octEncodedNormalScratch);
+                parentNormalBuffer[n] = encodedNormal.x;
+                parentNormalBuffer[n + 1] = encodedNormal.y;
+            }
+        }
+
+        var u, v;
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
             u = parentUBuffer[i];
             v = parentVBuffer[i];
@@ -167,9 +212,6 @@ define([
         var uOffset = isEastChild ? -maxShort : 0;
         var vOffset = isNorthChild ? -maxShort : 0;
 
-        var parentMinimumHeight = parameters.minimumHeight;
-        var parentMaximumHeight = parameters.maximumHeight;
-
         var westIndices = [];
         var southIndices = [];
         var eastIndices = [];
@@ -220,7 +262,7 @@ define([
 
             vBuffer[i] = v;
 
-            var height = CesiumMath.lerp(parentMinimumHeight, parentMaximumHeight, heightBuffer[i] / maxShort);
+            height = CesiumMath.lerp(parentMinimumHeight, parentMaximumHeight, heightBuffer[i] / maxShort);
             if (height < minimumHeight) {
                 minimumHeight = height;
             }
@@ -328,15 +370,6 @@ define([
         this.first = undefined;
         this.second = undefined;
         this.ratio = undefined;
-    };
-
-    Vertex.prototype.initializeInterpolated = function(first, second, ratio) {
-        this.vertexBuffer = undefined;
-        this.index = undefined;
-        this.newIndex = undefined;
-        this.first = first;
-        this.second = second;
-        this.ratio = ratio;
     };
 
     Vertex.prototype.initializeFromClipResult = function(clipResult, index, vertices) {

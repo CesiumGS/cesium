@@ -1,0 +1,28 @@
+@import url("../dijit.css");
+@import url("../../icons/commonIcons.css");/*sprite containing common icons to be used by all themes*/
+@import url("Common.css");
+@import url("form/Common.css");
+@import url("form/Button.css");
+@import url("form/Checkbox.css");
+@import url("form/RadioButton.css");
+@import url("form/Select.css");
+@import url("layout/TabContainer.css");
+@import url("Dialog.css");
+@import url("layout/AccordionContainer.css");
+@import url("layout/ContentPane.css");
+@import url("Calendar.css");
+@import url("Menu.css");
+@import url("form/Slider.css");
+@import url("ColorPalette.css");
+@import url("InlineEditBox.css");
+@import url("ProgressBar.css");
+@import url("TimePicker.css");
+@import url("layout/BorderContainer.css");
+@import url("Tree.css"); 
+@import url("Toolbar.css");
+@import url("Editor.css");/*in order to test button or menu item with icon */
+@import url("../../icons/editorIcons.css"); /*sprite for editor icons to be used by all themes*/
+@import url("TitlePane.css");
+@import url("form/NumberSpinner.css");
+
+@import url("claro_rtl.css");
