@@ -342,7 +342,7 @@ define([
                     // Binary glTF
                     var result = parseBinaryGltfHeader(gltf);
 
-                    // CESIUM_binary_glTF is from the beginning of the file but
+                    // CESIUM_binary_glTF is from the beginning of the file but the
                     // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
                         gltf = gltf.subarray(result.binaryOffset);
@@ -975,7 +975,7 @@ define([
                     // Load binary glTF
                     var result = parseBinaryGltfHeader(array);
                     // CESIUM_binary_glTF is from the beginning of the file but
-                    //  KHR_binary_glTF is from the beginning of the binary section
+                    // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
                         array = array.subarray(result.binaryOffset);
                     }
@@ -1148,7 +1148,9 @@ define([
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
 
-                if (id === 'CESIUM_binary_glTF' || id === 'KHR_binary_glTF') {
+                // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
+                // The 'KHR_binary_glTF' check is for backwards compatibility with Cesium 1.15.
+                if (id === 'CESIUM_binary_glTF' || id === 'binary_glTF' || id === 'KHR_binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[id] = model._cachedGltf.bgltf;
