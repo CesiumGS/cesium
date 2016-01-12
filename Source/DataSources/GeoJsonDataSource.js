@@ -22,6 +22,7 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './CorridorGraphics',
         './DataSource',
         './EntityCollection',
         './PolygonGraphics',
@@ -49,6 +50,7 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CorridorGraphics,
         DataSource,
         EntityCollection,
         PolygonGraphics,
@@ -72,6 +74,7 @@ define([
     var defaultStroke = Color.YELLOW;
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
+    var defaultTerrain = false;
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
     var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
@@ -326,13 +329,20 @@ define([
             }
         }
 
-        var polyline = new PolylineGraphics();
-        polyline.material = material;
-        polyline.width = widthProperty;
-        polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-        entity.polyline = polyline;
+        var graphics;
+        if (options.terrain) {
+            graphics = new CorridorGraphics();
+            entity.corridor = graphics;
+        }
+        else {
+            graphics = new PolylineGraphics();
+            entity.polyline = graphics;
+        }
+
+        graphics.material = material;
+        graphics.width = widthProperty;
+        graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -766,7 +776,8 @@ define([
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
+            terrain : defaultValue(options.terrain, defaultTerrain)
         };
 
         var that = this;
