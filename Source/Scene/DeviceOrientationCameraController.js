@@ -17,6 +17,9 @@ define([
            Quaternion) {
     "use strict";
 
+    /**
+     * @private
+     */
     function DeviceOrientationCameraController(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
@@ -93,10 +96,28 @@ define([
         this._lastGamma = this._gamma;
     };
 
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
     DeviceOrientationCameraController.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Destroys the resources held by this object.  Destroying an object allows for deterministic
+     * release of resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
     DeviceOrientationCameraController.prototype.destroy = function() {
         this._removeListener();
         return destroyObject(this);

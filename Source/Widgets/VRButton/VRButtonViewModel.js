@@ -45,7 +45,21 @@ define([
         }
     }
 
-    function VRButtonViewModel(vrElement, scene) {
+    /**
+     * The view model for {@link VRButton}.
+     * @alias VRButtonViewModel
+     * @constructor
+     *
+     * @param {Scene} scene The scene.
+     * @param {Element|String} [vrElement=document.body] The element or id to be placed into VR mode.
+     */
+    function VRButtonViewModel(scene, vrElement) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
+        }
+        //>>includeEnd('debug');
+
         var that = this;
 
         this._isEnabled = knockout.observable(Fullscreen.enabled);

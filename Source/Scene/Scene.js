@@ -207,37 +207,18 @@ define([
 
         var context = new Context(canvas, contextOptions);
         if (!defined(creditContainer)) {
-            creditContainer = document.createElement('div');
-            creditContainer.style.position = 'absolute';
-            creditContainer.style.bottom = '0';
-            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
-            creditContainer.style.color = '#ffffff';
-            creditContainer.style['font-size'] = '10px';
-            creditContainer.style['padding-right'] = '5px';
-            canvas.parentNode.appendChild(creditContainer);
+            canvas.parentNode.appendChild(CreditDisplay.createDefaultContainer());
         }
 
         if (!defined(leftCreditContainer) || !defined(rightCreditContainer)) {
-            leftCreditContainer = document.createElement('div');
-            leftCreditContainer.style.position = 'absolute';
-            leftCreditContainer.style.bottom = '0';
+            leftCreditContainer = CreditDisplay.createDefaultContainer();
             leftCreditContainer.style.left = '0';
             leftCreditContainer.style.width = '50%';
-            leftCreditContainer.style['text-shadow'] = '0px 0px 2px #000000';
-            leftCreditContainer.style.color = '#ffffff';
-            leftCreditContainer.style['font-size'] = '10px';
-            leftCreditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(leftCreditContainer);
 
-            rightCreditContainer = document.createElement('div');
-            rightCreditContainer.style.position = 'absolute';
-            rightCreditContainer.style.bottom = '0';
+            rightCreditContainer = CreditDisplay.createDefaultContainer();
             rightCreditContainer.style.left = '50%';
             rightCreditContainer.style.width = '50%';
-            rightCreditContainer.style['text-shadow'] = '0px 0px 2px #000000';
-            rightCreditContainer.style.color = '#ffffff';
-            rightCreditContainer.style['font-size'] = '10px';
-            rightCreditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(rightCreditContainer);
         }
 
@@ -1011,17 +992,24 @@ define([
             }
         },
 
+        /**
+         * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
+         * Used for cardboard and WebVR.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default false
+         */
         useWebVR : {
             get : function() {
                 return this._useWebVR;
             },
             set : function(value) {
                 this._useWebVR = value;
-                this._frameState.creditDisplay.useWebVR = this._useWebVR;
-
                 if (this._useWebVR) {
                     this._cameraVR = new Camera(this);
-                    this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
+                    if (!defined(this._deviceOrientationCameraController)) {
+                        this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
+                    }
                 } else {
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
@@ -1086,6 +1074,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.creditDisplay.useWebVR = scene._useWebVR;
 
         clearPasses(frameState.passes);
     }

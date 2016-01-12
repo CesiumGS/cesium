@@ -241,6 +241,7 @@ define([
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
+     * @param {Boolean} [options.vrButton=false] If set to true, the VRButton widget will be created.
      * @param {Boolean} [options.geocoder=true] If set to false, the Geocoder widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.infoBox=true] If set to false, the InfoBox widget will not be created.
@@ -590,7 +591,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var vrContainer = document.createElement('div');
             vrContainer.className = 'cesium-viewer-vrContainer';
             viewerContainer.appendChild(vrContainer);
-            vrButton = new VRButton(vrContainer, options.fullScreenElement, cesiumWidget.scene);
+            vrButton = new VRButton(vrContainer, cesiumWidget.scene, options.fullScreenElement);
 
             vrSubscription = subscribeAndEvaluate(vrButton.viewModel, 'isVREnabled', function(isVREnabled) {
                 vrContainer.style.display = isVREnabled ? 'block' : 'none';

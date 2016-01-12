@@ -70,9 +70,19 @@ define([
         this.far = 500000000.0;
         this._far = this.far;
 
+        /**
+         * Offsets the frustum in the x direction.
+         * @type {Number}
+         * @default 0.0
+         */
         this.xOffset = 0.0;
         this._xOffset = this.xOffset;
 
+        /**
+         * Offsets the frustum in the y direction.
+         * @type {Number}
+         * @default 0.0
+         */
         this.yOffset = 0.0;
         this._yOffset = this.yOffset;
     }

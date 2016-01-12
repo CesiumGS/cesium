@@ -212,6 +212,8 @@ define([
      * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
+     * @param {HTMLElement} leftContainer The HTML element for the left eye when using VR.
+     * @param {HTMLElement} rightContainer The HTML element for the right eye when using VR.
      * @param {String} [delimiter= ' • '] The string to separate text credits
      *
      * @alias CreditDisplay
@@ -273,6 +275,13 @@ define([
     }
 
     defineProperties(CreditDisplay.prototype, {
+        /**
+         * Defines whether VR is being used and the credits should be displayed in the left and right
+         * eye containers pr the single container for the normal view.
+         * @memberof CreditDisplay.prototype
+         * @type {Boolean}
+         * @default false
+         */
         useWebVR : {
             get : function() {
                 return this._useWebVR;
@@ -291,6 +300,17 @@ define([
             }
         }
     });
+
+    CreditDisplay.createDefaultContainer = function() {
+        var creditContainer = document.createElement('div');
+        creditContainer.style.position = 'absolute';
+        creditContainer.style.bottom = '0';
+        creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+        creditContainer.style.color = '#ffffff';
+        creditContainer.style['font-size'] = '10px';
+        creditContainer.style['padding-right'] = '5px';
+        return creditContainer;
+    };
 
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container

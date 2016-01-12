@@ -222,6 +222,7 @@ define([
      * If fullscreen mode is not supported by the browser, does nothing.
      *
      * @param {Object} element The HTML element which will be placed into fullscreen mode.
+     * @param {HMDVRDevice} vrDevice The VR device.
      *
      * @example
      * // Put the entire page into fullscreen.
