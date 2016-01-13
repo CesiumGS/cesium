@@ -23,11 +23,44 @@ define([
     getElement) {
     "use strict";
 
+    function lockScreen(orientation) {
+        var locked = false;
+        var screen = window.screen;
+        if (defined(screen)) {
+            if (defined(screen.lockOrientation)) {
+                locked = screen.lockOrientation(orientation);
+            } else if (defined(screen.mozLockOrientation)) {
+                locked = screen.mozLockOrientation(orientation);
+            } else if (defined(screen.msLockOrientation)) {
+                locked = screen.msLockOrientation(orientation);
+            } else if (defined(screen.orientation && screen.orientation.lock)) {
+                locked = screen.orientation.lock(orientation);
+            }
+        }
+        return locked;
+    }
+
+    function unlockScreen() {
+        var screen = window.screen;
+        if (defined(screen)) {
+            if (defined(screen.unlockOrientation)) {
+                screen.unlockOrientation();
+            } else if (defined(screen.mozUnlockOrientation)) {
+                screen.mozUnlockOrientation();
+            } else if (defined(screen.msUnlockOrientation)) {
+                screen.msUnlockOrientation();
+            } else if (defined(screen.orientation && screen.orientation.unlock)) {
+                screen.orientation.unlock();
+            }
+        }
+    }
+
     function toggleVR(viewModel, scene) {
         if (viewModel._isVRMode()) {
             scene.useWebVR = false;
             if (viewModel._locked) {
-                viewModel._unlockOrientation();
+                unlockScreen();
+                viewModel._locked = false;
             }
             viewModel._noSleep.disable();
             Fullscreen.exitFullscreen();
@@ -37,9 +70,9 @@ define([
                 Fullscreen.requestFullscreen(viewModel._vrElement);
             }
             viewModel._noSleep.enable();
-            //if (defined(viewModel._lockOrientation) && !viewModel._locked) {
-            //    viewModel._locked = viewModel._lockOrientation('landscape');
-            //}
+            if (!viewModel._locked) {
+                viewModel._locked = lockScreen('landscape');
+            }
             scene.useWebVR = true;
             viewModel._isVRMode(true);
         }
@@ -107,15 +140,6 @@ define([
         });
 
         this._locked = false;
-        this._lockOrientation = undefined;
-        this._unlockOrientation = undefined;
-
-        var screen = window.screen;
-        if (defined(screen)) {
-            this._lockOrientation = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation || (screen.orientation && screen.orientation.lock);
-            this._unlockOrientation = screen.unlockOrientation || screen.mozUnlockOrientation || screen.msUnlockOrientation || (screen.orientation && screen.orientation.unlock);
-        }
-
         this._noSleep = new NoSleep();
 
         this._command = createCommand(function() {
@@ -125,7 +149,7 @@ define([
         this._vrElement = defaultValue(getElement(vrElement), document.body);
 
         this._callback = function() {
-            toggleVR(that, scene);
+            //toggleVR(that, scene);
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);
     }

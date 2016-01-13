@@ -609,7 +609,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             });
 
             vrCallback = function() {
-                enableVRUI(that, false);
+                //enableVRUI(that, false);
             };
             document.addEventListener(Fullscreen.changeEventName, vrCallback);
         }
