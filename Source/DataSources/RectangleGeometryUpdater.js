@@ -459,7 +459,7 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        this._onTerrain = (!defined(height) && !defined(extrudedHeight));
+        this._onTerrain = (!defined(height) && !defined(extrudedHeight) && isColorMaterial);
         // When used on terrain we will pretend to be dynamic but may actually be constant.
         this._isConstant = true;
 
@@ -561,8 +561,7 @@ define([
 
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
-        var isAvailable = entity.isAvailable(time);
-        if (!entity.isShowing || !isAvailable || !Property.getValueOrDefault(rectangle.show, time, true)) {
+        if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
             return;
         }
 
@@ -602,8 +601,7 @@ define([
                     }),
                     asynchronous : false
                 }));
-            }
-            else {
+            } else {
                 var appearance = new MaterialAppearance({
                     material : material,
                     translucent : material.isTranslucent(),

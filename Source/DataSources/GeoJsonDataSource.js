@@ -334,8 +334,7 @@ define([
         if (options.terrain) {
             graphics = new CorridorGraphics();
             entity.corridor = graphics;
-        }
-        else {
+        } else {
             graphics = new PolylineGraphics();
             entity.polyline = graphics;
         }
