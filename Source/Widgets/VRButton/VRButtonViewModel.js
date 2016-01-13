@@ -55,8 +55,8 @@ define([
         }
     }
 
-    function toggleVR(viewModel, scene) {
-        if (viewModel._isVRMode()) {
+    function toggleVR(viewModel, scene, isVRMode) {
+        if (isVRMode()) {
             scene.useWebVR = false;
             if (viewModel._locked) {
                 unlockScreen();
@@ -64,7 +64,7 @@ define([
             }
             viewModel._noSleep.disable();
             Fullscreen.exitFullscreen();
-            viewModel._isVRMode(false);
+            isVRMode(false);
         } else {
             if (!Fullscreen.fullscreen) {
                 Fullscreen.requestFullscreen(viewModel._vrElement);
@@ -74,7 +74,7 @@ define([
                 viewModel._locked = lockScreen('landscape');
             }
             scene.useWebVR = true;
-            viewModel._isVRMode(true);
+            isVRMode(true);
         }
     }
 
@@ -95,8 +95,8 @@ define([
 
         var that = this;
 
-        this._isEnabled = knockout.observable(Fullscreen.enabled);
-        this._isVRMode = knockout.observable(false);
+        var isEnabled = knockout.observable(Fullscreen.enabled);
+        var isVRMode = knockout.observable(false);
 
         /**
          * Gets whether or not VR mode is active.
@@ -106,7 +106,7 @@ define([
         this.isVRMode = undefined;
         knockout.defineProperty(this, 'isVRMode', {
             get : function() {
-                return that._isVRMode();
+                return isVRMode();
             }
         });
 
@@ -119,10 +119,10 @@ define([
         this.isVREnabled = undefined;
         knockout.defineProperty(this, 'isVREnabled', {
             get : function() {
-                return that._isEnabled();
+                return isEnabled();
             },
             set : function(value) {
-                that._isEnabled(value && Fullscreen.enabled);
+                isEnabled(value && Fullscreen.enabled);
             }
         });
 
@@ -133,30 +133,30 @@ define([
          */
         this.tooltip = undefined;
         knockout.defineProperty(this, 'tooltip', function() {
-            if (!this.isVREnabled) {
+            if (!isEnabled()) {
                 return 'VR mode is unavailable';
             }
-            return this.isVRMode ? 'Exit VR mode' : 'Enter VR mode';
+            return isVRMode() ? 'Exit VR mode' : 'Enter VR mode';
         });
 
         this._locked = false;
         this._noSleep = new NoSleep();
 
         this._command = createCommand(function() {
-            toggleVR(that, scene);
+            toggleVR(that, scene, isVRMode);
         }, knockout.getObservable(this, 'isVREnabled'));
 
         this._vrElement = defaultValue(getElement(vrElement), document.body);
 
         this._callback = function() {
-            if (!Fullscreen.fullscreen && that._isVRMode()) {
+            if (!Fullscreen.fullscreen && isVRMode()) {
                 scene.useWebVR = false;
                 if (that._locked) {
                     unlockScreen();
                     that._locked = false;
                 }
                 that._noSleep.disable();
-                that._isVRMode(false);
+                isVRMode(false);
             }
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);

@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-                'Scene/CreditDisplay',
-                'Core/Credit'
-            ], function(
-    CreditDisplay,
-    Credit) {
+        'Scene/CreditDisplay',
+        'Core/Credit'
+    ], function(
+        CreditDisplay,
+        Credit) {
     "use strict";
 
     var container;

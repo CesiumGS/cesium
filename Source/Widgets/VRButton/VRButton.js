@@ -43,7 +43,6 @@ define([
         }
         //>>includeEnd('debug');
 
-
         container = getElement(container);
 
         var viewModel = new VRButtonViewModel(scene, vrElement);
