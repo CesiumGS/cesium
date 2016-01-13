@@ -663,7 +663,12 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (this._geometryUpdater._onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };

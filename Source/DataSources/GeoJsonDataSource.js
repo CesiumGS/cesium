@@ -14,6 +14,7 @@ define([
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
+        '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
         '../ThirdParty/when',
@@ -42,6 +43,7 @@ define([
         PinBuilder,
         PolygonHierarchy,
         RuntimeError,
+        HeightReference,
         VerticalOrigin,
         topojson,
         when,
@@ -284,6 +286,10 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
+            if (options.terrain) {
+                billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
+            }
+
             var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
@@ -339,6 +345,7 @@ define([
             entity.polyline = graphics;
         }
 
+        graphics.onTerrain = options.terrain;
         graphics.material = material;
         graphics.width = widthProperty;
         graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
@@ -411,6 +418,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        polygon.onTerrain = options.terrain;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
