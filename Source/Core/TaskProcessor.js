@@ -7,6 +7,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './getAbsoluteURL',
         './isCrossOriginUrl',
         './RuntimeError',
         'require'
@@ -18,6 +19,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getAbsoluteURL,
         isCrossOriginUrl,
         RuntimeError,
         require) {
@@ -139,8 +141,8 @@ define([
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else if (defined(require.toUrl)) {
-            var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
-            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
+            bootstrapMessage.loaderConfig.baseUrl =
+                getAbsoluteURL('..', new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js')));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')

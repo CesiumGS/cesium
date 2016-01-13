@@ -14,6 +14,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/getAbsoluteURL',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -69,6 +70,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        getAbsoluteURL,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -809,12 +811,6 @@ define([
             }
         }
     });
-
-    function getAbsoluteURL(url) {
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(url);
-        return modelUri.resolve(docUri).toString();
-    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
