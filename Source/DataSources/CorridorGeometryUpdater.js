@@ -13,6 +13,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/Iso8601',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
@@ -35,6 +36,7 @@ define([
         GeometryInstance,
         Iso8601,
         ShowGeometryInstanceAttribute,
+        GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
@@ -454,6 +456,10 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
+        this._onTerrain = (!defined(height) && !defined(extrudedHeight) && isColorMaterial);
+        // When used on terrain we will pretend to be dynamic but may actually be constant.
+        this._isConstant = true;
+
         if (!positions.isConstant || //
             !Property.isConstant(height) || //
             !Property.isConstant(extrudedHeight) || //
@@ -461,6 +467,12 @@ define([
             !Property.isConstant(width) || //
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(cornerType)) {
+            if (!this._dynamic) {
+                this._dynamic = true;
+                this._isConstant = false;
+                this._geometryChanged.raiseEvent(this);
+            }
+        } else if(this._onTerrain) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -488,7 +500,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    CorridorGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    CorridorGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -499,14 +511,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        return new DynamicGeometryUpdater(primitives, this);
+        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
     };
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
@@ -519,13 +532,23 @@ define([
         }
         //>>includeEnd('debug');
 
+        var geometryUpdater = this._geometryUpdater;
+        var onTerrain = geometryUpdater._onTerrain;
+        if (defined(this._primitive) && geometryUpdater._isConstant) {
+            return;
+        }
+
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
 
-        var geometryUpdater = this._geometryUpdater;
         var entity = geometryUpdater._entity;
         var corridor = entity.corridor;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(corridor.show, time, true)) {
@@ -547,24 +570,43 @@ define([
         options.cornerType = Property.getValueOrUndefined(corridor.cornerType, time);
 
         if (!defined(corridor.fill) || corridor.fill.getValue(time)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
-            options.vertexFormat = appearance.vertexFormat;
+            if (onTerrain) {
+                var currentColor = Color.WHITE;
+                if (defined(fillMaterialProperty.color)) {
+                    currentColor = fillMaterialProperty.color.getValue(time);
+                }
 
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new CorridorGeometry(options)
-                }),
-                appearance : appearance,
-                asynchronous : false
-            }));
+                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                    geometryInstance : new GeometryInstance({
+                        id : entity,
+                        geometry : new CorridorGeometry(options),
+                        attributes: {
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                        }
+                    }),
+                    asynchronous : false
+                }));
+            } else {
+                var appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+                options.vertexFormat = appearance.vertexFormat;
+
+                this._primitive = primitives.add(new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new CorridorGeometry(options)
+                    }),
+                    appearance : appearance,
+                    asynchronous : false
+                }));
+            }
         }
 
         if (defined(corridor.outline) && corridor.outline.getValue(time)) {

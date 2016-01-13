@@ -551,8 +551,7 @@ define([
         var groundPrimitives = this._groundPrimitives;
         if (onTerrain) {
             groundPrimitives.removeAndDestroy(this._primitive);
-        }
-        else {
+        } else {
             primitives.removeAndDestroy(this._primitive);
         }
         primitives.removeAndDestroy(this._outlinePrimitive);
@@ -582,7 +581,7 @@ define([
 
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
             this._material = material;
 
             if (onTerrain) {
