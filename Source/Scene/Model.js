@@ -70,7 +70,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
-        getAbsoluteURL,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -943,7 +943,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
 
         options = clone(options);
         options.basePath = getBaseUri(url);
