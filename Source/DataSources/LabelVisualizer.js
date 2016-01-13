@@ -55,11 +55,11 @@ define([
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.label = undefined;
         this.index = undefined;
-    };
+    }
 
     /**
      * A {@link Visualizer} which maps the {@link LabelGraphics} instance
@@ -70,7 +70,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var LabelVisualizer = function(scene, entityCollection) {
+    function LabelVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -89,7 +89,7 @@ define([
         this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates the primitives created by this visualizer to match their

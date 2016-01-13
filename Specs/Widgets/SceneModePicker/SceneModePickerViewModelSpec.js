@@ -12,7 +12,7 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
     beforeEach(function() {
@@ -106,5 +106,4 @@ defineSuite([
             return new SceneModePickerViewModel();
         }).toThrowDeveloperError();
     });
-
-});
+}, 'WebGL');

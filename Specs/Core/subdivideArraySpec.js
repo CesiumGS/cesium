@@ -1,10 +1,9 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'Core/subdivideArray'
     ], function(
         subdivideArray) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('Splits evenly divided arrays', function() {
         var values = [1, 2, 3, 4];

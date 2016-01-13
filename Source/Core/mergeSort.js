@@ -71,7 +71,7 @@ define([
      *     return Cesium.BoundingSphere.distanceSquaredTo(b, position) - Cesium.BoundingSphere.distanceSquaredTo(a, position);
      * }, position);
      */
-    var mergeSort = function(array, comparator, userDefinedObject) {
+    function mergeSort(array, comparator, userDefinedObject) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array)) {
             throw new DeveloperError('array is required.');
@@ -93,7 +93,7 @@ define([
         // trim scratch arrays
         leftScratchArray.length = 0;
         rightScratchArray.length = 0;
-    };
+    }
 
     /**
      * A function used to compare two items while performing a merge sort.

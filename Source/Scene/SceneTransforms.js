@@ -26,8 +26,7 @@ define([
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
      *
-     * @namespace
-     * @alias SceneTransforms
+     * @exports SceneTransforms
      */
     var SceneTransforms = {};
 
@@ -205,8 +204,7 @@ define([
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
         // Assuming viewport takes up the entire canvas...
-        viewport.width = scene.drawingBufferWidth;
-        viewport.height = scene.drawingBufferHeight;
+        BoundingRectangle.clone(scene._passState.viewport, viewport);
         Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
 
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
@@ -235,9 +233,7 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
 
-        var viewport = uniformState.viewport;
-        var viewportTransformation = uniformState.viewportTransformation;
-
+        var viewport = scene._passState.viewport;
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;

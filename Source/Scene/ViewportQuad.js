@@ -38,7 +38,7 @@ define([
      * var viewportQuad = new Cesium.ViewportQuad(new Cesium.BoundingRectangle(0, 0, 80, 40));
      * viewportQuad.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 1.0);
      */
-    var ViewportQuad = function(rectangle, material) {
+    function ViewportQuad(rectangle, material) {
         /**
          * Determines if the viewport quad primitive will be shown.
          *
@@ -90,7 +90,7 @@ define([
 
         this._overlayCommand = undefined;
         this._rs = undefined;
-    };
+    }
 
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
@@ -181,10 +181,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ViewportQuad#isDestroyed
      *
      * @example
      * quad = quad && quad.destroy();
+     * 
+     * @see ViewportQuad#isDestroyed
      */
     ViewportQuad.prototype.destroy = function() {
         if (defined(this._overlayCommand)) {

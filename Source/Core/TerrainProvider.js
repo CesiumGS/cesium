@@ -23,9 +23,9 @@ define([
      * @see CesiumTerrainProvider
      * @see ArcGisImageServerTerrainProvider
      */
-    var TerrainProvider = function() {
+    function TerrainProvider() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainProvider.prototype, {
         /**
@@ -66,6 +66,16 @@ define([
          * @type {Boolean}
          */
         ready : {
+            get : DeveloperError.throwInstantiationError
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
             get : DeveloperError.throwInstantiationError
         },
 

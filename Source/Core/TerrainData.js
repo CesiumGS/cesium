@@ -17,9 +17,9 @@ define([
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
-    var TerrainData = function TerrainData() {
+    function TerrainData() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainData.prototype, {
         /**

@@ -12,6 +12,7 @@ define([
         '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -29,6 +30,7 @@ define([
         joinUrls,
         loadXML,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -63,15 +65,12 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://www.maptiler.org/|MapTiler}
-     * @see {@link http://www.klokan.cz/projects/gdal2tiles/|GDDAL2Tiles}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // TileMapService tile provider
@@ -85,8 +84,12 @@ define([
      *        Cesium.Math.toRadians(-60.0),
      *        Cesium.Math.toRadians(40.0))
      * });
+     * 
+     * @see {@link http://www.maptiler.org/|MapTiler}
+     * @see {@link http://www.klokan.cz/projects/gdal2tiles/|GDDAL2Tiles}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(options) {
+    function TileMapServiceImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -99,6 +102,7 @@ define([
 
         this._url = url;
         this._ready = false;
+        this._readyPromise = when.defer();
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._errorEvent = new Event();
@@ -177,6 +181,7 @@ define([
                 } else {
                     var message = joinUrls(url, 'tilemapresource.xml') + 'specifies an unsupported profile attribute, ' + tilingSchemeName + '.';
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+                    that._readyPromise.reject(new RuntimeError(message));
                     return;
                 }
             }
@@ -241,6 +246,7 @@ define([
 
             that._tilingScheme = tilingScheme;
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(error) {
@@ -253,6 +259,7 @@ define([
             that._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
             that._rectangle = defaultValue(options.rectangle, that._tilingScheme.rectangle);
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function requestMetadata() {
@@ -266,7 +273,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var yTiles = imageryProvider._tilingScheme.getNumberOfYTilesAtLevel(level);
@@ -464,6 +471,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof TileMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

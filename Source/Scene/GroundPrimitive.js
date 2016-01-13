@@ -74,6 +74,12 @@ define([
      * is supported at this time.
      * </p>
      * <p>
+     * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
+     * Firefox, and Edge. Apple support is expected in iOS 9 and MacOS Safari 9. Android support varies by hardware and IE11 will most likely never support
+     * it. You can use webglreport.com to verify support for your hardware. Finally, this feature is currently only supported in Primitives and not yet
+     * available via the Entity API.
+     * </p>
+     * <p>
      * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
      * </p>
      *
@@ -91,9 +97,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see Primitive
-     * @see GeometryInstance
-     * @see Appearance
      *
      * @example
      * var rectangleInstance = new Cesium.GeometryInstance({
@@ -108,8 +111,12 @@ define([
      * scene.primitives.add(new Cesium.GroundPrimitive({
      *   geometryInstance : rectangleInstance
      * }));
+     * 
+     * @see Primitive
+     * @see GeometryInstance
+     * @see Appearance
      */
-    var GroundPrimitive = function(options) {
+    function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -179,7 +186,7 @@ define([
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined
         };
-    };
+    }
 
     defineProperties(GroundPrimitive.prototype, {
         /**
@@ -302,7 +309,7 @@ define([
          */
         readyPromise : {
             get : function() {
-                return this._readyPromise;
+                return this._readyPromise.promise;
             }
         }
     });
@@ -317,9 +324,13 @@ define([
         return scene.context.fragmentDepth;
     };
 
-    GroundPrimitive._maxHeight = 9000.0;
-    GroundPrimitive._minHeight = -100000.0;
-    GroundPrimitive._minOBBHeight = -11500.0;
+    GroundPrimitive._maxHeight = undefined;
+    GroundPrimitive._minHeight = undefined;
+    GroundPrimitive._minOBBHeight = undefined;
+
+    GroundPrimitive._maxTerrainHeight = 9000.0;
+    GroundPrimitive._minTerrainHeight = -100000.0;
+    GroundPrimitive._minOBBTerrainHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -511,7 +522,7 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._createColumbusViewShader(ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive, ShadowVolumeVS, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
@@ -675,6 +686,13 @@ define([
             return;
         }
 
+        if (!defined(GroundPrimitive._maxHeight)) {
+            var exaggeration = frameState.terrainExaggeration;
+            GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
+            GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
+            GroundPrimitive._minOBBHeight = GroundPrimitive._minOBBTerrainHeight * exaggeration;
+        }
+
         if (!defined(this._primitive)) {
             var instance = this.geometryInstance;
             var geometry = instance.geometry;
@@ -781,10 +799,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see GroundPrimitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

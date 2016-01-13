@@ -44,8 +44,6 @@ define([
      *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
      *                                          cube centered at the origin.
      *
-     * @see BoundingSphere
-     * @see BoundingRectangle
      *
      * @example
      * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
@@ -53,8 +51,11 @@ define([
      * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+     * 
+     * @see BoundingSphere
+     * @see BoundingRectangle
      */
-    var OrientedBoundingBox = function(center, halfAxes) {
+    function OrientedBoundingBox(center, halfAxes) {
         /**
          * The center of the box.
          * @type {Cartesian3}
@@ -67,7 +68,7 @@ define([
          * @default {@link Matrix3.IDENTITY}
          */
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
-    };
+    }
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -191,7 +192,7 @@ define([
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
      */
-    var fromTangentPlaneExtents = function(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
+    function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(minimumX) ||
             !defined(maximumX) ||
@@ -228,7 +229,7 @@ define([
         Matrix3.multiplyByScale(halfAxes, scale, halfAxes);
 
         return result;
-    };
+    }
 
     var scratchRectangleCenterCartographic = new Cartographic();
     var scratchRectangleCenter = new Cartesian3();
@@ -470,7 +471,6 @@ define([
 
     var scratchCorner = new Cartesian3();
     var scratchToCenter = new Cartesian3();
-    var scratchProj = new Cartesian3();
 
     /**
      * The distances calculated by the vector from the center of the bounding box to position projected onto direction.
@@ -611,9 +611,9 @@ define([
     /**
      * Determines whether or not a bounding box is hidden from view by the occluder.
      *
-     * @param {OrientedBoundingBox} sphere The bounding box surrounding the occludee object.
+     * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
      * @param {Occluder} occluder The occluder.
-     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
      */
     OrientedBoundingBox.isOccluded = function(box, occluder) {
         //>>includeStart('debug', pragmas.debug);
@@ -625,18 +625,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var halfAxes = box.halfAxes;
-        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
-        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
-        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
-
-        var uHalf = Cartesian3.magnitude(u);
-        var vHalf = Cartesian3.magnitude(v);
-        var wHalf = Cartesian3.magnitude(w);
-
-        var sphere = scratchBoundingSphere;
-        sphere.center = Cartesian3.clone(box.center, sphere.center);
-        sphere.radius = Math.max(uHalf, vHalf, wHalf);
+        var sphere = BoundingSphere.fromOrientedBoundingBox(box, scratchBoundingSphere);
 
         return !occluder.isBoundingSphereVisible(sphere);
     };

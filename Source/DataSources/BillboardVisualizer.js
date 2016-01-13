@@ -55,11 +55,11 @@ define([
     var pixelOffsetScaleByDistance = new NearFarScalar();
     var boundingRectangle = new BoundingRectangle();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.billboard = undefined;
         this.textureValue = undefined;
-    };
+    }
 
     /**
      * A {@link Visualizer} which maps {@link Entity#billboard} to a {@link Billboard}.
@@ -69,7 +69,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var BillboardVisualizer = function(scene, entityCollection) {
+    function BillboardVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -87,7 +87,7 @@ define([
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates the primitives created by this visualizer to match their

@@ -32,9 +32,6 @@ define([
      * if not specified.
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
-     * @see loadText
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * Cesium.loadJson('http://someUrl.com/someJson.txt').then(function(jsonData) {
@@ -42,8 +39,12 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see loadText
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var loadJson = function loadJson(url, headers) {
+    function loadJson(url, headers) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -61,7 +62,7 @@ define([
         return loadText(url, headers).then(function(value) {
             return JSON.parse(value);
         });
-    };
+    }
 
     return loadJson;
 });

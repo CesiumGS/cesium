@@ -224,6 +224,7 @@ define([
             if (doCorner) {
                 cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
                 cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
+                cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
                 var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);

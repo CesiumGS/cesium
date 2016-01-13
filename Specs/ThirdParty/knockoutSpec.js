@@ -1,10 +1,9 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'ThirdParty/knockout'
     ], function(
         knockout) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('can track all properties', function() {
         var obj = {

@@ -4,16 +4,21 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/clone',
+        'Core/combine',
         'Core/defaultValue',
+        'Core/defined',
         'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
         'Core/loadArrayBuffer',
+        'Core/loadJson',
         'Core/Math',
         'Core/Matrix4',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Renderer/RenderState',
+        'Renderer/ShaderSource',
         'Renderer/WebGLConstants',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
@@ -24,33 +29,54 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        clone,
+        combine,
         defaultValue,
+        defined,
         FeatureDetection,
         HeadingPitchRange,
         JulianDate,
         loadArrayBuffer,
+        loadJson,
         CesiumMath,
         Matrix4,
         PrimitiveType,
         Transforms,
         RenderState,
+        ShaderSource,
         WebGLConstants,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
+    var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
+    var boxNoIndicesUrl = './Data/Models/Box-NoIndices/box-noindices.gltf';
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
+    var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
+    var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
+    var riggedSimpleUrl = './Data/Models/rigged-simple/rigged-simple.gltf';
+
+    var boxConstantUrl = './Data/Models/MaterialsCommon/BoxConstant.gltf';
+    var boxLambertUrl = './Data/Models/MaterialsCommon/BoxLambert.gltf';
+    var boxBlinnUrl = './Data/Models/MaterialsCommon/BoxBlinn.gltf';
+    var boxPhongUrl = './Data/Models/MaterialsCommon/BoxPhong.gltf';
+    var boxNoLightUrl = './Data/Models/MaterialsCommon/BoxNoLight.gltf';
+    var boxAmbientLightUrl = './Data/Models/MaterialsCommon/BoxAmbientLight.gltf';
+    var boxDirectionalLightUrl = './Data/Models/MaterialsCommon/BoxDirectionalLight.gltf';
+    var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
+    var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
+    var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
+    var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var texturedBoxModel;
     var cesiumAirModel;
@@ -70,6 +96,7 @@ defineSuite([
         }));
         modelPromises.push(loadModel(cesiumAirUrl, {
             minimumPixelSize : 1,
+            maximumScale : 200,
             asynchronous : false
         }).then(function(model) {
             cesiumAirModel = model;
@@ -100,19 +127,33 @@ defineSuite([
     }
 
     function loadModel(url, options) {
-        options = defaultValue(options, {});
-
-        var model = primitives.add(Model.fromGltf({
+        options = combine(options, {
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             url : url,
-            modelMatrix : defaultValue(options.modelMatrix, Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0))),
-            show : false,
-            scale : options.scale,
-            minimumPixelSize : options.minimumPixelSize,
-            id : url,        // for picking tests
-            asynchronous : options.asynchronous,
-            releaseGltfJson : options.releaseGltfJson,
-            cacheKey : options.cacheKey
-        }));
+            id : url,
+            show : false
+        });
+
+        var model = primitives.add(Model.fromGltf(options));
+        addZoomTo(model);
+
+        return pollToPromise(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            return model;
+        });
+    }
+
+    function loadModelJson(gltf, options) {
+        options = combine(options, {
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            gltf : gltf,
+            show : false
+        });
+
+        var model = primitives.add(new Model(options));
         addZoomTo(model);
 
         return pollToPromise(function() {
@@ -129,8 +170,10 @@ defineSuite([
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         model.show = true;
         model.zoomTo();
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        var pixelColor = scene.renderForSpecs();
+        expect(pixelColor).not.toEqual([0, 0, 0, 255]);
         model.show = false;
+        return pixelColor;
     }
 
     it('fromGltf throws without options', function() {
@@ -154,6 +197,7 @@ defineSuite([
        expect(texturedBoxModel.modelMatrix).toEqual(modelMatrix);
        expect(texturedBoxModel.scale).toEqual(1.0);
        expect(texturedBoxModel.minimumPixelSize).toEqual(0.0);
+       expect(texturedBoxModel.maximumScale).toBeUndefined();
        expect(texturedBoxModel.id).toEqual(texturedBoxUrl);
        expect(texturedBoxModel.allowPicking).toEqual(true);
        expect(texturedBoxModel.activeAnimations).toBeDefined();
@@ -175,38 +219,37 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise on error', function() {
+        var invalidGltf = clone(texturedBoxModel.gltf, true);
+        invalidGltf.shaders.CesiumTexturedBoxTest0FS.uri = 'invalid.glsl';
+
+        var model = primitives.add(new Model({
+            gltf : invalidGltf
+        }));
+
+        scene.renderForSpecs();
+
+        return model.readyPromise.then(function(model) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(model.ready).toEqual(false);
+            primitives.remove(model);
+        });
+    });
+
     it('renders from glTF', function() {
         // Simulate using procedural glTF as opposed to loading it from a file
-        var model = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-            show : false
-        }));
-        addZoomTo(model);
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             verifyRender(model);
             primitives.remove(model);
         });
     });
 
     it('Applies the right render state', function() {
-        // Simulate using procedural glTF as opposed to loading it from a file
-        var model = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf
-        }));
-
         spyOn(RenderState, 'fromCache').and.callThrough();
 
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return model.ready;
-        }, { timeout : 10000 }).then(function() {
+        // Simulate using procedural glTF as opposed to loading it from a file
+        return loadModelJson(texturedBoxModel.gltf).then(function(model) {
             var rs = {
                 frontFace : WebGLConstants.CCW,
                 cull : {
@@ -342,7 +385,7 @@ defineSuite([
         expect(texturedBoxModel.getMesh('name-of-mesh-that-does-not-exist')).not.toBeDefined();
     });
 
-    it('getMesh returns returns a mesh', function() {
+    it('getMesh returns a mesh', function() {
         var mesh = texturedBoxModel.getMesh('Mesh');
         expect(mesh).toBeDefined();
         expect(mesh.name).toEqual('Mesh');
@@ -367,7 +410,7 @@ defineSuite([
         expect(texturedBoxModel.getMaterial('name-of-material-that-does-not-exist')).not.toBeDefined();
     });
 
-    it('getMaterial returns returns a material', function() {
+    it('getMaterial returns a material', function() {
         var material = texturedBoxModel.getMaterial('Texture');
         expect(material).toBeDefined();
         expect(material.name).toEqual('Texture');
@@ -430,6 +473,20 @@ defineSuite([
         texturedBoxModel.scale = originalScale;
     });
 
+    it('boundingSphere returns the bounding sphere when maximumScale is reached', function() {
+        var originalScale = texturedBoxModel.scale;
+        var originalMaximumScale = texturedBoxModel.maximumScale;
+        texturedBoxModel.scale = 20;
+        texturedBoxModel.maximumScale = 10;
+
+        var boundingSphere = texturedBoxModel.boundingSphere;
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+
+        texturedBoxModel.scale = originalScale;
+        texturedBoxModel.maximumScale = originalMaximumScale;
+    });
+
     it('boundingSphere returns the bounding sphere when modelMatrix has non-uniform scale', function() {
         var originalMatrix = Matrix4.clone(texturedBoxModel.modelMatrix);
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
@@ -451,6 +508,51 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    it('Throws because of invalid extension', function() {
+        return loadJson(boxUrl).then(function(gltf) {
+            gltf.extensionsUsed = ['NOT_supported_extension'];
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
+
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+            primitives.remove(model);
+        });
+    });
+
+    it('loads a glTF v0.8 model', function() {
+        return loadModel(cesiumAir_0_8Url, {
+            minimumPixelSize : 1
+        }).then(function(m) {
+            // 0.8 models had a number version. Verify it is converted to a string.
+            expect(m.gltf.asset.version).toEqual('0.8');
+
+            // Verify that rotation is converted from
+            // Axis-Angle (1,0,0,0) to Quaternion (0,0,0,1)
+            var rotation = m.gltf.nodes['Geometry-mesh005Node'].rotation;
+            expect(rotation).toEqual([0.0, 0.0, 0.0, 1.0]);
+
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model that doesn\'t have a technique', function() {
+        return loadModel(boxNoTechniqueUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF model that doesn\'t have indices', function() {
+        return loadModel(boxNoIndicesUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('renders texturedBoxCustom (all uniform semantics)', function() {
         return loadModel(texturedBoxCustomUrl).then(function(m) {
             verifyRender(m);
@@ -467,20 +569,7 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : arrayBuffer,
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
-
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+            return loadModelJson(arrayBuffer).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -489,20 +578,32 @@ defineSuite([
 
     it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
         return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            var model = primitives.add(new Model({
-                gltf : new Uint8Array(arrayBuffer),
-                modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-                show : false
-            }));
-            addZoomTo(model);
+            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
 
-            return pollToPromise(function() {
-                // Render scene to progressively load the model
-                scene.renderForSpecs();
-                return model.ready;
-            }, {
-                timeout : 10000
-            }).then(function() {
+    it('renders a model with the KHR_binary_glTF extension', function() {
+        return loadModel(texturedBoxKhrBinaryUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a model with the KHR_binary_glTF extension as an ArrayBuffer using new Model', function() {
+        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+            return loadModelJson(arrayBuffer).then(function(model) {
+                verifyRender(model);
+                primitives.remove(model);
+            });
+        });
+    });
+
+    it('loads a model with the KHR_binary_glTF extension as an Uint8Array using new Model', function() {
+        return loadArrayBuffer(texturedBoxKhrBinaryUrl).then(function(arrayBuffer) {
+            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
                 verifyRender(model);
                 primitives.remove(model);
             });
@@ -510,24 +611,24 @@ defineSuite([
     });
 
     it('Throws because of an invalid Binary glTF header - magic', function() {
+        var arrayBuffer = new ArrayBuffer(16);
         expect(function() {
-            var arrayBuffer = new ArrayBuffer(16);
-            var model = new Model({
+            return new Model({
                 gltf : arrayBuffer
             });
         }).toThrowDeveloperError();
     });
 
     it('Throws because of an invalid Binary glTF header - version', function() {
-        expect(function() {
-            var arrayBuffer = new ArrayBuffer(16);
-            var bytes = new Uint8Array(arrayBuffer);
-            bytes[0] = 'g'.charCodeAt(0);
-            bytes[1] = 'l'.charCodeAt(0);
-            bytes[2] = 'T'.charCodeAt(0);
-            bytes[3] = 'F'.charCodeAt(0);
+        var arrayBuffer = new ArrayBuffer(16);
+        var bytes = new Uint8Array(arrayBuffer);
+        bytes[0] = 'g'.charCodeAt(0);
+        bytes[1] = 'l'.charCodeAt(0);
+        bytes[2] = 'T'.charCodeAt(0);
+        bytes[3] = 'F'.charCodeAt(0);
 
-            var model = new Model({
+        expect(function() {
+            return new Model({
                 gltf : arrayBuffer
             });
         }).toThrowDeveloperError();
@@ -558,6 +659,7 @@ defineSuite([
 
     it('loads cesiumAir', function() {
         expect(cesiumAirModel.minimumPixelSize).toEqual(1);
+        expect(cesiumAirModel.maximumScale).toEqual(200);
         expect(cesiumAirModel.asynchronous).toEqual(false);
     });
 
@@ -1039,6 +1141,12 @@ defineSuite([
         });
     });
 
+    it('does not animate when there are no animations', function() {
+        var animations = animBoxesModel.activeAnimations;
+        expect(animations.length).toEqual(0);
+        expect(animations.update()).toEqual(false);
+    });
+
     ///////////////////////////////////////////////////////////////////////////
 
     it('renders riggedFigure without animation', function() {
@@ -1067,6 +1175,13 @@ defineSuite([
         riggedFigureModel.show = false;
     });
 
+    it('renders riggedSimple', function() {
+        return loadModel(riggedSimpleUrl).then(function(m) {
+            expect(m).toBeDefined();
+            verifyRender(m);
+        });
+    });
+
     it('should load a model where WebGL shader optimizer removes an attribute (linux)', function() {
         var url = './Data/Models/test-shader-optimize/test-shader-optimize.gltf';
         return loadModel(url).then(function(m) {
@@ -1075,7 +1190,7 @@ defineSuite([
         });
     });
 
-    it('releaseGltfJson releases glTFJSON when constructed with fromGltf', function() {
+    it('releaseGltfJson releases glTF JSON when constructed with fromGltf', function() {
         return loadModel(boxUrl, {
             releaseGltfJson : true
         }).then(function(m) {
@@ -1088,20 +1203,11 @@ defineSuite([
     });
 
     it('releaseGltfJson releases glTF JSON when constructed with Model constructor function', function() {
-        var m = primitives.add(new Model({
-            gltf : texturedBoxModel.gltf,
-            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
-            show : false,
+        return loadModelJson(texturedBoxModel.gltf, {
             releaseGltfJson : true,
+            incrementallyLoadTextures : false,
             asynchronous : true
-        }));
-        addZoomTo(m);
-
-        return pollToPromise(function() {
-            // Render scene to progressively load the model
-            scene.renderForSpecs();
-            return m.ready;
-        }, { timeout : 10000 }).then(function() {
+        }).then(function(m) {
             expect(m.releaseGltfJson).toEqual(true);
             expect(m.gltf).not.toBeDefined();
 
@@ -1175,7 +1281,6 @@ defineSuite([
         var promise = loadModel(boxUrl, {
             cacheKey : key
         });
-        var m2;
 
         expect(gltfCache[key]).toBeDefined();
         expect(gltfCache[key].count).toEqual(1);
@@ -1222,6 +1327,7 @@ defineSuite([
             modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
             show : false,
             cacheKey : key,
+            incrementallyLoadTextures : false,
             asynchronous : true
         }));
         addZoomTo(m);
@@ -1327,6 +1433,274 @@ defineSuite([
             primitives.remove(m3);
             expect(gltfCache[key3]).not.toBeDefined();
             expect(modelRendererResourceCache[key3]).not.toBeDefined();
+        });
+    });
+
+    it('Loads with incrementallyLoadTextures set to true', function() {
+        return loadModelJson(texturedBoxModel.gltf, {
+            incrementallyLoadTextures : true
+        }).then(function(m) {
+            // Get the rendered color of the model before textures are loaded
+            var loadedColor = verifyRender(m);
+
+            pollToPromise(function() {
+                // Render scene to progressively load textures
+                scene.renderForSpecs();
+                // Textures have finished loading
+                return (m.pendingTextureLoads === 0);
+            }, { timeout : 10000 }).then(function() {
+                var finishedColor = verifyRender(m);
+                expect(finishedColor).not.toEqual(loadedColor);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('Loads with incrementallyLoadTextures set to false', function() {
+        return loadModelJson(texturedBoxModel.gltf, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
+            // Get the rendered color of the model before textures are loaded
+            var loadedColor = verifyRender(m);
+
+            pollToPromise(function() {
+                // Render scene to progressively load textures (they should already be loaded)
+                scene.renderForSpecs();
+                // Textures have finished loading
+                return !defined(m._loadResources);
+            }, { timeout : 10000 }).then(function() {
+                var finishedColor = verifyRender(m);
+                expect(finishedColor).toEqual(loadedColor);
+                primitives.remove(m);
+            });
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the constant lighting model', function() {
+        return loadModel(boxConstantUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the lambert lighting model', function() {
+        return loadModel(boxLambertUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the blinn lighting model', function() {
+        return loadModel(boxBlinnUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using the phong lighting model', function() {
+        return loadModel(boxPhongUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a black ambient/directional light', function() {
+        return loadModel(boxNoLightUrl).then(function(m) {
+            // Verify that we render a black model because lighting is completely off
+            expect(m.ready).toBe(true);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = true;
+            m.zoomTo();
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = false;
+
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using an ambient light', function() {
+        return loadModel(boxAmbientLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a directional light', function() {
+        return loadModel(boxDirectionalLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a point light', function() {
+        return loadModel(boxPointLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common using a spot light', function() {
+        return loadModel(boxSpotLightUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common that has skinning', function() {
+        return loadModel(CesiumManUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_materials_common that has transparency', function() {
+        return loadModel(boxTransparentUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
+        function vertexShaderLoaded(vs) {
+            var renamedSource = ShaderSource.replaceMain(vs, 'czm_old_main');
+            var newMain =
+                'attribute vec4 a_color;\n' +
+                'varying vec4 v_color;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    czm_old_main();\n' +
+                '    v_color = a_color;\n' +
+                '}';
+            return renamedSource + '\n' + newMain;
+        }
+
+        function fragmentShaderLoaded(fs) {
+            fs = 'uniform float u_value;\n' +
+                 'varying vec4 v_color;\n' +
+                 'void main()\n' +
+                 '{\n' +
+                 '    gl_FragColor = u_value * v_color;\n' +
+                 '}';
+            return fs;
+        }
+
+        function uniformMapLoaded(uniformMap) {
+            return combine(uniformMap, {
+                u_value : function() {
+                    return 1.0;
+                }
+            });
+        }
+
+        var precreatedAttributes = {
+            a_color : {
+                index                  : 0, // updated in Model
+                componentsPerAttribute : 4,
+                value                  : [1.0, 1.0, 1.0, 1.0]
+            }
+        };
+
+        var options = {
+            precreatedAttributes : precreatedAttributes,
+            vertexShaderLoaded : vertexShaderLoaded,
+            fragmentShaderLoaded : fragmentShaderLoaded,
+            uniformMapLoaded : uniformMapLoaded
+        };
+
+        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
+            var pixelColor = verifyRender(model);
+            expect(pixelColor).toEqual([255, 255, 255, 255]);
+            primitives.remove(model);
+        });
+    });
+
+    it('loads with custom pickFragmentShader and pickUniformMap', function() {
+        function pickFragmentShaderLoaded(fs) {
+            return ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+        }
+
+        var pickId = scene.context.createPickId({
+            custom : 'custom'
+        });
+
+        function pickUniformMapLoaded(uniformMap) {
+            return combine(uniformMap, {
+                czm_pickColor : function() {
+                    return pickId.color;
+                }
+            });
+        }
+
+        var options = {
+            pickFragmentShaderLoaded : pickFragmentShaderLoaded,
+            pickUniformMapLoaded : pickUniformMapLoaded
+        };
+
+        return loadModelJson(texturedBoxModel.gltf, options).then(function(model) {
+            model.show = true;
+            var pick = scene.pick(new Cartesian2(0, 0));
+            expect(pick.custom).toEqual('custom');
+            primitives.remove(model);
+        });
+    });
+
+    it('does not issue draw commands when ignoreCommands is true', function() {
+        return loadModel(texturedBoxUrl, {
+            ignoreCommands : true
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            m.show = true;
+
+            m.zoomTo();
+            m.update(scene.frameState);
+            expect(scene.frameState.commandList.length).toEqual(0);
+
+            m.show = false;
+            primitives.remove(m);
+        });
+    });
+
+    it('does not issue draw commands when the model is out of view and cull is true', function() {
+        return loadModel(texturedBoxUrl, {
+            cull : true
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            m.show = true;
+
+            // Look at the model
+            m.zoomTo();
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            // Move the model out of view
+            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(100000.0, 0.0, 0.0));
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).toEqual(0);
+
+            m.show = false;
+            primitives.remove(m);
+        });
+    });
+
+    it('issues draw commands when the model is out of view and cull is false', function() {
+        return loadModel(texturedBoxUrl, {
+            cull : false
+        }).then(function(m) {
+            expect(m.ready).toBe(true);
+            m.show = true;
+
+            // Look at the model
+            m.zoomTo();
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            // Move the model out of view
+            m.modelMatrix = Matrix4.fromTranslation(new Cartesian3(10000000000.0, 0.0, 0.0));
+            scene.renderForSpecs();
+            expect(scene._frustumCommandsList.length).not.toEqual(0);
+
+            m.show = false;
+            primitives.remove(m);
         });
     });
 

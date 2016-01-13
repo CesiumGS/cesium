@@ -65,8 +65,11 @@
     "asset": {
         "generator": "collada2gltf@",
         "premultipliedAlpha": true,
-        "profile": "WebGL 1.0.2",
-        "version": 0.8
+        "profile": {
+            "api": "WebGL",
+            "version": "1.0.2"
+        },
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -91,25 +94,24 @@
     },
     "images": {
         "Image0001": {
-            "uri": "Cesium_Logo_Flat.png"
+            "name": "Image0001",
+            "uri": "Cesium_Logo_Flat.jpg"
         }
     },
     "materials": {
         "Effect-Texture": {
-            "instanceTechnique": {
-                "technique": "technique0",
-                "values": {
-                    "diffuse": "texture_Image0001",
-                    "shininess": 256,
-                    "specular": [
-                        0.2,
-                        0.2,
-                        0.2,
-                        1
-                    ]
-                }
-            },
-            "name": "Texture"
+            "name": "Texture",
+            "technique": "technique0",
+            "values": {
+                "diffuse": "texture_Image0001",
+                "shininess": 256,
+                "specular": [
+                    0.20000000298023224,
+                    0.20000000298023224,
+                    0.20000000298023224,
+                    1
+                ]
+            }
         }
     },
     "meshes": {
@@ -124,7 +126,7 @@
                     },
                     "indices": "accessor_21",
                     "material": "Effect-Texture",
-                    "primitive": 4
+                    "mode": 4
                 }
             ]
         }
@@ -267,6 +269,11 @@
     "skins": {},
     "techniques": {
         "technique0": {
+            "attributes": {
+                "a_normal": "normal",
+                "a_position": "position",
+                "a_texcoord0": "texcoord0"
+            },
             "parameters": {
                 "diffuse": {
                     "type": 35678
@@ -302,52 +309,20 @@
                     "type": 35664
                 }
             },
-            "pass": "defaultPass",
-            "passes": {
-                "defaultPass": {
-                    "details": {
-                        "commonProfile": {
-                            "extras": {
-                                "doubleSided": false
-                            },
-                            "lightingModel": "Phong",
-                            "parameters": [
-                                "diffuse",
-                                "modelViewMatrix",
-                                "normalMatrix",
-                                "projectionMatrix",
-                                "shininess",
-                                "specular"
-                            ],
-                            "texcoordBindings": {
-                                "diffuse": "TEXCOORD_0"
-                            }
-                        },
-                        "type": "COLLADA-1.4.1/commonProfile"
-                    },
-                    "instanceProgram": {
-                        "attributes": {
-                            "a_normal": "normal",
-                            "a_position": "position",
-                            "a_texcoord0": "texcoord0"
-                        },
-                        "program": "program_0",
-                        "uniforms": {
-                            "u_diffuse": "diffuse",
-                            "u_modelViewMatrix": "modelViewMatrix",
-                            "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_shininess": "shininess",
-                            "u_specular": "specular"
-                        }
-                    },
-                    "states": {
-                        "enable": [
-                            2884,
-                            2929
-                        ]
-                    }
-                }
+            "program": "program_0",
+            "states": {
+                "enable": [
+                    2929,
+                    2884
+                ]
+            },
+            "uniforms": {
+                "u_diffuse": "diffuse",
+                "u_modelViewMatrix": "modelViewMatrix",
+                "u_normalMatrix": "normalMatrix",
+                "u_projectionMatrix": "projectionMatrix",
+                "u_shininess": "shininess",
+                "u_specular": "specular"
             }
         }
     },

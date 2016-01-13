@@ -87,9 +87,7 @@ define([
     'marker-size', 'marker-symbol', 'marker-color', 'stroke', //
     'stroke-opacity', 'stroke-width', 'fill', 'fill-opacity'];
 
-    var stringifyScratch = new Array(4);
-
-    function describe(properties, nameProperty) {
+    function defaultDescribe(properties, nameProperty) {
         var html = '';
         for ( var key in properties) {
             if (properties.hasOwnProperty(key)) {
@@ -99,7 +97,7 @@ define([
                 var value = properties[key];
                 if (definedNotNull(value)) {
                     if (typeof value === 'object') {
-                        html += '<tr><th>' + key + '</th><td>' + describe(value) + '</td></tr>';
+                        html += '<tr><th>' + key + '</th><td>' + defaultDescribe(value) + '</td></tr>';
                     } else {
                         html += '<tr><th>' + key + '</th><td>' + value + '</td></tr>';
                     }
@@ -114,7 +112,7 @@ define([
         return html;
     }
 
-    function createDescriptionCallback(properties, nameProperty) {
+    function createDescriptionCallback(describe, properties, nameProperty) {
         var description;
         return function(time, result) {
             if (!defined(description)) {
@@ -124,10 +122,14 @@ define([
         };
     }
 
+    function defaultDescribeProperty(properties, nameProperty) {
+        return new CallbackProperty(createDescriptionCallback(defaultDescribe, properties, nameProperty), true);
+    }
+
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple entity,
     //we can't use it for them either.
-    function createObject(geoJson, entityCollection) {
+    function createObject(geoJson, entityCollection, describe) {
         var id = geoJson.id;
         if (!definedNotNull(id) || geoJson.type !== 'Feature') {
             id = createGuid();
@@ -189,7 +191,7 @@ define([
 
             var description = properties.description;
             if (!defined(description)) {
-                entity.description = new CallbackProperty(createDescriptionCallback(properties, nameProperty), true);
+                entity.description = describe(properties, nameProperty);
             } else if (description !== null) {
                 entity.description = new ConstantProperty(description);
             }
@@ -213,7 +215,7 @@ define([
 
         if (feature.geometry === null) {
             //Null geometry is allowed, so just create an empty entity instance for it.
-            createObject(feature, dataSource._entityCollection);
+            createObject(feature, dataSource._entityCollection, options.describe);
         } else {
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
@@ -263,11 +265,6 @@ define([
             }
         }
 
-        stringifyScratch[0] = symbol;
-        stringifyScratch[1] = color;
-        stringifyScratch[2] = size;
-        var id = JSON.stringify(stringifyScratch);
-
         var canvasOrPromise;
         if (defined(symbol)) {
             if (symbol.length === 1) {
@@ -284,7 +281,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            var entity = createObject(geoJson, dataSource._entityCollection);
+            var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
         }));
@@ -334,7 +331,7 @@ define([
         polyline.width = widthProperty;
         polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
 
-        var entity = createObject(geoJson, dataSource._entityCollection);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         entity.polyline = polyline;
     }
 
@@ -417,7 +414,7 @@ define([
             polygon.perPositionHeight = new ConstantProperty(true);
         }
 
-        var entity = createObject(geoJson, dataSource._entityCollection);
+        var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         entity.polygon = polygon;
     }
 
@@ -490,16 +487,16 @@ define([
      *   markerSymbol: '?'
      * }));
      */
-    var GeoJsonDataSource = function(name) {
+    function GeoJsonDataSource(name) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
         this._isLoading = false;
         this._loading = new Event();
-        this._entityCollection = new EntityCollection();
+        this._entityCollection = new EntityCollection(this);
         this._promises = [];
         this._pinBuilder = new PinBuilder();
-    };
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided GeoJSON or TopoJSON data.
@@ -732,6 +729,8 @@ define([
      * @param {String|Object} data A url, GeoJSON object, or TopoJSON object to be loaded.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {GeoJsonDataSource~describe} [options.describe=GeoJsonDataSource.defaultDescribeProperty] A function which returns a Property object (or just a string),
+     *                                                                                which converts the properties into an html description.
      * @param {Number} [options.markerSize=GeoJsonDataSource.markerSize] The default size of the map pin created for each point, in pixels.
      * @param {String} [options.markerSymbol=GeoJsonDataSource.markerSymbol] The default symbol of the map pin created for each point.
      * @param {Color} [options.markerColor=GeoJsonDataSource.markerColor] The default color of the map pin created for each point.
@@ -761,6 +760,7 @@ define([
         }
 
         options = {
+            describe: defaultValue(options.describe, defaultDescribeProperty),
             markerSize : defaultValue(options.markerSize, defaultMarkerSize),
             markerSymbol : defaultValue(options.markerSymbol, defaultMarkerSymbol),
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
@@ -775,7 +775,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
-            window.console.log(error);
+            console.log(error);
             return when.reject(error);
         });
     };
@@ -845,6 +845,13 @@ define([
             });
         });
     }
+
+    /**
+     * This callback is displayed as part of the GeoJsonDataSource class.
+     * @callback GeoJsonDataSource~describe
+     * @param {Object} properties The properties of the feature.
+     * @param {String} nameProperty The property key that Cesium estimates to have the name of the feature.
+     */
 
     return GeoJsonDataSource;
 });

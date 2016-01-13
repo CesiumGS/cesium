@@ -29,9 +29,6 @@ define([
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
-     * @see HermiteSpline
-     * @see CatmullRomSpline
-     * @see QuaternionSpline
      *
      * @example
      * var times = [ 0.0, 1.5, 3.0, 4.5, 6.0 ];
@@ -47,8 +44,12 @@ define([
      * });
      *
      * var p0 = spline.evaluate(times[0]);
+     * 
+     * @see HermiteSpline
+     * @see CatmullRomSpline
+     * @see QuaternionSpline
      */
-    var LinearSpline = function(options) {
+    function LinearSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var points = options.points;
@@ -70,7 +71,7 @@ define([
         this._points = points;
 
         this._lastTimeIndex = 0;
-    };
+    }
 
     defineProperties(LinearSpline.prototype, {
         /**

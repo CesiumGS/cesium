@@ -24,8 +24,8 @@ define([
     /**
      * @private
      */
-    var ModelAnimationCache = function() {
-    };
+    function ModelAnimationCache() {
+    }
 
     function getAccessorKey(model, accessor) {
         var gltf = model.gltf;
@@ -55,6 +55,8 @@ define([
             // Cache miss
             var loadResources = model._loadResources;
             var gltf = model.gltf;
+            var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
+
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
@@ -80,7 +82,12 @@ define([
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
-                    values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
+                    if (hasAxisAngle) {
+                        values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
+                    }
+                    else {
+                        values[i] = Quaternion.unpack(typedArray, byteOffset);
+                    }
                 }
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
@@ -102,10 +109,9 @@ define([
     }
 
  // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
-    var ConstantSpline = function(value) {
+    function ConstantSpline(value) {
         this._value = value;
-    };
-
+    }
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };

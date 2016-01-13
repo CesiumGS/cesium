@@ -158,6 +158,7 @@ function sprintf () {
     if (!chr) {
       chr = ' ';
     }
+
     var padding = (str.length >= len) ? '' : Array(1 + len - str.length >>> 0).join(chr);
     return leftJustify ? str + padding : padding + str;
   };

@@ -26,7 +26,6 @@ defineSuite([
         createFrameState,
         render) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var frameState;
@@ -54,7 +53,7 @@ defineSuite([
     beforeEach(function() {
         frameState = createFrameState(context);
 
-        frameState.camera.viewRectangle(rectangle);
+        frameState.camera.setView({ destination : rectangle });
         var us = context.uniformState;
         us.update(frameState);
     });

@@ -1,35 +1,57 @@
 {
   "name": "cesium",
-  "version": "1.14.0",
+  "version": "1.17.0",
   "description": "Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
+  "author": {
+    "name": "Analytical Graphics, Inc.",
+    "url": "http://www.agi.com"
+  },
+  "contributors": {
+    "name": "Cesium community",
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+  },
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/AnalyticalGraphicsInc/cesium.git"
   },
+  "bugs": {
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
+    "email": "cesium-dev@googlegroups.com"
+  },
+  "dependencies": {
+    "requirejs": "2.1.22"
+  },
   "devDependencies": {
     "almond": "0.3.1",
-    "async": "^1.4.2",
-    "bluebird": "^2.10.2",
+    "async": "1.5.0",
+    "bluebird": "3.0.5",
     "compression": "1.6.0",
-    "event-stream": "^3.3.2",
+    "event-stream": "3.3.2",
     "express": "4.13.3",
-    "globby": "^3.0.1",
-    "gulp": "^3.9.0",
-    "gulp-insert": "^0.5.0",
-    "gulp-jshint": "^1.11.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^0.5.4",
-    "gulp-zip": "^3.0.2",
-    "jsdoc": "3.3.3",
-    "jshint-stylish": "^2.0.1",
-    "mkdirp": "^0.5.1",
-    "request": "2.65.0",
-    "requirejs": "2.1.20",
-    "rimraf": "^2.4.3",
-    "strip-comments": "^0.3.2",
-    "yargs": "3.27.0"
+    "globby": "4.0.0",
+    "gulp": "3.9.0",
+    "gulp-insert": "0.5.0",
+    "gulp-jshint": "2.0.0",
+    "gulp-rename": "1.2.2",
+    "gulp-replace": "0.5.4",
+    "gulp-zip": "3.0.2",
+    "jsdoc": "3.4.0",
+    "jshint": "2.8.0",
+    "jshint-stylish": "2.1.0",
+    "mkdirp": "0.5.1",
+    "request": "2.67.0",
+    "rimraf": "2.4.4",
+    "strip-comments": "0.3.2",
+    "yargs": "3.30.0"
   },
   "scripts": {
     "start": "node server.js",

@@ -16,8 +16,6 @@ defineSuite([
         TimeStandard,
         Transforms) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
-
 
     // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the
     // sun center of mass point and the earth J2000 reference frame.

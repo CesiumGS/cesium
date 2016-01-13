@@ -32,7 +32,6 @@ define([
         createFrameState,
         destroyCanvas) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties

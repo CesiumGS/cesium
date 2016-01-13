@@ -6,7 +6,7 @@ defineSuite([
         SphereOutlineGeometry,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
             return new SphereOutlineGeometry({

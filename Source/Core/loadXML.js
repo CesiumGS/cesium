@@ -17,9 +17,6 @@ define([
      * @param {Object} [headers] HTTP headers to send with the request.
      * @returns {Promise.<XMLDocument>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load XML from a URL, setting a custom header
@@ -30,15 +27,19 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var loadXML = function(url, headers) {
+    function loadXML(url, headers) {
         return loadWithXhr({
             url : url,
             responseType : 'document',
             headers : headers,
             overrideMimeType : 'text/xml'
         });
-    };
+    }
 
     return loadXML;
 });
