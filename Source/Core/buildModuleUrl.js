@@ -1,10 +1,10 @@
 /*global define*/
 define([
-           '../ThirdParty/Uri',
-           './defined',
-           './DeveloperError',
-           './getAbsoluteUri',
-           'require'
+        '../ThirdParty/Uri',
+        './defined',
+        './DeveloperError',
+        './getAbsoluteUri',
+        'require'
     ], function(
         Uri,
         defined,
