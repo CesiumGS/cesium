@@ -5,37 +5,47 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError'
+        './DeveloperError',
+        './Queue',
+        './Request'
     ], function(
         Uri,
         when,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError) {
+        DeveloperError,
+        Queue,
+        Request) {
     "use strict";
 
-    var RequestTypeBudget = function(type) {
+    function RequestTypeBudget(request) {
         /**
-         * Total requests allowed this frame
+         * Total requests allowed this frame.
          */
         this.total = 0;
 
         /**
-         * Total requests used this frame
+         * Total requests used this frame.
          */
         this.used = 0;
 
         /**
-         * Type of request. Used for more fine-grained priority sorting
+         * Server of the request.
          */
-        this.type = type;
-    };
+        this.server = request.server;
+
+        /**
+         * Type of request. Used for more fine-grained priority sorting.
+         */
+        this.requestType = request.requestType;
+    }
 
     var activeRequestsByServer = {};
     var activeRequests = 0;
-    var budgets = {};
+    var budgets = [];
     var leftoverRequests = [];
+    var deferredRequests = new Queue();
 
     var stats = {
         numberOfRequestsThisFrame : 0
@@ -55,50 +65,41 @@ define([
     function RequestScheduler() {
     }
 
-    function handleLeftoverRequest(url, type, distance) {
-        // TODO : don't create a new object, reuse instead
-        leftoverRequests.push({
-            url : url,
-            type : type,
-            distance : defaultValue(distance, 0.0)
-        });
-    }
-
-    function printStats() {
-        if (stats.numberOfRequestsThisFrame > 0) {
-            console.log('Number of requests attempted: ' + stats.numberOfRequestsThisFrame);
-        }
-
-        var numberOfActiveRequests = RequestScheduler.maximumRequests - RequestScheduler.getNumberOfAvailableRequests();
-        if (numberOfActiveRequests > 0) {
-            console.log('Number of active requests: ' + numberOfActiveRequests);
-        }
-    }
-
     function distanceSortFunction(a, b) {
         return a.distance - b.distance;
     }
 
+    function getBudget(request) {
+        var budget;
+        var length = budgets.length;
+        for (var i = 0; i < length; ++i) {
+            budget = budgets[i];
+            if ((budget.server === request.server) && (budget.requestType === request.requestType)) {
+                return budget;
+            }
+        }
+        // Not found, create a new budget
+        budget = new RequestTypeBudget(request);
+        budgets.push(budget);
+        return budget;
+    }
+
     RequestScheduler.resetBudgets = function() {
-        // TODO : Right now, assume that requests made the previous frame will probably be issued again the current frame
-        // TODO : If this assumption changes, we should introduce stealing from other budgets.
+        showStats();
+        clearStats();
 
         if (!RequestScheduler.prioritize) {
             return;
         }
 
-        printStats();
-        stats.numberOfRequestsThisFrame = 0;
-
         // Reset budget totals
-        for (var name in budgets) {
-            if (budgets.hasOwnProperty(name)) {
-                budgets[name].total = 0;
-                budgets[name].used = 0;
-            }
+        var length = budgets.length;
+        for (var i = 0; i < length; ++i) {
+            budgets[i].total = 0;
+            budgets[i].used = 0;
         }
 
-        // Sort all requests made this frame by distance
+        // Sort all leftover requests by distance
         var requests = leftoverRequests;
         requests.sort(distanceSortFunction);
 
@@ -107,8 +108,7 @@ define([
         var requestsLength = requests.length;
         for (var j = 0; (j < requestsLength) && (availableRequests > 0); ++j) {
             var request = requests[j];
-            var server = RequestScheduler.getServer(request.url);
-            var budget = budgets[server];
+            var budget = getBudget(request);
             var budgetAvailable = RequestScheduler.getNumberOfAvailableRequestsByServer(request.url);
             if (budget.total < budgetAvailable) {
                 ++budget.total;
@@ -188,16 +188,49 @@ define([
         return true;
     };
 
+    function requestComplete(request) {
+        --activeRequests;
+        --activeRequestsByServer[request.server];
+
+        // Start a deferred request immediately now that a slot is open
+        var deferredRequest = deferredRequests.dequeue();
+        if (defined(deferredRequest)) {
+            deferredRequest.startPromise.resolve(deferredRequest);
+        }
+    }
+
+    function startRequest(request) {
+        ++activeRequests;
+        ++activeRequestsByServer[request.server];
+
+        return when(request.requestFunction(request.url, request.parameters), function(result) {
+            requestComplete(request);
+            return result;
+        }).otherwise(function(error) {
+            requestComplete(request);
+            return when.reject(error);
+        });
+    }
+
+    function deferRequest(request) {
+        deferredRequests.enqueue(request);
+        var deferred = when.defer();
+        request.startPromise = deferred;
+        return deferred.promise.then(startRequest);
+    }
+
+    function handleLeftoverRequest(request) {
+        if (RequestScheduler.prioritize) {
+            leftoverRequests.push(request);
+        }
+    }
+
     /**
      * A function that will make a request if there are available slots to the server.
      * Returns undefined immediately if the request would exceed the maximum, allowing
      * the caller to retry later instead of queueing indefinitely under the browser's control.
      *
-     * @param {String} url The URL to request.
-     * @param {RequestScheduler~RequestFunction} requestFunction The actual function that
-     *        makes the request.
-     * @param {RequestType} [requestType] The type of request being issued.
-     * @param {Number} [distance] The distance from the camera, used to prioritize requests.
+     * @param {Request} request The request object.
      *
      * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
@@ -209,7 +242,11 @@ define([
      *   // in this simple example, loadImage could be used directly as requestFunction.
      *   return Cesium.loadImage(url);
      * };
-     * var promise = Cesium.RequestScheduler.throttleRequest(url, requestFunction);
+     * var request = new Request({
+     *   url : url,
+     *   requestFunction : requestFunction
+     * });
+     * var promise = Cesium.RequestScheduler.throttleRequest(request);
      * if (!Cesium.defined(promise)) {
      *   // too many active requests in progress, try again later.
      * } else {
@@ -219,57 +256,92 @@ define([
      * }
      *
      */
-    RequestScheduler.throttleRequest = function(url, requestFunction, requestType, distance) {
+    RequestScheduler.throttleRequest = function(request) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(url)) {
-            throw new DeveloperError('url is required.');
+        if (!defined(request)) {
+            throw new DeveloperError('request is required.');
         }
-
-        if (!defined(requestFunction)) {
-            throw new DeveloperError('requestFunction is required.');
+        if (!defined(request.url)) {
+            throw new DeveloperError('request.url is required.');
+        }
+        if (!defined(request.requestFunction)) {
+            throw new DeveloperError('request.requestFunction is required.');
         }
         //>>includeEnd('debug');
 
         ++stats.numberOfRequestsThisFrame;
 
-        if (activeRequests >= RequestScheduler.maximumRequests) {
-            handleLeftoverRequest(url, requestType, distance);
-            return undefined;
+        if (!RequestScheduler.throttle) {
+            return request.requestFunction(request.url, request.parameters);
         }
 
-        var server = RequestScheduler.getServer(url);
-        var activeRequestsForServer = defaultValue(activeRequestsByServer[server], 0);
-        if (activeRequestsForServer >= RequestScheduler.maximumRequestsPerServer) {
-            handleLeftoverRequest(url, requestType, distance);
-            return undefined;
-        }
+        var server = RequestScheduler.getServer(request.url);
+        request.server = server;
+        activeRequestsByServer[server] = defaultValue(activeRequestsByServer[server], 0);
 
-        if (RequestScheduler.prioritize && defined(requestType)) {
-            var budget = budgets[server];
-            if (!defined(budget)) {
-                budget = new RequestTypeBudget(requestType);
-                budgets[server] = budget;
+        if (!RequestScheduler.hasAvailableRequests(request.url)) {
+            if (!request.defer) {
+                // No available slots to make the request, return undefined
+                handleLeftoverRequest(request);
+                return undefined;
+            } else {
+                // If no slots are available, the request is deferred until a slot opens up.
+                // Return a promise even if the request can't be completed immediately.
+                return deferRequest(request);
             }
+        }
+
+        if (RequestScheduler.prioritize && defined(request.requestType) && !request.defer) {
+            var budget = getBudget(request);
             if (budget.used >= budget.total) {
-                handleLeftoverRequest(url, requestType, distance);
+                // Request does not fit in the budget, return undefined
+                handleLeftoverRequest(request);
                 return undefined;
             }
             ++budget.used;
         }
 
-        ++activeRequests;
-        activeRequestsByServer[server] = activeRequestsForServer + 1;
-
-        return when(requestFunction(url), function(result) {
-            --activeRequests;
-            --activeRequestsByServer[server];
-            return result;
-        }).otherwise(function(error) {
-            --activeRequests;
-            --activeRequestsByServer[server];
-            return when.reject(error);
-        });
+        return startRequest(request);
     };
+
+    /**
+     * A function that will make a request when an open slot is available. Always returns
+     * a promise, which is suitable for data sources and utility functions.
+     *
+     * @param {String} url The URL to request.
+     * @param {RequestScheduler~RequestFunction} requestFunction The actual function that
+     *        makes the request.
+     * @param {Object} [parameters] Extra parameters to send with the request.
+     *
+     * @returns {Promise.<Object>} A Promise for the requested data.
+     */
+    RequestScheduler.request = function(url, requestFunction, parameters) {
+        return RequestScheduler.throttleRequest(new Request({
+            url : url,
+            parameters : parameters,
+            requestFunction : requestFunction,
+            defer : true
+        }));
+    };
+
+    function clearStats() {
+        stats.numberOfRequestsThisFrame = 0;
+    }
+
+    function showStats() {
+        if (!RequestScheduler.debugShowStatistics) {
+            return;
+        }
+
+        if (stats.numberOfRequestsThisFrame > 0) {
+            console.log('Number of requests attempted: ' + stats.numberOfRequestsThisFrame);
+        }
+
+        var numberOfActiveRequests = RequestScheduler.maximumRequests - RequestScheduler.getNumberOfAvailableRequests();
+        if (numberOfActiveRequests > 0) {
+            console.log('Number of active requests: ' + numberOfActiveRequests);
+        }
+    }
 
     /**
      * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
@@ -295,6 +367,20 @@ define([
      * @default true
      */
     RequestScheduler.prioritize = true;
+
+    /**
+     * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.
+     * @type {Boolean}
+     * @default true
+     */
+    RequestScheduler.throttle = true;
+
+    /**
+     * When true, log statistics to the console every frame
+     * @type {Boolean}
+     * @default true
+     */
+    RequestScheduler.debugShowStatistics = false;
 
     return RequestScheduler;
 });

@@ -15,6 +15,7 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
+        './Request',
         './RequestScheduler',
         './RequestType',
         './TerrainProvider',
@@ -35,6 +36,7 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        Request,
         RequestScheduler,
         RequestType,
         TerrainProvider,
@@ -146,7 +148,7 @@ define([
         }
 
         function requestMetadata() {
-            when(loadXML(that._url), metadataSuccess, metadataFailure);
+            when(RequestScheduler.request(that._url, loadXML), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -252,15 +254,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
-     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
+     * @param {Request} [request] The request object.
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests, distance) {
+    VRTheWorldTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         if (!this.ready) {
             throw new DeveloperError('requestTileGeometry must not be called before ready returns true.');
         }
@@ -273,16 +272,19 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
+        if (!defined(request)) {
+            // If a request object isn't provided, perform an immediate request
+            request = new Request();
+            request.defer = true;
+        }
 
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = RequestScheduler.throttleRequest(url, loadImage, RequestType.TERRAIN, distance);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = loadImage(url);
+        request.url = url;
+        request.requestFunction = loadImage;
+        request.requestType = RequestType.TERRAIN;
+
+        var promise = RequestScheduler.throttleRequest(request);
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;

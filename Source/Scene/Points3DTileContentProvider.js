@@ -11,6 +11,7 @@ define([
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
+        '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/when',
@@ -29,6 +30,7 @@ define([
         getMagic,
         loadArrayBuffer,
         PointGeometry,
+        Request,
         RequestScheduler,
         RequestType,
         when,
@@ -78,7 +80,12 @@ define([
         var that = this;
 
         var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer, RequestType.TILES3D, distance);
+        var promise = RequestScheduler.throttleRequest(new Request({
+            url : this._url,
+            requestFunction : loadArrayBuffer,
+            requestType : RequestType.TILES3D,
+            distance : distance
+        }));
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

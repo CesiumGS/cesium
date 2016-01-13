@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/IndexDatatype',
         '../Core/OrientedBoundingBox',
+        '../Core/Request',
         '../Core/TileProviderError',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         IndexDatatype,
         OrientedBoundingBox,
+        Request,
         TileProviderError,
         Buffer,
         BufferUsage,
@@ -135,7 +137,9 @@ define([
 
         function doRequest() {
             // Request the terrain from the terrain provider.
-            tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, true, distance);
+            var request = new Request();
+            request.distance = distance;
+            tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, request);
 
             // If the request method returns undefined (instead of a promise), the request
             // has been deferred.

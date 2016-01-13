@@ -20,6 +20,7 @@ define([
         './Matrix3',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Request',
         './RequestScheduler',
         './RequestType',
         './RuntimeError',
@@ -46,6 +47,7 @@ define([
         Matrix3,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Request,
         RequestScheduler,
         RequestType,
         RuntimeError,
@@ -248,7 +250,7 @@ define([
         }
 
         function requestMetadata() {
-            var metadata = loadJson(metadataUrl);
+            var metadata = RequestScheduler.request(metadataUrl, loadJson);
             when(metadata, metadataSuccess, metadataFailure);
         }
 
@@ -476,10 +478,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
-     *                  or false if the request should be initiated regardless of the number of requests
-     *                  already in progress.
-     * @param {Number} [distance] The distance of the tile from the camera, used to prioritize requests.
+     * @param {Request} [request] The request object.
      *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
@@ -488,7 +487,7 @@ define([
      * @exception {DeveloperError} This function must not be called before {@link CesiumTerrainProvider#ready}
      *            returns true.
      */
-    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests, distance) {
+    CesiumTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         //>>includeStart('debug', pragmas.debug)
         if (!this._ready) {
             throw new DeveloperError('requestTileGeometry must not be called before the terrain provider is ready.');
@@ -511,8 +510,6 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise;
-
         var extensionList = [];
         if (this._requestVertexNormals && this._hasVertexNormals) {
             extensionList.push(this._littleEndianExtensionSize ? "octvertexnormals" : "vertexnormals");
@@ -524,14 +521,20 @@ define([
         function tileLoader(tileUrl) {
             return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
         }
-        throttleRequests = defaultValue(throttleRequests, true);
-        if (throttleRequests) {
-            promise = RequestScheduler.throttleRequest(url, tileLoader, RequestType.TERRAIN, distance);
-            if (!defined(promise)) {
-                return undefined;
-            }
-        } else {
-            promise = tileLoader(url);
+
+        if (!defined(request)) {
+            // If a request object isn't provided, perform an immediate request
+            request = new Request();
+            request.defer = true;
+        }
+
+        request.url = url;
+        request.requestFunction = tileLoader;
+        request.requestType = RequestType.TERRAIN;
+
+        var promise = RequestScheduler.throttleRequest(request);
+        if (!defined(promise)) {
+            return undefined;
         }
 
         var that = this;

@@ -10,6 +10,7 @@ define([
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
+        '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/Uri',
@@ -30,6 +31,7 @@ define([
         Intersect,
         loadJson,
         CesiumMath,
+        Request,
         RequestScheduler,
         RequestType,
         Uri,
@@ -230,7 +232,11 @@ define([
         var tileset = this;
 
         // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
-        var promise = RequestScheduler.throttleRequest(tilesJson, loadJson, RequestType.TILES3D);
+        var promise = RequestScheduler.throttleRequest(new Request({
+            url : tilesJson,
+            requestFunction : loadJson,
+            requestType : RequestType.TILES3D
+        }));
 
         if (!defined(promise)) {
             return undefined;

@@ -5,6 +5,7 @@ define([
         '../Core/DeveloperError',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
+        '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType'
     ], function(
@@ -13,6 +14,7 @@ define([
         DeveloperError,
         loadImage,
         loadImageViaBlob,
+        Request,
         RequestScheduler,
         RequestType) {
     "use strict";
@@ -311,10 +313,14 @@ define([
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImage = function(imageryProvider, url, distance) {
-        if (defined(imageryProvider.tileDiscardPolicy)) {
-            return RequestScheduler.throttleRequest(url, loadImageViaBlob, RequestType.IMAGERY, distance);
-        }
-        return RequestScheduler.throttleRequest(url, loadImage, RequestType.IMAGERY, distance);
+        var requestFunction = defined(imageryProvider.tileDiscardPolicy) ? loadImageViaBlob : loadImage;
+
+        return RequestScheduler.throttleRequest(new Request({
+            url : url,
+            requestFunction : requestFunction,
+            requestType : RequestType.IMAGERY,
+            distance : distance
+        }));
     };
 
     return ImageryProvider;

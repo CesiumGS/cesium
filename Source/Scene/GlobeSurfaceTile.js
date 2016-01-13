@@ -241,16 +241,28 @@ define([
         }
     };
 
+    function createTileBoundingBox(tile, frameState) {
+        var minimumHeight;
+        var maximumHeight;
+        if (defined(tile.parent) && defined(tile.parent.data)) {
+            minimumHeight = tile.parent.data.minimumHeight;
+            maximumHeight = tile.parent.data.maximumHeight;
+        }
+        return new TileBoundingBox({
+            rectangle : tile.rectangle,
+            ellipsoid : tile.tilingScheme.ellipsoid,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight
+        });
+    }
+
     GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
-            surfaceTile.tileBoundingBox = new TileBoundingBox({
-                rectangle : tile.rectangle,
-                ellipsoid : tile.tilingScheme.ellipsoid
-            });
-            // Set the distance of the tile now in order to prioritize the request later.
-            // Rough estimate, since the tile height isn't known until the terrain is loaded.
+            // Create the TileBoundingBox now in order to estimate the distance, which is used to prioritize the request.
+            // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
+            surfaceTile.tileBoundingBox = createTileBoundingBox(tile, frameState);
             tile._distance = surfaceTile.tileBoundingBox.distanceToCamera(frameState);
         }
 

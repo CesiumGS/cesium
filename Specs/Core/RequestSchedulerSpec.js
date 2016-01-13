@@ -1,9 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Core/RequestScheduler',
+        'Core/Request',
+        'Core/RequestType',
         'ThirdParty/when'
     ], function(
         RequestScheduler,
+        Request,
+        RequestType,
         when) {
     "use strict";
 
@@ -20,15 +24,27 @@ defineSuite([
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
     });
 
-    it('throttleRequest throws when url is undefined', function() {
+    it('throttleRequest throws when request is undefined', function() {
         expect(function() {
             RequestScheduler.throttleRequest();
         }).toThrowDeveloperError();
     });
 
-    it('throttleRequest throws when requestFunction is undefined', function() {
+    it('throttleRequest throws when request.url is undefined', function() {
         expect(function() {
-            RequestScheduler.throttleRequest('http://foo.com/1');
+            RequestScheduler.throttleRequest(new Request({
+                requestFunction : function(url) {
+                    return undefined;
+                }
+            }));
+        }).toThrowDeveloperError();
+    });
+
+    it('throttleRequest throws when request.requestFunction is undefined', function() {
+        expect(function() {
+            RequestScheduler.throttleRequest(new Request({
+                url : 'file/path'
+            }));
         }).toThrowDeveloperError();
     });
 
@@ -43,9 +59,14 @@ defineSuite([
             return deferred.promise;
         }
 
-        var promise1 = RequestScheduler.throttleRequest('http://foo.com/1', requestFunction);
-        var promise2 = RequestScheduler.throttleRequest('http://foo.com/2', requestFunction);
-        var promise3 = RequestScheduler.throttleRequest('http://foo.com/3', requestFunction);
+        var request = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise1 = RequestScheduler.throttleRequest(request);
+        var promise2 = RequestScheduler.throttleRequest(request);
+        var promise3 = RequestScheduler.throttleRequest(request);
 
         expect(deferreds.length).toBe(2);
         expect(promise1).toBeDefined();
@@ -54,16 +75,16 @@ defineSuite([
 
         deferreds[0].resolve();
 
-        var promise4 = RequestScheduler.throttleRequest('http://foo.com/3', requestFunction);
+        var promise4 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(3);
         expect(promise4).toBeDefined();
 
-        var promise5 = RequestScheduler.throttleRequest('http://foo.com/4', requestFunction);
+        var promise5 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(3);
         expect(promise5).not.toBeDefined();
 
         RequestScheduler.maximumRequests = 3;
-        var promise6 = RequestScheduler.throttleRequest('http://foo.com/4', requestFunction);
+        var promise6 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(4);
         expect(promise6).toBeDefined();
 
@@ -83,9 +104,14 @@ defineSuite([
             return deferred.promise;
         }
 
-        var promise1 = RequestScheduler.throttleRequest('http://foo.com/1', requestFunction);
-        var promise2 = RequestScheduler.throttleRequest('http://foo.com/2', requestFunction);
-        var promise3 = RequestScheduler.throttleRequest('http://foo.com/3', requestFunction);
+        var request = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var promise1 = RequestScheduler.throttleRequest(request);
+        var promise2 = RequestScheduler.throttleRequest(request);
+        var promise3 = RequestScheduler.throttleRequest(request);
 
         expect(deferreds.length).toBe(2);
         expect(promise1).toBeDefined();
@@ -94,16 +120,16 @@ defineSuite([
 
         deferreds[0].resolve();
 
-        var promise4 = RequestScheduler.throttleRequest('http://foo.com/3', requestFunction);
+        var promise4 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(3);
         expect(promise4).toBeDefined();
 
-        var promise5 = RequestScheduler.throttleRequest('http://foo.com/4', requestFunction);
+        var promise5 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(3);
         expect(promise5).not.toBeDefined();
 
         RequestScheduler.maximumRequestsPerServer = 3;
-        var promise6 = RequestScheduler.throttleRequest('http://foo.com/4', requestFunction);
+        var promise6 = RequestScheduler.throttleRequest(request);
         expect(deferreds.length).toBe(4);
         expect(promise6).toBeDefined();
 
@@ -121,9 +147,14 @@ defineSuite([
             return deferred.promise;
         }
 
-        RequestScheduler.throttleRequest('http://foo.com/1', requestFunction);
-        RequestScheduler.throttleRequest('http://foo.com/2', requestFunction);
-        RequestScheduler.throttleRequest('http://foo.com/3', requestFunction);
+        var request = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.throttleRequest(request);
 
         expect(RequestScheduler.maximumRequests).toBe(10);
         expect(RequestScheduler.getNumberOfAvailableRequests()).toBe(7);
@@ -144,9 +175,19 @@ defineSuite([
             return deferred.promise;
         }
 
-        RequestScheduler.throttleRequest('http://foo.com/1', requestFunction);
-        RequestScheduler.throttleRequest('http://foo.com/2', requestFunction);
-        RequestScheduler.throttleRequest('http://bar.com/3', requestFunction);
+        var requestFoo = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var requestBar = new Request({
+            url : 'http://bar.com/1',
+            requestFunction : requestFunction
+        });
+
+        RequestScheduler.throttleRequest(requestFoo);
+        RequestScheduler.throttleRequest(requestFoo);
+        RequestScheduler.throttleRequest(requestBar);
 
         expect(RequestScheduler.maximumRequestsPerServer).toBe(6);
         expect(RequestScheduler.getNumberOfAvailableRequestsByServer('http://foo.com')).toBe(4);
@@ -188,13 +229,23 @@ defineSuite([
             return deferred.promise;
         }
 
-        RequestScheduler.throttleRequest('http://foo.com/1', requestFunction);
+        var requestFoo = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var requestBar = new Request({
+            url : 'http://bar.com/1',
+            requestFunction : requestFunction
+        });
+
+        RequestScheduler.throttleRequest(requestFoo);
         expect(RequestScheduler.hasAvailableRequests('http://foo.com')).toEqual(true);
-        RequestScheduler.throttleRequest('http://foo.com/2', requestFunction);
+        RequestScheduler.throttleRequest(requestFoo);
         expect(RequestScheduler.hasAvailableRequests('http://foo.com')).toEqual(false);
 
         expect(RequestScheduler.hasAvailableRequests()).toEqual(true);
-        RequestScheduler.throttleRequest('http://bar.com/1', requestFunction);
+        RequestScheduler.throttleRequest(requestBar);
         expect(RequestScheduler.hasAvailableRequests()).toEqual(false);
 
         expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(0);
@@ -202,5 +253,201 @@ defineSuite([
         deferreds[0].resolve();
         deferreds[1].resolve();
         deferreds[2].resolve();
+    });
+
+    it('defers request when request scheduler is full', function() {
+        RequestScheduler.maximumRequests = 3;
+
+        var deferreds = [];
+
+        function requestFunction(url) {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        var requestDeferred = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction,
+            defer : true
+        });
+
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.throttleRequest(request);
+        expect(RequestScheduler.hasAvailableRequests()).toEqual(false);
+
+        // A deferred request will always return a promise, however its
+        // requestFunction is not called until there is an open slot
+        var deferredPromise = RequestScheduler.throttleRequest(requestDeferred);
+        expect(deferredPromise).toBeDefined();
+        expect(deferreds[3]).not.toBeDefined();
+
+        // When the first request completes, the deferred promise starts
+        deferreds[0].resolve();
+        expect(deferreds[3]).toBeDefined();
+
+        deferreds[1].resolve();
+        deferreds[2].resolve();
+        deferreds[3].resolve();
+    });
+
+    it('makes a basic request', function() {
+        RequestScheduler.maximumRequests = 2;
+
+        var deferreds = [];
+
+        function requestFunction(url) {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var promise1 = RequestScheduler.request('http://foo.com/1', requestFunction);
+        var promise2 = RequestScheduler.request('http://foo.com/2', requestFunction);
+        var promise3 = RequestScheduler.request('http://foo.com/3', requestFunction);
+
+        expect(promise1).toBeDefined();
+        expect(promise2).toBeDefined();
+        expect(promise3).toBeDefined();
+
+        expect(deferreds[2]).not.toBeDefined();
+
+        // When the first request completes, the last request starts
+        deferreds[0].resolve();
+        expect(deferreds[2]).toBeDefined();
+
+        deferreds[1].resolve();
+        deferreds[2].resolve();
+    });
+
+    it('prioritize requests', function() {
+        RequestScheduler.prioritize = true;
+        RequestScheduler.maximumRequests = 2;
+
+        var deferreds = [];
+
+        function requestFunction(url) {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var terrainRequest1 = new Request({
+            url : 'http://foo.com/1',
+            requestType : RequestType.TERRAIN,
+            requestFunction : requestFunction,
+            distance : 10.0
+        });
+
+        var terrainRequest2 = new Request({
+            url : 'http://foo.com/2',
+            requestType : RequestType.TERRAIN,
+            requestFunction : requestFunction,
+            distance : 20.0
+        });
+
+        var imageryRequest = new Request({
+            url : 'http://bar.com/1',
+            requestType : RequestType.IMAGERY,
+            requestFunction : requestFunction,
+            distance : 15.0
+        });
+
+        var promise1 = RequestScheduler.throttleRequest(terrainRequest1);
+        var promise2 = RequestScheduler.throttleRequest(terrainRequest2);
+        var promise3 = RequestScheduler.throttleRequest(imageryRequest);
+
+        // The requests should all return undefined because the budgets haven't been created yet
+        expect(promise1).not.toBeDefined();
+        expect(promise2).not.toBeDefined();
+        expect(promise3).not.toBeDefined();
+
+        // Budgets should now allow one terrain request and one imagery request (based on their distances)
+        RequestScheduler.resetBudgets();
+
+        promise1 = RequestScheduler.throttleRequest(terrainRequest1);
+        promise2 = RequestScheduler.throttleRequest(terrainRequest2);
+        promise3 = RequestScheduler.throttleRequest(imageryRequest);
+
+        expect(promise1).toBeDefined();
+        expect(promise2).not.toBeDefined();
+        expect(promise3).toBeDefined();
+
+        deferreds[0].resolve();
+        deferreds[1].resolve();
+
+        RequestScheduler.resetBudgets();
+        RequestScheduler.prioritize = false;
+    });
+
+    it('does not throttle requests when RequestScheduler.throttle is false', function() {
+        RequestScheduler.throttle = false;
+        RequestScheduler.maximumRequests = 2;
+
+        var deferreds = [];
+
+        function requestFunction(url) {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'http://foo.com/',
+            requestFunction : requestFunction
+        });
+
+        var promise1 = RequestScheduler.throttleRequest(request);
+        var promise2 = RequestScheduler.throttleRequest(request);
+        var promise3 = RequestScheduler.throttleRequest(request);
+
+        // All requests are passed through to the browser
+        expect(promise1).toBeDefined();
+        expect(promise2).toBeDefined();
+        expect(promise3).toBeDefined();
+
+        deferreds[0].resolve();
+        deferreds[1].resolve();
+        deferreds[2].resolve();
+
+        RequestScheduler.throttle = true;
+    });
+
+    it('debugShowStatistics', function() {
+        spyOn(console, 'log');
+
+        var deferreds = [];
+
+        function requestFunction(url) {
+            var deferred = when.defer();
+            deferreds.push(deferred);
+            return deferred.promise;
+        }
+
+        var request = new Request({
+            url : 'http://foo.com/1',
+            requestFunction : requestFunction
+        });
+
+        RequestScheduler.debugShowStatistics = false;
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.resetBudgets();
+        expect(console.log).not.toHaveBeenCalled();
+
+        RequestScheduler.debugShowStatistics = true;
+        RequestScheduler.throttleRequest(request);
+        RequestScheduler.resetBudgets();
+        expect(console.log).toHaveBeenCalled();
+
+        deferreds[0].resolve();
+        deferreds[1].resolve();
+
+        RequestScheduler.resetBudgets();
     });
 });

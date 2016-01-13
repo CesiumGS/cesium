@@ -12,6 +12,7 @@ define([
         '../Core/joinUrls',
         '../Core/loadXML',
         '../Core/Rectangle',
+        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
@@ -30,6 +31,7 @@ define([
         joinUrls,
         loadXML,
         Rectangle,
+        RequestScheduler,
         RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
@@ -269,7 +271,7 @@ define([
                 resourceUrl = proxy.getURL(resourceUrl);
             }
             // Try to load remaining parameters from XML
-            when(loadXML(resourceUrl), metadataSuccess, metadataFailure);
+            when(RequestScheduler.request(resourceUrl, loadXML), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
