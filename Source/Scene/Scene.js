@@ -999,11 +999,13 @@ define([
             set : function(value) {
                 this._useWebVR = value;
                 if (this._useWebVR) {
+                    this._frameState.creditDisplay.container.style.visibility = 'hidden';
                     this._cameraVR = new Camera(this);
                     if (!defined(this._deviceOrientationCameraController)) {
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
                     }
                 } else {
+                    this._frameState.creditDisplay.container.style.visibility = 'visible';
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
                 }
