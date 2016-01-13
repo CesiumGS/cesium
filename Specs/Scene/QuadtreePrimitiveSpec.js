@@ -4,25 +4,25 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/defineProperties',
+        'Core/EventHelper',
         'Core/GeographicTilingScheme',
         'Core/Visibility',
+        'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
-        'Specs/createFrameState',
-        'Core/EventHelper',
-        'Scene/QuadtreeTile'
-], function(
+        'Specs/createFrameState'
+    ], function(
         QuadtreePrimitive,
         Cartesian3,
         Cartographic,
         defineProperties,
+        EventHelper,
         GeographicTilingScheme,
         Visibility,
+        QuadtreeTile,
         QuadtreeTileLoadState,
         createContext,
-        createFrameState,
-        EventHelper,
-        QuadtreeTile) {
+        createFrameState) {
     "use strict";
     /*global jasmine,it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 

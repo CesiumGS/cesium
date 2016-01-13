@@ -74,6 +74,12 @@ define([
      * is supported at this time.
      * </p>
      * <p>
+     * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
+     * Firefox, and Edge. Apple support is expected in iOS 9 and MacOS Safari 9. Android support varies by hardware and IE11 will most likely never support
+     * it. You can use webglreport.com to verify support for your hardware. Finally, this feature is currently only supported in Primitives and not yet
+     * available via the Entity API.
+     * </p>
+     * <p>
      * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
      * </p>
      *

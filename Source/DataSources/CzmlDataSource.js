@@ -14,6 +14,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
+        '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -30,6 +31,7 @@ define([
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
@@ -85,6 +87,7 @@ define([
         Ellipsoid,
         Event,
         ExtrapolationType,
+        getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -101,6 +104,7 @@ define([
         Spherical,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -187,9 +191,7 @@ define([
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+            result = getAbsoluteUri(result, getAbsoluteUri(sourceUri));
         }
         return result;
     }
@@ -348,6 +350,8 @@ define([
             return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
         case HorizontalOrigin:
             return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+        case HeightReference:
+            return HeightReference[defaultValue(czmlInterval.heightReference, czmlInterval)];
         case Image:
             return unwrapUriInterval(czmlInterval, sourceUri);
         case JulianDate:
@@ -1001,6 +1005,7 @@ define([
 
         processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, billboard, 'heightReference', billboardData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri, entityCollection);
@@ -1140,6 +1145,7 @@ define([
         processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, label, 'heightReference', labelData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(String, label, 'text', labelData.text, interval, sourceUri, entityCollection);
         processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri, entityCollection);

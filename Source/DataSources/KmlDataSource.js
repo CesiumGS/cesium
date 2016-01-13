@@ -14,6 +14,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getAbsoluteUri',
+        '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -27,6 +29,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../ThirdParty/Autolinker',
@@ -66,6 +69,8 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getAbsoluteUri,
+        getExtensionFromUri,
         getFilenameFromUri,
         Iso8601,
         JulianDate,
@@ -79,6 +84,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         Autolinker,
@@ -171,7 +177,7 @@ define([
 
         detectFromFilename : function(filename) {
             var ext = filename.toLowerCase();
-            ext = ext.substr(ext.lastIndexOf('.') + 1);
+            ext = getExtensionFromUri(ext);
             return MimeTypes[ext];
         }
     };
@@ -435,9 +441,7 @@ define([
             }
         }
         if (!hrefResolved && defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
+            href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
             href = proxyUrl(href, proxy);
         }
         return href;
@@ -822,9 +826,7 @@ define([
                     var uri = tokens[0];
                     if (!defined(externalStyleHash[uri])) {
                         if (defined(sourceUri)) {
-                            var baseUri = new Uri(document.location.href);
-                            sourceUri = new Uri(sourceUri);
-                            uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                            uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
                         }
                         promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                     }
@@ -840,6 +842,40 @@ define([
         var surfacePosition = new ScaledPositionProperty(entity.position);
         entity.polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
+    }
+
+    function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
+        if (!defined(altitudeMode) && !defined(gxAltitudeMode) || altitudeMode === 'clampToGround') {
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (altitudeMode === 'relativeToGround') {
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (altitudeMode === 'absolute') {
+            window.console.log('KML - <kml:altitudeMode>:absolute is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'clampToSeaFloor') {
+            window.console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            window.console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (defined(altitudeMode)) {
+            window.console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        } else {
+            window.console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        }
+
+        //Clamp to ellipsoid until we support terrain
+        return HeightReference.CLAMP_TO_GROUND;
     }
 
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
@@ -881,7 +917,7 @@ define([
         return properties;
     }
 
-    function processPositionGraphics(dataSource, entity, styleEntity) {
+    function processPositionGraphics(dataSource, entity, styleEntity, heightReference) {
         var label = entity.label;
         if (!defined(label)) {
             label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
@@ -909,6 +945,11 @@ define([
                 label.horizontalOrigin = undefined;
             }
         }
+
+        if (defined(heightReference)) {
+            billboard.heightReference = heightReference;
+            label.heightReference = heightReference;
+        }
     }
 
     function processPathGraphics(dataSource, entity, styleEntity) {
@@ -934,8 +975,8 @@ define([
 
         var position = readCoordinate(coordinatesString);
 
-        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = position;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(dataSource, entity, styleEntity);

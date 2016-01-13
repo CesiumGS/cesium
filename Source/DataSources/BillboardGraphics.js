@@ -71,6 +71,8 @@ define([
         this._colorSubscription = undefined;
         this._eyeOffset = undefined;
         this._eyeOffsetSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._pixelOffset = undefined;
         this._pixelOffsetSubscription = undefined;
         this._show = undefined;
@@ -212,6 +214,14 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the {@link Cartesian2} Property specifying the billboard's pixel offset in screen space
          * from the origin of this billboard.  This is commonly used to align multiple billboards and labels at
          * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
@@ -309,6 +319,7 @@ define([
         }
         result.color = this._color;
         result.eyeOffset = this._eyeOffset;
+        result.heightReference = this._heightReference;
         result.horizontalOrigin = this._horizontalOrigin;
         result.image = this._image;
         result.imageSubRegion = this._imageSubRegion;
@@ -342,6 +353,7 @@ define([
 
         this.color = defaultValue(this._color, source.color);
         this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
+        this.heightReference = defaultValue(this._heightReference, source.heightReference);
         this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
         this.image = defaultValue(this._image, source.image);
         this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
