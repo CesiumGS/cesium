@@ -586,7 +586,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var vrButton;
         var vrSubscription;
         var vrModeSubscription;
-        var vrCallback;
         if (options.vrButton) {
             var vrContainer = document.createElement('div');
             vrContainer.className = 'cesium-viewer-vrContainer';
@@ -607,11 +606,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             vrModeSubscription = subscribeAndEvaluate(vrButton.viewModel, 'isVRMode', function(isVRMode) {
                 enableVRUI(that, isVRMode);
             });
-
-            vrCallback = function() {
-                //enableVRUI(that, false);
-            };
-            document.addEventListener(Fullscreen.changeEventName, vrCallback);
         }
 
         //Assign all properties to this instance.  No "this" assignments should

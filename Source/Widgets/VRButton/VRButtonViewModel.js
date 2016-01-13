@@ -149,7 +149,15 @@ define([
         this._vrElement = defaultValue(getElement(vrElement), document.body);
 
         this._callback = function() {
-            //toggleVR(that, scene);
+            if (!Fullscreen.fullscreen && that._isVRMode()) {
+                scene.useWebVR = false;
+                if (that._locked) {
+                    unlockScreen();
+                    that._locked = false;
+                }
+                that._noSleep.disable();
+                that._isVRMode(false);
+            }
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);
     }
