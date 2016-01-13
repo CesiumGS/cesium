@@ -1645,6 +1645,7 @@ define([
                 viewport.height = context.drawingBufferHeight;
 
                 var savedCamera = Camera.clone(camera, scene._cameraVR);
+                var savedAspectRatio = savedCamera.frustum.aspectRatio;
 
                 var near = camera.frustum.near;
                 var fo = near * 5.0;
@@ -1668,11 +1669,15 @@ define([
                 executeCommands(scene, passState);
 
                 Camera.clone(savedCamera, camera);
+                camera.frustum.aspectRatio = savedAspectRatio;
+                camera.frustum.xOffset = 0.0;
             } else {
                 viewport.x = 0;
                 viewport.y = 0;
                 viewport.width = context.drawingBufferWidth * 0.5;
                 viewport.height = context.drawingBufferHeight;
+
+                var savedTop = camera.frustum.top;
 
                 camera.frustum.top = camera.frustum.right * (viewport.height / viewport.width);
                 camera.frustum.bottom = -camera.frustum.top;
@@ -1682,6 +1687,9 @@ define([
                 viewport.x = passState.viewport.width;
 
                 executeCommands(scene, passState);
+
+                camera.frustum.top = savedTop;
+                camera.frustum.bottom = -savedTop;
             }
         } else {
             viewport.x = 0;
