@@ -12,6 +12,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/OrientedBoundingBox',
         '../Core/PointGeometry',
+        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
@@ -32,6 +33,7 @@ define([
         loadArrayBuffer,
         OrientedBoundingBox,
         PointGeometry,
+        RequestScheduler,
         when,
         Cesium3DTileContentState,
         PointAppearance,
@@ -44,7 +46,7 @@ define([
     /**
      * @private
      */
-    var Points3DTileContentProvider = function(tileset, tile, url) {
+    function Points3DTileContentProvider(tileset, tile, url) {
         this._primitive = undefined;
         this._url = url;
 
@@ -74,21 +76,31 @@ define([
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
-    };
+    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    /**
+     * DOC_TBA
+     *
+     * Use Cesium3DTile#requestContent
+     */
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {

@@ -26,7 +26,7 @@ define([
      *
      * @see Clock
      */
-    var ClockViewModel = function(clock) {
+    function ClockViewModel(clock) {
         if (!defined(clock)) {
             clock = new Clock();
         }
@@ -190,7 +190,7 @@ define([
                 clock.shouldAnimate = value;
             }
         });
-    };
+    }
 
     defineProperties(ClockViewModel.prototype, {
         /**

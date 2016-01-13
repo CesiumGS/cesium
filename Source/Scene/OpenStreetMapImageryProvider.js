@@ -56,8 +56,6 @@ define([
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // OpenStreetMap tile provider
@@ -65,9 +63,12 @@ define([
      *     url : '//a.tile.openstreetmap.org/'
      * });
      * 
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * 
      * @deprecated
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+    function OpenStreetMapImageryProvider(options) {
         deprecationWarning('OpenStreetMapImageryProvider', 'OpenStreetMapImageryProvider is deprecated. It will be removed in Cesium 1.18. Use createOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
 
@@ -112,7 +113,7 @@ define([
             credit = new Credit(credit);
         }
         this._credit = credit;
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;

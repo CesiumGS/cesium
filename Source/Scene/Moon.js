@@ -42,12 +42,13 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
      * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
-     * @see Scene#moon
      *
      * @example
      * scene.moon = new Cesium.Moon();
+     * 
+     * @see Scene#moon
      */
-    var Moon = function(options) {
+    function Moon(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.textureUrl;
@@ -88,7 +89,7 @@ define([
         this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
-    };
+    }
 
     defineProperties(Moon.prototype, {
         /**
@@ -173,10 +174,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Moon#isDestroyed
      *
      * @example
      * moon = moon && moon.destroy();
+     * 
+     * @see Moon#isDestroyed
      */
     Moon.prototype.destroy = function() {
         this._ellipsoidPrimitive = this._ellipsoidPrimitive && this._ellipsoidPrimitive.destroy();

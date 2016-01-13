@@ -113,10 +113,9 @@ defineSuite([
     });
 
     it('works with PackableForInterpolation', function() {
-        var CustomType = function(value) {
+        function CustomType(value) {
             this.x = value;
-        };
-
+        }
         CustomType.packedLength = 1;
 
         CustomType.packedInterpolationLength = 2;

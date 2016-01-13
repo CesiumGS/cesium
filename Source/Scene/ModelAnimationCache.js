@@ -24,8 +24,8 @@ define([
     /**
      * @private
      */
-    var ModelAnimationCache = function() {
-    };
+    function ModelAnimationCache() {
+    }
 
     function getAccessorKey(model, accessor) {
         var gltf = model.gltf;
@@ -109,10 +109,9 @@ define([
     }
 
  // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
-    var ConstantSpline = function(value) {
+    function ConstantSpline(value) {
         this._value = value;
-    };
-
+    }
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };

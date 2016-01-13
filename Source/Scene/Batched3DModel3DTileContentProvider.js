@@ -8,6 +8,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
@@ -22,6 +23,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
+        RequestScheduler,
         when,
         BatchedModel,
         Cesium3DTileBatchTableResources,
@@ -32,7 +34,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Batched3DModel3DTileContentProvider = function(tileset, tile, url) {
+    function Batched3DModel3DTileContentProvider(tileset, tile, url) {
         this._model = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -55,7 +57,7 @@ define([
         this._batchLength = 0;
         this._batchTableResources = undefined;
         this._models = undefined;
-    };
+    }
 
     defineProperties(Batched3DModel3DTileContentProvider.prototype, {
         /**
@@ -119,14 +121,19 @@ define([
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     /**

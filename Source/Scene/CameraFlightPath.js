@@ -121,7 +121,7 @@ define([
 
         var heightFunction = createHeightFunction(camera, destination, start.z, destination.z, optionAltitude);
 
-        var update = function(value) {
+        function update(value) {
             var time = value.time / duration;
 
             camera.setView({
@@ -134,8 +134,7 @@ define([
 
             Cartesian2.lerp(start, destination, time, camera.position);
             camera.position.z = heightFunction(time);
-        };
-
+        }
         return update;
     }
 
@@ -169,7 +168,7 @@ define([
 
         var heightFunction = createHeightFunction(camera, destination, startCart.height, destCart.height, optionAltitude);
 
-        var update = function(value) {
+        function update(value) {
             var time = value.time / duration;
 
             var position = Cartesian3.fromRadians(
@@ -186,8 +185,7 @@ define([
                     roll : CesiumMath.lerp(startRoll, roll, time)
                 }
             });
-        };
-
+        }
         return update;
     }
 
@@ -200,7 +198,7 @@ define([
         var startHeight = camera.frustum.right - camera.frustum.left;
         var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z, optionAltitude);
 
-        var update = function(value) {
+        function update(value) {
             var time = value.time / duration;
 
             camera.setView({
@@ -221,8 +219,7 @@ define([
             frustum.left -= incrementAmount;
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
-        };
-
+        }
         return update;
     }
 
@@ -240,13 +237,13 @@ define([
     }
 
     function wrapCallback(controller, cb) {
-        var wrapped = function() {
+        function wrapped() {
             if (typeof cb === 'function') {
                 cb();
             }
 
             controller.enableInputs = true;
-        };
+        }
         return wrapped;
     }
 

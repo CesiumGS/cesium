@@ -1,0 +1,25 @@
+{
+    "properties": {
+        "id": {
+            "minimum": 0,
+            "maximum": 99
+        }
+    },
+    "geometricError": 240,
+    "root": {
+        "boundingVolume": {
+            "region": [
+                -1.3199909535359484,
+                0.6986784218000001,
+                -1.3199090464640515,
+                0.6987415782,
+                0,
+                88
+            ]
+        },
+        "geometricError": 70,
+        "content": {
+            "url": "tiles2.json"
+        }
+    }
+}

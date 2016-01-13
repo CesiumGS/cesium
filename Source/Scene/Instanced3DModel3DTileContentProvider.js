@@ -11,6 +11,7 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
+        '../Core/RequestScheduler',
         '../Core/Transforms',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -30,6 +31,7 @@ define([
         getStringFromTypedArray,
         loadArrayBuffer,
         Matrix4,
+        RequestScheduler,
         Transforms,
         Uri,
         when,
@@ -42,7 +44,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Instanced3DModel3DTileContentProvider = function(tileset, tile, url) {
+    function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
@@ -65,7 +67,7 @@ define([
 
         this._batchTableResources = undefined;
         this._models = undefined;
-    };
+    }
 
     defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
         /**
@@ -128,14 +130,19 @@ define([
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     /**

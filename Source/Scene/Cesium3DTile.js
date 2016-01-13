@@ -10,6 +10,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -40,6 +41,7 @@ define([
         destroyObject,
         DeveloperError,
         GeometryInstance,
+        getExtensionFromUri,
         Intersect,
         Matrix3,
         Matrix4,
@@ -64,7 +66,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Cesium3DTile = function(tileset, baseUrl, header, parent) {
+    function Cesium3DTile(tileset, baseUrl, header, parent) {
         this._header = header;
         var contentHeader = header.content;
 
@@ -124,19 +126,16 @@ define([
 
         this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
 
-        /**
-         * DOC_TBA
-         *
-         * @readonly
-         */
-        this.hasTilesetContent = false;
+        this.refining = false;
+
+        this.hasContent = true;
 
         /**
          * DOC_TBA
          *
          * @readonly
          */
-        this.hasContent = true;
+        this.hasTilesetContent = false;
 
         /**
          * DOC_TBA
@@ -150,7 +149,7 @@ define([
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
-            var type = url.substring(url.lastIndexOf('.') + 1);
+            var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
@@ -217,7 +216,7 @@ define([
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
-    };
+    }
 
     defineProperties(Cesium3DTile.prototype, {
         /**
@@ -299,7 +298,6 @@ define([
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
-
         return cullingVolume.computeVisibility(boundingVolume);
     };
 
@@ -411,10 +409,13 @@ define([
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
+        // TODO: Is there a reason to destroy the bounding volumes (and thus to implement destroy() functions for them)? The destroyObject function description says it should be used to for objects that have GL resources. 
+        /*
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._boundingVolume = this._boundingVolume && this._boundingVolume.destroy();
         this._contentBoundingVolume = this._contentBoundingVolume && this._contentBoundingVolume.destroy();
+        */
         return destroyObject(this);
     };
 

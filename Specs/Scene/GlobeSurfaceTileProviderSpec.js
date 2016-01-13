@@ -396,7 +396,7 @@ defineSuite([
             url : 'Data/Images/Red16x16.png'
         }));
 
-        frameState.camera.setView({ destination : Rectangle.fromDegrees(1.0e7, 1.0e7, 2.5e6, 2.5e6) });
+        frameState.camera.setView({ destination : new Rectangle(0.0000001, 0.0000001, 0.0000025, 0.0000025) });
 
         return pollToPromise(function() {
             globe.update(frameState);
@@ -687,42 +687,42 @@ defineSuite([
         it('recreates the level zero tiles', function() {
             var surface = globe._surface;
 
-            return updateUntilDone(globe).then(function() {
-                var levelZeroTiles = surface._levelZeroTiles;
-                expect(levelZeroTiles.length).toBe(2);
+            globe.update(frameState);
 
-                var levelZero0 = levelZeroTiles[0];
-                var levelZero1 = levelZeroTiles[1];
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
 
-                surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
 
-                return updateUntilDone(globe).then(function() {
-                    levelZeroTiles = surface._levelZeroTiles;
-                    expect(levelZeroTiles[0]).not.toBe(levelZero0);
-                    expect(levelZeroTiles[1]).not.toBe(levelZero1);
-                });
-            });
+            surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
+
+            globe.update(frameState);
+
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).not.toBe(levelZero0);
+            expect(levelZeroTiles[1]).not.toBe(levelZero1);
         });
 
         it('does nothing if the new provider is the same as the old', function() {
             var surface = globe._surface;
             var provider = surface.tileProvider.terrainProvider;
 
-            return updateUntilDone(globe).then(function() {
-                var levelZeroTiles = surface._levelZeroTiles;
-                expect(levelZeroTiles.length).toBe(2);
+            globe.update(frameState);
 
-                var levelZero0 = levelZeroTiles[0];
-                var levelZero1 = levelZeroTiles[1];
+            var levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles.length).toBe(2);
 
-                surface.tileProvider.terrainProvider = provider;
+            var levelZero0 = levelZeroTiles[0];
+            var levelZero1 = levelZeroTiles[1];
 
-                return updateUntilDone(globe).then(function() {
-                    levelZeroTiles = surface._levelZeroTiles;
-                    expect(levelZeroTiles[0]).toBe(levelZero0);
-                    expect(levelZeroTiles[1]).toBe(levelZero1);
-                });
-            });
+            surface.tileProvider.terrainProvider = provider;
+
+            globe.update(frameState);
+
+            levelZeroTiles = surface._levelZeroTiles;
+            expect(levelZeroTiles[0]).toBe(levelZero0);
+            expect(levelZeroTiles[1]).toBe(levelZero1);
         });
     }, 'WebGL');
 

@@ -42,7 +42,7 @@ define([
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
-    var CorridorGraphics = function(options) {
+    function CorridorGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -70,7 +70,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(CorridorGraphics.prototype, {
         /**

@@ -12,7 +12,7 @@ define([
     /**
      * @private
      */
-    var Empty3DTileContentProvider = function() {
+    function Empty3DTileContentProvider() {
         /**
          * @readonly
          */
@@ -31,7 +31,7 @@ define([
         this.readyPromise = when.defer();
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
-    };
+    }
 
     Empty3DTileContentProvider.prototype.request = function() {
     };

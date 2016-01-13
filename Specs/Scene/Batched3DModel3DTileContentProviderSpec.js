@@ -95,4 +95,8 @@ defineSuite([
         return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
     });
 
+    it('destroys before loading finishes', function() {
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, withoutBatchTableUrl);
+    });
+
 }, 'WebGL');

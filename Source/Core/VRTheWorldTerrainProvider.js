@@ -15,8 +15,8 @@ define([
         './loadXML',
         './Math',
         './Rectangle',
+        './RequestScheduler',
         './TerrainProvider',
-        './throttleRequestByServer',
         './TileProviderError'
     ], function(
         when,
@@ -34,8 +34,8 @@ define([
         loadXML,
         CesiumMath,
         Rectangle,
+        RequestScheduler,
         TerrainProvider,
-        throttleRequestByServer,
         TileProviderError) {
     "use strict";
 
@@ -58,15 +58,16 @@ define([
      *                    specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * var terrainProvider = new Cesium.VRTheWorldTerrainProvider({
      *   url : '//www.vr-theworld.com/vr-theworld/tiles1.0.0/73/'
      * });
      * viewer.terrainProvider = terrainProvider;
+     * 
+     * @see TerrainProvider
      */
-    var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(options) {
+    function VRTheWorldTerrainProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -147,7 +148,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(VRTheWorldTerrainProvider.prototype, {
         /**
@@ -273,7 +274,7 @@ define([
 
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
-            promise = throttleRequestByServer(url, loadImage);
+            promise = RequestScheduler.throttleRequest(url, loadImage);
             if (!defined(promise)) {
                 return undefined;
             }

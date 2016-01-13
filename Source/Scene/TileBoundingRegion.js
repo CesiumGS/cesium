@@ -35,8 +35,6 @@ define([
         SceneMode) {
     "use strict";
 
-// TODO: replace code in GlobeSurfaceTile.js and GlobeSurfaceTileProvider.js
-
     /**
      * @param {Object} options Object with the following properties:
      * @param {Rectangle} options.rectangle
@@ -46,9 +44,10 @@ define([
      *
      * @private
      */
+
     var TileBoundingRegion = function(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.rectangle)) {
+        if (!defined(options) || !defined(options.rectangle)) {
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
@@ -207,41 +206,62 @@ define([
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     var vectorScratch = new Cartesian3();
 
+    /**
+     * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
+     *
+     * @param {FrameState} frameState The state information of the current rendering frame.
+     *
+     * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
+     */
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
-        var southwestCornerCartesian = this.southwestCornerCartesian;
-        var northeastCornerCartesian = this.northeastCornerCartesian;
-        var westNormal = this.westNormal;
-        var southNormal = this.southNormal;
-        var eastNormal = this.eastNormal;
-        var northNormal = this.northNormal;
-        var maximumHeight = this.maximumHeight;
+        var camera = frameState.camera;
+        var cameraCartesianPosition = camera.positionWC;
+        var cameraCartographicPosition = camera.positionCartographic;
 
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(this.rectangle), southwestCornerScratch);
-            southwestCornerCartesian.z = southwestCornerCartesian.y;
-            southwestCornerCartesian.y = southwestCornerCartesian.x;
-            southwestCornerCartesian.x = 0.0;
-            northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(this.rectangle), northeastCornerScratch);
-            northeastCornerCartesian.z = northeastCornerCartesian.y;
-            northeastCornerCartesian.y = northeastCornerCartesian.x;
-            northeastCornerCartesian.x = 0.0;
-            westNormal = negativeUnitY;
-            eastNormal = Cartesian3.UNIT_Y;
-            southNormal = negativeUnitZ;
-            northNormal = Cartesian3.UNIT_Z;
-            maximumHeight = 0.0;
+        var result = 0.0;
+        if (!Rectangle.contains(this.rectangle, cameraCartographicPosition)) {
+            var southwestCornerCartesian = this.southwestCornerCartesian;
+            var northeastCornerCartesian = this.northeastCornerCartesian;
+            var westNormal = this.westNormal;
+            var southNormal = this.southNormal;
+            var eastNormal = this.eastNormal;
+            var northNormal = this.northNormal;
+
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(this.rectangle), southwestCornerScratch);
+                southwestCornerCartesian.z = southwestCornerCartesian.y;
+                southwestCornerCartesian.y = southwestCornerCartesian.x;
+                southwestCornerCartesian.x = 0.0;
+                northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(this.rectangle), northeastCornerScratch);
+                northeastCornerCartesian.z = northeastCornerCartesian.y;
+                northeastCornerCartesian.y = northeastCornerCartesian.x;
+                northeastCornerCartesian.x = 0.0;
+                westNormal = negativeUnitY;
+                eastNormal = Cartesian3.UNIT_Y;
+                southNormal = negativeUnitZ;
+                northNormal = Cartesian3.UNIT_Z;
+            }
+
+            var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
+            var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
+            var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
+
+            var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
+            var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
+            var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
+
+            if (distanceToWestPlane > 0.0) {
+                result += distanceToWestPlane * distanceToWestPlane;
+            } else if (distanceToEastPlane > 0.0) {
+                result += distanceToEastPlane * distanceToEastPlane;
+            }
+
+            if (distanceToSouthPlane > 0.0) {
+                result += distanceToSouthPlane * distanceToSouthPlane;
+            } else if (distanceToNorthPlane > 0.0) {
+                result += distanceToNorthPlane * distanceToNorthPlane;
+            }
         }
-
-        var cameraCartesianPosition = frameState.camera.positionWC;
-        var cameraCartographicPosition = frameState.camera.positionCartographic;
-
-        var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
-        var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
-        var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
-
-        var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
-        var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
-        var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
 
         var cameraHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
@@ -249,22 +269,9 @@ define([
         } else {
             cameraHeight = cameraCartesianPosition.x;
         }
+
+        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? this.maximumHeight : 0.0;
         var distanceFromTop = cameraHeight - maximumHeight;
-
-        var result = 0.0;
-
-        if (distanceToWestPlane > 0.0) {
-            result += distanceToWestPlane * distanceToWestPlane;
-        } else if (distanceToEastPlane > 0.0) {
-            result += distanceToEastPlane * distanceToEastPlane;
-        }
-
-        if (distanceToSouthPlane > 0.0) {
-            result += distanceToSouthPlane * distanceToSouthPlane;
-        } else if (distanceToNorthPlane > 0.0) {
-            result += distanceToNorthPlane * distanceToNorthPlane;
-        }
-
         if (distanceFromTop > 0.0) {
             result += distanceFromTop * distanceFromTop;
         }

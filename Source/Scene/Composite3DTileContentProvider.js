@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
+        '../Core/RequestScheduler',
         '../ThirdParty/when',
         './Cesium3DTileContentState'
     ], function(
@@ -15,6 +16,7 @@ define([
         DeveloperError,
         getMagic,
         loadArrayBuffer,
+        RequestScheduler,
         when,
         Cesium3DTileContentState) {
     "use strict";
@@ -22,7 +24,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Composite3DTileContentProvider = function(tileset, tile, url, factory) {
+    function Composite3DTileContentProvider(tileset, tile, url, factory) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -43,7 +45,7 @@ define([
          * @type {Promise}
          */
         this.readyPromise = when.defer();
-    };
+    }
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
@@ -55,14 +57,19 @@ define([
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        this.state = Cesium3DTileContentState.LOADING;
-
-        loadArrayBuffer(this._url).then(function(arrayBuffer) {
-            that.initialize(arrayBuffer);
-        }).otherwise(function(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        });
+        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        if (defined(promise)) {
+            this.state = Cesium3DTileContentState.LOADING;
+            promise.then(function(arrayBuffer) {
+                if (that.isDestroyed()) {
+                    return when.reject('tileset is destroyed');
+                }
+                that.initialize(arrayBuffer);
+            }).otherwise(function(error) {
+                that.state = Cesium3DTileContentState.FAILED;
+                that.readyPromise.reject(error);
+            });
+        }
     };
 
     /**

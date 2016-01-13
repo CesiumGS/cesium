@@ -67,7 +67,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
      * globe.
      */
-    var Globe = function(ellipsoid) {
+    function Globe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({
             ellipsoid : ellipsoid
@@ -190,7 +190,7 @@ define([
 
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
-    };
+    }
 
     defineProperties(Globe.prototype, {
         /**
@@ -224,6 +224,18 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
+            }
+        },
+        /**
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get: function() {
+                return this._surface.tileLoadProgressEvent;
             }
         }
     });
@@ -487,10 +499,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Globe#isDestroyed
      *
      * @example
      * globe = globe && globe.destroy();
+     * 
+     * @see Globe#isDestroyed
      */
     Globe.prototype.destroy = function() {
         this._surfaceShaderSet = this._surfaceShaderSet && this._surfaceShaderSet.destroy();

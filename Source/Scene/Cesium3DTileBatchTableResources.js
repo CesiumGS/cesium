@@ -44,7 +44,7 @@ define([
      *
      * @private
      */
-    var Cesium3DTileBatchTableResources = function(contentProvider, size) {
+    function Cesium3DTileBatchTableResources(contentProvider, size) {
         this._batchLength = defaultValue(size, 0);
         this._batchValues = undefined;  // Per-model show/color
         this._batchValuesDirty = false;
@@ -81,7 +81,7 @@ define([
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
-    };
+    }
 
     defineProperties(Cesium3DTileBatchTableResources.prototype, {
         /**

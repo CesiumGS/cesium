@@ -19,7 +19,7 @@ define([
      * @param {Cartesian3} [origin=Cartesian3.ZERO] The origin of the ray.
      * @param {Cartesian3} [direction=Cartesian3.ZERO] The direction of the ray.
      */
-    var Ray = function(origin, direction) {
+    function Ray(origin, direction) {
         direction = Cartesian3.clone(defaultValue(direction, Cartesian3.ZERO));
         if (!Cartesian3.equals(direction, Cartesian3.ZERO)) {
             Cartesian3.normalize(direction, direction);
@@ -37,7 +37,7 @@ define([
          * @type {Cartesian3}
          */
         this.direction = direction;
-    };
+    }
 
     /**
      * Computes the point along the ray given by r(t) = o + t*d,

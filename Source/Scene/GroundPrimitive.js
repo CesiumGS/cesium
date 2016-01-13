@@ -91,9 +91,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see Primitive
-     * @see GeometryInstance
-     * @see Appearance
      *
      * @example
      * var rectangleInstance = new Cesium.GeometryInstance({
@@ -108,8 +105,12 @@ define([
      * scene.primitives.add(new Cesium.GroundPrimitive({
      *   geometryInstance : rectangleInstance
      * }));
+     * 
+     * @see Primitive
+     * @see GeometryInstance
+     * @see Appearance
      */
-    var GroundPrimitive = function(options) {
+    function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -179,7 +180,7 @@ define([
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined
         };
-    };
+    }
 
     defineProperties(GroundPrimitive.prototype, {
         /**
@@ -792,10 +793,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see GroundPrimitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

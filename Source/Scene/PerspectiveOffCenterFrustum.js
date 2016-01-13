@@ -30,7 +30,6 @@ define([
      * @alias PerspectiveOffCenterFrustum
      * @constructor
      *
-     * @see PerspectiveFrustum
      *
      * @example
      * var frustum = new Cesium.PerspectiveOffCenterFrustum();
@@ -40,8 +39,10 @@ define([
      * frustum.bottom = -1.0;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * 
+     * @see PerspectiveFrustum
      */
-    var PerspectiveOffCenterFrustum = function() {
+    function PerspectiveOffCenterFrustum() {
         /**
          * Defines the left clipping plane.
          * @type {Number}
@@ -93,7 +94,7 @@ define([
         this._cullingVolume = new CullingVolume();
         this._perspectiveMatrix = new Matrix4();
         this._infinitePerspective = new Matrix4();
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);

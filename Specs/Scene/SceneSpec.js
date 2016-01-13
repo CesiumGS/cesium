@@ -590,7 +590,9 @@ defineSuite([
         }
 
         var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({
+            destination : rectangle
+        });
 
         var canvas = scene.canvas;
         var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);

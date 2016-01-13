@@ -13,8 +13,8 @@ define([
         './HeightmapTerrainData',
         './loadImage',
         './Math',
-        './TerrainProvider',
-        './throttleRequestByServer'
+        './RequestScheduler',
+        './TerrainProvider'
     ], function(
         when,
         Credit,
@@ -29,8 +29,8 @@ define([
         HeightmapTerrainData,
         loadImage,
         CesiumMath,
-        TerrainProvider,
-        throttleRequestByServer) {
+        RequestScheduler,
+        TerrainProvider) {
     "use strict";
 
     /**
@@ -52,7 +52,6 @@ define([
      *                    If neither parameter is specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] The credit, which will is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
@@ -61,8 +60,10 @@ define([
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });
      * viewer.terrainProvider = terrainProvider;
+     * 
+     *  @see TerrainProvider
      */
-    var ArcGisImageServerTerrainProvider = function ArcGisImageServerTerrainProvider(options) {
+    function ArcGisImageServerTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -101,7 +102,7 @@ define([
         }
         this._credit = credit;
         this._readyPromise = when.resolve(true);
-    };
+    }
 
     defineProperties(ArcGisImageServerTerrainProvider.prototype, {
         /**
@@ -230,7 +231,7 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = throttleRequestByServer(url, loadImage);
+        var promise = RequestScheduler.throttleRequest(url, loadImage);
         if (!defined(promise)) {
             return undefined;
         }

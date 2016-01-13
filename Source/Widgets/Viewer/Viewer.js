@@ -277,7 +277,7 @@ define([
      *     window.alert(error);
      * });
      */
-    var Viewer = function(container, options) {
+    function Viewer(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -370,6 +370,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var eventHelper = new EventHelper();
 
         eventHelper.add(clock.onTick, Viewer.prototype._onTick, this);
+        eventHelper.add(cesiumWidget.scene.morphStart, Viewer.prototype._clearTrackedObject, this);
 
         // Selection Indicator
         var selectionIndicator;
@@ -612,7 +613,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndSelectObject, ScreenSpaceEventType.LEFT_CLICK);
         cesiumWidget.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
-    };
+    }
 
     defineProperties(Viewer.prototype, {
         /**
@@ -913,8 +914,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         /**
          * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
          * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
-         * determines the frame rate.  This value must be greater than 0 and a value higher than
-         * the underlying requestAnimationFrame implementatin will have no effect.
+         * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
+         * than the underlying requestAnimationFrame implementation will have no effect.
          * @memberof Viewer.prototype
          *
          * @type {Number}

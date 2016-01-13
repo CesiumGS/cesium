@@ -72,7 +72,7 @@ define([
      *
      * @private
      */
-    var ModelInstanceCollection = function(options) {
+    function ModelInstanceCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -131,7 +131,7 @@ define([
 
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
-    };
+    }
 
     defineProperties(ModelInstanceCollection.prototype, {
         allowPicking : {
