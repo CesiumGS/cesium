@@ -35,7 +35,6 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var globe = scene.globe;
 globe.depthTestAgainstTerrain = true;
-var ellipsoid = globe.ellipsoid;
 
 var cesiumTerrainProviderHeightmaps = new Cesium.CesiumTerrainProvider({
     url : '//assets.agi.com/stk-terrain/world',

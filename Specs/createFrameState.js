@@ -15,7 +15,7 @@ define([
         FrameState) {
     "use strict";
 
-    var createFrameState = function(context, camera, frameNumber, time) {
+    function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
         var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')));
 
@@ -32,11 +32,13 @@ define([
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
+        frameState.terrainExaggeration = 1.0;
+
         frameState.passes.render = true;
         frameState.passes.pick = false;
 
         return frameState;
-    };
+    }
 
     return createFrameState;
 });

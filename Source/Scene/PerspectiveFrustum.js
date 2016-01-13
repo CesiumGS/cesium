@@ -20,7 +20,6 @@ define([
      * @alias PerspectiveFrustum
      * @constructor
      *
-     * @see PerspectiveOffCenterFrustum
      *
      * @example
      * var frustum = new Cesium.PerspectiveFrustum();
@@ -28,8 +27,10 @@ define([
      * frustum.fov = Cesium.Math.PI_OVER_THREE;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
+     * 
+     * @see PerspectiveOffCenterFrustum
      */
-    var PerspectiveFrustum = function() {
+    function PerspectiveFrustum() {
         this._offCenterFrustum = new PerspectiveOffCenterFrustum();
 
         /**
@@ -68,7 +69,7 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
@@ -184,40 +185,6 @@ define([
     PerspectiveFrustum.prototype.computeCullingVolume = function(position, direction, up) {
         update(this);
         return this._offCenterFrustum.computeCullingVolume(position, direction, up);
-    };
-
-    /**
-     * Returns the pixel's width and height in meters.
-     *
-     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} [distance=near plane distance] The distance to the near plane in meters.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
-     *
-     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
-     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
-     *
-     * @example
-     * // Example 1
-     * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(scene.drawingBufferWidth, scene.drawingBufferHeight));
-     *
-     * @example
-     * // Example 2
-     * // Get the width and height of a pixel if the near plane was set to 'distance'.
-     * // For example, get the size of a pixel of an image on a billboard.
-     * var position = camera.position;
-     * var direction = camera.direction;
-     * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
-     * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
-     * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(scene.drawingBufferWidth, scene.drawingBufferHeight), distance);
-     *
-     * @deprecated
-     */
-    PerspectiveFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
-        update(this);
-        return this._offCenterFrustum.getPixelSize(drawingBufferDimensions, distance, result);
     };
 
     /**

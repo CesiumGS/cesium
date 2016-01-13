@@ -31,7 +31,6 @@ define([
      * @param {Proxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a data asynchronously
@@ -40,8 +39,10 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var loadJsonp = function(url, options) {
+    function loadJsonp(url, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -92,7 +93,7 @@ define([
         loadJsonp.loadAndExecuteScript(url, functionName, deferred);
 
         return deferred.promise;
-    };
+    }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {

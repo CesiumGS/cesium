@@ -12,6 +12,7 @@ define([
         './Math',
         './OrientedBoundingBox',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh'
     ], function(
         when,
@@ -26,6 +27,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh) {
     "use strict";
 
@@ -74,8 +76,6 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
-     * @see TerrainData
-     * @see HeightmapTerrainData
      *
      * @example
      * var data = new Cesium.QuantizedMeshTerrainData({
@@ -102,8 +102,11 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
+     * @see TerrainData
+     * @see HeightmapTerrainData
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -175,7 +178,6 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        var requires32BitIndices = vertexCount > 64 * 1024;
         this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, vertexCount);
         this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, vertexCount);
         this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, vertexCount);
@@ -190,7 +192,7 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
@@ -235,11 +237,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -257,6 +260,7 @@ define([
 
         var ellipsoid = tilingScheme.ellipsoid;
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
             minimumHeight : this._minimumHeight,
@@ -274,7 +278,8 @@ define([
             northSkirtHeight : this._northSkirtHeight,
             rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
-            ellipsoid : ellipsoid
+            ellipsoid : ellipsoid,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {
@@ -288,16 +293,27 @@ define([
             vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
+            var vertices = new Float32Array(result.vertices);
+            var rtc = result.center;
+            var minimumHeight = result.minimumHeight;
+            var maximumHeight = result.maximumHeight;
+            var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
+            var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
+            var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
+            var stride = result.vertexStride;
+            var terrainEncoding = TerrainEncoding.clone(result.encoding);
+
             return new TerrainMesh(
-                    that._boundingSphere.center,
-                    new Float32Array(result.vertices),
+                    rtc,
+                    vertices,
                     indicesTypedArray,
-                    that._minimumHeight,
-                    that._maximumHeight,
-                    that._boundingSphere,
-                    that._horizonOcclusionPoint,
-                    defined(that._encodedNormals) ? 7 : 6,
-                    that._orientedBoundingBox);
+                    minimumHeight,
+                    maximumHeight,
+                    boundingSphere,
+                    occlusionPoint,
+                    stride,
+                    obb,
+                    terrainEncoding);
         });
     };
 

@@ -67,7 +67,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * // Construct a terrain provider that uses per vertex normals for lighting
@@ -76,7 +75,7 @@ define([
      *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
-     *
+     * 
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
      * var imageryProvider = new Cesium.TileMapServiceImageryProvider({
@@ -92,8 +91,10 @@ define([
      *
      * // The globe must enable lighting to make use of the terrain's vertex normals
      * viewer.scene.globe.enableLighting = true;
+     * 
+     * @see TerrainProvider
      */
-    var CesiumTerrainProvider = function CesiumTerrainProvider(options) {
+    function CesiumTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -258,14 +259,13 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     /**
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
      * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
      *
-     * @namespace
-     * @alias QuantizedMeshExtensionIds
+     * @exports QuantizedMeshExtensionIds
      * @see CesiumTerrainProvider
      * @private
      */
@@ -525,10 +525,9 @@ define([
             extensionList.push("watermask");
         }
 
-        var tileLoader = function(tileUrl) {
+        function tileLoader(tileUrl) {
             return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
-        };
-
+        }
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, tileLoader);

@@ -16,6 +16,7 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
+        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './WindingOrder'
@@ -36,6 +37,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
+        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         WindingOrder) {
@@ -128,7 +130,7 @@ define([
      *   shapePositions : computeCircle(100000.0)
      * });
      */
-    var PolylineVolumeOutlineGeometry = function(options) {
+    function PolylineVolumeOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.polylinePositions;
         var shape = options.shapePositions;
@@ -157,11 +159,10 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + 2;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolylineVolumeOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -280,7 +281,7 @@ define([
      */
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
-        var cleanPositions = PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions(positions, polylineVolumeOutlineGeometry._ellipsoid);
+        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
         var shape2D = polylineVolumeOutlineGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

@@ -6,7 +6,6 @@ defineSuite([
         EncodedCartesian3,
         Cartesian3) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('construct with default values', function() {
         var encoded = new EncodedCartesian3();

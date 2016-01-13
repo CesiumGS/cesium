@@ -30,7 +30,6 @@ defineSuite([
         DomEventSimulator,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var container;
     var widget;

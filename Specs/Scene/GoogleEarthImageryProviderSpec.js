@@ -28,7 +28,6 @@ defineSuite([
         ImageryState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -61,7 +60,6 @@ defineSuite([
         var path = '';
         var url = 'http://example.invalid';
         var channel = 1234;
-        var version = 1;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
@@ -98,7 +96,6 @@ defineSuite([
         var path = '';
         var url = 'http://example.invalid';
         var channel = 1234;
-        var version = 1;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);

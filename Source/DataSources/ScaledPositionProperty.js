@@ -22,12 +22,12 @@ define([
      * It will go away or be refactored to support data with arbitrary height references.
      * @private
      */
-    var ScaledPositionProperty = function(value) {
+    function ScaledPositionProperty(value) {
         this._definitionChanged = new Event();
         this._value = undefined;
         this._removeSubscription = undefined;
         this.setValue(value);
-    };
+    }
 
     defineProperties(ScaledPositionProperty.prototype, {
         isConstant : {

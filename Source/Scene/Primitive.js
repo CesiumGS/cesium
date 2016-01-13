@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/combine',
@@ -35,6 +36,7 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         clone,
         combine,
@@ -107,8 +109,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see GeometryInstance
-     * @see Appearance
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -175,8 +175,11 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
+     * 
+     * @see GeometryInstance
+     * @see Appearance
      */
-    var Primitive = function(options) {
+    function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -324,7 +327,7 @@ define([
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
-    };
+    }
 
     defineProperties(Primitive.prototype, {
         /**
@@ -1224,6 +1227,22 @@ define([
         attributes.length = 0;
     }
 
+    function updateBoundingVolumes(primitive, frameState) {
+        // Update bounding volumes for primitives that are sized in pixels.
+        // The pixel size in meters varies based on the distance from the camera.
+        var pixelSize = primitive.appearance.pixelSize;
+        if (defined(pixelSize)) {
+            var length = primitive._boundingSpheres.length;
+            for (var i = 0; i < length; ++i) {
+                var boundingSphere = primitive._boundingSpheres[i];
+                var boundingSphereWC = primitive._boundingSphereWC[i];
+                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                var sizeInMeters = pixelSizeInMeters * pixelSize;
+                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
+            }
+        }
+    }
+
     var rtcScratch = new Cartesian3();
 
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -1232,6 +1251,8 @@ define([
             throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
         }
         //>>includeEnd('debug');
+
+        updateBoundingVolumes(primitive, frameState);
 
         if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);
@@ -1518,10 +1539,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Primitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
         var length;

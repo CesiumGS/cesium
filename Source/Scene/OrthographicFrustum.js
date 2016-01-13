@@ -5,7 +5,6 @@ define([
         '../Core/Cartesian4',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         './CullingVolume'
@@ -15,7 +14,6 @@ define([
         Cartesian4,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Matrix4,
         CullingVolume) {
@@ -41,7 +39,7 @@ define([
      * frustum.near = 0.01 * maxRadii;
      * frustum.far = 50.0 * maxRadii;
      */
-    var OrthographicFrustum = function() {
+    function OrthographicFrustum() {
         /**
          * The left clipping plane.
          * @type {Number}
@@ -92,7 +90,7 @@ define([
 
         this._cullingVolume = new CullingVolume();
         this._orthographicMatrix = new Matrix4();
-    };
+    }
 
     function update(frustum) {
         //>>includeStart('debug', pragmas.debug);
@@ -266,53 +264,6 @@ define([
         plane.w = -Cartesian3.dot(Cartesian3.negate(direction, negateScratch), point);
 
         return this._cullingVolume;
-    };
-
-    /**
-     * Returns the pixel's width and height in meters.
-     *
-     * @param {Cartesian2} drawingBufferDimensions A {@link Cartesian2} with width and height in the x and y properties, respectively.
-     * @param {Number} distance Ignored for orthographic frustum.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
-     *
-     * @exception {DeveloperError} drawingBufferDimensions.x must be greater than zero.
-     * @exception {DeveloperError} drawingBufferDimensions.y must be greater than zero.
-     *
-     * @example
-     * var pixelSize = camera.frustum.getPixelSize(new Cesium.Cartesian2(scene.drawingBufferWidth, scene.drawingBufferHeight));
-     *
-     * @deprecated
-     */
-    OrthographicFrustum.prototype.getPixelSize = function(drawingBufferDimensions, distance, result) {
-        deprecationWarning('OrthographicFrustum', 'getPixelSize is deprecated. Use getPixelDimensions instead.');
-
-        update(this);
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawingBufferDimensions)) {
-            throw new DeveloperError('drawingBufferDimensions is required.');
-        }
-        if (drawingBufferDimensions.x <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.x must be greater than zero.');
-        }
-        if (drawingBufferDimensions.y <= 0) {
-            throw new DeveloperError('drawingBufferDimensions.y must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        var frustumWidth = this.right - this.left;
-        var frustumHeight = this.top - this.bottom;
-        var pixelWidth = frustumWidth / drawingBufferDimensions.x;
-        var pixelHeight = frustumHeight / drawingBufferDimensions.y;
-
-        if (!defined(result)) {
-            return new Cartesian2(pixelWidth, pixelHeight);
-        }
-
-        result.x = pixelWidth;
-        result.y = pixelHeight;
-        return result;
     };
 
     /**

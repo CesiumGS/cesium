@@ -115,15 +115,14 @@ define([
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats] The formats in which to get feature information at a
      *                                 specific location when {@see UrlTemplateImageryProvider#pickFeatures} is invoked.  If this
      *                                 parameter is not specified, feature picking is disabled.
+     * @param {Boolean} [options.enablePickFeatures=true] If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+     *        request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+     *        {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+     *        features) without communicating with the server.  Set this property to false if you know your data
+     *        source does not support picking features or if you don't want this provider's features to be pickable. Note
+     *        that this can be dynamically overridden by modifying the {@link UriTemplateImageryProvider#enablePickFeatures}
+     *        property.
      *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see WebMapTileServiceImageryProvider
      *
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
@@ -148,8 +147,17 @@ define([
      *          'width=256&height=256',
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
      * });
+     * 
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see TileMapServiceImageryProvider
+     * @see WebMapServiceImageryProvider
+     * @see WebMapTileServiceImageryProvider
      */
-    var UrlTemplateImageryProvider = function UrlTemplateImageryProvider(options) {
+    function UrlTemplateImageryProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -184,6 +192,17 @@ define([
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
         this._hasAlphaChannel = defaultValue(options.hasAlphaChannel, true);
+
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
+         * request the <code>options.pickFeaturesUrl</code> and attempt to interpret the features included in the response.  If false,
+         * {@link UrlTemplateImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @type {Boolean}
+         * @default true
+         */
+        this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -233,7 +252,7 @@ define([
 
             requestMetadata();
        }
-    };
+    }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
         /**
@@ -548,8 +567,8 @@ define([
     };
 
     /**
-     * Picking features is not currently supported by this imagery provider, so this function simply returns
-     * undefined.
+     * Asynchronously determines what features, if any, are located at a given longitude and latitude within
+     * a tile.  This function should not be called before {@link ImageryProvider#ready} returns true.
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
@@ -562,7 +581,7 @@ define([
      *                   It may also be undefined if picking is not supported.
      */
     UrlTemplateImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        if (!defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
+        if (!this.enablePickFeatures || !defined(this._pickFeaturesUrl) || this._getFeatureInfoFormats.length === 0) {
             return undefined;
         }
 

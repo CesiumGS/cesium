@@ -22,7 +22,7 @@ define([
      *
      * @private
      */
-    var EncodedCartesian3 = function() {
+    function EncodedCartesian3() {
         /**
          * The high bits for each component.  Bits 0 to 22 store the whole value.  Bits 23 to 31 are not used.
          *
@@ -38,7 +38,7 @@ define([
          * @default {@link Cartesian3.ZERO}
          */
         this.low = Cartesian3.clone(Cartesian3.ZERO);
-    };
+    }
 
     /**
      * Encodes a 64-bit floating-point value as two floating-point values that, when converted to

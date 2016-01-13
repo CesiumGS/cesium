@@ -10,7 +10,7 @@ http://cesiumjs.org/
 
 See the [Cesium Up and Running](http://cesiumjs.org/2013/04/12/Cesium-up-and-running/) tutorial.  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
 
-Interested in contributing?  See the [wiki](https://github.com/AnalyticalGraphicsInc/cesium/wiki).
+Interested in contributing?  See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Mission ###
 
@@ -33,6 +33,11 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/Nanaimo.html"><img src="http://cesiumjs.org/demos/images/Nanaimo.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/WAVE.html"><img src="http://cesiumjs.org/demos/images/WAVE.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/HereYouGo.html"><img src="http://cesiumjs.org/demos/images/HereYouGo.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/EastJapanEarthquake.html"><img src="http://cesiumjs.org/demos/images/JapanEarthquake.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/CyberCity3D.html"><img src="http://cesiumjs.org/demos/images/CyberCity.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/PaperDrone.html"><img src="http://cesiumjs.org/demos/images/PaperDrone.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/3DHarvestingPlanner.html"><img src="http://cesiumjs.org/demos/images/3DHarvest1.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/OpenWebGIS.html"><img src="http://cesiumjs.org/demos/images/OpenWebGIS.png" height="150" /></a>&nbsp;

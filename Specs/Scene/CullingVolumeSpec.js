@@ -14,7 +14,6 @@ defineSuite([
         Intersect,
         PerspectiveFrustum) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var cullingVolume;
 
@@ -45,7 +44,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    var testWithAndWithoutPlaneMask = function(culling, bound, intersect) {
+    function testWithAndWithoutPlaneMask(culling, bound, intersect) {
         expect(culling.computeVisibility(bound)).toEqual(intersect);
 
         var mask = culling.computeVisibilityWithPlaneMask(bound, CullingVolume.MASK_INDETERMINATE);
@@ -58,8 +57,7 @@ defineSuite([
             expect(mask).not.toEqual(CullingVolume.MASK_OUTSIDE);
         }
         expect(culling.computeVisibilityWithPlaneMask(bound, mask)).toEqual(mask);
-    };
-
+    }
     describe('box intersections', function() {
 
         it('can contain an axis aligned bounding box', function() {

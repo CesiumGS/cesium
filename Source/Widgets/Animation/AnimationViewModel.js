@@ -114,7 +114,7 @@ define([
      *
      * @see Animation
      */
-    var AnimationViewModel = function(clockViewModel) {
+    function AnimationViewModel(clockViewModel) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
@@ -369,7 +369,7 @@ define([
                 clockViewModel.multiplier = shuttleRingTicks[index];
             }
         });
-    };
+    }
 
     /**
      * Gets or sets the default date formatter used by new instances.

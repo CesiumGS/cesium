@@ -44,7 +44,7 @@ define([
      *     container : 'navigationHelpButtonContainer'
      * });
      */
-    var NavigationHelpButton = function(options) {
+    function NavigationHelpButton(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.container)) {
             throw new DeveloperError('options.container is required.');
@@ -192,7 +192,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
             document.addEventListener('mousedown', this._closeInstructions, true);
             document.addEventListener('touchstart', this._closeInstructions, true);
         }
-    };
+    }
 
     defineProperties(NavigationHelpButton.prototype, {
         /**

@@ -62,7 +62,7 @@ define([
      *        frame, so the actual number of resident tiles may be higher.  The value of
      *        this property will not affect visual quality.
      */
-    var QuadtreePrimitive = function QuadtreePrimitive(options) {
+    function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.tileProvider)) {
             throw new DeveloperError('options.tileProvider is required.');
@@ -134,7 +134,10 @@ define([
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
-    };
+
+        this._tileLoadProgressEvent = new Event();
+        this._lastTileLoadQueueLength = 0;
+    }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -145,6 +148,18 @@ define([
         tileProvider : {
             get : function() {
                 return this._tileProvider;
+            }
+        },
+        /**
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
+         *
+         * @memberof QuadtreePrimitive.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get : function() {
+                return this._tileLoadProgressEvent;
             }
         }
     });
@@ -261,7 +276,7 @@ define([
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.endUpdate(frameState);
+            this._tileProvider.updateForPick(frameState);
         }
     };
 
@@ -295,10 +310,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreePrimitive#isDestroyed
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     * 
+     * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
@@ -312,7 +328,6 @@ define([
         }
 
         var i;
-        var j;
         var len;
 
         // Clear the render list.
@@ -431,6 +446,8 @@ define([
             }
         }
 
+        raiseTileLoadProgressEvent(primitive);
+
         if (debug.enableDebugOutput) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
@@ -438,7 +455,6 @@ define([
                 debug.maxDepth !== debug.lastMaxDepth ||
                 debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-                /*global console*/
                 console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
                 debug.lastTilesVisited = debug.tilesVisited;
@@ -447,6 +463,19 @@ define([
                 debug.lastMaxDepth = debug.maxDepth;
                 debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
             }
+        }
+    }
+
+    /**
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new one.
+     */
+    function raiseTileLoadProgressEvent(primitive) {
+        var currentLoadQueueLength = primitive._tileLoadQueue.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
         }
     }
 

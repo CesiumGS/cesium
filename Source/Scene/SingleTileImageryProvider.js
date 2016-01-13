@@ -44,13 +44,13 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
-    var SingleTileImageryProvider = function(options) {
+    function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
 
@@ -125,8 +125,7 @@ define([
         }
 
         doRequest();
-    };
-
+    }
 
     defineProperties(SingleTileImageryProvider.prototype, {
         /**

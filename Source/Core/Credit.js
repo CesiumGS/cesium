@@ -26,7 +26,7 @@ define([
      * //Create a credit with a tooltip, image and link
      * var credit = new Cesium.Credit('Cesium', '/images/cesium_logo.png', 'http://cesiumjs.org/');
      */
-    var Credit = function(text, imageUrl, link) {
+    function Credit(text, imageUrl, link) {
         var hasLink = (defined(link));
         var hasImage = (defined(imageUrl));
         var hasText = (defined(text));
@@ -59,7 +59,7 @@ define([
         }
 
         this._id = id;
-    };
+    }
 
     defineProperties(Credit.prototype, {
         /**

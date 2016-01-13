@@ -14,15 +14,13 @@ defineSuite([
         TimeIntervalCollection,
         Entity) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
-    var CollectionListener = function() {
+    function CollectionListener() {
         this.timesCalled = 0;
         this.added = undefined;
         this.removed = undefined;
         this.changed = undefined;
-    };
-
+    }
     CollectionListener.prototype.onCollectionChanged = function(collection, added, removed, changed) {
         this.timesCalled++;
         this.added = added.slice(0);
