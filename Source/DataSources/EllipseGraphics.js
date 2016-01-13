@@ -41,6 +41,7 @@ define([
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
+     * @param {Property} [options.onTerrain=false] A boolean Property specifying whether the ellipse is drawn on terrain.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
@@ -73,6 +74,8 @@ define([
         this._outlineWidthSubscription = undefined;
         this._numberOfVerticalLines = undefined;
         this._numberOfVerticalLinesSubscription = undefined;
+        this._onTerrain = undefined;
+        this._onTerrainSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -200,7 +203,15 @@ define([
          * @type {Property}
          * @default 16
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines')
+        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
+
+        /**
+         * Gets or sets the boolean Property specifying whether the ellipse should be drawn on terrain.
+         * @memberof RectangleGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        onTerrain : createPropertyDescriptor('onTerrain')
     });
 
     /**
@@ -227,6 +238,7 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.numberOfVerticalLines = this.numberOfVerticalLines;
+        result.onTerrain = this.onTerrain;
         return result;
     };
 
@@ -257,6 +269,7 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
+        this.onTerrain = defaultValue(this.onTerrain, source.onTerrain);
     };
 
     return EllipseGraphics;

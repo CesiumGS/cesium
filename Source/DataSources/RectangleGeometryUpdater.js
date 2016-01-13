@@ -52,6 +52,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultOnTerrain = new ConstantProperty(false);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -100,7 +101,11 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._onTerrain = false;
         this._options = new GeometryOptions(entity);
+
+        // When used on terrain we will pretend to be dynamic but may actually be constant.
+        this._isConstant = true;
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
 
@@ -459,9 +464,9 @@ define([
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
 
-        this._onTerrain = (!defined(height) && !defined(extrudedHeight) && isColorMaterial);
-        // When used on terrain we will pretend to be dynamic but may actually be constant.
-        this._isConstant = true;
+        var onTerrainProperty = defaultValue(rectangle.onTerrain, defaultOnTerrain);
+        var onTerrainEnabled = onTerrainProperty.isConstant ? onTerrainProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
+        this._onTerrain = onTerrainEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
 
         if (!coordinates.isConstant || //
             !Property.isConstant(height) || //
