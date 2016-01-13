@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getAbsoluteUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
@@ -27,6 +28,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getAbsoluteUri,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
@@ -224,8 +226,7 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : this._tileset.url + gltfUrl;
-            collectionOptions.url = url;
+            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.url);
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;

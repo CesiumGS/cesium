@@ -10,6 +10,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/getAbsoluteUri',
         '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/Matrix4',
@@ -36,6 +37,7 @@ define([
         destroyObject,
         DeveloperError,
         GeometryInstance,
+        getAbsoluteUri,
         getExtensionFromUri,
         Intersect,
         Matrix4,
@@ -147,7 +149,7 @@ define([
         var content;
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
-            var url = (new Uri(contentUrl).isAbsolute()) ? contentUrl : baseUrl + contentUrl;
+            var url = getAbsoluteUri(contentUrl, baseUrl);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
