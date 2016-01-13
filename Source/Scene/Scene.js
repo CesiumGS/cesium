@@ -196,8 +196,6 @@ define([
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
-        var leftCreditContainer = options.leftCreditContainer;
-        var rightCreditContainer = options.rightCreditContainer;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
@@ -207,24 +205,18 @@ define([
 
         var context = new Context(canvas, contextOptions);
         if (!defined(creditContainer)) {
-            creditContainer = CreditDisplay.createDefaultContainer();
+            creditContainer = document.createElement('div');
+            creditContainer.style.position = 'absolute';
+            creditContainer.style.bottom = '0';
+            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style.color = '#ffffff';
+            creditContainer.style['font-size'] = '10px';
+            creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
 
-        if (!defined(leftCreditContainer) || !defined(rightCreditContainer)) {
-            leftCreditContainer = CreditDisplay.createDefaultContainer();
-            leftCreditContainer.style.left = '0';
-            leftCreditContainer.style.width = '50%';
-            canvas.parentNode.appendChild(leftCreditContainer);
-
-            rightCreditContainer = CreditDisplay.createDefaultContainer();
-            rightCreditContainer.style.left = '50%';
-            rightCreditContainer.style.width = '50%';
-            canvas.parentNode.appendChild(rightCreditContainer);
-        }
-
         this._id = createGuid();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, leftCreditContainer, rightCreditContainer));
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer));
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
 
         var ps = new PassState(context);
@@ -1075,7 +1067,6 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.creditDisplay.useWebVR = scene._useWebVR;
 
         clearPasses(frameState.passes);
     }

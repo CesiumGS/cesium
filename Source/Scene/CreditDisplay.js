@@ -1,108 +1,70 @@
 /*global define*/
 define([
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError'
+       '../Core/Credit',
+       '../Core/defaultValue',
+       '../Core/defined',
+       '../Core/destroyObject',
+       '../Core/DeveloperError'
     ], function(
         Credit,
         defaultValue,
         defined,
-        defineProperties,
         destroyObject,
         DeveloperError) {
     "use strict";
 
-    function createDelimiterElement(delimiter) {
-        var del = document.createElement('span');
-        del.textContent = delimiter;
-        del.className = 'cesium-credit-delimiter';
-        return del;
+    function displayTextCredit(credit, container, delimiter) {
+        if (!defined(credit.element)) {
+            var text = credit.text;
+            var link = credit.link;
+            var span = document.createElement('span');
+            if (credit.hasLink()) {
+                var a = document.createElement('a');
+                a.textContent = text;
+                a.href = link;
+                a.target = '_blank';
+                span.appendChild(a);
+            } else {
+                span.textContent = text;
+            }
+            span.className = 'cesium-credit-text';
+            credit.element = span;
+        }
+        if (container.hasChildNodes()) {
+            var del = document.createElement('span');
+            del.textContent = delimiter;
+            del.className = 'cesium-credit-delimiter';
+            container.appendChild(del);
+        }
+        container.appendChild(credit.element);
     }
 
-    function createTextElement(credit) {
-        var text = credit.text;
-        var link = credit.link;
-        var span = document.createElement('span');
-        if (credit.hasLink()) {
-            var a = document.createElement('a');
-            a.textContent = text;
-            a.href = link;
-            a.target = '_blank';
-            span.appendChild(a);
-        } else {
-            span.textContent = text;
-        }
-        span.className = 'cesium-credit-text';
-        return span;
-    }
+    function displayImageCredit(credit, container) {
+        if (!defined(credit.element)) {
+            var text = credit.text;
+            var link = credit.link;
+            var span = document.createElement('span');
+            var content = document.createElement('img');
+            content.src = credit.imageUrl;
+            content.style['vertical-align'] = 'bottom';
+            if (defined(text)) {
+                content.alt = text;
+                content.title = text;
+            }
 
-    function displayTextCredit(creditDisplay, credit) {
-        var delimiter = creditDisplay._delimiter;
-
-        if (!creditDisplay.useWebVR) {
-            if (!defined(credit.element)) {
-                credit.element = createTextElement(credit);
+            if (credit.hasLink()) {
+                var a = document.createElement('a');
+                a.appendChild(content);
+                a.href = link;
+                a.target = '_blank';
+                span.appendChild(a);
+            } else {
+                span.appendChild(content);
             }
-            if (creditDisplay._textContainer.hasChildNodes()) {
-                creditDisplay._textContainer.appendChild(createDelimiterElement(delimiter));
-            }
-            creditDisplay._textContainer.appendChild(credit.element);
-        } else {
-            if (!defined(credit.leftElement)) {
-                credit.leftElement = createTextElement(credit);
-                credit.rightElement = createTextElement(credit);
-            }
-            if (creditDisplay._leftTextContainer.hasChildNodes()) {
-                creditDisplay._leftTextContainer.appendChild(createDelimiterElement(delimiter));
-                creditDisplay._rightTextContainer.appendChild(createDelimiterElement(delimiter));
-            }
-            creditDisplay._leftTextContainer.appendChild(credit.leftElement);
-            creditDisplay._rightTextContainer.appendChild(credit.rightElement);
+            span.className = 'cesium-credit-image';
+            credit.element = span;
         }
-    }
-
-    function createImageElement(credit) {
-        var text = credit.text;
-        var link = credit.link;
-        var span = document.createElement('span');
-        var content = document.createElement('img');
-        content.src = credit.imageUrl;
-        content.style['vertical-align'] = 'bottom';
-        if (defined(text)) {
-            content.alt = text;
-            content.title = text;
-        }
-
-        if (credit.hasLink()) {
-            var a = document.createElement('a');
-            a.appendChild(content);
-            a.href = link;
-            a.target = '_blank';
-            span.appendChild(a);
-        } else {
-            span.appendChild(content);
-        }
-        span.className = 'cesium-credit-image';
-        return span;
-    }
-
-    function displayImageCredit(creditDisplay, credit) {
-        if (!creditDisplay.useWebVR) {
-            if (!defined(credit.element)) {
-                credit.element = createImageElement(credit);
-            }
-            creditDisplay._imageContainer.appendChild(credit.element);
-        } else {
-            if (!defined(credit.leftElement)) {
-                credit.leftElement = createImageElement(credit);
-                credit.rightElement = createImageElement(credit);
-            }
-            creditDisplay._leftImageContainer.appendChild(credit.leftElement);
-            creditDisplay._rightImageContainer.appendChild(credit.rightElement);
-        }
+        container.appendChild(credit.element);
     }
 
     function contains(credits, credit) {
@@ -116,34 +78,20 @@ define([
         return false;
     }
 
-    function removeCreditDomElement(credit, element) {
-        var container = element.parentNode;
-        if (!container) {
-            return;
-        }
-
-        if (!credit.hasImage()) {
-            var delimiter = element.previousSibling;
-            if (delimiter === null) {
-                delimiter = element.nextSibling;
-            }
-            if (delimiter !== null) {
-                container.removeChild(delimiter);
-            }
-        }
-        container.removeChild(element);
-    }
-
-    function removeCredit(credit) {
+    function removeCreditDomElement(credit) {
         var element = credit.element;
         if (defined(element)) {
-            removeCreditDomElement(credit, element);
-        }
-
-        var leftElement = credit.leftElement;
-        if (defined(leftElement)) {
-            removeCreditDomElement(credit, leftElement);
-            removeCreditDomElement(credit, credit.rightElement);
+            var container = element.parentNode;
+            if (!credit.hasImage()) {
+                var delimiter = element.previousSibling;
+                if (delimiter === null) {
+                    delimiter = element.nextSibling;
+                }
+                if (delimiter !== null) {
+                    container.removeChild(delimiter);
+                }
+            }
+            container.removeChild(element);
         }
     }
 
@@ -157,7 +105,7 @@ define([
             if (defined(credit)) {
                 index = displayedTextCredits.indexOf(credit);
                 if (index === -1) {
-                    displayTextCredit(creditDisplay, credit);
+                    displayTextCredit(credit, creditDisplay._textContainer, creditDisplay._delimiter);
                 } else {
                     displayedTextCredits.splice(index, 1);
                 }
@@ -166,7 +114,7 @@ define([
         for (i = 0; i < displayedTextCredits.length; i++) {
             credit = displayedTextCredits[i];
             if (defined(credit)) {
-                removeCredit(credit);
+                removeCreditDomElement(credit);
             }
         }
 
@@ -182,7 +130,7 @@ define([
             if (defined(credit)) {
                 index = displayedImageCredits.indexOf(credit);
                 if (index === -1) {
-                    displayImageCredit(creditDisplay, credit);
+                    displayImageCredit(credit, creditDisplay._imageContainer);
                 } else {
                     displayedImageCredits.splice(index, 1);
                 }
@@ -191,29 +139,15 @@ define([
         for (i = 0; i < displayedImageCredits.length; i++) {
             credit = displayedImageCredits[i];
             if (defined(credit)) {
-                removeCredit(credit);
+                removeCreditDomElement(credit);
             }
         }
-    }
-
-    function createImageContainer() {
-        var imageContainer = document.createElement('span');
-        imageContainer.className = 'cesium-credit-imageContainer';
-        return imageContainer;
-    }
-
-    function createTextContainer() {
-        var textContainer = document.createElement('span');
-        textContainer.className = 'cesium-credit-textContainer';
-        return textContainer;
     }
 
     /**
      * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
-     * @param {HTMLElement} leftContainer The HTML element for the left eye when using VR.
-     * @param {HTMLElement} rightContainer The HTML element for the right eye when using VR.
      * @param {String} [delimiter= ' • '] The string to separate text credits
      *
      * @alias CreditDisplay
@@ -222,47 +156,24 @@ define([
      * @example
      * var creditDisplay = new Cesium.CreditDisplay(creditContainer);
      */
-    function CreditDisplay(container, leftContainer, rightContainer, delimiter) {
+    function CreditDisplay(container, delimiter) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('credit container is required');
         }
-        if (!defined(leftContainer)) {
-            throw new DeveloperError('leftContainer container is required');
-        }
-        if (!defined(rightContainer)) {
-            throw new DeveloperError('rightContainer container is required');
-        }
         //>>includeEnd('debug');
 
-        var imageContainer = createImageContainer();
-        var textContainer = createTextContainer();
+        var imageContainer = document.createElement('span');
+        imageContainer.className = 'cesium-credit-imageContainer';
+        var textContainer = document.createElement('span');
+        textContainer.className = 'cesium-credit-textContainer';
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
+        this._delimiter = defaultValue(delimiter, ' • ');
         this._container = container;
         this._textContainer = textContainer;
         this._imageContainer = imageContainer;
-
-        var leftImageContainer = createImageContainer();
-        var leftTextContainer = createTextContainer();
-        leftContainer.appendChild(leftImageContainer);
-        leftContainer.appendChild(leftTextContainer);
-
-        this._leftContainer = leftContainer;
-        this._leftImageContainer = leftImageContainer;
-        this._leftTextContainer = leftTextContainer;
-
-        var rightImageContainer = createImageContainer();
-        var rightTextContainer = createTextContainer();
-        rightContainer.appendChild(rightImageContainer);
-        rightContainer.appendChild(rightTextContainer);
-
-        this._rightContainer = rightContainer;
-        this._rightImageContainer = rightImageContainer;
-        this._rightTextContainer = rightTextContainer;
-
-        this._delimiter = defaultValue(delimiter, ' • ');
         this._defaultImageCredits = [];
         this._defaultTextCredits = [];
 
@@ -274,52 +185,7 @@ define([
             imageCredits : [],
             textCredits : []
         };
-
-        this._useWebVR = false;
-        this._leftContainer.style.display = 'none';
-        this._rightContainer.style.display = 'none';
     }
-
-    defineProperties(CreditDisplay.prototype, {
-        /**
-         * Defines whether VR is being used and the credits should be displayed in the left and right
-         * eye containers pr the single container for the normal view.
-         * @memberof CreditDisplay.prototype
-         * @type {Boolean}
-         * @default false
-         */
-        useWebVR : {
-            get : function() {
-                return this._useWebVR;
-            },
-            set : function(value) {
-                this._useWebVR = value;
-                if (this._useWebVR) {
-                    this._container.style.display = 'none';
-                    this._leftContainer.style.display = 'block';
-                    this._rightContainer.style.display = 'block';
-                } else {
-                    this._container.style.display = 'block';
-                    this._leftContainer.style.display = 'none';
-                    this._rightContainer.style.display = 'none';
-                }
-            }
-        }
-    });
-
-    /**
-     * @private
-     */
-    CreditDisplay.createDefaultContainer = function() {
-        var creditContainer = document.createElement('div');
-        creditContainer.style.position = 'absolute';
-        creditContainer.style.bottom = '0';
-        creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
-        creditContainer.style.color = '#ffffff';
-        creditContainer.style['font-size'] = '10px';
-        creditContainer.style['padding-right'] = '5px';
-        return creditContainer;
-    };
 
     /**
      * Adds a credit to the list of current credits to be displayed in the credit container
@@ -438,10 +304,7 @@ define([
     CreditDisplay.prototype.destroy = function() {
         this._container.removeChild(this._textContainer);
         this._container.removeChild(this._imageContainer);
-        this._leftContainer.removeChild(this._leftTextContainer);
-        this._leftContainer.removeChild(this._leftImageContainer);
-        this._rightContainer.removeChild(this._rightTextContainer);
-        this._rightContainer.removeChild(this._rightImageContainer);
+
         return destroyObject(this);
     };
 

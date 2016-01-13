@@ -216,16 +216,8 @@ define([
         var creditContainer = document.createElement('div');
         creditContainer.className = 'cesium-widget-credits';
 
-        var leftCreditContainer = document.createElement('div');
-        leftCreditContainer.className = 'cesium-widget-credits-left';
-
-        var rightCreditContainer = document.createElement('div');
-        rightCreditContainer.className = 'cesium-widget-credits-right';
-
         var creditContainerContainer = defined(options.creditContainer) ? getElement(options.creditContainer) : element;
         creditContainerContainer.appendChild(creditContainer);
-        creditContainerContainer.appendChild(leftCreditContainer);
-        creditContainerContainer.appendChild(rightCreditContainer);
 
         var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
 
@@ -249,8 +241,6 @@ define([
                 canvas : canvas,
                 contextOptions : options.contextOptions,
                 creditContainer : creditContainer,
-                leftCreditContainer : leftCreditContainer,
-                rightCreditContainer : rightCreditContainer,
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),

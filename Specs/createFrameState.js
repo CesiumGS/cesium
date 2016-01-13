@@ -17,10 +17,7 @@ define([
 
     function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var container = document.createElement('div');
-        var leftContainer = document.createElement('div');
-        var rightContainer = document.createElement('div');
-        var frameState = new FrameState(context, new CreditDisplay(container, leftContainer, rightContainer));
+        var frameState = new FrameState(context, new CreditDisplay(document.createElement('div')));
 
         var projection = new GeographicProjection();
         frameState.mapProjection = projection;
