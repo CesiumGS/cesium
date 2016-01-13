@@ -11,8 +11,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Scene/UrlTemplateImageryProvider',
-        'Specs/pollToPromise',
-        
+        'Specs/pollToPromise'
     ], function(
         createOpenStreetMapImageryProvider,
         DefaultProxy,

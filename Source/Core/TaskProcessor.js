@@ -1,16 +1,16 @@
 /*global define*/
 define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './buildModuleUrl',
-        './defaultValue',
-        './defined',
-        './destroyObject',
-        './DeveloperError',
-        './getAbsoluteURL',
-        './isCrossOriginUrl',
-        './RuntimeError',
-        'require'
+           '../ThirdParty/Uri',
+           '../ThirdParty/when',
+           './buildModuleUrl',
+           './defaultValue',
+           './defined',
+           './destroyObject',
+           './DeveloperError',
+           './getAbsoluteUri',
+           './isCrossOriginUrl',
+           './RuntimeError',
+           'require'
     ], function(
         Uri,
         when,
@@ -19,7 +19,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
-        getAbsoluteURL,
+        getAbsoluteUri,
         isCrossOriginUrl,
         RuntimeError,
         require) {
@@ -142,7 +142,7 @@ define([
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else if (defined(require.toUrl)) {
             bootstrapMessage.loaderConfig.baseUrl =
-                getAbsoluteURL('..', new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js')));
+                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')

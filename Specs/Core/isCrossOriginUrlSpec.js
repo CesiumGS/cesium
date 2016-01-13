@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/getAbsoluteURL',
+        'Core/getAbsoluteUri',
         'Core/isCrossOriginUrl',
         'ThirdParty/Uri'
     ], function(
-        getAbsoluteURL,
+        getAbsoluteUri,
         isCrossOriginUrl,
         Uri) {
     "use strict";
@@ -16,10 +16,10 @@ defineSuite([
 
     it('returns false for absolute urls that are not cross-origin', function() {
 
-        var absoluteUrl = getAbsoluteURL('/some/url.jpg');
+        var absoluteUrl = getAbsoluteUri('/some/url.jpg');
         expect(isCrossOriginUrl(absoluteUrl)).toEqual(false);
 
-        absoluteUrl = getAbsoluteURL('some/url.jpg');
+        absoluteUrl = getAbsoluteUri('some/url.jpg');
         expect(isCrossOriginUrl(absoluteUrl)).toEqual(false);
     });
 

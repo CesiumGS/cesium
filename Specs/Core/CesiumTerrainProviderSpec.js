@@ -5,7 +5,7 @@ defineSuite([
         'Core/defined',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
-        'Core/getAbsoluteURL',
+        'Core/getAbsoluteUri',
         'Core/HeightmapTerrainData',
         'Core/loadWithXhr',
         'Core/Math',
@@ -20,7 +20,7 @@ defineSuite([
         defined,
         Ellipsoid,
         GeographicTilingScheme,
-        getAbsoluteURL,
+        getAbsoluteUri,
         HeightmapTerrainData,
         loadWithXhr,
         CesiumMath,
@@ -386,7 +386,7 @@ defineSuite([
         it('supports scheme-less template URLs in layer.json resolved with absolute URL', function() {
             returnTileJson('Data/CesiumTerrainTileJson/MultipleUrls.tile.json');
 
-            var url = getAbsoluteURL('Data/CesiumTerrainTileJson');
+            var url = getAbsoluteUri('Data/CesiumTerrainTileJson');
 
             var provider = new CesiumTerrainProvider({
                 url : url
