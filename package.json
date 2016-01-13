@@ -40,7 +40,7 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "vinyl-transform": "^1.0.0",
-    "yargs": "3.27.0"
+    "yargs": "3.27.0",
     "deamdify": "^0.1.1"
   },
   "scripts": {
