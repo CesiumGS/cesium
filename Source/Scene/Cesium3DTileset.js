@@ -7,6 +7,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/GetExtensionFromUri',
+        '../Core/getFileNameFromUri',
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
@@ -26,6 +28,8 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getExtensionFromUri,
+        getFileNameFromUri,
         Intersect,
         loadJson,
         CesiumMath,
@@ -68,10 +72,22 @@ define([
         }
         //>>includeEnd('debug');
 
+        var fileName = defaultValue(getFileNameFromUri(url), 'tiles.json');
+
+        if (getExtensionFromUri(fileName) !== 'json') {
+            fileName = 'tiles.json';
+        }
+
+        var endPathIndex = url.lastIndexOf('/');
+        if (endPathIndex !== -1) {
+            url = url.substring(0, endPathIndex);
+        }
+
+
         url = appendForwardSlash(url);
 
         this._url = url;
-        this._tilesJson = url + 'tiles.json';
+        this._tilesJson = url + fileName;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._properties = undefined; // Metadata for per-model/point/etc properties
