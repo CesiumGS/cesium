@@ -38,7 +38,6 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
-     * @param {Property} [options.onTerrain=false] A boolean Property specifying whether the polygon is drawn on terrain.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -68,8 +67,6 @@ define([
         this._outlineWidthSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
-        this._onTerrain = undefined;
-        this._onTerrainSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -184,15 +181,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : createPropertyDescriptor('perPositionHeight'),
-
-        /**
-         * Gets or sets the boolean Property specifying whether the polygon should be drawn on terrain.
-         * @memberof RectangleGraphics.prototype
-         * @type {Property}
-         * @default true
-         */
-        onTerrain : createPropertyDescriptor('onTerrain')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight')
     });
 
     /**
@@ -217,7 +206,6 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.perPositionHeight = this.perPositionHeight;
-        result.onTerrain = this.onTerrain;
         return result;
     };
 
@@ -246,7 +234,6 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
-        this.onTerrain = defaultValue(this.onTerrain, source.onTerrain);
     };
 
     return PolygonGraphics;

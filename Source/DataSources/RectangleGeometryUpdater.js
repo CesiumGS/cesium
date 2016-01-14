@@ -52,7 +52,6 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultOnTerrain = new ConstantProperty(false);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -104,8 +103,6 @@ define([
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
 
-        // When used on terrain we will pretend to be dynamic but may actually be constant.
-        this._isConstant = true;
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
 
@@ -257,6 +254,18 @@ define([
         isClosed : {
             get : function() {
                 return this._isClosed;
+            }
+        },
+        /**
+         * Gets a value indicating if the geometry should be drawn on terrain.
+         * @memberof CorridorGeometryUpdater.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        onTerrain : {
+            get : function() {
+                return this._onTerrain;
             }
         },
         /**
@@ -460,13 +469,15 @@ define([
         var outlineWidth = rectangle.outlineWidth;
         var closeBottom = rectangle.closeBottom;
         var closeTop = rectangle.closeTop;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
+
+        if (outlineEnabled && onTerrain) {
+            outlineEnabled = false;
+        }
 
         this._fillEnabled = fillEnabled;
+        this._onTerrain = onTerrain;
         this._outlineEnabled = outlineEnabled;
-
-        var onTerrainProperty = defaultValue(rectangle.onTerrain, defaultOnTerrain);
-        var onTerrainEnabled = onTerrainProperty.isConstant ? onTerrainProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-        this._onTerrain = onTerrainEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
 
         if (!coordinates.isConstant || //
             !Property.isConstant(height) || //
@@ -477,12 +488,6 @@ define([
             !Property.isConstant(outlineWidth) || //
             !Property.isConstant(closeBottom) || //
             !Property.isConstant(closeTop)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._isConstant = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else if(this._onTerrain) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -548,9 +553,6 @@ define([
 
         var geometryUpdater = this._geometryUpdater;
         var onTerrain = geometryUpdater._onTerrain;
-        if (defined(this._primitive) && geometryUpdater._isConstant) {
-            return;
-        }
 
         var primitives = this._primitives;
         var groundPrimitives = this._groundPrimitives;

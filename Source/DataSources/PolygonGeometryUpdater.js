@@ -56,7 +56,6 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultOnTerrain = new ConstantProperty(false);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -105,9 +104,6 @@ define([
         this._outlineWidth = 1.0;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
-
-        // When used on terrain we will pretend to be dynamic but may actually be constant.
-        this._isConstant = true;
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     }
 
@@ -259,6 +255,18 @@ define([
         isClosed : {
             get : function() {
                 return this._isClosed;
+            }
+        },
+        /**
+         * Gets a value indicating if the geometry should be drawn on terrain.
+         * @memberof CorridorGeometryUpdater.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        onTerrain : {
+            get : function() {
+                return this._onTerrain;
             }
         },
         /**
@@ -418,6 +426,9 @@ define([
         var fillProperty = polygon.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
+        var perPositionHeightProperty = polygon.perPositionHeight;
+        var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
+
         var outlineProperty = polygon.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
@@ -459,14 +470,15 @@ define([
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
         var outlineWidth = polygon.outlineWidth;
-        var perPositionHeight = polygon.perPositionHeight;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial && !perPositionHeightEnabled;
+
+        if (outlineEnabled && onTerrain) {
+            outlineEnabled = false;
+        }
 
         this._fillEnabled = fillEnabled;
+        this._onTerrain = onTerrain;
         this._outlineEnabled = outlineEnabled;
-
-        var onTerrainProperty = defaultValue(polygon.onTerrain, defaultOnTerrain);
-        var onTerrainEnabled = onTerrainProperty.isConstant ? onTerrainProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
-        this._onTerrain = onTerrainEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
 
         if (!hierarchy.isConstant || //
             !Property.isConstant(height) || //
@@ -474,13 +486,7 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(perPositionHeight)) {
-            if (!this._dynamic) {
-                this._dynamic = true;
-                this._isConstant = false;
-                this._geometryChanged.raiseEvent(this);
-            }
-        } else if(this._onTerrain) {
+            !Property.isConstant(perPositionHeightProperty)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -502,7 +508,7 @@ define([
             options.extrudedHeight = extrudedHeightValue;
             options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            options.perPositionHeight = defined(perPositionHeightProperty) ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
             this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue;
             this._dynamic = false;
@@ -552,9 +558,6 @@ define([
 
         var geometryUpdater = this._geometryUpdater;
         var onTerrain = geometryUpdater._onTerrain;
-        if (defined(this._primitive) && geometryUpdater._isConstant) {
-            return;
-        }
 
         var primitives = this._primitives;
         var groundPrimitives = this._groundPrimitives;

@@ -9,6 +9,7 @@ define([
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
+        './StaticGroundGeometryColorBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         AssociativeArray,
@@ -20,6 +21,7 @@ define([
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch) {
     "use strict";
 
@@ -87,17 +89,21 @@ define([
         }
 
         if (updater.fillEnabled) {
-            if (updater.isClosed) {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._closedColorBatch.add(time, updater);
-                } else {
-                    that._closedMaterialBatch.add(time, updater);
-                }
+            if (updater.onTerrain) {
+                that._groundColorBatch.add(time, updater);
             } else {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._openColorBatch.add(time, updater);
+                if (updater.isClosed) {
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._closedColorBatch.add(time, updater);
+                    } else {
+                        that._closedMaterialBatch.add(time, updater);
+                    }
                 } else {
-                    that._openMaterialBatch.add(time, updater);
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._openColorBatch.add(time, updater);
+                    } else {
+                        that._openMaterialBatch.add(time, updater);
+                    }
                 }
             }
         }
@@ -142,8 +148,10 @@ define([
         this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
         this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
         this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
+        this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
-        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
+        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch,
+                         this._groundColorBatch, this._dynamicBatch, this._outlineBatch];
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
