@@ -3,4 +3,4 @@ node_js:
   - "0.12"
 sudo: false
 script:
-  - npm run jsHint && npm run release
+  - travis_wait npm run jsHint && npm run release
