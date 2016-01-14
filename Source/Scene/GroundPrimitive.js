@@ -3,9 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
@@ -34,9 +36,11 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         GeometryInstance,
@@ -87,7 +91,8 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render.
+     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render. This option is deprecated. Please use options.geometryInstances instead.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -96,7 +101,6 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     *
      *
      * @example
      * var rectangleInstance = new Cesium.GeometryInstance({
@@ -111,13 +115,17 @@ define([
      * scene.primitives.add(new Cesium.GroundPrimitive({
      *   geometryInstance : rectangleInstance
      * }));
-     * 
+     *
      * @see Primitive
      * @see GeometryInstance
      * @see Appearance
      */
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (defined(options.geometryInstance)) {
+            deprecationWarning('GroundPrimitive.geometryInstance', 'GroundPrimitive.geometryInstance is deprecated in version 1.18 and will be removed in version 1.20. Please use GroundPrimitive.geometryInstances.');
+        }
 
         /**
          * The geometry instance rendered with this primitive.  This may
@@ -127,16 +135,36 @@ define([
          * Changing this property after the primitive is rendered has no effect.
          * </p>
          *
-         * @type Array
+         * @type {GeometryInstance}
+         *
+         * @default undefined
+         *
+         * @deprecated
+         */
+        this.geometryInstance = options.geometryInstance;
+        /**
+         * The geometry instance rendered with this primitive.  This may
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
+         * is <code>true</code> when the primitive is constructed.
+         * <p>
+         * Changing this property after the primitive is rendered has no effect.
+         * </p>
+         * <p>
+         * Because of the rendering technique used, all geometry instances must be the same color.
+         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
+         * on the first attempt to render.
+         * </p>
+         *
+         * @type {Array|GeometryInstance}
          *
          * @default undefined
          */
-        this.geometryInstance = options.geometryInstance;
+        this.geometryInstances = options.geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
          *
-         * @type Boolean
+         * @type {Boolean}
          *
          * @default true
          */
@@ -160,6 +188,8 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+
+        this._uniformMap = {};
 
         this._boundingVolumes = [];
         this._boundingVolumes2D = [];
@@ -522,7 +552,8 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._modifyShaderPosition(primitive, ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = ShadowVolumeVS;
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
@@ -582,7 +613,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilPreloadPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // stencil depth command
@@ -597,7 +628,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilDepthPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // color command
@@ -612,7 +643,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsColorPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // pick stencil preload and depth are the same as the color pass
@@ -630,7 +661,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsPickPass;
             command.shaderProgram = groundPrimitive._spPick;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
         }
     }
@@ -682,7 +713,7 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -694,37 +725,80 @@ define([
         }
 
         if (!defined(this._primitive)) {
-            var instance = this.geometryInstance;
-            var geometry = instance.geometry;
+            var primitiveOptions = this._primitiveOptions;
 
-            var instanceType = geometry.constructor;
-            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                instance = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                    attributes : instance.attributes,
-                    modelMatrix : Matrix4.IDENTITY,
-                    id : instance.id,
-                    pickPrimitive : this
-                });
+            var instance;
+            var geometry;
+            var instanceType;
+
+            if (defined(this.geometryInstance)) {
+                instance = this.geometryInstance;
+                geometry = instance.geometry;
+
+                instanceType = geometry.constructor;
+                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                    instance = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : instance.attributes,
+                        modelMatrix : Matrix4.IDENTITY,
+                        id : instance.id,
+                        pickPrimitive : this
+                    });
+                }
+
+                primitiveOptions.geometryInstances = instance;
+            } else {
+                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+                var length = instances.length;
+                var groundInstances = new Array(length);
+
+                var color;
+
+                for (var i = 0 ; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+
+                    instanceType = geometry.constructor;
+                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                        var attributes = instance.attributes;
+
+                        //>>includeStart('debug', pragmas.debug);
+                        if (!defined(attributes) || !defined(attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (defined(color) && ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (!defined(color)) {
+                            color = attributes.color;
+                        }
+                        //>>includeEnd('debug');
+
+                        groundInstances[i] = new GeometryInstance({
+                            geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                            attributes : attributes,
+                            modelMatrix : Matrix4.IDENTITY,
+                            id : instance.id,
+                            pickPrimitive : this
+                        });
+                    }
+                }
+
+                primitiveOptions.geometryInstances = groundInstances;
             }
 
-            var primitiveOptions = this._primitiveOptions;
-            primitiveOptions.geometryInstances = instance;
-
             var that = this;
-            this._primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
+            primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
             };
-            this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
+            primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
-            this._primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
+            primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState);
             };
-            this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+            primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
@@ -734,6 +808,7 @@ define([
 
                 if (that.releaseGeometryInstances) {
                     that.geometryInstance = undefined;
+                    that.geometryInstances = undefined;
                 }
 
                 var error = primitive._error;
@@ -799,10 +874,9 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     *
      * @example
      * e = e && e.destroy();
-     * 
+     *
      * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
