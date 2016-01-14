@@ -765,7 +765,7 @@ define([
                         //>>includeStart('debug', pragmas.debug);
                         if (!defined(attributes) || !defined(attributes.color)) {
                             throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (defined(color) && ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                        } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
                             throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
                         } else if (!defined(color)) {
                             color = attributes.color;
