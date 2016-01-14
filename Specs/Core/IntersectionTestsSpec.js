@@ -678,10 +678,10 @@ defineSuite([
         expect(actual).toEqual(ray.origin);
     });
 
-    it('grazingAltitudeLocation is undefined', function() {
+    it('grazingAltitudeLocation with empty ray', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var ray = new Ray(Cartesian3.ZERO, Cartesian3.UNIT_Z);
-        expect(IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)).not.toBeDefined();
+        expect(IntersectionTests.grazingAltitudeLocation(ray, ellipsoid)).toEqual(ray.origin);
     });
 
     it('lineSegmentPlane intersects', function() {

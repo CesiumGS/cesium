@@ -293,6 +293,15 @@ defineSuite([
         expect(result).toEqual(expectedResult);
     });
 
+    it('normalize works with a zero vector parameter', function() {
+        var cartesian = new Cartesian2(0.0, 0.0);
+        var expectedResult = new Cartesian2(0.0, 0.0);
+        var result = new Cartesian2();
+        var returnedResult = Cartesian2.normalize(cartesian, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
     it('normalize works with a result parameter that is an input parameter', function() {
         var cartesian = new Cartesian2(2.0, 0.0);
         var expectedResult = new Cartesian2(1.0, 0.0);
