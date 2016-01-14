@@ -378,7 +378,7 @@ define([
     /**
      * When true, log statistics to the console every frame
      * @type {Boolean}
-     * @default true
+     * @default false
      */
     RequestScheduler.debugShowStatistics = false;
 
