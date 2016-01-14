@@ -304,7 +304,7 @@ defineSuite([
             expect(tileset._selectedTiles[0]).not.toBe(tileset._root);
 
             // Set contents box to undefined, and now root won't be culled
-            tileset._root._contentsOrientedBoundingBox = undefined;
+            tileset._root._contentBoundingVolume = undefined;
             scene.renderForSpecs();
             expect(stats.visited).toEqual(2);
             expect(stats.numberOfCommands).toEqual(2);
@@ -610,7 +610,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             viewRootOnly();
             // TODO : remove 's' when #3325 is merged in
-            tileset.debugShowContentsBoundingVolume = true;
+            tileset.debugShowContentBoundingVolume = true;
             scene.renderForSpecs();
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);

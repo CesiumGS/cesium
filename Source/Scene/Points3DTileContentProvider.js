@@ -10,12 +10,16 @@ define([
         '../Core/GeometryInstance',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
+        '../Core/OrientedBoundingBox',
         '../Core/PointGeometry',
         '../Core/RequestScheduler',
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
-        './Primitive'
+        './Primitive',
+        './TileBoundingRegion',
+        './TileBoundingSphere',
+        './TileOrientedBoundingBox'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -27,12 +31,16 @@ define([
         GeometryInstance,
         getMagic,
         loadArrayBuffer,
+        OrientedBoundingBox,
         PointGeometry,
         RequestScheduler,
         when,
         Cesium3DTileContentState,
         PointAppearance,
-        Primitive) {
+        Primitive,
+        TileBoundingRegion,
+        TileBoundingSphere,
+        TileOrientedBoundingBox) {
     "use strict";
 
     /**
@@ -57,7 +65,14 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(tile.orientedBoundingBox);
+        // If the tile's bounding volume is not a BoundingSphere, convert to a BoundingSphere
+        var boundingVolume = tile.contentsBoundingVolume.boundingVolume;
+        if (boundingVolume instanceof OrientedBoundingBox) {
+            this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(boundingVolume);
+        } else {
+            this.boundingSphere = boundingVolume;
+        }
+        // TODO: need to improve this for other bounding volumes, e.g., regions
 
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;

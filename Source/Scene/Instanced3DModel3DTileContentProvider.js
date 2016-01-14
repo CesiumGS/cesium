@@ -50,7 +50,7 @@ define([
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
-        this._boundingVolume = tile.orientedBoundingBox;
+        this._tile = tile;
 
         /**
          * @readonly
@@ -216,7 +216,7 @@ define([
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
-            boundingVolume : this._boundingVolume,
+            boundingVolume : this._tile.contentsBoundingVolume.boundingVolume,
             cull : false,
             url : undefined,
             headers : undefined,

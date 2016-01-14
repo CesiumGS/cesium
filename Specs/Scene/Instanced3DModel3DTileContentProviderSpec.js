@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Scene/Cesium3DTileContentState',
+        'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTileContentState,
+        TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
     "use strict";
@@ -91,7 +93,9 @@ defineSuite([
         });
 
         var tileset = {};
-        var tile = {};
+        var tile = {
+            contentsBoundingVolume : new TileBoundingSphere()
+        };
         var url = '';
         var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
         instancedTile.initialize(arrayBuffer);

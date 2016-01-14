@@ -20,7 +20,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
-        './TileBoundingBox',
+        './TileBoundingRegion',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -43,7 +43,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileTerrain) {
     "use strict";
 
@@ -75,7 +75,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
-        this.tileBoundingBox = undefined;
+        this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;

@@ -1,25 +1,40 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/TileBoundingBox',
+        'Scene/TileBoundingRegion',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Color',
         'Core/Ellipsoid',
+        'Core/Intersect',
         'Core/Math',
+        'Core/Plane',
         'Core/Rectangle',
+        'Scene/Cesium3DTile',
         'Scene/SceneMode',
-        'Specs/createFrameState'
+        'Specs/createFrameState',
+        'Specs/createScene'
     ], function(
-        TileBoundingBox,
+        TileBoundingRegion,
         Cartesian2,
         Cartesian3,
         Cartographic,
+        Color,
         Ellipsoid,
+        Intersect,
         CesiumMath,
+        Plane,
         Rectangle,
+        Cesium3DTile,
         SceneMode,
-        createFrameState) {
+        createFrameState,
+        createScene) {
     "use strict";
+
+    var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
+    var regionBox = boundingVolumeRegion.slice(0, 4);
+    var rectangle = new Rectangle(regionBox[0], regionBox[1], regionBox[2], regionBox[3]);
+    var tileBoundingRegion = new TileBoundingRegion({maximumHeight: boundingVolumeRegion[5], minimumHeight: boundingVolumeRegion[4], rectangle: rectangle});
 
     var frameState;
     var camera;
@@ -30,8 +45,8 @@ defineSuite([
     });
 
     it('throws when options.rectangle is undefined', function() {
-        expect(function(){
-            return new TileBoundingBox();
+        expect(function() {
+            return new TileBoundingRegion();
         }).toThrowDeveloperError();
     });
 
@@ -42,7 +57,7 @@ defineSuite([
         var east = 0.001;
         var north = 0.001;
 
-        var tile = new TileBoundingBox({
+        var tile = new TileBoundingRegion({
             rectangle : new Rectangle(west, south, east, north),
             minimumHeight : 0.0,
             maximumHeight : 10.0
@@ -78,7 +93,7 @@ defineSuite([
         var east = 0.001;
         var north = 0.001;
 
-        var tile = new TileBoundingBox({
+        var tile = new TileBoundingRegion({
             rectangle : new Rectangle(west, south, east, north),
             minimumHeight : 0.0,
             maximumHeight : 10.0
@@ -100,4 +115,51 @@ defineSuite([
         camera.position = Cartesian3.fromRadians(position3D.longitude, position3D.latitude);
         expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, 10.0);
     });
+
+    it('can be instantiated with rectangle and heights', function() {
+        var minimumHeight = boundingVolumeRegion[4];
+        var maximumHeight = boundingVolumeRegion[5];
+        var tbr = new TileBoundingRegion({maximumHeight: maximumHeight, minimumHeight: minimumHeight, rectangle: rectangle});
+        expect(tbr).toBeDefined();
+        expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.rectangle).toEqual(rectangle);
+        expect(tbr.minimumHeight).toEqual(minimumHeight);
+        expect(tbr.maximumHeight).toEqual(maximumHeight);
+    });
+
+    it('can be instantiated with only a rectangle', function() {
+        var tbr = new TileBoundingRegion({rectangle: rectangle});
+        expect(tbr).toBeDefined();
+        expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.rectangle).toEqual(rectangle);
+        expect(tbr.minimumHeight).toBeDefined();
+        expect(tbr.maximumHeight).toBeDefined();
+    });
+
+    it('can create a debug volume', function() {
+        var debugVolume = tileBoundingRegion.createDebugVolume(Color.BLUE);
+        expect(debugVolume).toBeDefined();
+    });
+
+    it('distance to camera is 0 when camera is inside bounding region', function() {
+        camera.position = Cartesian3.fromRadians(regionBox[0] + CesiumMath.EPSILON6, regionBox[1], 0);
+        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqual(0.0);
+    });
+
+    it('distance to camera is correct when camera is outside bounding region', function() {
+        camera.position = Cartesian3.fromRadians(regionBox[0], regionBox[1], 2.0);
+        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
+    });
+
+    it('intersects plane', function() {
+        var normal = new Cartesian3();
+        Cartesian3.normalize(Cartesian3.fromRadians(0.0, 0.0, 1.0), normal);
+        var distanceFromCenter = Cartesian3.distance(
+            new Cartesian3(0.0, 0.0, 0.0),
+            Cartesian3.fromRadians(0.0, 0.0, 0.0)
+        );
+        var plane = new Plane(normal, -distanceFromCenter);
+        expect(tileBoundingRegion.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
+    });
+
 });

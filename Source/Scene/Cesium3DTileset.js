@@ -52,7 +52,7 @@ define([
      * @param {Boolean} [options.debugShowBox=false] TODO
      * @param {Boolean} [options.debugShowContentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
-     * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
+     * @param {Boolean} [options.debugShowContentBoundingVolume=false] TODO
      *
      * @alias Cesium3DTileset
      * @constructor
@@ -136,7 +136,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowContentsBoundingVolume = defaultValue(options.debugShowContentsBoundingVolume, false);
+        this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
 
         /**
          * DOC_TBA
