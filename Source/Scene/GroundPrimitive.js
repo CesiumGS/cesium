@@ -97,7 +97,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     *
      * @example
      * var rectangleInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.RectangleGeometry({
@@ -111,7 +110,7 @@ define([
      * scene.primitives.add(new Cesium.GroundPrimitive({
      *   geometryInstance : rectangleInstance
      * }));
-     * 
+     *
      * @see Primitive
      * @see GeometryInstance
      * @see Appearance
@@ -132,6 +131,7 @@ define([
          * @default undefined
          */
         this.geometryInstance = options.geometryInstance;
+        this.geometryInstances = options.geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
@@ -160,6 +160,8 @@ define([
         this._rsStencilDepthPass = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
+
+        this._uniformMap = {};
 
         this._boundingVolumes = [];
         this._boundingVolumes2D = [];
@@ -522,7 +524,8 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._modifyShaderPosition(primitive, ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = ShadowVolumeVS;
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
@@ -582,7 +585,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilPreloadPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // stencil depth command
@@ -597,7 +600,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilDepthPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // color command
@@ -612,7 +615,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsColorPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // pick stencil preload and depth are the same as the color pass
@@ -630,7 +633,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsPickPass;
             command.shaderProgram = groundPrimitive._spPick;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
         }
     }
@@ -682,7 +685,7 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -694,37 +697,66 @@ define([
         }
 
         if (!defined(this._primitive)) {
-            var instance = this.geometryInstance;
-            var geometry = instance.geometry;
+            var primitiveOptions = this._primitiveOptions;
 
-            var instanceType = geometry.constructor;
-            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                instance = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                    attributes : instance.attributes,
-                    modelMatrix : Matrix4.IDENTITY,
-                    id : instance.id,
-                    pickPrimitive : this
-                });
+            var instance;
+            var geometry;
+            var instanceType;
+
+            if (defined(this.geometryInstance)) {
+                instance = this.geometryInstance;
+                geometry = instance.geometry;
+
+                instanceType = geometry.constructor;
+                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                    instance = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : instance.attributes,
+                        modelMatrix : Matrix4.IDENTITY,
+                        id : instance.id,
+                        pickPrimitive : this
+                    });
+                }
+
+                primitiveOptions.geometryInstances = instance;
+            } else {
+                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+                var length = instances.length;
+                var groundInstances = new Array(length);
+
+                for (var i = 0 ; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+
+                    instanceType = geometry.constructor;
+                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                        groundInstances[i] = new GeometryInstance({
+                            geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                            attributes : instance.attributes,
+                            modelMatrix : Matrix4.IDENTITY,
+                            id : instance.id,
+                            pickPrimitive : this
+                        });
+                    }
+                }
+
+                primitiveOptions.geometryInstances = groundInstances;
             }
 
-            var primitiveOptions = this._primitiveOptions;
-            primitiveOptions.geometryInstances = instance;
-
             var that = this;
-            this._primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
+            primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
             };
-            this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
+            primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
-            this._primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
+            primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState);
             };
-            this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+            primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
@@ -734,6 +766,7 @@ define([
 
                 if (that.releaseGeometryInstances) {
                     that.geometryInstance = undefined;
+                    that.geometryInstances = undefined;
                 }
 
                 var error = primitive._error;
@@ -799,10 +832,9 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     *
      * @example
      * e = e && e.destroy();
-     * 
+     *
      * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
