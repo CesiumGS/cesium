@@ -6,7 +6,7 @@ define([
     "use strict";
 
     /**
-     * Stores information for making a request using RequestScheduler
+     * Stores information for making a request using {@link RequestScheduler}.
      *
      * @exports Request
      *
