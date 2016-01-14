@@ -30,11 +30,10 @@ defineSuite([
         }
     };
 
-    var tileWithContentsBoundingSphere = {
+    var tileWithContentBoundingSphere = {
         geometricError : 1,
         refine : 'replace',
         content : {
-            batchSize: 1,
             url : '0/0.b3dm',
             boundingVolume : {
                 sphere: [0.0, 0.0, 0.0, 5.0]
@@ -55,12 +54,11 @@ defineSuite([
         }
     };
 
-    var tileWithContentsBoundingRegion = {
+    var tileWithContentBoundingRegion = {
         geometricError : 1,
         refine : 'replace',
         children : [],
         content : {
-            batchSize: 1,
             url : '0/0.b3dm',
             boundingVolume : {
                 region : [-1.2, -1.2, 0, 0, -30, -34]
@@ -80,12 +78,11 @@ defineSuite([
         }
     };
 
-    var tileWithContentsBoundingBox = {
+    var tileWithContentBoundingBox = {
         geometricError : 1,
         refine : 'replace',
         children : [],
         content : {
-            batchSize: 1,
             url : '0/0.b3dm',
             boundingVolume : {
                 box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
@@ -96,21 +93,46 @@ defineSuite([
         }
     };
 
+    var tileWithInvalidExtension = {
+        geometricError : 1,
+        refine : 'replace',
+        children : [],
+        content : {
+            url : '0/0.xxxx'
+        },
+        boundingVolume: {
+            box : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+        }
+    };
+
+    it('throws if content has an unsupported extension', function() {
+        expect(function() {
+            return new Cesium3DTile(undefined, '/some_url', tileWithInvalidExtension, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('destroys', function() {
+        var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingSphere, undefined);
+        expect(tile.isDestroyed()).toEqual(false);
+        tile.destroy();
+        expect(tile.isDestroyed()).toEqual(true);
+    });
+
     describe('bounding volumes', function() {
         it('can have a bounding sphere', function() {
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingSphere, undefined);
             var radius = tileWithBoundingSphere.boundingVolume.sphere[3];
-            expect(tile.contentsBoundingVolume).toBeDefined();
-            expect(tile.contentsBoundingVolume.boundingVolume.radius).toEqual(radius);
-            expect(tile.contentsBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
+            expect(tile.contentBoundingVolume).toBeDefined();
+            expect(tile.contentBoundingVolume.boundingVolume.radius).toEqual(radius);
+            expect(tile.contentBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
-        it('can have a contents bounding sphere', function() {
-            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingSphere, undefined);
-            var radius = tileWithContentsBoundingSphere.content.boundingVolume.sphere[3];
-            expect(tile.contentsBoundingVolume).toBeDefined();
-            expect(tile.contentsBoundingVolume.boundingVolume.radius).toEqual(radius);
-            expect(tile.contentsBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
+        it('can have a content bounding sphere', function() {
+            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentBoundingSphere, undefined);
+            var radius = tileWithContentBoundingSphere.content.boundingVolume.sphere[3];
+            expect(tile.contentBoundingVolume).toBeDefined();
+            expect(tile.contentBoundingVolume.boundingVolume.radius).toEqual(radius);
+            expect(tile.contentBoundingVolume.boundingVolume.center).toEqual(Cartesian3.ZERO);
         });
 
         it('can have a bounding region', function() {
@@ -120,13 +142,13 @@ defineSuite([
             var maximumHeight = tileWithBoundingRegion.boundingVolume.region[5];
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingRegion, undefined);
             var tbr = new TileBoundingRegion({rectangle: rectangle, minimumHeight: minimumHeight, maximumHeight: maximumHeight});
-            expect(tile.contentsBoundingVolume).toBeDefined();
-            expect(tile.contentsBoundingVolume).toEqual(tbr);
+            expect(tile.contentBoundingVolume).toBeDefined();
+            expect(tile.contentBoundingVolume).toEqual(tbr);
         });
 
-        it('can have a contents bounding region', function() {
-            var region = tileWithContentsBoundingRegion.content.boundingVolume.region;
-            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingRegion, undefined);
+        it('can have a content bounding region', function() {
+            var region = tileWithContentBoundingRegion.content.boundingVolume.region;
+            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentBoundingRegion, undefined);
             expect(tile._contentBoundingVolume).toBeDefined();
             var tbb = new TileBoundingRegion({
                 rectangle: new Rectangle(region[0], region[1], region[2], region[3]),
@@ -139,27 +161,27 @@ defineSuite([
         it('can have an oriented bounding box', function() {
             var box = tileWithBoundingBox.boundingVolume.box;
             var tile = new Cesium3DTile(undefined, '/some_url', tileWithBoundingBox, undefined);
-            expect(tile.contentsBoundingVolume).toBeDefined();
+            expect(tile.contentBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
                 center: center,
                 halfAxes: halfAxes
             });
-            expect(tile.contentsBoundingVolume).toEqual(obb);
+            expect(tile.contentBoundingVolume).toEqual(obb);
         });
 
-        it('can have a contents oriented bounding box', function() {
-            var box = tileWithContentsBoundingBox.boundingVolume.box;
-            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentsBoundingBox, undefined);
-            expect(tile.contentsBoundingVolume).toBeDefined();
+        it('can have a content oriented bounding box', function() {
+            var box = tileWithContentBoundingBox.boundingVolume.box;
+            var tile = new Cesium3DTile(undefined, '/some_url', tileWithContentBoundingBox, undefined);
+            expect(tile.contentBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
             var obb = new TileOrientedBoundingBox({
                 center: center,
                 halfAxes: halfAxes
             });
-            expect(tile.contentsBoundingVolume).toEqual(obb);
+            expect(tile.contentBoundingVolume).toEqual(obb);
         });
     });
 
@@ -194,5 +216,4 @@ defineSuite([
             expect(tile._debugBoundingVolume).toBeDefined();
         });
     });
-
 });

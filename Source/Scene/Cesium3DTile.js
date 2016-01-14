@@ -160,11 +160,13 @@ define([
                 this._numberOfUnrefinableChildren = 1;
             }
 
-            if (defined(contentFactory)) {
-                content = contentFactory(tileset, this, url);
-            } else {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(contentFactory)) {
                 throw new DeveloperError('Unknown tile content type, ' + type + ', for ' + url);
             }
+            //>>includeEnd('debug');
+
+            content = contentFactory(tileset, this, url);
         } else {
             content = new Empty3DTileContentProvider();
             this.hasContent = false;
@@ -238,7 +240,7 @@ define([
          * @type {Object}
          * @readonly
          */
-        contentsBoundingVolume : {
+        contentBoundingVolume : {
             get : function() {
                 return defaultValue(this._contentBoundingVolume, this._boundingVolume);
             }
@@ -411,13 +413,8 @@ define([
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();
-        // TODO: Is there a reason to destroy the bounding volumes (and thus to implement destroy() functions for them)? The destroyObject function description says it should be used to for objects that have GL resources. 
-        /*
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
-        this._boundingVolume = this._boundingVolume && this._boundingVolume.destroy();
-        this._contentBoundingVolume = this._contentBoundingVolume && this._contentBoundingVolume.destroy();
-        */
         return destroyObject(this);
     };
 

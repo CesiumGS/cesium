@@ -12,8 +12,7 @@ defineSuite([
         'Core/Rectangle',
         'Scene/Cesium3DTile',
         'Scene/SceneMode',
-        'Specs/createFrameState',
-        'Specs/createScene'
+        'Specs/createFrameState'
     ], function(
         TileBoundingRegion,
         Cartesian2,
@@ -27,8 +26,7 @@ defineSuite([
         Rectangle,
         Cesium3DTile,
         SceneMode,
-        createFrameState,
-        createScene) {
+        createFrameState) {
     "use strict";
 
     var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
@@ -48,6 +46,42 @@ defineSuite([
         expect(function() {
             return new TileBoundingRegion();
         }).toThrowDeveloperError();
+    });
+
+    it('can be instantiated with rectangle and heights', function() {
+        var minimumHeight = boundingVolumeRegion[4];
+        var maximumHeight = boundingVolumeRegion[5];
+        var tbr = new TileBoundingRegion({maximumHeight: maximumHeight, minimumHeight: minimumHeight, rectangle: rectangle});
+        expect(tbr).toBeDefined();
+        expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.rectangle).toEqual(rectangle);
+        expect(tbr.minimumHeight).toEqual(minimumHeight);
+        expect(tbr.maximumHeight).toEqual(maximumHeight);
+    });
+
+    it('can be instantiated with only a rectangle', function() {
+        var tbr = new TileBoundingRegion({rectangle: rectangle});
+        expect(tbr).toBeDefined();
+        expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.rectangle).toEqual(rectangle);
+        expect(tbr.minimumHeight).toBeDefined();
+        expect(tbr.maximumHeight).toBeDefined();
+    });
+
+    it('distanceToCamera throws when frameState is undefined', function() {
+        expect(function() {
+            return tileBoundingRegion.distanceToCamera();
+        }).toThrowDeveloperError();
+    });
+
+    it('distance to camera is 0 when camera is inside bounding region', function() {
+        camera.position = Cartesian3.fromRadians(regionBox[0] + CesiumMath.EPSILON6, regionBox[1], 0);
+        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqual(0.0);
+    });
+
+    it('distance to camera is correct when camera is outside bounding region', function() {
+        camera.position = Cartesian3.fromRadians(regionBox[0], regionBox[1], 2.0);
+        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
     });
 
     it('distanceToCamera', function() {
@@ -116,24 +150,10 @@ defineSuite([
         expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, 10.0);
     });
 
-    it('can be instantiated with rectangle and heights', function() {
-        var minimumHeight = boundingVolumeRegion[4];
-        var maximumHeight = boundingVolumeRegion[5];
-        var tbr = new TileBoundingRegion({maximumHeight: maximumHeight, minimumHeight: minimumHeight, rectangle: rectangle});
-        expect(tbr).toBeDefined();
-        expect(tbr.boundingVolume).toBeDefined();
-        expect(tbr.rectangle).toEqual(rectangle);
-        expect(tbr.minimumHeight).toEqual(minimumHeight);
-        expect(tbr.maximumHeight).toEqual(maximumHeight);
-    });
-
-    it('can be instantiated with only a rectangle', function() {
-        var tbr = new TileBoundingRegion({rectangle: rectangle});
-        expect(tbr).toBeDefined();
-        expect(tbr.boundingVolume).toBeDefined();
-        expect(tbr.rectangle).toEqual(rectangle);
-        expect(tbr.minimumHeight).toBeDefined();
-        expect(tbr.maximumHeight).toBeDefined();
+    it('createDebugVolume throws when color is undefined', function() {
+        expect(function() {
+            return tileBoundingRegion.createDebugVolume();
+        }).toThrowDeveloperError();
     });
 
     it('can create a debug volume', function() {
@@ -141,14 +161,10 @@ defineSuite([
         expect(debugVolume).toBeDefined();
     });
 
-    it('distance to camera is 0 when camera is inside bounding region', function() {
-        camera.position = Cartesian3.fromRadians(regionBox[0] + CesiumMath.EPSILON6, regionBox[1], 0);
-        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqual(0.0);
-    });
-
-    it('distance to camera is correct when camera is outside bounding region', function() {
-        camera.position = Cartesian3.fromRadians(regionBox[0], regionBox[1], 2.0);
-        expect(tileBoundingRegion.distanceToCamera(frameState)).toEqualEpsilon(1.0, CesiumMath.EPSILON6);
+    it('intersectPlane throws when plane is undefined', function() {
+        expect(function() {
+            return tileBoundingRegion.intersectPlane();
+        }).toThrowDeveloperError();
     });
 
     it('intersects plane', function() {
@@ -161,5 +177,4 @@ defineSuite([
         var plane = new Plane(normal, -distanceFromCenter);
         expect(tileBoundingRegion.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
-
 });
