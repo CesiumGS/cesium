@@ -124,25 +124,9 @@ define([
          *
          * @private
          */
-        this._orientedBoundingBox = OrientedBoundingBox.fromPoints(getBoxPoints(this.rectangle, this.minimumHeight, this.maximumHeight));
+         this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+        //this._orientedBoundingBox = OrientedBoundingBox.fromPoints(getBoxPoints(this.rectangle, this.minimumHeight, this.maximumHeight));
     };
-
-    function getBoxPoints(rectangle, minimumHeight, maximumHeight) {
-        var swLowCartographic = new Cartographic(rectangle.west, rectangle.south, minimumHeight);
-        var seLowCartographic = new Cartographic(rectangle.east, rectangle.south, minimumHeight);
-        var neLowCartographic = new Cartographic(rectangle.east, rectangle.north, minimumHeight);
-        var nwLowCartographic = new Cartographic(rectangle.west, rectangle.north, minimumHeight);
-        var swHighCartographic = new Cartographic(swLowCartographic.longitude, swLowCartographic.latitude, maximumHeight);
-        var seHighCartographic = new Cartographic(seLowCartographic.longitude, seLowCartographic.latitude, maximumHeight);
-        var nwHighCartographic = new Cartographic(nwLowCartographic.longitude, nwLowCartographic.latitude, maximumHeight);
-        var neHighCartographic = new Cartographic(neLowCartographic.longitude, neLowCartographic.latitude, maximumHeight);
-        var cartographicCorners = [swLowCartographic, seLowCartographic, neLowCartographic, nwLowCartographic, swHighCartographic, neHighCartographic, seHighCartographic, nwHighCartographic];
-        var cartesianCorners = [];
-        for (var i = 0; i < cartographicCorners.length; ++i) {
-            cartesianCorners.push(Ellipsoid.WGS84.cartographicToCartesian(cartographicCorners[i]));
-        }
-        return cartesianCorners;
-    }
 
     defineProperties(TileBoundingRegion.prototype, {
         /**
