@@ -49,8 +49,6 @@ define([
      * @param {Boolean} [options.debugShowStatistics=false] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
-     * @param {Boolean} [options.debugShowBox=false] TODO
-     * @param {Boolean} [options.debugShowContentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] TODO
      *
@@ -117,16 +115,6 @@ define([
          * DOC_TBA
          */
         this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
-
-        /**
-         * DOC_TBA
-         */
-        this.debugShowBox = defaultValue(options.debugShowBox, false);
-
-        /**
-         * DOC_TBA
-         */
-        this.debugShowContentBox = defaultValue(options.debugShowContentBox, false);
 
         /**
          * DOC_TBA

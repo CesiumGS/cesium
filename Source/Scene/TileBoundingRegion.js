@@ -125,7 +125,6 @@ define([
          * @private
          */
          this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
-        //this._orientedBoundingBox = OrientedBoundingBox.fromPoints(getBoxPoints(this.rectangle, this.minimumHeight, this.maximumHeight));
     };
 
     defineProperties(TileBoundingRegion.prototype, {
@@ -198,6 +197,11 @@ define([
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(frameState)) {
+            throw new DeveloperError('frameState is required.');
+        }
+        //>>includeEnd('debug');
         var camera = frameState.camera;
         var cameraCartesianPosition = camera.positionWC;
         var cameraCartographicPosition = camera.positionCartographic;
@@ -293,7 +297,7 @@ define([
             rectangle : this.rectangle,
             height : this.minimumHeight,
             extrudedHeight: this.maximumHeight
-         });
+        });
         var instance = new GeometryInstance({
             geometry : geometry,
             modelMatrix : modelMatrix,

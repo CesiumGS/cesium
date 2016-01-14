@@ -44,8 +44,6 @@ var city = scene.primitives.add(new Cesium.Cesium3DTileset({
     maximumScreenSpaceError : 16,
     debugShowStatistics : false,
     debugFreezeFrame : false,
-    debugShowBox : false,
-    debugShowcontentBox : false,
     debugShowBoundingVolume : false,
     debugShowContentBoundingVolume : false
 }));
@@ -266,14 +264,6 @@ Sandcastle.addToolbarButton('Freeze on/off', function() {
 
 Sandcastle.addToolbarButton('Colorize on/off', function() {
     city.debugColorizeTiles = !city.debugColorizeTiles;
-});
-
-Sandcastle.addToolbarButton('Box on/off', function() {
-    city.debugShowBox = !city.debugShowBox;
-});
-
-Sandcastle.addToolbarButton('Contents box on/off', function() {
-    city.debugShowcontentBox = !city.debugShowcontentBox;
 });
 
 Sandcastle.addToolbarButton('BV on/off', function() {

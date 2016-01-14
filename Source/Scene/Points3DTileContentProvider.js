@@ -66,7 +66,7 @@ define([
         this.readyPromise = when.defer();
 
         // If the tile's bounding volume is not a BoundingSphere, convert to a BoundingSphere
-        var boundingVolume = tile.contentsBoundingVolume.boundingVolume;
+        var boundingVolume = tile.contentBoundingVolume.boundingVolume;
         if (boundingVolume instanceof OrientedBoundingBox) {
             this.boundingSphere = BoundingSphere.fromOrientedBoundingBox(boundingVolume);
         } else {

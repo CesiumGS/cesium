@@ -88,7 +88,7 @@ define([
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
         var tile = {
-            contentsBoundingVolume : new TileBoundingSphere()
+            contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
@@ -106,7 +106,7 @@ define([
             url : counter++
         };
         var tile = {
-            contentsBoundingVolume : new TileBoundingSphere()
+            contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
@@ -125,7 +125,7 @@ define([
             loadTilesJson : Cesium3DTileset.prototype.loadTilesJson
         };
         var tile = {
-            contentsBoundingVolume : new TileBoundingSphere()
+            contentBoundingVolume : new TileBoundingSphere()
         };
         var url = 'invalid';
         var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
