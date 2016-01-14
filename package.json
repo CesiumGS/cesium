@@ -11,7 +11,7 @@
   "directories": {
     "lib": "Source"
   },
-  "dependencies": {
+  "devDependencies": {
     "almond": "0.3.1",
     "browserify": "^9.0.8",
     "async": "^1.4.2",
@@ -40,7 +40,9 @@
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "vinyl-transform": "^1.0.0",
-    "yargs": "3.27.0",
+    "yargs": "3.27.0"
+  },
+  "dependencies": {
     "deamdify": "^0.1.1"
   },
   "scripts": {
