@@ -3,9 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
@@ -34,9 +36,11 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         GeometryInstance,
@@ -87,7 +91,8 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render.
+     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render. This option is deprecated. Please use options.geometryInstances instead.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -118,6 +123,10 @@ define([
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        if (defined(options.geometryInstance)) {
+            deprecationWarning('GroundPrimitive.geometryInstance', 'GroundPrimitive.geometryInstance is deprecated in version 1.18 and will be removed in version 1.20. Please use GroundPrimitive.geometryInstances.');
+        }
+
         /**
          * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
@@ -126,17 +135,36 @@ define([
          * Changing this property after the primitive is rendered has no effect.
          * </p>
          *
-         * @type Array
+         * @type {GeometryInstance}
+         *
+         * @default undefined
+         *
+         * @deprecated
+         */
+        this.geometryInstance = options.geometryInstance;
+        /**
+         * The geometry instance rendered with this primitive.  This may
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
+         * is <code>true</code> when the primitive is constructed.
+         * <p>
+         * Changing this property after the primitive is rendered has no effect.
+         * </p>
+         * <p>
+         * Because of the rendering technique used, all geometry instances must be the same color.
+         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
+         * on the first attempt to render.
+         * </p>
+         *
+         * @type {Array|GeometryInstance}
          *
          * @default undefined
          */
-        this.geometryInstance = options.geometryInstance;
         this.geometryInstances = options.geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
          *
-         * @type Boolean
+         * @type {Boolean}
          *
          * @default true
          */
@@ -724,15 +752,29 @@ define([
                 var length = instances.length;
                 var groundInstances = new Array(length);
 
+                var color;
+
                 for (var i = 0 ; i < length; ++i) {
                     instance = instances[i];
                     geometry = instance.geometry;
 
                     instanceType = geometry.constructor;
                     if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                        var attributes = instance.attributes;
+
+                        //>>includeStart('debug', pragmas.debug);
+                        if (!defined(attributes) || !defined(attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (defined(color) && ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (!defined(color)) {
+                            color = attributes.color;
+                        }
+                        //>>includeEnd('debug');
+
                         groundInstances[i] = new GeometryInstance({
                             geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                            attributes : instance.attributes,
+                            attributes : attributes,
                             modelMatrix : Matrix4.IDENTITY,
                             id : instance.id,
                             pickPrimitive : this
