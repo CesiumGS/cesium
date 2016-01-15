@@ -569,6 +569,7 @@ define([
 
         this._useWebVR = false;
         this._cameraVR = undefined;
+        this._aspectRatioVR = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1004,10 +1005,15 @@ define([
                     if (!defined(this._deviceOrientationCameraController)) {
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
                     }
+
+                    this._aspectRatioVR = this._camera.frustum.aspectRatio;
                 } else {
                     this._frameState.creditDisplay.container.style.visibility = 'visible';
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
+
+                    this._camera.frustum.aspectRatio = this._aspectRatioVR;
+                    this._camera.frustum.xOffset = 0.0;
                 }
             }
         }
@@ -1645,7 +1651,6 @@ define([
                 viewport.height = context.drawingBufferHeight;
 
                 var savedCamera = Camera.clone(camera, scene._cameraVR);
-                var savedAspectRatio = savedCamera.frustum.aspectRatio;
 
                 var near = camera.frustum.near;
                 var fo = near * 5.0;
@@ -1669,8 +1674,6 @@ define([
                 executeCommands(scene, passState);
 
                 Camera.clone(savedCamera, camera);
-                camera.frustum.aspectRatio = savedAspectRatio;
-                camera.frustum.xOffset = 0.0;
             } else {
                 viewport.x = 0;
                 viewport.y = 0;
@@ -1868,9 +1871,8 @@ define([
         this._tweens.update();
         this._camera.update(this._mode);
 
-        if (!this._useWebVR || this._mode === SceneMode.SCENE2D) {
-            this._screenSpaceCameraController.update();
-        } else {
+        this._screenSpaceCameraController.update();
+        if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
     };
