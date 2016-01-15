@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getBaseUri',
         '../Core/GetExtensionFromUri',
         '../Core/getFileNameFromUri',
         '../Core/Intersect',
@@ -28,6 +29,7 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getBaseUri,
         getExtensionFromUri,
         getFileNameFromUri,
         Intersect,
@@ -72,19 +74,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        var fileName = defaultValue(getFileNameFromUri(url), 'tiles.json');
-
-        if (getExtensionFromUri(fileName) !== 'json') {
+        var fileName;
+        if (getExtensionFromUri(url) === 'json') {
+            fileName = getFileNameFromUri(url);
+        } else {
             fileName = 'tiles.json';
         }
 
-        var endPathIndex = url.lastIndexOf('/');
-        if (endPathIndex !== -1) {
-            url = url.substring(0, endPathIndex);
-        }
-
-
-        url = appendForwardSlash(url);
+        url = getBaseUri(url);
 
         this._url = url;
         this._tilesJson = url + fileName;
