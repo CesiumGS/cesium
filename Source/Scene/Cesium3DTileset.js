@@ -9,7 +9,6 @@ define([
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
-        '../Core/getFilenameFromUri',
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
@@ -31,7 +30,6 @@ define([
         Event,
         getBaseUri,
         getExtensionFromUri,
-        getFilenameFromUri,
         Intersect,
         loadJson,
         CesiumMath,
@@ -79,9 +77,7 @@ define([
             tilesJson = url;
             url = getBaseUri(url);
         } else {
-            if (url.lastIndexOf('/') !== (url.length - 1)) {
-                url = appendForwardSlash(url);
-            }
+            url = appendForwardSlash(url);
             tilesJson = url + 'tiles.json';
         }
 
