@@ -853,10 +853,6 @@ define([
         var sceneOffset = byteOffset;
         var binOffset = sceneOffset + sceneLength;
 
-        if (sceneFormat !== 0) {
-            throw new RuntimeError('CESIUM_binary_glTF not supported, use KHR_binary_glTF instead.');
-        }
-
         var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
             glTF: JSON.parse(json),
