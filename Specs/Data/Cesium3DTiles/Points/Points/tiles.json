@@ -10,6 +10,7 @@
             ]
         },
         "geometricError": 0,
+        "refine": "add",
         "content": {
             "url": "points.pnts"
         }

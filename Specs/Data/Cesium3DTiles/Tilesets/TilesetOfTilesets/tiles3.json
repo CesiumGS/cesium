@@ -11,6 +11,7 @@
             ]
         },
         "geometricError": 0,
+        "refine": "add",
         "content": {
             "url": "ll.b3dm"
         }

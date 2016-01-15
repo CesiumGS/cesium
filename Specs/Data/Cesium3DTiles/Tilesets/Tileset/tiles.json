@@ -18,6 +18,7 @@
             ]
         },
         "geometricError": 70,
+        "refine": "add",
         "content": {
             "url": "parent.b3dm",
             "boundingVolume": {
