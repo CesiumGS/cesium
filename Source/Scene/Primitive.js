@@ -318,6 +318,8 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
+
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
@@ -328,6 +330,8 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
     }
+
+    Primitive._readOnlyInstanceAttributes = ['boundingSphere', 'boundingSphereCV'];
 
     defineProperties(Primitive.prototype, {
         /**
@@ -1496,7 +1500,28 @@ define([
                     get : createGetFunction(name, perInstanceAttributes)
                 };
 
-                if (name !== 'boundingSphere' && name !== 'boundingSphereCV') {
+                var createSetter = true;
+                var readOnlyAttributes = Primitive._readOnlyInstanceAttributes;
+                length = readOnlyAttributes.length;
+                for (var j = 0; j < length; ++j) {
+                    if (name === Primitive._readOnlyInstanceAttributes[j]) {
+                        createSetter = false;
+                        break;
+                    }
+                }
+
+                readOnlyAttributes = this._readOnlyInstanceAttributes;
+                if (createSetter && defined(readOnlyAttributes)) {
+                    length = readOnlyAttributes.length;
+                    for (var k = 0; k < length; ++k) {
+                        if (name === readOnlyAttributes[k]) {
+                            createSetter = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (createSetter) {
                     properties[name].set = createSetFunction(name, perInstanceAttributes, this._dirtyAttributes);
                 }
             }

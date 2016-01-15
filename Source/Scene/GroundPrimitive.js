@@ -230,6 +230,11 @@ define([
             flat : true
         });
 
+        var readOnlyAttributes;
+        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
+            readOnlyAttributes = GroundPrimitive._readOnlyInstanceAttributes;
+        }
+
         this._primitiveOptions = {
             geometryInstances : undefined,
             appearance : appearance,
@@ -239,11 +244,14 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
+            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
             _createCommandsFunction : undefined
         };
     }
+
+    GroundPrimitive._readOnlyInstanceAttributes = ['color'];
 
     defineProperties(GroundPrimitive.prototype, {
         /**
