@@ -74,20 +74,19 @@ define([
         }
         //>>includeEnd('debug');
 
-        var fileName;
+        var tilesJson;
         if (getExtensionFromUri(url) === 'json') {
-            fileName = getFilenameFromUri(url);
+            tilesJson = url;
+            url = getBaseUri(url);
         } else {
-            fileName = 'tiles.json';
+            if (url.lastIndexOf('/') !== (url.length - 1)) {
+                url = appendForwardSlash(url);
+            }
+            tilesJson = url + 'tiles.json';
         }
-
-        if ((url.lastIndexOf('/') !== (url.length - 1)) && (getExtensionFromUri(url) === '')) {
-            url = appendForwardSlash(url);
-        }
-        url = getBaseUri(url);
 
         this._url = url;
-        this._tilesJson = url + fileName;
+        this._tilesJson = tilesJson;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._properties = undefined; // Metadata for per-model/point/etc properties

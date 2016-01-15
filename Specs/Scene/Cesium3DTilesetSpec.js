@@ -117,34 +117,28 @@ defineSuite([
         });
     });
 
-    it('resolves readPromise given full file path', function() {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
+    it('_url and _tilesJson set up correctly given full file path', function() {
+        var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json'
-        }));
-        scene.renderForSpecs();
-        return tileset.readyPromise.then(function(tileset) {
-            expect(tileset.ready).toEqual(true);
         });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
     });
 
-    it('resolves readPromise given directory', function() {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
-            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
-        }));
-        scene.renderForSpecs();
-        return tileset.readyPromise.then(function(tileset) {
-            expect(tileset.ready).toEqual(true);
-        });
-    });
-
-    it('resolves readPromise given directory without ending /', function() {
-        var tileset = scene.primitives.add(new Cesium3DTileset({
+    it('_url and _tilesJson set up correctly given directory without ending /', function() {
+        var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
-        }));
-        scene.renderForSpecs();
-        return tileset.readyPromise.then(function(tileset) {
-            expect(tileset.ready).toEqual(true);
         });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
+    });
+
+    it('_url and _tilesJson set up correctly given directory with ending /', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
+        });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
     });
 
     it('resolves readyPromise', function() {
