@@ -6,6 +6,7 @@
         }
     },
     "geometricError": 240,
+    "refine": "add",
     "root": {
         "boundingVolume": {
             "region": [

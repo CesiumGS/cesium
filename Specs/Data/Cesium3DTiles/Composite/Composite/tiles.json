@@ -18,6 +18,7 @@
             ]
         },
         "geometricError": 0,
+        "refine": "add",
         "content": {
             "url": "composite.cmpt"
         }

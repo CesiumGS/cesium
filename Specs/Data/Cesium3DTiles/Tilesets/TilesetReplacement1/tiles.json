@@ -46,6 +46,7 @@
                     ]
                 },
                 "geometricError": 70,
+                "refine": "add",
                 "children": [
                     {
                         "boundingVolume": {
@@ -93,6 +94,7 @@
                     ]
                 },
                 "geometricError": 70,
+                "refine": "add",
                 "children": [
                     {
                         "boundingVolume": {

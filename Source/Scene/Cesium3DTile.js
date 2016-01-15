@@ -96,13 +96,20 @@ define([
          */
         this.geometricError = header.geometricError;
 
-// TODO: use default for a smaller tree.json?  Or inherit from parent.  Same for "type" and others.
+        var refine;
+        if (defined(header.refine)) {
+            refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
+        } else if (defined(parent)) {
+            // Inherit from parent tile if omitted.
+            refine = parent.refine;
+        }
+
         /**
          * DOC_TBA
          *
          * @readonly
          */
-        this.refine = (header.refine === 'replace') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
+        this.refine = refine;
 
         /**
          * DOC_TBA
