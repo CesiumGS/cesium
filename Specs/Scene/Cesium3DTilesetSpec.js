@@ -117,6 +117,30 @@ defineSuite([
         });
     });
 
+    it('url and tilesJson set up correctly given tiles.json path', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json'
+        });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
+    });
+
+    it('url and tilesJson set up correctly given directory without trailing slash', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
+    });
+
+    it('url and tilesJson set up correctly given directory with trailing slash', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
+        });
+        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             return tileset.readyPromise.then(function(tileset) {

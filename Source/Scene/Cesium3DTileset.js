@@ -7,6 +7,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getBaseUri',
+        '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
@@ -26,6 +28,8 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getBaseUri,
+        getExtensionFromUri,
         Intersect,
         loadJson,
         CesiumMath,
@@ -66,10 +70,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        url = appendForwardSlash(url);
+        var tilesJson;
+        if (getExtensionFromUri(url) === 'json') {
+            tilesJson = url;
+            url = getBaseUri(url);
+        } else {
+            url = appendForwardSlash(url);
+            tilesJson = url + 'tiles.json';
+        }
 
         this._url = url;
-        this._tilesJson = url + 'tiles.json';
+        this._tilesJson = tilesJson;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._properties = undefined; // Metadata for per-model/point/etc properties
