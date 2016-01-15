@@ -14,6 +14,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
+        '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -86,6 +87,7 @@ define([
         Ellipsoid,
         Event,
         ExtrapolationType,
+        getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -189,9 +191,7 @@ define([
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+            result = getAbsoluteUri(result, getAbsoluteUri(sourceUri));
         }
         return result;
     }

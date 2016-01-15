@@ -6,6 +6,17 @@ Change Log
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
+### 1.18 - 2016-02-01
+
+* Breaking changes
+    * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
+* Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+* Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
+* Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
+* Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
+* Added `getExtensionFromUri` helper function.
+* Added `getAbsoluteUri` helper function.
+
 ### 1.17 - 2016-01-04
 
 * Breaking changes

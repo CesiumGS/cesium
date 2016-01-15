@@ -8,7 +8,12 @@ http://cesiumjs.org/
 
 ### Get Started ###
 
-See the [Cesium Up and Running](http://cesiumjs.org/2013/04/12/Cesium-up-and-running/) tutorial.  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
+Visit the [Downloads page](http://cesiumjs.org/downloads.html) or use the npm module:
+```
+npm install cesium
+```
+
+Have questions?  Ask them on the [forum](http://cesiumjs.org/forum.html).
 
 Interested in contributing?  See [CONTRIBUTING.md](CONTRIBUTING.md).
 

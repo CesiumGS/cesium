@@ -7,15 +7,18 @@
     },
     "geometricError": 40,
     "root": {
-        "box": [
-            -1.319970476767974,
-            0.6986942109000001,
-            -1.3199295232320258,
-            0.6987257891,
-            0,
-            15
-        ],
+        "boundingVolume": {
+            "region": [
+                -1.319970476767974,
+                0.6986942109000001,
+                -1.3199295232320258,
+                0.6987257891,
+                0,
+                15
+            ]
+        },
         "geometricError": 0,
+        "refine": "add",
         "content": {
             "url": "instancedWithoutBatchTable.i3dm"
         }

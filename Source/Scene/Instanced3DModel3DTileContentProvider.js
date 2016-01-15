@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/getAbsoluteUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
@@ -29,6 +30,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        getAbsoluteUri,
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
@@ -53,7 +55,6 @@ define([
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
-        this._boundingVolume = tile.orientedBoundingBox;
 
         /**
          * @readonly
@@ -225,7 +226,7 @@ define([
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
-            boundingVolume : this._boundingVolume,
+            boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
             cull : false,
             url : undefined,
             headers : undefined,
@@ -235,8 +236,7 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            var url = (new Uri(gltfUrl).isAbsolute()) ? gltfUrl : this._tileset.url + gltfUrl;
-            collectionOptions.url = url;
+            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.url);
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;

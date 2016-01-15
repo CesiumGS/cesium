@@ -113,7 +113,6 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxOutlineGeometry}
      *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
      *
      * @example

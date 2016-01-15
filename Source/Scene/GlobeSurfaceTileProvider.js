@@ -532,8 +532,8 @@ define([
      */
     GlobeSurfaceTileProvider.prototype.computeDistanceToTile = function(tile, frameState) {
         var surfaceTile = tile.data;
-        var tileBoundingBox = surfaceTile.tileBoundingBox;
-        return tileBoundingBox.distanceToCamera(frameState);
+        var tileBoundingRegion = surfaceTile.tileBoundingRegion;
+        return tileBoundingRegion.distanceToCamera(frameState);
     };
 
     /**
@@ -565,7 +565,7 @@ define([
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {

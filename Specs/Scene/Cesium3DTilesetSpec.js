@@ -304,7 +304,7 @@ defineSuite([
             expect(tileset._selectedTiles[0]).not.toBe(tileset._root);
 
             // Set contents box to undefined, and now root won't be culled
-            tileset._root._contentsOrientedBoundingBox = undefined;
+            tileset._root._contentBoundingVolume = undefined;
             scene.renderForSpecs();
             expect(stats.visited).toEqual(2);
             expect(stats.numberOfCommands).toEqual(2);
@@ -539,7 +539,7 @@ defineSuite([
                 var subtreeRoot = root.children[0];
                 expect(root.geometricError).toEqual(subtreeRoot.geometricError);
                 expect(root.refine).toEqual(subtreeRoot.refine);
-                expect(root._tileBoundingBox).toEqual(subtreeRoot._tileBoundingBox);
+                expect(root.contentBoundingVolume.boundingVolume).toEqual(subtreeRoot.contentBoundingVolume.boundingVolume);
 
                 // Check that Subtree root has 4 children
                 expect(subtreeRoot.hasTilesetContent).toEqual(false);
@@ -603,18 +603,25 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(2); // Tile command + bounding volume command
+
+            tileset.debugShowBoundingVolume = false;
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(1);
         });
     });
 
     it('debugShowContentBoundingVolume', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             viewRootOnly();
-            // TODO : remove 's' when #3325 is merged in
-            tileset.debugShowContentsBoundingVolume = true;
+            tileset.debugShowContentBoundingVolume = true;
             scene.renderForSpecs();
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(2); // Tile command + bounding volume command
+
+            tileset.debugShowContentBoundingVolume = false;
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(1);
         });
     });
 

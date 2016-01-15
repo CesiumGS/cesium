@@ -14,7 +14,7 @@ define([
         '../Renderer/VertexArray',
         '../ThirdParty/when',
         './TerrainState',
-        './TileBoundingBox'
+        './TileBoundingRegion'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -30,7 +30,7 @@ define([
         VertexArray,
         when,
         TerrainState,
-        TileBoundingBox) {
+        TileBoundingRegion) {
     "use strict";
 
     /**
@@ -87,8 +87,8 @@ define([
         surfaceTile.maximumHeight = mesh.maximumHeight;
         surfaceTile.boundingSphere3D = BoundingSphere.clone(mesh.boundingSphere3D, surfaceTile.boundingSphere3D);
         surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
-        surfaceTile.tileBoundingBox.minimumHeight = mesh.minimumHeight;
-        surfaceTile.tileBoundingBox.maximumHeight = mesh.maximumHeight;
+        surfaceTile.tileBoundingRegion.minimumHeight = mesh.minimumHeight;
+        surfaceTile.tileBoundingRegion.maximumHeight = mesh.maximumHeight;
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
 

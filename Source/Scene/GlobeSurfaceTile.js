@@ -20,7 +20,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
-        './TileBoundingBox',
+        './TileBoundingRegion',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -43,7 +43,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
-        TileBoundingBox,
+        TileBoundingRegion,
         TileTerrain) {
     "use strict";
 
@@ -75,7 +75,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
-        this.tileBoundingBox = undefined;
+        this.tileBoundingRegion = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -241,14 +241,14 @@ define([
         }
     };
 
-    function createTileBoundingBox(tile, frameState) {
+    function createTileBoundingRegion(tile) {
         var minimumHeight;
         var maximumHeight;
         if (defined(tile.parent) && defined(tile.parent.data)) {
             minimumHeight = tile.parent.data.minimumHeight;
             maximumHeight = tile.parent.data.maximumHeight;
         }
-        return new TileBoundingBox({
+        return new TileBoundingRegion({
             rectangle : tile.rectangle,
             ellipsoid : tile.tilingScheme.ellipsoid,
             minimumHeight : minimumHeight,
@@ -260,10 +260,10 @@ define([
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
-            // Create the TileBoundingBox now in order to estimate the distance, which is used to prioritize the request.
+            // Create the TileBoundingRegion now in order to estimate the distance, which is used to prioritize the request.
             // Since the terrain isn't loaded yet, estimate the heights using its parent's values.
-            surfaceTile.tileBoundingBox = createTileBoundingBox(tile, frameState);
-            tile._distance = surfaceTile.tileBoundingBox.distanceToCamera(frameState);
+            surfaceTile.tileBoundingRegion = createTileBoundingRegion(tile, frameState);
+            tile._distance = surfaceTile.tileBoundingRegion.distanceToCamera(frameState);
         }
 
         if (tile.state === QuadtreeTileLoadState.START) {
@@ -384,7 +384,6 @@ define([
 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.loadedTerrain = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -421,7 +420,6 @@ define([
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,

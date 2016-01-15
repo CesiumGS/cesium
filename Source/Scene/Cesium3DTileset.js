@@ -53,10 +53,8 @@ define([
      * @param {Boolean} [options.debugShowStatistics=false] TODO
      * @param {Boolean} [options.debugFreezeFrame=false] TODO
      * @param {Boolean} [options.debugColorizeTiles=false] TODO
-     * @param {Boolean} [options.debugShowBox=false] TODO
-     * @param {Boolean} [options.debugShowContentBox=false] TODO
      * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
-     * @param {Boolean} [options.debugShowContentsBoundingVolume=false] TODO
+     * @param {Boolean} [options.debugShowContentBoundingVolume=false] TODO
      *
      * @alias Cesium3DTileset
      * @constructor
@@ -125,22 +123,12 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowBox = defaultValue(options.debugShowBox, false);
-
-        /**
-         * DOC_TBA
-         */
-        this.debugShowContentBox = defaultValue(options.debugShowContentBox, false);
-
-        /**
-         * DOC_TBA
-         */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
          * DOC_TBA
          */
-        this.debugShowContentsBoundingVolume = defaultValue(options.debugShowContentsBoundingVolume, false);
+        this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
 
         /**
          * DOC_TBA

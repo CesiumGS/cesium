@@ -14,6 +14,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -74,6 +75,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -847,12 +849,6 @@ define([
         }
     });
 
-    function getAbsoluteURL(url) {
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(url);
-        return modelUri.resolve(docUri).toString();
-    }
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
@@ -992,7 +988,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
 
         options = clone(options);
         options.basePath = getBaseUri(url);
