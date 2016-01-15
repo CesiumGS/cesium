@@ -1,20 +1,20 @@
 /*global define*/
 define([
-           '../Core/defaultValue',
-           '../Core/defined',
-           '../Core/destroyObject',
-           '../Core/DeveloperError',
-           '../Core/Math',
-           '../Core/Matrix3',
-           '../Core/Quaternion'
-       ], function(
-           defaultValue,
-           defined,
-           destroyObject,
-           DeveloperError,
-           CesiumMath,
-           Matrix3,
-           Quaternion) {
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/Math',
+        '../Core/Matrix3',
+        '../Core/Quaternion'
+    ], function(
+        defaultValue,
+        defined,
+        destroyObject,
+        DeveloperError,
+        CesiumMath,
+        Matrix3,
+        Quaternion) {
     "use strict";
 
     /**

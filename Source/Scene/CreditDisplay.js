@@ -1,10 +1,10 @@
 /*global define*/
 define([
-       '../Core/Credit',
-       '../Core/defaultValue',
-       '../Core/defined',
-       '../Core/destroyObject',
-       '../Core/DeveloperError'
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/destroyObject',
+        '../Core/DeveloperError'
     ], function(
         Credit,
         defaultValue,

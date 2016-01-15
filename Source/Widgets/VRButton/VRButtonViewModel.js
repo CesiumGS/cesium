@@ -1,26 +1,26 @@
 /*global define*/
 define([
-           '../../Core/defaultValue',
-           '../../Core/defined',
-           '../../Core/defineProperties',
-           '../../Core/destroyObject',
-           '../../Core/DeveloperError',
-           '../../Core/Fullscreen',
-           '../../ThirdParty/knockout',
-           '../../ThirdParty/NoSleep',
-           '../createCommand',
-           '../getElement'
-       ], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    destroyObject,
-    DeveloperError,
-    Fullscreen,
-    knockout,
-    NoSleep,
-    createCommand,
-    getElement) {
+        '../../Core/defaultValue',
+        '../../Core/defined',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        '../../Core/Fullscreen',
+        '../../ThirdParty/knockout',
+        '../../ThirdParty/NoSleep',
+        '../createCommand',
+        '../getElement'
+    ], function(
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        Fullscreen,
+        knockout,
+        NoSleep,
+        createCommand,
+        getElement) {
     "use strict";
 
     function lockScreen(orientation) {
