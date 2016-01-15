@@ -11,6 +11,7 @@ Change Log
 * Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
 * Added `getExtensionFromUri` helper function.
 * Added `getAbsoluteUri` helper function.
+* `GroundPrimitive` now supports batching geometry for better performance.
 
 ### 1.17 - 2016-01-04
 

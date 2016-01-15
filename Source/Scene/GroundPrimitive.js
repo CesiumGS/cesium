@@ -103,6 +103,7 @@ define([
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
      * @example
+     * // Example 1: Create primitive with a single instance
      * var rectangleInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.RectangleGeometry({
      *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
@@ -113,7 +114,33 @@ define([
      *   }
      * });
      * scene.primitives.add(new Cesium.GroundPrimitive({
-     *   geometryInstance : rectangleInstance
+     *   geometryInstances : rectangleInstance
+     * }));
+     *
+     * // Example 2: Batch instances
+     * var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
+     * var rectangleInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.RectangleGeometry({
+     *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
+     *   }),
+     *   id : 'rectangle',
+     *   attributes : {
+     *     color : color
+     *   }
+     * });
+     * var ellipseInstance = new Cesium.GeometryInstance({
+     *     geometry : new Cesium.EllipseGeometry({
+     *         center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
+     *         semiMinorAxis : 300000.0,
+     *         semiMajorAxis : 400000.0
+     *     }),
+     *     id : 'ellipse',
+     *     attributes : {
+     *         color : color
+     *     }
+     * });
+     * scene.primitives.add(new Cesium.GroundPrimitive({
+     *   geometryInstances : [rectangleInstance, ellipseInstance]
      * }));
      *
      * @see Primitive
@@ -710,6 +737,7 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
@@ -740,7 +768,6 @@ define([
                     instance = new GeometryInstance({
                         geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                         attributes : instance.attributes,
-                        modelMatrix : Matrix4.IDENTITY,
                         id : instance.id,
                         pickPrimitive : this
                     });
@@ -775,7 +802,6 @@ define([
                         groundInstances[i] = new GeometryInstance({
                             geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
                             attributes : attributes,
-                            modelMatrix : Matrix4.IDENTITY,
                             id : instance.id,
                             pickPrimitive : this
                         });
