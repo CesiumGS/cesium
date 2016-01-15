@@ -845,10 +845,7 @@ define([
         byteOffset += sizeOfUint32; // Skip length
 
         var sceneLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-
-        var sceneFormat = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
+        byteOffset += sizeOfUint32 + sizeOfUint32;
 
         var sceneOffset = byteOffset;
         var binOffset = sceneOffset + sceneLength;
