@@ -345,7 +345,6 @@ define([
             entity.polyline = graphics;
         }
 
-        graphics.onTerrain = options.terrain;
         graphics.material = material;
         graphics.width = widthProperty;
         graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
@@ -418,7 +417,9 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.onTerrain = options.terrain;
+        if (!options.terrain) {
+            polygon.height = 0;
+        }
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
