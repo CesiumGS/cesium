@@ -853,11 +853,8 @@ define([
         var sceneOffset = byteOffset;
         var binOffset = sceneOffset + sceneLength;
 
-        // This means the last 2 integers of the header are jsonOffset & jsonLength
         if (sceneFormat !== 0) {
-            sceneOffset = sceneLength;
-            sceneLength = sceneFormat;
-            binOffset = 0;
+            throw new RuntimeError('CESIUM_binary_glTF not supported');
         }
 
         var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
