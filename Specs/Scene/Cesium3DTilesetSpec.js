@@ -117,7 +117,7 @@ defineSuite([
         });
     });
 
-    it('_url and _tilesJson set up correctly given full file path', function() {
+    it('url and tilesJson set up correctly given tiles.json path', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json'
         });
@@ -125,7 +125,7 @@ defineSuite([
         expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
     });
 
-    it('_url and _tilesJson set up correctly given directory without ending /', function() {
+    it('url and tilesJson set up correctly given directory without trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
         });
@@ -133,7 +133,7 @@ defineSuite([
         expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
     });
 
-    it('_url and _tilesJson set up correctly given directory with ending /', function() {
+    it('url and tilesJson set up correctly given directory with trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
         });
