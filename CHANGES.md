@@ -11,6 +11,8 @@ Change Log
 * Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
 * Added `getExtensionFromUri` helper function.
 * Added `getAbsoluteUri` helper function.
+* Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
+* Added `Scene.useWebVR` to switch the scene to use stereoscopic rendering.
 * `GroundPrimitive` now supports batching geometry for better performance.
 
 ### 1.17 - 2016-01-04
