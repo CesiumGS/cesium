@@ -85,7 +85,7 @@ define([
 
         this._url = url;
         this._tilesJson = url + fileName;
-        this._state = Cesium3DTilestState.UNLOADED;
+        this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
