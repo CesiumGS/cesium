@@ -81,6 +81,9 @@ define([
             fileName = 'tiles.json';
         }
 
+        if ((url.lastIndexOf('/') !== (url.length - 1)) && (getExtensionFromUri(url) === '')) {
+            url = appendForwardSlash(url);
+        }
         url = getBaseUri(url);
 
         this._url = url;

@@ -117,6 +117,36 @@ defineSuite([
         });
     });
 
+    it('resolves readPromise given full file path', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json'
+        }));
+        scene.renderForSpecs();
+        return tileset.readyPromise.then(function(tileset) {
+            expect(tileset.ready).toEqual(true);
+        });
+    });
+
+    it('resolves readPromise given directory', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
+        }));
+        scene.renderForSpecs();
+        return tileset.readyPromise.then(function(tileset) {
+            expect(tileset.ready).toEqual(true);
+        });
+    });
+
+    it('resolves readPromise given directory without ending /', function() {
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        }));
+        scene.renderForSpecs();
+        return tileset.readyPromise.then(function(tileset) {
+            expect(tileset.ready).toEqual(true);
+        });
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             return tileset.readyPromise.then(function(tileset) {
