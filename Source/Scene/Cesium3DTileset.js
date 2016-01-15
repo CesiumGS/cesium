@@ -9,7 +9,7 @@ define([
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
-        '../Core/getFileNameFromUri',
+        '../Core/getFilenameFromUri',
         '../Core/Intersect',
         '../Core/loadJson',
         '../Core/Math',
@@ -31,7 +31,7 @@ define([
         Event,
         getBaseUri,
         getExtensionFromUri,
-        getFileNameFromUri,
+        getFilenameFromUri,
         Intersect,
         loadJson,
         CesiumMath,
@@ -76,7 +76,7 @@ define([
 
         var fileName;
         if (getExtensionFromUri(url) === 'json') {
-            fileName = getFileNameFromUri(url);
+            fileName = getFilenameFromUri(url);
         } else {
             fileName = 'tiles.json';
         }
