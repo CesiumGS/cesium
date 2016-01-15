@@ -11,6 +11,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/PolygonGeometry',
         '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
@@ -36,6 +37,7 @@ define([
         GeometryInstance,
         isArray,
         Iso8601,
+        oneTimeWarning,
         PolygonGeometry,
         PolygonHierarchy,
         PolygonOutlineGeometry,
@@ -473,6 +475,7 @@ define([
         var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial && !perPositionHeightEnabled;
 
         if (outlineEnabled && onTerrain) {
+            oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');
             outlineEnabled = false;
         }
 

@@ -10,6 +10,7 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
@@ -33,6 +34,7 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
+        oneTimeWarning,
         RectangleGeometry,
         RectangleOutlineGeometry,
         ShowGeometryInstanceAttribute,
@@ -472,6 +474,7 @@ define([
         var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
 
         if (outlineEnabled && onTerrain) {
+            oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');
             outlineEnabled = false;
         }
 
