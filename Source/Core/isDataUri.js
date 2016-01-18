@@ -19,8 +19,7 @@ define([
      */
     function isDataUri(uri) {
         if (defined(uri)) {
-            var result = dataUriRegex.exec(uri);
-            return (result !== null);
+            return dataUriRegex.test(uri);
         }
 
         return false;
