@@ -251,7 +251,7 @@ define([
     /**
      * @private
      */
-    Cesium3DTileset.prototype.loadTilesJson = function(tilesetUrl, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
         var tileset = this;
         var promise = RequestScheduler.throttleRequest(tilesetUrl, loadJson);
 
@@ -679,7 +679,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function loadTiles(tileset) {
-        var promise = tileset.loadTilesJson(tileset._tilesetUrl, undefined);
+        var promise = tileset.loadTileset(tileset._tilesetUrl, undefined);
         if (defined(promise)) {
             tileset._state = Cesium3DTilesetState.LOADING;
             promise.then(function(data) {

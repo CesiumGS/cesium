@@ -43,7 +43,7 @@ define([
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = this._tileset.loadTilesJson(this._url, this._tile);
+        var promise = this._tileset.loadTileset(this._url, this._tile);
 
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;

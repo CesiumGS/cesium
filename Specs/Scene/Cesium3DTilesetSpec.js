@@ -786,7 +786,7 @@ defineSuite([
         });
     });
 
-    it('destroys before loadTilesJson finishes', function() {
+    it('destroys before loadTileset finishes', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
