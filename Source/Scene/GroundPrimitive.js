@@ -232,7 +232,7 @@ define([
 
         var readOnlyAttributes;
         if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
-            readOnlyAttributes = GroundPrimitive._readOnlyInstanceAttributes;
+            readOnlyAttributes = readOnlyInstanceAttributesScratch;
         }
 
         this._primitiveOptions = {
@@ -252,7 +252,7 @@ define([
         };
     }
 
-    GroundPrimitive._readOnlyInstanceAttributes = ['color'];
+    var readOnlyInstanceAttributesScratch = ['color'];
 
     defineProperties(GroundPrimitive.prototype, {
         /**

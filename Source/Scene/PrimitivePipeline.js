@@ -537,7 +537,7 @@ define([
         var indices = computePerInstanceAttributeLocations(instances, invalidInstances, perInstanceAttributes, attributeLocations, perInstanceAttributeNames);
 
         var pickOffsets;
-        if (parameters.createPickOffsets) {
+        if (parameters.createPickOffsets && defined(geometries)) {
             pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 

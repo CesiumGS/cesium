@@ -334,8 +334,6 @@ define([
         this._readyPromise = when.defer();
     }
 
-    Primitive._readOnlyInstanceAttributes = ['boundingSphere', 'boundingSphereCV'];
-
     defineProperties(Primitive.prototype, {
         /**
          * When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
@@ -1452,6 +1450,9 @@ define([
         };
     }
 
+
+    var readOnlyInstanceAttributesScratch = ['boundingSphere', 'boundingSphereCV'];
+    
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
@@ -1508,7 +1509,7 @@ define([
                 };
 
                 var createSetter = true;
-                var readOnlyAttributes = Primitive._readOnlyInstanceAttributes;
+                var readOnlyAttributes = readOnlyInstanceAttributesScratch;
                 length = readOnlyAttributes.length;
                 for (var j = 0; j < length; ++j) {
                     if (name === Primitive._readOnlyInstanceAttributes[j]) {
