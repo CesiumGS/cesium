@@ -76,7 +76,7 @@ define([
             url = getBaseUri(url);
         } else {
             url = appendForwardSlash(url);
-            tilesJson = url + 'tiles.json';
+            tilesJson = url + 'tileset.json';
         }
 
         this._url = url;
