@@ -209,10 +209,12 @@ Sandcastle.addToolbarButton('Batching', function() {
 
     viewOverlappingPolygons();
 });
+
 Sandcastle.addToolbarButton('Batch Picking', function() {
     var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5);
     var show = new Cesium.ShowGeometryInstanceAttribute(true);
     var instances = createBatchedInstances(color, show);
+
     var primitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
         geometryInstances : instances
     }));
@@ -223,7 +225,7 @@ Sandcastle.addToolbarButton('Batch Picking', function() {
 
     // Edit id to differentiate between picked primitive and normally displayed primitive.
     var pickIdPrefix = 'pick';
-    for (var i = 0.0; i < instances.length; ++i) {
+    for (var i = 0; i < instances.length; ++i) {
         instances[i].id = pickIdPrefix + instances[i].id;
     }
 

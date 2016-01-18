@@ -452,6 +452,35 @@ define([
         return indices;
     }
 
+    function createPickOffsets(instances, geometries) {
+        var pickOffsets = [];
+        var geometryIndex = 0;
+        var indexCount = geometries[geometryIndex];
+        var offset = 0;
+
+        var length = instances.length;
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var geometry = instance.geometry;
+            var count = geometry.indices.length;
+
+            if (offset + count >= indexCount) {
+                offset = 0;
+                indexCount = geometries[++geometryIndex];
+            }
+
+            pickOffsets.push({
+                index : geometryIndex,
+                offset : offset,
+                count : count
+            });
+            offset += count;
+
+            indexCount -= count;
+        }
+        return pickOffsets;
+    }
+
     /**
      * @private
      */
@@ -487,6 +516,11 @@ define([
         perInstanceAttributeNames = defined(perInstanceAttributeNames) ? perInstanceAttributeNames : getCommonPerInstanceAttributeNames(invalidInstances);
         var indices = computePerInstanceAttributeLocations(instances, invalidInstances, perInstanceAttributes, attributeLocations, perInstanceAttributeNames);
 
+        var pickOffsets;
+        if (parameters.createPickOffsets) {
+            pickOffsets = createPickOffsets(instances, perInstanceAttributes);
+        }
+
         return {
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
@@ -494,7 +528,8 @@ define([
             vaAttributes : perInstanceAttributes,
             vaAttributeLocations : indices,
             validInstancesIndices : parameters.validInstancesIndices,
-            invalidInstancesIndices : parameters.invalidInstancesIndices
+            invalidInstancesIndices : parameters.invalidInstancesIndices,
+            pickOffsets : pickOffsets
         };
     };
 
@@ -1039,7 +1074,8 @@ define([
             allowPicking : parameters.allowPicking,
             vertexCacheOptimize : parameters.vertexCacheOptimize,
             compressVertices : parameters.compressVertices,
-            modelMatrix : parameters.modelMatrix
+            modelMatrix : parameters.modelMatrix,
+            createPickOffsets : parameters.createPickOffsets
         };
     };
 
@@ -1099,7 +1135,8 @@ define([
             allowPicking : packedParameters.allowPicking,
             vertexCacheOptimize : packedParameters.vertexCacheOptimize,
             compressVertices : packedParameters.compressVertices,
-            modelMatrix : Matrix4.clone(packedParameters.modelMatrix)
+            modelMatrix : Matrix4.clone(packedParameters.modelMatrix),
+            createPickOffsets : packedParameters.createPickOffsets
         };
     };
 
@@ -1119,7 +1156,8 @@ define([
             packedVaAttributeLocations : packAttributeLocations(results.vaAttributeLocations, transferableObjects),
             modelMatrix : results.modelMatrix,
             validInstancesIndices : results.validInstancesIndices,
-            invalidInstancesIndices : results.invalidInstancesIndices
+            invalidInstancesIndices : results.invalidInstancesIndices,
+            pickOffsets : results.pickOffsets
         };
     };
 
@@ -1132,7 +1170,8 @@ define([
             attributeLocations : packedResult.attributeLocations,
             vaAttributes : packedResult.vaAttributes,
             perInstanceAttributeLocations : unpackAttributeLocations(packedResult.packedVaAttributeLocations, packedResult.vaAttributes),
-            modelMatrix : packedResult.modelMatrix
+            modelMatrix : packedResult.modelMatrix,
+            pickOffsets : packedResult.pickOffsets
         };
     };
 

@@ -247,7 +247,8 @@ define([
             _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
-            _createCommandsFunction : undefined
+            _createCommandsFunction : undefined,
+            _createPickOffsets : true
         };
     }
 
@@ -627,17 +628,17 @@ define([
     function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
         var primitive = groundPrimitive._primitive;
         var length = primitive._va.length * 3;
-
         colorCommands.length = length;
-        pickCommands.length = length;
 
         var vaIndex = 0;
+        var command;
+        var vertexArray;
 
         for (var i = 0; i < length; i += 3) {
-            var vertexArray = primitive._va[vaIndex];
+            vertexArray = primitive._va[vaIndex++];
 
             // stencil preload command
-            var command = colorCommands[i];
+            command = colorCommands[i];
             if (!defined(command)) {
                 command = colorCommands[i] = new DrawCommand({
                     owner : groundPrimitive,
@@ -680,20 +681,67 @@ define([
             command.shaderProgram = groundPrimitive._sp;
             command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
+        }
 
-            // pick stencil preload and depth are the same as the color pass
-            pickCommands[i] = colorCommands[i];
-            pickCommands[i + 1] = colorCommands[i + 1];
+        var pickOffsets = primitive._pickOffsets;
+        length = pickOffsets.length * 3;
+        pickCommands.length = length;
 
-            command = pickCommands[i + 2];
+        var pickIndex = 0;
+
+        for (var j = 0; j < length; j += 3) {
+            var pickOffset = pickOffsets[pickIndex++];
+
+            var offset = pickOffset.offset;
+            var count = pickOffset.count;
+            vertexArray = primitive._va[pickOffset.index];
+
+            // stencil preload command
+            command = pickCommands[j];
             if (!defined(command)) {
-                command = pickCommands[i + 2] = new DrawCommand({
+                command = pickCommands[j] = new DrawCommand({
                     owner : groundPrimitive,
                     primitiveType : primitive._primitiveType
                 });
             }
 
             command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = groundPrimitive._rsStencilPreloadPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = groundPrimitive._uniformMap;
+            command.pass = Pass.GROUND;
+
+            // stencil depth command
+            command = pickCommands[j + 1];
+            if (!defined(command)) {
+                command = pickCommands[j + 1] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = groundPrimitive._rsStencilDepthPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = groundPrimitive._uniformMap;
+            command.pass = Pass.GROUND;
+
+            // color command
+            command = pickCommands[j + 2];
+            if (!defined(command)) {
+                command = pickCommands[j + 2] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
             command.renderState = groundPrimitive._rsPickPass;
             command.shaderProgram = groundPrimitive._spPick;
             command.uniformMap = groundPrimitive._uniformMap;
