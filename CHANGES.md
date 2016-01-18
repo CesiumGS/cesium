@@ -3,6 +3,8 @@ Change Log
 
 ### 1.18 - 2016-02-01
 
+* Breaking changes
+    * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead.
 * Deprecated
     * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
