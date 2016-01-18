@@ -118,13 +118,13 @@ defineSuite([
     });
 
     it('rejects readyPromise with invalid tileset version', function() {
-        var tilesJson = {
+        var tilesetJson = {
             "asset" : {
                 "version" : "2.0"
             }
         };
 
-        var uri = 'data:text/plain;base64,' + btoa(JSON.stringify(tilesJson));
+        var uri = 'data:text/plain;base64,' + btoa(JSON.stringify(tilesetJson));
 
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : uri
@@ -138,7 +138,7 @@ defineSuite([
         });
     });
 
-    it('url and tilesJson set up correctly given tiles.json path', function() {
+    it('url and tilesetUrl set up correctly given tileset.json path', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json'
         });
@@ -146,7 +146,7 @@ defineSuite([
         expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json');
     });
 
-    it('url and tilesJson set up correctly given directory without trailing slash', function() {
+    it('url and tilesetUrl set up correctly given directory without trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
         });
@@ -154,7 +154,7 @@ defineSuite([
         expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json');
     });
 
-    it('url and tilesJson set up correctly given directory with trailing slash', function() {
+    it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
         });
