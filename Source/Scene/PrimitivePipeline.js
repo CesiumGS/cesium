@@ -452,21 +452,36 @@ define([
         return indices;
     }
 
-    function createPickOffsets(instances, geometries) {
-        var pickOffsets = [];
-        var geometryIndex = 0;
-        var indexCount = geometries[geometryIndex];
-        var offset = 0;
+    function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
+        var offset;
+        var indexCount;
+        var geometryIndex;
+
+        var offsetIndex = pickOffsets.length - 1;
+        if (offsetIndex >= 0) {
+            var pickOffset = pickOffsets[offsetIndex];
+            offset = pickOffset.offset + pickOffset.count;
+            geometryIndex = pickOffset.index;
+            indexCount = geometries[geometryIndex].indices.length;
+        } else {
+            offset = 0;
+            geometryIndex = 0;
+            indexCount = geometries[geometryIndex].indices.length;
+        }
 
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
-            var geometry = instance.geometry;
+            var geometry = instance[geometryName];
+            if (!defined(geometry)) {
+                continue;
+            }
+
             var count = geometry.indices.length;
 
-            if (offset + count >= indexCount) {
+            if (offset + count > indexCount) {
                 offset = 0;
-                indexCount = geometries[++geometryIndex];
+                indexCount = geometries[++geometryIndex].indices.length;
             }
 
             pickOffsets.push({
@@ -475,9 +490,14 @@ define([
                 count : count
             });
             offset += count;
-
-            indexCount -= count;
         }
+    }
+
+    function createInstancePickOffsets(instances, geometries) {
+        var pickOffsets = [];
+        createPickOffsets(instances, 'geometry', geometries, pickOffsets);
+        createPickOffsets(instances, 'westHemisphereGeometry', geometries, pickOffsets);
+        createPickOffsets(instances, 'eastHemisphereGeometry', geometries, pickOffsets);
         return pickOffsets;
     }
 
@@ -518,7 +538,7 @@ define([
 
         var pickOffsets;
         if (parameters.createPickOffsets) {
-            pickOffsets = createPickOffsets(instances, perInstanceAttributes);
+            pickOffsets = createInstancePickOffsets(instances, geometries);
         }
 
         return {
