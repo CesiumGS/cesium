@@ -679,7 +679,7 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function loadTiles(tileset) {
-        var promise = tileset.  loadTilesJson(tileset._tilesetUrl, undefined);
+        var promise = tileset.loadTilesJson(tileset._tilesetUrl, undefined);
         if (defined(promise)) {
             tileset._state = Cesium3DTilesetState.LOADING;
             promise.then(function(data) {
