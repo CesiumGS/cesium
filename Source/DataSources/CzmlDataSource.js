@@ -600,7 +600,10 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
         if (!isReference) {
-            referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
+            if (defined(packetData.referenceFrame)) {
+                referenceFrame = ReferenceFrame[packetData.referenceFrame];
+            }
+            referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
             unwrappedInterval = unwrapCartesianInterval(packetData);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
             isSampled = unwrappedIntervalLength > packedLength;
