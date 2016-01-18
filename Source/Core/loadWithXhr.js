@@ -32,12 +32,6 @@ define([
      * @param {String} [options.overrideMimeType] Overrides the MIME type returned by the server.
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
-     * @see loadArrayBuffer
-     * @see loadBlob
-     * @see loadJson
-     * @see loadText
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // Load a single URL asynchronously. In real code, you should use loadBlob instead.
@@ -49,6 +43,13 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see loadArrayBuffer
+     * @see loadBlob
+     * @see loadJson
+     * @see loadText
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadWithXhr(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

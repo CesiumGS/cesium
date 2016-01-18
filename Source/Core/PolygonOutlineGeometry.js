@@ -203,8 +203,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
-     * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight] The height of the polygon.
+     * @param {Number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -321,7 +321,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -416,7 +415,6 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @returns {PolygonOutlineGeometry}
      *
-     * @see PolygonOutlineGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
@@ -430,6 +428,8 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+     *
+     * @see PolygonOutlineGeometry#createGeometry
      */
     PolygonOutlineGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

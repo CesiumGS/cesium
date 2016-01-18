@@ -182,8 +182,7 @@ define([
      * A set of functions to detect whether the current browser supports
      * various features.
      *
-     * @namespace
-     * @alias FeatureDetection
+     * @exports FeatureDetection
      */
     var FeatureDetection = {
         isChrome : isChrome,

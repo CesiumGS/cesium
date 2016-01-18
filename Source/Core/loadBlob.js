@@ -17,8 +17,6 @@ define([
      * @param {Object} [headers] HTTP headers to send with the requests.
      * @returns {Promise.<Blob>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a single URL asynchronously
@@ -27,6 +25,9 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadBlob(url, headers) {
         return loadWithXhr({

@@ -169,8 +169,6 @@ define([
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {Cartesian3} cameraCartesianPosition The position of the camera in world coordinates.
-     * @param {Cartographic} cameraCartographicPosition The position of the camera in cartographic / geodetic coordinates.
      *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
@@ -204,10 +202,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreeTileProvider#isDestroyed
      *
      * @example
      * provider = provider && provider();
+     * 
+     * @see QuadtreeTileProvider#isDestroyed
      */
     QuadtreeTileProvider.prototype.destroy = DeveloperError.throwInstantiationError;
 

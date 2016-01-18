@@ -36,7 +36,7 @@ For ideas for Cesium code contributions, see:
 * issues labeled [beginner](https://github.com/AnalyticalGraphicsInc/cesium/labels/beginner) and
 * issues labeled [roadmap](https://github.com/AnalyticalGraphicsInc/cesium/labels/roadmap).
 
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for how to build and run Cesium on your system.
+See the [Build Guide](Documentation/Contributors/BuildGuide/README.md) for how to build and run Cesium on your system.
 
 Always feel free to introduce yourself on the [Cesium forum](http://cesiumjs.org/forum.html) to brainstorm ideas and ask for guidance.
 
@@ -61,6 +61,7 @@ Please email a completed CLA with all fields filled in to [cla@agi.com](mailto:c
 
 Our code is our lifeblood so maintaining Cesium's high code quality is important to us.
 
+* Review the [Contributor Guides](Documentation/Contributors/README.md).  In addition to Cesium-specific topics, they contain a lot of general software development best practices.
 * If this is your first contribution to Cesium, add your name to [CONTRIBUTORS.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md).
 * Pull request tips
    * If your pull request fixes an existing issue, include a link to the issue in the description (like this: [#1](https://github.com/AnalyticalGraphicsInc/cesium/issues/1)).  Likewise, if your pull request fixes an issue reported on the Cesium forum, include a link to the thread.
@@ -68,10 +69,10 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
    * Once you are done making new commits to address feedback, add a comment to the pull request such as `"this is ready"` since GitHub doesn't notify us about commits.
 * Code and tests
    * Follow the [Coding Guide](Documentation/Contributors/CodingGuide/README.md).
-   * Verify your code passes [JSHint](http://www.jshint.com/).  We use the JSHint Eclipse plugin so it runs automatically when we save.  You can also run `jsHint` from the command line (`npm run jsHint`).
+   * Verify your code passes [JSHint](http://www.jshint.com/).  Run JSHint for all of Cesium with `npm run jsHint` or automatically run JSHint when files are saved with `npm run jsHint-watch`.  See the [Build Guide](Documentation/Contributors/BuildGuide/README.md).
    * Verify that all tests pass, and write new tests with excellent code coverage for new code.  Follow the [Testing Guide](Documentation/Contributors/TestingGuide/README.md).
-   * Update [LICENSE.md](LICENSE.md) if third-party libraries were added/updated/removed, including new version of existing libraries.  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.
-   * If new public classes, functions, or properties were added, also:
-      * Include reference documentation with code examples.  Check out the [best practices](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Documentation-Best-Practices).
+   * If you added new identifiers to the Cesium API:
       * Update [CHANGES.md](CHANGES.md).
+      * Include reference documentation with code examples.  Follow the [Documentation Guide](Documentation/Contributors/DocumentationGuide/README.md).
       * If the change is significant, add a new [Sandcastle](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html) example or extend and existing one.
+   * If you added third-party libraries, including new version of existing libraries, update [LICENSE.md](LICENSE.md).  Mention it in [CHANGES.md](CHANGES.md).  If you plan to add a third-party library, start a new thread on the [Cesium forum](http://cesiumjs.org/forum.html) first.

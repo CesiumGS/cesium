@@ -10,10 +10,10 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
@@ -65,10 +65,10 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        getAbsoluteUri,
         getBaseUri,
         getMagic,
         getStringFromTypedArray,
@@ -342,7 +342,6 @@ define([
                     // Binary glTF
                     var result = parseBinaryGltfHeader(gltf);
 
-                    // CESIUM_binary_glTF is from the beginning of the file but
                     // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
                         gltf = gltf.subarray(result.binaryOffset);
@@ -810,12 +809,6 @@ define([
         }
     });
 
-    function getAbsoluteURL(url) {
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(url);
-        return modelUri.resolve(docUri).toString();
-    }
-
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
@@ -852,21 +845,10 @@ define([
         byteOffset += sizeOfUint32; // Skip length
 
         var sceneLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-
-        var sceneFormat = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
+        byteOffset += sizeOfUint32 + sizeOfUint32; // Skip sceneFormat
 
         var sceneOffset = byteOffset;
         var binOffset = sceneOffset + sceneLength;
-
-        // If sceneFormat isn't 0 (JSON) then we are using the CESIUM_binary_glTF extension
-        // This means the last 2 integers of the header are jsonOffset & jsonLength
-        if (sceneFormat !== 0) {
-            sceneOffset = sceneLength;
-            sceneLength = sceneFormat;
-            binOffset = 0;
-        }
 
         var json = getStringFromTypedArray(uint8Array, sceneOffset, sceneLength);
         return {
@@ -947,7 +929,7 @@ define([
         var url = options.url;
         // If no cache key is provided, use the absolute URL, since two URLs with
         // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteURL(url));
+        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
 
         options = clone(options);
         options.basePath = getBaseUri(url);
@@ -974,7 +956,6 @@ define([
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
                     var result = parseBinaryGltfHeader(array);
-                    // CESIUM_binary_glTF is from the beginning of the file but
                     //  KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
                         array = array.subarray(result.binaryOffset);
@@ -1148,7 +1129,7 @@ define([
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
 
-                if (id === 'CESIUM_binary_glTF' || id === 'KHR_binary_glTF') {
+                if (id === 'KHR_binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[id] = model._cachedGltf.bgltf;
@@ -1198,16 +1179,8 @@ define([
                         bufferView : undefined
                     };
                 }
-                else if (defined(shader.extensions) &&
-                    (defined(shader.extensions.CESIUM_binary_glTF) || defined(shader.extensions.KHR_binary_glTF))) {
-                    var binary;
-                    if (defined(shader.extensions.CESIUM_binary_glTF)) {
-                        binary = shader.extensions.CESIUM_binary_glTF;
-                    }
-                    else { // defined(shader.extensions.KHR_binary_glTF)
-                        binary = shader.extensions.KHR_binary_glTF;
-                    }
-
+                else if (defined(shader.extensions) && defined(shader.extensions.KHR_binary_glTF)) {
+                    var binary = shader.extensions.KHR_binary_glTF;
                     model._loadResources.shaders[id] = {
                         source : undefined,
                         bufferView : binary.bufferView
@@ -1251,15 +1224,8 @@ define([
                 var gltfImage = images[textures[id].source];
 
                 // Image references either uri (external or base64-encoded) or bufferView
-                if (defined(gltfImage.extensions) &&
-                    (defined(gltfImage.extensions.CESIUM_binary_glTF) || defined(gltfImage.extensions.KHR_binary_glTF))) {
-                    var binary;
-                    if (defined(gltfImage.extensions.CESIUM_binary_glTF)) {
-                        binary = gltfImage.extensions.CESIUM_binary_glTF;
-                    }
-                    else { // defined(gltfImage.extensions.KHR_binary_glTF)
-                        binary = gltfImage.extensions.KHR_binary_glTF;
-                    }
+                if (defined(gltfImage.extensions) && defined(gltfImage.extensions.KHR_binary_glTF)) {
+                    var binary = gltfImage.extensions.KHR_binary_glTF;
                     model._loadResources.texturesToCreateFromBufferView.enqueue({
                         id : id,
                         image : undefined,
@@ -3052,12 +3018,9 @@ define([
             for (var index=0;index<extensionsUsedCount;++index) {
                 var extension = extensionsUsed[index];
 
-                if (extension !== 'CESIUM_RTC' && extension !== 'CESIUM_binary_glTF' &&
-                    extension !== 'KHR_binary_glTF' && extension !== 'KHR_materials_common') {
+                if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
+                    extension !== 'KHR_materials_common') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
-                }
-                else if(extension === 'CESIUM_binary_glTF') {
-                    deprecationWarning('CESIUM_binary_glTF extension', 'Use of the CESIUM_binary_glTF extension has been deprecated. Use the KHR_binary_glTF extension instead.');
                 }
             }
         }
@@ -3340,10 +3303,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Model#isDestroyed
      *
      * @example
      * model = model && model.destroy();
+     * 
+     * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {
         // Vertex arrays are unique to this model, destroy here.

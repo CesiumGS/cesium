@@ -10,8 +10,7 @@ define([
     /**
      * Determines how two pixels' values are combined.
      *
-     * @namespace
-     * @alias BlendEquation
+     * @exports BlendEquation
      */
     var BlendEquation = {
         /**

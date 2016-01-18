@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/when',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
@@ -17,6 +18,7 @@ define([
     ], function(
         when,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
@@ -76,8 +78,6 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
-     * @see TerrainData
-     * @see HeightmapTerrainData
      *
      * @example
      * var data = new Cesium.QuantizedMeshTerrainData({
@@ -104,6 +104,9 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
+     * @see TerrainData
+     * @see HeightmapTerrainData
      */
     function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
@@ -191,6 +194,8 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
+
+        this._mesh = undefined;
     }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
@@ -302,7 +307,10 @@ define([
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
-            return new TerrainMesh(
+            that._skirtIndex = result.skirtIndex;
+            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+
+            that._mesh = new TerrainMesh(
                     rtc,
                     vertices,
                     indicesTypedArray,
@@ -313,6 +321,22 @@ define([
                     stride,
                     obb,
                     terrainEncoding);
+
+            // Free memory received from server after mesh is created.
+            that._quantizedVertices = undefined;
+            that._encodedNormals = undefined;
+            that._indices = undefined;
+
+            that._uValues = undefined;
+            that._vValues = undefined;
+            that._heightValues = undefined;
+
+            that._westIndices = undefined;
+            that._southIndices = undefined;
+            that._eastIndices = undefined;
+            that._northIndices = undefined;
+
+            return that._mesh;
         });
     };
 
@@ -362,6 +386,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var mesh = this._mesh;
+        if (!defined(this._mesh)) {
+            return undefined;
+        }
+
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
@@ -369,9 +398,11 @@ define([
         var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            vertices : this._quantizedVertices,
-            indices : this._indices,
-            encodedNormals : this._encodedNormals,
+            vertices : mesh.vertices,
+            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            indices : mesh.indices,
+            skirtIndex : this._skirtIndex,
+            encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
             isEastChild : isEastChild,
@@ -443,11 +474,51 @@ define([
         var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
-        var uBuffer = this._uValues;
-        var vBuffer = this._vValues;
-        var heightBuffer = this._heightValues;
+        if (!defined(this._mesh)) {
+            return interpolateHeight(this, u, v);
+        }
 
-        var indices = this._indices;
+        interpolateMeshHeight(this, u, v);
+    };
+
+    var texCoordScratch0 = new Cartesian2();
+    var texCoordScratch1 = new Cartesian2();
+    var texCoordScratch2 = new Cartesian2();
+
+    function interpolateMeshHeight(terrainData, u, v) {
+        var mesh = terrainData._mesh;
+        var vertices = mesh.vertices;
+        var encoding = mesh.encoding;
+        var indices = mesh.indices;
+
+        for (var i = 0, len = indices.length; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var uv0 = encoding.decodeTextureCoordinates(vertices, i0, texCoordScratch0);
+            var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
+            var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
+
+            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
+            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                var h0 = encoding.decodeHeight(vertices, i0);
+                var h1 = encoding.decodeHeight(vertices, i1);
+                var h2 = encoding.decodeHeight(vertices, i2);
+                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            }
+        }
+
+        // Position does not lie in any triangle in this mesh.
+        return undefined;
+    }
+
+    function interpolateHeight(terrainData, u, v) {
+        var uBuffer = terrainData._uValues;
+        var vBuffer = terrainData._vValues;
+        var heightBuffer = terrainData._heightValues;
+
+        var indices = terrainData._indices;
         for (var i = 0, len = indices.length; i < len; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
@@ -466,13 +537,13 @@ define([
                 var quantizedHeight = barycentric.x * heightBuffer[i0] +
                                       barycentric.y * heightBuffer[i1] +
                                       barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(this._minimumHeight, this._maximumHeight, quantizedHeight / maxShort);
+                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
             }
         }
 
         // Position does not lie in any triangle in this mesh.
         return undefined;
-    };
+    }
 
     /**
      * Determines if a given child tile is available, based on the
