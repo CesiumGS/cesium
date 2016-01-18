@@ -8,12 +8,12 @@ define([
     var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
 
     /**
-     * DOC_TBA.
+     * Determines if the specified uri is a data uri.
      *
-     * @exports isArray
+     * @exports isDataUri
      *
-     * @param {Object} value DOC_TBA.
-     * @returns {Boolean} true DOC_TBA.
+     * @param {String} uri The uri to test.
+     * @returns {Boolean} true when the uri is a data uri; otherwise, false.
      *
      * @private
      */
