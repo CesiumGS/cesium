@@ -231,13 +231,13 @@ define([
             return undefined;
         }
 
-        return promise.then(function(tree) {
+        return promise.then(function(tilesetJson) {
             if (tileset.isDestroyed()) {
                 return when.reject('tileset is destroyed');
             }
 
             var baseUrl = tileset.url;
-            var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
+            var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
             // to parentTile's children, and increment its numberOfChildrenWithoutContent
@@ -248,7 +248,7 @@ define([
 
             var stack = [];
             stack.push({
-                header : tree.root,
+                header : tilesetJson.root,
                 cesium3DTile : rootTile
             });
 
@@ -271,7 +271,7 @@ define([
             }
 
             return {
-                tree : tree,
+                tilesetJson : tilesetJson,
                 root : rootTile
             };
         });
@@ -647,14 +647,14 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function loadTiles(tileset) {
-        var promise = tileset.loadTilesJson(tileset._tilesJson, undefined);
+        var promise = tileset.  loadTilesJson(tileset._tilesJson, undefined);
         if (defined(promise)) {
             tileset._state = Cesium3DTilesetState.LOADING;
             promise.then(function(data) {
-                var tree = data.tree;
+                var tilesetJson = data.tilesetJson;
                 tileset._state = Cesium3DTilesetState.READY;
-                tileset._properties = tree.properties;
-                tileset._geometricError = tree.geometricError;
+                tileset._properties = tilesetJson.properties;
+                tileset._geometricError = tilesetJson.geometricError;
                 tileset._root = data.root;
                 tileset._readyPromise.resolve(tileset);
             }).otherwise(function(error) {
