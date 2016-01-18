@@ -61,7 +61,7 @@ define([
      *
      * @see Scene.skyAtmosphere
      */
-    var SkyAtmosphere = function(ellipsoid) {
+    function SkyAtmosphere(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         /**
@@ -113,7 +113,7 @@ define([
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
             }
         };
-    };
+    }
 
     defineProperties(SkyAtmosphere.prototype, {
         /**
@@ -236,10 +236,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyAtmosphere#isDestroyed
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
+     * 
+     * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {
         var command = this._command;

@@ -27,12 +27,12 @@ define([
      * @alias PolylineArrowMaterialProperty
      * @constructor
      */
-    var PolylineArrowMaterialProperty = function(color) {
+    function PolylineArrowMaterialProperty(color) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
         this.color = color;
-    };
+    }
 
     defineProperties(PolylineArrowMaterialProperty.prototype, {
         /**

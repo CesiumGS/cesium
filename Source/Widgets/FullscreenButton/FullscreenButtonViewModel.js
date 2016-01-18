@@ -26,7 +26,7 @@ define([
      *
      * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      */
-    var FullscreenButtonViewModel = function(fullscreenElement) {
+    function FullscreenButtonViewModel(fullscreenElement) {
         var that = this;
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
@@ -87,7 +87,7 @@ define([
             tmpIsFullscreen(Fullscreen.fullscreen);
         };
         document.addEventListener(Fullscreen.changeEventName, this._callback);
-    };
+    }
 
     defineProperties(FullscreenButtonViewModel.prototype, {
         /**

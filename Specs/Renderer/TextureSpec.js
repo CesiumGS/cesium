@@ -42,7 +42,6 @@ defineSuite([
         createContext,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
     var greenImage;
@@ -388,18 +387,17 @@ defineSuite([
         texture = new Texture({
             context : context,
             source : blueImage,
-            pixelFormat : PixelFormat.RGBA
+            pixelFormat : PixelFormat.RGBA,
+            sampler : new Sampler({
+                minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
+            })
         });
-
         texture.generateMipmap();
-        texture.sampler = new Sampler({
-            minificationFilter : TextureMinificationFilter.NEAREST_MIPMAP_LINEAR
-        });
 
         expect(renderFragment(context)).toEqual(Color.BLUE.toBytes());
     });
 
-    it('can set a sampler', function() {
+    it('can set a sampler property', function() {
         texture = new Texture({
             context : context,
             source : blueImage,
@@ -420,6 +418,28 @@ defineSuite([
         expect(s.wrapT).toEqual(sampler.wrapT);
         expect(s.minificationFilter).toEqual(sampler.minificationFilter);
         expect(s.magnificationFilter).toEqual(sampler.magnificationFilter);
+        expect(s.maximumAnisotropy).toEqual(2.0);
+    });
+
+    it('can set sampler at construction', function() {
+        texture = new Texture({
+            context : context,
+            source : blueImage,
+            pixelFormat : PixelFormat.RGBA,
+            sampler : new Sampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.MIRRORED_REPEAT,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST,
+                maximumAnisotropy : 2.0
+            })
+        });
+
+        var s = texture.sampler;
+        expect(s.wrapS).toEqual(TextureWrap.REPEAT);
+        expect(s.wrapT).toEqual(TextureWrap.MIRRORED_REPEAT);
+        expect(s.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
+        expect(s.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
         expect(s.maximumAnisotropy).toEqual(2.0);
     });
 

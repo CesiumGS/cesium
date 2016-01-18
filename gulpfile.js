@@ -31,7 +31,6 @@ if (/\.0$/.test(version)) {
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
-var copyUnminified = taskName === 'combine' || taskName === 'default' || taskName === undefined;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
 var sourceFiles = ['Source/**/*.js',
@@ -60,7 +59,6 @@ var filesToClean = ['Source/Cesium.js',
                     'Instrumented',
                     'Source/Shaders/**/*.js',
                     'Specs/SpecList.js',
-                    'Apps/Sandcastle/.jshintrc',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
                     'Cesium-*.zip'];
@@ -91,7 +89,7 @@ gulp.task('build', function(done) {
     createCesiumJs();
     createSpecList();
     createGalleryList();
-    createSandcastleJsHintOptions();
+    createJsHintOptions();
     done();
 });
 
@@ -157,11 +155,6 @@ gulp.task('combine', ['generateStubs'], function() {
         removePragmas : false,
         optimizer : 'none',
         outputDirectory : outputDirectory
-    }).then(function() {
-        if (!copyUnminified) {
-            return;
-        }
-        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
@@ -171,11 +164,6 @@ gulp.task('combineRelease', ['generateStubs'], function() {
         removePragmas : true,
         optimizer : 'none',
         outputDirectory : outputDirectory
-    }).then(function() {
-        if (!copyUnminified) {
-            return;
-        }
-        return streamToPromise(gulp.src(outputDirectory + '/**').pipe(gulp.dest(path.join('Build', 'Cesium'))));
     });
 });
 
@@ -707,12 +695,6 @@ function createCesiumJs() {
 
         var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
 
-        //Ignore the deprecated Scene version of HeadingPitchRange
-        //until it is removed with #3097
-        if (moduleId === 'Scene/HeadingPitchRange') {
-            return;
-        }
-
         moduleIds.push("'./" + moduleId + "'");
         parameters.push(parameterName);
         assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
@@ -742,7 +724,7 @@ function createSpecList() {
         specs.push("'" + filePathToModuleId(file) + "'");
     });
 
-    var contents = 'var specs = [' + specs.join(',') + '];';
+    var contents = '/*jshint unused: false*/\nvar specs = [' + specs.join(',') + '];';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
@@ -776,16 +758,17 @@ var gallery_demos = [' + demos.join(', ') + '];';
     fs.writeFileSync(output, contents);
 }
 
-function createSandcastleJsHintOptions() {
-    var jsHintOptions = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
-    jsHintOptions.predef = ['JSON', 'require', 'console', 'Sandcastle', 'Cesium'];
+function createJsHintOptions() {
+    var primary = JSON.parse(fs.readFileSync('.jshintrc', 'utf8'));
+    var gallery = JSON.parse(fs.readFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), 'utf8'));
+    primary.jasmine = false;
+    primary.predef = gallery.predef;
+    primary.unused = gallery.unused;
 
-    var contents = JSON.stringify(jsHintOptions, null, 2);
-    fs.writeFileSync(path.join('Apps', 'Sandcastle', '.jshintrc'), contents);
-
-    contents = '\
+    var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
-var sandcastleJsHintOptions = ' + contents + ';';
+var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';';
+
     fs.writeFileSync(path.join('Apps', 'Sandcastle', 'jsHintOptions.js'), contents);
 }
 

@@ -9,6 +9,13 @@ define([
         Fullscreen) {
     "use strict";
 
+    var theNavigator;
+    if (typeof navigator !== 'undefined') {
+        theNavigator = navigator;
+    } else {
+        theNavigator = {};
+    }
+
     function extractVersion(versionString) {
         var parts = versionString.split('.');
         for (var i = 0, len = parts.length; i < len; ++i) {
@@ -23,7 +30,7 @@ define([
         if (!defined(isChromeResult)) {
             isChromeResult = false;
 
-            var fields = (/ Chrome\/([\.0-9]+)/).exec(navigator.userAgent);
+            var fields = (/ Chrome\/([\.0-9]+)/).exec(theNavigator.userAgent);
             if (fields !== null) {
                 isChromeResult = true;
                 chromeVersionResult = extractVersion(fields[1]);
@@ -44,8 +51,8 @@ define([
             isSafariResult = false;
 
             // Chrome contains Safari in the user agent too
-            if (!isChrome() && (/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
-                var fields = (/ Version\/([\.0-9]+)/).exec(navigator.userAgent);
+            if (!isChrome() && (/ Safari\/[\.0-9]+/).test(theNavigator.userAgent)) {
+                var fields = (/ Version\/([\.0-9]+)/).exec(theNavigator.userAgent);
                 if (fields !== null) {
                     isSafariResult = true;
                     safariVersionResult = extractVersion(fields[1]);
@@ -66,7 +73,7 @@ define([
         if (!defined(isWebkitResult)) {
             isWebkitResult = false;
 
-            var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(navigator.userAgent);
+            var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(theNavigator.userAgent);
             if (fields !== null) {
                 isWebkitResult = true;
                 webkitVersionResult = extractVersion(fields[1]);
@@ -88,14 +95,14 @@ define([
             isInternetExplorerResult = false;
 
             var fields;
-            if (navigator.appName === 'Microsoft Internet Explorer') {
-                fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(navigator.userAgent);
+            if (theNavigator.appName === 'Microsoft Internet Explorer') {
+                fields = /MSIE ([0-9]{1,}[\.0-9]{0,})/.exec(theNavigator.userAgent);
                 if (fields !== null) {
                     isInternetExplorerResult = true;
                     internetExplorerVersionResult = extractVersion(fields[1]);
                 }
-            } else if (navigator.appName === 'Netscape') {
-                fields = /Trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(navigator.userAgent);
+            } else if (theNavigator.appName === 'Netscape') {
+                fields = /Trident\/.*rv:([0-9]{1,}[\.0-9]{0,})/.exec(theNavigator.userAgent);
                 if (fields !== null) {
                     isInternetExplorerResult = true;
                     internetExplorerVersionResult = extractVersion(fields[1]);
@@ -115,7 +122,7 @@ define([
         if (!defined(isFirefoxResult)) {
             isFirefoxResult = false;
 
-            var fields = /Firefox\/([\.0-9]+)/.exec(navigator.userAgent);
+            var fields = /Firefox\/([\.0-9]+)/.exec(theNavigator.userAgent);
             if (fields !== null) {
                 isFirefoxResult = true;
                 firefoxVersionResult = extractVersion(fields[1]);
@@ -127,7 +134,7 @@ define([
     var isWindowsResult;
     function isWindows() {
         if (!defined(isWindowsResult)) {
-            isWindowsResult = /Windows/i.test(navigator.appVersion);
+            isWindowsResult = /Windows/i.test(theNavigator.appVersion);
         }
         return isWindowsResult;
     }
@@ -140,11 +147,11 @@ define([
     var hasPointerEvents;
     function supportsPointerEvents() {
         if (!defined(hasPointerEvents)) {
-            //While window.navigator.pointerEnabled is deprecated in the W3C specification
+            //While navigator.pointerEnabled is deprecated in the W3C specification
             //we still need to use it if it exists in order to support browsers
             //that rely on it, such as the Windows WebBrowser control which defines
-            //window.PointerEvent but sets window.navigator.pointerEnabled to false.
-            hasPointerEvents = defined(window.PointerEvent) && (!defined(window.navigator.pointerEnabled) || window.navigator.pointerEnabled);
+            //PointerEvent but sets navigator.pointerEnabled to false.
+            hasPointerEvents = typeof PointerEvent !== 'undefined' && (!defined(theNavigator.pointerEnabled) || theNavigator.pointerEnabled);
         }
         return hasPointerEvents;
     }
@@ -153,8 +160,7 @@ define([
      * A set of functions to detect whether the current browser supports
      * various features.
      *
-     * @namespace
-     * @alias FeatureDetection
+     * @exports FeatureDetection
      */
     var FeatureDetection = {
         isChrome : isChrome,
@@ -168,7 +174,7 @@ define([
         isFirefox : isFirefox,
         firefoxVersion : firefoxVersion,
         isWindows : isWindows,
-        hardwareConcurrency : defaultValue(navigator.hardwareConcurrency, 3),
+        hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents
     };
 

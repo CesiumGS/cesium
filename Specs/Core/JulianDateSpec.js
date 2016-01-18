@@ -10,7 +10,6 @@ defineSuite([
         TimeConstants,
         TimeStandard) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
@@ -433,6 +432,18 @@ defineSuite([
         var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 10, 10, 14, 0, 0)));
         var julianDate = JulianDate.fromIso8601('2008-11-10T14:00:00+00');
         expect(julianDate).toEqual(expectedDate);
+    });
+
+    it('Construct from ISO8601 local calendar date and time with no seconds and UTC offset in basic format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
+        var computedDate = JulianDate.fromIso8601('20090801T0730-0500');
+        expect(computedDate).toEqual(expectedDate);
+    });
+
+    it('Construct from ISO8601 local calendar date and time with no seconds and UTC offset in extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2009, 7, 1, 12, 30, 0)));
+        var computedDate = JulianDate.fromIso8601('2009-08-01T07:30-05:00');
+        expect(computedDate).toEqual(expectedDate);
     });
 
     it('Fails to construct an ISO8601 ordinal date with day less than 1', function() {

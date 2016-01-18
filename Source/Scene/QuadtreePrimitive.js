@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getTimestamp',
+        '../Core/Math',
         '../Core/Queue',
         '../Core/Ray',
         '../Core/Rectangle',
@@ -26,6 +27,7 @@ define([
         DeveloperError,
         Event,
         getTimestamp,
+        CesiumMath,
         Queue,
         Ray,
         Rectangle,
@@ -58,7 +60,7 @@ define([
      *        frame, so the actual number of resident tiles may be higher.  The value of
      *        this property will not affect visual quality.
      */
-    var QuadtreePrimitive = function QuadtreePrimitive(options) {
+    function QuadtreePrimitive(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.tileProvider)) {
             throw new DeveloperError('options.tileProvider is required.');
@@ -129,7 +131,10 @@ define([
         this._occluders = new QuadtreeOccluders({
             ellipsoid : ellipsoid
         });
-    };
+
+        this._tileLoadProgressEvent = new Event();
+        this._lastTileLoadQueueLength = 0;
+    }
 
     defineProperties(QuadtreePrimitive.prototype, {
         /**
@@ -140,6 +145,18 @@ define([
         tileProvider : {
             get : function() {
                 return this._tileProvider;
+            }
+        },
+        /**
+         * Gets an event that's raised when the length of the tile load queue has changed since the last render frame.  When the load queue is empty,
+         * all terrain and imagery for the current view have been loaded.  The event passes the new length of the tile load queue.
+         *
+         * @memberof QuadtreePrimitive.prototype
+         * @type {Event}
+         */
+        tileLoadProgressEvent : {
+            get : function() {
+                return this._tileLoadProgressEvent;
             }
         }
     });
@@ -256,7 +273,7 @@ define([
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.endUpdate(frameState);
+            this._tileProvider.updateForPick(frameState);
         }
     };
 
@@ -290,10 +307,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreePrimitive#isDestroyed
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     * 
+     * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();
@@ -307,7 +325,6 @@ define([
         }
 
         var i;
-        var j;
         var len;
 
         // Clear the render list.
@@ -414,6 +431,8 @@ define([
             }
         }
 
+        raiseTileLoadProgressEvent(primitive);
+
         if (debug.enableDebugOutput) {
             if (debug.tilesVisited !== debug.lastTilesVisited ||
                 debug.tilesRendered !== debug.lastTilesRendered ||
@@ -421,7 +440,6 @@ define([
                 debug.maxDepth !== debug.lastMaxDepth ||
                 debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
 
-                /*global console*/
                 console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
 
                 debug.lastTilesVisited = debug.tilesVisited;
@@ -433,6 +451,19 @@ define([
         }
     }
 
+    /**
+     * Checks if the load queue length has changed since the last time we raised a queue change event - if so, raises
+     * a new one.
+     */
+    function raiseTileLoadProgressEvent(primitive) {
+        var currentLoadQueueLength = primitive._tileLoadQueue.length;
+
+        if (currentLoadQueueLength !== primitive._lastTileLoadQueueLength) {
+            primitive._tileLoadProgressEvent.raiseEvent(currentLoadQueueLength);
+            primitive._lastTileLoadQueueLength = currentLoadQueueLength;
+        }
+    }
+
     function screenSpaceError(primitive, frameState, tile) {
         if (frameState.mode === SceneMode.SCENE2D) {
             return screenSpaceError2D(primitive, frameState, tile);
@@ -440,17 +471,17 @@ define([
 
         var maxGeometricError = primitive._tileProvider.getLevelMaximumGeometricError(tile.level);
 
-        var distance = primitive._tileProvider.computeDistanceToTile(tile, frameState);
-        tile._distance = distance;
-
+        var distance = tile._distance;
         var height = frameState.context.drawingBufferHeight;
+        var sseDenominator = frameState.camera.frustum.sseDenominator;
 
-        var camera = frameState.camera;
-        var frustum = camera.frustum;
-        var fovy = frustum.fovy;
+        var error = (maxGeometricError * height) / (distance * sseDenominator);
 
-        // PERFORMANCE_IDEA: factor out stuff that's constant across tiles.
-        return (maxGeometricError * height) / (2 * distance * Math.tan(0.5 * fovy));
+        if (frameState.fog.enabled) {
+            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+        }
+
+        return error;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {
@@ -517,7 +548,7 @@ define([
         var timeSlice = primitive._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+        for (var i = tileLoadQueue.length - 1; i >= 0; --i) {
             var tile = tileLoadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(frameState, tile);

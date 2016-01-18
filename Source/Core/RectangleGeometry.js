@@ -513,6 +513,8 @@ define([
      * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
+     * @param {Boolean} [options.closeTop=true] Specifies whether the rectangle has a top cover when extruded.
+     * @param {Boolean} [options.closeBottom=true] Specifies whether the rectangle has a bottom cover when extruded.
      *
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -538,12 +540,12 @@ define([
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
      *   rectangle : Cesium.Rectangle.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0,
-     *   extrudedHieght: 300000,
+     *   extrudedHeight: 300000,
      *   closeTop: false
      * });
      * var geometry = Cesium.RectangleGeometry.createGeometry(rectangle);
      */
-    var RectangleGeometry = function(options) {
+    function RectangleGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
@@ -580,7 +582,7 @@ define([
         this._closeTop = closeTop;
         this._closeBottom = closeBottom;
         this._workerName = 'createRectangleGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

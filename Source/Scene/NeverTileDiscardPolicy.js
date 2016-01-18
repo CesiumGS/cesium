@@ -10,8 +10,8 @@ define([], function() {
      *
      * @see DiscardMissingTileImagePolicy
      */
-    var NeverTileDiscardPolicy = function(options) {
-    };
+    function NeverTileDiscardPolicy(options) {
+    }
 
     /**
      * Determines if the discard policy is ready to process images.

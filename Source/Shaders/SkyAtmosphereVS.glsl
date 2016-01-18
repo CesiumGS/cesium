@@ -63,7 +63,6 @@ const float fSamples = 2.0;
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
 varying vec3 v_toCamera;
-varying vec3 v_positionEC;
 
 float scale(float fCos)
 {
@@ -126,6 +125,5 @@ void main(void)
     v_mieColor = v3FrontColor * fKmESun;
     v_rayleighColor = v3FrontColor * (v3InvWavelength * fKrESun);
     v_toCamera = czm_viewerPositionWC - v3Pos;
-    v_positionEC = (czm_modelView * position).xyz;
     gl_Position = czm_modelViewProjection * position;
 }

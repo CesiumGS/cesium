@@ -8,8 +8,7 @@ define([
     /**
      * The interface for interpolation algorithms.
      *
-     * @namespace
-     * @alias InterpolationAlgorithm
+     * @exports InterpolationAlgorithm
      *
      * @see LagrangePolynomialApproximation
      * @see LinearApproximation

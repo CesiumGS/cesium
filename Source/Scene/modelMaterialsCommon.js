@@ -1,12 +1,12 @@
 /*global define*/
 define([
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Renderer/WebGLConstants'
-], function(
-    defaultValue,
-    defined,
-    WebGLConstants) {
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Renderer/WebGLConstants'
+    ], function(
+        defaultValue,
+        defined,
+        WebGLConstants) {
     "use strict";
 
     function webGLConstantToGlslType(webGLValue) {
@@ -640,7 +640,7 @@ define([
      *
      * @private
      */
-    var modelMaterialsCommon = function(gltf) {
+    function modelMaterialsCommon(gltf) {
         if (!defined(gltf)) {
             return undefined;
         }
@@ -709,7 +709,7 @@ define([
         }
 
         return gltf;
-    };
+    }
 
     return modelMaterialsCommon;
 });

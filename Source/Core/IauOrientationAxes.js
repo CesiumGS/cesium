@@ -29,13 +29,13 @@ define([
      *
      * @private
      */
-    var IauOrientationAxes = function(computeFunction) {
+    function IauOrientationAxes(computeFunction) {
         if (!defined(computeFunction) || typeof computeFunction !== 'function') {
             computeFunction = Iau2000Orientation.ComputeMoon;
         }
 
         this._computeFunction = computeFunction;
-    };
+    }
 
     var xAxisScratch = new Cartesian3();
     var yAxisScratch = new Cartesian3();

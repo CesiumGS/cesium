@@ -22,7 +22,7 @@ define([
      *
      * @see RuntimeError
      */
-    var DeveloperError = function(message) {
+    function DeveloperError(message) {
         /**
          * 'DeveloperError' indicating that this exception was thrown due to a developer error.
          * @type {String}
@@ -51,7 +51,7 @@ define([
          * @readonly
          */
         this.stack = stack;
-    };
+    }
 
     DeveloperError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;

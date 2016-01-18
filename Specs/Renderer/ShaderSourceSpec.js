@@ -4,7 +4,6 @@ defineSuite([
     ], function(
         ShaderSource) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('combines #defines', function() {
         var source = new ShaderSource({
@@ -61,7 +60,7 @@ defineSuite([
 
     it('throws with invalid qualifier', function() {
         expect(function() {
-            var source = new ShaderSource({
+            return new ShaderSource({
                 pickColorQualifier : 'const'
             });
         }).toThrowDeveloperError();

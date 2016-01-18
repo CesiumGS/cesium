@@ -11,6 +11,7 @@ define([
         '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
@@ -29,6 +30,7 @@ define([
         loadJsonp,
         CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
@@ -75,15 +77,13 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
      * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
@@ -91,8 +91,11 @@ define([
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
+     * 
+     * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var BingMapsImageryProvider = function BingMapsImageryProvider(options) {
+    function BingMapsImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -140,6 +143,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
@@ -196,12 +200,14 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + metadataUrl + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -213,7 +219,7 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     defineProperties(BingMapsImageryProvider.prototype, {
         /**
@@ -438,6 +444,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

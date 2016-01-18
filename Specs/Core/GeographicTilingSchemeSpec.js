@@ -16,7 +16,6 @@ defineSuite([
         Rectangle,
         TilingScheme) {
     "use strict";
-    /*global describe,it,expect*/
 
     it('conforms to TilingScheme interface.', function() {
         expect(GeographicTilingScheme).toConformToInterface(TilingScheme);

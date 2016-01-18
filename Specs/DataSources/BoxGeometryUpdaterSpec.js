@@ -42,7 +42,6 @@ defineSuite([
         createDynamicProperty,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var time;
@@ -467,4 +466,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(BoxGeometryUpdater, entity, entity.box, function() {
         return scene;
     });
-});
+}, 'WebGL');

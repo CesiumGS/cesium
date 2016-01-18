@@ -1,6 +1,8 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -34,6 +36,8 @@ define([
         './SceneMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
+        Cartesian3,
         clone,
         combine,
         ComponentDatatype,
@@ -105,8 +109,6 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see GeometryInstance
-     * @see Appearance
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -173,8 +175,11 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
+     * 
+     * @see GeometryInstance
+     * @see Appearance
      */
-    var Primitive = function(options) {
+    function Primitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -266,6 +271,18 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * @private
+         */
+        this.rtcCenter = options.rtcCenter;
+        this._modifiedModelView = new Matrix4();
+
+        //>>includeStart('debug', pragmas.debug);
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+            throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
+        }
+        //>>includeEnd('debug');
+
         this._translucent = undefined;
 
         this._state = PrimitiveState.READY;
@@ -310,7 +327,7 @@ define([
         this._createGeometryResults = undefined;
         this._ready = false;
         this._readyPromise = when.defer();
-    };
+    }
 
     defineProperties(Primitive.prototype, {
         /**
@@ -499,7 +516,7 @@ define([
 
     var positionRegex = /attribute\s+vec(?:3|4)\s+(.*)3DHigh;/g;
 
-    Primitive._createColumbusViewShader = function(vertexShaderSource, scene3DOnly) {
+    Primitive._modifyShaderPosition = function(primitive, vertexShaderSource, scene3DOnly) {
         var match;
 
         var forwardDecl = '';
@@ -516,38 +533,58 @@ define([
                 forwardDecl += functionName + ';\n';
             }
 
-            if (!scene3DOnly) {
-                attributes +=
-                    'attribute vec3 ' + name + '2DHigh;\n' +
-                    'attribute vec3 ' + name + '2DLow;\n';
+            if (!defined(primitive.rtcCenter)) {
+                // Use GPU RTE
+                if (!scene3DOnly) {
+                    attributes +=
+                        'attribute vec3 ' + name + '2DHigh;\n' +
+                        'attribute vec3 ' + name + '2DLow;\n';
+
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    vec4 p;\n' +
+                        '    if (czm_morphTime == 1.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '    }\n' +
+                        '    else if (czm_morphTime == 0.0)\n' +
+                        '    {\n' +
+                        '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
+                        '    }\n' +
+                        '    else\n' +
+                        '    {\n' +
+                        '        p = czm_columbusViewMorph(\n' +
+                        '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
+                        '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
+                        '                czm_morphTime);\n' +
+                        '    }\n' +
+                        '    return p;\n' +
+                        '}\n\n';
+                } else {
+                    computeFunctions +=
+                        functionName + '\n' +
+                        '{\n' +
+                        '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
+                        '}\n\n';
+                }
+            } else {
+                // Use RTC
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DHigh;/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/attribute\s+vec(?:3|4)\s+position3DLow;/g, '');
+
+                forwardDecl += 'uniform mat4 u_modifiedModelView;\n';
+                attributes += 'attribute vec4 position;\n';
 
                 computeFunctions +=
                     functionName + '\n' +
                     '{\n' +
-                    '    vec4 p;\n' +
-                    '    if (czm_morphTime == 1.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '    }\n' +
-                    '    else if (czm_morphTime == 0.0)\n' +
-                    '    {\n' +
-                    '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
-                    '    }\n' +
-                    '    else\n' +
-                    '    {\n' +
-                    '        p = czm_columbusViewMorph(\n' +
-                    '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
-                    '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
-                    '                czm_morphTime);\n' +
-                    '    }\n' +
-                    '    return p;\n' +
+                    '    return u_modifiedModelView * position;\n' +
                     '}\n\n';
-            } else {
-                computeFunctions +=
-                    functionName + '\n' +
-                    '{\n' +
-                    '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                    '}\n\n';
+
+
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
+                vertexShaderSource = vertexShaderSource.replace(/czm_modelViewProjectionRelativeToEye/g, 'czm_projection');
             }
         }
 
@@ -1031,7 +1068,7 @@ define([
     function createShaderProgram(primitive, frameState, appearance) {
         var context = frameState.context;
 
-        var vs = Primitive._createColumbusViewShader(appearance.vertexShaderSource, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
@@ -1089,6 +1126,12 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
+
+        if (defined(primitive.rtcCenter)) {
+            uniforms.u_modifiedModelView = function() {
+                return primitive._modifiedModelView;
+            };
+        }
 
         var pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
@@ -1184,12 +1227,32 @@ define([
         attributes.length = 0;
     }
 
+    function updateBoundingVolumes(primitive, frameState) {
+        // Update bounding volumes for primitives that are sized in pixels.
+        // The pixel size in meters varies based on the distance from the camera.
+        var pixelSize = primitive.appearance.pixelSize;
+        if (defined(pixelSize)) {
+            var length = primitive._boundingSpheres.length;
+            for (var i = 0; i < length; ++i) {
+                var boundingSphere = primitive._boundingSpheres[i];
+                var boundingSphereWC = primitive._boundingSphereWC[i];
+                var pixelSizeInMeters = frameState.camera.getPixelSize(boundingSphere, frameState.context.drawingBufferWidth, frameState.context.drawingBufferHeight);
+                var sizeInMeters = pixelSizeInMeters * pixelSize;
+                boundingSphereWC.radius = boundingSphere.radius + sizeInMeters;
+            }
+        }
+    }
+
+    var rtcScratch = new Cartesian3();
+
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
             throw new DeveloperError('Primitive.modelMatrix is only supported in 3D mode.');
         }
         //>>includeEnd('debug');
+
+        updateBoundingVolumes(primitive, frameState);
 
         if (!Matrix4.equals(modelMatrix, primitive._modelMatrix)) {
             Matrix4.clone(modelMatrix, primitive._modelMatrix);
@@ -1205,6 +1268,13 @@ define([
                     }
                 }
             }
+        }
+
+        if (defined(primitive.rtcCenter)) {
+            var viewMatrix = frameState.camera.viewMatrix;
+            Matrix4.multiply(viewMatrix, primitive._modelMatrix, primitive._modifiedModelView);
+            Matrix4.multiplyByPoint(primitive._modifiedModelView, primitive.rtcCenter, rtcScratch);
+            Matrix4.setTranslation(primitive._modifiedModelView, rtcScratch, primitive._modifiedModelView);
         }
 
         var boundingSpheres;
@@ -1268,6 +1338,10 @@ define([
 
         if (defined(this._error)) {
             throw this._error;
+        }
+
+        if (defined(this.rtcCenter) && !frameState.scene3DOnly) {
+            throw new DeveloperError('RTC rendering is only available for 3D only scenes.');
         }
 
         if (this._state === PrimitiveState.FAILED) {
@@ -1465,10 +1539,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Primitive#isDestroyed
      *
      * @example
      * e = e && e.destroy();
+     * 
+     * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {
         var length;

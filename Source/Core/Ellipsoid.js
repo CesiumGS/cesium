@@ -7,7 +7,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './freezeObject',
-        './Math'
+        './Math',
+        './scaleToGeodeticSurface'
     ], function(
         Cartesian3,
         Cartographic,
@@ -16,7 +17,8 @@ define([
         defineProperties,
         DeveloperError,
         freezeObject,
-        CesiumMath) {
+        CesiumMath,
+        scaleToGeodeticSurface) {
     "use strict";
 
     function initialize(ellipsoid, x, y, z) {
@@ -75,7 +77,7 @@ define([
      * @see Ellipsoid.WGS84
      * @see Ellipsoid.UNIT_SPHERE
      */
-    var Ellipsoid = function(x, y, z) {
+    function Ellipsoid(x, y, z) {
         this._radii = undefined;
         this._radiiSquared = undefined;
         this._radiiToTheFourth = undefined;
@@ -86,7 +88,7 @@ define([
         this._centerToleranceSquared = undefined;
 
         initialize(this, x, y, z);
-    };
+    }
 
     defineProperties(Ellipsoid.prototype, {
         /**
@@ -265,7 +267,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {Ellipsoid} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -501,9 +502,6 @@ define([
         return result;
     };
 
-    var scaleToGeodeticSurfaceIntersection = new Cartesian3();
-    var scaleToGeodeticSurfaceGradient = new Cartesian3();
-
     /**
      * Scales the provided Cartesian position along the geodetic surface normal
      * so that it is on the surface of this ellipsoid.  If the position is
@@ -514,98 +512,7 @@ define([
      * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required.');
-        }
-        //>>includeEnd('debug');
-
-        var positionX = cartesian.x;
-        var positionY = cartesian.y;
-        var positionZ = cartesian.z;
-
-        var oneOverRadii = this._oneOverRadii;
-        var oneOverRadiiX = oneOverRadii.x;
-        var oneOverRadiiY = oneOverRadii.y;
-        var oneOverRadiiZ = oneOverRadii.z;
-
-        var x2 = positionX * positionX * oneOverRadiiX * oneOverRadiiX;
-        var y2 = positionY * positionY * oneOverRadiiY * oneOverRadiiY;
-        var z2 = positionZ * positionZ * oneOverRadiiZ * oneOverRadiiZ;
-
-        // Compute the squared ellipsoid norm.
-        var squaredNorm = x2 + y2 + z2;
-        var ratio = Math.sqrt(1.0 / squaredNorm);
-
-        // As an initial approximation, assume that the radial intersection is the projection point.
-        var intersection = Cartesian3.multiplyByScalar(cartesian, ratio, scaleToGeodeticSurfaceIntersection);
-
-        //* If the position is near the center, the iteration will not converge.
-        if (squaredNorm < this._centerToleranceSquared) {
-            return !isFinite(ratio) ? undefined : Cartesian3.clone(intersection, result);
-        }
-
-        var oneOverRadiiSquared = this._oneOverRadiiSquared;
-        var oneOverRadiiSquaredX = oneOverRadiiSquared.x;
-        var oneOverRadiiSquaredY = oneOverRadiiSquared.y;
-        var oneOverRadiiSquaredZ = oneOverRadiiSquared.z;
-
-        // Use the gradient at the intersection point in place of the true unit normal.
-        // The difference in magnitude will be absorbed in the multiplier.
-        var gradient = scaleToGeodeticSurfaceGradient;
-        gradient.x = intersection.x * oneOverRadiiSquaredX * 2.0;
-        gradient.y = intersection.y * oneOverRadiiSquaredY * 2.0;
-        gradient.z = intersection.z * oneOverRadiiSquaredZ * 2.0;
-
-        // Compute the initial guess at the normal vector multiplier, lambda.
-        var lambda = (1.0 - ratio) * Cartesian3.magnitude(cartesian) / (0.5 * Cartesian3.magnitude(gradient));
-        var correction = 0.0;
-
-        var func;
-        var denominator;
-        var xMultiplier;
-        var yMultiplier;
-        var zMultiplier;
-        var xMultiplier2;
-        var yMultiplier2;
-        var zMultiplier2;
-        var xMultiplier3;
-        var yMultiplier3;
-        var zMultiplier3;
-
-        do {
-            lambda -= correction;
-
-            xMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredX);
-            yMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredY);
-            zMultiplier = 1.0 / (1.0 + lambda * oneOverRadiiSquaredZ);
-
-            xMultiplier2 = xMultiplier * xMultiplier;
-            yMultiplier2 = yMultiplier * yMultiplier;
-            zMultiplier2 = zMultiplier * zMultiplier;
-
-            xMultiplier3 = xMultiplier2 * xMultiplier;
-            yMultiplier3 = yMultiplier2 * yMultiplier;
-            zMultiplier3 = zMultiplier2 * zMultiplier;
-
-            func = x2 * xMultiplier2 + y2 * yMultiplier2 + z2 * zMultiplier2 - 1.0;
-
-            // "denominator" here refers to the use of this expression in the velocity and acceleration
-            // computations in the sections to follow.
-            denominator = x2 * xMultiplier3 * oneOverRadiiSquaredX + y2 * yMultiplier3 * oneOverRadiiSquaredY + z2 * zMultiplier3 * oneOverRadiiSquaredZ;
-
-            var derivative = -2.0 * denominator;
-
-            correction = func / derivative;
-        } while (Math.abs(func) > CesiumMath.EPSILON12);
-
-        if (!defined(result)) {
-            return new Cartesian3(positionX * xMultiplier, positionY * yMultiplier, positionZ * zMultiplier);
-        }
-        result.x = positionX * xMultiplier;
-        result.y = positionY * yMultiplier;
-        result.z = positionZ * zMultiplier;
-        return result;
+        return scaleToGeodeticSurface(cartesian, this._oneOverRadii, this._oneOverRadiiSquared, this._centerToleranceSquared, result);
     };
 
     /**

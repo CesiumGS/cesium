@@ -446,7 +446,7 @@ define([
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(extrudedPolygon);
      */
-    var PolygonGeometry = function(options) {
+    function PolygonGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
@@ -485,7 +485,7 @@ define([
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
-    };
+    }
 
     /**
      * A description of a polygon from an array of positions. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
@@ -501,7 +501,6 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @returns {PolygonGeometry}
      *
-     * @see PolygonGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
@@ -515,6 +514,8 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonGeometry.createGeometry(polygon);
+     * 
+     * @see PolygonGeometry#createGeometry
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -542,7 +543,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolygonGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

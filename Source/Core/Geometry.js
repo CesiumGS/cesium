@@ -63,7 +63,7 @@ define([
      *   boundingSphere : Cesium.BoundingSphere.fromVertices(positions)
      * });
      */
-    var Geometry = function(options) {
+    function Geometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -107,8 +107,6 @@ define([
          *
          * @default undefined
          *
-         * @see GeometryAttribute
-         * @see VertexFormat
          *
          * @example
          * geometry.attributes.position = new Cesium.GeometryAttribute({
@@ -116,6 +114,9 @@ define([
          *   componentsPerAttribute : 3,
          *   values : new Float32Array(0)
          * });
+         * 
+         * @see GeometryAttribute
+         * @see VertexFormat
          */
         this.attributes = options.attributes;
 
@@ -158,7 +159,7 @@ define([
          * @private
          */
         this.boundingSphereCV = undefined;
-    };
+    }
 
     /**
      * Computes the number of vertices in a geometry.  The runtime is linear with

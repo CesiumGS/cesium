@@ -81,7 +81,7 @@ define([
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
      */
-    var WallGeometry = function(options) {
+    function WallGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -128,11 +128,10 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 1;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {WallGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -286,7 +285,6 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @returns {WallGeometry}
      *
-     * @see WallGeometry#createGeometry
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
@@ -302,6 +300,8 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     * 
+     * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
