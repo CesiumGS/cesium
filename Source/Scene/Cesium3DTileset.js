@@ -90,6 +90,7 @@ define([
         this._tilesetUrl = tilesetUrl;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
+        this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
@@ -162,6 +163,26 @@ define([
     }
 
     defineProperties(Cesium3DTileset.prototype, {
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        asset : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._asset;
+            }
+        },
+
         /**
          * DOC_TBA
          *
@@ -664,6 +685,7 @@ define([
             promise.then(function(data) {
                 var tilesetJson = data.tilesetJson;
                 tileset._state = Cesium3DTilesetState.READY;
+                tileset._asset = tilesetJson.asset;
                 tileset._properties = tilesetJson.properties;
                 tileset._geometricError = tilesetJson.geometricError;
                 tileset._root = data.root;

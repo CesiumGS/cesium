@@ -172,9 +172,17 @@ defineSuite([
 
     it('loads tiles.json', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var asset = tileset.asset;
+            expect(asset).toBeDefined();
+            expect(asset.version).toEqual('0.0');
+            expect(asset.tilesetVersion).toEqual('1.2.3');
+
             var properties = tileset.properties;
             expect(properties).toBeDefined();
             expect(properties.id).toBeDefined();
+            expect(properties.id.minimum).toEqual(0);
+            expect(properties.id.maximum).toEqual(99);
+
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
@@ -204,6 +212,15 @@ defineSuite([
         }).then(function() {
             expect(tileset3._state).toEqual(Cesium3DTilesetState.LOADING);
         });
+    });
+
+    it('throws when getting asset and tileset is not ready', function() {
+        var tileset = new Cesium3DTileset({
+            url : tilesetUrl
+        });
+        expect(function() {
+            return tileset.asset;
+        }).toThrowDeveloperError();
     });
 
     it('throws when getting properties and tileset is not ready', function() {
