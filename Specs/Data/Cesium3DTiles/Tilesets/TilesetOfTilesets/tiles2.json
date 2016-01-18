@@ -1,4 +1,7 @@
 {
+    "asset" : {
+        "version": 0.0
+    },
     "root": {
         "boundingVolume": {
             "region": [
