@@ -23,7 +23,7 @@
         "geometricError": 70,
         "refine": "add",
         "content": {
-            "url": "tiles2.json"
+            "url": "tileset2.json"
         }
     }
 }

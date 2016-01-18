@@ -122,7 +122,7 @@ define([
 
     Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest = function(type) {
         var tileset = {
-            loadTilesJson : Cesium3DTileset.prototype.loadTilesJson
+            loadTileset : Cesium3DTileset.prototype.loadTileset
         };
         var tile = {
             contentBoundingVolume : new TileBoundingSphere()
