@@ -117,28 +117,49 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise with invalid tileset version', function() {
+        var tilesJson = {
+            "asset" : {
+                "version" : "2.0"
+            }
+        };
+
+        var uri = 'data:text/plain;base64,' + btoa(JSON.stringify(tilesJson));
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : uri
+        }));
+        scene.renderForSpecs();
+        return tileset.readyPromise.then(function(tileset) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(tileset.ready).toEqual(false);
+            expect(tileset._state).toEqual(Cesium3DTilesetState.FAILED);
+        });
+    });
+
     it('url and tilesJson set up correctly given tiles.json path', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json'
         });
-        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
-        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles3.json');
     });
 
     it('url and tilesJson set up correctly given directory without trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
         });
-        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
-        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
     });
 
     it('url and tilesJson set up correctly given directory with trailing slash', function() {
         var tileset = new Cesium3DTileset({
             url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
         });
-        expect(tileset._url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
-        expect(tileset._tilesJson).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tiles.json');
     });
 
     it('resolves readyPromise', function() {
@@ -151,9 +172,17 @@ defineSuite([
 
     it('loads tiles.json', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var asset = tileset.asset;
+            expect(asset).toBeDefined();
+            expect(asset.version).toEqual('0.0');
+            expect(asset.tilesetVersion).toEqual('1.2.3');
+
             var properties = tileset.properties;
             expect(properties).toBeDefined();
             expect(properties.id).toBeDefined();
+            expect(properties.id.minimum).toEqual(0);
+            expect(properties.id.maximum).toEqual(99);
+
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
@@ -183,6 +212,15 @@ defineSuite([
         }).then(function() {
             expect(tileset3._state).toEqual(Cesium3DTilesetState.LOADING);
         });
+    });
+
+    it('throws when getting asset and tileset is not ready', function() {
+        var tileset = new Cesium3DTileset({
+            url : tilesetUrl
+        });
+        expect(function() {
+            return tileset.asset;
+        }).toThrowDeveloperError();
     });
 
     it('throws when getting properties and tileset is not ready', function() {
