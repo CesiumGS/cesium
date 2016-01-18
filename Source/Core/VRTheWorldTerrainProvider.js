@@ -272,17 +272,19 @@ define([
             url = proxy.getURL(url);
         }
 
-        if (!defined(request)) {
+        // TODO : request used to be a boolean called throttleRequest. Continue to handle that case until it is deprecated.
+        if (!defined(request) || (request === false)) {
             // If a request object isn't provided, perform an immediate request
-            request = new Request();
-            request.defer = true;
+            request = new Request({
+                defer : true
+            });
         }
 
         request.url = url;
         request.requestFunction = loadImage;
-        request.requestType = RequestType.TERRAIN;
+        request.type = RequestType.TERRAIN;
 
-        var promise = RequestScheduler.throttleRequest(request);
+        var promise = RequestScheduler.schedule(request);
         if (!defined(promise)) {
             return undefined;
         }

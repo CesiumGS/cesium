@@ -220,10 +220,10 @@ define([
         var tileset = this;
 
         // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
-        var promise = RequestScheduler.throttleRequest(new Request({
+        var promise = RequestScheduler.schedule(new Request({
             url : tilesJson,
             requestFunction : loadJson,
-            requestType : RequestType.TILES3D
+            type : RequestType.TILES3D
         }));
 
         if (!defined(promise)) {
@@ -311,7 +311,7 @@ define([
         if (!outOfCore) {
             return;
         }
-        if (!hasAvailableRequests(tiles3D)) {
+        if (!hasAvailableRequests(tile)) {
             return;
         }
 
@@ -328,8 +328,8 @@ define([
         }
     }
 
-    function hasAvailableRequests(tiles3D) {
-        return RequestScheduler.hasAvailableRequests(tiles3D._url);
+    function hasAvailableRequests(tile) {
+        return !defined(tile._requestServer) || tile._requestServer.hasAvailableRequests();
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
@@ -426,7 +426,7 @@ define([
                     // Only sort and refine (render or request children) if any
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
-                    if (anyChildrenLoaded || hasAvailableRequests(tiles3D)) {
+                    if (anyChildrenLoaded || hasAvailableRequests(t)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -476,7 +476,7 @@ define([
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || hasAvailableRequests(tiles3D)) {
+                    if (allChildrenLoaded || hasAvailableRequests(t)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 

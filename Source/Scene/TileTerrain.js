@@ -137,8 +137,9 @@ define([
 
         function doRequest() {
             // Request the terrain from the terrain provider.
-            var request = new Request();
-            request.distance = distance;
+            var request = new Request({
+                distance : distance
+            });
             tileTerrain.data = terrainProvider.requestTileGeometry(x, y, level, request);
 
             // If the request method returns undefined (instead of a promise), the request

@@ -18,10 +18,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTileContentState',
         './PointAppearance',
-        './Primitive',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
+        './Primitive'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -41,10 +38,7 @@ define([
         when,
         Cesium3DTileContentState,
         PointAppearance,
-        Primitive,
-        TileBoundingRegion,
-        TileBoundingSphere,
-        TileOrientedBoundingBox) {
+        Primitive) {
     "use strict";
 
     /**
@@ -95,10 +89,11 @@ define([
         var that = this;
 
         var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.throttleRequest(new Request({
+        var promise = RequestScheduler.schedule(new Request({
             url : this._url,
+            server : this._tile._requestServer,
             requestFunction : loadArrayBuffer,
-            requestType : RequestType.TILES3D,
+            type : RequestType.TILES3D,
             distance : distance
         }));
         if (defined(promise)) {

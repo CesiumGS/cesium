@@ -24,15 +24,15 @@ defineSuite([
         RequestScheduler.maximumRequestsPerServer = originalMaximumRequestsPerServer;
     });
 
-    it('throttleRequest throws when request is undefined', function() {
+    it('schedule throws when request is undefined', function() {
         expect(function() {
-            RequestScheduler.throttleRequest();
+            RequestScheduler.schedule();
         }).toThrowDeveloperError();
     });
 
-    it('throttleRequest throws when request.url is undefined', function() {
+    it('schedule throws when request.url is undefined', function() {
         expect(function() {
-            RequestScheduler.throttleRequest(new Request({
+            RequestScheduler.schedule(new Request({
                 requestFunction : function(url) {
                     return undefined;
                 }
@@ -40,9 +40,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throttleRequest throws when request.requestFunction is undefined', function() {
+    it('schedule throws when request.requestFunction is undefined', function() {
         expect(function() {
-            RequestScheduler.throttleRequest(new Request({
+            RequestScheduler.schedule(new Request({
                 url : 'file/path'
             }));
         }).toThrowDeveloperError();
@@ -64,9 +64,9 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        var promise1 = RequestScheduler.throttleRequest(request);
-        var promise2 = RequestScheduler.throttleRequest(request);
-        var promise3 = RequestScheduler.throttleRequest(request);
+        var promise1 = RequestScheduler.schedule(request);
+        var promise2 = RequestScheduler.schedule(request);
+        var promise3 = RequestScheduler.schedule(request);
 
         expect(deferreds.length).toBe(2);
         expect(promise1).toBeDefined();
@@ -75,16 +75,16 @@ defineSuite([
 
         deferreds[0].resolve();
 
-        var promise4 = RequestScheduler.throttleRequest(request);
+        var promise4 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(3);
         expect(promise4).toBeDefined();
 
-        var promise5 = RequestScheduler.throttleRequest(request);
+        var promise5 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(3);
         expect(promise5).not.toBeDefined();
 
         RequestScheduler.maximumRequests = 3;
-        var promise6 = RequestScheduler.throttleRequest(request);
+        var promise6 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(4);
         expect(promise6).toBeDefined();
 
@@ -109,9 +109,9 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        var promise1 = RequestScheduler.throttleRequest(request);
-        var promise2 = RequestScheduler.throttleRequest(request);
-        var promise3 = RequestScheduler.throttleRequest(request);
+        var promise1 = RequestScheduler.schedule(request);
+        var promise2 = RequestScheduler.schedule(request);
+        var promise3 = RequestScheduler.schedule(request);
 
         expect(deferreds.length).toBe(2);
         expect(promise1).toBeDefined();
@@ -120,16 +120,16 @@ defineSuite([
 
         deferreds[0].resolve();
 
-        var promise4 = RequestScheduler.throttleRequest(request);
+        var promise4 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(3);
         expect(promise4).toBeDefined();
 
-        var promise5 = RequestScheduler.throttleRequest(request);
+        var promise5 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(3);
         expect(promise5).not.toBeDefined();
 
         RequestScheduler.maximumRequestsPerServer = 3;
-        var promise6 = RequestScheduler.throttleRequest(request);
+        var promise6 = RequestScheduler.schedule(request);
         expect(deferreds.length).toBe(4);
         expect(promise6).toBeDefined();
 
@@ -152,9 +152,9 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        RequestScheduler.throttleRequest(request);
-        RequestScheduler.throttleRequest(request);
-        RequestScheduler.throttleRequest(request);
+        RequestScheduler.schedule(request);
+        RequestScheduler.schedule(request);
+        RequestScheduler.schedule(request);
 
         expect(RequestScheduler.maximumRequests).toBe(10);
         expect(RequestScheduler.getNumberOfAvailableRequests()).toBe(7);
@@ -185,9 +185,9 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        RequestScheduler.throttleRequest(requestFoo);
-        RequestScheduler.throttleRequest(requestFoo);
-        RequestScheduler.throttleRequest(requestBar);
+        RequestScheduler.schedule(requestFoo);
+        RequestScheduler.schedule(requestFoo);
+        RequestScheduler.schedule(requestBar);
 
         expect(RequestScheduler.maximumRequestsPerServer).toBe(6);
         expect(RequestScheduler.getNumberOfAvailableRequestsByServer('http://foo.com')).toBe(4);
@@ -201,23 +201,23 @@ defineSuite([
         expect(RequestScheduler.getNumberOfAvailableRequestsByServer('http://bar.com')).toBe(6);
     });
 
-    it('getServer with https', function() {
-        var server = RequestScheduler.getServer('https://foo.com/1');
+    it('getServerName with https', function() {
+        var server = RequestScheduler.getServerName('https://foo.com/1');
         expect(server).toEqual('foo.com:443');
     });
 
-    it('getServer with http', function() {
-        var server = RequestScheduler.getServer('http://foo.com/1');
+    it('getServerName with http', function() {
+        var server = RequestScheduler.getServerName('http://foo.com/1');
         expect(server).toEqual('foo.com:80');
     });
 
-    it('getServer throws if url is undefined', function() {
+    it('getServerName throws if url is undefined', function() {
         expect(function() {
-            return RequestScheduler.getServer();
+            return RequestScheduler.getServerName();
         }).toThrowDeveloperError();
     });
 
-    it('hasAvailableRequests', function() {
+    it('hasAvailableRequests and hasAvailableRequestsByServer', function() {
         RequestScheduler.maximumRequestsPerServer = 2;
         RequestScheduler.maximumRequests = 3;
 
@@ -239,13 +239,13 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        RequestScheduler.throttleRequest(requestFoo);
-        expect(RequestScheduler.hasAvailableRequests('http://foo.com')).toEqual(true);
-        RequestScheduler.throttleRequest(requestFoo);
-        expect(RequestScheduler.hasAvailableRequests('http://foo.com')).toEqual(false);
+        RequestScheduler.schedule(requestFoo);
+        expect(RequestScheduler.hasAvailableRequestsByServer('http://foo.com')).toEqual(true);
+        RequestScheduler.schedule(requestFoo);
+        expect(RequestScheduler.hasAvailableRequestsByServer('http://foo.com')).toEqual(false);
 
         expect(RequestScheduler.hasAvailableRequests()).toEqual(true);
-        RequestScheduler.throttleRequest(requestBar);
+        RequestScheduler.schedule(requestBar);
         expect(RequestScheduler.hasAvailableRequests()).toEqual(false);
 
         expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(0);
@@ -277,14 +277,14 @@ defineSuite([
             defer : true
         });
 
-        RequestScheduler.throttleRequest(request);
-        RequestScheduler.throttleRequest(request);
-        RequestScheduler.throttleRequest(request);
+        RequestScheduler.schedule(request);
+        RequestScheduler.schedule(request);
+        RequestScheduler.schedule(request);
         expect(RequestScheduler.hasAvailableRequests()).toEqual(false);
 
         // A deferred request will always return a promise, however its
         // requestFunction is not called until there is an open slot
-        var deferredPromise = RequestScheduler.throttleRequest(requestDeferred);
+        var deferredPromise = RequestScheduler.schedule(requestDeferred);
         expect(deferredPromise).toBeDefined();
         expect(deferreds[3]).not.toBeDefined();
 
@@ -340,28 +340,28 @@ defineSuite([
 
         var terrainRequest1 = new Request({
             url : 'http://foo.com/1',
-            requestType : RequestType.TERRAIN,
+            type : RequestType.TERRAIN,
             requestFunction : requestFunction,
             distance : 10.0
         });
 
         var terrainRequest2 = new Request({
             url : 'http://foo.com/2',
-            requestType : RequestType.TERRAIN,
+            type : RequestType.TERRAIN,
             requestFunction : requestFunction,
             distance : 20.0
         });
 
         var imageryRequest = new Request({
             url : 'http://bar.com/1',
-            requestType : RequestType.IMAGERY,
+            type : RequestType.IMAGERY,
             requestFunction : requestFunction,
             distance : 15.0
         });
 
-        var promise1 = RequestScheduler.throttleRequest(terrainRequest1);
-        var promise2 = RequestScheduler.throttleRequest(terrainRequest2);
-        var promise3 = RequestScheduler.throttleRequest(imageryRequest);
+        var promise1 = RequestScheduler.schedule(terrainRequest1);
+        var promise2 = RequestScheduler.schedule(terrainRequest2);
+        var promise3 = RequestScheduler.schedule(imageryRequest);
 
         // The requests should all return undefined because the budgets haven't been created yet
         expect(promise1).not.toBeDefined();
@@ -371,9 +371,9 @@ defineSuite([
         // Budgets should now allow one terrain request and one imagery request (based on their distances)
         RequestScheduler.resetBudgets();
 
-        promise1 = RequestScheduler.throttleRequest(terrainRequest1);
-        promise2 = RequestScheduler.throttleRequest(terrainRequest2);
-        promise3 = RequestScheduler.throttleRequest(imageryRequest);
+        promise1 = RequestScheduler.schedule(terrainRequest1);
+        promise2 = RequestScheduler.schedule(terrainRequest2);
+        promise3 = RequestScheduler.schedule(imageryRequest);
 
         expect(promise1).toBeDefined();
         expect(promise2).not.toBeDefined();
@@ -403,9 +403,9 @@ defineSuite([
             requestFunction : requestFunction
         });
 
-        var promise1 = RequestScheduler.throttleRequest(request);
-        var promise2 = RequestScheduler.throttleRequest(request);
-        var promise3 = RequestScheduler.throttleRequest(request);
+        var promise1 = RequestScheduler.schedule(request);
+        var promise2 = RequestScheduler.schedule(request);
+        var promise3 = RequestScheduler.schedule(request);
 
         // All requests are passed through to the browser
         expect(promise1).toBeDefined();
@@ -436,12 +436,12 @@ defineSuite([
         });
 
         RequestScheduler.debugShowStatistics = false;
-        RequestScheduler.throttleRequest(request);
+        RequestScheduler.schedule(request);
         RequestScheduler.resetBudgets();
         expect(console.log).not.toHaveBeenCalled();
 
         RequestScheduler.debugShowStatistics = true;
-        RequestScheduler.throttleRequest(request);
+        RequestScheduler.schedule(request);
         RequestScheduler.resetBudgets();
         expect(console.log).toHaveBeenCalled();
 

@@ -137,10 +137,11 @@ define([
         var that = this;
 
         var distance = this._tile.distanceToCamera;
-        var promise = RequestScheduler.throttleRequest(new Request({
+        var promise = RequestScheduler.schedule(new Request({
             url : this._url,
+            server : this._tile._requestServer,
             requestFunction : loadArrayBuffer,
-            requestType : RequestType.TILES3D,
+            type : RequestType.TILES3D,
             distance : distance
         }));
         if (defined(promise)) {
@@ -230,6 +231,7 @@ define([
             cull : false,
             url : undefined,
             headers : undefined,
+            type : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined
         };

@@ -18,6 +18,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
+        '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -50,6 +51,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         RectangleOutlineGeometry,
+        RequestScheduler,
         SphereOutlineGeometry,
         Uri,
         when,
@@ -155,9 +157,11 @@ define([
         this.readyPromise = when.defer();
 
         var content;
+        var requestServer;
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = getAbsoluteUri(contentUrl, baseUrl);
+            requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
@@ -179,6 +183,7 @@ define([
             this.hasContent = false;
         }
         this._content = content;
+        this._requestServer = requestServer;
 
         function setRefinable(tile) {
             var parent = tile.parent;

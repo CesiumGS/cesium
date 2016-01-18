@@ -315,10 +315,10 @@ define([
     ImageryProvider.loadImage = function(imageryProvider, url, distance) {
         var requestFunction = defined(imageryProvider.tileDiscardPolicy) ? loadImageViaBlob : loadImage;
 
-        return RequestScheduler.throttleRequest(new Request({
+        return RequestScheduler.schedule(new Request({
             url : url,
             requestFunction : requestFunction,
-            requestType : RequestType.IMAGERY,
+            type : RequestType.IMAGERY,
             distance : distance
         }));
     };

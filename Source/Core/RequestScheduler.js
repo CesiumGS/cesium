@@ -7,7 +7,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Queue',
-        './Request'
+        './Request',
+        './RequestType'
     ], function(
         Uri,
         when,
@@ -16,10 +17,11 @@ define([
         defineProperties,
         DeveloperError,
         Queue,
-        Request) {
+        Request,
+        RequestType) {
     "use strict";
 
-    function RequestTypeBudget(request) {
+    function RequestBudget(request) {
         /**
          * Total requests allowed this frame.
          */
@@ -38,10 +40,34 @@ define([
         /**
          * Type of request. Used for more fine-grained priority sorting.
          */
-        this.requestType = request.requestType;
+        this.type = request.type;
     }
 
-    var activeRequestsByServer = {};
+    /**
+     * Stores the number of active requests at a particular server. Areas that commonly makes requests may store
+     * a reference to this object in order to quickly determine whether a request can be issued (e.g. Cesium3DTile).
+     */
+    function RequestServer(serverName) {
+        /**
+         * Number of active requests at this server.
+         */
+        this.activeRequests = 0;
+
+        /**
+         * The name of the server.
+         */
+        this.serverName = serverName;
+    }
+
+    RequestServer.prototype.hasAvailableRequests = function() {
+        return RequestScheduler.hasAvailableRequests() && (this.activeRequests < RequestScheduler.maximumRequestsPerServer);
+    };
+
+    RequestServer.prototype.getNumberOfAvailableRequests = function() {
+        return RequestScheduler.maximumRequestsPerServer - this.activeRequests;
+    };
+
+    var activeRequestsByServer = [];
     var activeRequests = 0;
     var budgets = [];
     var leftoverRequests = [];
@@ -74,12 +100,12 @@ define([
         var length = budgets.length;
         for (var i = 0; i < length; ++i) {
             budget = budgets[i];
-            if ((budget.server === request.server) && (budget.requestType === request.requestType)) {
+            if ((budget.server === request.server) && (budget.type === request.type)) {
                 return budget;
             }
         }
         // Not found, create a new budget
-        budget = new RequestTypeBudget(request);
+        budget = new RequestBudget(request);
         budgets.push(budget);
         return budget;
     }
@@ -88,7 +114,7 @@ define([
         showStats();
         clearStats();
 
-        if (!RequestScheduler.prioritize) {
+        if (!RequestScheduler.prioritize || !RequestScheduler.throttle) {
             return;
         }
 
@@ -109,7 +135,7 @@ define([
         for (var j = 0; (j < requestsLength) && (availableRequests > 0); ++j) {
             var request = requests[j];
             var budget = getBudget(request);
-            var budgetAvailable = RequestScheduler.getNumberOfAvailableRequestsByServer(request.url);
+            var budgetAvailable = budget.server.getNumberOfAvailableRequests();
             if (budget.total < budgetAvailable) {
                 ++budget.total;
                 --availableRequests;
@@ -127,7 +153,7 @@ define([
      * @param {String} url The url.
      * @returns {String} The server name.
      */
-    RequestScheduler.getServer = function(url) {
+    RequestScheduler.getServerName = function(url) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(url)) {
             throw new DeveloperError('url is required.');
@@ -144,15 +170,34 @@ define([
     };
 
     /**
+     * Get the request server from a given url.
+     *
+     * @param {String} url The url.
+     * @returns {RequestServer} The request server.
+     */
+    RequestScheduler.getRequestServer = function(url) {
+        var requestServer;
+        var serverName = RequestScheduler.getServerName(url);
+        var length = activeRequestsByServer.length;
+        for (var i = 0; i < length; ++i) {
+            requestServer = activeRequestsByServer[i];
+            if (requestServer.serverName === serverName) {
+                return requestServer;
+            }
+        }
+        requestServer = new RequestServer(serverName);
+        activeRequestsByServer.push(requestServer);
+        return requestServer;
+    };
+
+    /**
      * Get the number of available slots for the given server.
      *
      * @param {String} url The url to check.
      * @returns {Number} The number of available slots.
      */
     RequestScheduler.getNumberOfAvailableRequestsByServer = function(url) {
-        var server = RequestScheduler.getServer(url);
-        var activeRequestsForServer = defaultValue(activeRequestsByServer[server], 0);
-        return RequestScheduler.maximumRequestsPerServer - activeRequestsForServer;
+        return RequestScheduler.getRequestServer(url).getNumberOfAvailableRequests();
     };
 
     /**
@@ -165,32 +210,29 @@ define([
     };
 
     /**
-     * Checks if there are available slots to make a request.
-     * It considers the total number of available slots across all servers, and
-     * if a url is provided, the total number of available slots at the url's server.
+     * Checks if there are available slots to make a request at the server pointed to by the url.
      *
      * @param {String} [url] The url to check.
      * @returns {Boolean} Returns true if there are available slots, otherwise false.
      */
-    RequestScheduler.hasAvailableRequests = function(url) {
-        if (activeRequests >= RequestScheduler.maximumRequests) {
-            return false;
-        }
+    RequestScheduler.hasAvailableRequestsByServer = function(url) {
+        return RequestScheduler.getRequestServer(url).hasAvailableRequests();
+    };
 
-        if (defined(url)) {
-            var server = RequestScheduler.getServer(url);
-            var activeRequestsForServer = defaultValue(activeRequestsByServer[server], 0);
-            if (activeRequestsForServer >= RequestScheduler.maximumRequestsPerServer) {
-                return false;
-            }
-        }
-
-        return true;
+    /**
+     * Checks if there are available slots to make a request, considering the total
+     * number of available slots across all servers.
+     *
+     * @param {String} [url] The url to check.
+     * @returns {Boolean} Returns true if there are available slots, otherwise false.
+     */
+    RequestScheduler.hasAvailableRequests = function() {
+        return activeRequests < RequestScheduler.maximumRequests;
     };
 
     function requestComplete(request) {
         --activeRequests;
-        --activeRequestsByServer[request.server];
+        --request.server.activeRequests;
 
         // Start a deferred request immediately now that a slot is open
         var deferredRequest = deferredRequests.dequeue();
@@ -201,7 +243,7 @@ define([
 
     function startRequest(request) {
         ++activeRequests;
-        ++activeRequestsByServer[request.server];
+        ++request.server.activeRequests;
 
         return when(request.requestFunction(request.url, request.parameters), function(result) {
             requestComplete(request);
@@ -246,7 +288,7 @@ define([
      *   url : url,
      *   requestFunction : requestFunction
      * });
-     * var promise = Cesium.RequestScheduler.throttleRequest(request);
+     * var promise = Cesium.RequestScheduler.schedule(request);
      * if (!Cesium.defined(promise)) {
      *   // too many active requests in progress, try again later.
      * } else {
@@ -256,7 +298,7 @@ define([
      * }
      *
      */
-    RequestScheduler.throttleRequest = function(request) {
+    RequestScheduler.schedule = function(request) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(request)) {
             throw new DeveloperError('request is required.');
@@ -275,11 +317,11 @@ define([
             return request.requestFunction(request.url, request.parameters);
         }
 
-        var server = RequestScheduler.getServer(request.url);
-        request.server = server;
-        activeRequestsByServer[server] = defaultValue(activeRequestsByServer[server], 0);
+        if (!defined(request.server)) {
+            request.server = RequestScheduler.getRequestServer(request.url);
+        }
 
-        if (!RequestScheduler.hasAvailableRequests(request.url)) {
+        if (!request.server.hasAvailableRequests()) {
             if (!request.defer) {
                 // No available slots to make the request, return undefined
                 handleLeftoverRequest(request);
@@ -291,7 +333,7 @@ define([
             }
         }
 
-        if (RequestScheduler.prioritize && defined(request.requestType) && !request.defer) {
+        if (RequestScheduler.prioritize && defined(request.type) && !request.defer) {
             var budget = getBudget(request);
             if (budget.used >= budget.total) {
                 // Request does not fit in the budget, return undefined
@@ -312,15 +354,17 @@ define([
      * @param {RequestScheduler~RequestFunction} requestFunction The actual function that
      *        makes the request.
      * @param {Object} [parameters] Extra parameters to send with the request.
+     * @param {RequestType} [requestType] Type of request. Used for more fine-grained priority sorting.
      *
      * @returns {Promise.<Object>} A Promise for the requested data.
      */
-    RequestScheduler.request = function(url, requestFunction, parameters) {
-        return RequestScheduler.throttleRequest(new Request({
+    RequestScheduler.request = function(url, requestFunction, parameters, requestType) {
+        return RequestScheduler.schedule(new Request({
             url : url,
             parameters : parameters,
             requestFunction : requestFunction,
-            defer : true
+            defer : true,
+            type : defaultValue(requestType, RequestType.OTHER)
         }));
     };
 
