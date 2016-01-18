@@ -1,4 +1,7 @@
 {
+    "asset" : {
+        "version": "0.0"
+    },
     "root": {
         "boundingVolume": {
             "region": [
@@ -29,7 +32,7 @@
                 "geometricError": 0,
                 "refine": "add",
                 "content": {
-                    "url": "tiles3.json"
+                    "url": "tileset3.json"
                 }
             },
             {

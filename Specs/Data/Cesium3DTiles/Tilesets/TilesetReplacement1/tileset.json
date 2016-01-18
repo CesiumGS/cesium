@@ -1,4 +1,7 @@
 {
+    "asset" : {
+        "version": "0.0"
+    },
     "properties": {
         "id": {
             "minimum": 0,
@@ -17,10 +20,21 @@
                 88
             ]
         },
-        "geometricError": 240,
-        "refine": "add",
+        "geometricError": 70,
+        "refine": "replace",
         "content": {
-            "url": "parent.b3dm"
+            "url": "parent.b3dm",
+            "boundingVolume": {
+                "region": [
+                    -1.319970476767974,
+                    0.6986942109000001,
+                    -1.3199295232320258,
+                    0.6987257891,
+                    0,
+                    88
+                ]
+            }
+
         },
         "children": [
             {
@@ -35,10 +49,7 @@
                     ]
                 },
                 "geometricError": 70,
-                "refine": "replace",
-                "content": {
-                    "url": "parent.b3dm"
-                },
+                "refine": "add",
                 "children": [
                     {
                         "boundingVolume": {
@@ -52,7 +63,6 @@
                             ]
                         },
                         "geometricError": 0,
-                        "refine": "add",
                         "content": {
                             "url": "ll.b3dm"
                         }
@@ -69,7 +79,6 @@
                             ]
                         },
                         "geometricError": 0,
-                        "refine": "replace",
                         "content": {
                             "url": "ur.b3dm"
                         }
@@ -89,9 +98,6 @@
                 },
                 "geometricError": 70,
                 "refine": "add",
-                "content": {
-                    "url": "parent.b3dm"
-                },
                 "children": [
                     {
                         "boundingVolume": {
@@ -105,7 +111,6 @@
                             ]
                         },
                         "geometricError": 0,
-                        "refine": "add",
                         "content": {
                             "url": "lr.b3dm"
                         }
@@ -122,7 +127,6 @@
                             ]
                         },
                         "geometricError": 0,
-                        "refine": "replace",
                         "content": {
                             "url": "ul.b3dm"
                         }

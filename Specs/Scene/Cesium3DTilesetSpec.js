@@ -50,7 +50,7 @@ defineSuite([
     // 3 level tree with mix of additive and replacement refinement
     var tilesetRefinementMix = './Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
 
-    // tiles.json : root content points to tiles2.json
+    // tileset.json : root content points to tiles2.json
     // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
@@ -104,7 +104,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('rejects readyPromise with invalid tiles.json', function() {
+    it('rejects readyPromise with invalid tileset.json', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : 'invalid'
         }));
@@ -117,6 +117,51 @@ defineSuite([
         });
     });
 
+    it('rejects readyPromise with invalid tileset version', function() {
+        var tilesetJson = {
+            "asset" : {
+                "version" : "2.0"
+            }
+        };
+
+        var uri = 'data:text/plain;base64,' + btoa(JSON.stringify(tilesetJson));
+
+        var tileset = scene.primitives.add(new Cesium3DTileset({
+            url : uri
+        }));
+        scene.renderForSpecs();
+        return tileset.readyPromise.then(function(tileset) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(tileset.ready).toEqual(false);
+            expect(tileset._state).toEqual(Cesium3DTilesetState.FAILED);
+        });
+    });
+
+    it('url and tilesetUrl set up correctly given tileset.json path', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json'
+        });
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json');
+    });
+
+    it('url and tilesetUrl set up correctly given directory without trailing slash', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+        });
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json');
+    });
+
+    it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
+        var tileset = new Cesium3DTileset({
+            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
+        });
+        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
+        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json');
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             return tileset.readyPromise.then(function(tileset) {
@@ -125,18 +170,26 @@ defineSuite([
         });
     });
 
-    it('loads tiles.json', function() {
+    it('loads tileset.json', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            var asset = tileset.asset;
+            expect(asset).toBeDefined();
+            expect(asset.version).toEqual('0.0');
+            expect(asset.tilesetVersion).toEqual('1.2.3');
+
             var properties = tileset.properties;
             expect(properties).toBeDefined();
             expect(properties.id).toBeDefined();
+            expect(properties.id.minimum).toEqual(0);
+            expect(properties.id.maximum).toEqual(99);
+
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
             expect(tileset.url).toEqual(tilesetUrl);
         });
     });
 
-    it('loads tiles.json once request scheduler has available slots', function() {
+    it('loads tileset.json once request scheduler has available slots', function() {
         RequestScheduler.maximumRequests = 2;
         viewNothing();
 
@@ -159,6 +212,15 @@ defineSuite([
         }).then(function() {
             expect(tileset3._state).toEqual(Cesium3DTilesetState.LOADING);
         });
+    });
+
+    it('throws when getting asset and tileset is not ready', function() {
+        var tileset = new Cesium3DTileset({
+            url : tilesetUrl
+        });
+        expect(function() {
+            return tileset.asset;
+        }).toThrowDeveloperError();
     });
 
     it('throws when getting properties and tileset is not ready', function() {
@@ -518,12 +580,12 @@ defineSuite([
         });
     });
 
-    it('loads tileset with external tiles.json', function() {
+    it('loads tileset with external tileset.json', function() {
         // Set view so that no tiles are loaded initially
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            // Root points to an external tiles.json and has no children until it is requested
+            // Root points to an external tileset.json and has no children until it is requested
             var root = tileset._root;
             expect(root.hasTilesetContent).toEqual(true);
             expect(root.children.length).toEqual(0);
@@ -548,7 +610,7 @@ defineSuite([
         });
     });
 
-    it('renders tileset with external tiles.json', function() {
+    it('renders tileset with external tileset.json', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             scene.renderForSpecs();
             var stats = tileset._statistics;
@@ -724,7 +786,7 @@ defineSuite([
         });
     });
 
-    it('destroys before loadTilesJson finishes', function() {
+    it('destroys before loadTileset finishes', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset({
             url : tilesetUrl
         }));
@@ -737,13 +799,13 @@ defineSuite([
         });
     });
 
-    it('destroys before external tiles.json finishes loading', function() {
+    it('destroys before external tileset.json finishes loading', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             var root = tileset._root;
 
             viewRootOnly();
-            scene.renderForSpecs(); // Request external tiles.json
+            scene.renderForSpecs(); // Request external tileset.json
 
             var stats = tileset._statistics;
             expect(stats.numberOfPendingRequests).toEqual(1);
@@ -752,7 +814,7 @@ defineSuite([
             return root.readyPromise.then(function(root) {
                 fail('should not resolve');
             }).otherwise(function(error) {
-                // Expect the root to not have added any children from the external tiles.json
+                // Expect the root to not have added any children from the external tileset.json
                 expect(root.children.length).toEqual(0);
                 expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });

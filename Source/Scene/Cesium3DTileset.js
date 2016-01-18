@@ -7,7 +7,10 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/getBaseUri',
+        '../Core/getExtensionFromUri',
         '../Core/Intersect',
+        '../Core/isDataUri',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Request',
@@ -28,7 +31,10 @@ define([
         destroyObject,
         DeveloperError,
         Event,
+        getBaseUri,
+        getExtensionFromUri,
         Intersect,
+        isDataUri,
         loadJson,
         CesiumMath,
         Request,
@@ -70,12 +76,25 @@ define([
         }
         //>>includeEnd('debug');
 
-        url = appendForwardSlash(url);
+        var tilesetUrl;
+        var baseUrl;
+
+        if (getExtensionFromUri(url) === 'json') {
+            tilesetUrl = url;
+            baseUrl = getBaseUri(url);
+        } else if (isDataUri(url)) {
+            tilesetUrl = url;
+            baseUrl = '';
+        } else {
+            baseUrl = appendForwardSlash(url);
+            tilesetUrl = baseUrl + 'tileset.json';
+        }
 
         this._url = url;
-        this._tilesJson = url + 'tiles.json';
+        this._tilesetUrl = tilesetUrl;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
+        this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
@@ -156,6 +175,26 @@ define([
          * @type {Object}
          * @readonly
          */
+        asset : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._asset;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
         properties : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
@@ -216,12 +255,12 @@ define([
     /**
      * @private
      */
-    Cesium3DTileset.prototype.loadTilesJson = function(tilesJson, parentTile) {
+    Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
         var tileset = this;
 
         // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
         var promise = RequestScheduler.schedule(new Request({
-            url : tilesJson,
+            url : tilesetUrl,
             requestFunction : loadJson,
             type : RequestType.TILES3D
         }));
@@ -230,13 +269,17 @@ define([
             return undefined;
         }
 
-        return promise.then(function(tree) {
+        return promise.then(function(tilesetJson) {
             if (tileset.isDestroyed()) {
                 return when.reject('tileset is destroyed');
             }
 
+            if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
+                return when.reject('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+            }
+
             var baseUrl = tileset.url;
-            var rootTile = new Cesium3DTile(tileset, baseUrl, tree.root, parentTile);
+            var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
             // to parentTile's children, and increment its numberOfChildrenWithoutContent
@@ -247,7 +290,7 @@ define([
 
             var stack = [];
             stack.push({
-                header : tree.root,
+                header : tilesetJson.root,
                 cesium3DTile : rootTile
             });
 
@@ -270,7 +313,7 @@ define([
             }
 
             return {
-                tree : tree,
+                tilesetJson : tilesetJson,
                 root : rootTile
             };
         });
@@ -649,14 +692,15 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function loadTiles(tileset) {
-        var promise = tileset.loadTilesJson(tileset._tilesJson, undefined);
+        var promise = tileset.loadTileset(tileset._tilesetUrl, undefined);
         if (defined(promise)) {
             tileset._state = Cesium3DTilesetState.LOADING;
             promise.then(function(data) {
-                var tree = data.tree;
+                var tilesetJson = data.tilesetJson;
                 tileset._state = Cesium3DTilesetState.READY;
-                tileset._properties = tree.properties;
-                tileset._geometricError = tree.geometricError;
+                tileset._asset = tilesetJson.asset;
+                tileset._properties = tilesetJson.properties;
+                tileset._geometricError = tilesetJson.geometricError;
                 tileset._root = data.root;
                 tileset._readyPromise.resolve(tileset);
             }).otherwise(function(error) {

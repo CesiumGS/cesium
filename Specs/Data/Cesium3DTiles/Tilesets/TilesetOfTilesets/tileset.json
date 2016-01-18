@@ -1,4 +1,7 @@
 {
+    "asset" : {
+        "version": "0.0"
+    },
     "properties": {
         "id": {
             "minimum": 0,
@@ -20,7 +23,7 @@
         "geometricError": 70,
         "refine": "add",
         "content": {
-            "url": "tiles2.json"
+            "url": "tileset2.json"
         }
     }
 }
