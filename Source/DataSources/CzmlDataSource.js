@@ -802,6 +802,7 @@ define([
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
             processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'alpha', materialData.alpha, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
