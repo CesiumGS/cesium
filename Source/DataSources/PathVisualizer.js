@@ -365,7 +365,7 @@ define([
         var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
 
         polyline.show = true;
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
     };

@@ -9,13 +9,13 @@ defineSuite([
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
+        'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        'Scene/GetFeatureInfoFormat'
+        'ThirdParty/when'
     ], function(
         UrlTemplateImageryProvider,
         DefaultProxy,
@@ -26,13 +26,13 @@ defineSuite([
         Rectangle,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        GetFeatureInfoFormat,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when,
-        GetFeatureInfoFormat) {
+        when) {
     "use strict";
 
     afterEach(function() {

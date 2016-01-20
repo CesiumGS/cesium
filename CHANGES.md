@@ -3,7 +3,22 @@ Change Log
 
 ### 1.18 - 2016-02-01
 
+* Breaking changes
+    * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+* Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
+* Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
+* Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
+* Added `getExtensionFromUri` helper function.
+* Added `getAbsoluteUri` helper function.
+* Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
+* Added `Scene.useWebVR` to switch the scene to use stereoscopic rendering.
+* Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute.  This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases.  To enable the previous behavior, use the following code:
+    ```javascript
+    if(Cesium.FeatureDetection.supportsImageRenderingPixelated()){
+        viewer.resolutionScale = window.devicePixelRatio;
+    }
+    ```
 
 ### 1.17 - 2016-01-04
 
