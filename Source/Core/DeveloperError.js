@@ -40,6 +40,8 @@ define([
         //Browsers such as IE don't have a stack property until you actually throw the error.
         var stack;
         try {
+            /*global console*/
+            console.error(toString(this));
             throw new Error();
         } catch (e) {
             stack = e.stack;
@@ -54,7 +56,7 @@ define([
     }
 
     DeveloperError.prototype.toString = function() {
-        var str = this.name + ': ' + this.message;
+        var str = toString(this);
 
         if (defined(this.stack)) {
             str += '\n' + this.stack.toString();
@@ -62,6 +64,10 @@ define([
 
         return str;
     };
+
+    function toString(developerError) {
+        return developerError.name + ': ' + developerError.message;
+    }
 
     /**
      * @private
