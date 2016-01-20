@@ -19,6 +19,7 @@ Change Log
         viewer.resolutionScale = window.devicePixelRatio;
     }
     ```
+* Improved DeveloperError to also display an error on the console.
 
 ### 1.17 - 2016-01-04
 
