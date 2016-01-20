@@ -216,7 +216,6 @@ define([
         var text = label._text;
         var glyph;
         var dimensions;
-        //var totalWidth = 0;
         var lineWidth = 0;
         var maxWidth = 0;
         var maxHeight = 0;
@@ -227,8 +226,6 @@ define([
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
-            //totalWidth += dimensions.computedWidth;
-            //maxHeight = Math.max(maxHeight, dimensions.height);
             lineWidth += dimensions.width;
             maxWidth = Math.max(maxWidth, lineWidth);
             maxHeight = Math.max(maxHeight, dimensions.height + dimensions.descent);
@@ -242,10 +239,8 @@ define([
         var horizontalOrigin = label._horizontalOrigin;
         var widthOffset = 0;
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
-            //widthOffset -= totalWidth / 2 * scale;
             widthOffset -= maxWidth / 2 * scale;
         } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
-            //widthOffset -= totalWidth * scale;
             widthOffset -= maxWidth * scale;
         }
         var heightOffset = 0;
@@ -263,20 +258,16 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        //var verticalOrigin = label._verticalOrigin;
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
 
             if (verticalOrigin === VerticalOrigin.BOTTOM || dimensions.height === maxHeight) {
-                //glyphPixelOffset.y = -dimensions.descent * scale;
                 glyphPixelOffset.y = heightOffset - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.TOP) {
-               // glyphPixelOffset.y = -(maxHeight - dimensions.height) * scale - dimensions.descent * scale;
                glyphPixelOffset.y = heightOffset - (maxHeight - dimensions.height) * scale - dimensions.descent * scale;
             } else if (verticalOrigin === VerticalOrigin.CENTER) {
-                //glyphPixelOffset.y = -(maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
                glyphPixelOffset.y = heightOffset - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
             if (text.charAt(glyphIndex) === '\n') {
@@ -284,18 +275,12 @@ define([
                 glyphPixelOffset.x = widthOffset;
                 continue;
              }
-            if (verticalOrigin === VerticalOrigin.TOP){
+            if (verticalOrigin === VerticalOrigin.TOP || verticalOrigin === VerticalOrigin.CENTER ){
                 glyphPixelOffset.y -= glyphNewlineOffset;
-               }
-            else if (verticalOrigin === VerticalOrigin.BOTTOM){
+               } else if (verticalOrigin === VerticalOrigin.BOTTOM){
                 glyphPixelOffset.y += glyphNewlineOffset;
             }
-            else{
-                glyphPixelOffset.y -= glyphNewlineOffset;
-            }
-
-            //glyphPixelOffset.y *= resolutionScale;
-
+             
             if (defined(glyph.billboard)) {
                 glyph.billboard._setTranslate(glyphPixelOffset);
             }
