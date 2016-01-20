@@ -17,29 +17,21 @@ define([
 
         /**
          * The URL to request.
-         *
-         * @private
          */
         this.url = options.url;
 
         /**
          * Extra parameters to send with the request. For example, HTTP headers or jsonp parameters.
-         *
-         * @private
          */
         this.parameters = options.parameters;
 
         /**
          * The actual function that makes the request.
-         *
-         * @private
          */
         this.requestFunction = options.requestFunction;
 
         /**
          * Type of request. Used for more fine-grained priority sorting.
-         *
-         * @private
          */
         this.type = options.type;
 
@@ -47,15 +39,11 @@ define([
          * Specifies that the request should be deferred until an open slot is available.
          * A deferred request will always return a promise, which is suitable for data
          * sources and utility functions.
-         *
-         * @private
          */
         this.defer = defaultValue(options.defer, false);
 
         /**
          * The distance from the camera, used to prioritize requests.
-         *
-         * @private
          */
         this.distance = defaultValue(options.distance, 0.0);
 

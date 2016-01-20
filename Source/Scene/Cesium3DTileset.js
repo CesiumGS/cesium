@@ -354,7 +354,7 @@ define([
         if (!outOfCore) {
             return;
         }
-        if (!hasAvailableRequests(tile)) {
+        if (!tile.canRequestContent()) {
             return;
         }
 
@@ -369,10 +369,6 @@ define([
             when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
             when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
         }
-    }
-
-    function hasAvailableRequests(tile) {
-        return !defined(tile._requestServer) || tile._requestServer.hasAvailableRequests();
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
@@ -469,7 +465,7 @@ define([
                     // Only sort and refine (render or request children) if any
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
-                    if (anyChildrenLoaded || hasAvailableRequests(t)) {
+                    if (anyChildrenLoaded || t.canRequestContent()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -519,7 +515,7 @@ define([
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || hasAvailableRequests(t)) {
+                    if (allChildrenLoaded || t.canRequestContent()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 

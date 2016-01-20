@@ -302,6 +302,17 @@ define([
     /**
      * DOC_TBA
      */
+    Cesium3DTile.prototype.canRequestContent = function() {
+        if (!defined(this._requestServer)) {
+            // If tile does not have a request server, then it does not have content to load.
+            return true;
+        }
+        return this._requestServer.hasAvailableRequests();
+    };
+
+    /**
+     * DOC_TBA
+     */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
     };

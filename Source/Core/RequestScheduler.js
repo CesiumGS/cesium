@@ -67,7 +67,7 @@ define([
         return RequestScheduler.maximumRequestsPerServer - this.activeRequests;
     };
 
-    var activeRequestsByServer = [];
+    var activeRequestsByServer = {};
     var activeRequests = 0;
     var budgets = [];
     var leftoverRequests = [];
@@ -162,11 +162,11 @@ define([
 
         var uri = new Uri(url).resolve(pageUri);
         uri.normalize();
-        var server = uri.authority;
-        if (!/:/.test(server)) {
-            server = server + ':' + (uri.scheme === 'https' ? '443' : '80');
+        var serverName = uri.authority;
+        if (!/:/.test(serverName)) {
+            serverName = serverName + ':' + (uri.scheme === 'https' ? '443' : '80');
         }
-        return server;
+        return serverName;
     };
 
     /**
@@ -176,22 +176,17 @@ define([
      * @returns {RequestServer} The request server.
      */
     RequestScheduler.getRequestServer = function(url) {
-        var requestServer;
         var serverName = RequestScheduler.getServerName(url);
-        var length = activeRequestsByServer.length;
-        for (var i = 0; i < length; ++i) {
-            requestServer = activeRequestsByServer[i];
-            if (requestServer.serverName === serverName) {
-                return requestServer;
-            }
+        var server = activeRequestsByServer[serverName];
+        if (!defined(server)) {
+            server = new RequestServer(serverName);
+            activeRequestsByServer[serverName] = server;
         }
-        requestServer = new RequestServer(serverName);
-        activeRequestsByServer.push(requestServer);
-        return requestServer;
+        return server;
     };
 
     /**
-     * Get the number of available slots for the given server.
+     * Get the number of available slots at the server pointed to by the url.
      *
      * @param {String} url The url to check.
      * @returns {Number} The number of available slots.

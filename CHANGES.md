@@ -11,7 +11,7 @@ Change Log
 * Breaking changes
     * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
 * Deprecated
-    * Deprecated `throttleRequests` flag in `TerrainProvider`. It is replaced by an optional `Request` object that stores information used to prioritize requests.
+    * Deprecated `throttleRequests` flag in `TerrainProvider`. It will be removed in 1.19. It is replaced by an optional `Request` object that stores information used to prioritize requests.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
 * Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)

@@ -522,7 +522,6 @@ define([
             return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
         }
 
-        // TODO : request used to be a boolean called throttleRequest. Continue to handle that case until it is deprecated.
         if (!defined(request) || (request === false)) {
             // If a request object isn't provided, perform an immediate request
             request = new Request({
