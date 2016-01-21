@@ -8,7 +8,7 @@ define([
     /**
      * This type describes an interface and is not intended to be instantiated directly.
      *
-     * DOC_TBA
+     * @private
      */
     function Cesium3DTileContentProvider(tileset, tile, url) {
         /**
@@ -36,7 +36,7 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
-    Cesium3DTileContentProvider.prototype.update = function(owner, frameState) {
+    Cesium3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         DeveloperError.throwInstantiationError();
     };
 

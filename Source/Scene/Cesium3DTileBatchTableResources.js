@@ -666,18 +666,18 @@ define([
         }
     }
 
-    function applyDebugSettings(owner, batchTableResources) {
-        if (owner.debugColorizeTiles && !batchTableResources._debugColorizeTiles) {
+    function applyDebugSettings(tiles3D, batchTableResources) {
+        if (tiles3D.debugColorizeTiles && !batchTableResources._debugColorizeTiles) {
             batchTableResources._debugColorizeTiles = true;
             batchTableResources.setAllColor(batchTableResources._debugColor);
-        } else if (!owner.debugColorizeTiles && batchTableResources._debugColorizeTiles) {
+        } else if (!tiles3D.debugColorizeTiles && batchTableResources._debugColorizeTiles) {
             batchTableResources._debugColorizeTiles = false;
             batchTableResources.setAllColor(Color.WHITE);
         }
     }
 
-    Cesium3DTileBatchTableResources.prototype.update = function(owner, frameState) {
-        applyDebugSettings(owner, this);
+    Cesium3DTileBatchTableResources.prototype.update = function(tiles3D, frameState) {
+        applyDebugSettings(tiles3D, this);
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
