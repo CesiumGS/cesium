@@ -91,7 +91,7 @@ define([
         var distance = this._tile.distanceToCamera;
         var promise = RequestScheduler.schedule(new Request({
             url : this._url,
-            server : this._tile._requestServer,
+            server : this._tile.requestServer,
             requestFunction : loadArrayBuffer,
             type : RequestType.TILES3D,
             distance : distance

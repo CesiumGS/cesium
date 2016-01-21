@@ -268,6 +268,18 @@ define([
             get : function() {
                 return this._content.processingPromise;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @type {RequestScheduler~RequestServer}
+         * @readonly
+         */
+        requestServer : {
+            get : function() {
+                return this._requestServer;
+            }
         }
     });
 
