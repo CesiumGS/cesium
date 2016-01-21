@@ -494,7 +494,7 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            expect(root.isRefinable()).toEqual(false);
+            expect(root.isRefinable(scene.frameState.cullingVolume)).toEqual(false);
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
             expect(stats.numberOfPendingRequests).toEqual(4);
@@ -520,14 +520,14 @@ defineSuite([
             return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
                 // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
                 scene.renderForSpecs();
-                expect(root.isRefinable()).toEqual(false);
+                expect(root.isRefinable(scene.frameState.cullingVolume)).toEqual(false);
                 expect(root.numberOfChildrenWithoutContent).toEqual(0); // Children are loaded
                 expect(stats.numberOfCommands).toEqual(1); // Render root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
-                    expect(root.isRefinable()).toEqual(true);
+                    expect(root.isRefinable(scene.frameState.cullingVolume)).toEqual(true);
                     expect(stats.numberOfCommands).toEqual(4); // Render children
                 });
             });
@@ -552,7 +552,7 @@ defineSuite([
             var root = tileset._root;
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                 scene.renderForSpecs();
-                expect(root.isRefinable()).toEqual(false);
+                expect(root.isRefinable(scene.frameState.cullingVolume)).toEqual(false);
                 expect(stats.numberOfCommands).toEqual(0);
 
                 setZoom(5.0); // Zoom into the last tile, when it is ready the root is refinable
@@ -560,7 +560,7 @@ defineSuite([
 
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
-                    expect(root.isRefinable()).toEqual(true);
+                    expect(root.isRefinable(scene.frameState.cullingVolume)).toEqual(true);
                     expect(stats.numberOfCommands).toEqual(2); // Renders two content tiles
                 });
             });

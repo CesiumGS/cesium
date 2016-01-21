@@ -24,6 +24,7 @@ define([
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
+        './CullingVolume',
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
@@ -56,6 +57,7 @@ define([
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        CullingVolume,
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
@@ -133,8 +135,6 @@ define([
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
-        this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
-
         this.refining = false;
 
         this.hasContent = true;
@@ -164,7 +164,6 @@ define([
             if (type === 'json') {
                 this.hasTilesetContent = true;
                 this.hasContent = false;
-                this._numberOfUnrefinableChildren = 1;
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -180,20 +179,6 @@ define([
         }
         this._content = content;
 
-        function setRefinable(tile) {
-            var parent = tile.parent;
-            if (defined(parent) && (tile.hasContent || tile.isRefinable())) {
-                // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
-                // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
-                // before the parent is able to refine to it.
-                --parent._numberOfUnrefinableChildren;
-                // If the parent is empty, traverse up the tree to update ancestor tiles.
-                if (!parent.hasContent) {
-                    setRefinable(parent);
-                }
-            }
-        }
-
         var that = this;
 
         // Content enters the READY state
@@ -201,8 +186,6 @@ define([
             if (defined(that.parent)) {
                 --that.parent.numberOfChildrenWithoutContent;
             }
-
-            setRefinable(that);
 
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -276,8 +259,40 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTile.prototype.isRefinable = function() {
-        return this._numberOfUnrefinableChildren === 0;
+    Cesium3DTile.prototype.isRefinable = function(cullingVolume) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cullingVolume)) {
+            throw new DeveloperError('cullingVolume must be defined');
+        }
+        //>>includeEnd('debug');
+
+        var visibleChildren = [];
+        var child;
+        var k;
+
+        for (k = 0; k < this.children.length; ++k) {
+            child = this.children[k];
+            if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
+                visibleChildren.push(child);
+            }
+        }
+
+        var refinable = true;
+        for (k = 0; k < visibleChildren.length; ++k) {
+            child = visibleChildren[k];
+            // A tile is not refinable if a child has tileset content but
+            // is not refinable.
+            if ((child.hasTilesetContent || !child.hasContent) && !child.isRefinable(cullingVolume)) {
+                refinable = false;
+                break;
+            } else if (!child.isReady()) {
+                // if a child is visible but not loaded, the tile is not refinable
+                refinable = false;
+                break;
+            }
+        }
+
+        return refinable;
     };
 
     /**

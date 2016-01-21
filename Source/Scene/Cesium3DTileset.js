@@ -501,31 +501,43 @@ define([
                 } else {
                     // Tile does not meet SSE.
 
+                    // Save result to avoid doing unnecessary
+                    // isRefinable() multiple times
+                    var tileIsRefinable = t.isRefinable(cullingVolume);
+                    var visibleChildren = [];
+
+                    for (k = 0; k < childrenLength; ++k) {
+                        child = children[k];
+                        if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
+                            visibleChildren.push(child);
+                        }
+                    }
+
                     // Only sort children by distance if we are going to refine to them
                     // or slots are available to request them.  If we are just rendering the
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
-                    var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || hasAvailableRequests(tiles3D)) {
+                    if (tileIsRefinable || hasAvailableRequests(tiles3D)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
-                        computeDistanceToCamera(children, frameState);
+                        computeDistanceToCamera(visibleChildren, frameState);
 
                         // Sort children by distance for (1) request ordering, and (2) early-z
-                        children.sort(sortChildrenByDistanceToCamera);
+                        visibleChildren.sort(sortChildrenByDistanceToCamera);
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable() || t.refining) {
+                    if (!tileIsRefinable || t.refining) {
                         // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
                         // If all its children have content, it will became refinable once they are loaded.
                         // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
+                        for (k = 0; k < visibleChildren.length; ++k) {
+                            child = visibleChildren[k];
+
                             if (child.isContentUnloaded()) {
                                 requestContent(tiles3D, child, outOfCore);
-                            } else if (!child.hasContent && !child.isRefinable()){
+                            } else if (!child.hasContent && !child.isRefinable(cullingVolume)) {
                                 // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
                                 child.refining = true;
                                 // Store the plane mask so that the child can optimize based on its parent's returned mask
@@ -535,8 +547,8 @@ define([
                         }
                     } else {
                         // Tile does not meet SEE and it is refinable. Refine to children in front-to-back order.
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
+                        for (k = 0; k < visibleChildren.length; ++k) {
+                            child = visibleChildren[k];
                             child.refining = false;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
