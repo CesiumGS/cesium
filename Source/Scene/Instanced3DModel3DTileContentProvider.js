@@ -53,17 +53,17 @@ define([
         this._tile = tile;
 
         /**
-         * @readonly
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -125,9 +125,7 @@ define([
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -148,7 +146,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -278,27 +276,25 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Instanced3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+    Instanced3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(owner, frameState);
+        this._batchTableResources.update(tiles3D, frameState);
         this._modelInstanceCollection.update(frameState);
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();

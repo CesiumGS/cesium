@@ -32,17 +32,17 @@ define([
         this._factory = factory;
 
         /**
-         * @readonly
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
     }
@@ -50,9 +50,7 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -73,7 +71,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -150,26 +148,24 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Composite3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Composite3DTileContentProvider.prototype.update = function(tiles3D, context, frameState, commandList) {
         var length = this._contentProviders.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].update(owner, context, frameState, commandList);
+            this._contentProviders[i].update(tiles3D, context, frameState, commandList);
         }
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Composite3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Composite3DTileContentProvider.prototype.destroy = function() {
         var length = this._contentProviders.length;

@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     function Tileset3DTileContentProvider(tileset, tile, url) {
         this._tileset = tileset;
@@ -20,25 +20,23 @@ define([
         this._url = url;
 
         /**
-         * @readonly
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
     }
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -59,13 +57,22 @@ define([
         }
     };
 
-    Tileset3DTileContentProvider.prototype.update = function(owner, frameState) {
+    /**
+     * @private
+     */
+    Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 
+    /**
+     * @private
+     */
     Tileset3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @private
+     */
     Tileset3DTileContentProvider.prototype.destroy = function() {
         return destroyObject(this);
     };

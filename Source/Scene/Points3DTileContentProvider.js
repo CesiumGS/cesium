@@ -44,24 +44,24 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     function Points3DTileContentProvider(tileset, tile, url) {
         this._primitive = undefined;
         this._url = url;
 
         /**
-         * @readonly
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -81,9 +81,7 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -103,6 +101,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
@@ -167,30 +168,39 @@ define([
         });
     };
 
-    function applyDebugSettings(owner, content) {
-        if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
+    function applyDebugSettings(tiles3D, content) {
+        if (tiles3D.debugColorizeTiles && !content._debugColorizeTiles) {
             content._debugColorizeTiles = true;
             content._primitive.appearance.uniforms.highlightColor = content._debugColor;
-        } else if (!owner.debugColorizeTiles && content._debugColorizeTiles) {
+        } else if (!tiles3D.debugColorizeTiles && content._debugColorizeTiles) {
             content._debugColorizeTiles = false;
             content._primitive.appearance.uniforms.highlightColor = Color.WHITE;
         }
     }
 
-    Points3DTileContentProvider.prototype.update = function(owner, frameState) {
+    /**
+     * @private
+     */
+    Points3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
 
-        applyDebugSettings(owner, this);
+        applyDebugSettings(tiles3D, this);
 
         this._primitive.update(frameState);
     };
 
+    /**
+     * @private
+     */
     Points3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @private
+     */
     Points3DTileContentProvider.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);

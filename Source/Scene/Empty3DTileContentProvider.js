@@ -10,39 +10,51 @@ define([
     "use strict";
 
     /**
-     * @private
+     * DOC_TBA
      */
     function Empty3DTileContentProvider() {
         /**
-         * @readonly
+         * @private
          */
         this.state = undefined;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
         this.state = Cesium3DTileContentState.PROCESSING;
         this.processingPromise.resolve(this);
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     }
 
+    /**
+     * @private
+     */
     Empty3DTileContentProvider.prototype.request = function() {
     };
 
-    Empty3DTileContentProvider.prototype.update = function(owner, frameState) {
+    /**
+     * @private
+     */
+    Empty3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 
+    /**
+     * @private
+     */
     Empty3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @private
+     */
     Empty3DTileContentProvider.prototype.destroy = function() {
         return destroyObject(this);
     };

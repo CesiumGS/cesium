@@ -40,17 +40,17 @@ define([
         this._tileset = tileset;
 
         /**
-         * @readonly
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -114,9 +114,7 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -137,7 +135,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         var byteStart = defaultValue(byteOffset, 0);
@@ -218,27 +216,25 @@ define([
     };
 
     /**
-     * DOC_TBA
-     *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Batched3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+    Batched3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(owner, frameState);
+        this._batchTableResources.update(tiles3D, frameState);
         this._model.update(frameState);
    };
 
-   /**
-    * DOC_TBA
-    */
+    /**
+     * @private
+     */
     Batched3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
