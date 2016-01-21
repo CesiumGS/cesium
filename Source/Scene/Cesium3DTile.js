@@ -383,7 +383,10 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Computes the (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
+     *
+     * @param {FrameState} frameState The frame state.
+     * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
         return this._boundingVolume.distanceToCamera(frameState);
@@ -431,11 +434,11 @@ define([
         }
     }
 
-    function applyDebugSettings(tile, owner, frameState) {
+    function applyDebugSettings(tile, tiles3D, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
-        var showVolume = owner.debugShowBoundingVolume || (owner.debugShowContentBoundingVolume && !hasContentBoundingVolume);
+        var showVolume = tiles3D.debugShowBoundingVolume || (tiles3D.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume && workaround2657(tile._header.boundingVolume)) {
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
@@ -445,34 +448,39 @@ define([
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
 
-        if (owner.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
+        if (tiles3D.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
             if (!defined(tile._debugContentBoundingVolume)) {
                 tile._debugContentBoundingVolume = tile._boundingVolume.createDebugVolume(Color.BLUE);
             }
             tile._debugContentBoundingVolume.update(frameState);
-        } else if (!owner.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
+        } else if (!tiles3D.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
             tile._debugContentBoundingVolume = tile._debugContentBoundingVolume.destroy();
         }
     }
 
     /**
-     * DOC_TBA
+     * Get the draw commands needed to render this tile.
+     *
+     * @private
      */
-    Cesium3DTile.prototype.update = function(owner, frameState) {
-        applyDebugSettings(this, owner, frameState);
-        this._content.update(owner, frameState);
+    Cesium3DTile.prototype.update = function(tiles3D, frameState) {
+        applyDebugSettings(this, tiles3D, frameState);
+        this._content.update(tiles3D, frameState);
     };
 
     var scratchCommandList = [];
 
     /**
-     * DOC_TBA
+     * Processes the tile's content, e.g., create WebGL resources, to move from the PROCESSING to READY state.
+     *
+     * @param {Cesium3DTileset} tiles3D The tileset containing this tile.
+     * @param {FrameState} frameState The frame state.
      */
-    Cesium3DTile.prototype.process = function(owner, frameState) {
+    Cesium3DTile.prototype.process = function(tiles3D, frameState) {
         var savedCommandList = frameState.commandList;
         frameState.commandList = scratchCommandList;
 
-        this._content.update(owner, frameState);
+        this._content.update(tiles3D, frameState);
 
         scratchCommandList.length = 0;
         frameState.commandList = savedCommandList;
