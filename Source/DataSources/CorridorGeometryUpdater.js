@@ -554,10 +554,10 @@ define([
             groundPrimitives.removeAndDestroy(this._primitive);
         } else {
             primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._outlinePrimitive = undefined;
         }
-        primitives.removeAndDestroy(this._outlinePrimitive);
         this._primitive = undefined;
-        this._outlinePrimitive = undefined;
 
         var entity = geometryUpdater._entity;
         var corridor = entity.corridor;
@@ -619,7 +619,7 @@ define([
             }
         }
 
-        if (defined(corridor.outline) && corridor.outline.getValue(time)) {
+        if (!onTerrain && defined(corridor.outline) && corridor.outline.getValue(time)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(corridor.outlineColor, time, Color.BLACK, scratchColor);

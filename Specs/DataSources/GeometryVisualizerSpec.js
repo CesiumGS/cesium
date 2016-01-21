@@ -80,6 +80,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -288,6 +289,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -494,7 +496,8 @@ defineSuite([
                 show : new CallbackProperty(function() {
                     return true;
                 }, false),
-                material : Color.RED
+                material : Color.RED,
+                height : 0
             }
         });
 
@@ -542,7 +545,8 @@ defineSuite([
                     return true;
                 }, false),
                 outline : true,
-                outlineColor : Color.RED
+                outlineColor : Color.RED,
+                height : 0
             }
         });
 
@@ -585,6 +589,7 @@ defineSuite([
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = Cartesian3.fromDegrees(0, 0, 0);
@@ -645,7 +650,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : Color.ORANGE
+                material : Color.ORANGE,
+                height : 0
             }
         });
         objects.add(entity);
@@ -664,7 +670,8 @@ defineSuite([
                 ellipse : {
                     semiMajorAxis : 2,
                     semiMinorAxis : 1,
-                    material : Color.BLUE
+                    material : Color.BLUE,
+                    height : 0
                 }
             });
             objects.add(entity2);
@@ -706,7 +713,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
+                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE)),
+                height : 0
             }
         });
 

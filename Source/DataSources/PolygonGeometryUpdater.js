@@ -568,10 +568,10 @@ define([
             groundPrimitives.removeAndDestroy(this._primitive);
         } else {
             primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._outlinePrimitive = undefined;
         }
-        primitives.removeAndDestroy(this._outlinePrimitive);
         this._primitive = undefined;
-        this._outlinePrimitive = undefined;
 
         var entity = geometryUpdater._entity;
         var polygon = entity.polygon;
@@ -637,7 +637,7 @@ define([
             }
         }
 
-        if (Property.getValueOrDefault(polygon.outline, time, false)) {
+        if (!onTerrain && Property.getValueOrDefault(polygon.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(polygon.outlineColor, time, Color.BLACK, scratchColor);
