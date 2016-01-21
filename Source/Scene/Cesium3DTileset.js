@@ -481,7 +481,7 @@ define([
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         //
         // Don't select if the tile is being loaded to refine another tile
-        if (tile.isReady() && !tile.refining &&
+        if ((tile.isReady() && !tile.refining) &&
                 (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
         }

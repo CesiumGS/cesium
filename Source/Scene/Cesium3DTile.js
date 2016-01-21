@@ -301,9 +301,11 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the promise that will be resolved when the tile's content is ready to process.
+         * This happens after the content is downloaded but before the content is ready
+         * to render.
          *
-         * @type {Promise}
+         * @type {Promise.<Cesium3DTileContentProvider>}
          * @readonly
          */
         processingPromise : {
@@ -321,6 +323,13 @@ define([
     };
 
     /**
+     * When <code>true</code>, the tile can be refined to when doing replacement refinement.
+     * <p>
+     * A tile is refinable when all of its children's content is loaded.  If a child is does
+     * not have empty (such as for accelerating culling), its descendants with content must
+     * be loaded first.
+     * </p>
+     *
      * DOC_TBA
      */
     Cesium3DTile.prototype.isReplacementRefinable = function() {
@@ -328,6 +337,8 @@ define([
     };
 
     /**
+     * When <true>true</code>, the tile's content has not be requested.
+     *
      * DOC_TBA
      */
     Cesium3DTile.prototype.isContentUnloaded = function() {
@@ -335,27 +346,39 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Requests the tile's content.
+     * <p>
+     * The request may not be made if the Cesium Request Scheduler can't prioritize it.
+     * </p>
      */
     Cesium3DTile.prototype.requestContent = function() {
         this._content.request();
     };
 
     /**
-     * DOC_TBA
+     * Determines whether the tile's bounding volume intersects the culling volume.
+     *
+     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
+     * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
     };
 
     /**
-     * DOC_TBA
+     * Assuming the tile's bounding volume intersects the culling volume, determines
+     * whether the tile's content's bounding volume intersects the culling volume.
+     *
+     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile's content is to be tested.
+     * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
         var boundingVolume = this._contentBoundingVolume;
         if (!defined(boundingVolume)) {
             return Intersect.INSIDE;
         }
+        // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
+        // tile's (not the content's) bounding volume intersects the culling volume?
         return cullingVolume.computeVisibility(boundingVolume);
     };
 
