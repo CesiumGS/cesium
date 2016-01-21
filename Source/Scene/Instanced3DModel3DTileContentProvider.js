@@ -238,7 +238,7 @@ define([
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.url);
+            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.baseUrl);
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;

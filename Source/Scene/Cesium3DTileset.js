@@ -91,6 +91,7 @@ define([
         }
 
         this._url = url;
+        this._baseUrl = baseUrl;
         this._tilesetUrl = tilesetUrl;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
@@ -249,6 +250,20 @@ define([
             get : function() {
                 return this._url;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        baseUrl : {
+            get : function() {
+                return this._baseUrl;
+            }
         }
     });
 
@@ -278,7 +293,7 @@ define([
                 return when.reject('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = tileset.url;
+            var baseUrl = tileset._baseUrl;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
