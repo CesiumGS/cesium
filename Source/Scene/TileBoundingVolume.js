@@ -12,6 +12,8 @@ define([
      * @see TileBoundingRegion
      * @see TileBoundingSphere
      * @see TileOrientedBoundingBox
+     *
+     * @private
      */
     var TileBoundingVolume = function() {
     };

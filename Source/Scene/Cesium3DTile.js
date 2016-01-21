@@ -66,7 +66,11 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;
+     * the content is loaded on-demand when needed based on the view using
+     * {@link Cesium3DTile#requestContent}.
+     *
+     * @private
      */
     function Cesium3DTile(tileset, baseUrl, header, parent) {
         this._header = header;
@@ -90,8 +94,10 @@ define([
         this._contentBoundingVolume = contentBoundingVolume;
 
         /**
-         * DOC_TBA
+         * The error, in meters, introduced if this tile is rendered and its children are not.
+         * This is used to compute Screen-Space Error (SSE), i.e., the error measured in pixels.
          *
+         * @type {Number}
          * @readonly
          */
         this.geometricError = header.geometricError;
@@ -105,14 +111,15 @@ define([
         }
 
         /**
-         * DOC_TBA
+         * Specifies if additive or replacement refinement is used when traversing this tile for rendering.
          *
+         * @type {Cesium3DTileRefine}
          * @readonly
          */
         this.refine = refine;
 
         /**
-         * DOC_TBA
+         * An array of {@link Cesium3DTile} objects that are this tile's children.
          *
          * @type {Array}
          * @readonly
@@ -120,41 +127,48 @@ define([
         this.children = [];
 
         /**
-         * DOC_TBA
+         * This tile's parent or <code>undefined</code> if this tile is the root.
+         * <p>
+         * When a tile's content references an external tileset.json, the external tileset's
+         * root tile's parent is not <code>undefined</code>; it is the referencing tile as if
+         * the two tilesets were merged.
+         * </p>
          *
+         * @type {Cesium3DTile}
          * @readonly
          */
         this.parent = parent;
 
         /**
-         * DOC_TBA
+         * The number of unloaded children, i.e., children whose content is not loaded.
          *
+         * @type {Number}
          * @readonly
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
 
+        /**
+         * When <code>true</code>, the tile can be traversed but not selected for rendering;
+         * this allows traversal of empty interior tiles to optimize culling.
+         *
+         * @type {Boolean}
+         */
         this.refining = false;
 
-        this.hasContent = true;
-
         /**
-         * DOC_TBA
+         * Gets the promise that will be resolved when the tile's content is ready to render.
          *
-         * @readonly
-         */
-        this.hasTilesetContent = false;
-
-        /**
-         * DOC_TBA
-         *
-         * @type {Promise}
+         * @type {Promise.<Cesium3DTile>}
          * @readonly
          */
         this.readyPromise = when.defer();
 
         var content;
+        var hasContent;
+        var hasTilesetContent;
+
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = getAbsoluteUri(contentUrl, baseUrl);
@@ -162,9 +176,12 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
-                this.hasTilesetContent = true;
-                this.hasContent = false;
+                hasContent = false;
+                hasTilesetContent = true;
                 this._numberOfUnrefinableChildren = 1;
+            } else {
+                hasContent = true;
+                hasTilesetContent = false;
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -176,13 +193,34 @@ define([
             content = contentFactory(tileset, this, url);
         } else {
             content = new Empty3DTileContentProvider();
-            this.hasContent = false;
+            hasContent = false;
+            hasTilesetContent = false;
         }
+
         this._content = content;
+
+        /**
+         * When <code>true</code>, the tile has content.  This does not imply that the content is loaded.
+         * <p>
+         * When a tile's content points to a external tileset, the tile is not considered to have content.
+         * </p>
+         *
+         * @type {Number}
+         * @readonly
+         */
+        this.hasContent = hasContent;
+
+        /**
+         * When <code>true</code>, the tile's content points to an external tileset.
+         *
+         * @type {Number}
+         * @readonly
+         */
+        this.hasTilesetContent = hasTilesetContent;
 
         function setRefinable(tile) {
             var parent = tile.parent;
-            if (defined(parent) && (tile.hasContent || tile.isRefinable())) {
+            if (defined(parent) && (tile.hasContent || tile.isReplacementRefinable())) {
                 // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
                 // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
                 // before the parent is able to refine to it.
@@ -206,13 +244,18 @@ define([
 
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
+            // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
+            // and therefore that.parent will never refine.  If this becomes an issue, failed
+            // requests can be reissued.
             that.readyPromise.reject(error);
-//TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
         // Members that are updated every frame for rendering optimizations:
 
         /**
+         * The (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
+         *
+         * @type {Number}
          * @private
          */
         this.distanceToCamera = 0;
@@ -231,8 +274,10 @@ define([
 
     defineProperties(Cesium3DTile.prototype, {
         /**
-         * DOC_TBA
+         * The tile's loaded content.  This represents the actual tile's payload,
+         * not the content's metadata in tileset.json.
          *
+         * @type {Cesium3DTileContentProvider}
          * @readonly
          */
         content : {
@@ -242,9 +287,11 @@ define([
         },
 
         /**
-         * Get the bounding volume of the tile
+         * Get the bounding volume of the tile's contents.  This defaults to the
+         * tile's bounding volume when the content's bounding volume is
+         * <code>undefined</code>.
          *
-         * @type {Object}
+         * @type {TileBoundingVolume}
          * @readonly
          */
         contentBoundingVolume : {
@@ -276,7 +323,7 @@ define([
     /**
      * DOC_TBA
      */
-    Cesium3DTile.prototype.isRefinable = function() {
+    Cesium3DTile.prototype.isReplacementRefinable = function() {
         return this._numberOfUnrefinableChildren === 0;
     };
 
@@ -409,14 +456,36 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see Cesium3DTile#destroy
      */
     Cesium3DTile.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     *
+     * @example
+     * tile = tile && tile.destroy();
+     *
+     * @see Cesium3DTile#isDestroyed
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();

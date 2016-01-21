@@ -629,7 +629,7 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable() || t.refining) {
+                    if (!t.isReplacementRefinable() || t.refining) {
                         // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
                         // If all its children have content, it will became refinable once they are loaded.
                         // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
@@ -639,7 +639,7 @@ define([
                             child = children[k];
                             if (child.isContentUnloaded()) {
                                 requestContent(tiles3D, child, outOfCore);
-                            } else if (!child.hasContent && !child.isRefinable()){
+                            } else if (!child.hasContent && !child.isReplacementRefinable()){
                                 // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
                                 child.refining = true;
                                 // Store the plane mask so that the child can optimize based on its parent's returned mask

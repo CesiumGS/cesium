@@ -124,7 +124,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(current.building) && (current.building !== pickedBuilding)) {
         // Restore original color to building that is no longer selected
 
-        // This assignment is nessearcy to work with the set property
+        // This assignment is necessary to work with the set property
         current.building.color = Cesium.Color.clone(current.originalColor, current.building.color);
         current.building = undefined;
     }
