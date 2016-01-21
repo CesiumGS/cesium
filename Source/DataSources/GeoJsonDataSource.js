@@ -528,6 +528,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -622,6 +623,20 @@ define([
             set : function(value) {
                 defaultFill = value;
                 defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
+            }
+        },
+        /**
+         * Gets or sets default of whether to draw on terrain.
+         * @memberof GeoJsonDataSource
+         * @type {Boolean}
+         * @default false
+         */
+        terrain : {
+            get : function() {
+                return defaultTerrain;
+            },
+            set : function(value) {
+                defaultTerrain = value;
             }
         },
 
@@ -755,6 +770,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */

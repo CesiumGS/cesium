@@ -17,6 +17,7 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -38,6 +39,7 @@ defineSuite([
         OrthographicFrustum,
         TextureAtlas,
         VerticalOrigin,
+        createGlobe,
         createScene,
         pollToPromise,
         when) {
@@ -1557,32 +1559,8 @@ defineSuite([
     });
 
     describe('height referenced billboards', function() {
-        function createMockGlobe() {
-            var globe = {
-                callback : undefined,
-                removedCallback : false,
-                ellipsoid : Ellipsoid.WGS84,
-                update : function() {},
-                getHeight : function() {
-                    return 0.0;
-                },
-                _surface : {},
-                destroy : function() {}
-            };
-
-            globe._surface.updateHeight = function(position, callback) {
-                globe.callback = callback;
-                return function() {
-                    globe.removedCallback = true;
-                    globe.callback = undefined;
-                };
-            };
-
-            return globe;
-        }
-
         it('explicitly constructs a billboard with height reference', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
@@ -1591,7 +1569,7 @@ defineSuite([
         });
 
         it('set billboard height reference property', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add();
             b.heightReference = HeightReference.CLAMP_TO_GROUND;
 
@@ -1599,7 +1577,7 @@ defineSuite([
         });
 
         it('creating with a height reference creates a height update callback', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1608,7 +1586,7 @@ defineSuite([
         });
 
         it('set height reference property creates a height update callback', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
@@ -1617,7 +1595,7 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1635,7 +1613,7 @@ defineSuite([
         });
 
         it('changing the position updates the callback', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1648,7 +1626,7 @@ defineSuite([
         });
 
         it('callback updates the position', function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
