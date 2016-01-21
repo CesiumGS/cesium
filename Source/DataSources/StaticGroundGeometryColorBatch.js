@@ -19,8 +19,8 @@ define([
 
     var colorScratch = new Color();
 
-    function Batch(primitives, translucent) {
-        this.translucent = translucent;
+    function Batch(primitives, color) {
+        this.color = color;
         this.primitives = primitives;
         this.createPrimitive = false;
         this.waitingOnCreate = false;
@@ -33,6 +33,7 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.itemsToRemove = [];
+        this.isDirty = false;
     }
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
@@ -145,7 +146,7 @@ define([
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
                         attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
                         attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
-                        if ((this.translucent && attributes.color[3] === 255) || (!this.translucent && attributes.color[3] !== 255)) {
+                        if (!Color.equals(this.color, attributes.color)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
                     }
@@ -229,21 +230,32 @@ define([
      * @private
      */
     function StaticGroundGeometryColorBatch(primitives) {
-        this._solidBatch = new Batch(primitives, false);
-        this._translucentBatch = new Batch(primitives, true);
+        this._batches = new AssociativeArray();
+        this._primitives = primitives;
     }
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
-        if (instance.attributes.color.value[3] === 255) {
-            this._solidBatch.add(updater, instance);
+        var batches = this._batches;
+        // instance.attributes.color.value is a Uint8Array, so just read it as a Uint32 and make that the key
+        var batchKey = new Uint32Array(instance.attributes.color.value.buffer)[0];
+        var batch;
+        if (batches.contains(batchKey)) {
+            batch = batches.get(batchKey);
         } else {
-            this._translucentBatch.add(updater, instance);
+            batch = new Batch(this._primitives, instance.attributes.color);
+            batches.set(batchKey, batch);
         }
+        batch.add(updater, instance);
+        return batch;
     };
 
     StaticGroundGeometryColorBatch.prototype.remove = function(updater) {
-        if (!this._solidBatch.remove(updater)) {
-            this._translucentBatch.remove(updater);
+        var batchesArray = this._batches.values;
+        var count = batchesArray.length;
+        for(var i=0;i<count;++i) {
+            if (batchesArray[i].remove(updater)) {
+                return;
+            }
         }
     };
 
@@ -252,52 +264,59 @@ define([
         var updater;
 
         //Perform initial update
-        var isUpdated = this._solidBatch.update(time);
-        isUpdated = this._translucentBatch.update(time) && isUpdated;
-
-        //If any items swapped between solid/translucent, we need to
-        //move them between batches
-        var itemsToRemove = this._solidBatch.itemsToRemove;
-        var solidsToMoveLength = itemsToRemove.length;
-        if (solidsToMoveLength > 0) {
-            for (i = 0; i < solidsToMoveLength; i++) {
-                updater = itemsToRemove[i];
-                this._solidBatch.remove(updater);
-                this._translucentBatch.add(updater, updater.createFillGeometryInstance(time));
-            }
+        var isUpdated = true;
+        var batches = this._batches;
+        var batchesArray = batches.values;
+        var batchCount = batchesArray.length;
+        for(i=0;i<batchCount;++i) {
+            isUpdated = batchesArray[i].update(time) && isUpdated;
         }
 
-        itemsToRemove = this._translucentBatch.itemsToRemove;
-        var translucentToMoveLength = itemsToRemove.length;
-        if (translucentToMoveLength > 0) {
-            for (i = 0; i < translucentToMoveLength; i++) {
-                updater = itemsToRemove[i];
-                this._translucentBatch.remove(updater);
-                this._solidBatch.add(updater, updater.createFillGeometryInstance(time));
+        //If any items swapped between batches we need to move them
+        for(i=0;i<batchCount;++i) {
+            var oldBatch = batchesArray[i];
+            var itemsToRemove = oldBatch.itemsToRemove;
+            var itemsToMoveLength = itemsToRemove.length;
+            for (var j = 0; j < itemsToMoveLength; j++) {
+                updater = itemsToRemove[j];
+                oldBatch.remove(updater);
+                var newBatch = this.add(time, updater);
+                oldBatch.isDirty = true;
+                newBatch.isDirty = true;
             }
         }
 
         //If we moved anything around, we need to re-build the primitive
-        if (solidsToMoveLength > 0 || translucentToMoveLength > 0) {
-            isUpdated = this._solidBatch.update(time) && isUpdated;
-            isUpdated = this._translucentBatch.update(time) && isUpdated;
+        for(i=0;i<batchCount;++i) {
+            var batch = batchesArray[i];
+            if (batch.isDirty) {
+                isUpdated = batchesArray[i].update(time) && isUpdated;
+                batch.isDirty = false;
+            }
         }
 
         return isUpdated;
     };
 
     StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
-        if (this._solidBatch.contains(entity)) {
-            return this._solidBatch.getBoundingSphere(entity, result);
-        } else if (this._translucentBatch.contains(entity)) {
-            return this._translucentBatch.getBoundingSphere(entity, result);
+        var batchesArray = this._batches.values;
+        var batchCount = batchesArray.length;
+        for(var i=0;i<batchCount;++i) {
+            var batch = batchesArray[i];
+            if (batch.contains(entity)) {
+                return batch.getBoundingSphere(entity, result);
+            }
         }
+
         return BoundingSphereState.FAILED;
     };
 
     StaticGroundGeometryColorBatch.prototype.removeAllPrimitives = function() {
-        this._solidBatch.removeAllPrimitives();
-        this._translucentBatch.removeAllPrimitives();
+        var batchesArray = this._batches.values;
+        var batchCount = batchesArray.length;
+        for(var i=0;i<batchCount;++i) {
+            batchesArray[i].removeAllPrimitives();
+        }
     };
 
     return StaticGroundGeometryColorBatch;
