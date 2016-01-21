@@ -201,7 +201,7 @@ define([
          * @type {Property}
          * @default true
          */
-        closeBottom : createPropertyDescriptor('closeBottom'),
+        closeBottom : createPropertyDescriptor('closeBottom')
     });
 
     /**
