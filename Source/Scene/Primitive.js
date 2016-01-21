@@ -1450,7 +1450,6 @@ define([
         };
     }
 
-
     var readOnlyInstanceAttributesScratch = ['boundingSphere', 'boundingSphereCV'];
     
     /**
@@ -1512,7 +1511,7 @@ define([
                 var readOnlyAttributes = readOnlyInstanceAttributesScratch;
                 length = readOnlyAttributes.length;
                 for (var j = 0; j < length; ++j) {
-                    if (name === Primitive._readOnlyInstanceAttributes[j]) {
+                    if (name === readOnlyInstanceAttributesScratch[j]) {
                         createSetter = false;
                         break;
                     }

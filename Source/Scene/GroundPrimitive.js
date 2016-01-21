@@ -625,20 +625,18 @@ define([
         }
     }
 
-    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+    function createColorCommands(groundPrimitive, colorCommands) {
         var primitive = groundPrimitive._primitive;
         var length = primitive._va.length * 3;
         colorCommands.length = length;
 
         var vaIndex = 0;
-        var command;
-        var vertexArray;
 
         for (var i = 0; i < length; i += 3) {
-            vertexArray = primitive._va[vaIndex++];
+            var vertexArray = primitive._va[vaIndex++];
 
             // stencil preload command
-            command = colorCommands[i];
+            var command = colorCommands[i];
             if (!defined(command)) {
                 command = colorCommands[i] = new DrawCommand({
                     owner : groundPrimitive,
@@ -682,9 +680,12 @@ define([
             command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
         }
+    }
 
+    function createPickCommands(groundPrimitive, pickCommands) {
+        var primitive = groundPrimitive._primitive;
         var pickOffsets = primitive._pickOffsets;
-        length = pickOffsets.length * 3;
+        var length = pickOffsets.length * 3;
         pickCommands.length = length;
 
         var pickIndex = 0;
@@ -694,10 +695,10 @@ define([
 
             var offset = pickOffset.offset;
             var count = pickOffset.count;
-            vertexArray = primitive._va[pickOffset.index];
+            var vertexArray = primitive._va[pickOffset.index];
 
             // stencil preload command
-            command = pickCommands[j];
+            var command = pickCommands[j];
             if (!defined(command)) {
                 command = pickCommands[j] = new DrawCommand({
                     owner : groundPrimitive,
@@ -749,12 +750,17 @@ define([
         }
     }
 
-    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+        createColorCommands(groundPrimitive, colorCommands);
+        createPickCommands(groundPrimitive, pickCommands);
+    }
+
+    function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingVolumes = primitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(primitive._boundingVolumes2D)) {
-            boundingVolumes = primitive._boundingVolumes2D;
+            boundingVolumes = groundPrimitive._boundingVolumes;
+        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
+            boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
         var commandList = frameState.commandList;
@@ -772,13 +778,29 @@ define([
         }
 
         if (passes.pick) {
-            var pickLength = pickCommands.length;
-            for (var k = 0; k < pickLength; ++k) {
+            var primitive = groundPrimitive._primitive;
+            var pickOffsets = primitive._pickOffsets;
+            var length = pickOffsets.length * 3;
+            pickCommands.length = length;
+
+            var pickIndex = 0;
+            for (var k = 0; k < length; k += 3) {
+                var pickOffset = pickOffsets[pickIndex++];
+                var bv = boundingVolumes[pickOffset.index];
+
                 pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingVolumes[Math.floor(k / 3)];
+                pickCommands[k].boundingVolume = bv;
                 pickCommands[k].cull = cull;
 
-                commandList.push(pickCommands[k]);
+                pickCommands[k + 1].modelMatrix = modelMatrix;
+                pickCommands[k + 1].boundingVolume = bv;
+                pickCommands[k + 1].cull = cull;
+
+                pickCommands[k + 2].modelMatrix = modelMatrix;
+                pickCommands[k + 2].boundingVolume = bv;
+                pickCommands[k + 2].cull = cull;
+
+                commandList.push(pickCommands[k], pickCommands[k + 1], pickCommands[k + 2]);
             }
         }
     }
