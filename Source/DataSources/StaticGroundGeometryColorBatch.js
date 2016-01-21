@@ -19,9 +19,10 @@ define([
 
     var colorScratch = new Color();
 
-    function Batch(primitives, color) {
-        this.color = color;
+    function Batch(primitives, color, key) {
         this.primitives = primitives;
+        this.color = color;
+        this.key = key;
         this.createPrimitive = false;
         this.waitingOnCreate = false;
         this.primitive = undefined;
@@ -242,7 +243,7 @@ define([
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
         } else {
-            batch = new Batch(this._primitives, instance.attributes.color);
+            batch = new Batch(this._primitives, instance.attributes.color, batchKey);
             batches.set(batchKey, batch);
         }
         batch.add(updater, instance);
@@ -286,11 +287,15 @@ define([
             }
         }
 
-        //If we moved anything around, we need to re-build the primitive
-        for(i=0;i<batchCount;++i) {
-            var batch = batchesArray[i];
-            if (batch.isDirty) {
-                isUpdated = batchesArray[i].update(time) && isUpdated;
+        //If we moved anything around, we need to re-build the primitive and remove empty batches
+        var batchesArrayCopy = batchesArray.slice();
+        var batchesCopyCount = batchesArrayCopy.length;
+        for(i=0;i<batchesCopyCount;++i) {
+            var batch = batchesArrayCopy[i];
+            if (batch.geometry.length === 0) {
+                batches.remove(batch.key);
+            } else if (batch.isDirty) {
+                isUpdated = batchesArrayCopy[i].update(time) && isUpdated;
                 batch.isDirty = false;
             }
         }
