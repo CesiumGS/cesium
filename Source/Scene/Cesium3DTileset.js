@@ -367,8 +367,7 @@ define([
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         //
         // Don't select if the tile is being loaded to refine another tile
-        if (tile.isReady() && !tile.refining &&
-                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
+        if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
         }
     }
@@ -452,8 +451,6 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            // Pass along whether the child is being loaded for refinement
-                            child.refining = t.refining;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
 
@@ -488,6 +485,7 @@ define([
                     // or slots are available to request them.  If we are just rendering the
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
+
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || hasAvailableRequests(tiles3D)) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
@@ -498,29 +496,23 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable() || t.refining) {
-                        // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
-                        // If all its children have content, it will became refinable once they are loaded.
-                        // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
+                    if (!allChildrenLoaded) {
+                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (child.isContentUnloaded()) {
-                                requestContent(tiles3D, child, outOfCore);
-                            } else if (!child.hasContent && !child.isRefinable()){
-                                // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
-                                child.refining = true;
-                                // Store the plane mask so that the child can optimize based on its parent's returned mask
-                                child.parentPlaneMask = planeMask;
-                                stack.push(child);
+                        if (outOfCore) {
+                            for (k = 0; (k < childrenLength) && hasAvailableRequests(tiles3D); ++k) {
+                                child = children[k];
+// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
+                                if (child.isContentUnloaded()) {
+                                    requestContent(tiles3D, child);
+                                }
                             }
                         }
                     } else {
-                        // Tile does not meet SEE and it is refinable. Refine to children in front-to-back order.
+                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.refining = false;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
