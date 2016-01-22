@@ -1,20 +1,20 @@
 /*global define*/
 define([
-           '../Core/AssociativeArray',
-           '../Core/Color',
-           '../Core/ColorGeometryInstanceAttribute',
-           '../Core/defined',
-           '../Core/ShowGeometryInstanceAttribute',
-           '../Scene/GroundPrimitive',
-           './BoundingSphereState'
-       ], function(
-    AssociativeArray,
-    Color,
-    ColorGeometryInstanceAttribute,
-    defined,
-    ShowGeometryInstanceAttribute,
-    GroundPrimitive,
-    BoundingSphereState) {
+        '../Core/AssociativeArray',
+        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defined',
+        '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
+        './BoundingSphereState'
+    ], function(
+        AssociativeArray,
+        Color,
+        ColorGeometryInstanceAttribute,
+        defined,
+        ShowGeometryInstanceAttribute,
+        GroundPrimitive,
+        BoundingSphereState) {
     "use strict";
 
     var colorScratch = new Color();

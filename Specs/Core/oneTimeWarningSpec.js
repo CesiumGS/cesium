@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-                'Core/oneTimeWarning'
-            ], function(
-    oneTimeWarning) {
+        'Core/oneTimeWarning'
+    ], function(
+        oneTimeWarning) {
     "use strict";
 
     it('logs a warning', function() {

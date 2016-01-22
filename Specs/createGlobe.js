@@ -1,10 +1,10 @@
 /*global define*/
 define([
-           'Core/Ellipsoid',
-           'Core/defaultValue'
-       ], function(
-    Ellipsoid,
-    defaultValue) {
+        'Core/defaultValue',
+        'Core/Ellipsoid'
+    ], function(
+        defaultValue,
+        Ellipsoid) {
     "use strict";
 
     function createGlobe(ellipsoid) {
