@@ -513,7 +513,7 @@ define([
         }
 
         var currentPos = fromPointsCurrentPos;
-        currentPos.x = positionsHigh[0] + positionsLow[0]
+        currentPos.x = positionsHigh[0] + positionsLow[0];
         currentPos.y = positionsHigh[1] + positionsLow[1];
         currentPos.z = positionsHigh[2] + positionsLow[2];
 
