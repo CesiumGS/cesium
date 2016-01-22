@@ -227,16 +227,25 @@ define([
         this._loadProgressEventsToRaise = [];
 
         /**
-         * DOC_TBA
+         * This event fires once for each visible tile in a frame.  This can be used to style a tileset.
          * <p>
-         * This event is fired at the end of the frame after the scene is rendered.
+         * The visible {@link Cesium3DTile} is passed to the event listener.
+         * </p>
+         * <p>
+         * This event is fired during the tileset traversal while the frame is being rendered
+         * so that updates to the tile take effect in the same frame.  Do not create or modify
+         * Cesium entities or primitives during the event listener.
          * </p>
          *
          * @type {Event}
          * @default new Event()
          *
          * @example
-         * DOC_TBA
+         * tileset.tileVisible.addEventListener(function(tile) {
+         *     if (tile.content instanceof Cesium.Batched3DModel3DTileContentProvider) {
+         *         console.log('A Batched 3D Model tile is visible.');
+         *     }
+         * });
          */
         this.tileVisible = new Event();
 

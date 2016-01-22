@@ -40,16 +40,22 @@ define([
         this._tileset = tileset;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.processingPromise = when.defer();
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.readyPromise = when.defer();
@@ -114,6 +120,8 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
@@ -135,6 +143,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Batched3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
@@ -216,6 +226,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Batched3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
@@ -227,6 +239,8 @@ define([
    };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Batched3DModel3DTileContentProvider.prototype.isDestroyed = function() {
@@ -234,6 +248,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Batched3DModel3DTileContentProvider.prototype.destroy = function() {

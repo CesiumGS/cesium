@@ -20,22 +20,30 @@ define([
         this._url = url;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.processingPromise = when.defer();
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.readyPromise = when.defer();
     }
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Tileset3DTileContentProvider.prototype.request = function() {
@@ -58,12 +66,16 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Tileset3DTileContentProvider.prototype.isDestroyed = function() {
@@ -71,6 +83,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Tileset3DTileContentProvider.prototype.destroy = function() {

@@ -69,8 +69,12 @@ define([
      * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;
      * the content is loaded on-demand when needed based on the view using
      * {@link Cesium3DTile#requestContent}.
+     * <p>
+     * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
+     * </p>
      *
-     * @private
+     * @alias Cesium3DTile
+     * @constructor
      */
     function Cesium3DTile(tileset, baseUrl, header, parent) {
         this._header = header;
@@ -144,6 +148,8 @@ define([
          *
          * @type {Number}
          * @readonly
+         *
+         * @private
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
@@ -154,6 +160,8 @@ define([
          * this allows traversal of empty interior tiles to optimize culling.
          *
          * @type {Boolean}
+         *
+         * @private
          */
         this.refining = false;
 
@@ -162,6 +170,8 @@ define([
          *
          * @type {Promise.<Cesium3DTile>}
          * @readonly
+         *
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -207,6 +217,8 @@ define([
          *
          * @type {Number}
          * @readonly
+         *
+         * @private
          */
         this.hasContent = hasContent;
 
@@ -215,6 +227,8 @@ define([
          *
          * @type {Number}
          * @readonly
+         *
+         * @private
          */
         this.hasTilesetContent = hasTilesetContent;
 
@@ -256,6 +270,7 @@ define([
          * The (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
          *
          * @type {Number}
+         *
          * @private
          */
         this.distanceToCamera = 0;
@@ -264,6 +279,7 @@ define([
          * The plane mask of the parent for use with {@link CullingVolume#computeVisibilityWithPlaneMask}).
          *
          * @type {Number}
+         *
          * @private
          */
         this.parentPlaneMask = 0;
@@ -307,6 +323,8 @@ define([
          *
          * @type {Promise.<Cesium3DTileContentProvider>}
          * @readonly
+         *
+         * @private
          */
         processingPromise : {
             get : function() {
@@ -317,6 +335,8 @@ define([
 
     /**
      * DOC_TBA
+     *
+     * @private
      */
     Cesium3DTile.prototype.isReady = function() {
         return this._content.state === Cesium3DTileContentState.READY;
@@ -331,6 +351,8 @@ define([
      * </p>
      *
      * DOC_TBA
+     *
+     * @private
      */
     Cesium3DTile.prototype.isReplacementRefinable = function() {
         return this._numberOfUnrefinableChildren === 0;
@@ -340,6 +362,8 @@ define([
      * When <true>true</code>, the tile's content has not be requested.
      *
      * DOC_TBA
+     *
+     * @private
      */
     Cesium3DTile.prototype.isContentUnloaded = function() {
         return this._content.state === Cesium3DTileContentState.UNLOADED;
@@ -350,6 +374,8 @@ define([
      * <p>
      * The request may not be made if the Cesium Request Scheduler can't prioritize it.
      * </p>
+     *
+     * @private
      */
     Cesium3DTile.prototype.requestContent = function() {
         this._content.request();
@@ -360,6 +386,8 @@ define([
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+     *
+     * @private
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
@@ -371,6 +399,8 @@ define([
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile's content is to be tested.
      * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
+     *
+     * @private
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
         var boundingVolume = this._contentBoundingVolume;
@@ -387,6 +417,8 @@ define([
      *
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The distance, in meters, or zero if the camera is inside the bounding volume.
+     *
+     * @private
      */
     Cesium3DTile.prototype.distanceToTile = function(frameState) {
         return this._boundingVolume.distanceToCamera(frameState);
@@ -475,6 +507,8 @@ define([
      *
      * @param {Cesium3DTileset} tiles3D The tileset containing this tile.
      * @param {FrameState} frameState The frame state.
+     *
+     * @private
      */
     Cesium3DTile.prototype.process = function(tiles3D, frameState) {
         var savedCommandList = frameState.commandList;
@@ -487,36 +521,14 @@ define([
     };
 
     /**
-     * Returns true if this object was destroyed; otherwise, false.
-     * <br /><br />
-     * If this object was destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
-     *
-     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
-     *
-     * @see Cesium3DTile#destroy
+     * @private
      */
     Cesium3DTile.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
-     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
-     * <br /><br />
-     * Once an object is destroyed, it should not be used; calling any function other than
-     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
-     * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
-     *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
-     *
-     * @example
-     * tile = tile && tile.destroy();
-     *
-     * @see Cesium3DTile#isDestroyed
+     * @private
      */
     Cesium3DTile.prototype.destroy = function() {
         this._content = this._content && this._content.destroy();

@@ -32,16 +32,22 @@ define([
         this._factory = factory;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.processingPromise = when.defer();
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.readyPromise = when.defer();
@@ -50,6 +56,8 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Composite3DTileContentProvider.prototype.request = function() {
@@ -71,6 +79,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
@@ -148,6 +158,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Composite3DTileContentProvider.prototype.update = function(tiles3D, context, frameState, commandList) {
@@ -158,6 +170,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Composite3DTileContentProvider.prototype.isDestroyed = function() {
@@ -165,6 +179,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Composite3DTileContentProvider.prototype.destroy = function() {

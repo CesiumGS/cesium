@@ -51,16 +51,22 @@ define([
         this._url = url;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.processingPromise = when.defer();
 
         /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
          * @private
          */
         this.readyPromise = when.defer();
@@ -81,6 +87,8 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Points3DTileContentProvider.prototype.request = function() {
@@ -102,6 +110,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
@@ -179,15 +189,15 @@ define([
     }
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Points3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-
         applyDebugSettings(tiles3D, this);
-
         this._primitive.update(frameState);
     };
 
