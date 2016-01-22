@@ -278,6 +278,8 @@ define([
                 ++parentTile.numberOfChildrenWithoutContent;
             }
 
+            var refiningTiles = [];
+
             var stack = [];
             stack.push({
                 header : tilesetJson.root,
@@ -286,21 +288,30 @@ define([
 
             while (stack.length > 0) {
                 var t = stack.pop();
+                var tile3D = t.cesium3DTile;
                 var children = t.header.children;
+                var hasEmptyChild = false;
                 if (defined(children)) {
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, t.cesium3DTile);
-                        t.cesium3DTile.children.push(childTile);
-
+                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, tile3D);
+                        tile3D.children.push(childTile);
                         stack.push({
                             header : childHeader,
                             cesium3DTile : childTile
                         });
+                        if (!childTile.hasContent) {
+                            hasEmptyChild = true;
+                        }
                     }
                 }
+                if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
+                    refiningTiles.push(tile3D);
+                }
             }
+
+            loadRefiningTiles(refiningTiles);
 
             return {
                 tilesetJson : tilesetJson,
@@ -308,6 +319,31 @@ define([
             };
         });
     };
+
+    function loadRefiningTiles(refiningTiles) {
+        // Tiles that use replacement refinement and have empty child tiles need to keep track of
+        // descendants with content in order to refine correctly.
+        var stack = [];
+        var length = refiningTiles.length;
+        for (var i = 0; i < length; ++i) {
+            var refiningTile = refiningTiles[i];
+            refiningTile.descendantsWithContent = [];
+            stack.push(refiningTile);
+            while (stack.length > 0) {
+                var tile = stack.pop();
+                var children = tile.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var childTile = children[k];
+                    if (childTile.hasContent) {
+                        refiningTile.descendantsWithContent.push(childTile);
+                    } else {
+                        stack.push(childTile);
+                    }
+                }
+            }
+        }
+    }
 
     function getScreenSpaceError(geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
@@ -369,10 +405,12 @@ define([
         // Don't select if the tile is being loaded to refine another tile
         if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
+            tile.selected = true;
         }
     }
 
     var scratchStack = [];
+    var refiningTiles = [];
 
     function selectTiles(tiles3D, frameState, outOfCore) {
         if (tiles3D.debugFreezeFrame) {
@@ -384,6 +422,8 @@ define([
 
         var selectedTiles = tiles3D._selectedTiles;
         selectedTiles.length = 0;
+
+        refiningTiles.length = 0;
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
@@ -505,7 +545,7 @@ define([
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.isContentUnloaded()) {
-                                    requestContent(tiles3D, child);
+                                    requestContent(tiles3D, child, outOfCore);
                                 }
                             }
                         }
@@ -517,7 +557,45 @@ define([
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
+
+                        if (defined(t.descendantsWithContent)) {
+                            refiningTiles.push(t);
+                        }
                     }
+                }
+            }
+        }
+
+        checkRefiningTiles(refiningTiles, tiles3D, frameState);
+    }
+
+    function checkRefiningTiles(refiningTiles, tiles3D, frameState) {
+        // In the common case, a tile that uses replacement refinement is refinable once all its
+        // children are loaded. However if it has an empty child, refining to its children would
+        // show a visible gap. In this case, the empty child's children (or further descendants)
+        // would need to be selected before the original tile is refinable. It is hard to determine
+        // this easily during the traversal, so this fixes the situation retroactively.
+        var descendant;
+        var refiningTilesLength = refiningTiles.length;
+        for (var i = 0; i < refiningTilesLength; ++i) {
+            var j;
+            var refinable = true;
+            var refiningTile = refiningTiles[i];
+            var descendantsLength = refiningTile.descendantsWithContent.length;
+            for (j = 0; j < descendantsLength; ++j) {
+                descendant = refiningTile.descendantsWithContent[j];
+                if (!descendant.selected) {
+                    // TODO: also check that its visible
+                    refinable = false;
+                    break;
+                }
+            }
+            if (!refinable) {
+                var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
+                selectTile(tiles3D._selectedTiles, refiningTile, fullyVisible, frameState);
+                for (j = 0; j < descendantsLength; ++j) {
+                    descendant = refiningTile.descendantsWithContent[j];
+                    descendant.selected = false;
                 }
             }
         }
