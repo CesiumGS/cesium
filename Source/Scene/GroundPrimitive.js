@@ -558,8 +558,12 @@ define([
         rectangle.east = maxLon;
         rectangle.west = minLon;
 
-        var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
-        primitive._boundingVolumes.push(obb);
+        if (rectangle.width < CesiumMath.PI) {
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
+            primitive._boundingVolumes.push(obb);
+        } else {
+            primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
+        }
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
