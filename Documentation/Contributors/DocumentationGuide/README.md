@@ -422,7 +422,9 @@ DESCRIPTION.
 @see TYPE#INSTANCE_MEMBER
 @see TYPE.STATIC_MEMBER
 
-@example 
+@example
+
+[@private]
 ```
 
 ### Member Function
@@ -442,6 +444,8 @@ DESCRIPTION.
 @see TYPE.STATIC_MEMBER
 
 @example 
+
+[@private]
 ```
 
 ### Property
@@ -461,6 +465,8 @@ DESCRIPTION.
 @see TYPE.STATIC_MEMBER
 
 @example 
+
+[@private]
 ```
 
 ### Property Getter/Setter
@@ -480,6 +486,8 @@ DESCRIPTION.
 @see TYPE.STATIC_MEMBER
 
 @example 
+
+[@private]
 ```
 
 ### Standalone Function
@@ -501,4 +509,6 @@ DESCRIPTION.
 @see TYPE.STATIC_MEMBER
 
 @example 
+
+[@private]
 ```
