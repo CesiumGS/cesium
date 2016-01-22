@@ -200,7 +200,7 @@ define([
          * @type {Property}
          * @default 16
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
+        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines')
     });
 
     /**
