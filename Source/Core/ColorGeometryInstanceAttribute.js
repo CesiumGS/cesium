@@ -180,7 +180,8 @@ define([
                 defined(right) &&
                 left.value[0] === right.value[0] &&
                 left.value[1] === right.value[1] &&
-                left.value[2] === right.value[2]);
+                left.value[2] === right.value[2] &&
+                left.value[3] === right.value[3]);
     };
 
     return ColorGeometryInstanceAttribute;
