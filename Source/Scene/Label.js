@@ -58,7 +58,6 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
