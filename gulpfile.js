@@ -318,6 +318,28 @@ gulp.task('test-all', ['build'], function(done) {
     });
 });
 
+gulp.task('test-non-webgl', ['build'], function(done) {
+    karma.start({
+        configFile: karmaConfigFile,
+        client: {
+            args: ['', 'WebGL']
+        }
+    }, function() {
+        return done();
+    });
+});
+
+gulp.task('test-webgl', ['build'], function(done) {
+    karma.start({
+        configFile: karmaConfigFile,
+        client: {
+            args: ['WebGL', '']
+        }
+    }, function() {
+        return done();
+    });
+});
+
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
 
