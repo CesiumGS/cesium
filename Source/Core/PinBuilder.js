@@ -26,7 +26,6 @@ define([
      * @alias PinBuilder
      * @constructor
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
     function PinBuilder() {
         this._cache = {};
