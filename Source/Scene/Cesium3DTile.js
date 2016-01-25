@@ -18,6 +18,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
+        '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -50,6 +51,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         RectangleOutlineGeometry,
+        RequestScheduler,
         SphereOutlineGeometry,
         Uri,
         when,
@@ -178,10 +180,12 @@ define([
         var content;
         var hasContent;
         var hasTilesetContent;
+        var requestServer;
 
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = getAbsoluteUri(contentUrl, baseUrl);
+            requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
@@ -208,6 +212,7 @@ define([
         }
 
         this._content = content;
+        this._requestServer = requestServer;
 
         /**
          * When <code>true</code>, the tile has content.  This does not imply that the content is loaded.
@@ -330,6 +335,18 @@ define([
             get : function() {
                 return this._content.processingPromise;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @type {RequestScheduler~RequestServer}
+         * @readonly
+         */
+        requestServer : {
+            get : function() {
+                return this._requestServer;
+            }
         }
     });
 
@@ -388,6 +405,17 @@ define([
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      *
      * @private
+     */
+    Cesium3DTile.prototype.canRequestContent = function() {
+        if (!defined(this._requestServer)) {
+            // If tile does not have a request server, then it does not have content to load.
+            return true;
+        }
+        return this._requestServer.hasAvailableRequests();
+    };
+
+    /**
+     * DOC_TBA
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);

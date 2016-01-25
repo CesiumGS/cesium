@@ -589,7 +589,7 @@ define([
      *
      * @param {Imagery} imagery The imagery to request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery) {
+    ImageryLayer.prototype._requestImagery = function(imagery, distance) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -623,7 +623,7 @@ define([
 
         function doRequest() {
             imagery.state = ImageryState.TRANSITIONING;
-            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
+            var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level, distance);
 
             if (!defined(imagePromise)) {
                 // Too many parallel requests, so postpone loading tile.

@@ -13,7 +13,9 @@ define([
         '../Core/isDataUri',
         '../Core/loadJson',
         '../Core/Math',
+        '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTile',
@@ -35,7 +37,9 @@ define([
         isDataUri,
         loadJson,
         CesiumMath,
+        Request,
         RequestScheduler,
+        RequestType,
         Uri,
         when,
         Cesium3DTile,
@@ -93,6 +97,7 @@ define([
         }
 
         this._url = url;
+        this._baseUrl = baseUrl;
         this._tilesetUrl = tilesetUrl;
         this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
@@ -365,6 +370,20 @@ define([
             get : function() {
                 return this._url;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {String}
+         * @readonly
+         */
+        baseUrl : {
+            get : function() {
+                return this._baseUrl;
+            }
         }
     });
 
@@ -375,7 +394,13 @@ define([
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
         var tileset = this;
-        var promise = RequestScheduler.throttleRequest(tilesetUrl, loadJson);
+
+        // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
+        var promise = RequestScheduler.schedule(new Request({
+            url : tilesetUrl,
+            requestFunction : loadJson,
+            type : RequestType.TILES3D
+        }));
 
         if (!defined(promise)) {
             return undefined;
@@ -390,7 +415,7 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = tileset.url;
+            var baseUrl = tileset._baseUrl;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
@@ -467,22 +492,21 @@ define([
         if (!outOfCore) {
             return;
         }
-        if (!hasAvailableRequests(tiles3D)) {
+        if (!tile.canRequestContent()) {
             return;
         }
 
-        var stats = tiles3D._statistics;
-        ++stats.numberOfPendingRequests;
-        addLoadProgressEvent(tiles3D);
-
         tile.requestContent();
-        var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-        when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
-        when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
-    }
 
-    function hasAvailableRequests(tiles3D) {
-        return RequestScheduler.hasAvailableRequests(tiles3D._url);
+        if (!tile.isContentUnloaded()) {
+            var stats = tiles3D._statistics;
+            ++stats.numberOfPendingRequests;
+            addLoadProgressEvent(tiles3D);
+
+            var removeFunction = removeFromProcessingQueue(tiles3D, tile);
+            when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
+            when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
+        }
     }
 
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
@@ -579,7 +603,7 @@ define([
                     // Only sort and refine (render or request children) if any
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
-                    if (anyChildrenLoaded || hasAvailableRequests(tiles3D)) {
+                    if (anyChildrenLoaded || t.canRequestContent()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -629,7 +653,7 @@ define([
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
-                    if (allChildrenLoaded || hasAvailableRequests(tiles3D)) {
+                    if (allChildrenLoaded || t.canRequestContent()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 

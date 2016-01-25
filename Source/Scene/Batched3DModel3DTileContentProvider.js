@@ -8,7 +8,9 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
+        '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/when',
         './BatchedModel',
         './Cesium3DTileBatchTableResources',
@@ -23,7 +25,9 @@ define([
         getMagic,
         getStringFromTypedArray,
         loadArrayBuffer,
+        Request,
         RequestScheduler,
+        RequestType,
         when,
         BatchedModel,
         Cesium3DTileBatchTableResources,
@@ -49,6 +53,7 @@ define([
         this._model = undefined;
         this._url = url;
         this._tileset = tileset;
+        this._tile = tile;
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
@@ -138,7 +143,14 @@ define([
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var distance = this._tile.distanceToCamera;
+        var promise = RequestScheduler.schedule(new Request({
+            url : this._url,
+            server : this._tile.requestServer,
+            requestFunction : loadArrayBuffer,
+            type : RequestType.TILES3D,
+            distance : distance
+        }));
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

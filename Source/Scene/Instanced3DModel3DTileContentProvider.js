@@ -12,7 +12,9 @@ define([
         '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         '../Core/Matrix4',
+        '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../Core/Transforms',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -33,7 +35,9 @@ define([
         getStringFromTypedArray,
         loadArrayBuffer,
         Matrix4,
+        Request,
         RequestScheduler,
+        RequestType,
         Transforms,
         Uri,
         when,
@@ -149,7 +153,14 @@ define([
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var distance = this._tile.distanceToCamera;
+        var promise = RequestScheduler.schedule(new Request({
+            url : this._url,
+            server : this._tile.requestServer,
+            requestFunction : loadArrayBuffer,
+            type : RequestType.TILES3D,
+            distance : distance
+        }));
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {
@@ -239,13 +250,14 @@ define([
             cull : false,
             url : undefined,
             headers : undefined,
+            type : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined
         };
 
         if (gltfFormat === 0) {
             var gltfUrl = getStringFromTypedArray(gltfView);
-            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.url);
+            collectionOptions.url = getAbsoluteUri(gltfUrl, this._tileset.baseUrl);
         } else {
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;
