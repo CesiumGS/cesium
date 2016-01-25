@@ -42,7 +42,6 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      */
     function RectangleGraphics(options) {
         this._show = undefined;
