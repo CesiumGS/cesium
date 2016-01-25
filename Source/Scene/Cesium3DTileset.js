@@ -501,17 +501,8 @@ define([
                 } else {
                     // Tile does not meet SSE.
 
-                    // Save result to avoid doing unnecessary
-                    // isRefinable() multiple times
-                    var tileIsRefinable = t.isRefinable(cullingVolume);
-                    var visibleChildren = [];
-
-                    for (k = 0; k < childrenLength; ++k) {
-                        child = children[k];
-                        if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
-                            visibleChildren.push(child);
-                        }
-                    }
+                    var visibleChildren = t.getVisibleChildren(cullingVolume);
+                    var tileIsRefinable = t.isRefinable(visibleChildren, cullingVolume);
 
                     // Only sort children by distance if we are going to refine to them
                     // or slots are available to request them.  If we are just rendering the
@@ -537,7 +528,7 @@ define([
 
                             if (child.isContentUnloaded()) {
                                 requestContent(tiles3D, child, outOfCore);
-                            } else if (!child.hasContent && !child.isRefinable(cullingVolume)) {
+                            } else if (!child.hasContent && !child.isRefinable(visibleChildren, cullingVolume)) {
                                 // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
                                 child.refining = true;
                                 // Store the plane mask so that the child can optimize based on its parent's returned mask

@@ -256,39 +256,45 @@ define([
         return this._content.state === Cesium3DTileContentState.READY;
     };
 
-    /**
-     * DOC_TBA
-     */
-    Cesium3DTile.prototype.isRefinable = function(cullingVolume) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(cullingVolume)) {
-            throw new DeveloperError('cullingVolume must be defined');
-        }
-        //>>includeEnd('debug');
-
+    Cesium3DTile.prototype.getVisibleChildren = function(cullingVolume) {
         var visibleChildren = [];
-        var child;
-        var k;
-
-        for (k = 0; k < this.children.length; ++k) {
-            child = this.children[k];
+        var length = this.children.length;
+        for (var i = 0; i < length; ++i) {
+            var child = this.children[i];
             if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
                 visibleChildren.push(child);
             }
         }
+        return visibleChildren;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Cesium3DTile.prototype.isRefinable = function(visibleChildren, cullingVolume) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cullingVolume)) {
+            throw new DeveloperError('cullingVolume must be defined');
+        }
+        if (!defined(visibleChildren)) {
+            throw new DeveloperError('visibleChildren must be defined');
+        }
+        //>>includeEnd('debug');
+
+        var child;
+        var k;
 
         var refinable = true;
-        for (k = 0; k < visibleChildren.length; ++k) {
+        var length = visibleChildren.length;
+        for (k = 0; k < length; ++k) {
             child = visibleChildren[k];
-            // A tile is not refinable if a child has tileset content but
-            // is not refinable.
-            if ((child.hasTilesetContent || !child.hasContent) && !child.isRefinable(cullingVolume)) {
-                refinable = false;
-                break;
-            } else if (!child.isReady()) {
-                // if a child is visible but not loaded, the tile is not refinable
-                refinable = false;
-                break;
+            // A tile is not refinable if at least one of its children:
+            // 1) Is in state !== Cesium3DTileContentState.READY
+            // 2) Is empty or has tileset content, and is not refinable
+            if (!child.isReady() || ((child.hasTilesetContent || !child.hasContent) &&
+                !child.isRefinable(child.getVisibleChildren(cullingVolume), cullingVolume))) {
+                    refinable = false;
+                    break;
             }
         }
 
