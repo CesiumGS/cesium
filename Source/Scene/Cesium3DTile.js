@@ -405,7 +405,7 @@ define([
 
         if (owner.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
             if (!defined(tile._debugContentBoundingVolume)) {
-                tile._debugContentBoundingVolume = tile._boundingVolume.createDebugVolume(Color.BLUE);
+                tile._debugContentBoundingVolume = tile._contentBoundingVolume.createDebugVolume(Color.BLUE);
             }
             tile._debugContentBoundingVolume.update(frameState);
         } else if (!owner.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
