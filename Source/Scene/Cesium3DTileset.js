@@ -466,6 +466,23 @@ define([
             var k;
             var additiveRefinement = (t.refine === Cesium3DTileRefine.ADD);
 
+            if (t.hasTilesetContent) {
+                // If tile has tileset content, skip it and process its child instead (the tileset root)
+                // No need to check visibility or sse of the child because its bounding volume
+                // and geometric error are equal to its parent.
+                if (t.isReady()) {
+                    child = t.children[0];
+                    child.parentPlaneMask = t.parentPlaneMask;
+                    child.distanceToCamera = t.distanceToCamera;
+                    if (child.isContentUnloaded()) {
+                        requestContent(tiles3D, child, outOfCore);
+                    } else {
+                        stack.push(child);
+                    }
+                }
+                continue;
+            }
+
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.

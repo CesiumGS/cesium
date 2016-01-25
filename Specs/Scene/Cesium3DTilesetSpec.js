@@ -588,6 +588,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             // Root points to an external tileset.json and has no children until it is requested
             var root = tileset._root;
+            expect(root.hasTilesetContent).toEqual(true);
             expect(root.children.length).toEqual(0);
 
             // Set view so that root's content is requested
@@ -604,6 +605,7 @@ defineSuite([
                 expect(root.contentBoundingVolume.boundingVolume).toEqual(subtreeRoot.contentBoundingVolume.boundingVolume);
 
                 // Check that Subtree root has 4 children
+                expect(subtreeRoot.hasTilesetContent).toEqual(false);
                 expect(subtreeRoot.children.length).toEqual(4);
             });
         });

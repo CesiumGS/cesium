@@ -29,7 +29,7 @@
                         20
                     ]
                 },
-                "geometricError": 70,
+                "geometricError": 0,
                 "refine": "add",
                 "content": {
                     "url": "tileset3.json"

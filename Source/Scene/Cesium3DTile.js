@@ -155,6 +155,13 @@ define([
         /**
          * DOC_TBA
          *
+         * @readonly
+         */
+        this.hasTilesetContent = false;
+
+        /**
+         * DOC_TBA
+         *
          * @type {Promise}
          * @readonly
          */
@@ -168,6 +175,7 @@ define([
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
             if (type === 'json') {
+                this.hasTilesetContent = true;
                 this.hasContent = false;
             }
 
