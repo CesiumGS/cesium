@@ -493,8 +493,11 @@ define([
         var that = this;
         return when(options).then(function(properties) {
             //>>includeStart('debug', pragmas.debug);
+            if (!defined(properties)) {
+                throw new DeveloperError('properties is required.');
+              }
             if (!defined(properties.url)) {
-                throw new DeveloperError('options.url is required.');
+                throw new DeveloperError('properties.url is required.');
             }
             //>>includeEnd('debug');
 

@@ -669,4 +669,28 @@ defineSuite([
             return provider.hasAlphaChannel();
         }).toThrowDeveloperError();
     });
+
+    it('throws if getTileCredits called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.getTileCredits();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if requestImage called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.requestImage();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if pickFeatures called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.pickFeatures();
+        }).toThrowDeveloperError();
+    });
 });
