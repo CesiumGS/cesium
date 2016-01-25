@@ -48,7 +48,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState);
+        loadingImagery.processStateMachine(frameState, tile._distance);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -90,7 +90,7 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, tile._distance);
                 return false; // not done loading
             } else {
                 // This imagery tile is failed or invalid, and we have the "best available" substitute.

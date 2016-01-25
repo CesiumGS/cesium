@@ -58,6 +58,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
+     * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the CESIUM_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.dynamic] Collection is set to stream instance data every frame.
@@ -122,6 +123,7 @@ define([
         // Passed on to Model
         this._url = options.url;
         this._headers = options.headers;
+        this._requestType = options.requestType;
         this._gltf = options.gltf;
         this._basePath = options.basePath;
         this._asynchronous = options.asynchronous;
@@ -523,6 +525,7 @@ define([
         var modelOptions = {
             url : collection._url,
             headers : collection._headers,
+            requestType : collection._requestType,
             gltf : collection._gltf,
             basePath : collection._basePath,
             cacheKey : undefined,

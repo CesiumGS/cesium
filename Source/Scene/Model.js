@@ -30,6 +30,8 @@ define([
         '../Core/PrimitiveType',
         '../Core/Quaternion',
         '../Core/Queue',
+        '../Core/Request',
+        '../Core/RequestScheduler',
         '../Core/RuntimeError',
         '../Core/TaskProcessor',
         '../Renderer/Buffer',
@@ -89,6 +91,8 @@ define([
         PrimitiveType,
         Quaternion,
         Queue,
+        Request,
+        RequestScheduler,
         RuntimeError,
         TaskProcessor,
         Buffer,
@@ -543,6 +547,7 @@ define([
         this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
         this._pickUniformMapLoaded = options.pickUniformMapLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
+        this._requestType = options.requestType;
 
         /**
          * @private
@@ -1006,7 +1011,7 @@ define([
             setCachedGltf(model, cachedGltf);
             gltfCache[cacheKey] = cachedGltf;
 
-            loadArrayBuffer(url, options.headers).then(function(arrayBuffer) {
+            RequestScheduler.request(url, loadArrayBuffer, options.headers, options.requestType).then(function(arrayBuffer) {
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
@@ -1194,7 +1199,8 @@ define([
                     ++model._loadResources.pendingBufferLoads;
                     var uri = new Uri(buffer.uri);
                     var bufferPath = uri.resolve(model._baseUri).toString();
-                    loadArrayBuffer(bufferPath).then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
+                    var promise = RequestScheduler.request(bufferPath, loadArrayBuffer, undefined, model._requestType);
+                    promise.then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
                 }
             }
         }
@@ -1298,7 +1304,8 @@ define([
                     ++model._loadResources.pendingShaderLoads;
                     var uri = new Uri(shader.uri);
                     var shaderPath = uri.resolve(model._baseUri).toString();
-                    loadText(shaderPath).then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
+                    var promise = RequestScheduler.request(shaderPath, loadText, undefined, model.requestType);
+                    promise.then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
                 }
             }
         }

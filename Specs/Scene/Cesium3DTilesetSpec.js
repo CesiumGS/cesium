@@ -732,7 +732,7 @@ defineSuite([
             // and the second tileset to use the remaining two
             expect(tilesets[0]._statistics.numberOfPendingRequests).toEqual(4);
             expect(tilesets[1]._statistics.numberOfPendingRequests).toEqual(2);
-            expect(RequestScheduler.hasAvailableRequests(tilesets[0]._url)).toEqual(false);
+            expect(RequestScheduler.hasAvailableRequestsByServer(tilesets[0]._url)).toEqual(false);
         });
     });
 

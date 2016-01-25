@@ -27,6 +27,7 @@ define([
         '../Core/Matrix4',
         '../Core/mergeSort',
         '../Core/Occluder',
+        '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
@@ -89,6 +90,7 @@ define([
         Matrix4,
         mergeSort,
         Occluder,
+        RequestScheduler,
         ShowGeometryInstanceAttribute,
         ClearCommand,
         ComputeEngine,
@@ -1785,6 +1787,7 @@ define([
 
         scene._preRender.raiseEvent(scene, time);
         scene._jobScheduler.resetBudgets();
+        RequestScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
