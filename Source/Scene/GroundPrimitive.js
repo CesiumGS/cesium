@@ -558,6 +558,7 @@ define([
         rectangle.east = maxLon;
         rectangle.west = minLon;
 
+        // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
             var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
             primitive._boundingVolumes.push(obb);

@@ -22,6 +22,8 @@ Change Log
     }
     ```
 * `GroundPrimitive` now supports batching geometry for better performance.
+* Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
+* Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
 
 ### 1.17 - 2016-01-04
 
