@@ -7,6 +7,7 @@ Change Log
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead.
 * Deprecated
     * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
+    * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.20. Use `createTileMapServiceImageryProvider` instead.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
 * Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
@@ -22,6 +23,8 @@ Change Log
     }
     ```
 * `GroundPrimitive` now supports batching geometry for better performance.
+* Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
+* `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
 
 ### 1.17 - 2016-01-04
 

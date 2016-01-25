@@ -487,7 +487,6 @@ define([
      * recommended because existing tiles provided by the imagery provider will not be updated.
      *
      * @param {Promise|Object} options Any of the options that may be passed to the {@see UrlTemplateImageryProvider} constructor.
-     *
      */
     UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
         var that = this;
