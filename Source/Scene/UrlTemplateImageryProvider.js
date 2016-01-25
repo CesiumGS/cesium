@@ -53,7 +53,7 @@ define([
      * @alias UrlTemplateImageryProvider
      * @constructor
      *
-     * @param {Object} [options] Object with the following properties:
+     * @param {Promise|Object} [options] Object with the following properties:
      * @param {String} options.url  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -147,7 +147,7 @@ define([
      *          'width=256&height=256',
      *    rectangle : Cesium.Rectangle.fromDegrees(96.799393, -43.598214999057824, 153.63925700000001, -9.2159219997013)
      * });
-     * 
+     *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
@@ -193,48 +193,7 @@ define([
          */
         this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
 
-        var that = this;
-        this._readyPromise = when(options).then(function(properties) {
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(properties.url)) {
-                throw new DeveloperError('options.url is required.');
-            }
-            //>>includeEnd('debug');
-
-            that._url = properties.url;
-            that._pickFeaturesUrl = properties.pickFeaturesUrl;
-            that._proxy = properties.proxy;
-            that._tileDiscardPolicy = properties.tileDiscardPolicy;
-            that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
-
-            that._subdomains = properties.subdomains;
-            if (Array.isArray(that._subdomains)) {
-                that._subdomains = that._subdomains.slice();
-            } else if (defined(that._subdomains) && that._subdomains.length > 0) {
-                that._subdomains = that._subdomains.split('');
-            } else {
-                that._subdomains = ['a', 'b', 'c'];
-            }
-
-            that._tileWidth = defaultValue(properties.tileWidth, 256);
-            that._tileHeight = defaultValue(properties.tileHeight, 256);
-            that._minimumLevel = defaultValue(properties.minimumLevel, 0);
-            that._maximumLevel = properties.maximumLevel;
-            that._tilingScheme = defaultValue(properties.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : properties.ellipsoid }));
-            that._rectangle = defaultValue(properties.rectangle, that._tilingScheme.rectangle);
-            that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
-            that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
-
-            var credit = properties.credit;
-            if (typeof credit === 'string') {
-                credit = new Credit(credit);
-            }
-            that._credit = credit;
-
-            that._urlParts = urlTemplateToParts(that._url, tags);
-            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
-            return true;
-        });
+        this._readyPromise = this.reinitialize(options);
     }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -522,6 +481,58 @@ define([
             }
         }
     });
+
+    /**
+     * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
+     * recommended because existing tiles provided by the imagery provider will not be updated.
+     *
+     * @param {Promise|Object} options Any of the options that may be passed to the {@see UrlTemplateImageryProvider} constructor.
+     *
+     */
+    UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
+        var that = this;
+        return when(options).then(function(properties) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(properties.url)) {
+                throw new DeveloperError('options.url is required.');
+            }
+            //>>includeEnd('debug');
+
+            that._url = properties.url;
+            that._pickFeaturesUrl = properties.pickFeaturesUrl;
+            that._proxy = properties.proxy;
+            that._tileDiscardPolicy = properties.tileDiscardPolicy;
+            that._getFeatureInfoFormats = properties.getFeatureInfoFormats;
+
+            that._subdomains = properties.subdomains;
+            if (Array.isArray(that._subdomains)) {
+                that._subdomains = that._subdomains.slice();
+            } else if (defined(that._subdomains) && that._subdomains.length > 0) {
+                that._subdomains = that._subdomains.split('');
+            } else {
+                that._subdomains = ['a', 'b', 'c'];
+            }
+
+            that._tileWidth = defaultValue(properties.tileWidth, 256);
+            that._tileHeight = defaultValue(properties.tileHeight, 256);
+            that._minimumLevel = defaultValue(properties.minimumLevel, 0);
+            that._maximumLevel = properties.maximumLevel;
+            that._tilingScheme = defaultValue(properties.tilingScheme, new WebMercatorTilingScheme({ ellipsoid : properties.ellipsoid }));
+            that._rectangle = defaultValue(properties.rectangle, that._tilingScheme.rectangle);
+            that._rectangle = Rectangle.intersection(that._rectangle, that._tilingScheme.rectangle);
+            that._hasAlphaChannel = defaultValue(properties.hasAlphaChannel, true);
+
+            var credit = properties.credit;
+            if (typeof credit === 'string') {
+                credit = new Credit(credit);
+            }
+            that._credit = credit;
+
+            that._urlParts = urlTemplateToParts(that._url, tags);
+            that._pickFeaturesUrlParts = urlTemplateToParts(that._pickFeaturesUrl, pickFeaturesTags);
+            return true;
+        });
+    };
 
     /**
      * Gets the credits to be displayed when a given tile is displayed.
