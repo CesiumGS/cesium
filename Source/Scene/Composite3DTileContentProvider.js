@@ -22,7 +22,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Use this to access the individual tiles (precisely, tile content) in the composite.
+     * </p>
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Composite3DTileContentProvider
+     * @constructor
      */
     function Composite3DTileContentProvider(tileset, tile, url, factory) {
         this._url = url;

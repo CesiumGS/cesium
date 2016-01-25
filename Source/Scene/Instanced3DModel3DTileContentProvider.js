@@ -44,7 +44,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Use this to access and modify individual features (instances) in the tile.
+     * </p>
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Instanced3DModel3DTileContentProvider
+     * @constructor
      */
     function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
         this._modelInstanceCollection = undefined;

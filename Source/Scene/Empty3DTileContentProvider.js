@@ -10,7 +10,15 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents empty content for tiles in a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset that
+     * do not have content, e.g., because they are used to optimize hierarchical culling.
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Batched3DModel3DTileContentProvider
+     * @constructor
      */
     function Empty3DTileContentProvider() {
         /**

@@ -12,7 +12,15 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents content for a tile in a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset whose
+     * content points to another 3D Tiles tileset.
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Tileset3DTileContentProvider
+     * @constructor
      */
     function Tileset3DTileContentProvider(tileset, tile, url) {
         this._tileset = tileset;

@@ -2,14 +2,12 @@
 define([
         './Batched3DModel3DTileContentProvider',
         './Composite3DTileContentProvider',
-        './Empty3DTileContentProvider',
         './Instanced3DModel3DTileContentProvider',
         './Points3DTileContentProvider',
         './Tileset3DTileContentProvider'
     ], function(
         Batched3DModel3DTileContentProvider,
         Composite3DTileContentProvider,
-        Empty3DTileContentProvider,
         Instanced3DModel3DTileContentProvider,
         Points3DTileContentProvider,
         Tileset3DTileContentProvider) {
