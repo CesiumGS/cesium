@@ -191,7 +191,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.enablePickFeatures = defaultValue(options.enablePickFeatures, true);
+        this.enablePickFeatures = true;
 
         this._readyPromise = this.reinitialize(options);
     }
@@ -493,13 +493,13 @@ define([
         return when(options).then(function(properties) {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(properties)) {
-                throw new DeveloperError('properties is required.');
+                throw new DeveloperError('options is required.');
               }
             if (!defined(properties.url)) {
-                throw new DeveloperError('properties.url is required.');
+                throw new DeveloperError('options.url is required.');
             }
             //>>includeEnd('debug');
-
+            this.enablePickFeatures = defaultValue(properties.enablePickFeatures, this.enablePickFeatures);
             that._url = properties.url;
             that._pickFeaturesUrl = properties.pickFeaturesUrl;
             that._proxy = properties.proxy;
