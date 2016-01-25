@@ -66,8 +66,6 @@ define([
      * @see WallGeometry#createGeometry
      * @see WallGeometry#fromConstantHeight
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
-     *
      * @example
      * // create a wall that spans from ground level to 10000 meters
      * var wall = new Cesium.WallGeometry({
