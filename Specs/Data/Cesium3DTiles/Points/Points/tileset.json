@@ -1,21 +1,21 @@
 {
-    "asset": {
-        "version": "0.0"
+  "asset": {
+    "version": "0.0"
+  },
+  "geometricError": 346.4,
+  "refine": "add",
+  "root": {
+    "boundingVolume": {
+      "sphere": [
+        1215011.9317263428,
+        -4736309.3434217675,
+        4081602.0044800863,
+        100
+      ]
     },
-    "geometricError": 346.4,
-    "root": {
-        "boundingVolume": {
-            "sphere": [
-                1213918.69,
-                -4737361.56,
-                4080867.52,
-                100.45
-            ]
-        },
-        "geometricError": 0,
-        "refine": "add",
-        "content": {
-            "url": "points.pnts"
-        }
+    "geometricError": 0,
+    "content": {
+      "url": "points.pnts"
     }
+  }
 }
