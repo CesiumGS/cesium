@@ -1664,8 +1664,6 @@ define([
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=KML.html|Cesium Sandcastle KML Demo}
-     *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
