@@ -238,8 +238,6 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
-     *
      * @example
      * // Create a color material with fromType:
      * polygon.material = Cesium.Material.fromType('Color');
