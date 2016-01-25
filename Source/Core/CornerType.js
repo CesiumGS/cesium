@@ -8,8 +8,6 @@ define([
     /**
      * Style options for corners.
      *
-     * demonstrates the three corner types, as used by {@link CorridorGraphics}.
-     *
      * @exports CornerType
      */
     var CornerType = {
