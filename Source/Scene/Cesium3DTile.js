@@ -24,6 +24,7 @@ define([
         './Cesium3DTileContentProviderFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
+        './CullingVolume',
         './Empty3DTileContentProvider',
         './PerInstanceColorAppearance',
         './Primitive',
@@ -56,6 +57,7 @@ define([
         Cesium3DTileContentProviderFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        CullingVolume,
         Empty3DTileContentProvider,
         PerInstanceColorAppearance,
         Primitive,
@@ -133,8 +135,6 @@ define([
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
-        this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
-
         this.refining = false;
 
         this.hasContent = true;
@@ -164,7 +164,6 @@ define([
             if (type === 'json') {
                 this.hasTilesetContent = true;
                 this.hasContent = false;
-                this._numberOfUnrefinableChildren = 1;
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -180,20 +179,6 @@ define([
         }
         this._content = content;
 
-        function setRefinable(tile) {
-            var parent = tile.parent;
-            if (defined(parent) && (tile.hasContent || tile.isRefinable())) {
-                // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
-                // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
-                // before the parent is able to refine to it.
-                --parent._numberOfUnrefinableChildren;
-                // If the parent is empty, traverse up the tree to update ancestor tiles.
-                if (!parent.hasContent) {
-                    setRefinable(parent);
-                }
-            }
-        }
-
         var that = this;
 
         // Content enters the READY state
@@ -201,8 +186,6 @@ define([
             if (defined(that.parent)) {
                 --that.parent.numberOfChildrenWithoutContent;
             }
-
-            setRefinable(that);
 
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -273,11 +256,49 @@ define([
         return this._content.state === Cesium3DTileContentState.READY;
     };
 
+    Cesium3DTile.prototype.getVisibleChildren = function(cullingVolume) {
+        var visibleChildren = [];
+        var length = this.children.length;
+        for (var i = 0; i < length; ++i) {
+            var child = this.children[i];
+            if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
+                visibleChildren.push(child);
+            }
+        }
+        return visibleChildren;
+    };
+
     /**
      * DOC_TBA
      */
-    Cesium3DTile.prototype.isRefinable = function() {
-        return this._numberOfUnrefinableChildren === 0;
+    Cesium3DTile.prototype.isRefinable = function(visibleChildren, cullingVolume) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cullingVolume)) {
+            throw new DeveloperError('cullingVolume must be defined');
+        }
+        if (!defined(visibleChildren)) {
+            throw new DeveloperError('visibleChildren must be defined');
+        }
+        //>>includeEnd('debug');
+
+        var child;
+        var k;
+
+        var refinable = true;
+        var length = visibleChildren.length;
+        for (k = 0; k < length; ++k) {
+            child = visibleChildren[k];
+            // A tile is not refinable if at least one of its children:
+            // 1) Is in state !== Cesium3DTileContentState.READY
+            // 2) Is empty or has tileset content, and is not refinable
+            if (!child.isReady() || ((child.hasTilesetContent || !child.hasContent) &&
+                !child.isRefinable(child.getVisibleChildren(cullingVolume), cullingVolume))) {
+                    refinable = false;
+                    break;
+            }
+        }
+
+        return refinable;
     };
 
     /**
