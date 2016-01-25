@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Star burst overlapping billboards.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        require.config({
+                           baseUrl : '../../../Source',
+                           waitSeconds : 60
+                       });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <div id="zoomButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+"use strict";
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    selectionIndicator : false
+});
+
+// Add labels clustered at the same location
+var numBillboards = 28.0;
+for (var i = 0; i < numBillboards; ++i) {
+    var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+    viewer.entities.add({
+        position : position,
+        billboard : {
+            image : '../images/facility.gif',
+            scale : 2.5
+        },
+        label : {
+            text : 'Label' + i,
+            show : false
+        }
+    });
+}
+
+var scene = viewer.scene;
+
+// State saved across mouse click and move events
+var pickedEntities;
+var lines;
+var linePrimitive;
+var radius;
+var centerPosition;
+
+// Additional pixel padding separating the billboards
+var padding = 10.0;
+
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+// Star burst on left mouse click.
+handler.setInputAction(function(movement) {
+    if (!Cesium.defined(pickedEntities)) {
+        var pickedObjects = scene.drillPick(movement.position);
+        if (Cesium.defined(pickedObjects) && pickedObjects.length > 1) {
+            pickedEntities = [];
+            lines = [];
+
+            var angle = 0.0;
+            var angleIncrease;
+            var magnitude;
+            var magIncrease;
+            var maxDimension;
+
+            // Drill pick gets all of the entities under the mouse pointer.
+            // Find the billboards and set their pixel offsets in a circle pattern.
+            for (var i = 0; i < pickedObjects.length; ++i) {
+                var object = pickedObjects[i];
+                if (object.primitive instanceof Cesium.Billboard) {
+                    if (pickedEntities.length === 0) {
+                        centerPosition = Cesium.Cartesian3.clone(object.primitive.position);
+                    }
+
+                    pickedEntities.push(object);
+
+                    if (!Cesium.defined(angleIncrease)) {
+                        var width = object.primitive.width;
+                        var height = object.primitive.height;
+                        maxDimension = Math.max(width, height) * object.primitive.scale + padding;
+                        magnitude = maxDimension + maxDimension * 0.5;
+                        magIncrease = magnitude;
+                        angleIncrease = maxDimension / magnitude;
+                    }
+
+                    var x = magnitude * Math.cos(angle);
+                    var y = magnitude * Math.sin(angle);
+
+                    var offset = new Cesium.Cartesian2(x, -y);
+                    object.id.billboard.pixelOffset = offset;
+                    if (Cesium.defined(object.id.label)) {
+                        object.id.label.pixelOffset = offset;
+                    }
+
+                    var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, object.primitive.position);
+                    position.x += offset.x;
+                    position.y += offset.y;
+                    Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
+                    position.y = scene.drawingBufferHeight - position.y;
+                    lines.push(Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0));
+
+                    angle += angleIncrease;
+                    if (angle + angleIncrease * 0.5 > Cesium.Math.TWO_PI) {
+                        magnitude += magIncrease;
+                        angle = 0.0;
+                        angleIncrease = maxDimension / magnitude;
+                    }
+                }
+            }
+
+            // Add lines from the pick center out to the translated billboard.
+            var instances = [];
+            for (var j = 0; j < lines.length; ++j) {
+                instances.push(new Cesium.GeometryInstance({
+                    geometry : new Cesium.SimplePolylineGeometry({
+                        positions : [centerPosition, lines[j]],
+                        followSurface : false,
+                        granularity : Cesium.Math.PI_OVER_FOUR
+                    }),
+                    attributes : {
+                        color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.WHITE)
+                    }
+                }));
+            }
+
+            linePrimitive = scene.primitives.add(new Cesium.Primitive({
+                geometryInstances : instances,
+                appearance : new Cesium.PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false
+                }),
+                asynchronous : false
+            }));
+
+            lines = undefined;
+            viewer.selectedEntity = undefined;
+            radius = magnitude + magIncrease;
+        }
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+function undoStarBurst() {
+    // The radius of the star burst is only defined when the billboards are in a star burst pattern.
+    if (!Cesium.defined(radius)) {
+        return;
+    }
+
+    // Reset billboard and label pixel offsets.
+    // Hide overlapping labels.
+    for (var i = 0; i < pickedEntities.length; ++i) {
+        var entity = pickedEntities[i].id;
+        entity.billboard.pixelOffset = new Cesium.Cartesian2(0.0, 0.0);
+        if (Cesium.defined(entity.label)) {
+            entity.label.pixelOffset = new Cesium.Cartesian2(0.0, 0.0);
+            entity.label.show = false;
+        }
+    }
+
+    // Remove lines from the scene.
+    // Free resources and reset state.
+    scene.primitives.remove(linePrimitive);
+    linePrimitive = undefined;
+    pickedEntities = undefined;
+    radius = undefined;
+}
+
+// Reset the star burst on camera move because the lines from the center
+// because the line end points rely on the screen space positions of the billboards.
+scene.camera.moveStart.addEventListener(function() {
+    undoStarBurst();
+});
+
+var currentObject;
+
+// Remove the star burst when the mouse exits the circle and show the label of the billboard the mouse is hovering over.
+handler.setInputAction(function(movement) {
+    if (Cesium.defined(radius)) {
+        var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, centerPosition);
+
+        var position = movement.endPosition;
+        if (Cesium.Cartesian2.distance(position, screenPosition) > radius) {
+            undoStarBurst();
+        } else {
+            var pickedObject = scene.pick(position);
+            if (pickedObject !== currentObject) {
+                if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Billboard && Cesium.defined(pickedObject.id.label)) {
+                    if (Cesium.defined(currentObject)) {
+                        currentObject.id.label.show = false;
+                    }
+
+                    currentObject = pickedObject;
+                    pickedObject.id.label.show = true;
+                    pickedObject.id.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -100.0);
+                } else if (Cesium.defined(currentObject)) {
+                    currentObject.id.label.show = false;
+                    currentObject = undefined;
+                }
+            }
+        }
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+startup(Cesium);
+} else if (typeof require === "function") {
+require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
