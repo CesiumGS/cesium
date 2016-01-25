@@ -10,6 +10,7 @@ define([
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
+        'Cesium/DataSources/GpxDataSource',
         'Cesium/Scene/TileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
@@ -26,6 +27,7 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
+        GpxDataSource,
         TileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
@@ -105,6 +107,8 @@ define([
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
             loadPromise = KmlDataSource.load(source);
+        } else if(/\.gpx$/i.test(source)){
+            loadPromise = GpxDataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }
