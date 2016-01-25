@@ -162,8 +162,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
-     *
      * @example
      * // For each example, include a link to CesiumWidget.css stylesheet in HTML head,
      * // and in the body, include: <div id="cesiumContainer"></div>

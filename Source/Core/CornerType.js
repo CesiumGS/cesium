@@ -8,9 +8,6 @@ define([
     /**
      * Style options for corners.
      *
-     * @demo The {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
-     * demonstrates the three corner types, as used by {@link CorridorGraphics}.
-     *
      * @exports CornerType
      */
     var CornerType = {

@@ -524,8 +524,6 @@ define([
      *
      * @see RectangleGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
-     *
      * @example
      * // 1. create an rectangle
      * var rectangle = new Cesium.RectangleGeometry({
