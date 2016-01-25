@@ -306,8 +306,6 @@ define([
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
-     *
      * @example
      * // Create a label collection with two labels
      * var labels = scene.primitives.add(new Cesium.LabelCollection());
