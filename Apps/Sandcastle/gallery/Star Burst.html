@@ -45,7 +45,8 @@ for (var i = 0; i < numBillboards; ++i) {
         },
         label : {
             text : 'Label' + i,
-            show : false
+            eyeOffset : new Cesium.Cartesian3(0.0, 0.0, -100.0), // draw in front of billboards
+            show : false                                         // only visible on mouse hover
         }
     });
 }
@@ -128,11 +129,9 @@ function starBurst(mousePosition) {
             }
 
             var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, object.primitive.position);
-            position.x += offset.x;
-            position.y += offset.y;
+            Cesium.Cartesian2.add(position, offset, position);
             Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
-            position.y = scene.drawingBufferHeight - position.y;
-            lines.push(Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0));
+            lines.push(scene.pickPosition(position));
 
             angle += angleIncrease;
             if (angle + angleIncrease * 0.5 > Cesium.Math.TWO_PI) {
@@ -224,7 +223,6 @@ function showLabels(mousePosition) {
 
             currentObject = pickedObject;
             pickedObject.id.label.show = true;
-            pickedObject.id.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -100.0);
         } else if (Cesium.defined(currentObject)) {
             currentObject.id.label.show = false;
             currentObject = undefined;
