@@ -517,7 +517,6 @@ defineSuite([
 
             var stats = tileset._statistics;
             var root = tileset._root;
-            var root = tileset._root;
             expect(root.descendantsWithContent).toBeDefined();
             expect(root.descendantsWithContent.length).toEqual(4);
             return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
