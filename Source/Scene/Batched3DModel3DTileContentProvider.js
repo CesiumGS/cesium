@@ -76,7 +76,7 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this._batchLength = 0;
+        this._featuresLength = 0;
         this._batchTableResources = undefined;
         this._features = undefined;
     }
@@ -90,9 +90,9 @@ define([
          * @type {Number}
          * @readonly
          */
-        batchLength : {
+        featuresLength : {
             get : function() {
-                return this._batchLength;
+                return this._featuresLength;
             }
         },
 
@@ -108,10 +108,10 @@ define([
 
     function createFeatures(content) {
         var tileset = content._tileset;
-        var batchLength = content._batchLength;
-        if (!defined(content._features) && (batchLength > 0)) {
-            var features = new Array(batchLength);
-            for (var i = 0; i < batchLength; ++i) {
+        var featuresLength = content._featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
                 features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
             }
             content._features = features;
@@ -122,10 +122,10 @@ define([
      * DOC_TBA
      */
     Batched3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId >= batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + (batchLength - 1) + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
         }
         //>>includeEnd('debug');
 
@@ -194,11 +194,11 @@ define([
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var batchLength = view.getUint32(byteOffset, true);
-        this._batchLength = batchLength;
+        var featuresLength = view.getUint32(byteOffset, true);
+        this._featuresLength = featuresLength;
         byteOffset += sizeOfUint32;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, featuresLength);
         this._batchTableResources = batchTableResources;
 
         var batchTableByteLength = view.getUint32(byteOffset, true);

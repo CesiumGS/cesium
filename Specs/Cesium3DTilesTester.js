@@ -181,7 +181,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [98, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
-        var batchLength = defaultValue(options.batchLength, 1);
+        var featuresLength = defaultValue(options.featuresLength, 1);
 
         var headerByteLength = 20;
         var byteLength = headerByteLength;
@@ -193,7 +193,7 @@ define([
         view.setUint8(3, magic[3]);
         view.setUint32(4, version, true);          // version
         view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, batchLength, true);     // batchLength
+        view.setUint32(12, featuresLength, true);  // featuresLength
         view.setUint32(16, 0, true);               // batchTableByteLength
 
         return buffer;
@@ -205,10 +205,10 @@ define([
         var magic = defaultValue(options.magic, [105, 51, 100, 109]);
         var version = defaultValue(options.version, 1);
         var gltfFormat = defaultValue(options.gltfFormat, 1);
-        var instancesLength = defaultValue(options.instancesLength, 1);
+        var featuresLength = defaultValue(options.featuresLength, 1);
 
         var headerByteLength = 28;
-        var instancesByteLength = instancesLength * 16;
+        var instancesByteLength = featuresLength * 16;
         var byteLength = headerByteLength + instancesByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -221,10 +221,10 @@ define([
         view.setUint32(12, 0, true);               // batchTableByteLength
         view.setUint32(16, 0, true);               // gltfByteLength
         view.setUint32(20, gltfFormat, true);      // gltfFormat
-        view.setUint32(24, instancesLength, true); // instancesLength
+        view.setUint32(24, featuresLength, true); // featuresLength
 
         var byteOffset = headerByteLength;
-        for (var j = 0; j < instancesLength; ++j) {
+        for (var j = 0; j < featuresLength; ++j) {
             view.setFloat64(byteOffset, 0.0, true);
             view.setFloat64(byteOffset + 8, 0.0, true);
             byteOffset += 16;

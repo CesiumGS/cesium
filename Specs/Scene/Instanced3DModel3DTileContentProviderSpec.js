@@ -89,7 +89,7 @@ defineSuite([
 
     it('loads with no instances, but does not become ready', function() {
         var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
-            instancesLength : 0
+            featuresLength : 0
         });
 
         var tileset = {};

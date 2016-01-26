@@ -446,7 +446,7 @@ define([
         var vertexBuffer = collection._vertexBuffer;
         var createVertexBuffer = collection._createVertexBuffer;
 
-        var instancesLength = collection.length;
+        var featuresLength = collection.length;
         var dynamic = collection._dynamic;
         var viewMatrix = context.uniformState.view;
         var center = dynamic ? Cartesian3.ZERO : collection._boundingVolume.center;
@@ -456,10 +456,10 @@ define([
         var vertexSizeInFloats = usesBatchTable ? 13 : 12;
 
         if (createVertexBuffer) {
-            instanceBufferData = new Float32Array(instancesLength * vertexSizeInFloats);
+            instanceBufferData = new Float32Array(featuresLength * vertexSizeInFloats);
         }
 
-        for (var i = 0; i < instancesLength; ++i) {
+        for (var i = 0; i < featuresLength; ++i) {
             var instance = collection._instances[i];
             var modelMatrix = instance.modelMatrix;
 
@@ -506,12 +506,10 @@ define([
 
     function createBoundingVolume(collection) {
         if (!defined(collection._boundingVolume)) {
-            var instancesLength = collection.length;
-            var points = new Array(instancesLength);
-            for (var i = 0; i < instancesLength; ++i) {
-                var translation = new Cartesian3();
-                Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
-                points[i] = translation;
+            var featuresLength = collection.length;
+            var points = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                points[i] = Matrix4.getTranslation(collection._instances[i].modelMatrix, new Cartesian3());
             }
 
             var boundingSphere = new BoundingSphere();
@@ -637,7 +635,7 @@ define([
         var j;
         var command;
         var commandsLength = drawCommands.length;
-        var instancesLength = collection.length;
+        var featuresLength = collection.length;
         var allowPicking = collection.allowPicking;
         var usesBatchTable = defined(collection._batchTableResources);
 
@@ -646,14 +644,14 @@ define([
         if (collection._instancingSupported) {
             for (i = 0; i < commandsLength; ++i) {
                 command = clone(drawCommands[i]);
-                command.instanceCount = instancesLength;
+                command.instanceCount = featuresLength;
                 command.boundingVolume = boundingVolume;
                 command.cull = collection._cull;
                 collection._drawCommands.push(command);
 
                 if (allowPicking) {
                     command = clone(pickCommands[i]);
-                    command.instanceCount = instancesLength;
+                    command.instanceCount = featuresLength;
                     command.boundingVolume = boundingVolume;
                     command.cull = collection._cull;
                     collection._pickCommands.push(command);
@@ -663,7 +661,7 @@ define([
             // When instancing is disabled, create commands for every instance.
             var instances = collection._instances;
             for (i = 0; i < commandsLength; ++i) {
-                for (j = 0; j < instancesLength; ++j) {
+                for (j = 0; j < featuresLength; ++j) {
                     command = clone(drawCommands[i]);
                     command.modelMatrix = new Matrix4();
                     command.boundingVolume = new BoundingSphere();
@@ -724,13 +722,13 @@ define([
 
         var modelCommands = collection._modelCommands;
         var commandsLength = modelCommands.length;
-        var instancesLength = collection.length;
+        var featuresLength = collection.length;
         var allowPicking = collection.allowPicking;
 
         for (var i = 0; i < commandsLength; ++i) {
             var modelCommand = modelCommands[i];
-            for (var j = 0; j < instancesLength; ++j) {
-                var commandIndex = i * instancesLength + j;
+            for (var j = 0; j < featuresLength; ++j) {
+                var commandIndex = i * featuresLength + j;
                 var drawCommand = collection._drawCommands[commandIndex];
                 var instanceMatrix = collection._instances[j].modelMatrix;
                 var nodeMatrix = modelCommand.modelMatrix;

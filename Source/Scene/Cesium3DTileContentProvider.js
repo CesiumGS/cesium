@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/defineProperties',
         '../Core/DeveloperError'
     ], function(
+        defineProperties,
         DeveloperError) {
     "use strict";
 
@@ -40,6 +42,31 @@ define([
          */
         this.readyPromise = undefined;
     }
+
+    defineProperties(Cesium3DTileContentProvider.prototype, {
+        /**
+         * Gets the number of features in the tile.
+         *
+         * @memberof Cesium3DTileContentProvider.prototype
+         *
+         * @type {Number}
+         * @readonly
+         */
+        featuresLength : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        batchTableResources : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        }
+    });
 
     /**
      * Requests the tile's content.

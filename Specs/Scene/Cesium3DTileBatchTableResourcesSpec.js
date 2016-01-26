@@ -28,7 +28,7 @@ defineSuite([
     var result = new Color();
 
     var mockContentProvider = {
-        getFeature : function(index) {
+        getFeature : function(batchId) {
             return {};
         }
     };
@@ -327,7 +327,7 @@ defineSuite([
             // check that the 2nd resource has an id of 2
             expect(resources.getProperty(2, 'id')).toEqual(2);
 
-            expect(resources.batchLength).toEqual(content.batchLength);
+            expect(resources.featuresLength).toEqual(content.featuresLength);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -339,7 +339,7 @@ defineSuite([
 
             expect(resources.getProperty(2, 'id')).toBeUndefined();
 
-            expect(resources.batchLength).toEqual(content.batchLength);
+            expect(resources.featuresLength).toEqual(content.featuresLength);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -357,14 +357,14 @@ defineSuite([
         });
     });
 
-    it('renders with batchLength greater than maximumTextureSize', function() {
+    it('renders with featuresLength greater than maximumTextureSize', function() {
         // Set maximum texture size to 64 temporarily. Batch length of b3dm file is 100.
         var maximumTextureSize = ContextLimits.maximumTextureSize;
         ContextLimits._maximumTextureSize = 64;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var resources = tileset._root.content.batchTableResources;
-            expect(resources.batchLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
+            expect(resources.featuresLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Reset maximum texture size
@@ -372,7 +372,7 @@ defineSuite([
         });
     });
 
-    it('renders with batchLength of zero', function() {
+    it('renders with featuresLength of zero', function() {
         return Cesium3DTilesTester.loadTileset(scene, batchLengthZeroUrl).then(function(tileset) {
             expectRender(tileset);
 

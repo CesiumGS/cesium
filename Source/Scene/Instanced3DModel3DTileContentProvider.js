@@ -101,7 +101,7 @@ define([
          * @type {Number}
          * @readonly
          */
-        instancesLength : {
+        featuresLength : {
             get : function() {
                 return this._modelInstanceCollection.length;
             }
@@ -119,26 +119,26 @@ define([
 
     function createFeatures(content) {
         var tileset = content._tileset;
-        var instancesLength = content.instancesLength;
-        if (!defined(content._features) && (instancesLength > 0)) {
-            var features = new Array(instancesLength);
-            for (var i = 0; i < instancesLength; ++i) {
+        var featuresLength = content.featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
                 features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
             }
             content._features = features;
         }
     }
 
-    Instanced3DModel3DTileContentProvider.prototype.getFeature = function(index) {
-        var instancesLength = this._modelInstanceCollection.length;
+    Instanced3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
+        var featuresLength = this._modelInstanceCollection.length;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(index) || (index < 0) || (index >= instancesLength)) {
-            throw new DeveloperError('index is required and between zero and instancesLength - 1 (' + (instancesLength - 1) + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
         }
         //>>includeEnd('debug');
 
         createFeatures(this);
-        return this._features[index];
+        return this._features[batchId];
     };
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -212,7 +212,7 @@ define([
         var gltfFormat = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var instancesLength = view.getUint32(byteOffset, true);
+        var featuresLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         //>>includeStart('debug', pragmas.debug);
@@ -221,7 +221,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, featuresLength);
         this._batchTableResources = batchTableResources;
         var hasBatchTable = false;
         if (batchTableByteLength > 0) {
@@ -237,14 +237,14 @@ define([
         // Each vertex has a longitude, latitude, and optionally batchId if there is a batch table
         // Coordinates are in double precision, batchId is a short
         var instanceByteLength = sizeOfFloat64 * 2 + (hasBatchTable ? sizeOfUint16 : 0);
-        var instancesByteLength = instancesLength * instanceByteLength;
+        var instancesByteLength = featuresLength * instanceByteLength;
 
         var instancesView = new DataView(arrayBuffer, byteOffset, instancesByteLength);
         byteOffset += instancesByteLength;
 
         // Create model instance collection
         var collectionOptions = {
-            instances : new Array(instancesLength),
+            instances : new Array(featuresLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
             cull : false,
@@ -268,7 +268,7 @@ define([
         var instances = collectionOptions.instances;
         byteOffset = 0;
 
-        for (var i = 0; i < instancesLength; ++i) {
+        for (var i = 0; i < featuresLength; ++i) {
             // Get longitude and latitude
             var longitude = instancesView.getFloat64(byteOffset, true);
             byteOffset += sizeOfFloat64;
