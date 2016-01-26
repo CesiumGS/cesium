@@ -421,12 +421,11 @@ function changeColor(tile) {
     var max = styleableProperties[currentPropertyName].maximum;
     var delta = max - min;
     var content = tile.content;
+    var batchTableResources = content.batchTableResources;
 
     // Is the tile a Batched 3D Model or Instanced 3D Model?
     if (Cesium.defined(batchTableResources)) {
         // Does it have a per-model height property?
-        var batchTableResources = content.batchTableResources;
-
         if (batchTableResources.hasProperty(currentPropertyName)) {
             var length = Cesium.defaultValue(content.batchLength, content.instancesLength);
             for (var i = 0; i < length; ++i) {
