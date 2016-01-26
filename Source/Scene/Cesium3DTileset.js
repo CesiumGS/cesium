@@ -286,7 +286,7 @@ define([
         },
 
         /**
-         * Gets the tileset's properties dictionary object, which contains metadata about per-feature propertie.
+         * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
          * <p>
          * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/properties.schema.json|properties schema}
          * in the 3D Tiles spec for the full set of properties.
