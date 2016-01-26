@@ -161,28 +161,7 @@ define([
         this.state = Cesium3DTileContentState.PROCESSING;
         this.processingPromise.resolve(this);
 
-        var tilesToLoad = tilesLength;
-
-        var that = this;
-
-        function checkDone() {
-            if (tilesToLoad === 0) {
-                that.state = Cesium3DTileContentState.READY;
-                that.readyPromise.resolve(that);
-            }
-        }
-
-        function tileLoaded(content) {
-            tilesToLoad--;
-            checkDone();
-        }
-
-        function tileFailed(error) {
-            that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
-        }
-
-        checkDone();
+        var contentPromises = [];
 
         for (var i = 0; i < tilesLength; ++i) {
             var tileType = getMagic(uint8Array, byteOffset);
@@ -196,12 +175,32 @@ define([
                 var content = contentFactory(this._tileset, this._tile, this._url);
                 content.initialize(arrayBuffer, byteOffset);
                 this._contentProviders.push(content);
-                when(content.readyPromise).then(tileLoaded).otherwise(tileFailed);
+                contentPromises.push(content.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
 
             byteOffset += tileByteLength;
+        }
+
+        var that = this;
+
+        when.all(contentPromises, function() {
+            that.state = Cesium3DTileContentState.READY;
+            that.readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that.readyPromise.reject(error);
+        });
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Composite3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        var length = this._contentProviders.length;
+        for (var i = 0; i < length; ++i) {
+            this._contentProviders[i].applyDebugSettings(enabled, color);
         }
     };
 

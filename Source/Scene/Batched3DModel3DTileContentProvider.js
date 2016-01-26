@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -17,6 +18,7 @@ define([
         './Cesium3DTileContentState',
         './Model'
     ], function(
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -246,6 +248,16 @@ define([
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
         });
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
+    Batched3DModel3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        color = enabled ? color : Color.WHITE;
+        this._batchTableResources.setAllColor(color);
     };
 
     /**

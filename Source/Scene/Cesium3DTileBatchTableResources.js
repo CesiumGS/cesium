@@ -76,9 +76,6 @@ define([
 
         this._textureDimensions = textureDimensions;
         this._textureStep = textureStep;
-
-        this._debugColor = Color.fromRandom({ alpha : 1.0 });
-        this._debugColorizeTiles = false;
     }
 
     defineProperties(Cesium3DTileBatchTableResources.prototype, {
@@ -709,22 +706,10 @@ define([
         }
     }
 
-    function applyDebugSettings(tiles3D, batchTableResources) {
-        if (tiles3D.debugColorizeTiles && !batchTableResources._debugColorizeTiles) {
-            batchTableResources._debugColorizeTiles = true;
-            batchTableResources.setAllColor(batchTableResources._debugColor);
-        } else if (!tiles3D.debugColorizeTiles && batchTableResources._debugColorizeTiles) {
-            batchTableResources._debugColorizeTiles = false;
-            batchTableResources.setAllColor(Color.WHITE);
-        }
-    }
-
     /**
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.update = function(tiles3D, frameState) {
-        applyDebugSettings(tiles3D, this);
-
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 

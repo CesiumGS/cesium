@@ -16,8 +16,8 @@ defineSuite([
     "use strict";
 
     var scene;
-    var centerLongitude = -1.31995;
-    var centerLatitude = 0.69871;
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
 
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
 

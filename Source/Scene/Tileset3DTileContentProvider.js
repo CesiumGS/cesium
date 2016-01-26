@@ -104,6 +104,14 @@ define([
      *
      * @private
      */
+    Tileset3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
     Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 

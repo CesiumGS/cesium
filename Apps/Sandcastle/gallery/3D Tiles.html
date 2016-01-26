@@ -29,35 +29,54 @@ function startup(Cesium) {
     "use strict";
 //Sandcastle_Begin
 
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
-var city = scene.primitives.add(new Cesium.Cesium3DTileset({
-    //url : 'http://localhost:8002/tilesets/Cambridge',
-    //url : 'http://localhost:8002/tilesets/London_Canary_Wharf',
-    //url : 'http://localhost:8002/tilesets/trees',
-    //url : 'http://localhost:8002/tilesets/Philly',
-    url : 'http://localhost:8002/tilesets/Seattle',
-    //url : 'http://localhost:8002/tilesets/SeattleTrees',
-    //url : 'http://localhost:8002/tilesets/SeattleComposite',
-
-    // Defaults:
-    maximumScreenSpaceError : 16,
-    debugShowStatistics : false,
-    debugFreezeFrame : false,
-    debugShowBoundingVolume : false,
-    debugShowContentBoundingVolume : false
-}));
-
-viewer.camera.setView({
-    //destination : Cesium.Cartesian3.fromDegrees(-71.1106, 42.3736, 5000.0) // Cambridge
-    //destination : Cesium.Cartesian3.fromDegrees(0.0183, 51.5036, 5000.0) // Canary Wharf
-    //destination : Cesium.Cartesian3.fromRadians(-1.2911323805815227, 0.7097150757974291, 5000.0) // NYC Trees
-    //destination : Cesium.Cartesian3.fromDegrees(-75.1667, 39.9500, 5000.0) // Philly trees
-    destination : Cesium.Cartesian3.fromDegrees(-122.3331, 47.6097, 5000.0) // Seattle
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true
 });
 
+var scene = viewer.scene;
+scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;
-//viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
+var tilesetUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Tilesets/Tileset/';
+var batchedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+var instancedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+var compositeUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Composite/Composite/';
+var pointsUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Points/Points/';
+
+var tileset;
+
+function loadTileset(url) {
+    reset();
+
+    tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+        url : url
+    }));
+
+    return Cesium.when(tileset.readyPromise).then(function(tileset) {
+        var boundingBox = tileset._root._boundingVolume;
+        var center = Cesium.Rectangle.center(boundingBox.rectangle);
+        var height = boundingBox.maximumHeight + 500.0;
+        viewer.camera.setView({
+            destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, height)
+        });
+
+        var properties = tileset.properties;
+        styleableProperties = {};
+        if (Cesium.defined(properties)) {
+            for (var name in properties) {
+                // Include all properties except longitude and latitude
+                if (properties.hasOwnProperty(name) &&
+                        (name !== 'Longitude') &&
+                        (name !== 'Latitude')) {
+                    var property = properties[name];
+                    styleableProperties[name] = property;
+                    var button = Sandcastle.addToolbarButton('Change ' + name + ' style', getStyleFunction(name, property));
+                    styleablePropertyButtons.push(button);
+                }
+            }
+        }
+    });
+}
 
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
@@ -108,7 +127,7 @@ document.addEventListener('keyup', function(e) {
 }, false);
 
 var current = {
-    model : undefined,
+    building : undefined,
     originalColor : new Cesium.Color()
 };
 
@@ -209,6 +228,10 @@ function zoom(movement) {
         var latitude = building.getProperty('Latitude');
         var height = building.getProperty('Height');
 
+        if (!Cesium.defined(longitude) || !Cesium.defined(latitude) || !Cesium.defined(height)) {
+            return;
+        }
+
         var positionCartographic = new Cesium.Cartographic(longitude, latitude, height * 0.5);
         var position = scene.globe.ellipsoid.cartographicToCartesian(positionCartographic);
 
@@ -242,7 +265,7 @@ handler.setInputAction(function(movement) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
-city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
         console.log('Stopped loading');
         return;
@@ -254,59 +277,71 @@ city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProce
 
 ///////////////////////////////////////////////////////////////////////////////
 
+Sandcastle.addToolbarMenu([ {
+    text : 'Tileset',
+    onselect : function() {
+        loadTileset(tilesetUrl);
+    }
+}, {
+    text : 'Batched',
+    onselect : function() {
+        loadTileset(batchedUrl);
+    }
+}, {
+    text : 'Instanced',
+    onselect : function() {
+        loadTileset(instancedUrl);
+    }
+}, {
+    text : 'Composite',
+    onselect : function() {
+        loadTileset(compositeUrl);
+    }
+}, {
+    text : 'Points',
+    onselect : function() {
+        loadTileset(pointsUrl);
+    }
+}]);
+
 Sandcastle.addToolbarButton('Stats on/off', function() {
-    city.debugShowStatistics = !city.debugShowStatistics;
+    tileset.debugShowStatistics = !tileset.debugShowStatistics;
 });
 
 Sandcastle.addToolbarButton('Freeze on/off', function() {
-    city.debugFreezeFrame = !city.debugFreezeFrame;
+    tileset.debugFreezeFrame = !tileset.debugFreezeFrame;
 });
 
 Sandcastle.addToolbarButton('Colorize on/off', function() {
-    city.debugColorizeTiles = !city.debugColorizeTiles;
+    tileset.debugColorizeTiles = !tileset.debugColorizeTiles;
 });
 
 Sandcastle.addToolbarButton('BV on/off', function() {
-    city.debugShowBoundingVolume = !city.debugShowBoundingVolume;
+    tileset.debugShowBoundingVolume = !tileset.debugShowBoundingVolume;
 });
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
-    city.debugShowContentBoundingVolume = !city.debugShowContentBoundingVolume;
+    tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {
-    ++city.maximumScreenSpaceError;
-    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+    ++tileset.maximumScreenSpaceError;
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
 Sandcastle.addToolbarButton('SSE--', function() {
-    city.maximumScreenSpaceError = Math.max(city.maximumScreenSpaceError - 1, 0);
-    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+    tileset.maximumScreenSpaceError = Math.max(tileset.maximumScreenSpaceError - 1, 0);
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
 
 var styleableProperties = {};
+var styleablePropertyButtons = [];
 var currentPropertyName;
 var colorBins = new Array(6);
 var lastTimeColored = 0;
 var addedListener = false;
-
-Cesium.when(city.readyPromise).then(function(city) {
-    var properties = city.properties;
-    if (Cesium.defined(properties)) {
-        for (var name in properties) {
-            // Include all properties except longitude and latitude
-            if (properties.hasOwnProperty(name) &&
-                    (name !== 'Longitude') &&
-                    (name !== 'Latitude')) {
-                var property = properties[name];
-                styleableProperties[name] = property;
-                Sandcastle.addToolbarButton('Change ' + name + ' style', getStyleFunction(name, property));
-            }
-        }
-    }
-});
 
 function getStyleFunction(name, property) {
     return function() {
@@ -371,7 +406,7 @@ function createColorBins(colorBins, property) {
 function addTileVisibleListener() {
     if (!addedListener) {
         addedListener = true;
-        city.tileVisible.addEventListener(changeColor);
+        tileset.tileVisible.addEventListener(changeColor);
     }
 }
 
@@ -386,14 +421,13 @@ function changeColor(tile) {
     var max = styleableProperties[currentPropertyName].maximum;
     var delta = max - min;
     var content = tile.content;
+    var batchTableResources = content.batchTableResources;
 
-    // Is the tile a Batched 3D Model?
-    if (content instanceof Cesium.Batched3DModel3DTileContentProvider) {
+    // Is the tile a Batched 3D Model or Instanced 3D Model?
+    if (Cesium.defined(batchTableResources)) {
         // Does it have a per-model height property?
-        var batchTableResources = content.batchTableResources;
-
         if (batchTableResources.hasProperty(currentPropertyName)) {
-            var length = content.batchSize;
+            var length = Cesium.defaultValue(content.batchLength, content.instancesLength);
             for (var i = 0; i < length; ++i) {
                 var building = content.getFeature(i);
                 var value = building.getProperty(currentPropertyName);
@@ -419,10 +453,35 @@ function changeColor(tile) {
     }
 }
 
+function reset() {
+    if (Cesium.defined(tileset)) {
+        scene.primitives.remove(tileset);
+    }
+
+    // Remove styleable property buttons of the previous tileset
+    var buttonsLength = styleablePropertyButtons.length;
+    for (var i = 0; i < buttonsLength; ++i) {
+        var button = styleablePropertyButtons[i];
+        button.parentNode.removeChild(button);
+    }
+
+    current.building = undefined;
+    current.originalColor = new Cesium.Color();
+
+    styleableProperties = {};
+    styleablePropertyButtons = [];
+    currentPropertyName = undefined;
+    colorBins = new Array(6);
+    lastTimeColored = 0;
+    addedListener = false;
+
+    annotations.removeAll();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 //Sandcastle_End
-    Sandcastle.finishedLoading();
+Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
     startup(Cesium);
