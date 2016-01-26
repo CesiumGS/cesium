@@ -303,6 +303,8 @@ define([
                 ++parentTile.numberOfChildrenWithoutContent;
             }
 
+            var refiningTiles = [];
+
             var stack = [];
             stack.push({
                 header : tilesetJson.root,
@@ -311,21 +313,32 @@ define([
 
             while (stack.length > 0) {
                 var t = stack.pop();
+                var tile3D = t.cesium3DTile;
                 var children = t.header.children;
+                var hasEmptyChild = false;
                 if (defined(children)) {
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, t.cesium3DTile);
-                        t.cesium3DTile.children.push(childTile);
-
+                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, tile3D);
+                        tile3D.children.push(childTile);
                         stack.push({
                             header : childHeader,
                             cesium3DTile : childTile
                         });
+                        if (!childTile.hasContent) {
+                            hasEmptyChild = true;
+                        }
                     }
                 }
+                if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
+                    // Tiles that use replacement refinement and have empty child tiles need to keep track of
+                    // descendants with content in order to refine correctly.
+                    refiningTiles.push(tile3D);
+                }
             }
+
+            prepareRefiningTiles(refiningTiles);
 
             return {
                 tilesetJson : tilesetJson,
@@ -333,6 +346,29 @@ define([
             };
         });
     };
+
+    function prepareRefiningTiles(refiningTiles) {
+        var stack = [];
+        var length = refiningTiles.length;
+        for (var i = 0; i < length; ++i) {
+            var refiningTile = refiningTiles[i];
+            refiningTile.descendantsWithContent = [];
+            stack.push(refiningTile);
+            while (stack.length > 0) {
+                var tile = stack.pop();
+                var children = tile.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    var childTile = children[k];
+                    if (childTile.hasContent) {
+                        refiningTile.descendantsWithContent.push(childTile);
+                    } else {
+                        stack.push(childTile);
+                    }
+                }
+            }
+        }
+    }
 
     function getScreenSpaceError(geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
@@ -389,15 +425,14 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        //
-        // Don't select if the tile is being loaded to refine another tile
-        if (tile.isReady() && !tile.refining &&
-                (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
+        if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
+            tile.selected = true;
         }
     }
 
     var scratchStack = [];
+    var scratchRefiningTiles = [];
 
     function selectTiles(tiles3D, frameState, outOfCore) {
         if (tiles3D.debugFreezeFrame) {
@@ -409,6 +444,8 @@ define([
 
         var selectedTiles = tiles3D._selectedTiles;
         selectedTiles.length = 0;
+
+        scratchRefiningTiles.length = 0;
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
@@ -431,6 +468,7 @@ define([
         while (stack.length > 0) {
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
+            t.selected = false;
             ++stats.visited;
 
             var planeMask = t.visibility(cullingVolume);
@@ -459,7 +497,6 @@ define([
                     child = t.children[0];
                     child.parentPlaneMask = t.parentPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
-                    child.refining = t.refining;
                     if (child.isContentUnloaded()) {
                         requestContent(tiles3D, child, outOfCore);
                     } else {
@@ -468,6 +505,7 @@ define([
                 }
                 continue;
             }
+
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
@@ -493,8 +531,6 @@ define([
                         // to replacement refinement where we need all children.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            // Pass along whether the child is being loaded for refinement
-                            child.refining = t.refining;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
 
@@ -529,6 +565,7 @@ define([
                     // or slots are available to request them.  If we are just rendering the
                     // tile (and can't make child requests because no slots are available)
                     // then the children do not need to be sorted.
+
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || t.canRequestContent()) {
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
@@ -539,34 +576,66 @@ define([
 // TODO: same TODO as above.
                     }
 
-                    if (!t.isRefinable() || t.refining) {
-                        // Tile does not meet SSE. Add its commands since it is the best we have until it becomes refinable.
-                        // If all its children have content, it will became refinable once they are loaded.
-                        // If a child is empty (such as for accelerating culling), its descendants with content must be loaded first.
+                    if (!allChildrenLoaded) {
+                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
-                        for (k = 0; k < childrenLength; ++k) {
-                            child = children[k];
-                            if (child.isContentUnloaded()) {
-                                requestContent(tiles3D, child, outOfCore);
-                            } else if (!child.hasContent && !child.isRefinable()){
-                                // If the child is empty, start loading its descendants. Mark as refining so they aren't selected.
-                                child.refining = true;
-                                // Store the plane mask so that the child can optimize based on its parent's returned mask
-                                child.parentPlaneMask = planeMask;
-                                stack.push(child);
+                        if (outOfCore) {
+                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
+                                child = children[k];
+// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
+                                if (child.isContentUnloaded()) {
+                                    requestContent(tiles3D, child, outOfCore);
+                                }
                             }
                         }
                     } else {
-                        // Tile does not meet SEE and it is refinable. Refine to children in front-to-back order.
+                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.refining = false;
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
                         }
+
+                        if (defined(t.descendantsWithContent)) {
+                            scratchRefiningTiles.push(t);
+                        }
                     }
+                }
+            }
+        }
+
+        checkRefiningTiles(scratchRefiningTiles, tiles3D, frameState);
+    }
+
+    function checkRefiningTiles(refiningTiles, tiles3D, frameState) {
+        // In the common case, a tile that uses replacement refinement is refinable once all its
+        // children are loaded. However if it has an empty child, refining to its children would
+        // show a visible gap. In this case, the empty child's children (or further descendants)
+        // would need to be selected before the original tile is refinable. It is hard to determine
+        // this easily during the traversal, so this fixes the situation retroactively.
+        var descendant;
+        var refiningTilesLength = refiningTiles.length;
+        for (var i = 0; i < refiningTilesLength; ++i) {
+            var j;
+            var refinable = true;
+            var refiningTile = refiningTiles[i];
+            var descendantsLength = refiningTile.descendantsWithContent.length;
+            for (j = 0; j < descendantsLength; ++j) {
+                descendant = refiningTile.descendantsWithContent[j];
+                if (!descendant.selected) {
+                    // TODO: also check that its visible
+                    refinable = false;
+                    break;
+                }
+            }
+            if (!refinable) {
+                var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
+                selectTile(tiles3D._selectedTiles, refiningTile, fullyVisible, frameState);
+                for (j = 0; j < descendantsLength; ++j) {
+                    descendant = refiningTile.descendantsWithContent[j];
+                    descendant.selected = false;
                 }
             }
         }
@@ -663,8 +732,10 @@ define([
         var tileVisible = tiles3D.tileVisible;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
-            tileVisible.raiseEvent(tile);
-            tile.update(tiles3D, frameState);
+            if (tile.selected) {
+                tileVisible.raiseEvent(tile);
+                tile.update(tiles3D, frameState);
+            }
         }
 
         tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);

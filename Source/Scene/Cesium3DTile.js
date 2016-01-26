@@ -122,6 +122,17 @@ define([
         this.children = [];
 
         /**
+         * Descendant tiles that need to be visible before this tile can refine. For example, if
+         * a child is empty (such as for accelerating culling), its descendants with content would
+         * be added here. This array is generated during runtime in {@link Cesium3DTileset#loadTileset}.
+         * If a tiles's children all have content, this is left undefined.
+         *
+         * @type {Array}
+         * @readonly
+         */
+        this.descendantsWithContent = undefined;
+
+        /**
          * DOC_TBA
          *
          * @readonly
@@ -134,10 +145,6 @@ define([
          * @readonly
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
-
-        this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
-
-        this.refining = false;
 
         this.hasContent = true;
 
@@ -168,7 +175,6 @@ define([
             if (type === 'json') {
                 this.hasTilesetContent = true;
                 this.hasContent = false;
-                this._numberOfUnrefinableChildren = 1;
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -185,20 +191,6 @@ define([
         this._content = content;
         this._requestServer = requestServer;
 
-        function setRefinable(tile) {
-            var parent = tile.parent;
-            if (defined(parent) && (tile.hasContent || tile.isRefinable())) {
-                // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
-                // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
-                // before the parent is able to refine to it.
-                --parent._numberOfUnrefinableChildren;
-                // If the parent is empty, traverse up the tree to update ancestor tiles.
-                if (!parent.hasContent) {
-                    setRefinable(parent);
-                }
-            }
-        }
-
         var that = this;
 
         // Content enters the READY state
@@ -207,15 +199,13 @@ define([
                 --that.parent.numberOfChildrenWithoutContent;
             }
 
-            setRefinable(that);
-
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
             that.readyPromise.reject(error);
 //TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
-        // Members that are updated every frame for rendering optimizations:
+        // Members that are updated every frame for tree traversal and rendering optimizations:
 
         /**
          * @private
@@ -229,6 +219,13 @@ define([
          * @private
          */
         this.parentPlaneMask = 0;
+
+        /**
+         * Marks if the tile is selected this frame.
+         *
+         * @type {Boolean}
+         */
+        this.selected = false;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -288,13 +285,6 @@ define([
      */
     Cesium3DTile.prototype.isReady = function() {
         return this._content.state === Cesium3DTileContentState.READY;
-    };
-
-    /**
-     * DOC_TBA
-     */
-    Cesium3DTile.prototype.isRefinable = function() {
-        return this._numberOfUnrefinableChildren === 0;
     };
 
     /**
