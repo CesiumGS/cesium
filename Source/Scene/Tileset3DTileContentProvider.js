@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../ThirdParty/when',
         './Cesium3DTileContentState'
     ], function(
         defined,
+        defineProperties,
         destroyObject,
         when,
         Cesium3DTileContentState) {
@@ -48,6 +50,30 @@ define([
          */
         this.readyPromise = when.defer();
     }
+
+    defineProperties(Tileset3DTileContentProvider.prototype, {
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        featuresLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        batchTableResources : {
+            get : function() {
+                return undefined;
+            }
+        }
+    });
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.

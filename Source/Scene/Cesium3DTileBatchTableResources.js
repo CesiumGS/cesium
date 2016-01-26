@@ -42,8 +42,9 @@ define([
     /**
      * DOC_TBA
      */
-    function Cesium3DTileBatchTableResources(contentProvider, size) {
-        this._batchLength = defaultValue(size, 0);
+    function Cesium3DTileBatchTableResources(contentProvider, featuresLength) {
+        featuresLength = defaultValue(featuresLength, 0);
+        this._featuresLength = featuresLength;
         this._batchValues = undefined;  // Per-model show/color
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
@@ -59,12 +60,11 @@ define([
         var textureDimensions;
         var textureStep;
 
-        var batchLength = this._batchLength;
-        if (batchLength > 0) {
+        if (featuresLength > 0) {
             // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
             // when more than one row is needed (e.g., > 16K models in one tile)
-            var width = Math.min(batchLength, ContextLimits.maximumTextureSize);
-            var height = Math.ceil(batchLength / ContextLimits.maximumTextureSize);
+            var width = Math.min(featuresLength, ContextLimits.maximumTextureSize);
+            var height = Math.ceil(featuresLength / ContextLimits.maximumTextureSize);
             var stepX = 1.0 / width;
             var centerX = stepX * 0.5;
             var stepY = 1.0 / height;
@@ -87,9 +87,9 @@ define([
          * @type {Number}
          * @readonly
          */
-        batchLength : {
+        featuresLength : {
             get : function() {
-                return this._batchLength;
+                return this._featuresLength;
             }
         },
 
@@ -134,10 +134,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.setShow = function(batchId, value) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
         if (!defined(value)) {
@@ -164,10 +164,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.getShow = function(batchId) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
         //>>includeEnd('debug');
 
@@ -186,10 +186,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.setColor = function(batchId, value) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
         if (!defined(value)) {
@@ -226,8 +226,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var batchLength = this._batchLength;
-        for (var i = 0; i < batchLength; ++i) {
+        var featuresLength = this._featuresLength;
+        for (var i = 0; i < featuresLength; ++i) {
             // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
             this.setColor(i, value);
         }
@@ -237,10 +237,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.getColor = function(batchId, result) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
         if (!defined(result)) {
@@ -296,10 +296,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.getProperty = function(batchId, name) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
         if (!defined(name)) {
@@ -324,10 +324,10 @@ define([
      * DOC_TBA
      */
     Cesium3DTileBatchTableResources.prototype.setProperty = function(batchId, name, value) {
-        var batchLength = this._batchLength;
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId > batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + batchLength - + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
         if (!defined(name)) {
@@ -344,7 +344,7 @@ define([
 
         if (!defined(propertyValues)) {
             // Property does not exist.  Create it.
-            this._batchTable[name] = new Array(batchLength);
+            this._batchTable[name] = new Array(featuresLength);
             propertyValues = this._batchTable[name];
         }
 
@@ -352,7 +352,7 @@ define([
     };
 
     function getGlslComputeSt(batchTableResources) {
-        // GLSL batchId is zero-based: [0, batchLength - 1]
+        // GLSL batchId is zero-based: [0, featuresLength - 1]
         if (batchTableResources._textureDimensions.y === 1) {
             return 'uniform vec4 tiles3d_textureStep; \n' +
                 'vec2 computeSt(float batchId) \n' +
@@ -381,7 +381,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change vertex shader source; the model was not batched
             return undefined;
         }
@@ -423,7 +423,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change fragment shader source; the model was not batched
             return undefined;
         }
@@ -491,7 +491,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change the uniform map; the model was not batched
             return undefined;
         }
@@ -519,7 +519,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change vertex shader source; the model was not batched
             return undefined;
         }
@@ -561,7 +561,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change fragment shader source; the model was not batched
             return undefined;
         }
@@ -611,7 +611,7 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
-        if (this._batchLength === 0) {
+        if (this._featuresLength === 0) {
             // Do not change the uniform map; the model was not batched
             return undefined;
         }
@@ -658,8 +658,8 @@ define([
     }
 
     function createPickTexture(batchTableResources, context) {
-        var batchLength = batchTableResources._batchLength;
-        if (!defined(batchTableResources._pickTexture) && (batchLength > 0)) {
+        var featuresLength = batchTableResources._featuresLength;
+        if (!defined(batchTableResources._pickTexture) && (featuresLength > 0)) {
             var pickIds = batchTableResources._pickIds;
             var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
@@ -669,8 +669,8 @@ define([
             // a continuous range of pickIds and then converting the base pickId + batchId
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
-            for (var i = 0; i < batchLength; ++i) {
-                var pickId = context.createPickId(contentProvider.getModel(i));
+            for (var i = 0; i < featuresLength; ++i) {
+                var pickId = context.createPickId(contentProvider.getFeature(i));
                 pickIds.push(pickId);
 
                 var pickColor = pickId.color;

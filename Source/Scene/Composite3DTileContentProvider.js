@@ -3,6 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
@@ -15,6 +16,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        defineProperties,
         DeveloperError,
         getMagic,
         loadArrayBuffer,
@@ -67,6 +69,30 @@ define([
          */
         this.readyPromise = when.defer();
     }
+
+    defineProperties(Composite3DTileContentProvider.prototype, {
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        featuresLength : {
+            get : function() {
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        batchTableResources : {
+            get : function() {
+                return undefined;
+            }
+        }
+    });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

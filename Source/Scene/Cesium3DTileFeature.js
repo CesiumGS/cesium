@@ -10,7 +10,7 @@ define([
     /**
      * DOC_TBA
      */
-    function BatchedModel(tileset, batchTableResources, batchId) {
+    function Cesium3DTileFeature(tileset, batchTableResources, batchId) {
         this._batchTableResources = batchTableResources;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
@@ -23,7 +23,7 @@ define([
         this.primitive = tileset;
     }
 
-    defineProperties(BatchedModel.prototype, {
+    defineProperties(Cesium3DTileFeature.prototype, {
         /**
          * DOC_TBA
          */
@@ -55,16 +55,16 @@ define([
     /**
      * DOC_TBA
      */
-    BatchedModel.prototype.getProperty = function(name) {
+    Cesium3DTileFeature.prototype.getProperty = function(name) {
         return this._batchTableResources.getProperty(this._batchId, name);
     };
 
     /**
      * DOC_TBA
      */
-    BatchedModel.prototype.setProperty = function(name, value) {
+    Cesium3DTileFeature.prototype.setProperty = function(name, value) {
         this._batchTableResources.setProperty(this._batchId, name, value);
     };
 
-    return BatchedModel;
+    return Cesium3DTileFeature;
 });

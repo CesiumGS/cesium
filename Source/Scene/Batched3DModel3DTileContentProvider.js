@@ -13,7 +13,7 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/when',
-        './BatchedModel',
+        './Cesium3DTileFeature',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './Model'
@@ -31,7 +31,7 @@ define([
         RequestScheduler,
         RequestType,
         when,
-        BatchedModel,
+        Cesium3DTileFeature,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         Model) {
@@ -78,23 +78,23 @@ define([
          */
         this.readyPromise = when.defer();
 
-        this._batchLength = 0;
+        this._featuresLength = 0;
         this._batchTableResources = undefined;
-        this._models = undefined;
+        this._features = undefined;
     }
 
     defineProperties(Batched3DModel3DTileContentProvider.prototype, {
         /**
-         * DOC_TBA
+         * Gets the number of features in the tile, i.e., the number of 3D models in the batch.
          *
          * @memberof Batched3DModel3DTileContentProvider.prototype
          *
          * @type {Number}
          * @readonly
          */
-        batchLength : {
+        featuresLength : {
             get : function() {
-                return this._batchLength;
+                return this._featuresLength;
             }
         },
 
@@ -108,31 +108,31 @@ define([
         }
     });
 
-    function createModels(content) {
+    function createFeatures(content) {
         var tileset = content._tileset;
-        var batchLength = content._batchLength;
-        if (!defined(content._models) && (batchLength > 0)) {
-            var models = new Array(batchLength);
-            for (var i = 0; i < batchLength; ++i) {
-                models[i] = new BatchedModel(tileset, content._batchTableResources, i);
+        var featuresLength = content._featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
             }
-            content._models = models;
+            content._features = features;
         }
     }
 
     /**
      * DOC_TBA
      */
-    Batched3DModel3DTileContentProvider.prototype.getModel = function(batchId) {
-        var batchLength = this._batchLength;
+    Batched3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
+        var featuresLength = this._featuresLength;
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(batchId) || (batchId < 0) || (batchId >= batchLength)) {
-            throw new DeveloperError('batchId is required and between zero and batchLength - 1 (' + (batchLength - 1) + ').');
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
         }
         //>>includeEnd('debug');
 
-        createModels(this);
-        return this._models[batchId];
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
@@ -197,7 +197,7 @@ define([
         byteOffset += sizeOfUint32;
 
         var batchLength = view.getUint32(byteOffset, true);
-        this._batchLength = batchLength;
+        this._featuresLength = batchLength;
         byteOffset += sizeOfUint32;
 
         var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);

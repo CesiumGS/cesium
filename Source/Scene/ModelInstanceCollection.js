@@ -509,9 +509,7 @@ define([
             var instancesLength = collection.length;
             var points = new Array(instancesLength);
             for (var i = 0; i < instancesLength; ++i) {
-                var translation = new Cartesian3();
-                Matrix4.getTranslation(collection._instances[i].modelMatrix, translation);
-                points[i] = translation;
+                points[i] = Matrix4.getTranslation(collection._instances[i].modelMatrix, new Cartesian3());
             }
 
             var boundingSphere = new BoundingSphere();

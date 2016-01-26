@@ -427,9 +427,9 @@ function changeColor(tile) {
     if (Cesium.defined(batchTableResources)) {
         // Does it have a per-model height property?
         if (batchTableResources.hasProperty(currentPropertyName)) {
-            var length = Cesium.defaultValue(content.batchLength, content.instancesLength);
+            var length = content.featuresLength;
             for (var i = 0; i < length; ++i) {
-                var building = content.getModel(i);
+                var building = content.getFeature(i);
                 var value = building.getProperty(currentPropertyName);
 
 // TODO: we could also fix these server side
