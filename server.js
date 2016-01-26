@@ -41,12 +41,29 @@
     mime.define({
         'application/json' : ['czml', 'json', 'geojson', 'topojson'],
         'model/vnd.gltf+json' : ['gltf'],
-        'model/vnd.gltf.binary' : ['bgltf', 'glb'],
+        'model/vnd.gltf.binary' : ['glb'],
+        'application/octet-stream' : ['b3dm', 'pnts', 'i3dm', 'cmpt'],
         'text/plain' : ['glsl']
     });
 
     var app = express();
     app.use(compression());
+    app.get('*.b3dm', function(req, res, next) {
+        res.header('Content-Encoding', 'gzip');
+        next();
+    });
+    app.get('*.pnts', function(req, res, next) {
+        res.header('Content-Encoding', 'gzip');
+        next();
+    });
+    app.get('*.i3dm', function(req, res, next) {
+        res.header('Content-Encoding', 'gzip');
+        next();
+    });
+    app.get('*.cmpt', function(req, res, next) {
+        res.header('Content-Encoding', 'gzip');
+        next();
+    });
     app.use(express.static(__dirname));
 
     function getRemoteUrlFromParam(req) {
