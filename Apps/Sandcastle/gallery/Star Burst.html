@@ -220,9 +220,21 @@ function undoStarBurst() {
 var currentObject;
 
 function showLabels(mousePosition) {
-    var pickedObject = scene.pick(mousePosition);
+    var pickedObjects = scene.drillPick(mousePosition);
+    var pickedObject;
+
+    if (Cesium.defined(pickedObjects)) {
+        var length = pickedObjects.length;
+        for (var i = 0; i < length; ++i) {
+            if (pickedObjects[i].primitive instanceof Cesium.Billboard) {
+                pickedObject = pickedObjects[i];
+                break;
+            }
+        }
+    }
+
     if (pickedObject !== currentObject) {
-        if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Billboard && Cesium.defined(pickedObject.id.label)) {
+        if (Cesium.defined(pickedObject) && Cesium.defined(pickedObject.id.label)) {
             if (Cesium.defined(currentObject)) {
                 currentObject.id.label.show = false;
             }
