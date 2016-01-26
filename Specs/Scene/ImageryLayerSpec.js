@@ -237,6 +237,23 @@ defineSuite([
         });
     });
 
+    it('getViewableRectangle works', function() {
+        var providerRectangle = Rectangle.fromDegrees(8.2, 61.09, 8.5, 61.7);
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Green4x4.png',
+            rectangle : providerRectangle
+        });
+
+        var layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
+        var layer = new ImageryLayer(provider, {
+            rectangle : layerRectangle
+        });
+
+        return layer.getViewableRectangle().then(function(rectangle) {
+            expect(rectangle).toEqual(Rectangle.intersection(providerRectangle, layerRectangle));
+        });
+    });
+
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
             var provider = new TileMapServiceImageryProvider({
