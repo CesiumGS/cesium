@@ -78,7 +78,8 @@ var starBurstState = {
     center : undefined,
     pixelPadding : 10.0,
     angleStart : 0.0,
-    angleEnd : Cesium.Math.PI
+    angleEnd : Cesium.Math.PI,
+    maxDimension : undefined
 };
 
 function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
@@ -125,6 +126,7 @@ function starBurst(mousePosition) {
 
     var pickedEntities = starBurstState.pickedEntities = [];
     var lines = [];
+    starBurstState.maxDimension = Number.NEGATIVE_INFINITY;
 
     var angleStart = starBurstState.angleStart;
     var angleEnd = starBurstState.angleEnd;
@@ -178,6 +180,9 @@ function starBurst(mousePosition) {
     var instances = [];
     length = lines.length;
     for (i = 0; i < length; ++i) {
+        var pickedObject = pickedEntities[i];
+        starBurstState.maxDimension = Math.max(pickedObject.primitive.width, pickedObject.primitive.height, starBurstState.maxDimension);
+
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
                 positions : [starBurstState.center, lines[i]],
@@ -211,7 +216,10 @@ function updateStarBurst(mousePosition) {
     // Remove the star burst if the mouse exits the screen space circle.
     // If the mouse is inside the circle, show the label of the billboard the mouse is hovering over.
     var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, starBurstState.center);
-    if (Cesium.Cartesian2.distance(mousePosition, screenPosition) > starBurstState.radius) {
+    var fromCenter = Cesium.Cartesian2.subtract(mousePosition, screenPosition, new Cesium.Cartesian2());
+    var radius = starBurstState.radius;
+
+    if (Cesium.Cartesian2.magnitudeSquared(fromCenter) > radius * radius || fromCenter.y > 2.0 * (starBurstState.maxDimension + starBurstState.pixelPadding)) {
         undoStarBurst();
     } else {
         showLabels(mousePosition);
