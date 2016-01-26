@@ -76,7 +76,9 @@ var starBurstState = {
     linePrimitive : undefined,
     radius : undefined,
     center : undefined,
-    pixelPadding : 10.0
+    pixelPadding : 10.0,
+    angleStart : 0.0,
+    angleEnd : Cesium.Math.PI
 };
 
 function starBurst(mousePosition) {
@@ -92,7 +94,10 @@ function starBurst(mousePosition) {
     var pickedEntities = starBurstState.pickedEntities = [];
     var lines = [];
 
-    var angle = 0.0;
+    var angleStart = starBurstState.angleStart;
+    var angleEnd = starBurstState.angleEnd;
+
+    var angle = angleStart;
     var angleIncrease;
     var magnitude;
     var magIncrease;
@@ -131,12 +136,13 @@ function starBurst(mousePosition) {
             var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, object.primitive.position);
             Cesium.Cartesian2.add(position, offset, position);
             Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
-            lines.push(scene.pickPosition(position));
+            position.y = scene.drawingBufferHeight - position.y;
+            lines.push(Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0));
 
             angle += angleIncrease;
-            if (angle + angleIncrease * 0.5 > Cesium.Math.TWO_PI) {
+            if (angle + angleIncrease * 0.5 > angleEnd) {
                 magnitude += magIncrease;
-                angle = 0.0;
+                angle = angleStart;
                 angleIncrease = maxDimension / magnitude;
             }
         }
