@@ -51,6 +51,32 @@ for (var i = 0; i < numBillboards; ++i) {
 }
 
 var scene = viewer.scene;
+var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+
+handler.setInputAction(function(movement) {
+    // Star burst on left mouse click.
+    starBurst(movement.position);
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+handler.setInputAction(function(movement) {
+    // Remove the star burst when the mouse exits the circle and show the label of the billboard the mouse is hovering over.
+    if (Cesium.defined(radius)) {
+        var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, centerPosition);
+
+        var position = movement.endPosition;
+        if (Cesium.Cartesian2.distance(position, screenPosition) > radius) {
+            undoStarBurst();
+        } else {
+            showLabels(position);
+        }
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+
+scene.camera.moveStart.addEventListener(function() {
+    // Reset the star burst on camera move because the lines from the center
+    // because the line end points rely on the screen space positions of the billboards.
+    undoStarBurst();
+});
 
 // State saved across mouse click and move events
 var pickedEntities;
@@ -62,12 +88,9 @@ var centerPosition;
 // Additional pixel padding separating the billboards
 var padding = 10.0;
 
-var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-
-// Star burst on left mouse click.
-handler.setInputAction(function(movement) {
+function starBurst(mousePosition) {
     if (!Cesium.defined(pickedEntities)) {
-        var pickedObjects = scene.drillPick(movement.position);
+        var pickedObjects = scene.drillPick(mousePosition);
         if (Cesium.defined(pickedObjects) && pickedObjects.length > 1) {
             pickedEntities = [];
             lines = [];
@@ -152,7 +175,7 @@ handler.setInputAction(function(movement) {
             radius = magnitude + magIncrease;
         }
     }
-}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+}
 
 function undoStarBurst() {
     // The radius of the star burst is only defined when the billboards are in a star burst pattern.
@@ -179,41 +202,25 @@ function undoStarBurst() {
     radius = undefined;
 }
 
-// Reset the star burst on camera move because the lines from the center
-// because the line end points rely on the screen space positions of the billboards.
-scene.camera.moveStart.addEventListener(function() {
-    undoStarBurst();
-});
-
 var currentObject;
 
-// Remove the star burst when the mouse exits the circle and show the label of the billboard the mouse is hovering over.
-handler.setInputAction(function(movement) {
-    if (Cesium.defined(radius)) {
-        var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, centerPosition);
-
-        var position = movement.endPosition;
-        if (Cesium.Cartesian2.distance(position, screenPosition) > radius) {
-            undoStarBurst();
-        } else {
-            var pickedObject = scene.pick(position);
-            if (pickedObject !== currentObject) {
-                if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Billboard && Cesium.defined(pickedObject.id.label)) {
-                    if (Cesium.defined(currentObject)) {
-                        currentObject.id.label.show = false;
-                    }
-
-                    currentObject = pickedObject;
-                    pickedObject.id.label.show = true;
-                    pickedObject.id.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -100.0);
-                } else if (Cesium.defined(currentObject)) {
-                    currentObject.id.label.show = false;
-                    currentObject = undefined;
-                }
+function showLabels(mousePosition) {
+    var pickedObject = scene.pick(mousePosition);
+    if (pickedObject !== currentObject) {
+        if (Cesium.defined(pickedObject) && pickedObject.primitive instanceof Cesium.Billboard && Cesium.defined(pickedObject.id.label)) {
+            if (Cesium.defined(currentObject)) {
+                currentObject.id.label.show = false;
             }
+
+            currentObject = pickedObject;
+            pickedObject.id.label.show = true;
+            pickedObject.id.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, -100.0);
+        } else if (Cesium.defined(currentObject)) {
+            currentObject.id.label.show = false;
+            currentObject = undefined;
         }
     }
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+}
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
