@@ -34,7 +34,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 // Add labels clustered at the same location
-var numBillboards = 28;
+var numBillboards = 30;
 for (var i = 0; i < numBillboards; ++i) {
     var position = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
     viewer.entities.add({
@@ -81,6 +81,23 @@ var starBurstState = {
     angleEnd : Cesium.Math.PI
 };
 
+function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
+    var x = magnitude * Math.cos(angle);
+    var y = magnitude * Math.sin(angle);
+
+    var offset = new Cesium.Cartesian2(x, -y);
+    entity.billboard.pixelOffset = offset;
+    if (Cesium.defined(entity.label)) {
+        entity.label.pixelOffset = offset;
+    }
+
+    var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, entityPosition);
+    Cesium.Cartesian2.add(position, offset, position);
+    Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
+    position.y = scene.drawingBufferHeight - position.y;
+    lines.push(Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0));
+}
+
 function starBurst(mousePosition) {
     if (Cesium.defined(starBurstState.pickedEntities)) {
         return;
@@ -88,6 +105,21 @@ function starBurst(mousePosition) {
 
     var pickedObjects = scene.drillPick(mousePosition);
     if (!Cesium.defined(pickedObjects) || pickedObjects.length < 2) {
+        return;
+    }
+
+    var billboardEntities = [];
+    var length = pickedObjects.length;
+    var i;
+
+    for (i = 0; i < length; ++i) {
+        var pickedObject = pickedObjects[i];
+        if (pickedObject.primitive instanceof Cesium.Billboard) {
+            billboardEntities.push(pickedObject);
+        }
+    }
+
+    if (billboardEntities.length === 0) {
         return;
     }
 
@@ -105,56 +137,50 @@ function starBurst(mousePosition) {
 
     // Drill pick gets all of the entities under the mouse pointer.
     // Find the billboards and set their pixel offsets in a circle pattern.
-    var length = pickedObjects.length;
-    for (var i = 0; i < length; ++i) {
-        var object = pickedObjects[i];
-        if (object.primitive instanceof Cesium.Billboard) {
-            if (pickedEntities.length === 0) {
-                starBurstState.center = Cesium.Cartesian3.clone(object.primitive.position);
-            }
-
-            pickedEntities.push(object);
-
-            if (!Cesium.defined(angleIncrease)) {
-                var width = object.primitive.width;
-                var height = object.primitive.height;
-                maxDimension = Math.max(width, height) * object.primitive.scale + starBurstState.pixelPadding;
-                magnitude = maxDimension + maxDimension * 0.5;
-                magIncrease = magnitude;
-                angleIncrease = maxDimension / magnitude;
-            }
-
-            var x = magnitude * Math.cos(angle);
-            var y = magnitude * Math.sin(angle);
-
-            var offset = new Cesium.Cartesian2(x, -y);
-            object.id.billboard.pixelOffset = offset;
-            if (Cesium.defined(object.id.label)) {
-                object.id.label.pixelOffset = offset;
-            }
-
-            var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, object.primitive.position);
-            Cesium.Cartesian2.add(position, offset, position);
-            Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
-            position.y = scene.drawingBufferHeight - position.y;
-            lines.push(Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0));
-
-            angle += angleIncrease;
-            if (angle + angleIncrease * 0.5 > angleEnd) {
-                magnitude += magIncrease;
-                angle = angleStart;
-                angleIncrease = maxDimension / magnitude;
-            }
+    length = billboardEntities.length;
+    i = 0;
+    while (i < length) {
+        var object = billboardEntities[i];
+        if (pickedEntities.length === 0) {
+            starBurstState.center = Cesium.Cartesian3.clone(object.primitive.position);
         }
+
+        if (!Cesium.defined(angleIncrease)) {
+            var width = object.primitive.width;
+            var height = object.primitive.height;
+            maxDimension = Math.max(width, height) * object.primitive.scale + starBurstState.pixelPadding;
+            magnitude = maxDimension + maxDimension * 0.5;
+            magIncrease = magnitude;
+            angleIncrease = maxDimension / magnitude;
+        }
+
+        offsetBillboard(object.id, object.primitive.position, angle, magnitude, lines);
+        pickedEntities.push(object);
+
+        var reflectedAngle = angleEnd - angle;
+        if (i + 1 < length && reflectedAngle - angleIncrease * 0.5 > angle + angleIncrease * 0.5) {
+            object = billboardEntities[++i];
+            offsetBillboard(object.id, object.primitive.position, reflectedAngle, magnitude, lines);
+            pickedEntities.push(object);
+        }
+
+        angle += angleIncrease;
+        if (reflectedAngle - angleIncrease * 0.5 < angle + angleIncrease * 0.5) {
+            magnitude += magIncrease;
+            angle = angleStart;
+            angleIncrease = maxDimension / magnitude;
+        }
+
+        ++i;
     }
 
     // Add lines from the pick center out to the translated billboard.
     var instances = [];
     length = lines.length;
-    for (var j = 0; j < length; ++j) {
+    for (i = 0; i < length; ++i) {
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
-                positions : [starBurstState.center, lines[j]],
+                positions : [starBurstState.center, lines[i]],
                 followSurface : false,
                 granularity : Cesium.Math.PI_OVER_FOUR
             }),
