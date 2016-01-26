@@ -18,6 +18,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RectangleOutlineGeometry',
+        '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -50,6 +51,7 @@ define([
         OrientedBoundingBox,
         Rectangle,
         RectangleOutlineGeometry,
+        RequestScheduler,
         SphereOutlineGeometry,
         Uri,
         when,
@@ -162,9 +164,11 @@ define([
         this.readyPromise = when.defer();
 
         var content;
+        var requestServer;
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
             var url = getAbsoluteUri(contentUrl, baseUrl);
+            requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
 
@@ -185,6 +189,7 @@ define([
             this.hasContent = false;
         }
         this._content = content;
+        this._requestServer = requestServer;
 
         var that = this;
 
@@ -260,6 +265,18 @@ define([
             get : function() {
                 return this._content.processingPromise;
             }
+        },
+
+        /**
+         * DOC_TBA
+         *
+         * @type {RequestScheduler~RequestServer}
+         * @readonly
+         */
+        requestServer : {
+            get : function() {
+                return this._requestServer;
+            }
         }
     });
 
@@ -282,6 +299,17 @@ define([
      */
     Cesium3DTile.prototype.requestContent = function() {
         this._content.request();
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Cesium3DTile.prototype.canRequestContent = function() {
+        if (!defined(this._requestServer)) {
+            // If tile does not have a request server, then it does not have content to load.
+            return true;
+        }
+        return this._requestServer.hasAvailableRequests();
     };
 
     /**

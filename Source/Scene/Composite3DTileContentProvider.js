@@ -6,7 +6,9 @@ define([
         '../Core/DeveloperError',
         '../Core/getMagic',
         '../Core/loadArrayBuffer',
+        '../Core/Request',
         '../Core/RequestScheduler',
+        '../Core/RequestType',
         '../ThirdParty/when',
         './Cesium3DTileContentState'
     ], function(
@@ -16,7 +18,9 @@ define([
         DeveloperError,
         getMagic,
         loadArrayBuffer,
+        Request,
         RequestScheduler,
+        RequestType,
         when,
         Cesium3DTileContentState) {
     "use strict";
@@ -57,7 +61,14 @@ define([
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
 
-        var promise = RequestScheduler.throttleRequest(this._url, loadArrayBuffer);
+        var distance = this._tile.distanceToCamera;
+        var promise = RequestScheduler.schedule(new Request({
+            url : this._url,
+            server : this._tile.requestServer,
+            requestFunction : loadArrayBuffer,
+            type : RequestType.TILES3D,
+            distance : distance
+        }));
         if (defined(promise)) {
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function(arrayBuffer) {

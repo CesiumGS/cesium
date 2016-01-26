@@ -99,7 +99,7 @@ defineSuite([
         });
 
         beforeEach(function() {
-            tilingScheme = new WebMercatorTilingScheme();
+            tilingScheme = new GeographicTilingScheme();
             alwaysDeferTerrainProvider.tilingScheme = tilingScheme;
             alwaysFailTerrainProvider.tilingScheme = tilingScheme;
             rootTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);

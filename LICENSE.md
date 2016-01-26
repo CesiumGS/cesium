@@ -268,6 +268,14 @@ https://github.com/amd/rest3d/tree/master/server/o3dgc
 > OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 > THE SOFTWARE.
 
+### NoSleep.js
+
+https://github.com/richtr/NoSleep.js
+
+> NoSleep.js v0.5.0 - git.io/vfn01
+> Rich Tibbett
+> MIT license
+
 Tests
 =====
 

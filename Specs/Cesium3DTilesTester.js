@@ -103,7 +103,7 @@ define([
     var counter = 0;
     Cesium3DTilesTester.rejectsReadyPromiseOnError = function(scene, arrayBuffer, type) {
         var tileset = {
-            url : counter++
+            baseUrl : counter++
         };
         var tile = {
             contentBoundingVolume : new TileBoundingSphere()
