@@ -42,9 +42,6 @@ var batchedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Batched/Batched
 var instancedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
 var compositeUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Composite/Composite/';
 var pointsUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Points/Points/';
-var washingtonDCUrl = 'http://localhost:8002/tilesets/WashingtonDC/';
-var canaryWharfUrl = 'http://localhost:8002/tilesets/CanaryWharf/';
-var seattleUrl = 'http://localhost:8002/tilesets/Seattle/';
 
 var tileset;
 
@@ -304,25 +301,6 @@ Sandcastle.addToolbarMenu([ {
     text : 'Points',
     onselect : function() {
         loadTileset(pointsUrl);
-    }
-}, {
-    text : 'Canary Wharf',
-    onselect : function() {
-        loadTileset(canaryWharfUrl);
-    }
-}, {
-    text : 'Seattle',
-    onselect : function() {
-        loadTileset(seattleUrl);
-    }
-}, {
-    text : 'Washington DC',
-    onselect : function() {
-        loadTileset(washingtonDCUrl).then(function() {
-            viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
-            viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-77.0164, 38.9047, 0.0), new Cesium.Cartesian3(600.0, -2000.0, 800.0));
-            viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-        });
     }
 }]);
 
