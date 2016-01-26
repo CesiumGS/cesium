@@ -48,7 +48,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Use this to access and modify individual features (instances) in the tile.
+     * </p>
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Instanced3DModel3DTileContentProvider
+     * @constructor
      */
     function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
@@ -57,17 +68,23 @@ define([
         this._tile = tile;
 
         /**
-         * @readonly
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -129,9 +146,9 @@ define([
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -159,7 +176,9 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -290,27 +309,31 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Instanced3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+    Instanced3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(owner, frameState);
+        this._batchTableResources.update(tiles3D, frameState);
         this._modelInstanceCollection.update(frameState);
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();

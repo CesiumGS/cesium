@@ -75,6 +75,7 @@ define([
 
     /**
      * Computes the distance between this bounding sphere and the camera attached to frameState.
+     *
      * @param {FrameState} frameState The frameState to which the camera is attached.
      * @returns {Number} The distance between the camera and the bounding sphere in meters. Returns 0 if the camera is inside the bounding volume.
      *

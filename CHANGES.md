@@ -3,7 +3,22 @@ Change Log
 
 ### TODO
 
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium types are:
+   * `Cesium3DTileset`
+   * `Cesium3DTile`
+   * `Batched3DModel3DTileContentProvider`
+   * `Instanced3DModel3DTileContentProvider`
+   * `Points3DTileContentProvider`
+   * `Composite3DTileContentProvider`
+   * `Tileset3DTileContentProvider`
+   * `Empty3DTileContentProvider`
+   * `BatchedModel`
+   * `Cesium3DTileBatchTableResources`
+   
+TODO: these are still private:
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
+
+TODO: this is not finished yet:
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
 ### 1.18 - 2016-02-01

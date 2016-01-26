@@ -26,7 +26,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Use this to access the individual tiles (precisely, tile content) in the composite.
+     * </p>
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Composite3DTileContentProvider
+     * @constructor
      */
     function Composite3DTileContentProvider(tileset, tile, url, factory) {
         this._url = url;
@@ -36,17 +47,23 @@ define([
         this._factory = factory;
 
         /**
-         * @readonly
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.readyPromise = when.defer();
     }
@@ -54,9 +71,9 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -84,7 +101,9 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -161,26 +180,30 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Composite3DTileContentProvider.prototype.update = function(owner, context, frameState, commandList) {
+    Composite3DTileContentProvider.prototype.update = function(tiles3D, context, frameState, commandList) {
         var length = this._contentProviders.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].update(owner, context, frameState, commandList);
+            this._contentProviders[i].update(tiles3D, context, frameState, commandList);
         }
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Composite3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Composite3DTileContentProvider.prototype.destroy = function() {
         var length = this._contentProviders.length;

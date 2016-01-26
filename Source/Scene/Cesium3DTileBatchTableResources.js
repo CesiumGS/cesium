@@ -40,9 +40,7 @@ define([
     "use strict";
 
     /**
-     * Manage batch values like show/color for models within a collection
-     *
-     * @private
+     * DOC_TBA
      */
     function Cesium3DTileBatchTableResources(contentProvider, size) {
         this._batchLength = defaultValue(size, 0);
@@ -135,6 +133,9 @@ define([
         return batchTableResources._batchValues;
     }
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.setShow = function(batchId, value) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -162,6 +163,9 @@ define([
         }
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.getShow = function(batchId) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -181,6 +185,9 @@ define([
 
     var scratchColor = new Array(4);
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.setColor = function(batchId, value) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -212,6 +219,9 @@ define([
         }
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.setAllColor = function(value) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(value)) {
@@ -226,6 +236,9 @@ define([
         }
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.getColor = function(batchId, result) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -248,6 +261,9 @@ define([
         return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, result);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.hasProperty = function(name) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(name)) {
@@ -259,6 +275,9 @@ define([
         return defined(batchTable) && defined(batchTable[name]);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.getPropertyNames = function() {
         var names = [];
         var batchTable = this._batchTable;
@@ -276,6 +295,9 @@ define([
         return names;
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.getProperty = function(batchId, name) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -301,6 +323,9 @@ define([
         return clone(propertyValues[batchId], true);
     };
 
+    /**
+     * DOC_TBA
+     */
     Cesium3DTileBatchTableResources.prototype.setProperty = function(batchId, name, value) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
@@ -355,6 +380,9 @@ define([
             '} \n';
     }
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
         if (this._batchLength === 0) {
             // Do not change vertex shader source; the model was not batched
@@ -394,6 +422,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
         if (this._batchLength === 0) {
             // Do not change fragment shader source; the model was not batched
@@ -459,6 +490,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
         if (this._batchLength === 0) {
             // Do not change the uniform map; the model was not batched
@@ -484,6 +518,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
         if (this._batchLength === 0) {
             // Do not change vertex shader source; the model was not batched
@@ -523,6 +560,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
         if (this._batchLength === 0) {
             // Do not change fragment shader source; the model was not batched
@@ -570,6 +610,9 @@ define([
         };
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
         if (this._batchLength === 0) {
             // Do not change the uniform map; the model was not batched
@@ -666,18 +709,21 @@ define([
         }
     }
 
-    function applyDebugSettings(owner, batchTableResources) {
-        if (owner.debugColorizeTiles && !batchTableResources._debugColorizeTiles) {
+    function applyDebugSettings(tiles3D, batchTableResources) {
+        if (tiles3D.debugColorizeTiles && !batchTableResources._debugColorizeTiles) {
             batchTableResources._debugColorizeTiles = true;
             batchTableResources.setAllColor(batchTableResources._debugColor);
-        } else if (!owner.debugColorizeTiles && batchTableResources._debugColorizeTiles) {
+        } else if (!tiles3D.debugColorizeTiles && batchTableResources._debugColorizeTiles) {
             batchTableResources._debugColorizeTiles = false;
             batchTableResources.setAllColor(Color.WHITE);
         }
     }
 
-    Cesium3DTileBatchTableResources.prototype.update = function(owner, frameState) {
-        applyDebugSettings(owner, this);
+    /**
+     * @private
+     */
+    Cesium3DTileBatchTableResources.prototype.update = function(tiles3D, frameState) {
+        applyDebugSettings(tiles3D, this);
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
@@ -696,10 +742,16 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @private
+     */
     Cesium3DTileBatchTableResources.prototype.destroy = function() {
         this._batchTexture = this._batchTexture && this._batchTexture.destroy();
         this._pickTexture = this._pickTexture && this._pickTexture.destroy();

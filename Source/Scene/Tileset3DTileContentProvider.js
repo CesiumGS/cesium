@@ -12,7 +12,15 @@ define([
     "use strict";
 
     /**
-     * @private
+     * Represents content for a tile in a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset whose
+     * content points to another 3D Tiles tileset.
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Tileset3DTileContentProvider
+     * @constructor
      */
     function Tileset3DTileContentProvider(tileset, tile, url) {
         this._tileset = tileset;
@@ -20,25 +28,31 @@ define([
         this._url = url;
 
         /**
-         * @readonly
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.readyPromise = when.defer();
     }
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -59,13 +73,28 @@ define([
         }
     };
 
-    Tileset3DTileContentProvider.prototype.update = function(owner, frameState) {
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
+    Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
     Tileset3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
     Tileset3DTileContentProvider.prototype.destroy = function() {
         return destroyObject(this);
     };

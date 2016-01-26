@@ -36,7 +36,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Represents the contents of a
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md|Batched 3D Model}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
+     * <p>
+     * Use this to access and modify individual features (models) in the tile.
+     * </p>
+     * <p>
+     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
+     * </p>
+     *
+     * @alias Batched3DModel3DTileContentProvider
+     * @constructor
      */
     function Batched3DModel3DTileContentProvider(tileset, tile, url) {
         this._model = undefined;
@@ -45,17 +56,23 @@ define([
         this._tile = tile;
 
         /**
-         * @readonly
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.processingPromise = when.defer();
 
         /**
-         * @type {Promise}
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
          */
         this.readyPromise = when.defer();
 
@@ -119,9 +136,9 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#requestContent
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -149,7 +166,9 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         var byteStart = defaultValue(byteOffset, 0);
@@ -230,27 +249,31 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      *
-     * Use Cesium3DTile#update
+     * @private
      */
-    Batched3DModel3DTileContentProvider.prototype.update = function(owner, frameState) {
+    Batched3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(owner, frameState);
+        this._batchTableResources.update(tiles3D, frameState);
         this._model.update(frameState);
    };
 
-   /**
-    * DOC_TBA
-    */
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
     Batched3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
      */
     Batched3DModel3DTileContentProvider.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();

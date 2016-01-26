@@ -50,20 +50,26 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {String} options.url TODO
-     * @param {Boolean} [options.show=true] TODO
-     * @param {Boolean} [options.maximumScreenSpaceError=16] TODO
-     * @param {Boolean} [options.debugShowStatistics=false] TODO
-     * @param {Boolean} [options.debugFreezeFrame=false] TODO
-     * @param {Boolean} [options.debugColorizeTiles=false] TODO
-     * @param {Boolean} [options.debugShowBoundingVolume=false] TODO
-     * @param {Boolean} [options.debugShowContentBoundingVolume=false] TODO
+     * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},
+     * used for streaming massive heterogeneous 3D geospatial datasets.
      *
      * @alias Cesium3DTileset
      * @constructor
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
+     * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
+     * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
+     * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
+     * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
+     * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
+     * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
+     *
+     * @example
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     *      url : 'http://localhost:8002/tilesets/Seattle'
+     * }));
      */
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -102,17 +108,30 @@ define([
         this._selectedTiles = [];
 
         /**
-         * DOC_TBA
+         * Determines if the tileset will be shown.
+         *
+         * @type {Boolean}
+         * @default true
          */
         this.show = defaultValue(options.show, true);
 
         /**
-         * DOC_TBA
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @type {Number}
+         * @default 16
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * Determines if rendering statistics are output to the console.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
         this._statistics = {
@@ -131,37 +150,104 @@ define([
         };
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * Determines if only the tiles from last frame should be used for rendering.  This
+         * effectively "freezes" the tileset to the previous frame so it is possible to zoom
+         * out and see what was rendered.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, assigns a random color to each tile.  This is useful for visualizing
+         * what models belong to what tiles, espeically with additive refinement where models
+         * from parent tiles may be interleaved with models from child tiles.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.debugColorizeTiles = defaultValue(options.debugColorizeTiles, false);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the bounding volume for each tile.  The bounding volume is
+         * white if the tile's content has an explicit bounding volume; otherwise, it
+         * is red.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders a blue bounding volume for each tile's content.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
          */
         this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
 
         /**
-         * DOC_TBA
+         * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
+         * is requested, when a requested tile is finished downloading, and when a downloaded tile has been
+         * processed and is ready to render.
+         * <p>
+         * The number of pending tile requests, <code>numberOfPendingRequests</code>, and number of tiles
+         * processing, <code>numberProcessing</code> are passed to the event listener.
+         * </p>
+         * <p>
+         * This event is fired at the end of the frame after the scene is rendered.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+         *     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
+         *         console.log('Stopped loading');
+         *         return;
+         *     }
+         *
+         *     console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+         * });
          */
         this.loadProgress = new Event();
         this._loadProgressEventsToRaise = [];
 
         /**
-         * DOC_TBA
+         * This event fires once for each visible tile in a frame.  This can be used to style a tileset.
+         * <p>
+         * The visible {@link Cesium3DTile} is passed to the event listener.
+         * </p>
+         * <p>
+         * This event is fired during the tileset traversal while the frame is being rendered
+         * so that updates to the tile take effect in the same frame.  Do not create or modify
+         * Cesium entities or primitives during the event listener.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileVisible.addEventListener(function(tile) {
+         *     if (tile.content instanceof Cesium.Batched3DModel3DTileContentProvider) {
+         *         console.log('A Batched 3D Model tile is visible.');
+         *     }
+         * });
          */
-// TODO:
-// * This event fires inside update; the others are painfully deferred until the end of the frame,
-// which also means they are one tick behind for time-dynamic updates.
         this.tileVisible = new Event();
 
         this._readyPromise = when.defer();
@@ -169,12 +255,19 @@ define([
 
     defineProperties(Cesium3DTileset.prototype, {
         /**
-         * DOC_TBA
+         * Gets the tileset's asset object property, which contains metadata about the tileset.
+         * <p>
+         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/asset.schema.json|asset schema}
+         * in the 3D Tiles spec for the full set of properties.
+         * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Object}
          * @readonly
+         *
+         * @example
+         * console.log('3D Tiles version: ' + tileset.asset.version);
          */
         asset : {
             get : function() {
@@ -189,12 +282,20 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the tileset's properties dictionary object, which contains metadata about per-feature properties.
+         * <p>
+         * See the {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/schema/properties.schema.json|properties schema}
+         * in the 3D Tiles spec for the full set of properties.
+         * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Object}
          * @readonly
+         *
+         * @example
+         * console.log('Maximum building height: ' + tileset.properties.height.maximum);
+         * console.log('Minimum building height: ' + tileset.properties.height.minimum);
          */
         properties : {
             get : function() {
@@ -209,7 +310,8 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the tileset's root tile is loaded and the tileset is ready to render.
+         * This is set to <code>true</code> right before {@link Cesium3DTileset#readyPromise} is resolved.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -225,12 +327,26 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the promise that will be resolved when the tileset's root tile is loaded and the tileset is ready to render.
+         * <p>
+         * This promise is resolved at the end of the frame before the first frame the tileset is rendered in.
+         * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
-         * @type {Promise}
+         * @type {Promise.<Cesium3DTileset>}
          * @readonly
+         *
+         * @example
+         * Cesium.when(tileset.readyPromise).then(function(tileset) {
+         *     // tile.properties is not defined until readyPromise resolves.
+         *     var properties = tileset.properties;
+         *     if (Cesium.defined(properties)) {
+         *         for (var name in properties) {
+         *             console.log(properties[name]);
+         *         }
+         *     }
+         * });
          */
         readyPromise : {
             get : function() {
@@ -239,7 +355,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * The url to a tileset.json file or to a directory containing a tileset.json file.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -268,6 +384,8 @@ define([
     });
 
     /**
+     * Loads the main tileset.json or a tileset.json referenced from a tile.
+     *
      * @private
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
@@ -290,7 +408,7 @@ define([
             }
 
             if (!defined(tilesetJson.asset) || (tilesetJson.asset.version !== '0.0')) {
-                return when.reject('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
+                throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
             var baseUrl = tileset._baseUrl;
@@ -393,7 +511,8 @@ define([
         }
     }
 
-// TODO: is it worth exploiting frame-to-frame coherence in the sort?
+    // PERFORMANCE_IDEA: is it worth exploiting frame-to-frame coherence in the sort, i.e., the
+    // list of children are probably fully or mostly sorted unless the camera moved significantly?
     function sortChildrenByDistanceToCamera(a, b) {
         // Sort by farthest child first since this is going on a stack
         return b.distanceToCamera - a.distanceToCamera;
@@ -793,7 +912,14 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
+     * get the draw commands needed to render this primitive.
+     * <p>
+     * Do not call this function directly.  This is documented just to
+     * list the exceptions that may be propagated when the scene is rendered:
+     * </p>
+     *
+     * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
         if (this._state === Cesium3DTilesetState.UNLOADED) {
@@ -828,14 +954,36 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     *
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see Cesium3DTileset#destroy
      */
     Cesium3DTileset.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     *
+     * @example
+     * tileset = tileset && tileset.destroy();
+     *
+     * @see Cesium3DTileset#isDestroyed
      */
     Cesium3DTileset.prototype.destroy = function() {
         // Traverse the tree and destroy all tiles

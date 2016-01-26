@@ -12,6 +12,8 @@ define([
      * @see TileBoundingRegion
      * @see TileBoundingSphere
      * @see TileOrientedBoundingBox
+     *
+     * @private
      */
     var TileBoundingVolume = function() {
     };
@@ -32,7 +34,6 @@ define([
      *
      * @param {Color} color The desired color of the primitive's mesh
      * @return {Primitive}
-     *
      */
     TileBoundingVolume.prototype.createDebugVolume = function(color) {
         DeveloperError.throwInstantiationError();
