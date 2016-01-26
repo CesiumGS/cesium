@@ -407,11 +407,8 @@ define([
      * DOC_TBA
      */
     Cesium3DTile.prototype.update = function(owner, frameState) {
-        if (this.selected) {
-            this.selected = false;
-            applyDebugSettings(this, owner, frameState);
-            this._content.update(owner, frameState);
-        }
+        applyDebugSettings(this, owner, frameState);
+        this._content.update(owner, frameState);
     };
 
     var scratchCommandList = [];

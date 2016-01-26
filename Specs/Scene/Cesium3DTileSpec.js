@@ -192,7 +192,6 @@ defineSuite([
                 debugShowBoundingVolume: true
             };
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingRegion, undefined);
-            tile.selected = true;
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
@@ -203,7 +202,6 @@ defineSuite([
                 debugShowBoundingVolume: true
             };
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
-            tile.selected = true;
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });
@@ -214,7 +212,6 @@ defineSuite([
                 debugShowBoundingVolume: true
             };
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
-            tile.selected = true;
             tile.update(mockTileset, scene.frameState);
             expect(tile._debugBoundingVolume).toBeDefined();
         });

@@ -468,6 +468,7 @@ define([
         while (stack.length > 0) {
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
+            t.selected = false;
             ++stats.visited;
 
             var planeMask = t.visibility(cullingVolume);
@@ -731,8 +732,10 @@ define([
         var tileVisible = tiles3D.tileVisible;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
-            tileVisible.raiseEvent(tile);
-            tile.update(tiles3D, frameState);
+            if (tile.selected) {
+                tileVisible.raiseEvent(tile);
+                tile.update(tiles3D, frameState);
+            }
         }
 
         tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
