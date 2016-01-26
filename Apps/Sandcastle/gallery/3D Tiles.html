@@ -143,7 +143,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(current.building) && (current.building !== pickedBuilding)) {
         // Restore original color to building that is no longer selected
 
-        // This assignment is nessearcy to work with the set property
+        // This assignment is necessary to work with the set property
         current.building.color = Cesium.Color.clone(current.originalColor, current.building.color);
         current.building = undefined;
     }
@@ -421,11 +421,12 @@ function changeColor(tile) {
     var max = styleableProperties[currentPropertyName].maximum;
     var delta = max - min;
     var content = tile.content;
-    var batchTableResources = content.batchTableResources;
 
     // Is the tile a Batched 3D Model or Instanced 3D Model?
     if (Cesium.defined(batchTableResources)) {
         // Does it have a per-model height property?
+        var batchTableResources = content.batchTableResources;
+
         if (batchTableResources.hasProperty(currentPropertyName)) {
             var length = Cesium.defaultValue(content.batchLength, content.instancesLength);
             for (var i = 0; i < length; ++i) {

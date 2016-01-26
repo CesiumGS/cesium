@@ -3,21 +3,50 @@ Change Log
 
 ### TODO
 
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium types are:
+   * `Cesium3DTileset`
+   * `Cesium3DTile`
+   * `Batched3DModel3DTileContentProvider`
+   * `Instanced3DModel3DTileContentProvider`
+   * `Points3DTileContentProvider`
+   * `Composite3DTileContentProvider`
+   * `Tileset3DTileContentProvider`
+   * `Empty3DTileContentProvider`
+   * `BatchedModel`
+   * `Cesium3DTileBatchTableResources`
+   
+TODO: these are still private:
 * Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
+
+TODO: this is not finished yet:
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
 ### 1.18 - 2016-02-01
 
 * Breaking changes
     * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
+    * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead.
 * Deprecated
     * Deprecated `throttleRequests` flag in `TerrainProvider`. It will be removed in 1.19. It is replaced by an optional `Request` object that stores information used to prioritize requests.
+    * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
 * Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
 * Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
 * Added `getExtensionFromUri` helper function.
 * Added `getAbsoluteUri` helper function.
+* Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
+* Added `Scene.useWebVR` to switch the scene to use stereoscopic rendering.
+* Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute.  This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases.  To enable the previous behavior, use the following code:
+    ```javascript
+    if(Cesium.FeatureDetection.supportsImageRenderingPixelated()){
+        viewer.resolutionScale = window.devicePixelRatio;
+    }
+    ```
+* `GroundPrimitive` now supports batching geometry for better performance.
+* Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
+* Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
+* Fixed incorrect texture coordinates for polygons with large height.
 
 ### 1.17 - 2016-01-04
 

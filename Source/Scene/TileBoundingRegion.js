@@ -44,7 +44,6 @@ define([
      *
      * @private
      */
-
     var TileBoundingRegion = function(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.rectangle)) {
@@ -115,15 +114,7 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-        /**
-         * An oriented bounding box that encloses this tile's region.
-         * This is used to calculate tile visibility.
-         *
-         * @type {OrientedBoundingBox}
-         * @default OrientedBoundingBox()
-         *
-         * @private
-         */
+         // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
          this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
     };
 
@@ -193,7 +184,6 @@ define([
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
      * @param {FrameState} frameState The state information of the current rendering frame.
-     *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
     TileBoundingRegion.prototype.distanceToCamera = function(frameState) {

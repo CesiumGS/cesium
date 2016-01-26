@@ -185,6 +185,7 @@ defineSuite([
 
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
+            expect(tileset._root.descendantsWithContent).toBeUndefined();
             expect(tileset.url).toEqual(tilesetUrl);
         });
     });
@@ -494,7 +495,6 @@ defineSuite([
             scene.renderForSpecs();
 
             var stats = tileset._statistics;
-            expect(root.isRefinable()).toEqual(false);
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
             expect(stats.numberOfPendingRequests).toEqual(4);
@@ -517,17 +517,17 @@ defineSuite([
 
             var stats = tileset._statistics;
             var root = tileset._root;
+            expect(root.descendantsWithContent).toBeDefined();
+            expect(root.descendantsWithContent.length).toEqual(4);
             return when.join(root.children[0].readyPromise, root.children[1].readyPromise).then(function() {
                 // Even though root's children are loaded, the grandchildren need to be loaded before it becomes refinable
                 scene.renderForSpecs();
-                expect(root.isRefinable()).toEqual(false);
                 expect(root.numberOfChildrenWithoutContent).toEqual(0); // Children are loaded
                 expect(stats.numberOfCommands).toEqual(1); // Render root
                 expect(stats.numberOfPendingRequests).toEqual(4); // Loading grandchildren
 
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
-                    expect(root.isRefinable()).toEqual(true);
                     expect(stats.numberOfCommands).toEqual(4); // Render children
                 });
             });
@@ -537,7 +537,7 @@ defineSuite([
     it('replacement refinement - selects root when sse is not met and subtree is not refinable (2)', function() {
         // Check that the root is refinable once its child is loaded
         //
-        //          E
+        //          C
         //          E
         //        C   E
         //            C (smaller geometric error)
@@ -550,17 +550,17 @@ defineSuite([
 
             var stats = tileset._statistics;
             var root = tileset._root;
+            expect(root.descendantsWithContent).toBeDefined();
+            expect(root.descendantsWithContent.length).toEqual(2);
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                 scene.renderForSpecs();
-                expect(root.isRefinable()).toEqual(false);
-                expect(stats.numberOfCommands).toEqual(0);
+                expect(stats.numberOfCommands).toEqual(1);
 
                 setZoom(5.0); // Zoom into the last tile, when it is ready the root is refinable
                 scene.renderForSpecs();
 
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
-                    expect(root.isRefinable()).toEqual(true);
                     expect(stats.numberOfCommands).toEqual(2); // Renders two content tiles
                 });
             });
