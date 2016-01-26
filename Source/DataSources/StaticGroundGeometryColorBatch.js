@@ -146,7 +146,6 @@ define([
                     colorProperty.getValue(time, colorScratch);
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
                         attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        attributes.color = ColorGeometryInstanceAttribute.toValue(colorScratch, attributes.color);
                         if (!Color.equals(this.color, attributes.color)) {
                             this.itemsToRemove[removedCount++] = updater;
                         }
