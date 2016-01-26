@@ -60,7 +60,7 @@ function createOverlappingPolygons(withAlpha) {
     }
     
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance : new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
@@ -81,7 +81,7 @@ function createOverlappingPolygons(withAlpha) {
     }
     
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance : new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
@@ -102,7 +102,7 @@ function createOverlappingPolygons(withAlpha) {
     }
     
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance : new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolygonGeometry({
                 polygonHierarchy : polygonHierarchy
             }),
@@ -124,7 +124,7 @@ var handler;
 Sandcastle.addDefaultToolbarButton('Picking Example', function() {
     createOverlappingPolygons(true);
     viewOverlappingPolygons();
-    
+
     var currentObject;
     var lastColor;
 
@@ -152,7 +152,6 @@ Sandcastle.addToolbarButton('Z-Order', function() {
     createOverlappingPolygons(false);
     viewOverlappingPolygons();
     
-
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
         var pickedObject = scene.pick(movement.endPosition);
@@ -162,10 +161,107 @@ Sandcastle.addToolbarButton('Z-Order', function() {
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 
+function createBatchedInstances(color, show) {
+    var instances = [];
+
+    var width = 0.02561343838881669;
+    var height = 0.019831817968480436;
+
+    var lat = 46.18147866629652;
+    var lon = -122.20406057655991;
+
+    var delta = 0.03;
+    var latDeltas = [0.0, 0.0, delta, 0.0];
+    var lonDeltas = [0.0, delta, 0.0, -delta];
+
+    var length = latDeltas.length;
+    for (var i = 0; i < length; ++i) {
+        lon = lon + lonDeltas[i];
+        lat = lat + latDeltas[i];
+
+        var west = lon;
+        var east = lon + width;
+        var south = lat;
+        var north = lat + height;
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry : new Cesium.RectangleGeometry({
+                rectangle : Cesium.Rectangle.fromDegrees(west, south, east, north),
+            }),
+            attributes: {
+                color : color,
+                show : show
+            },
+            id : 'rectangle' + i
+        }));
+    }
+
+    return instances;
+}
+
+Sandcastle.addToolbarButton('Batching', function() {
+    var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5);
+    var show = new Cesium.ShowGeometryInstanceAttribute(true);
+    var instances = createBatchedInstances(color, show);
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : instances
+    }));
+
+    viewOverlappingPolygons();
+});
+
+Sandcastle.addToolbarButton('Batch Picking', function() {
+    var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5);
+    var show = new Cesium.ShowGeometryInstanceAttribute(true);
+    var instances = createBatchedInstances(color, show);
+
+    var primitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : instances
+    }));
+
+    color = new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 0.5);
+    show = new Cesium.ShowGeometryInstanceAttribute(false);
+    instances = createBatchedInstances(color, show);
+
+    // Edit id to differentiate between picked primitive and normally displayed primitive.
+    var pickIdPrefix = 'pick';
+    for (var i = 0; i < instances.length; ++i) {
+        instances[i].id = pickIdPrefix + instances[i].id;
+    }
+
+    var pickPrimitive = scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : instances
+    }));
+
+    viewOverlappingPolygons();
+
+    var currentObject;
+
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedObject = scene.pick(movement.endPosition);
+        if (Cesium.defined(pickedObject) && pickedObject !== currentObject && pickedObject.id.indexOf(pickIdPrefix) === -1) {
+            if (Cesium.defined(currentObject)) {
+                primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
+                pickPrimitive.getGeometryInstanceAttributes(pickIdPrefix + currentObject.id).show = [0];
+            }
+
+            currentObject = pickedObject;
+
+            primitive.getGeometryInstanceAttributes(currentObject.id).show = [0];
+            pickPrimitive.getGeometryInstanceAttributes(pickIdPrefix + currentObject.id).show = [1];
+        } else if (!Cesium.defined(pickedObject) && Cesium.defined(currentObject)) {
+            primitive.getGeometryInstanceAttributes(currentObject.id).show = [1];
+            pickPrimitive.getGeometryInstanceAttributes(pickIdPrefix + currentObject.id).show = [0];
+            currentObject = undefined;
+        }
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
 Sandcastle.addToolbarButton('Create large polygons', function() {
     // Circle geometry
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance: new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.CircleGeometry({
                 center : Cesium.Cartesian3.fromDegrees(-95.0, 45.0),
                 radius : 250000.0
@@ -179,7 +275,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
 
     // Ellipse Geometry
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance: new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.EllipseGeometry({
                 center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
                 semiMinorAxis : 300000.0,
@@ -194,7 +290,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
 
     // Corridor Geometry
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance : new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry: new Cesium.CorridorGeometry({
                 positions : Cesium.Cartesian3.fromDegreesArray([
                         -112.0, 40.0,
@@ -212,7 +308,7 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
 
     // Rectangle geometry
     scene.groundPrimitives.add(new Cesium.GroundPrimitive({
-        geometryInstance : new Cesium.GeometryInstance({
+        geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.RectangleGeometry({
                 rectangle : Cesium.Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0),
                 rotation : Cesium.Math.toRadians(45)

@@ -133,6 +133,17 @@ define([
         this.children = [];
 
         /**
+         * Descendant tiles that need to be visible before this tile can refine. For example, if
+         * a child is empty (such as for accelerating culling), its descendants with content would
+         * be added here. This array is generated during runtime in {@link Cesium3DTileset#loadTileset}.
+         * If a tiles's children all have content, this is left undefined.
+         *
+         * @type {Array}
+         * @readonly
+         */
+        this.descendantsWithContent = undefined;
+
+        /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
          * When a tile's content points to an external tileset.json, the external tileset's
@@ -154,8 +165,6 @@ define([
          * @private
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
-
-        this._numberOfUnrefinableChildren = this.numberOfChildrenWithoutContent;
 
         /**
          * When <code>true</code>, the tile can be traversed but not selected for rendering;
@@ -192,7 +201,6 @@ define([
             if (type === 'json') {
                 hasContent = false;
                 hasTilesetContent = true;
-                this._numberOfUnrefinableChildren = 1;
             } else {
                 hasContent = true;
                 hasTilesetContent = false;
@@ -237,20 +245,6 @@ define([
          */
         this.hasTilesetContent = hasTilesetContent;
 
-        function setRefinable(tile) {
-            var parent = tile.parent;
-            if (defined(parent) && (tile.hasContent || tile.isReplacementRefinable())) {
-                // When a tile with content is loaded, its parent can safely refine to it without any gaps in rendering
-                // Since an empty tile doesn't have content of its own, its descendants with content need to be loaded
-                // before the parent is able to refine to it.
-                --parent._numberOfUnrefinableChildren;
-                // If the parent is empty, traverse up the tree to update ancestor tiles.
-                if (!parent.hasContent) {
-                    setRefinable(parent);
-                }
-            }
-        }
-
         var that = this;
 
         // Content enters the READY state
@@ -258,8 +252,6 @@ define([
             if (defined(that.parent)) {
                 --that.parent.numberOfChildrenWithoutContent;
             }
-
-            setRefinable(that);
 
             that.readyPromise.resolve(that);
         }).otherwise(function(error) {
@@ -269,7 +261,7 @@ define([
             that.readyPromise.reject(error);
         });
 
-        // Members that are updated every frame for rendering optimizations:
+        // Members that are updated every frame for tree traversal and rendering optimizations:
 
         /**
          * The (potentially approximate) distance from the closest point of the tile's bounding volume to the camera.
@@ -288,6 +280,13 @@ define([
          * @private
          */
         this.parentPlaneMask = 0;
+
+        /**
+         * Marks if the tile is selected this frame.
+         *
+         * @type {Boolean}
+         */
+        this.selected = false;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -367,21 +366,6 @@ define([
         return this._content.state === Cesium3DTileContentState.READY;
     };
 
-    /**
-     * When <code>true</code>, the tile can be refined to when doing replacement refinement.
-     * <p>
-     * A tile is refinable when all of its children's content is loaded.  If a child is does
-     * not have empty (such as for accelerating culling), its descendants with content must
-     * be loaded first.
-     * </p>
-     *
-     * DOC_TBA
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.isReplacementRefinable = function() {
-        return this._numberOfUnrefinableChildren === 0;
-    };
 
     /**
      * When <true>true</code>, the tile's content has not be requested.
