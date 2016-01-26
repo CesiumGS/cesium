@@ -17,7 +17,7 @@ define([
      * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
      * </p>
      *
-     * @alias Batched3DModel3DTileContentProvider
+     * @alias Empty3DTileContentProvider
      * @constructor
      */
     function Empty3DTileContentProvider() {
