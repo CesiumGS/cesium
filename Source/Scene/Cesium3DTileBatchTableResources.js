@@ -673,7 +673,7 @@ define([
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
             for (var i = 0; i < batchLength; ++i) {
-                var pickId = context.createPickId(contentProvider.getModel(i));
+                var pickId = context.createPickId(contentProvider.getFeature(i));
                 pickIds.push(pickId);
 
                 var pickColor = pickId.color;

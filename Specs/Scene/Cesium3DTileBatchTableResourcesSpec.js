@@ -28,7 +28,7 @@ defineSuite([
     var result = new Color();
 
     var mockContentProvider = {
-        getModel : function(index) {
+        getFeature : function(index) {
             return {};
         }
     };

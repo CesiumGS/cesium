@@ -18,7 +18,7 @@ define([
         '../Core/Transforms',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './BatchedModel',
+        './Cesium3DTileFeature',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './ModelInstanceCollection'
@@ -41,7 +41,7 @@ define([
         Transforms,
         Uri,
         when,
-        BatchedModel,
+        Cesium3DTileFeature,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         ModelInstanceCollection) {
@@ -89,7 +89,7 @@ define([
         this.readyPromise = when.defer();
 
         this._batchTableResources = undefined;
-        this._models = undefined;
+        this._features = undefined;
     }
 
     defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
@@ -117,19 +117,19 @@ define([
         }
     });
 
-    function createModels(content) {
+    function createFeatures(content) {
         var tileset = content._tileset;
         var instancesLength = content.instancesLength;
-        if (!defined(content._models) && (instancesLength > 0)) {
-            var models = new Array(instancesLength);
+        if (!defined(content._features) && (instancesLength > 0)) {
+            var features = new Array(instancesLength);
             for (var i = 0; i < instancesLength; ++i) {
-                models[i] = new BatchedModel(tileset, content._batchTableResources, i);
+                features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
             }
-            content._models = models;
+            content._features = features;
         }
     }
 
-    Instanced3DModel3DTileContentProvider.prototype.getModel = function(index) {
+    Instanced3DModel3DTileContentProvider.prototype.getFeature = function(index) {
         var instancesLength = this._modelInstanceCollection.length;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(index) || (index < 0) || (index >= instancesLength)) {
@@ -137,8 +137,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        createModels(this);
-        return this._models[index];
+        createFeatures(this);
+        return this._features[index];
     };
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;

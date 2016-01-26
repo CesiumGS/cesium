@@ -146,13 +146,13 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, gltfEmbeddedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
-                content.getModel(-1);
+                content.getFeature(-1);
             }).toThrowDeveloperError();
             expect(function(){
-                content.getModel(1000);
+                content.getFeature(1000);
             }).toThrowDeveloperError();
             expect(function(){
-                content.getModel();
+                content.getFeature();
             }).toThrowDeveloperError();
         });
     });

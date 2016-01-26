@@ -395,7 +395,7 @@ function changeColor(tile) {
         if (batchTableResources.hasProperty(currentPropertyName)) {
             var length = content.batchSize;
             for (var i = 0; i < length; ++i) {
-                var building = content.getModel(i);
+                var building = content.getFeature(i);
                 var value = building.getProperty(currentPropertyName);
 
 // TODO: we could also fix these server side

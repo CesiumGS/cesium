@@ -12,7 +12,7 @@ define([
         '../Core/RequestScheduler',
         '../Core/RequestType',
         '../ThirdParty/when',
-        './BatchedModel',
+        './Cesium3DTileFeature',
         './Cesium3DTileBatchTableResources',
         './Cesium3DTileContentState',
         './Model'
@@ -29,7 +29,7 @@ define([
         RequestScheduler,
         RequestType,
         when,
-        BatchedModel,
+        Cesium3DTileFeature,
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         Model) {
@@ -78,7 +78,7 @@ define([
 
         this._batchLength = 0;
         this._batchTableResources = undefined;
-        this._models = undefined;
+        this._features = undefined;
     }
 
     defineProperties(Batched3DModel3DTileContentProvider.prototype, {
@@ -106,22 +106,22 @@ define([
         }
     });
 
-    function createModels(content) {
+    function createFeatures(content) {
         var tileset = content._tileset;
         var batchLength = content._batchLength;
-        if (!defined(content._models) && (batchLength > 0)) {
-            var models = new Array(batchLength);
+        if (!defined(content._features) && (batchLength > 0)) {
+            var features = new Array(batchLength);
             for (var i = 0; i < batchLength; ++i) {
-                models[i] = new BatchedModel(tileset, content._batchTableResources, i);
+                features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
             }
-            content._models = models;
+            content._features = features;
         }
     }
 
     /**
      * DOC_TBA
      */
-    Batched3DModel3DTileContentProvider.prototype.getModel = function(batchId) {
+    Batched3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
         var batchLength = this._batchLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId >= batchLength)) {
@@ -129,8 +129,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        createModels(this);
-        return this._models[batchId];
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
