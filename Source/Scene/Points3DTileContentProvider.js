@@ -196,15 +196,15 @@ define([
         });
     };
 
-    function applyDebugSettings(tiles3D, content) {
-        if (tiles3D.debugColorizeTiles && !content._debugColorizeTiles) {
-            content._debugColorizeTiles = true;
-            content._primitive.appearance.uniforms.highlightColor = content._debugColor;
-        } else if (!tiles3D.debugColorizeTiles && content._debugColorizeTiles) {
-            content._debugColorizeTiles = false;
-            content._primitive.appearance.uniforms.highlightColor = Color.WHITE;
-        }
-    }
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
+     * @private
+     */
+    Points3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        color = enabled ? color : Color.WHITE;
+        this._primitive.appearance.uniforms.highlightColor = color;
+    };
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
@@ -215,7 +215,6 @@ define([
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        applyDebugSettings(tiles3D, this);
         this._primitive.update(frameState);
     };
 

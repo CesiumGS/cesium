@@ -64,6 +64,15 @@ define([
     };
 
     /**
+     * Called when the tileset's debugColorizeTiles is changed.
+     *
+     * @private
+     */
+    Cesium3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        DeveloperError.throwInstantiationError();
+    };
+
+    /**
      * Called by the tile during tileset traversal to get the draw commands needed to render this content.
      * When the tile's content is in the PROCESSING state, this creates WebGL resources to ultimately
      * move to the READY state.

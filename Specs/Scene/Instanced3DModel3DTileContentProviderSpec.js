@@ -18,8 +18,8 @@ defineSuite([
     "use strict";
 
     var scene;
-    var centerLongitude = -1.31995;
-    var centerLatitude = 0.69871;
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
 
     var gltfEmbeddedUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfEmbedded/';
     var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';

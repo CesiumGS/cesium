@@ -1,22 +1,22 @@
 {
-    "asset" : {
-        "version": "0.0"
+  "asset": {
+    "version": "0.0"
+  },
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.31968,
+        0.698874,
+        0,
+        20
+      ]
     },
-    "root": {
-        "boundingVolume": {
-            "region": [
-                -1.3199909535359484,
-                0.6986784218000001,
-                -1.31995,
-                0.69871,
-                0,
-                20
-            ]
-        },
-        "geometricError": 0,
-        "refine": "add",
-        "content": {
-            "url": "ll.b3dm"
-        }
+    "geometricError": 0,
+    "refine": "add",
+    "content": {
+      "url": "ll.b3dm"
     }
+  }
 }
