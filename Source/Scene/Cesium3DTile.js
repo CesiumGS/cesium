@@ -121,20 +121,14 @@ define([
 
         /**
          * Descendant tiles that need to be visible before this tile can refine. For example, if
-         * a child is empty (such as for accelerating culling), its descendants with content must
-         * be loaded first. If a tiles's children all have content, this is left undefined.
+         * a child is empty (such as for accelerating culling), its descendants with content would
+         * be added here. This array is generated during runtime in {@link Cesium3DTileset#loadTileset}.
+         * If a tiles's children all have content, this is left undefined.
          *
          * @type {Array}
          * @readonly
          */
         this.descendantsWithContent = undefined;
-
-        /**
-         * Marks if the tile is selected this frame.
-         *
-         * @type {Boolean}
-         */
-        this.selected = false;
 
         /**
          * DOC_TBA
@@ -206,7 +200,7 @@ define([
 //TODO: that.parent.numberOfChildrenWithoutContent will never reach zero and therefore that.parent will never refine
         });
 
-        // Members that are updated every frame for rendering optimizations:
+        // Members that are updated every frame for tree traversal and rendering optimizations:
 
         /**
          * @private
@@ -220,6 +214,13 @@ define([
          * @private
          */
         this.parentPlaneMask = 0;
+
+        /**
+         * Marks if the tile is selected this frame.
+         *
+         * @type {Boolean}
+         */
+        this.selected = false;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -379,10 +380,10 @@ define([
      */
     Cesium3DTile.prototype.update = function(owner, frameState) {
         if (this.selected) {
+            this.selected = false;
             applyDebugSettings(this, owner, frameState);
             this._content.update(owner, frameState);
         }
-        this.selected = false;
     };
 
     var scratchCommandList = [];

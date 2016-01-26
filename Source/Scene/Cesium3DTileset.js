@@ -307,11 +307,13 @@ define([
                     }
                 }
                 if (tile3D.hasContent && hasEmptyChild && (tile3D.refine === Cesium3DTileRefine.REPLACE)) {
+                    // Tiles that use replacement refinement and have empty child tiles need to keep track of
+                    // descendants with content in order to refine correctly.
                     refiningTiles.push(tile3D);
                 }
             }
 
-            loadRefiningTiles(refiningTiles);
+            prepareRefiningTiles(refiningTiles);
 
             return {
                 tilesetJson : tilesetJson,
@@ -320,9 +322,7 @@ define([
         });
     };
 
-    function loadRefiningTiles(refiningTiles) {
-        // Tiles that use replacement refinement and have empty child tiles need to keep track of
-        // descendants with content in order to refine correctly.
+    function prepareRefiningTiles(refiningTiles) {
         var stack = [];
         var length = refiningTiles.length;
         for (var i = 0; i < length; ++i) {
@@ -401,8 +401,6 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        //
-        // Don't select if the tile is being loaded to refine another tile
         if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
             tile.selected = true;
@@ -410,7 +408,7 @@ define([
     }
 
     var scratchStack = [];
-    var refiningTiles = [];
+    var scratchRefiningTiles = [];
 
     function selectTiles(tiles3D, frameState, outOfCore) {
         if (tiles3D.debugFreezeFrame) {
@@ -423,7 +421,7 @@ define([
         var selectedTiles = tiles3D._selectedTiles;
         selectedTiles.length = 0;
 
-        refiningTiles.length = 0;
+        scratchRefiningTiles.length = 0;
 
         var root = tiles3D._root;
         root.distanceToCamera = root.distanceToTile(frameState);
@@ -576,14 +574,14 @@ define([
                         }
 
                         if (defined(t.descendantsWithContent)) {
-                            refiningTiles.push(t);
+                            scratchRefiningTiles.push(t);
                         }
                     }
                 }
             }
         }
 
-        checkRefiningTiles(refiningTiles, tiles3D, frameState);
+        checkRefiningTiles(scratchRefiningTiles, tiles3D, frameState);
     }
 
     function checkRefiningTiles(refiningTiles, tiles3D, frameState) {
