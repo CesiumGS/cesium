@@ -180,8 +180,8 @@ function starBurst(mousePosition) {
     var instances = [];
     length = lines.length;
     for (i = 0; i < length; ++i) {
-        var pickedObject = pickedEntities[i];
-        starBurstState.maxDimension = Math.max(pickedObject.primitive.width, pickedObject.primitive.height, starBurstState.maxDimension);
+        var pickedEntity = pickedEntities[i];
+        starBurstState.maxDimension = Math.max(pickedEntity.primitive.width, pickedEntity.primitive.height, starBurstState.maxDimension);
 
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
