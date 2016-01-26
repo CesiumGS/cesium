@@ -37,7 +37,7 @@ var scene = viewer.scene;
 scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;
 
-var cityUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Tilesets/Tileset/';
+var tilesetUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Tilesets/Tileset/';
 var batchedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 var instancedUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
 var compositeUrl = 'http://localhost:8080/Specs/Data/Cesium3DTiles/Composite/Composite/';
@@ -46,24 +46,24 @@ var washingtonDCUrl = 'http://localhost:8002/tilesets/WashingtonDC/';
 var canaryWharfUrl = 'http://localhost:8002/tilesets/CanaryWharf/';
 var seattleUrl = 'http://localhost:8002/tilesets/Seattle/';
 
-var city;
+var tileset;
 
-function loadCity(url) {
+function loadTileset(url) {
     reset();
 
-    city = scene.primitives.add(new Cesium.Cesium3DTileset({
+    tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url
     }));
 
-    return Cesium.when(city.readyPromise).then(function(city) {
-        var boundingBox = city._root._boundingVolume;
+    return Cesium.when(tileset.readyPromise).then(function(tileset) {
+        var boundingBox = tileset._root._boundingVolume;
         var center = Cesium.Rectangle.center(boundingBox.rectangle);
         var height = boundingBox.maximumHeight + 500.0;
         viewer.camera.setView({
             destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, height)
         });
 
-        var properties = city.properties;
+        var properties = tileset.properties;
         styleableProperties = {};
         if (Cesium.defined(properties)) {
             for (var name in properties) {
@@ -268,7 +268,7 @@ handler.setInputAction(function(movement) {
 ///////////////////////////////////////////////////////////////////////////////
 
 /*
-city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
     if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
         console.log('Stopped loading');
         return;
@@ -281,44 +281,44 @@ city.loadProgress.addEventListener(function(numberOfPendingRequests, numberProce
 ///////////////////////////////////////////////////////////////////////////////
 
 Sandcastle.addToolbarMenu([ {
-    text : 'City',
+    text : 'Tileset',
     onselect : function() {
-        loadCity(cityUrl);
+        loadTileset(tilesetUrl);
     }
 }, {
     text : 'Batched',
     onselect : function() {
-        loadCity(batchedUrl);
+        loadTileset(batchedUrl);
     }
 }, {
     text : 'Instanced',
     onselect : function() {
-        loadCity(instancedUrl);
+        loadTileset(instancedUrl);
     }
 }, {
     text : 'Composite',
     onselect : function() {
-        loadCity(compositeUrl);
+        loadTileset(compositeUrl);
     }
 }, {
     text : 'Points',
     onselect : function() {
-        loadCity(pointsUrl);
+        loadTileset(pointsUrl);
     }
 }, {
     text : 'Canary Wharf',
     onselect : function() {
-        loadCity(canaryWharfUrl);
+        loadTileset(canaryWharfUrl);
     }
 }, {
     text : 'Seattle',
     onselect : function() {
-        loadCity(seattleUrl);
+        loadTileset(seattleUrl);
     }
 }, {
     text : 'Washington DC',
     onselect : function() {
-        loadCity(washingtonDCUrl).then(function() {
+        loadTileset(washingtonDCUrl).then(function() {
             viewer.scene.screenSpaceCameraController.minimumZoomDistance = 1;
             viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-77.0164, 38.9047, 0.0), new Cesium.Cartesian3(600.0, -2000.0, 800.0));
             viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -327,33 +327,33 @@ Sandcastle.addToolbarMenu([ {
 }]);
 
 Sandcastle.addToolbarButton('Stats on/off', function() {
-    city.debugShowStatistics = !city.debugShowStatistics;
+    tileset.debugShowStatistics = !tileset.debugShowStatistics;
 });
 
 Sandcastle.addToolbarButton('Freeze on/off', function() {
-    city.debugFreezeFrame = !city.debugFreezeFrame;
+    tileset.debugFreezeFrame = !tileset.debugFreezeFrame;
 });
 
 Sandcastle.addToolbarButton('Colorize on/off', function() {
-    city.debugColorizeTiles = !city.debugColorizeTiles;
+    tileset.debugColorizeTiles = !tileset.debugColorizeTiles;
 });
 
 Sandcastle.addToolbarButton('BV on/off', function() {
-    city.debugShowBoundingVolume = !city.debugShowBoundingVolume;
+    tileset.debugShowBoundingVolume = !tileset.debugShowBoundingVolume;
 });
 
 Sandcastle.addToolbarButton('Contents BV on/off', function() {
-    city.debugShowContentBoundingVolume = !city.debugShowContentBoundingVolume;
+    tileset.debugShowContentBoundingVolume = !tileset.debugShowContentBoundingVolume;
 });
 
 Sandcastle.addToolbarButton('SSE++', function() {
-    ++city.maximumScreenSpaceError;
-    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+    ++tileset.maximumScreenSpaceError;
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
 Sandcastle.addToolbarButton('SSE--', function() {
-    city.maximumScreenSpaceError = Math.max(city.maximumScreenSpaceError - 1, 0);
-    console.log('New max SSE: ' + city.maximumScreenSpaceError);
+    tileset.maximumScreenSpaceError = Math.max(tileset.maximumScreenSpaceError - 1, 0);
+    console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -428,7 +428,7 @@ function createColorBins(colorBins, property) {
 function addTileVisibleListener() {
     if (!addedListener) {
         addedListener = true;
-        city.tileVisible.addEventListener(changeColor);
+        tileset.tileVisible.addEventListener(changeColor);
     }
 }
 
@@ -476,11 +476,11 @@ function changeColor(tile) {
 }
 
 function reset() {
-    if (Cesium.defined(city)) {
-        scene.primitives.remove(city);
+    if (Cesium.defined(tileset)) {
+        scene.primitives.remove(tileset);
     }
 
-    // Remove styleable property buttons of the previous city
+    // Remove styleable property buttons of the previous tileset
     var buttonsLength = styleablePropertyButtons.length;
     for (var i = 0; i < buttonsLength; ++i) {
         var button = styleablePropertyButtons[i];
