@@ -230,7 +230,7 @@ define([
         /**
          * When <code>true</code>, the tile's content points to an external tileset.
          *
-         * @type {Number}
+         * @type {Boolean}
          * @readonly
          *
          * @private
