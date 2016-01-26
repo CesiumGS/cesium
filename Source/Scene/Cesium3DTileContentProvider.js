@@ -36,6 +36,10 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
+    Cesium3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        DeveloperError.throwInstantiationError();
+    };
+
     Cesium3DTileContentProvider.prototype.update = function(owner, frameState) {
         DeveloperError.throwInstantiationError();
     };

@@ -36,6 +36,9 @@ define([
     Empty3DTileContentProvider.prototype.request = function() {
     };
 
+    Empty3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    };
+
     Empty3DTileContentProvider.prototype.update = function(owner, frameState) {
     };
 

@@ -232,6 +232,8 @@ define([
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
+        this._debugColor = new Color.fromRandom({ alpha : 1.0 });
+        this._debugColorizeTiles = false;
     }
 
     defineProperties(Cesium3DTile.prototype, {
@@ -410,6 +412,14 @@ define([
             tile._debugContentBoundingVolume.update(frameState);
         } else if (!owner.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
             tile._debugContentBoundingVolume = tile._debugContentBoundingVolume.destroy();
+        }
+
+        if (owner.debugColorizeTiles && !tile._debugColorizeTiles) {
+            tile._debugColorizeTiles = true;
+            tile._content.applyDebugSettings(true, tile._debugColor);
+        } else if (!owner.debugColorizeTiles && tile._debugColorizeTiles) {
+            tile._debugColorizeTiles = false;
+            tile._content.applyDebugSettings(false, tile._debugColor);
         }
     }
 

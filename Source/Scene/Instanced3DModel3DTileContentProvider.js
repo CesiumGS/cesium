@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -24,6 +25,7 @@ define([
         './ModelInstanceCollection'
     ], function(
         Cartesian3,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -287,6 +289,14 @@ define([
             that.state = Cesium3DTileContentState.FAILED;
             that.readyPromise.reject(error);
         });
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Instanced3DModel3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        color = enabled ? color : Color.WHITE;
+        this._batchTableResources.setAllColor(color);
     };
 
     /**

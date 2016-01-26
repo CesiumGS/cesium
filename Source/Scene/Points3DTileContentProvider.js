@@ -174,23 +174,12 @@ define([
         });
     };
 
-    function applyDebugSettings(owner, content) {
-        if (owner.debugColorizeTiles && !content._debugColorizeTiles) {
-            content._debugColorizeTiles = true;
-            content._primitive.appearance.uniforms.highlightColor = content._debugColor;
-        } else if (!owner.debugColorizeTiles && content._debugColorizeTiles) {
-            content._debugColorizeTiles = false;
-            content._primitive.appearance.uniforms.highlightColor = Color.WHITE;
-        }
-    }
+    Points3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+        color = enabled ? color : Color.WHITE;
+        this._primitive.appearance.uniforms.highlightColor = color;
+    };
 
     Points3DTileContentProvider.prototype.update = function(owner, frameState) {
-        // In the PROCESSING state we may be calling update() to move forward
-        // the content's resource loading.  In the READY state, it will
-        // actually generate commands.
-
-        applyDebugSettings(owner, this);
-
         this._primitive.update(frameState);
     };
 

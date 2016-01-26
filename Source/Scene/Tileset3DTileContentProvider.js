@@ -59,6 +59,9 @@ define([
         }
     };
 
+    Tileset3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    };
+
     Tileset3DTileContentProvider.prototype.update = function(owner, frameState) {
     };
 
