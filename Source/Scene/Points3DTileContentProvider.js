@@ -6,6 +6,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/getMagic',
@@ -26,6 +27,7 @@ define([
         defaultValue,
         defined,
         destroyObject,
+        defineProperties,
         DeveloperError,
         GeometryInstance,
         getMagic,
@@ -94,6 +96,32 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
     }
+
+    defineProperties(Points3DTileContentProvider.prototype, {
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        featuresLength : {
+            get : function() {
+                // TODO: implement batchTable for pnts tile format
+                return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         *
+         * @private
+         */
+        batchTableResources : {
+            get : function() {
+                // TODO: implement batchTable for pnts tile format
+                return undefined;
+            }
+        }
+    });
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

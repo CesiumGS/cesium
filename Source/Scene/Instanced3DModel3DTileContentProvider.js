@@ -94,7 +94,7 @@ define([
 
     defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
         /**
-         * DOC_TBA
+         * Gets the number of features in the tile, i.e., the number of 3D models instances.
          *
          * @memberof Instanced3DModel3DTileContentProvider.prototype
          *

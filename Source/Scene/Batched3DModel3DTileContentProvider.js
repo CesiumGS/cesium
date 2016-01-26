@@ -83,7 +83,7 @@ define([
 
     defineProperties(Batched3DModel3DTileContentProvider.prototype, {
         /**
-         * DOC_TBA
+         * Gets the number of features in the tile, i.e., the number of 3D models in the batch.
          *
          * @memberof Batched3DModel3DTileContentProvider.prototype
          *
