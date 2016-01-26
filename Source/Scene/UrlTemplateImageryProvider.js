@@ -181,6 +181,7 @@ define([
         this._tileDiscardPolicy = undefined;
         this._credit = undefined;
         this._hasAlphaChannel = undefined;
+        this._readyPromise = undefined;
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link UrlTemplateImageryProvider#pickFeatures} will
@@ -193,7 +194,7 @@ define([
          */
         this.enablePickFeatures = true;
 
-        this._readyPromise = this.reinitialize(options);
+        this.reinitialize(options);
     }
 
     defineProperties(UrlTemplateImageryProvider.prototype, {
@@ -490,7 +491,7 @@ define([
      */
     UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
         var that = this;
-        return when(options).then(function(properties) {
+        that._readyPromise = when(options).then(function(properties) {
             //>>includeStart('debug', pragmas.debug);
             if (!defined(properties)) {
                 throw new DeveloperError('options is required.');
@@ -499,7 +500,7 @@ define([
                 throw new DeveloperError('options.url is required.');
             }
             //>>includeEnd('debug');
-            this.enablePickFeatures = defaultValue(properties.enablePickFeatures, this.enablePickFeatures);
+            that.enablePickFeatures = defaultValue(properties.enablePickFeatures, that.enablePickFeatures);
             that._url = properties.url;
             that._pickFeaturesUrl = properties.pickFeaturesUrl;
             that._proxy = properties.proxy;
