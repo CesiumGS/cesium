@@ -580,7 +580,7 @@ define([
                         selectTile(selectedTiles, t, fullyVisible, frameState);
 
                         if (outOfCore) {
-                            for (k = 0; (k < childrenLength) && hasAvailableRequests(tiles3D); ++k) {
+                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.isContentUnloaded()) {

@@ -33,10 +33,10 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var city = scene.primitives.add(new Cesium.Cesium3DTileset({
     //url : 'http://localhost:8002/tilesets/Cambridge',
-    //url : 'http://localhost:8002/tilesets/London_Canary_Wharf',
+    url : 'http://localhost:8002/tilesets/CanaryWharf',
     //url : 'http://localhost:8002/tilesets/trees',
     //url : 'http://localhost:8002/tilesets/Philly',
-    url : 'http://localhost:8002/tilesets/Seattle',
+    //url : 'http://localhost:8002/tilesets/Seattle',
     //url : 'http://localhost:8002/tilesets/SeattleTrees',
     //url : 'http://localhost:8002/tilesets/SeattleComposite',
 
@@ -50,10 +50,10 @@ var city = scene.primitives.add(new Cesium.Cesium3DTileset({
 
 viewer.camera.setView({
     //destination : Cesium.Cartesian3.fromDegrees(-71.1106, 42.3736, 5000.0) // Cambridge
-    //destination : Cesium.Cartesian3.fromDegrees(0.0183, 51.5036, 5000.0) // Canary Wharf
+    destination : Cesium.Cartesian3.fromDegrees(0.0183, 51.5036, 5000.0) // Canary Wharf
     //destination : Cesium.Cartesian3.fromRadians(-1.2911323805815227, 0.7097150757974291, 5000.0) // NYC Trees
     //destination : Cesium.Cartesian3.fromDegrees(-75.1667, 39.9500, 5000.0) // Philly trees
-    destination : Cesium.Cartesian3.fromDegrees(-122.3331, 47.6097, 5000.0) // Seattle
+    //destination : Cesium.Cartesian3.fromDegrees(-122.3331, 47.6097, 5000.0) // Seattle
 });
 
 scene.debugShowFramesPerSecond = true;
