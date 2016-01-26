@@ -11,6 +11,7 @@ define([
         '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/isDataUri',
+        '../Core/joinUrls',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Request',
@@ -35,6 +36,7 @@ define([
         getExtensionFromUri,
         Intersect,
         isDataUri,
+        joinUrls,
         loadJson,
         CesiumMath,
         Request,
@@ -87,7 +89,7 @@ define([
             baseUrl = '';
         } else {
             baseUrl = appendForwardSlash(url);
-            tilesetUrl = baseUrl + 'tileset.json';
+            tilesetUrl = joinUrls(baseUrl, 'tileset.json');
         }
 
         this._url = url;

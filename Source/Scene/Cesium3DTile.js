@@ -10,9 +10,9 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
-        '../Core/getAbsoluteUri',
         '../Core/getExtensionFromUri',
         '../Core/Intersect',
+        '../Core/joinUrls',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
@@ -43,9 +43,9 @@ define([
         destroyObject,
         DeveloperError,
         GeometryInstance,
-        getAbsoluteUri,
         getExtensionFromUri,
         Intersect,
+        joinUrls,
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
@@ -160,7 +160,7 @@ define([
         var requestServer;
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
-            var url = getAbsoluteUri(contentUrl, baseUrl);
+            var url = joinUrls(baseUrl, contentUrl);
             requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
             var contentFactory = Cesium3DTileContentProviderFactory[type];
