@@ -120,7 +120,7 @@ define([
          * values will provide better performance but lower visual quality.
          *
          * @type {Number}
-         * @default 15
+         * @default 16
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
@@ -178,7 +178,9 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders the bounding volume for each tile.
+         * When true, renders the bounding volume for each tile.  The bounding volume is
+         * white if the tile's content has an explicit bounding volume; otherwise, it
+         * is red.
          * </p>
          *
          * @type {Boolean}
@@ -189,13 +191,7 @@ define([
         /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
-         * When true, renders the bounding volume for each tile's content.
-         * </p>
-         * <p>
-         * When both {@see Cesium3DTileset#debugShowBoundingVolume} and this are true, the tile's
-         * bounding volume is white, and the content's bounding volume is red.  If the content
-         * doesn't have a bounding volume (indicating it is the same volume as the tile), the
-         * tile's bounding volume is blue.
+         * When true, renders a blue bounding volume for each tile's content.
          * </p>
          *
          * @type {Boolean}

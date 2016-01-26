@@ -135,9 +135,9 @@ define([
         /**
          * This tile's parent or <code>undefined</code> if this tile is the root.
          * <p>
-         * When a tile's content references an external tileset.json, the external tileset's
-         * root tile's parent is not <code>undefined</code>; it is the referencing tile as if
-         * the two tilesets were merged.
+         * When a tile's content points to an external tileset.json, the external tileset's
+         * root tile's parent is not <code>undefined</code>; instead, the parent references
+         * the tile (with its content pointing to an external tileset.json) as if the two tilesets were merged.
          * </p>
          *
          * @type {Cesium3DTile}
@@ -220,7 +220,7 @@ define([
          * When a tile's content points to a external tileset, the tile is not considered to have content.
          * </p>
          *
-         * @type {Number}
+         * @type {Boolean}
          * @readonly
          *
          * @private
@@ -298,6 +298,8 @@ define([
          * The tile's loaded content.  This represents the actual tile's payload,
          * not the content's metadata in tileset.json.
          *
+         * @memberof Cesium3DTile.prototype
+         *
          * @type {Cesium3DTileContentProvider}
          * @readonly
          */
@@ -311,6 +313,8 @@ define([
          * Get the bounding volume of the tile's contents.  This defaults to the
          * tile's bounding volume when the content's bounding volume is
          * <code>undefined</code>.
+         *
+         * @memberof Cesium3DTile.prototype
          *
          * @type {TileBoundingVolume}
          * @readonly
@@ -326,6 +330,8 @@ define([
          * This happens after the content is downloaded but before the content is ready
          * to render.
          *
+         * @memberof Cesium3DTile.prototype
+         *
          * @type {Promise.<Cesium3DTileContentProvider>}
          * @readonly
          *
@@ -339,6 +345,8 @@ define([
 
         /**
          * DOC_TBA
+         *
+         * @memberof Cesium3DTile.prototype
          *
          * @type {RequestScheduler~RequestServer}
          * @readonly
@@ -399,10 +407,10 @@ define([
     };
 
     /**
-     * Determines whether the tile's bounding volume intersects the culling volume.
+     * Determines if a request for the tile's content can be made based on the priorities of
+     * the request scheduler.
      *
-     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
-     * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+     * @returns {Boolean} <code>true</code> when the content request can be made; otherwise, <code>false</false>.
      *
      * @private
      */
@@ -415,7 +423,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Determines whether the tile's bounding volume intersects the culling volume.
+     *
+     * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
+     * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
+     *
+     * @private
      */
     Cesium3DTile.prototype.visibility = function(cullingVolume) {
         return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);

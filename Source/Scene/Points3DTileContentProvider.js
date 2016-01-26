@@ -220,6 +220,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Points3DTileContentProvider.prototype.isDestroyed = function() {
@@ -227,6 +229,8 @@ define([
     };
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.
+     *
      * @private
      */
     Points3DTileContentProvider.prototype.destroy = function() {
