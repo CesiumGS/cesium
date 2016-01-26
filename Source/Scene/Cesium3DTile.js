@@ -167,16 +167,6 @@ define([
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
         /**
-         * When <code>true</code>, the tile can be traversed but not selected for rendering;
-         * this allows traversal of empty interior tiles to optimize culling.
-         *
-         * @type {Boolean}
-         *
-         * @private
-         */
-        this.refining = false;
-
-        /**
          * Gets the promise that will be resolved when the tile's content is ready to render.
          *
          * @type {Promise.<Cesium3DTile>}
