@@ -212,7 +212,7 @@ define([
         var gltfFormat = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var featuresLength = view.getUint32(byteOffset, true);
+        var instancesLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         //>>includeStart('debug', pragmas.debug);
@@ -221,7 +221,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, featuresLength);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
         this._batchTableResources = batchTableResources;
         var hasBatchTable = false;
         if (batchTableByteLength > 0) {
@@ -237,14 +237,14 @@ define([
         // Each vertex has a longitude, latitude, and optionally batchId if there is a batch table
         // Coordinates are in double precision, batchId is a short
         var instanceByteLength = sizeOfFloat64 * 2 + (hasBatchTable ? sizeOfUint16 : 0);
-        var instancesByteLength = featuresLength * instanceByteLength;
+        var instancesByteLength = instancesLength * instanceByteLength;
 
         var instancesView = new DataView(arrayBuffer, byteOffset, instancesByteLength);
         byteOffset += instancesByteLength;
 
         // Create model instance collection
         var collectionOptions = {
-            instances : new Array(featuresLength),
+            instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
             cull : false,
@@ -268,7 +268,7 @@ define([
         var instances = collectionOptions.instances;
         byteOffset = 0;
 
-        for (var i = 0; i < featuresLength; ++i) {
+        for (var i = 0; i < instancesLength; ++i) {
             // Get longitude and latitude
             var longitude = instancesView.getFloat64(byteOffset, true);
             byteOffset += sizeOfFloat64;

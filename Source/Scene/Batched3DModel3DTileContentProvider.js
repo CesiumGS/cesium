@@ -194,11 +194,11 @@ define([
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var featuresLength = view.getUint32(byteOffset, true);
-        this._featuresLength = featuresLength;
+        var batchLength = view.getUint32(byteOffset, true);
+        this._featuresLength = batchLength;
         byteOffset += sizeOfUint32;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, featuresLength);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
         this._batchTableResources = batchTableResources;
 
         var batchTableByteLength = view.getUint32(byteOffset, true);
