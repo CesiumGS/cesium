@@ -30,6 +30,7 @@ Change Log
 * Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
 * `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
 * Added a Sandcastle example to "star burst" overlapping billboards and labels.
+* Added `Rectangle.union` and `Rectangle.expand`.
 
 ### 1.17 - 2016-01-04
 
