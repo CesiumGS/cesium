@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,6 +23,7 @@ define([
         './SceneMode'
     ], function(
         Cartesian3,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -54,15 +56,17 @@ define([
      * @alias SkyAtmosphere
      * @constructor
      *
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
+     * @param {Object} [options] Object with the following properties:
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the atmosphere is drawn around.
+     * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 1.0)] The color of atmosphere.
      *
      * @example
      * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
      * @see Scene.skyAtmosphere
      */
-    function SkyAtmosphere(ellipsoid) {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+    function SkyAtmosphere(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * Determines if the atmosphere is shown.
@@ -71,18 +75,17 @@ define([
          * @default true
          */
         this.show = true;
-
-        this._ellipsoid = ellipsoid;
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._color = defaultValue(options.color, new Color());
         this._command = new DrawCommand({
             owner : this
         });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
-
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
-        var innerRadius = ellipsoid.maximumRadius;
+        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, new Cartesian3()));
+        var innerRadius = this._ellipsoid.maximumRadius;
         var rayleighScaleDepth = 0.25;
 
         var that = this;
@@ -111,6 +114,15 @@ define([
             },
             fScaleOverScaleDepth : function() {
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
+            },
+            fRedColor : function() {
+                return that._color.red;
+            },
+            fGreenColor : function() {
+                return that._color.green;
+            },
+            fBlueColor : function() {
+                return that._color.blue;
             }
         };
     }
@@ -127,7 +139,19 @@ define([
             get : function() {
                 return this._ellipsoid;
             }
-        }
+        },
+        /**
+         * Gets the color of the atmosphere.
+         * @memberof SkyAtmosphere.prototype
+         *
+         * @type {Color}
+         * @readonly
+         */
+         color : {
+             get : function() {
+                 return this._color;
+             }
+         }
     });
 
     /**
@@ -239,7 +263,7 @@ define([
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
-     * 
+     *
      * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {

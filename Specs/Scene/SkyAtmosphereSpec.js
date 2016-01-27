@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/SkyAtmosphere',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/Ellipsoid',
         'Renderer/ClearCommand',
         'Scene/SceneMode',
@@ -11,6 +12,7 @@ defineSuite([
     ], function(
         SkyAtmosphere,
         Cartesian3,
+        Color,
         Ellipsoid,
         ClearCommand,
         SceneMode,
@@ -130,8 +132,13 @@ defineSuite([
     });
 
     it('gets ellipsoid', function() {
-        var s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
+        var s = new SkyAtmosphere({ellipsoid: Ellipsoid.UNIT_SPHERE});
         expect(s.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);
+    });
+
+    it('gets color', function() {
+        var s = new SkyAtmosphere({color: new Color(10,0,0)});
+        expect(s.color).toEqual(new Color(10,0,0));
     });
 
     it('isDestroyed', function() {
