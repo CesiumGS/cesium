@@ -96,6 +96,17 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} <code>false</code>
+     */
+    Composite3DTileContentProvider.prototype.hasProperty = function(name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
      * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
      *
      * @param {Number} batchId The batchId for the feature.
