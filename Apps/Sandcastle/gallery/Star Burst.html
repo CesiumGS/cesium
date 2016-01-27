@@ -72,6 +72,7 @@ scene.camera.moveStart.addEventListener(function() {
 
 // State saved across mouse click and move events
 var starBurstState = {
+    enabled : false,
     pickedEntities : undefined,
     linePrimitive : undefined,
     radius : undefined,
@@ -229,6 +230,13 @@ function updateStarBurst(mousePosition) {
         return;
     }
 
+    if (!starBurstState.enabled) {
+        // For some reason we get a mousemove event on click, so
+        // do not show a label on the first event.
+        starBurstState.enabled = true;
+        return;
+    }
+
     // Remove the star burst if the mouse exits the screen space circle.
     // If the mouse is inside the circle, show the label of the billboard the mouse is hovering over.
     var screenPosition = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, starBurstState.center);
@@ -267,6 +275,7 @@ function undoStarBurst() {
     starBurstState.linePrimitive = undefined;
     starBurstState.pickedEntities = undefined;
     starBurstState.radius = undefined;
+    starBurstState.enabled = false;
 }
 
 var currentObject;
