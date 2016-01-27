@@ -72,13 +72,32 @@ define([
 
     defineProperties(Composite3DTileContentProvider.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+         * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
          *
-         * @private
+         * @memberof Composite3DTileContentProvider.prototype
+         *
+         * @type {Number}
+         * @readonly
          */
         featuresLength : {
             get : function() {
                 return 0;
+            }
+        },
+
+        /**
+         * Gets the array of {@link Cesium3DTileContentProvider} objects that represent the
+         * content of the composite's inner tiles, which can also be composites.
+         *
+         * @memberof Composite3DTileContentProvider.prototype
+         *
+         * @type {Arrays}
+         * @readonly
+         */
+        innerContents : {
+            get : function() {
+                return this._contentProviders;
             }
         }
     });

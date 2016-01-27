@@ -406,24 +406,41 @@ function createColorBins(colorBins, property) {
 function addTileVisibleListener() {
     if (!addedListener) {
         addedListener = true;
-        tileset.tileVisible.addEventListener(changeColor);
+        tileset.tileVisible.addEventListener(changeTileColor);
     }
 }
 
-function changeColor(tile) {
+function changeTileColor(tile) {
 	if (Cesium.defined(tile.lastTimeColored) && tile.lastTimeColored === lastTimeColored) {
         // Tile was already updated with new colors
         return;
 	}
 	tile.lastTimeColored = lastTimeColored;
 
-    var min = styleableProperties[currentPropertyName].minimum;
-    var max = styleableProperties[currentPropertyName].maximum;
-    var delta = max - min;
-    var content = tile.content;
+    changeCompositeContentColor(tile.content);
+}
 
-    // Does it have a per-model height property?
+function changeCompositeContentColor(content) {
+    var innerContents = content.innerContents;
+    if (Cesium.defined(innerContents)) {
+        var length = innerContents.length;
+        for (var i = 0; i < length; ++i) {
+            // Recurse for composites of composites
+            changeCompositeContentColor(innerContents[i]);
+        }
+    } else {
+        // Not a composite tile
+        changeContentColor(content);
+    }
+}
+
+function changeContentColor(content) {
+    // Does it have a per-feature height property?
     if (content.hasProperty(currentPropertyName)) {
+        var min = styleableProperties[currentPropertyName].minimum;
+        var max = styleableProperties[currentPropertyName].maximum;
+        var delta = max - min;
+
         var length = content.featuresLength;
         for (var i = 0; i < length; ++i) {
             var building = content.getFeature(i);
