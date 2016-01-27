@@ -21,7 +21,7 @@ define([
      * // basePath will be "/Gallery/";
      * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false');
      *
-     * basePath will be "/Gallery/?value=true&example=false";
+     * // basePath will be "/Gallery/?value=true&example=false";
      * var basePath = Cesium.getBaseUri('/Gallery/simple.czml?value=true&example=false', true);
      */
     function getBaseUri(uri, includeQuery) {
