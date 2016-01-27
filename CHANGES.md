@@ -29,6 +29,7 @@ TODO: this is not finished yet:
 * Deprecated
     * Deprecated `throttleRequests` flag in `TerrainProvider`. It will be removed in 1.19. It is replaced by an optional `Request` object that stores information used to prioritize requests.
     * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
+    * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.20. Use `createTileMapServiceImageryProvider` instead.
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Fixed a picking problem ([#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)) that sometimes prevented objects being selected.
 * Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
@@ -47,6 +48,9 @@ TODO: this is not finished yet:
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
 * Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
 * Fixed incorrect texture coordinates for polygons with large height.
+* Fixed camera.flyTo not working when in 2D mode and only orientation changes
+* Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
+* `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
 
 ### 1.17 - 2016-01-04
 

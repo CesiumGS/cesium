@@ -82,7 +82,7 @@ define([
      * 
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
-     * var imageryProvider = new Cesium.TileMapServiceImageryProvider({
+     * var imageryProvider = new Cesium.createTileMapServiceImageryProvider({
      *        url : 'http://localhost:8080/Source/Assets/Textures/NaturalEarthII',
      *        fileExtension : 'jpg'
      *    });
