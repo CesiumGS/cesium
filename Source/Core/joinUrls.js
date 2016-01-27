@@ -20,6 +20,8 @@ define([
      * @param {String|Uri} first The base URL.
      * @param {String|Uri} second The URL path to join to the base URL.  If this URL is absolute, it is returned unmodified.
      * @param {Boolean} [appendSlash=true] The boolean determining whether there should be a forward slash between first and second.
+     *
+     * @return {String} The combined url
      * @private
      */
     function joinUrls(first, second, appendSlash) {
@@ -57,6 +59,9 @@ define([
         var baseUri = first;
         if (second.isAbsolute()) {
             baseUri = second;
+            if (second.scheme === 'data') {
+                return second.toString();
+            }
         }
 
         var url = '';

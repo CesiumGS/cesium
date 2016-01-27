@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/appendForwardSlash',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -11,6 +10,7 @@ define([
         '../Core/getExtensionFromUri',
         '../Core/Intersect',
         '../Core/isDataUri',
+        '../Core/joinUrls',
         '../Core/loadJson',
         '../Core/Math',
         '../Core/Request',
@@ -24,7 +24,6 @@ define([
         './CullingVolume',
         './SceneMode'
     ], function(
-        appendForwardSlash,
         defaultValue,
         defined,
         defineProperties,
@@ -35,6 +34,7 @@ define([
         getExtensionFromUri,
         Intersect,
         isDataUri,
+        joinUrls,
         loadJson,
         CesiumMath,
         Request,
@@ -92,8 +92,8 @@ define([
             tilesetUrl = url;
             baseUrl = '';
         } else {
-            baseUrl = appendForwardSlash(url);
-            tilesetUrl = baseUrl + 'tileset.json';
+            baseUrl = url;
+            tilesetUrl = joinUrls(baseUrl, 'tileset.json');
         }
 
         this._url = url;
