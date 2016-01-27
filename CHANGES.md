@@ -24,6 +24,7 @@ Change Log
     ```
 * `GroundPrimitive` now supports batching geometry for better performance.
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
+* Added `ImageryLayer.getViewableRectangle` to make it easy to get the effective bounds of an imagery layer.
 * Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
 * Fixed incorrect texture coordinates for polygons with large height.
 * Fixed camera.flyTo not working when in 2D mode and only orientation changes
