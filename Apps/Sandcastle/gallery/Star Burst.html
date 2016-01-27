@@ -45,13 +45,13 @@ for (var i = 0; i < numBillboards; ++i) {
         },
         label : {
             text : 'Label' + i,
-            eyeOffset : new Cesium.Cartesian3(0.0, 0.0, -100.0), // draw in front of billboards
-            show : false                                         // only visible on mouse hover
+            show : false
         }
     });
 }
 
 var scene = viewer.scene;
+var camera = scene.camera;
 var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
 
 handler.setInputAction(function(movement) {
@@ -64,7 +64,7 @@ handler.setInputAction(function(movement) {
     updateStarBurst(movement.endPosition);
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-scene.camera.moveStart.addEventListener(function() {
+camera.moveStart.addEventListener(function() {
     // Reset the star burst on camera move because the lines from the center
     // because the line end points rely on the screen space positions of the billboards.
     undoStarBurst();
@@ -87,24 +87,27 @@ function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
     var x = magnitude * Math.cos(angle);
     var y = magnitude * Math.sin(angle);
 
-    var offset = new Cesium.Cartesian2(x, -y);
+    var offset = new Cesium.Cartesian2(x, y);
 
-    var position = Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, entityPosition);
-    Cesium.Cartesian2.add(position, offset, position);
-    Cesium.SceneTransforms.transformWindowToDrawingBuffer(scene, position, position);
-    position.y = scene.drawingBufferHeight - position.y;
-    var endPoint = Cesium.SceneTransforms.drawingBufferToWgs84Coordinates(scene, position, 0.0);
-    lines.push(endPoint);
+    var drawingBufferWidth = scene.drawingBufferWidth;
+    var drawingBufferHeight = scene.drawingBufferHeight;
 
-    var z = -Cesium.Cartesian3.distance(starBurstState.center, endPoint);
+    var diff = Cesium.Cartesian3.subtract(entityPosition, camera.positionWC, new Cesium.Cartesian3());
+    var distance = Cesium.Cartesian3.dot(camera.directionWC, diff);
 
-    entity.billboard.pixelOffset = offset;
-    entity.billboard.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, z);
+    var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cesium.Cartesian2());
+    Cesium.Cartesian2.multiplyByScalar(offset, Cesium.Cartesian2.maximumComponent(dimensions), offset);
+
+    var eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, 0.0);
+    entity.billboard.eyeOffset = eyeOffset;
     if (Cesium.defined(entity.label)) {
-        entity.label.pixelOffset = offset;
+        entity.label.eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, -10.0);
     }
 
-    return z;
+    var endPoint = Cesium.Matrix4.multiplyByPoint(camera.viewMatrix, entityPosition, new Cesium.Cartesian3());
+    Cesium.Cartesian3.add(eyeOffset, endPoint, endPoint);
+    Cesium.Matrix4.multiplyByPoint(camera.inverseViewMatrix, endPoint, endPoint);
+    lines.push(endPoint);
 }
 
 function starBurst(mousePosition) {
@@ -144,7 +147,6 @@ function starBurst(mousePosition) {
     var magnitude;
     var magIncrease;
     var maxDimension;
-    var minZ = Number.POSITIVE_INFINITY;
 
     // Drill pick gets all of the entities under the mouse pointer.
     // Find the billboards and set their pixel offsets in a circle pattern.
@@ -165,18 +167,14 @@ function starBurst(mousePosition) {
             angleIncrease = maxDimension / magnitude;
         }
 
-        var z = offsetBillboard(object.id, object.primitive.position, angle, magnitude, lines);
+        offsetBillboard(object.id, object.primitive.position, angle, magnitude, lines);
         pickedEntities.push(object);
-
-        minZ = Math.min(z, minZ);
 
         var reflectedAngle = angleEnd - angle;
         if (i + 1 < length && reflectedAngle - angleIncrease * 0.5 > angle + angleIncrease * 0.5) {
             object = billboardEntities[++i];
-            z = offsetBillboard(object.id, object.primitive.position, reflectedAngle, magnitude, lines);
+            offsetBillboard(object.id, object.primitive.position, reflectedAngle, magnitude, lines);
             pickedEntities.push(object);
-
-            minZ = Math.max(z, minZ);
         }
 
         angle += angleIncrease;
@@ -195,10 +193,6 @@ function starBurst(mousePosition) {
     for (i = 0; i < length; ++i) {
         var pickedEntity = pickedEntities[i];
         starBurstState.maxDimension = Math.max(pickedEntity.primitive.width, pickedEntity.primitive.height, starBurstState.maxDimension);
-
-        if (Cesium.defined(pickedEntity.id.label)) {
-            pickedEntity.id.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, minZ - 100.0);
-        }
 
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
@@ -260,10 +254,8 @@ function undoStarBurst() {
     // Hide overlapping labels.
     for (var i = 0; i < pickedEntities.length; ++i) {
         var entity = pickedEntities[i].id;
-        entity.billboard.pixelOffset = new Cesium.Cartesian2(0.0, 0.0);
         entity.billboard.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, 0.0);
         if (Cesium.defined(entity.label)) {
-            entity.label.pixelOffset = new Cesium.Cartesian2(0.0, 0.0);
             entity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, 0.0);
             entity.label.show = false;
         }
