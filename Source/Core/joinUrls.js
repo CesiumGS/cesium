@@ -21,7 +21,7 @@ define([
      * @param {String|Uri} second The URL path to join to the base URL.  If this URL is absolute, it is returned unmodified.
      * @param {Boolean} [appendSlash=true] The boolean determining whether there should be a forward slash between first and second.
      *
-     * @return {String} The combinded url
+     * @return {String} The combined url
      * @private
      */
     function joinUrls(first, second, appendSlash) {
