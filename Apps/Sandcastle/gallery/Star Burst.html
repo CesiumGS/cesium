@@ -243,7 +243,7 @@ function updateStarBurst(mousePosition) {
     var fromCenter = Cesium.Cartesian2.subtract(mousePosition, screenPosition, new Cesium.Cartesian2());
     var radius = starBurstState.radius;
 
-    if (Cesium.Cartesian2.magnitudeSquared(fromCenter) > radius * radius || fromCenter.y > 2.0 * (starBurstState.maxDimension + starBurstState.pixelPadding)) {
+    if (Cesium.Cartesian2.magnitudeSquared(fromCenter) > radius * radius || fromCenter.y > 3.0 * (starBurstState.maxDimension + starBurstState.pixelPadding)) {
         undoStarBurst();
     } else {
         showLabels(mousePosition);
