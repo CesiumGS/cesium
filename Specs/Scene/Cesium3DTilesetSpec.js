@@ -1,4 +1,4 @@
-'?param1=1&param2=2'/*global defineSuite*/
+/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
@@ -174,7 +174,6 @@ defineSuite([
         expect(tileset.url).toEqual(path + param);
         expect(tileset._tilesetUrl).toEqual(path + '/tileset.json' + param);
     });
-
 
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
