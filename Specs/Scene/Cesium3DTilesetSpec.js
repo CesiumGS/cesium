@@ -1,4 +1,4 @@
-/*global defineSuite*/
+'?param1=1&param2=2'/*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
@@ -139,28 +139,42 @@ defineSuite([
     });
 
     it('url and tilesetUrl set up correctly given tileset.json path', function() {
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json';
         var tileset = new Cesium3DTileset({
-            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json'
+            url : path
         });
-        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json');
-        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset3.json');
+        expect(tileset.url).toEqual(path);
+        expect(tileset._tilesetUrl).toEqual(path);
     });
 
     it('url and tilesetUrl set up correctly given directory without trailing slash', function() {
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
         var tileset = new Cesium3DTileset({
-            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets'
+            url : path
         });
-        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets');
-        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json');
+        expect(tileset.url).toEqual(path);
+        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json');
     });
 
     it('url and tilesetUrl set up correctly given directory with trailing slash', function() {
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
         var tileset = new Cesium3DTileset({
-            url : './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/'
+            url : path
         });
-        expect(tileset.url).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/');
-        expect(tileset._tilesetUrl).toEqual('./Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json');
+        expect(tileset.url).toEqual(path);
+        expect(tileset._tilesetUrl).toEqual(path + 'tileset.json');
     });
+
+    it('url and tilesetUrl set up correctly given path with query string', function() {
+        var path = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets';
+        var param = '?param1=1&param2=2';
+        var tileset = new Cesium3DTileset({
+            url : path + param
+        });
+        expect(tileset.url).toEqual(path + param);
+        expect(tileset._tilesetUrl).toEqual(path + '/tileset.json' + param);
+    });
+
 
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {

@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/appendForwardSlash',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -25,7 +24,6 @@ define([
         './CullingVolume',
         './SceneMode'
     ], function(
-        appendForwardSlash,
         defaultValue,
         defined,
         defineProperties,
@@ -88,7 +86,7 @@ define([
             tilesetUrl = url;
             baseUrl = '';
         } else {
-            baseUrl = appendForwardSlash(url);
+            baseUrl = url;
             tilesetUrl = joinUrls(baseUrl, 'tileset.json');
         }
 
