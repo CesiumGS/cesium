@@ -74,6 +74,8 @@ camera.moveStart.addEventListener(function() {
 var starBurstState = {
     enabled : false,
     pickedEntities : undefined,
+    billboardEyeOffsets : undefined,
+    labelEyeOffsets : undefined,
     linePrimitive : undefined,
     radius : undefined,
     center : undefined,
@@ -83,7 +85,7 @@ var starBurstState = {
     maxDimension : undefined
 };
 
-function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
+function offsetBillboard(entity, entityPosition, angle, magnitude, lines, billboardEyeOffsets, labelEyeOffsets) {
     var x = magnitude * Math.cos(angle);
     var y = magnitude * Math.sin(angle);
 
@@ -98,9 +100,13 @@ function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
     var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cesium.Cartesian2());
     Cesium.Cartesian2.multiplyByScalar(offset, Cesium.Cartesian2.maximumComponent(dimensions), offset);
 
+    var labelOffset;
+    var billboardOffset = entity.billboard.eyeOffset;
+
     var eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, 0.0);
     entity.billboard.eyeOffset = eyeOffset;
     if (Cesium.defined(entity.label)) {
+        labelOffset = entity.label.eyeOffset;
         entity.label.eyeOffset = new Cesium.Cartesian3(offset.x, offset.y, -10.0);
     }
 
@@ -108,6 +114,9 @@ function offsetBillboard(entity, entityPosition, angle, magnitude, lines) {
     Cesium.Cartesian3.add(eyeOffset, endPoint, endPoint);
     Cesium.Matrix4.multiplyByPoint(camera.inverseViewMatrix, endPoint, endPoint);
     lines.push(endPoint);
+
+    billboardEyeOffsets.push(billboardOffset);
+    labelEyeOffsets.push(labelOffset);
 }
 
 function starBurst(mousePosition) {
@@ -136,6 +145,8 @@ function starBurst(mousePosition) {
     }
 
     var pickedEntities = starBurstState.pickedEntities = [];
+    var billboardEyeOffsets = starBurstState.billboardEyeOffsets = [];
+    var labelEyeOffsets = starBurstState.labelEyeOffsets = [];
     var lines = [];
     starBurstState.maxDimension = Number.NEGATIVE_INFINITY;
 
@@ -167,13 +178,13 @@ function starBurst(mousePosition) {
             angleIncrease = maxDimension / magnitude;
         }
 
-        offsetBillboard(object.id, object.primitive.position, angle, magnitude, lines);
+        offsetBillboard(object.id, object.primitive.position, angle, magnitude, lines, billboardEyeOffsets, labelEyeOffsets);
         pickedEntities.push(object);
 
         var reflectedAngle = angleEnd - angle;
         if (i + 1 < length && reflectedAngle - angleIncrease * 0.5 > angle + angleIncrease * 0.5) {
             object = billboardEntities[++i];
-            offsetBillboard(object.id, object.primitive.position, reflectedAngle, magnitude, lines);
+            offsetBillboard(object.id, object.primitive.position, reflectedAngle, magnitude, lines, billboardEyeOffsets, labelEyeOffsets);
             pickedEntities.push(object);
         }
 
@@ -250,13 +261,16 @@ function undoStarBurst() {
         return;
     }
 
+    var billboardEyeOffsets = starBurstState.billboardEyeOffsets;
+    var labelEyeOffsets = starBurstState.labelEyeOffsets;
+
     // Reset billboard and label pixel offsets.
     // Hide overlapping labels.
     for (var i = 0; i < pickedEntities.length; ++i) {
         var entity = pickedEntities[i].id;
-        entity.billboard.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, 0.0);
+        entity.billboard.eyeOffset = billboardEyeOffsets[i];
         if (Cesium.defined(entity.label)) {
-            entity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, 0.0);
+            entity.label.eyeOffset = labelEyeOffsets[i];
             entity.label.show = false;
         }
     }
@@ -266,6 +280,8 @@ function undoStarBurst() {
     scene.primitives.remove(starBurstState.linePrimitive);
     starBurstState.linePrimitive = undefined;
     starBurstState.pickedEntities = undefined;
+    starBurstState.billboardEyeOffsets = undefined;
+    starBurstState.labelEyeOffsets = undefined;
     starBurstState.radius = undefined;
     starBurstState.enabled = false;
 }
