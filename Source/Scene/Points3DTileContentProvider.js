@@ -136,7 +136,7 @@ define([
     Points3DTileContentProvider.prototype.getFeature = function(batchId) {
         // TODO: implement batchTable for pnts tile format
         return undefined;
-    }
+    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

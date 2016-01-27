@@ -103,7 +103,7 @@ define([
      */
     Composite3DTileContentProvider.prototype.getFeature = function(batchId) {
         return undefined;
-    }
+    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

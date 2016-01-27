@@ -84,7 +84,7 @@ define([
      */
     Tileset3DTileContentProvider.prototype.getFeature = function(batchId) {
         return undefined;
-    }
+    };
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
