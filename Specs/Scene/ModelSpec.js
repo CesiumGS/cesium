@@ -208,6 +208,16 @@ defineSuite([
        expect(texturedBoxModel.debugWireframe).toEqual(false);
     });
 
+    it('preserves query string in url', function() {
+        var params = '?param1=1&param2=2';
+        var url = texturedBoxUrl + params;
+        var model = Model.fromGltf({
+            url: url
+        });
+        expect(model._basePath).toEndWith(params);
+        expect(model._baseUri).toEndWith(params);
+    });
+
     it('renders', function() {
         expectRender(texturedBoxModel);
     });

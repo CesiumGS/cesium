@@ -9,6 +9,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -18,6 +19,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
+        '../Core/joinUrls',
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
         '../Core/loadImageFromTypedArray',
@@ -69,6 +71,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        definedNotNull,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -78,6 +81,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
+        joinUrls,
         loadArrayBuffer,
         loadImage,
         loadImageFromTypedArray,
@@ -397,10 +401,8 @@ define([
         setCachedGltf(this, cachedGltf);
 
         this._basePath = defaultValue(options.basePath, '');
-
-        var docUri = new Uri(document.location.href);
-        var modelUri = new Uri(this._basePath);
-        this._baseUri = modelUri.resolve(docUri);
+        var baseUri = getBaseUri(document.location.href);
+        this._baseUri = joinUrls(baseUri, this._basePath);
 
         /**
          * Determines if the model primitive will be shown.
@@ -978,7 +980,7 @@ define([
         var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(url));
 
         options = clone(options);
-        options.basePath = getBaseUri(url);
+        options.basePath = getBaseUri(url, true);
         options.cacheKey = cacheKey;
         var model = new Model(options);
 
@@ -1182,8 +1184,7 @@ define([
                 }
                 else if (buffer.type === 'arraybuffer') {
                     ++model._loadResources.pendingBufferLoads;
-                    var uri = new Uri(buffer.uri);
-                    var bufferPath = uri.resolve(model._baseUri).toString();
+                    var bufferPath = joinUrls(model._baseUri, buffer.uri);
                     var promise = RequestScheduler.request(bufferPath, loadArrayBuffer, undefined, model._requestType);
                     promise.then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferPath));
                 }
@@ -1279,8 +1280,7 @@ define([
                     };
                 } else {
                     ++model._loadResources.pendingShaderLoads;
-                    var uri = new Uri(shader.uri);
-                    var shaderPath = uri.resolve(model._baseUri).toString();
+                    var shaderPath = joinUrls(model._baseUri, shader.uri);
                     var promise = RequestScheduler.request(shaderPath, loadText, undefined, model.requestType);
                     promise.then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderPath));
                 }
@@ -1327,8 +1327,7 @@ define([
                     });
                 } else {
                     ++model._loadResources.pendingTextureLoads;
-                    var uri = new Uri(gltfImage.uri);
-                    var imagePath = uri.resolve(model._baseUri).toString();
+                    var imagePath = joinUrls(model._baseUri, gltfImage.uri);
                     loadImage(imagePath).then(imageLoad(model, id)).otherwise(getFailedLoadFunction(model, 'image', imagePath));
                 }
             }
