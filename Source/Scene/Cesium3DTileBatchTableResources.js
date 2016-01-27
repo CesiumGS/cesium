@@ -45,7 +45,7 @@ define([
     function Cesium3DTileBatchTableResources(contentProvider, featuresLength) {
         featuresLength = defaultValue(featuresLength, 0);
         this._featuresLength = featuresLength;
-        this._batchValues = undefined;  // Per-model show/color
+        this._batchValues = undefined;  // Per-feature show/color
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
         this._defaultTexture = undefined;
@@ -53,7 +53,11 @@ define([
         this._pickTexture = undefined;
         this._pickIds = [];
 
-        this._batchTable = undefined;
+        /**
+         * @private
+         */
+        this.batchTable = undefined;
+
         this._contentProvider = contentProvider;
 
         // Dimensions for batch and pick textures
@@ -80,7 +84,8 @@ define([
 
     defineProperties(Cesium3DTileBatchTableResources.prototype, {
         /**
-         * DOC_TBA
+         * Gets the number of features in the batch table.  This is the same
+         * as the number of features in the tile.
          *
          * @memberof Cesium3DTileBatchTableResources.prototype
          *
@@ -90,22 +95,6 @@ define([
         featuresLength : {
             get : function() {
                 return this._featuresLength;
-            }
-        },
-
-        /**
-         * DOC_TBA
-         *
-         * @memberof Cesium3DTileBatchTableResources.prototype
-         *
-         * @type {Object}
-         */
-        batchTable : {
-            get : function() {
-                return this._batchTable;
-            },
-            set : function(batchTable) {
-                this._batchTable = batchTable;
             }
         }
     });
@@ -268,7 +257,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var batchTable = this._batchTable;
+        var batchTable = this.batchTable;
         return defined(batchTable) && defined(batchTable[name]);
     };
 
@@ -277,7 +266,7 @@ define([
      */
     Cesium3DTileBatchTableResources.prototype.getPropertyNames = function() {
         var names = [];
-        var batchTable = this._batchTable;
+        var batchTable = this.batchTable;
 
         if (!defined(batchTable)) {
             return names;
@@ -307,11 +296,11 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(this._batchTable)) {
+        if (!defined(this.batchTable)) {
             return undefined;
         }
 
-        var propertyValues = this._batchTable[name];
+        var propertyValues = this.batchTable[name];
 
         if (!defined(propertyValues)) {
             return undefined;
@@ -335,17 +324,17 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(this._batchTable)) {
+        if (!defined(this.batchTable)) {
             // Tile payload did not have a batch table.  Create one for new user-defined properties.
-            this._batchTable = {};
+            this.batchTable = {};
         }
 
-        var propertyValues = this._batchTable[name];
+        var propertyValues = this.batchTable[name];
 
         if (!defined(propertyValues)) {
             // Property does not exist.  Create it.
-            this._batchTable[name] = new Array(featuresLength);
-            propertyValues = this._batchTable[name];
+            this.batchTable[name] = new Array(featuresLength);
+            propertyValues = this.batchTable[name];
         }
 
         propertyValues[batchId] = clone(value, true);
@@ -685,13 +674,6 @@ define([
         }
     }
 
-    function createBatchTexture(batchTableResources, context) {
-        if (!defined(batchTableResources._batchTexture)) {
-            batchTableResources._batchTexture = createTexture(batchTableResources, context, batchTableResources._batchValues);
-            batchTableResources._batchValuesDirty = false;
-        }
-    }
-
     function updateBatchTexture(batchTableResources) {
         if (batchTableResources._batchValuesDirty) {
             var dimensions = batchTableResources._textureDimensions;
@@ -720,8 +702,11 @@ define([
 
         if (this._batchValuesDirty) {
             // Create batch texture on-demand
-            createBatchTexture(this, context);
-            updateBatchTexture(this);  // Apply per-model show/color updates
+            if (!defined(this._batchTexture)) {
+                this._batchTexture = createTexture(this, context, this._batchValues);
+            }
+
+            updateBatchTexture(this);  // Apply per-feature show/color updates
 
             this._batchValuesDirty = false;
         }
