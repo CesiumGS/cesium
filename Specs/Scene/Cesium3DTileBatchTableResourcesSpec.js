@@ -321,13 +321,11 @@ defineSuite([
     it('renders tileset with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content.batchTableResources;
 
-            // Each resource in the b3dm file has an id property from 0 to 99,
+            // Each feature in the b3dm file has an id property from 0 to 99,
             // check that the 2nd resource has an id of 2
-            expect(resources.getProperty(2, 'id')).toEqual(2);
+            expect(content.getFeature(2).getProperty('id')).toEqual(2);
 
-            expect(resources.featuresLength).toEqual(content.featuresLength);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -335,11 +333,9 @@ defineSuite([
     it('renders tileset without batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content.batchTableResources;
 
-            expect(resources.getProperty(2, 'id')).toBeUndefined();
+            expect(content.getFeature(2).getProperty('id')).toBeUndefined();
 
-            expect(resources.featuresLength).toEqual(content.featuresLength);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -363,8 +359,8 @@ defineSuite([
         ContextLimits._maximumTextureSize = 64;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var resources = tileset._root.content.batchTableResources;
-            expect(resources.featuresLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             // Reset maximum texture size
@@ -397,7 +393,7 @@ defineSuite([
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content.batchTableResources;
+            var resources = content._batchTableResources;
             expect(resources.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(resources.isDestroyed()).toEqual(true);

@@ -107,15 +107,6 @@ define([
             get : function() {
                 return this._modelInstanceCollection.length;
             }
-        },
-
-        /**
-         * DOC_TBA
-         */
-        batchTableResources : {
-            get : function() {
-                return this._batchTableResources;
-            }
         }
     });
 

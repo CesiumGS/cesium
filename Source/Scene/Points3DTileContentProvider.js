@@ -108,18 +108,6 @@ define([
                 // TODO: implement batchTable for pnts tile format
                 return 0;
             }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
-         */
-        batchTableResources : {
-            get : function() {
-                // TODO: implement batchTable for pnts tile format
-                return undefined;
-            }
         }
     });
 

@@ -80,17 +80,6 @@ define([
             get : function() {
                 return 0;
             }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
-         */
-        batchTableResources : {
-            get : function() {
-                return undefined;
-            }
         }
     });
 

@@ -96,15 +96,6 @@ define([
             get : function() {
                 return this._featuresLength;
             }
-        },
-
-        /**
-         * DOC_TBA
-         */
-        batchTableResources : {
-            get : function() {
-                return this._batchTableResources;
-            }
         }
     });
 

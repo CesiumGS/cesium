@@ -63,15 +63,6 @@ define([
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
-        },
-
-        /**
-         * DOC_TBA
-         */
-        batchTableResources : {
-            get : function() {
-                DeveloperError.throwInstantiationError();
-            }
         }
     });
 
