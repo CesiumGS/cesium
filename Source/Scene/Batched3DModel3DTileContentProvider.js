@@ -121,7 +121,14 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Returns the {@link Cesium3DTileFeature} object for the feature with the
+     * given <code>batchId</code>.  This object is used to get and modify the
+     * feature's properties.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+     *
+     * @exception {DeveloperError} batchId must be between zero and {@link Batched3DModel3DTileContentProvider#featuresLength - 1}.
      */
     Batched3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
         var featuresLength = this._featuresLength;

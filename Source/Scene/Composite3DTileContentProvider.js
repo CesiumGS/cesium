@@ -94,6 +94,17 @@ define([
         }
     });
 
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} <code>undefined</code>.
+     */
+    Composite3DTileContentProvider.prototype.getFeature = function(batchId) {
+        return undefined;
+    }
+
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**

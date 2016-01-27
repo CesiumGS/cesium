@@ -13,6 +13,13 @@ define([
      * @alias Cesium3DTileContentProvider
      * @constructor
      *
+     * @see {@link Batched3DModel3DTileContentProvider}
+     * @see {@link Instanced3DModel3DTileContentProvider}
+     * @see {@link Points3DTileContentProvider}
+     * @see {@link Composite3DTileContentProvider}
+     * @see {@link Tileset3DTileContentProvider}
+     * @see {@link Empty3DTileContentProvider}
+     *
      * @private
      */
     function Cesium3DTileContentProvider(tileset, tile, url) {
@@ -67,6 +74,20 @@ define([
             }
         }
     });
+
+    /**
+     * Returns the {@link Cesium3DTileFeature} object for the feature with the
+     * given <code>batchId</code>.  This object is used to get and modify the
+     * feature's properties.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+     *
+     * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContentProvider#featuresLength - 1}.
+     */
+    Cesium3DTileContentProvider.prototype.getFeature = function(batchId) {
+        DeveloperError.throwInstantiationError();
+    };
 
     /**
      * Requests the tile's content.
@@ -136,7 +157,6 @@ define([
      * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
-     *
      *
      * @example
      * content = content && content.destroy();

@@ -123,6 +123,21 @@ define([
         }
     });
 
+    /**
+     * Returns the {@link Cesium3DTileFeature} object for the feature with the
+     * given <code>batchId</code>.  This object is used to get and modify the
+     * feature's properties.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+     *
+     * @exception {DeveloperError} batchId must be between zero and {@link Points3DTileContentProvider#featuresLength - 1}.
+     */
+    Points3DTileContentProvider.prototype.getFeature = function(batchId) {
+        // TODO: implement batchTable for pnts tile format
+        return undefined;
+    }
+
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
