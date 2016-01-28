@@ -150,8 +150,6 @@ define([
      *
      * @see EllipseOutlineGeometry.createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipse%20Outline.html|Cesium Sandcastle Ellipse Outline Demo}
-     *
      * @example
      * var ellipse = new Cesium.EllipseOutlineGeometry({
      *   center : Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883),
