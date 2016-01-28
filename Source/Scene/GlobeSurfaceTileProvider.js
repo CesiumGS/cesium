@@ -24,6 +24,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
+        '../Core/TerrainQuantization',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/Buffer',
@@ -68,6 +69,7 @@ define([
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
+        TerrainQuantization,
         Visibility,
         WebMercatorProjection,
         Buffer,
@@ -890,6 +892,7 @@ define([
         }
 
         var rtc = surfaceTile.center;
+        var encoding = surfaceTile.pickTerrain.mesh.encoding;
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
@@ -922,6 +925,20 @@ define([
                 tileRectangle.y -= rtc.z;
                 tileRectangle.z -= rtc.y;
                 tileRectangle.w -= rtc.z;
+            }
+
+            if (frameState.mode === SceneMode.SCENE2D && encoding.quantization === TerrainQuantization.BITS12) {
+                // In 2D, the texture coordinates of the tile are interpolated over the rectangle to get the position in the vertex shader.
+                // When the texture coordinates are quantized, error is introduced. This can be seen through the 1px wide cracking
+                // between the quantized tiles in 2D. To compensate for the error, move the expand the rectangle in each direction by
+                // half the error amount.
+                var epsilon = (1.0 / (Math.pow(2.0, 12.0) - 1.0)) * 0.5;
+                var widthEpsilon = (tileRectangle.z - tileRectangle.x) * epsilon;
+                var heightEpsilon = (tileRectangle.w - tileRectangle.y) * epsilon;
+                tileRectangle.x -= widthEpsilon;
+                tileRectangle.y -= heightEpsilon;
+                tileRectangle.z += widthEpsilon;
+                tileRectangle.w += heightEpsilon;
             }
 
             if (projection instanceof WebMercatorProjection) {
@@ -1071,7 +1088,6 @@ define([
             uniformMap.waterMask = waterMaskTexture;
             Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
 
-            var encoding = surfaceTile.pickTerrain.mesh.encoding;
             uniformMap.minMaxHeight.x = encoding.minimumHeight;
             uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
