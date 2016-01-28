@@ -33,6 +33,7 @@ Change Log
 * Added a Sandcastle example to "star burst" overlapping billboards and labels.
 * Added `Rectangle.union` and `Rectangle.expand`.
 * Added `Math.logBase` function.
+* Fixed a cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
 
 ### 1.17 - 2016-01-04
 
