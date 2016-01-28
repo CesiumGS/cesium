@@ -76,7 +76,7 @@ defineSuite([
         });
     });
 
-    it('throws when calling getModel with invalid index', function() {
+    it('throws when calling getFeature with invalid index', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){

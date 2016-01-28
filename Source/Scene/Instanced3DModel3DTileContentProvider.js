@@ -107,15 +107,6 @@ define([
             get : function() {
                 return this._modelInstanceCollection.length;
             }
-        },
-
-        /**
-         * DOC_TBA
-         */
-        batchTableResources : {
-            get : function() {
-                return this._batchTableResources;
-            }
         }
     });
 
@@ -131,6 +122,27 @@ define([
         }
     }
 
+    /**
+     * Determines if the tile's batch table has a property.  If it does, each feature in
+     * the tile will have the property.
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+     */
+    Instanced3DModel3DTileContentProvider.prototype.hasProperty = function(name) {
+        return this._batchTableResources.hasProperty(name);
+    };
+
+    /**
+     * Returns the {@link Cesium3DTileFeature} object for the feature with the
+     * given <code>batchId</code>.  This object is used to get and modify the
+     * feature's properties.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+     *
+     * @exception {DeveloperError} batchId must be between zero and {@link Instanced3DModel3DTileContentProvider#featuresLength - 1}.
+     */
     Instanced3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
         var featuresLength = this._modelInstanceCollection.length;
         //>>includeStart('debug', pragmas.debug);

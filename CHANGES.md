@@ -7,7 +7,6 @@ Change Log
    * `Cesium3DTileset`
    * `Cesium3DTile`
    * `Cesium3DTileFeature`
-   * `Cesium3DTileBatchTableResources`
    * `Batched3DModel3DTileContentProvider`
    * `Instanced3DModel3DTileContentProvider`
    * `Points3DTileContentProvider`

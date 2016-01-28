@@ -108,20 +108,35 @@ define([
                 // TODO: implement batchTable for pnts tile format
                 return 0;
             }
-        },
-
-        /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
-         */
-        batchTableResources : {
-            get : function() {
-                // TODO: implement batchTable for pnts tile format
-                return undefined;
-            }
         }
     });
+
+    /**
+     * Determines if the tile's batch table has a property.  If it does, each feature in
+     * the tile will have the property.
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+     */
+    Points3DTileContentProvider.prototype.hasProperty = function(name) {
+        // TODO: implement batchTable for pnts tile format
+        return false;
+    };
+
+    /**
+     * Returns the {@link Cesium3DTileFeature} object for the feature with the
+     * given <code>batchId</code>.  This object is used to get and modify the
+     * feature's properties.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
+     *
+     * @exception {DeveloperError} batchId must be between zero and {@link Points3DTileContentProvider#featuresLength - 1}.
+     */
+    Points3DTileContentProvider.prototype.getFeature = function(batchId) {
+        // TODO: implement batchTable for pnts tile format
+        return undefined;
+    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

@@ -72,9 +72,13 @@ define([
 
     defineProperties(Composite3DTileContentProvider.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+         * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
          *
-         * @private
+         * @memberof Composite3DTileContentProvider.prototype
+         *
+         * @type {Number}
+         * @readonly
          */
         featuresLength : {
             get : function() {
@@ -83,16 +87,42 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Gets the array of {@link Cesium3DTileContentProvider} objects that represent the
+         * content of the composite's inner tiles, which can also be composites.
          *
-         * @private
+         * @memberof Composite3DTileContentProvider.prototype
+         *
+         * @type {Arrays}
+         * @readonly
          */
-        batchTableResources : {
+        innerContents : {
             get : function() {
-                return undefined;
+                return this._contentProviders;
             }
         }
     });
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} <code>false</code>
+     */
+    Composite3DTileContentProvider.prototype.hasProperty = function(name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} <code>undefined</code>.
+     */
+    Composite3DTileContentProvider.prototype.getFeature = function(batchId) {
+        return undefined;
+    };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 

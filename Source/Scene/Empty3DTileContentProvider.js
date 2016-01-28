@@ -52,6 +52,28 @@ define([
     }
 
     /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Empty3DTileContentProvider</code>
+     * always returns <code>false</code> since a tile of this type does not have any features.
+     *
+     * @param {String} name The case-sensitive name of the property.
+     * @returns {Boolean} <code>false</code>
+     */
+    Empty3DTileContentProvider.prototype.hasProperty = function(name) {
+        return false;
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Empty3DTileContentProvider</code>
+     * always returns <code>undefined</code> since a tile of this type does not have any features.
+     *
+     * @param {Number} batchId The batchId for the feature.
+     * @returns {Cesium3DTileFeature} <code>undefined</code>.
+     */
+    Empty3DTileContentProvider.prototype.getFeature = function(batchId) {
+        return undefined;
+    };
+
+    /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
      *
      * @private
