@@ -242,7 +242,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
