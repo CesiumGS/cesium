@@ -80,6 +80,10 @@ define([
                 url += first.path + second.path;
             }
         } else {
+            url += first.path.replace(/^\/?/g, '');
+
+            if (appendSlash && second.path !== '') {url = url.replace(/\/?$/, '/');}
+
             url += second.path;
         }
 
