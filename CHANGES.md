@@ -29,6 +29,7 @@ Change Log
 * Fixed camera.flyTo not working when in 2D mode and only orientation changes
 * Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
 * `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
+* Fixed a cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
 
 ### 1.17 - 2016-01-04
 
