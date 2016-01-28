@@ -34,6 +34,7 @@ Change Log
 * Added `Rectangle.union` and `Rectangle.expand`.
 * Added `Math.logBase` function.
 * Fixed a cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
+* The new `createTileMapServiceImageryProvider` TMS implementation no longer flips X and Y coordinates for all gdal2tiles generated imagery. This worked around a bug in older versions of gdal2tiles which generated incorrect tilesets.  Specify the `flipXY : true` option to get the old behavior.
 
 ### 1.17 - 2016-01-04
 
