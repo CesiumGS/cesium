@@ -411,7 +411,7 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = tileset._baseUrl;
+            var baseUrl = joinUrls(tileset._baseUrl, '?v=' + tilesetJson.asset.version);
             var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset

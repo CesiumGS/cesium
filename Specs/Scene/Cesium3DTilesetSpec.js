@@ -203,6 +203,12 @@ defineSuite([
         });
     });
 
+    it('passes version in query string to tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            expect(tileset._root.content._url).toEqual(tilesetUrl + 'parent.b3dm?v=0.0');
+        });
+    });
+
     it('loads tileset.json once request scheduler has available slots', function() {
         RequestScheduler.maximumRequests = 2;
         viewNothing();
