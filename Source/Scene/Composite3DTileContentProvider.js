@@ -31,15 +31,11 @@ define([
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
-     * <p>
-     * Use this to access the individual tiles (precisely, tile content) in the composite.
-     * </p>
-     * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
-     * </p>
      *
      * @alias Composite3DTileContentProvider
      * @constructor
+     *
+     * @private
      */
     function Composite3DTileContentProvider(tileset, tile, url, factory) {
         this._url = url;
@@ -50,22 +46,16 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.processingPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.readyPromise = when.defer();
     }
@@ -74,11 +64,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
          * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
-         *
-         * @memberof Composite3DTileContentProvider.prototype
-         *
-         * @type {Number}
-         * @readonly
          */
         featuresLength : {
             get : function() {
@@ -89,11 +74,6 @@ define([
         /**
          * Gets the array of {@link Cesium3DTileContentProvider} objects that represent the
          * content of the composite's inner tiles, which can also be composites.
-         *
-         * @memberof Composite3DTileContentProvider.prototype
-         *
-         * @type {Arrays}
-         * @readonly
          */
         innerContents : {
             get : function() {
@@ -105,9 +85,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
      * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
-     *
-     * @param {String} name The case-sensitive name of the property.
-     * @returns {Boolean} <code>false</code>
      */
     Composite3DTileContentProvider.prototype.hasProperty = function(name) {
         return false;
@@ -116,9 +93,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
      * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
-     *
-     * @param {Number} batchId The batchId for the feature.
-     * @returns {Cesium3DTileFeature} <code>undefined</code>.
      */
     Composite3DTileContentProvider.prototype.getFeature = function(batchId) {
         return undefined;
@@ -128,8 +102,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Composite3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -158,8 +130,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -225,7 +195,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      */
     Composite3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
         var length = this._contentProviders.length;
@@ -236,8 +206,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Composite3DTileContentProvider.prototype.update = function(tiles3D, context, frameState, commandList) {
         var length = this._contentProviders.length;
@@ -248,8 +216,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Composite3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
@@ -257,8 +223,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Composite3DTileContentProvider.prototype.destroy = function() {
         var length = this._contentProviders.length;

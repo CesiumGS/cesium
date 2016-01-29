@@ -17,12 +17,11 @@ define([
      * Represents content for a tile in a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset whose
      * content points to another 3D Tiles tileset.
-     * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
-     * </p>
      *
      * @alias Tileset3DTileContentProvider
      * @constructor
+     *
+     * @private
      */
     function Tileset3DTileContentProvider(tileset, tile, url) {
         this._tileset = tileset;
@@ -31,22 +30,16 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.processingPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.readyPromise = when.defer();
     }
@@ -54,12 +47,19 @@ define([
     defineProperties(Tileset3DTileContentProvider.prototype, {
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         featuresLength : {
             get : function() {
                 return 0;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         */
+        innerContents : {
+            get : function() {
+                return undefined;
             }
         }
     });
@@ -67,9 +67,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Tileset3DTileContentProvider</code>
      * always returns <code>false</code> since a tile of this type does not have any features.
-     *
-     * @param {String} name The case-sensitive name of the property.
-     * @returns {Boolean} <code>false</code>
      */
     Tileset3DTileContentProvider.prototype.hasProperty = function(name) {
         return false;
@@ -78,9 +75,6 @@ define([
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Tileset3DTileContentProvider</code>
      * always returns <code>undefined</code> since a tile of this type does not have any features.
-     *
-     * @param {Number} batchId The batchId for the feature.
-     * @returns {Cesium3DTileFeature} <code>undefined</code>.
      */
     Tileset3DTileContentProvider.prototype.getFeature = function(batchId) {
         return undefined;
@@ -88,8 +82,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Tileset3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -112,24 +104,18 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Tileset3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
     };
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
     };
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Tileset3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
@@ -137,8 +123,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Tileset3DTileContentProvider.prototype.destroy = function() {
         return destroyObject(this);

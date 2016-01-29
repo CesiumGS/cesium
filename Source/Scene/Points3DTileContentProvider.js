@@ -47,15 +47,11 @@ define([
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Points/README.md|Points}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
-     * <p>
-     * Use this to access and modify individual features (points) in the tile.
-     * </p>
-     * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
-     * </p>
      *
      * @alias Points3DTileContentProvider
      * @constructor
+     *
+     * @private
      */
     function Points3DTileContentProvider(tileset, tile, url) {
         this._primitive = undefined;
@@ -65,22 +61,16 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.processingPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.readyPromise = when.defer();
 
@@ -100,23 +90,26 @@ define([
     defineProperties(Points3DTileContentProvider.prototype, {
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         featuresLength : {
             get : function() {
                 // TODO: implement batchTable for pnts tile format
                 return 0;
             }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         */
+        innerContents : {
+            get : function() {
+                return undefined;
+            }
         }
     });
 
     /**
-     * Determines if the tile's batch table has a property.  If it does, each feature in
-     * the tile will have the property.
-     *
-     * @param {String} name The case-sensitive name of the property.
-     * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      */
     Points3DTileContentProvider.prototype.hasProperty = function(name) {
         // TODO: implement batchTable for pnts tile format
@@ -124,14 +117,7 @@ define([
     };
 
     /**
-     * Returns the {@link Cesium3DTileFeature} object for the feature with the
-     * given <code>batchId</code>.  This object is used to get and modify the
-     * feature's properties.
-     *
-     * @param {Number} batchId The batchId for the feature.
-     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-     *
-     * @exception {DeveloperError} batchId must be between zero and {@link Points3DTileContentProvider#featuresLength - 1}.
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      */
     Points3DTileContentProvider.prototype.getFeature = function(batchId) {
         // TODO: implement batchTable for pnts tile format
@@ -142,8 +128,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -172,8 +156,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -241,8 +223,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
@@ -251,8 +231,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
@@ -263,8 +241,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
@@ -272,8 +248,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Points3DTileContentProvider.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
