@@ -227,6 +227,14 @@ define([
         this.loadProgress = new Event();
         this._loadProgressEventsToRaise = [];
 
+        // TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
+        // lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
+        // values wll be gown), we need to expose an event like loadProgress for when content is unloaded.
+        //
+        // We might also want to keep a separate data structure - or flag - so we know what property
+        // values changed (other than those derived from declarative styling, which can easily be
+        // reapplied).
+
         /**
          * This event fires once for each visible tile in a frame.  This can be used to style a tileset.
          * <p>
@@ -296,6 +304,9 @@ define([
          * @example
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
          * console.log('Minimum building height: ' + tileset.properties.height.minimum);
+         *
+         * {@see Cesium3DTileFeature#getProperty}
+         * {@see Cesium3DTileFeature#setProperty}
          */
         properties : {
             get : function() {
