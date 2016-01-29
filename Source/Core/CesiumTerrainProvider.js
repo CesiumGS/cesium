@@ -66,6 +66,7 @@ define([
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Array} [options.tiles] An array of tile URL templates used to override those found in the layer.json file.
      *
      *
      * @example

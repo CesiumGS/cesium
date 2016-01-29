@@ -31,6 +31,9 @@ Change Log
 * Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
 * `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
 * Added a Sandcastle example to "star burst" overlapping billboards and labels.
+* Improved joinURLs so that two qualified URLs can be joined
+* Tweaked `CesiumTerrainProvider` so that the tile URL templates can be overridden from the options property `tiles`.
+
 
 ### 1.17 - 2016-01-04
 
