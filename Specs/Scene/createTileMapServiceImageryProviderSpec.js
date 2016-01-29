@@ -267,7 +267,7 @@ defineSuite([
         });
 
         return requestMetadata.promise.then(function(url) {
-            expect(url.indexOf('?query=1')).not.toEqual(-1);
+            expect(/\?query=1$/.test(url)).toEqual(true);
         });
     });
 
