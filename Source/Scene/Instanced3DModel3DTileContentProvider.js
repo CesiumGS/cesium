@@ -53,15 +53,11 @@ define([
      * Represents the contents of a
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
-     * <p>
-     * Use this to access and modify individual features (instances) in the tile.
-     * </p>
-     * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTile#content}.
-     * </p>
      *
      * @alias Instanced3DModel3DTileContentProvider
      * @constructor
+     *
+     * @private
      */
     function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
@@ -71,22 +67,16 @@ define([
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.processingPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
-         *
-         * @private
          */
         this.readyPromise = when.defer();
 
@@ -96,16 +86,20 @@ define([
 
     defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
         /**
-         * Gets the number of features in the tile, i.e., the number of 3D models instances.
-         *
-         * @memberof Instanced3DModel3DTileContentProvider.prototype
-         *
-         * @type {Number}
-         * @readonly
+         * Part of the {@link Cesium3DTileContentProvider} interface.
          */
         featuresLength : {
             get : function() {
                 return this._modelInstanceCollection.length;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContentProvider} interface.
+         */
+        innerContents : {
+            get : function() {
+                return undefined;
             }
         }
     });
@@ -123,25 +117,14 @@ define([
     }
 
     /**
-     * Determines if the tile's batch table has a property.  If it does, each feature in
-     * the tile will have the property.
-     *
-     * @param {String} name The case-sensitive name of the property.
-     * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      */
     Instanced3DModel3DTileContentProvider.prototype.hasProperty = function(name) {
         return this._batchTableResources.hasProperty(name);
     };
 
     /**
-     * Returns the {@link Cesium3DTileFeature} object for the feature with the
-     * given <code>batchId</code>.  This object is used to get and modify the
-     * feature's properties.
-     *
-     * @param {Number} batchId The batchId for the feature.
-     * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
-     *
-     * @exception {DeveloperError} batchId must be between zero and {@link Instanced3DModel3DTileContentProvider#featuresLength - 1}.
+     * Part of the {@link Cesium3DTileContentProvider} interface.
      */
     Instanced3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
         var featuresLength = this._modelInstanceCollection.length;
@@ -161,8 +144,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.request = function() {
         var that = this;
@@ -191,8 +172,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
@@ -323,10 +302,7 @@ define([
     };
 
     /**
-     * DOC_TBA
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
@@ -334,10 +310,7 @@ define([
     };
 
     /**
-     * DOC_TBA
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
@@ -349,8 +322,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.isDestroyed = function() {
         return false;
@@ -358,8 +329,6 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContentProvider} interface.
-     *
-     * @private
      */
     Instanced3DModel3DTileContentProvider.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
