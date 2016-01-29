@@ -412,6 +412,7 @@ define([
             }
 
             var baseUrl = joinUrls(tileset._baseUrl, '?v=' + tilesetJson.asset.version);
+            tileset._baseUrl = baseUrl;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
