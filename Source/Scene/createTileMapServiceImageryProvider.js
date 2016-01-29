@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        '../Core/appendForwardSlash',
         '../Core/Cartesian2',
         '../Core/Cartographic',
         '../Core/Credit',
@@ -19,7 +18,6 @@ define([
         '../ThirdParty/when',
         './UrlTemplateImageryProvider'
     ], function(
-        appendForwardSlash,
         Cartesian2,
         Cartographic,
         Credit,
@@ -98,7 +96,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = appendForwardSlash(options.url);
+        var url = options.url;
 
         var deferred = when.defer();
         var imageryProvider = new UrlTemplateImageryProvider(deferred.promise);
