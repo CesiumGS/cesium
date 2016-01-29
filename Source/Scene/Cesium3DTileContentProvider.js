@@ -86,7 +86,7 @@ define([
          *
          * @memberof Composite3DTileContentProvider.prototype
          *
-         * @type {Arrays}
+         * @type {Array}
          * @readonly
          */
         innerContents : {

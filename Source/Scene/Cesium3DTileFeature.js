@@ -76,7 +76,7 @@ define([
         },
 
         /**
-         * Gets abd sets the highlight color multiplied with the feature's color.  When
+         * Gets and sets the highlight color multiplied with the feature's color.  When
          * this is white, the feature's color is not changed.
          * <p>
          * Only <code>red</code>, <code>green</code>, and <code>blue</code> components
@@ -142,7 +142,7 @@ define([
      * </p>
      *
      * @param {String} name The case-sensitive name of the property.
-     * @param {Any} The value of the property that will be copied.
+     * @param {Any} value The value of the property that will be copied.
      *
      * @example
      * var height = feature.getProperty('Height'); // e.g., the height of a building
