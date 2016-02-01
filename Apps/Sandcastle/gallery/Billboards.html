@@ -278,6 +278,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function () {
+    viewer.camera.setView({destination: Cesium.Camera.DEFAULT_VIEW_RECTANGLE});
     viewer.entities.removeAll();
 };
 //Sandcastle_End
