@@ -747,24 +747,11 @@ define([
             return;
         }
 
-        if (defined(surfaceTile.meshForWireframePromise)) {
+        if (!defined(surfaceTile.terrainData) || !defined(surfaceTile.terrainData._mesh)) {
             return;
         }
 
-        surfaceTile.meshForWireframePromise = surfaceTile.terrainData.createMesh(provider._terrainProvider.tilingScheme, tile.x, tile.y, tile.level);
-        if (!defined(surfaceTile.meshForWireframePromise)) {
-            // deferrred
-            return;
-        }
-
-        var vertexArray = surfaceTile.vertexArray;
-
-        when(surfaceTile.meshForWireframePromise, function(mesh) {
-            if (surfaceTile.vertexArray === vertexArray) {
-                surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
-            }
-            surfaceTile.meshForWireframePromise = undefined;
-        });
+        surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, surfaceTile.terrainData._mesh);
     }
 
     /**
