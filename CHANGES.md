@@ -2,6 +2,7 @@ Change Log
 ==========
 
 ### 1.18 - 2016-02-01
+
 * Breaking changes
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).
 * Deprecated
