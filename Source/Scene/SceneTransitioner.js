@@ -353,7 +353,7 @@ define([
         return Cartesian3.lerp(startPosition, endPosition, time, new Cartesian3());
     }
 
-    function morphPerspectiveToOrthographic(transitioner, duration, endCamera, complete) {
+    function morphPerspectiveToOrthographic(transitioner, duration, endCamera, updateHeight, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
 
@@ -364,7 +364,8 @@ define([
 
         function update(value) {
             camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
-            camera.position.x = d / Math.tan(camera.frustum.fov * 0.5);
+            var height = d / Math.tan(camera.frustum.fov * 0.5);
+            updateHeight(camera, height);
         }
         var tween = scene.tweens.add({
             duration : duration,
@@ -384,33 +385,45 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, complete) {
+    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid) {
+        duration *= 0.5;
+
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
-        var maxRadii = ellipsoid.maximumRadius;
 
-        var startPos = Cartesian3.clone(camera.position);
+        var position = Cartesian3.clone(camera.position);
         var startDir = Cartesian3.clone(camera.direction);
         var startUp = Cartesian3.clone(camera.up);
 
-        var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
-        var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
-        var d = (maxRadii * Math.PI) / tanTheta;
+        var endDir = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        var endUp = Cartesian3.clone(Cartesian3.UNIT_Y);
 
-        var endPos = new Cartesian3();
-        endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position, endPos), d, endPos);
-        var endDir = Cartesian3.clone(transitioner._camera2D.direction);
-        var endUp = Cartesian3.clone(transitioner._camera2D.up);
+        var frustum = new OrthographicFrustum();
+        frustum.right = position.z * 0.5;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
+        frustum.bottom = -frustum.top;
+
+        var camera2D = {
+            position : position,
+            direction : endDir,
+            up : endUp,
+            frustum : frustum
+        };
+        var complete = complete2DCallback(camera2D);
+        createMorphHandler(transitioner, complete);
 
         function updateCV(value) {
-            camera.position = columbusViewMorph(startPos, endPos, value.time);
             camera.direction = columbusViewMorph(startDir, endDir, value.time);
             camera.up = columbusViewMorph(startUp, endUp, value.time);
             camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
         }
-        duration *= 0.5;
+
+        function updateHeight(camera, height) {
+            camera.position.z = height;
+        }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -422,7 +435,7 @@ define([
             },
             update : updateCV,
             complete : function() {
-                morphPerspectiveToOrthographic(transitioner, duration, complete);
+                morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
             }
         });
         transitioner._currentTweens.push(tween);
@@ -436,7 +449,7 @@ define([
         var position = scene.mapProjection.project(ellipsoid.cartesianToCartographic(scene.camera.positionWC));
 
         var frustum = new OrthographicFrustum();
-        frustum.right = position.z;
+        frustum.right = position.z * 0.5;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
@@ -458,11 +471,15 @@ define([
             frustum : frustum
         };
 
+        function updateHeight(camera, height) {
+            camera.position.x = height;
+        }
+
         var complete = complete2DCallback(camera2D);
         createMorphHandler(transitioner, complete);
 
         function completeCallback() {
-            morphPerspectiveToOrthographic(transitioner, duration, camera2D, complete);
+            morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
         }
         morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
     }
