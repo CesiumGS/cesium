@@ -2027,23 +2027,14 @@
                     "technique": "PHONG",
                     "transparent": false,
                     "values": {
-                        "diffuse": {
-                            "type": 35678,
-                            "value": "texture_Image0002"
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.20000000298023224,
-                                0.20000000298023224,
-                                0.20000000298023224,
-                                1
-                            ]
-                        }
+                        "diffuse": "texture_Image0002",
+                        "shininess": 256,
+                        "specular": [
+                            0.20000000298023224,
+                            0.20000000298023224,
+                            0.20000000298023224,
+                            1
+                        ]
                     }
                 }
             },
