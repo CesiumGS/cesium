@@ -88,15 +88,12 @@
                     "technique": "CONSTANT",
                     "transparent": false,
                     "values": {
-                        "emission": {
-                            "type": 35666,
-                            "value": [
-                                0.800000011920929,
-                                0,
-                                0,
-                                1
-                            ]
-                        }
+                        "emission": [
+                            0.800000011920929,
+                            0,
+                            0,
+                            1
+                        ]
                     }
                 }
             },

@@ -2,12 +2,12 @@ Change Log
 ==========
 
 ### 1.18 - 2016-02-01
-
 * Breaking changes
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).
 * Deprecated
     * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
     * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.20. Use `createTileMapServiceImageryProvider` instead.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Added a Sandcastle example to "star burst" overlapping billboards and labels.
 * Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.

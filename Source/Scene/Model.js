@@ -1129,7 +1129,7 @@ define([
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
 
-                if (id === 'KHR_binary_glTF') {
+                if (id === 'KHR_binary_glTF' || id === 'binary_glTF') {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[id] = model._cachedGltf.bgltf;
