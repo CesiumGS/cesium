@@ -625,7 +625,7 @@ define([
      
         switch (paramName)  {
             case 'ambient':
-                return WebGLConstants.FLOAT_VEC4;
+                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'diffuse':
                 return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
             case 'emission':
