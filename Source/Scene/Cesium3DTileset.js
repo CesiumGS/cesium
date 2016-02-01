@@ -380,7 +380,7 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * The base path that non-absolute paths in tileset.json are relative to.
          *
          * @memberof Cesium3DTileset.prototype
          *

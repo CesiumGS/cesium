@@ -335,12 +335,8 @@ define([
         },
 
         /**
-         * DOC_TBA
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {RequestScheduler~RequestServer}
          * @readonly
+         * @private
          */
         requestServer : {
             get : function() {
@@ -350,7 +346,9 @@ define([
     });
 
     /**
-     * DOC_TBA
+     * Determines if the tile is ready to render.
+     *
+     * @returns {Boolean} <code>true</code> if the tile is ready to render; otherwise, <code>false</code>.
      *
      * @private
      */
@@ -360,9 +358,9 @@ define([
 
 
     /**
-     * When <true>true</code>, the tile's content has not be requested.
+     * Determines if the tile's content has not be requested.
      *
-     * DOC_TBA
+     * @returns {Boolean} <code>true</code> if tile's content has not be requested; otherwise, <code>false</code>.
      *
      * @private
      */
