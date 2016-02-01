@@ -1,19 +1,18 @@
 /*global define*/
 define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/DeveloperError',
-    '../Core/Rectangle',
-    '../Core/WebMercatorTilingScheme',
-    './UrlTemplateImageryProvider'
-], function(
-    Credit,
-    defaultValue,
-    DeveloperError,
-    Rectangle,
-    WebMercatorTilingScheme,
-    UrlTemplateImageryProvider
-) {
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/DeveloperError',
+        '../Core/Rectangle',
+        '../Core/WebMercatorTilingScheme',
+        './UrlTemplateImageryProvider'
+    ], function(
+        Credit,
+        defaultValue,
+        DeveloperError,
+        Rectangle,
+        WebMercatorTilingScheme,
+        UrlTemplateImageryProvider) {
     "use strict";
 
     var trailingSlashRegex = /\/$/;
@@ -43,7 +42,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider

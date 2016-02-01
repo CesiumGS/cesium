@@ -93,8 +93,6 @@ define([
      *
      * @see SimplePolylineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Simple%20Polyline.html|Cesium Sandcastle Simple Polyline Demo}
-     *
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.SimplePolylineGeometry({
