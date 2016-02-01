@@ -21,6 +21,7 @@ define([
         './Cesium3DTile',
         './Cesium3DTileRefine',
         './Cesium3DTilesetState',
+        './Cesium3DTileStyleEngine',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -45,6 +46,7 @@ define([
         Cesium3DTile,
         Cesium3DTileRefine,
         Cesium3DTilesetState,
+        Cesium3DTileStyleEngine,
         CullingVolume,
         SceneMode) {
     "use strict";
@@ -60,6 +62,7 @@ define([
      * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
+     * @param {DOC_TBA} [options.style] DOC_TBA
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -106,6 +109,7 @@ define([
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._newlySelectedTiles = [];
 
         /**
          * Determines if the tileset will be shown.
@@ -125,6 +129,23 @@ define([
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
         /**
+         * DOC_TBA
+         * <p>
+         * Assign <code>undefined</code> to remove the style, which will restore the visual
+         * appearance of the tileset to its default when no style was applied.
+         * </p>
+         * <p>
+         * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
+         * event is raised, so code in <code>tileVisible</code> can manually set a feature's
+         * properties using {@link Cesium3DTileContentProvider#getFeature}.  When
+         * a new style is assigned any manually set properties are overwritten.
+         * </p>
+         */
+        this.style = options.style;
+
+        this._styleEngine = new Cesium3DTileStyleEngine(this);
+
+        /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * Determines if rendering statistics are output to the console.
@@ -141,12 +162,17 @@ define([
             // Loading stats
             numberOfPendingRequests : 0,
             numberProcessing : 0,
+            // Styling stats
+            numberOfTilesStyled : 0,
+            numberOfFeaturesStyled : 0,
 
             lastSelected : -1,
             lastVisited : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
-            lastNumberProcessing : -1
+            lastNumberProcessing : -1,
+            lastNumberOfTilesStyled : -1,
+            lastNumberOfFeaturesStyled : -1
         };
 
         /**
@@ -236,7 +262,8 @@ define([
         // reapplied).
 
         /**
-         * This event fires once for each visible tile in a frame.  This can be used to style a tileset.
+         * This event fires once for each visible tile in a frame.  This can be used to manually
+         * style a tileset.
          * <p>
          * The visible {@link Cesium3DTile} is passed to the event listener.
          * </p>
@@ -305,8 +332,8 @@ define([
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
          * console.log('Minimum building height: ' + tileset.properties.height.minimum);
          *
-         * {@see Cesium3DTileFeature#getProperty}
-         * {@see Cesium3DTileFeature#setProperty}
+         * @see {Cesium3DTileFeature#getProperty}
+         * @see {Cesium3DTileFeature#setProperty}
          */
         properties : {
             get : function() {
@@ -553,12 +580,17 @@ define([
         }
     }
 
-    function selectTile(selectedTiles, tile, fullyVisible, frameState) {
+    function selectTile(tiles3D, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
-            selectedTiles.push(tile);
+            tiles3D._selectedTiles.push(tile);
             tile.selected = true;
+
+            if (tile.lastFrameNumber !== frameState.frameNumber - 1) {
+                tiles3D._newlySelectedTiles.push(tile);
+            }
+            tile.lastFrameNumber = frameState.frameNumber;
         }
     }
 
@@ -573,8 +605,8 @@ define([
         var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
         var cullingVolume = frameState.cullingVolume;
 
-        var selectedTiles = tiles3D._selectedTiles;
-        selectedTiles.length = 0;
+        tiles3D._selectedTiles.length = 0;
+        tiles3D._newlySelectedTiles.length = 0;
 
         scratchRefiningTiles.length = 0;
 
@@ -640,7 +672,7 @@ define([
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
-                selectTile(selectedTiles, t, fullyVisible, frameState);
+                selectTile(tiles3D, t, fullyVisible, frameState);
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
@@ -688,7 +720,7 @@ define([
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
                     // Select tile if it's a leaf (childrenLength === 0)
-                    selectTile(selectedTiles, t, fullyVisible, frameState);
+                    selectTile(tiles3D, t, fullyVisible, frameState);
                 } else {
                     // Tile does not meet SSE.
 
@@ -709,7 +741,7 @@ define([
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(selectedTiles, t, fullyVisible, frameState);
+                        selectTile(tiles3D, t, fullyVisible, frameState);
 
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
@@ -763,7 +795,7 @@ define([
             }
             if (!refinable) {
                 var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
-                selectTile(tiles3D._selectedTiles, refiningTile, fullyVisible, frameState);
+                selectTile(tiles3D, refiningTile, fullyVisible, frameState);
                 for (j = 0; j < descendantsLength; ++j) {
                     descendant = refiningTile.descendantsWithContent[j];
                     descendant.selected = false;
@@ -818,6 +850,8 @@ define([
         var stats = tiles3D._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
+        stats.numberOfTilesStyled = 0;
+        stats.numberOfFeaturesStyled = 0;
     }
 
     function showStats(tiles3D, isPick) {
@@ -828,13 +862,17 @@ define([
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
             stats.lastSelected !== tiles3D._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
-            stats.lastNumberProcessing !== stats.numberProcessing)) {
+            stats.lastNumberProcessing !== stats.numberProcessing ||
+            stats.lastNumberOfTilesStyled !== stats.numberOfTilesStyled ||
+            stats.lastNumberOfFeaturesStyled !== stats.numberOfFeaturesStyled)) {
 
             stats.lastVisited = stats.visited;
             stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
             stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
             stats.lastNumberProcessing = stats.numberProcessing;
+            stats.lastNumberOfTilesStyled = stats.numberOfTilesStyled;
+            stats.lastNumberOfFeaturesStyled = stats.numberOfFeaturesStyled;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -848,7 +886,9 @@ define([
                 // multiple frustums.
                 ', Commands: ' + stats.numberOfCommands +
                 ', Requests: ' + stats.numberOfPendingRequests +
-                ', Processing: ' + stats.numberProcessing;
+                ', Processing: ' + stats.numberProcessing +
+                ', Tiles styled: ' + stats.numberOfTilesStyled +
+                ', Features styled: ' + stats.numberOfFeaturesStyled;
 
             /*global console*/
             console.log(s);
@@ -857,19 +897,22 @@ define([
 
     function updateTiles(tiles3D, frameState) {
         var commandList = frameState.commandList;
-        var numberOfCommands = commandList.length;
+        var numberOfInitialCommands = commandList.length;
         var selectedTiles = tiles3D._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tiles3D.tileVisible;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             if (tile.selected) {
+                // Raise visible event before update in case the visible event
+                // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tiles3D, frameState);
             }
         }
 
-        tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
+        // Number of commands added by each update above
+        tiles3D._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -955,6 +998,7 @@ define([
             processTiles(this, frameState);
         }
         selectTiles(this, frameState, outOfCore);
+        this._styleEngine.applyStyle();
         updateTiles(this, frameState);
 
         // Events are raised (added to the afterRender queue) here since promises
