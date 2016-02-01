@@ -379,28 +379,19 @@
                     "technique": "PHONG",
                     "transparent": false,
                     "values": {
-                        "diffuse": {
-                            "type": 35666,
-                            "value": [
-                                0,
-                                0.04050629958510399,
-                                0.021240700036287308,
-                                1
-                            ]
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.6499999761581421,
-                                0.6499999761581421,
-                                0.6499999761581421,
-                                1
-                            ]
-                        }
+                        "diffuse": [
+                            0,
+                            0.04050629958510399,
+                            0.021240700036287308,
+                            1
+                        ],
+                        "shininess": 256,
+                        "specular": [
+                            0.6499999761581421,
+                            0.6499999761581421,
+                            0.6499999761581421,
+                            1
+                        ]
                     }
                 }
             },
@@ -414,57 +405,18 @@
                     "technique": "PHONG",
                     "transparent": false,
                     "values": {
-                        "diffuse": {
-                            "type": 35678,
-                            "value": "texture_Image0001"
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                1
-                            ]
-                        }
+                        "diffuse": "texture_Image0001",
+                        "shininess": 256,
+                        "specular": [
+                            0.03999999910593033,
+                            0.03999999910593033,
+                            0.03999999910593033,
+                            1
+                        ]
                     }
                 }
             },
             "name": "truck"
-        },
-        "Effect-wheels": {
-            "extensions": {
-                "KHR_materials_common": {
-                    "doubleSided": false,
-                    "jointCount": 0,
-                    "technique": "PHONG",
-                    "transparent": false,
-                    "values": {
-                        "diffuse": {
-                            "type": 35678,
-                            "value": "texture_Image0001"
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                1
-                            ]
-                        }
-                    }
-                }
-            },
-            "name": "wheels"
         },
         "Effect-window_trim": {
             "extensions": {
@@ -474,28 +426,19 @@
                     "technique": "PHONG",
                     "transparent": false,
                     "values": {
-                        "diffuse": {
-                            "type": 35666,
-                            "value": [
-                                0.06400000303983688,
-                                0.06400000303983688,
-                                0.06400000303983688,
-                                1
-                            ]
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                0.03999999910593033,
-                                1
-                            ]
-                        }
+                        "diffuse": [
+                            0.06400000303983688,
+                            0.06400000303983688,
+                            0.06400000303983688,
+                            1
+                        ],
+                        "shininess": 256,
+                        "specular": [
+                            0.03999999910593033,
+                            0.03999999910593033,
+                            0.03999999910593033,
+                            1
+                        ]
                     }
                 }
             },
@@ -513,7 +456,7 @@
                         "TEXCOORD_0": "accessor_136"
                     },
                     "indices": "accessor_127",
-                    "material": "Effect-wheels",
+                    "material": "Effect-truck",
                     "mode": 4
                 },
                 {
@@ -523,7 +466,7 @@
                         "TEXCOORD_0": "accessor_136"
                     },
                     "indices": "accessor_130",
-                    "material": "Effect-wheels",
+                    "material": "Effect-truck",
                     "mode": 4
                 }
             ]
