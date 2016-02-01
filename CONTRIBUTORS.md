@@ -29,6 +29,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Gabrielle Getz](https://github.com/ggetz)
    * [Sarah Chow](https://github.com/slchow)
    * [Brendan Flood](https://github.com/bflood-agi)
+   * [Thomas Pedbereznak](https://github.com/TomPed)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -80,5 +81,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Tucker Tibbetts](https://github.com/cttibbetts)
 * [Eric Putnam](https://github.com/eputnam)
 * [Dmitriy Pushkov](https://github.com/ezze)
+* [Max Limper](https://github.com/mlimper)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.

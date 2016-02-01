@@ -66,6 +66,16 @@
     overflow: hidden;
 }
 
+.cesium-viewer-vrContainer {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    padding: 0;
+    width: 29px;
+    height: 29px;
+    overflow: hidden;
+}
+
 .cesium-viewer-toolbar {
     display: block;
     position: absolute;

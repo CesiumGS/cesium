@@ -20,6 +20,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
+        './TileBoundingBox',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -42,6 +43,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
+        TileBoundingBox,
         TileTerrain) {
     "use strict";
 
@@ -61,62 +63,6 @@ define([
          */
         this.imagery = [];
 
-        /**
-         * The world coordinates of the southwest corner of the tile's rectangle.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.southwestCornerCartesian = new Cartesian3();
-
-        /**
-         * The world coordinates of the northeast corner of the tile's rectangle.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.northeastCornerCartesian = new Cartesian3();
-
-        /**
-         * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.westNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         * Because points of constant latitude do not necessary lie in a plane, positions below this
-         * plane are not necessarily inside the tile, but they are close.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.southNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.eastNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         * Because points of constant latitude do not necessary lie in a plane, positions below this
-         * plane are not necessarily inside the tile, but they are close.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.northNormal = new Cartesian3();
-
         this.waterMaskTexture = undefined;
 
         this.waterMaskTranslationAndScale = new Cartesian4(0.0, 0.0, 1.0, 1.0);
@@ -129,6 +75,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
+        this.tileBoundingBox = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -368,12 +315,6 @@ define([
         }
     };
 
-    var cartesian3Scratch = new Cartesian3();
-    var cartesian3Scratch2 = new Cartesian3();
-    var westernMidpointScratch = new Cartesian3();
-    var easternMidpointScratch = new Cartesian3();
-    var cartographicScratch = new Cartographic();
-
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
 
@@ -393,43 +334,6 @@ define([
                 layer._createTileImagerySkeletons(tile, terrainProvider);
             }
         }
-
-        var ellipsoid = tile.tilingScheme.ellipsoid;
-
-        // Compute tile rectangle boundaries for estimating the distance to the tile.
-        var rectangle = tile.rectangle;
-
-        ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle), surfaceTile.southwestCornerCartesian);
-        ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle), surfaceTile.northeastCornerCartesian);
-
-        // The middle latitude on the western edge.
-        cartographicScratch.longitude = rectangle.west;
-        cartographicScratch.latitude = (rectangle.south + rectangle.north) * 0.5;
-        cartographicScratch.height = 0.0;
-        var westernMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, westernMidpointScratch);
-
-        // Compute the normal of the plane on the western edge of the tile.
-        var westNormal = Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
-        Cartesian3.normalize(westNormal, surfaceTile.westNormal);
-
-        // The middle latitude on the eastern edge.
-        cartographicScratch.longitude = rectangle.east;
-        var easternMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, easternMidpointScratch);
-
-        // Compute the normal of the plane on the eastern edge of the tile.
-        var eastNormal = Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
-        Cartesian3.normalize(eastNormal, surfaceTile.eastNormal);
-
-        // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
-        var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
-        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
-        Cartesian3.normalize(southNormal, surfaceTile.southNormal);
-
-        // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
-        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
-        Cartesian3.normalize(northNormal, surfaceTile.northNormal);
     }
 
     function processTerrainStateMachine(tile, frameState, terrainProvider) {
@@ -461,7 +365,6 @@ define([
 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.loadedTerrain = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (loaded.state === TerrainState.FAILED) {
@@ -498,7 +401,6 @@ define([
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;
-                surfaceTile.pickTerrain.data = undefined;
                 surfaceTile.upsampledTerrain = undefined;
             } else if (upsampled.state === TerrainState.FAILED) {
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,

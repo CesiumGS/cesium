@@ -39,8 +39,6 @@ define([
      * @see BoxOutlineGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
-     *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
      *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
@@ -113,7 +111,6 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxOutlineGeometry}
      *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
      *
      * @example
