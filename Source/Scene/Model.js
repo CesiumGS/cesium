@@ -1132,7 +1132,7 @@ define([
                 // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
                 // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
                 // circa Cesium 1.15-1.17 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
-                if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF') {
+                if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[id] = model._cachedGltf.bgltf;
