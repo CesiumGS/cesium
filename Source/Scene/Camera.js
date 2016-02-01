@@ -966,6 +966,7 @@ define([
             pitch : undefined,
             roll : undefined
         },
+        convert: undefined,
         endTransform : undefined
     };
 
@@ -977,6 +978,8 @@ define([
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
+     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
+     * to be in the correct coordinate system.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
      *
      * @example
@@ -1032,7 +1035,7 @@ define([
             this._setTransform(options.endTransform);
         }
 
-        var convert = true;
+        var convert = defaultValue(options.convert, true);
         var destination = defaultValue(options.destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
         if (defined(destination) && defined(destination.west)) {
             destination = this.getRectangleCameraCoordinates(destination, scratchSetViewCartesian);
@@ -1053,6 +1056,58 @@ define([
             setView2D(this, destination, heading, convert);
         } else {
             setViewCV(this, destination, heading, pitch, roll, convert);
+        }
+    };
+
+    var pitchScratch = new Cartesian3();
+    /**
+     * Fly the camera to the home view.  Use {@link Camera#.DEFAULT_VIEW_RECTANGLE} to set
+     * the default view fro the 3D scene.  The home view for 2D and columbus view shows the
+     * entire map.
+     *
+     * @param {Number} [duration] The number of seconds to complete the camera flight to home. See {@link Camera#flyTo}
+     */
+    Camera.prototype.flyHome = function(duration) {
+        var mode = this._mode;
+
+        if (mode === SceneMode.MORPHING) {
+            this._scene.completeMorph();
+        }
+
+        if (mode === SceneMode.SCENE2D) {
+            this.flyTo({
+                destination : Rectangle.MAX_VALUE,
+                duration : duration,
+                endTransform : Matrix4.IDENTITY
+            });
+        } else if (mode === SceneMode.SCENE3D) {
+            var destination = this.getRectangleCameraCoordinates(Camera.DEFAULT_VIEW_RECTANGLE);
+
+            var mag = Cartesian3.magnitude(destination);
+            mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+            Cartesian3.normalize(destination, destination);
+            Cartesian3.multiplyByScalar(destination, mag, destination);
+
+            this.flyTo({
+                destination : destination,
+                duration : duration,
+                endTransform : Matrix4.IDENTITY
+            });
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            var maxRadii = this._projection.ellipsoid.maximumRadius;
+            var position = new Cartesian3(0.0, -1.0, 1.0);
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
+            this.flyTo({
+                destination : position,
+                duration : duration,
+                orientation : {
+                    heading : 0.0,
+                    pitch : -Math.acos(Cartesian3.normalize(position, pitchScratch).z),
+                    roll : 0.0
+                },
+                endTransform : Matrix4.IDENTITY,
+                convert : false
+            });
         }
     };
 
@@ -2483,6 +2538,7 @@ define([
             setViewOptions.orientation.heading = orientation.heading;
             setViewOptions.orientation.pitch = orientation.pitch;
             setViewOptions.orientation.roll = orientation.roll;
+            setViewOptions.convert = options.convert;
             setViewOptions.endTransform = options.endTransform;
             this.setView(setViewOptions);
             if (typeof options.complete === 'function'){

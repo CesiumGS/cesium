@@ -40,7 +40,7 @@ Sandcastle.addToolbarButton('Vehicle', function() {
 
 Sandcastle.reset = function() {
     viewer.dataSources.removeAll();
-    viewer.homeButton.viewModel.command();
+    viewer.camera.flyHome(0);
 };
 //Sandcastle_End
     Sandcastle.finishedLoading();
