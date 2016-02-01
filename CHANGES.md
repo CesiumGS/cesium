@@ -7,7 +7,6 @@ Change Log
 * Deprecated
     * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
     * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.20. Use `createTileMapServiceImageryProvider` instead.
-* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 * Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
 * Added a Sandcastle example to "star burst" overlapping billboards and labels.
 * Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
@@ -21,6 +20,7 @@ Change Log
     ```
 * `GroundPrimitive` now supports batching geometry for better performance.
 * Added `ImageryLayer.getViewableRectangle` to make it easy to get the effective bounds of an imagery layer.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 * Fixed a picking issue that sometimes prevented objects being selected. [#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)
 * Fixed cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
 * Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
