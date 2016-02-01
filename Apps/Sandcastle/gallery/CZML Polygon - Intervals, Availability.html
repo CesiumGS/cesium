@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="CZML Dynamic Polygon - Intervals and Availability">
-    <meta name="cesium-sandcastle-labels" content="CZML">
-    <title>Cesium Demo</title>
-    <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+  <meta name="description" content="CZML Dynamic Polygon - Intervals and Availability">
+  <meta name="cesium-sandcastle-labels" content="CZML">
+  <title>Cesium Demo</title>
+  <script type="text/javascript" src="../Sandcastle-header.js"></script>
+  <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+  <script type="text/javascript">
+  require.config({
+    baseUrl : '../../../Source',
+    waitSeconds : 60
+  });
+  </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -26,8 +26,8 @@
 
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
-//Sandcastle_Begin
+  "use strict";
+  //Sandcastle_Begin
 var czml = [
   {
     "id" : "document",
@@ -151,12 +151,12 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
   //Sandcastle_End
-    Sandcastle.finishedLoading();
+  Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
-    startup(Cesium);
+  startup(Cesium);
 } else if (typeof require === "function") {
-    require(["Cesium"], startup);
+  require(["Cesium"], startup);
 }
 </script>
 </body>
