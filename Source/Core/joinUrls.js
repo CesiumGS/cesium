@@ -82,7 +82,9 @@ define([
         } else {
             url += first.path.replace(/^\/?/g, '');
 
-            if (appendSlash && second.path !== '') {url = url.replace(/\/?$/, '/');}
+            if (appendSlash && second.path !== '') {
+                    url = url.replace(/\/?$/, '/');
+            }
 
             url += second.path;
         }
