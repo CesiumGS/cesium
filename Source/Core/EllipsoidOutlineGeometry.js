@@ -49,8 +49,6 @@ define([
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Outline.html|Cesium Sandcastle Ellipsoid Outline Demo}
-     *
      * @example
      * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
      *   radii : new Cesium.Cartesian3(1000000.0, 500000.0, 500000.0),
