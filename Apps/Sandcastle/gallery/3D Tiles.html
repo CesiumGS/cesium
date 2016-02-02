@@ -44,12 +44,26 @@ var compositeUrl = '../../../Specs/Data/Cesium3DTiles/Composite/Composite/';
 var pointsUrl = '../../../Specs/Data/Cesium3DTiles/Points/Points/';
 
 var tileset;
+var styleablePropertyButtons = [];
+var numberOfBins = 6;
 
 function loadTileset(url) {
     reset();
 
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url
+        url : url,
+        style : {
+            "name" : "id",
+            "autoBins" : [
+                [237, 248, 251],
+                [191, 211, 230],
+                [158, 188, 218],
+                [140, 150, 198],
+                [136, 86, 167],
+                [129, 15, 124]
+            ]
+        },
+        debugShowStatistics : true
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
@@ -61,16 +75,11 @@ function loadTileset(url) {
         });
 
         var properties = tileset.properties;
-        styleableProperties = {};
         if (Cesium.defined(properties)) {
             for (var name in properties) {
                 // Include all properties except longitude and latitude
-                if (properties.hasOwnProperty(name) &&
-                        (name !== 'Longitude') &&
-                        (name !== 'Latitude')) {
-                    var property = properties[name];
-                    styleableProperties[name] = property;
-                    var button = Sandcastle.addToolbarButton('Change ' + name + ' style', getStyleFunction(name, property));
+                if (properties.hasOwnProperty(name) && (name !== 'Longitude') && (name !== 'Latitude')) {
+                    var button = Sandcastle.addToolbarButton('Change style using ' + name, getStyleFunction(name));
                     styleablePropertyButtons.push(button);
                 }
             }
@@ -334,137 +343,41 @@ Sandcastle.addToolbarButton('SSE--', function() {
     console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
-///////////////////////////////////////////////////////////////////////////////
+// Styling ////////////////////////////////////////////////////////////////////
 
-var styleableProperties = {};
-var styleablePropertyButtons = [];
-var currentPropertyName;
-var colorBins = new Array(6);
-var lastTimeColored = 0;
-var addedListener = false;
-
-function getStyleFunction(name, property) {
+function getStyleFunction(name) {
     return function() {
-        currentPropertyName = name;
-        createColorBins(colorBins, styleableProperties[name]);
-        ++lastTimeColored;
-        addTileVisibleListener();
+        var colors = [];
+        for (var i = 0; i < numberOfBins; ++i) {
+            var r = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+            var g  = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+            var b = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+
+            colors[i] = [r, g, b];
+        }
+
+        tileset.style = {
+            "name" : name,
+            "autoBins" : colors
+        };
     };
 }
 
-Sandcastle.addToolbarButton('bins++', function() {
-    if (Cesium.defined(currentPropertyName)) {
-        ++colorBins.length;
-        console.log('Number of bins: ' + colorBins.length);
+Sandcastle.addToolbarButton('Remove style', function() {
+    tileset.style = undefined;
+});
 
-        createColorBins(colorBins, styleableProperties[currentPropertyName]);
-        ++lastTimeColored;
-    }
+Sandcastle.addToolbarButton('bins++', function() {
+    ++numberOfBins;
+    console.log('Number of bins: ' + numberOfBins);
 });
 
 Sandcastle.addToolbarButton('--bins', function() {
-    if (Cesium.defined(currentPropertyName)) {
-        colorBins.length = Math.max(colorBins.length - 1, 1);
-        console.log('Number of bins: ' + colorBins.length);
-
-        createColorBins(colorBins, styleableProperties[currentPropertyName]);
-        ++lastTimeColored;
-    }
+    numberOfBins = Math.max(numberOfBins - 1, 1);
+    console.log('Number of bins: ' + numberOfBins);
 });
 
-Sandcastle.addToolbarButton('palette', function() {
-    if (Cesium.defined(currentPropertyName)) {
-        colorBins.length = 6;
-        createColorBins(colorBins, styleableProperties[currentPropertyName]);
-        // Override random colors with a palette from http://colorbrewer2.org/
-        colorBins[0].color = Cesium.Color.fromBytes(237,248,251);
-        colorBins[1].color = Cesium.Color.fromBytes(191,211,230);
-        colorBins[2].color = Cesium.Color.fromBytes(158,188,218);
-        colorBins[3].color = Cesium.Color.fromBytes(140,150,198);
-        colorBins[4].color = Cesium.Color.fromBytes(136,86,167);
-        colorBins[5].color = Cesium.Color.fromBytes(129,15,124);
-
-        ++lastTimeColored;
-    }
-});
-
-function createColorBins(colorBins, property) {
-    var length = colorBins.length;
-    var min = property.minimum;
-    var max = property.maximum;
-    var delta = Math.max(max - min, 0);
-    delta = delta / length;
-    for (var i = 0; i < length; ++i) {
-        colorBins[i] = {
-            minimum : Math.floor(min + (i * delta)),
-            maximum : Math.ceil(min + ((i + 1) * delta)),
-            color : Cesium.Color.fromRandom({ alpha : 1.0 })
-        };
-    }
-}
-
-function addTileVisibleListener() {
-    if (!addedListener) {
-        addedListener = true;
-        tileset.tileVisible.addEventListener(changeTileColor);
-    }
-}
-
-function changeTileColor(tile) {
-	if (Cesium.defined(tile.lastTimeColored) && tile.lastTimeColored === lastTimeColored) {
-        // Tile was already updated with new colors
-        return;
-	}
-	tile.lastTimeColored = lastTimeColored;
-
-    changeCompositeContentColor(tile.content);
-}
-
-function changeCompositeContentColor(content) {
-    var innerContents = content.innerContents;
-    if (Cesium.defined(innerContents)) {
-        var length = innerContents.length;
-        for (var i = 0; i < length; ++i) {
-            // Recurse for composites of composites
-            changeCompositeContentColor(innerContents[i]);
-        }
-    } else {
-        // Not a composite tile
-        changeContentColor(content);
-    }
-}
-
-function changeContentColor(content) {
-    // Does it have a per-feature height property?
-    if (content.hasProperty(currentPropertyName)) {
-        var min = styleableProperties[currentPropertyName].minimum;
-        var max = styleableProperties[currentPropertyName].maximum;
-        var delta = max - min;
-
-        var length = content.featuresLength;
-        for (var i = 0; i < length; ++i) {
-            var building = content.getFeature(i);
-            var value = building.getProperty(currentPropertyName);
-
-// TODO: we could also fix these server side
-            // Some heights are undefined; set them to zero.
-            value = Cesium.defaultValue(value, 0.0);
-            // Some heights are -1; set them to zero.
-            value = Math.max(value, 0.0);
-
-// TODO: a histogram-weighted binary search would be awesome here.  Even better if
-// each tile also knows its min/max since coherence in a tile should be good.
-            var numberOfBins = colorBins.length;
-            for (var j = 0; j < numberOfBins; ++j) {
-                if (value < colorBins[j].maximum) {
-                    break;
-                }
-            }
-            j = Math.min(j, numberOfBins - 1); // In case, there is a precision issue
-            building.color = colorBins[j].color;
-        }
-    }
-}
+// End of Styling /////////////////////////////////////////////////////////////
 
 function reset() {
     if (Cesium.defined(tileset)) {
@@ -477,16 +390,11 @@ function reset() {
         var button = styleablePropertyButtons[i];
         button.parentNode.removeChild(button);
     }
+    styleablePropertyButtons = [];
+    numberOfBins = 6;
 
     current.building = undefined;
     current.originalColor = new Cesium.Color();
-
-    styleableProperties = {};
-    styleablePropertyButtons = [];
-    currentPropertyName = undefined;
-    colorBins = new Array(6);
-    lastTimeColored = 0;
-    addedListener = false;
 
     annotations.removeAll();
 }
