@@ -17,8 +17,8 @@ define([
     function Cesium3DTileStyleEngine(style) {
         this._style = style;               // The style JSON provided by the user
         this._styleDirty = defined(style); // true when the style JSON is reassigned
-        this._runtimeStyle = undefined;    // The computed style for runtime use from the style JSON
         this._lastStyleTime = 0;           // The "time" when the last style was assigned
+        this._runtimeStyle = undefined;    // The computed style for runtime use from the style JSON
 
         this.statistics = {
             numberOfTilesStyled : 0,
@@ -45,7 +45,7 @@ define([
         var styleDirty = this._styleDirty;
         this._styleDirty = false;
 
-        // Was a new style assigned this frame?
+        // Was a new style assigned since last frame?
         if (styleDirty) {
             this._runtimeStyle = getCesium3DTileStyle(this._style);
         }

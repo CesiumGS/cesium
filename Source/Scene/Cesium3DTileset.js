@@ -62,7 +62,7 @@ define([
      * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
-     * @param {DOC_TBA} [options.style] DOC_TBA
+     * @param {Object} [options.style] DOC_TBA
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -596,6 +596,7 @@ define([
             tile.selected = true;
 
             if (tile.lastFrameNumber !== frameState.frameNumber - 1) {
+                // Tile is newly visible; it is visible this frame, but was not visible last frame.
                 tiles3D._newlySelectedTiles.push(tile);
             }
             tile.lastFrameNumber = frameState.frameNumber;
