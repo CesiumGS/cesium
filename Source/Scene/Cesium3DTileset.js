@@ -548,7 +548,7 @@ define([
             addLoadProgressEvent(tiles3D);
 
             var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-            when(tile.processingPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
+            when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
             when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
         }
     }

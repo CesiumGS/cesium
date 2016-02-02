@@ -328,9 +328,9 @@ define([
          *
          * @private
          */
-        processingPromise : {
+        contentReadyToProcessPromise : {
             get : function() {
-                return this._content.processingPromise;
+                return this._content.contentReadyToProcessPromise;
             }
         },
 

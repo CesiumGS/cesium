@@ -36,7 +36,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
          */
-        this.processingPromise = when.defer();
+        this.contentReadyToProcessPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
@@ -92,7 +92,7 @@ define([
             this.state = Cesium3DTileContentState.LOADING;
             promise.then(function() {
                 that.state = Cesium3DTileContentState.PROCESSING;
-                that.processingPromise.resolve(that);
+                that.contentReadyToProcessPromise.resolve(that);
                 that.state = Cesium3DTileContentState.READY;
                 that.readyPromise.resolve(that);
             }).otherwise(function(error) {
