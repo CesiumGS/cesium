@@ -725,7 +725,7 @@ defineSuite([
             viewRootOnly();
             scene.renderForSpecs(); // Request root
             expect(tileset._statistics.numberOfPendingRequests).toEqual(1);
-            return tileset._root.processingPromise.then(function() {
+            return tileset._root.contentReadyToProcessPromise.then(function() {
                 scene.pickForSpecs();
                 expect(spy).not.toHaveBeenCalled();
                 scene.renderForSpecs();

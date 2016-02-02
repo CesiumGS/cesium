@@ -30,11 +30,11 @@ define([
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
          */
-        this.processingPromise = when.defer();
+        this.contentReadyToProcessPromise = when.defer();
 
         // Transition into the PROCESSING state.
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.processingPromise.resolve(this);
+        this.contentReadyToProcessPromise.resolve(this);
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.

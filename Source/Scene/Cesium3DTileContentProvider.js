@@ -52,7 +52,7 @@ define([
          *
          * @private
          */
-        this.processingPromise = undefined;
+        this.contentReadyToProcessPromise = undefined;
 
         /**
          * Gets the promise that will be resolved when the tile's content is ready to render.
