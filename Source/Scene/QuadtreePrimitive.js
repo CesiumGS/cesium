@@ -244,6 +244,13 @@ define([
         };
 
         object.removeFunc = function() {
+            var addedCallbacks = primitive._addHeightCallbacks;
+            var length = addedCallbacks.length;
+            for (var i = 0; i < length; ++i) {
+                if (addedCallbacks[i] === object) {
+                    addedCallbacks.splice(i, 1);
+                }
+            }
             primitive._removeHeightCallbacks.push(object);
         };
 
