@@ -908,7 +908,7 @@ define([
     }
 
     function updateTiles(tiles3D, frameState) {
-        tiles3D._styleEngine.applyStyle(tiles3D._selectedTiles, tiles3D._newlySelectedTiles);
+        tiles3D._styleEngine.applyStyle(tiles3D, frameState);
 
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;

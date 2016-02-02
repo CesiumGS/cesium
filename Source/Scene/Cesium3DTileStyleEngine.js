@@ -41,13 +41,21 @@ define([
         }
     });
 
-    Cesium3DTileStyleEngine.prototype.applyStyle = function(selectedTiles, newlySelectedTiles) {
+    Cesium3DTileStyleEngine.prototype.applyStyle = function(tileset, frameState) {
+        if (!tileset.ready) {
+            return;
+        }
+
         var styleDirty = this._styleDirty;
-        this._styleDirty = false;
+
+        if (frameState.passes.render) {
+            // Don't reset until the color pass, e.g., for mouse-over picking
+            this._styleDirty = false;
+        }
 
         // Was a new style assigned since last frame?
         if (styleDirty) {
-            this._runtimeStyle = getCesium3DTileStyle(this._style);
+            this._runtimeStyle = getCesium3DTileStyle(this._style, tileset.properties);
         }
 
         var applyToAllVisibleTiles = false;
@@ -65,7 +73,9 @@ define([
         // tiles; otherwise, loop through only the tiles that are newly visible, i.e., they are
         // visible this frame, but were not visible last frame.  In many cases, the newly selected
         // tiles list will be short or empty.
-        var tiles = applyToAllVisibleTiles ? selectedTiles : newlySelectedTiles;
+        var tiles = applyToAllVisibleTiles ? tileset._selectedTiles : tileset._newlySelectedTiles;
+        // PERFORMANCE_IDEA: does mouse-over picking basically trash this?  We need to style on
+        // pick, for example, because a feature's show may be false.
 
         var length = tiles.length;
         for (var i = 0; i < length; ++i) {
@@ -100,11 +110,10 @@ define([
 
     function styleContent(content, styleEngine) {
         var length = content.featuresLength;
-        var runtimeStyle = styleEngine._runtimeStyle;
 
         styleEngine.statistics.numberOfFeaturesStyled += length;
 
-        if (!defined(runtimeStyle)) {
+        if (!defined(styleEngine.style)) {
             clearStyle(content);
             return;
         }
@@ -113,11 +122,28 @@ define([
         // using Cesium3DTileBatchTableResources.  We might also be able to use less memory
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
-            var feature = content.getFeature(i);
-
-            // TODO: Design and implement full style schema
-            feature.color = runtimeStyle.color;
+            styleFeature(content.getFeature(i), styleEngine);
         }
+    }
+
+    // TODO: Design and implement full style schema
+    function styleFeature(feature, styleEngine) {
+        var runtimeStyle = styleEngine._runtimeStyle;
+
+        var value = feature.getProperty(runtimeStyle.name);
+        var colorBins = runtimeStyle.colors;
+        var numberOfBins = colorBins.length;
+
+        // PERFORMANCE_IDEA: colorBins is sorted so replace this linear search with a binary search.
+        // To improve the binary search, instead of making uniform splits, we could make non-uniform
+        // splits based on the histogram of distributed values in the tile
+        for (var j = 0; j < numberOfBins; ++j) {
+            if (value < colorBins[j].maximum) {
+                break;
+            }
+        }
+        j = Math.min(j, numberOfBins - 1); // In case, there is a precision issue
+        feature.color = colorBins[j].color;
     }
 
     function clearStyle(content) {
