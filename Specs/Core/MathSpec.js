@@ -405,4 +405,20 @@ defineSuite([
             CesiumMath.chordLength(0.0, undefined);
         }).toThrowDeveloperError();
     });
+
+    it('logBase', function() {
+        expect(CesiumMath.logBase(64, 4)).toEqual(3);
+    });
+
+    it('logBase throws without number', function() {
+        expect(function() {
+            CesiumMath.logBase(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('logBase throws without base', function() {
+        expect(function() {
+            CesiumMath.logBase(64, undefined);
+        }).toThrowDeveloperError();
+    });
 });

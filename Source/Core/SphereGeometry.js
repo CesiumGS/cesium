@@ -32,8 +32,6 @@ define([
      *
      * @see SphereGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sphere.html|Cesium Sandcastle Sphere Demo}
-     *
      * @example
      * var sphere = new Cesium.SphereGeometry({
      *   radius : 100.0,
