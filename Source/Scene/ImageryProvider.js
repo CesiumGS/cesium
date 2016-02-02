@@ -299,6 +299,7 @@ define([
      * too many requests pending, this function will instead return undefined, indicating
      * that the request should be retried later.
      *
+     * @param {ImageryProvider} imageryProvider The imageryProvider source.
      * @param {String} url The URL of the image.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
