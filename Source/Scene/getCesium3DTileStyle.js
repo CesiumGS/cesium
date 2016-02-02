@@ -8,18 +8,18 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * @private
      */
-    function getCesium3DTileStyle(styleJson) {
-        if (!defined(styleJson)) {
+    function getCesium3DTileStyle(style) {
+        if (!defined(style)) {
             return undefined;
         }
 
         // TODO: Design and implement full style schema
-        // TODO: Define a type for this, e.g., Cesium3DTileStyle
+        // TODO: Replace this getter function with a new type, Cesium3DTileStyle
         return {
             timeDynamic : false,
-            color : Color.fromBytes(styleJson.color[0], styleJson.color[1], styleJson.color[2])
+            color : Color.fromBytes(style.color[0], style.color[1], style.color[2])
         };
     }
 

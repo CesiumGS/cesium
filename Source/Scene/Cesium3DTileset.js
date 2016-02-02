@@ -128,22 +128,7 @@ define([
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
-        /**
-         * DOC_TBA
-         * <p>
-         * Assign <code>undefined</code> to remove the style, which will restore the visual
-         * appearance of the tileset to its default when no style was applied.
-         * </p>
-         * <p>
-         * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
-         * event is raised, so code in <code>tileVisible</code> can manually set a feature's
-         * properties using {@link Cesium3DTileContentProvider#getFeature}.  When
-         * a new style is assigned any manually set properties are overwritten.
-         * </p>
-         */
-        this.style = options.style;
-
-        this._styleEngine = new Cesium3DTileStyleEngine(this);
+        this._styleEngine = new Cesium3DTileStyleEngine(options.style);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -162,17 +147,12 @@ define([
             // Loading stats
             numberOfPendingRequests : 0,
             numberProcessing : 0,
-            // Styling stats
-            numberOfTilesStyled : 0,
-            numberOfFeaturesStyled : 0,
 
             lastSelected : -1,
             lastVisited : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
-            lastNumberProcessing : -1,
-            lastNumberOfTilesStyled : -1,
-            lastNumberOfFeaturesStyled : -1
+            lastNumberProcessing : -1
         };
 
         /**
@@ -417,6 +397,34 @@ define([
         baseUrl : {
             get : function() {
                 return this._baseUrl;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * <p>
+         * Assign <code>undefined</code> to remove the style, which will restore the visual
+         * appearance of the tileset to its default when no style was applied.
+         * </p>
+         * <p>
+         * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
+         * event is raised, so code in <code>tileVisible</code> can manually set a feature's
+         * properties using {@link Cesium3DTileContentProvider#getFeature}.  When
+         * a new style is assigned any manually set properties are overwritten.
+         * </p>
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Object}
+         *
+         * @default undefined
+         */
+        style : {
+            get : function() {
+                return this._styleEngine.style;
+            },
+            set : function(value) {
+                this._styleEngine.style = value;
             }
         }
     });
@@ -850,12 +858,15 @@ define([
         var stats = tiles3D._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
-        stats.numberOfTilesStyled = 0;
-        stats.numberOfFeaturesStyled = 0;
+
+        var styleStats = tiles3D._styleEngine.statistics;
+        styleStats.numberOfTilesStyled = 0;
+        styleStats.numberOfFeaturesStyled = 0;
     }
 
     function showStats(tiles3D, isPick) {
         var stats = tiles3D._statistics;
+        var styleStats = tiles3D._styleEngine.statistics;
 
         if (tiles3D.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
@@ -863,16 +874,16 @@ define([
             stats.lastSelected !== tiles3D._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing ||
-            stats.lastNumberOfTilesStyled !== stats.numberOfTilesStyled ||
-            stats.lastNumberOfFeaturesStyled !== stats.numberOfFeaturesStyled)) {
+            styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
+            styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
 
             stats.lastVisited = stats.visited;
             stats.lastNumberOfCommands = stats.numberOfCommands;
             stats.lastSelected = tiles3D._selectedTiles.length;
             stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
             stats.lastNumberProcessing = stats.numberProcessing;
-            stats.lastNumberOfTilesStyled = stats.numberOfTilesStyled;
-            stats.lastNumberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+            styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
+            styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -887,8 +898,8 @@ define([
                 ', Commands: ' + stats.numberOfCommands +
                 ', Requests: ' + stats.numberOfPendingRequests +
                 ', Processing: ' + stats.numberProcessing +
-                ', Tiles styled: ' + stats.numberOfTilesStyled +
-                ', Features styled: ' + stats.numberOfFeaturesStyled;
+                ', Tiles styled: ' + styleStats.numberOfTilesStyled +
+                ', Features styled: ' + styleStats.numberOfFeaturesStyled;
 
             /*global console*/
             console.log(s);
@@ -896,6 +907,8 @@ define([
     }
 
     function updateTiles(tiles3D, frameState) {
+        tiles3D._styleEngine.applyStyle(tiles3D._selectedTiles, tiles3D._newlySelectedTiles);
+
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tiles3D._selectedTiles;
@@ -998,7 +1011,6 @@ define([
             processTiles(this, frameState);
         }
         selectTiles(this, frameState, outOfCore);
-        this._styleEngine.applyStyle();
         updateTiles(this, frameState);
 
         // Events are raised (added to the afterRender queue) here since promises
