@@ -243,10 +243,9 @@ define([
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
         scene._mode = SceneMode.MORPHING;
-        createMorphHandler(this, complete3DCallback);
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DTo3D(this, duration, ellipsoid, complete3DCallback);
+            morphFrom2DTo3D(this, duration, ellipsoid);
         } else {
             morphFromColumbusViewTo3D(this, duration, ellipsoid);
         }
@@ -358,15 +357,24 @@ define([
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
     }
 
-    function morphFrom2DTo3D(transitioner, duration, ellipsoid, complete) {
+    function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
         duration *= 0.5;
 
-        var camera = transitioner._scene.camera;
+        var scene = transitioner._scene;
+        var camera = scene.camera;
         camera._setTransform(Matrix4.IDENTITY);
 
-        morphOrthographicToPerspective(transitioner, duration, ellipsoid, function() {
-            camera.frustum = transitioner._cameraCV.frustum.clone();
-            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete);
+        var frustum = new PerspectiveFrustum();
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.fov = CesiumMath.toRadians(60.0);
+
+        var camera3D = {
+            frustum : frustum
+        };
+
+        morphOrthographicToPerspective(transitioner, duration, camera3D, function() {
+            camera.frustum = camera3D.frustum.clone();
+            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid);
         });
     }
 
