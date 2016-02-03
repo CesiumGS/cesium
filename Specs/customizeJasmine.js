@@ -8,7 +8,7 @@ define([
              equalsMethodEqualityTester) {
     "use strict";
 
-    return function (env) {
+    return function (env, includedCategory, excludedCategory) {
         window.defineSuite = function(deps, name, suite, categories) {
             /*global define,describe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
@@ -18,6 +18,14 @@ define([
             if (typeof name === 'function') {
                 suite = name;
                 name = deps[0];
+            }
+
+            // exclude this spec if we're filtering by category and it's not the selected category
+            // otherwise if we have an excluded category, exclude this test if the category of this spec matches
+            if (includedCategory && categories !== includedCategory) {
+                return;
+            } else if (excludedCategory && categories === excludedCategory) {
+                return;
             }
 
             define(deps, function() {

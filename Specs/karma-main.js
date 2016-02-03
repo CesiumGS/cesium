@@ -13,7 +13,10 @@
                 'Specs/customizeJasmine'
             ],
             function(customizeJasmine) {
-                customizeJasmine(jasmine.getEnv());
+                var included = __karma__.config.args[0];
+                var excluded = __karma__.config.args[1];
+
+                customizeJasmine(jasmine.getEnv(), included, excluded);
 
                 var specFiles = Object.keys(__karma__.files).filter(function(file) {
                     return /Spec\.js$/.test(file);
