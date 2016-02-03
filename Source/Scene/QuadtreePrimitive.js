@@ -249,6 +249,7 @@ define([
             for (var i = 0; i < length; ++i) {
                 if (addedCallbacks[i] === object) {
                     addedCallbacks.splice(i, 1);
+                    break;
                 }
             }
             primitive._removeHeightCallbacks.push(object);
