@@ -342,20 +342,23 @@ define([
             get : function() {
                 return this._requestServer;
             }
+        },
+
+        /**
+         * Determines if the tile is ready to render. <code>true</code> if the tile
+         * is ready to render; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {boolean}
+         * @readonly
+         */
+        contentReady : {
+            get : function() {
+                return this._content.state === Cesium3DTileContentState.READY;
+            }
         }
     });
-
-    /**
-     * Determines if the tile is ready to render.
-     *
-     * @returns {Boolean} <code>true</code> if the tile is ready to render; otherwise, <code>false</code>.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.isReady = function() {
-        return this._content.state === Cesium3DTileContentState.READY;
-    };
-
 
     /**
      * Determines if the tile's content has not be requested.
