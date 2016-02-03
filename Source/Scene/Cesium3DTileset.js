@@ -542,7 +542,7 @@ define([
 
         tile.requestContent();
 
-        if (!tile.isContentUnloaded()) {
+        if (!tile.contentUnloaded) {
             var stats = tiles3D._statistics;
             ++stats.numberOfPendingRequests;
             addLoadProgressEvent(tiles3D);
@@ -587,7 +587,7 @@ define([
             return;
         }
 
-        if (root.isContentUnloaded()) {
+        if (root.contentUnloaded) {
             requestContent(tiles3D, root, outOfCore);
             return;
         }
@@ -628,7 +628,7 @@ define([
                     child = t.children[0];
                     child.parentPlaneMask = t.parentPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
-                    if (child.isContentUnloaded()) {
+                    if (child.contentUnloaded) {
                         requestContent(tiles3D, child, outOfCore);
                     } else {
                         stack.push(child);
@@ -667,7 +667,7 @@ define([
 
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                if (child.isContentUnloaded()) {
+                                if (child.contentUnloaded) {
                                     if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
                                         requestContent(tiles3D, child, outOfCore);
                                     }
@@ -715,7 +715,7 @@ define([
                             for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
-                                if (child.isContentUnloaded()) {
+                                if (child.contentUnloaded) {
                                     requestContent(tiles3D, child, outOfCore);
                                 }
                             }
