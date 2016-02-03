@@ -177,21 +177,27 @@ define([
         scene._mode = SceneMode.MORPHING;
 
         var camera = scene.camera;
-        var position = camera.positionWC;
-        var direction = camera.directionWC;
-        var up = camera.upWC;
+        var position;
+        var direction;
+        var up;
 
-        var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
-        var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
-        var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+        if (this._previousMode === SceneMode.SCENE2D) {
+            position = Cartesian3.clone(camera.position);
+            direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+            up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        } else {
+            position = camera.positionWC;
+            direction = camera.directionWC;
+            up = camera.upWC;
 
-        position = scene.mapProjection.project(ellipsoid.cartesianToCartographic(position));
-        direction = Matrix4.multiplyByPointAsVector(toENU, direction, new Cartesian3());
-        up = Matrix4.multiplyByPointAsVector(toENU, up, new Cartesian3());
+            var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
+            var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+            var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
-        var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
-        var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
-        var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
+            position = scene.mapProjection.project(ellipsoid.cartesianToCartographic(position));
+            direction = Matrix4.multiplyByPointAsVector(toENU, direction, new Cartesian3());
+            up = Matrix4.multiplyByPointAsVector(toENU, up, new Cartesian3());
+        }
 
         var frustum = new PerspectiveFrustum();
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
@@ -201,15 +207,20 @@ define([
             position : position,
             direction : direction,
             up : up,
-            position2D : position2D,
-            direction2D : direction2D,
-            up2D : up2D,
             frustum : frustum
         };
 
         if (this._previousMode === SceneMode.SCENE2D) {
             morphFrom2DToColumbusView(this, duration, cameraCV, ellipsoid, completeColumbusViewCallback(cameraCV));
         } else {
+            var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
+            var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
+            var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
+
+            cameraCV.position2D = position2D;
+            cameraCV.direction2D = direction2D;
+            cameraCV.up2D = up2D;
+
             morphFrom3DToColumbusView(this, duration, cameraCV, completeColumbusViewCallback(cameraCV));
         }
 
@@ -521,7 +532,6 @@ define([
             },
             update : update,
             complete : function() {
-                camera.frustum = cameraCV.frustum.clone();
                 complete(transitioner);
             }
         });
