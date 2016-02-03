@@ -2,13 +2,11 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties',
-       './getCesium3DTileStyle'
+       '../Core/defineProperties'
     ], function(
         Color,
         defined,
-        defineProperties,
-        getCesium3DTileStyle) {
+        defineProperties) {
     "use strict";
 
     /**
