@@ -357,19 +357,23 @@ define([
             get : function() {
                 return this._content.state === Cesium3DTileContentState.READY;
             }
+        },
+
+        /**
+         * Determines if the tile's content has not be requested. <code>true</code> if tile's
+         * content has not be requested; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        contentUnloaded : {
+            get : function () {
+                return this._content.state === Cesium3DTileContentState.UNLOADED;
+            }
         }
     });
-
-    /**
-     * Determines if the tile's content has not be requested.
-     *
-     * @returns {Boolean} <code>true</code> if tile's content has not be requested; otherwise, <code>false</code>.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.isContentUnloaded = function() {
-        return this._content.state === Cesium3DTileContentState.UNLOADED;
-    };
 
     /**
      * Requests the tile's content.
