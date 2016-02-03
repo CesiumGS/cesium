@@ -175,42 +175,41 @@ define([
 
         updateFrustums(this);
         scene._mode = SceneMode.MORPHING;
-        createMorphHandler(this, completeColumbusViewCallback);
+
+        var camera = scene.camera;
+        var position = camera.positionWC;
+        var direction = camera.directionWC;
+        var up = camera.upWC;
+
+        var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
+        var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+        var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
+
+        position = scene.mapProjection.project(ellipsoid.cartesianToCartographic(position));
+        direction = Matrix4.multiplyByPointAsVector(toENU, direction, new Cartesian3());
+        up = Matrix4.multiplyByPointAsVector(toENU, up, new Cartesian3());
+
+        var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
+        var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
+        var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
+
+        var frustum = new PerspectiveFrustum();
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.fov = CesiumMath.toRadians(60.0);
+
+        var cameraCV = {
+            position : position,
+            direction : direction,
+            up : up,
+            position2D : position2D,
+            direction2D : direction2D,
+            up2D : up2D,
+            frustum : frustum
+        };
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DToColumbusView(this, duration, ellipsoid, completeColumbusViewCallback);
+            morphFrom2DToColumbusView(this, duration, cameraCV, ellipsoid, completeColumbusViewCallback(cameraCV));
         } else {
-            var camera = scene.camera;
-            var position = camera.positionWC;
-            var direction = camera.directionWC;
-            var up = camera.upWC;
-
-            var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
-            var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
-            var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
-
-            position = scene.mapProjection.project(ellipsoid.cartesianToCartographic(position));
-            direction = Matrix4.multiplyByPointAsVector(toENU, direction, new Cartesian3());
-            up = Matrix4.multiplyByPointAsVector(toENU, up, new Cartesian3());
-
-            var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
-            var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
-            var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
-
-            var frustum = new PerspectiveFrustum();
-            frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-            frustum.fov = CesiumMath.toRadians(60.0);
-
-            var cameraCV = {
-                position : position,
-                direction : direction,
-                up : up,
-                position2D : position2D,
-                direction2D : direction2D,
-                up2D : up2D,
-                frustum : frustum
-            };
-
             morphFrom3DToColumbusView(this, duration, cameraCV, completeColumbusViewCallback(cameraCV));
         }
 
@@ -497,115 +496,45 @@ define([
         morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
     }
 
-    function morphOrthographicToPerspective(transitioner, duration, ellipsoid, complete) {
+    function morphOrthographicToPerspective(transitioner, duration, cameraCV, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        var maxRadii = ellipsoid.maximumRadius;
 
-        var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
-        var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
-        var d = (maxRadii * Math.PI) / tanTheta;
-        var endPos2D = new Cartesian3();
-        endPos2D = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position, endPos2D), d, endPos2D);
+        camera.frustum = cameraCV.frustum.clone();
+        var endFOV = camera.frustum.fov;
+        var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
+        var d = camera.position.z * Math.tan(endFOV * 0.5);
+        camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
 
-        var top = camera.frustum.top;
-        var bottom = camera.frustum.bottom;
-        var right = camera.frustum.right;
-        var left = camera.frustum.left;
-
-        var frustum2D = transitioner._camera2D.frustum;
-        var frustumCV = transitioner._cameraCV.frustum;
-
-        var startPos = Cartesian3.clone(camera.position);
-
-        function update2D(value) {
-            camera.position = columbusViewMorph(startPos, endPos2D, value.time);
-            camera.frustum.top = CesiumMath.lerp(top, frustum2D.top, value.time);
-            camera.frustum.bottom = CesiumMath.lerp(bottom, frustum2D.bottom, value.time);
-            camera.frustum.right = CesiumMath.lerp(right, frustum2D.right, value.time);
-            camera.frustum.left = CesiumMath.lerp(left, frustum2D.left, value.time);
+        function update(value) {
+            camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
+            camera.position.z = d / Math.tan(camera.frustum.fov * 0.5);
         }
-        var startTime = (right - left) / (2.0 * maxRadii * Math.PI);
-        var endTime = 1.0;
-        if (startTime > endTime) {
-            startTime = 0.0;
-        }
-
-        var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration < CesiumMath.EPSILON6) {
-            if (!Cartesian3.equalsEpsilon(startPos, endPos2D, CesiumMath.EPSILON6)) {
-                partialDuration = duration;
-                startTime = 0.0;
-                endTime = 1.0;
-            } else {
-                // If the camera and frustum are already in position for the switch to
-                // a perspective projection, nothing needs to be animated.
-                camera.position = endPos2D;
-                camera.frustum = frustumCV.clone();
-                complete(transitioner);
-                return;
-            }
-        }
-
         var tween = scene.tweens.add({
+            duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
-            duration : partialDuration,
             startObject : {
-                time : startTime
+                time : 0.0
             },
             stopObject : {
-                time : endTime
+                time : 1.0
             },
-            update : update2D,
+            update : update,
             complete : function() {
-                camera.frustum = frustumCV.clone();
+                camera.frustum = cameraCV.frustum.clone();
                 complete(transitioner);
             }
         });
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, complete) {
+    function morphFrom2DToColumbusView(transitioner, duration, cameraCV, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera._setTransform(Matrix4.IDENTITY);
 
-        duration *= 0.5;
-
-        function completeFrustumChange() {
-            var startPos = Cartesian3.clone(camera.position);
-            var startDir = Cartesian3.clone(camera.direction);
-            var startUp = Cartesian3.clone(camera.up);
-
-            var endPos = Cartesian3.clone(transitioner._cameraCV.position);
-            var endDir = Cartesian3.clone(transitioner._cameraCV.direction);
-            var endUp = Cartesian3.clone(transitioner._cameraCV.up);
-
-            function updateCV(value) {
-                camera.position = columbusViewMorph(startPos, endPos, value.time);
-                camera.direction = columbusViewMorph(startDir, endDir, value.time);
-                camera.up = columbusViewMorph(startUp, endUp, value.time);
-                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-                Cartesian3.normalize(camera.right, camera.right);
-            }
-            var tween = scene.tweens.add({
-                duration : duration,
-                easingFunction : EasingFunction.QUARTIC_OUT,
-                startObject : {
-                    time : 0.0
-                },
-                stopObject : {
-                    time : 1.0
-                },
-                update : updateCV,
-                complete : function() {
-                    complete(transitioner);
-                }
-            });
-
-            transitioner._currentTweens.push(tween);
-        }
-        morphOrthographicToPerspective(transitioner, duration, ellipsoid, completeFrustumChange);
+        createMorphHandler(transitioner, complete);
+        morphOrthographicToPerspective(transitioner, duration, cameraCV, complete);
     }
 
     function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
