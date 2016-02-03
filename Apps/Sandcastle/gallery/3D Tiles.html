@@ -44,26 +44,14 @@ var compositeUrl = '../../../Specs/Data/Cesium3DTiles/Composite/Composite/';
 var pointsUrl = '../../../Specs/Data/Cesium3DTiles/Points/Points/';
 
 var tileset;
-var styleablePropertyButtons = [];
+var styleableElements = [];
 var numberOfBins = 6;
 
 function loadTileset(url) {
     reset();
 
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url,
-        style : {
-            "name" : "id",
-            "autoBins" : [
-                [237, 248, 251],
-                [191, 211, 230],
-                [158, 188, 218],
-                [140, 150, 198],
-                [136, 86, 167],
-                [129, 15, 124]
-            ]
-        },
-        debugShowStatistics : true
+        url : url
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
@@ -80,10 +68,31 @@ function loadTileset(url) {
                 // Include all properties except longitude and latitude
                 if (properties.hasOwnProperty(name) && (name !== 'Longitude') && (name !== 'Latitude')) {
                     var button = Sandcastle.addToolbarButton('Change style using ' + name, getStyleFunction(name));
-                    styleablePropertyButtons.push(button);
+                    styleableElements.push(button);
                 }
             }
         }
+
+        tileset.style = Cesium.getCesium3DTileStyle(tileset, {
+            "color" : {
+                "propertyName" : "id",
+                "autoBins" : [
+                    [237, 248, 251],
+                    [191, 211, 230],
+                    [158, 188, 218],
+                    [140, 150, 198],
+                    [136, 86, 167],
+                    [129, 15, 124]
+                ]
+            },
+            "show" : {
+                "propertyName" : "Height",
+                "operator" : ">",
+                "operand" : 0
+            }
+        });
+
+        addExpressionUI();
     });
 }
 
@@ -158,6 +167,9 @@ handler.setInputAction(function(movement) {
     }
 
     if (Cesium.defined(pickedBuilding) && (pickedBuilding !== current.building)) {
+// For testing re-evaluating a style when a property changes
+//      pickedBuilding.setProperty('id', 1);
+
         current.building = pickedBuilding;
         Cesium.Color.clone(pickedBuilding.color, current.originalColor);
 
@@ -356,10 +368,17 @@ function getStyleFunction(name) {
             colors[i] = [r, g, b];
         }
 
-        tileset.style = {
-            "name" : name,
-            "autoBins" : colors
-        };
+        tileset.style = Cesium.getCesium3DTileStyle(tileset, {
+            "color" : {
+                "propertyName" : name,
+                "autoBins" : colors
+            },
+            "show" : {
+                "propertyName" : "Height",
+                "operator" : ">",
+                "operand" : 0
+            }
+        });
     };
 }
 
@@ -372,10 +391,93 @@ Sandcastle.addToolbarButton('bins++', function() {
     console.log('Number of bins: ' + numberOfBins);
 });
 
-Sandcastle.addToolbarButton('--bins', function() {
+Sandcastle.addToolbarButton('bins++', function() {
     numberOfBins = Math.max(numberOfBins - 1, 1);
     console.log('Number of bins: ' + numberOfBins);
 });
+
+function addExpressionUI() {
+    var properties = tileset.properties;
+    if (!Cesium.defined(properties)) {
+        return;
+    }
+
+    // Property name
+
+    var expressionPropertyNames = [{
+        text : 'Expression property name',
+        onselect : function() {
+        }
+    }];
+
+    function getPropertyNameFunction(name) {
+        return function() {
+            tileset.style.show.propertyName = name;
+        };
+    }
+
+    for (var name in properties) {
+        if (properties.hasOwnProperty(name)) {
+            expressionPropertyNames.push({
+                text : name,
+                onselect : getPropertyNameFunction(name)
+            });
+        }
+    }
+
+    // Operator
+
+    var menu = Sandcastle.addToolbarMenu(expressionPropertyNames);
+    styleableElements.push(menu);
+
+    var ops = ['true', 'false', '<', '<=', '>', '>=', '===', '!=='];
+    var operators = [{
+        text : 'Operator',
+        onselect : function() {
+        }
+    }];
+
+    function getOperatorFunction(operator) {
+        return function() {
+            tileset.style.show.operator = operator;
+        };
+    }
+
+    for (var i = 0; i < ops.length; ++i) {
+        operators.push({
+           text : ops[i],
+           onselect : getOperatorFunction(ops[i])
+       });
+    }
+
+    menu = Sandcastle.addToolbarMenu(operators);
+    styleableElements.push(menu);
+
+    // Operand
+
+    var oprs = [1, 10, 50, 100];
+    var operands = [{
+        text : 'Operand',
+        onselect : function() {
+        }
+    }];
+
+    function getOperandFunction(operand) {
+        return function() {
+            tileset.style.show.operand = operand;
+        };
+    }
+
+    for (var j = 0; j < oprs.length; ++j) {
+        operands.push({
+            text : oprs[j],
+            onselect : getOperandFunction(oprs[j])
+        });
+    }
+
+    menu = Sandcastle.addToolbarMenu(operands);
+    styleableElements.push(menu);
+}
 
 // End of Styling /////////////////////////////////////////////////////////////
 
@@ -385,12 +487,12 @@ function reset() {
     }
 
     // Remove styleable property buttons of the previous tileset
-    var buttonsLength = styleablePropertyButtons.length;
+    var buttonsLength = styleableElements.length;
     for (var i = 0; i < buttonsLength; ++i) {
-        var button = styleablePropertyButtons[i];
+        var button = styleableElements[i];
         button.parentNode.removeChild(button);
     }
-    styleablePropertyButtons = [];
+    styleableElements = [];
     numberOfBins = 6;
 
     current.building = undefined;
