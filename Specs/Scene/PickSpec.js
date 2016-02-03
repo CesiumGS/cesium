@@ -38,6 +38,7 @@ defineSuite([
     var scene;
     var primitives;
     var camera;
+    var primitiveRectangle = Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0);
 
     beforeAll(function() {
         scene = createScene();
@@ -76,7 +77,7 @@ defineSuite([
         var e = new Primitive({
             geometryInstances: new GeometryInstance({
                 geometry: new RectangleGeometry({
-                    rectangle: Rectangle.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+                    rectangle: primitiveRectangle,
                     vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
                     ellipsoid: ellipsoid,
                     granularity: CesiumMath.toRadians(20.0)
@@ -320,58 +321,26 @@ defineSuite([
     });
 
     it('picks in 2D', function() {
-        var ellipsoid = scene.mapProjection.ellipsoid;
-        var maxRadii = ellipsoid.maximumRadius;
-
-        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(camera.direction, camera.direction);
-        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = maxRadii * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-        frustum.bottom = -frustum.top;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
-        camera.frustum = frustum;
-
-        scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.getMorphTime(scene.mode);
-
+        camera.setView({
+            destination : primitiveRectangle
+        });
+        scene.morphTo2D(0.0);
         var rectangle = createRectangle();
         scene.initializeFrame();
         var pickedObject = scene.pick(new Cartesian2(0, 0));
         expect(pickedObject.primitive).toEqual(rectangle);
+        scene.morphTo3D(0.0);
     });
 
     it('picks in 2D when rotated', function() {
-        var ellipsoid = scene.mapProjection.ellipsoid;
-        var maxRadii = ellipsoid.maximumRadius;
-
-        camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
-        Cartesian3.negate(camera.direction, camera.direction);
-        Cartesian3.negate(Cartesian3.UNIT_X, camera.up);
-        Cartesian3.clone(Cartesian3.UNIT_Y, camera.right);
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = maxRadii * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-        frustum.bottom = -frustum.top;
-        frustum.near = 0.01 * maxRadii;
-        frustum.far = 60.0 * maxRadii;
-        camera.frustum = frustum;
-
-        scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.getMorphTime(scene.mode);
-
+        camera.setView({
+            destination : primitiveRectangle
+        });
+        scene.morphTo2D(0.0);
         var rectangle = createRectangle();
         scene.initializeFrame();
         var pickedObject = scene.pick(new Cartesian2(0.0, 0.0));
         expect(pickedObject.primitive).toEqual(rectangle);
+        scene.morphTo3D(0.0);
     });
 }, 'WebGL');
