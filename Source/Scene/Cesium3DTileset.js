@@ -62,7 +62,6 @@ define([
      * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
-     * @param {Object} [options.style] DOC_TBA
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
@@ -128,7 +127,7 @@ define([
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
-        this._styleEngine = new Cesium3DTileStyleEngine(options.style);
+        this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -415,7 +414,7 @@ define([
          *
          * @memberof Cesium3DTileset.prototype
          *
-         * @type {Object}
+         * @type {DOC_TBA}
          *
          * @default undefined
          */
@@ -425,6 +424,15 @@ define([
             },
             set : function(value) {
                 this._styleEngine.style = value;
+            }
+        },
+
+        /**
+         * @private
+         */
+        styleEngine : {
+            get : function() {
+                return this._styleEngine;
             }
         }
     });

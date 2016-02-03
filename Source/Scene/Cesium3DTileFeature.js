@@ -160,6 +160,15 @@ define([
      */
     Cesium3DTileFeature.prototype.setProperty = function(name, value) {
         this._batchTableResources.setProperty(this._batchId, name, value);
+
+        // PERFORMANCE_IDEA: only mark the style dirty if the property is in one
+        // of the style's expressions or - perhaps even better if it can be done quickly -
+        // if the new property value changed the result of an expression.
+        //
+        // PERFORMANCE_IDEA: Mark just the feature's tile dirty, instead of the huge
+        // tileset.  This could become an issue, for example, when a user is stashing
+        // UI state, e.g., selected/highlighted, as a feature's property.
+        this.primitive._styleEngine.makeDirty();
     };
 
     return Cesium3DTileFeature;

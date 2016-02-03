@@ -14,11 +14,10 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileStyleEngine(style) {
-        this._style = style;               // The style JSON provided by the user
-        this._styleDirty = defined(style); // true when the style JSON is reassigned
-        this._lastStyleTime = 0;           // The "time" when the last style was assigned
-        this._runtimeStyle = undefined;    // The computed style for runtime use from the style JSON
+    function Cesium3DTileStyleEngine() {
+        this._style = undefined;      // The style provided by the user
+        this._styleDirty = false;     // true when the style is reassigned
+        this._lastStyleTime = 0;      // The "time" when the last style was assigned
 
         this.statistics = {
             numberOfTilesStyled : 0,
@@ -41,6 +40,10 @@ define([
         }
     });
 
+    Cesium3DTileStyleEngine.prototype.makeDirty = function() {
+        this._styleDirty = true;
+    };
+
     Cesium3DTileStyleEngine.prototype.applyStyle = function(tileset, frameState) {
         if (!tileset.ready) {
             return;
@@ -53,15 +56,10 @@ define([
             this._styleDirty = false;
         }
 
-        // Was a new style assigned since last frame?
-        if (styleDirty) {
-            this._runtimeStyle = getCesium3DTileStyle(this._style, tileset.properties);
-        }
-
         var applyToAllVisibleTiles = false;
 
         // Should the style be reapplied to all visible tiles?
-        if (styleDirty || ((defined(this._runtimeStyle) && this._runtimeStyle.timeDynamic))) {
+        if (styleDirty || ((defined(this._style) && this._style.timeDynamic))) {
             ++this._lastStyleTime;
             applyToAllVisibleTiles = true;
         }
@@ -113,7 +111,7 @@ define([
 
         styleEngine.statistics.numberOfFeaturesStyled += length;
 
-        if (!defined(styleEngine.style)) {
+        if (!defined(styleEngine._style)) {
             clearStyle(content);
             return;
         }
@@ -126,12 +124,12 @@ define([
         }
     }
 
-    // TODO: Design and implement full style schema
     function styleFeature(feature, styleEngine) {
-        var runtimeStyle = styleEngine._runtimeStyle;
+        var runtimeStyle = styleEngine._style;
 
-        var value = feature.getProperty(runtimeStyle.name);
-        var colorBins = runtimeStyle.colors;
+        var styleColor = runtimeStyle.color;
+        var value = feature.getProperty(styleColor.propertyName);
+        var colorBins = styleColor.colors;
         var numberOfBins = colorBins.length;
 
         // PERFORMANCE_IDEA: colorBins is sorted so replace this linear search with a binary search.
@@ -144,6 +142,8 @@ define([
         }
         j = Math.min(j, numberOfBins - 1); // In case, there is a precision issue
         feature.color = colorBins[j].color;
+
+        feature.show = runtimeStyle.show.evaluate(feature);
     }
 
     function clearStyle(content) {
