@@ -350,7 +350,7 @@ define([
          *
          * @memberof Cesium3DTile.prototype
          *
-         * @type {boolean}
+         * @type {Boolean}
          * @readonly
          */
         contentReady : {
