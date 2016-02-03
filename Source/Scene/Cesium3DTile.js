@@ -174,7 +174,7 @@ define([
          *
          * @private
          */
-        this.readyPromise = when.defer();
+        this.contentReadyPromise = when.defer();
 
         var content;
         var hasContent;
@@ -243,12 +243,12 @@ define([
                 --that.parent.numberOfChildrenWithoutContent;
             }
 
-            that.readyPromise.resolve(that);
+            that.contentReadyPromise.resolve(that);
         }).otherwise(function(error) {
             // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
             // and therefore that.parent will never refine.  If this becomes an issue, failed
             // requests can be reissued.
-            that.readyPromise.reject(error);
+            that.contentReadyPromise.reject(error);
         });
 
         // Members that are updated every frame for tree traversal and rendering optimizations:

@@ -549,7 +549,7 @@ define([
 
             var removeFunction = removeFromProcessingQueue(tiles3D, tile);
             when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
-            when(tile.readyPromise).then(removeFunction).otherwise(removeFunction);
+            when(tile.contentReadyPromise).then(removeFunction).otherwise(removeFunction);
         }
     }
 

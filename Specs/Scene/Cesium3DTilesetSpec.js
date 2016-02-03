@@ -612,7 +612,7 @@ defineSuite([
             // Set view so that root's content is requested
             viewRootOnly();
             scene.renderForSpecs();
-            return root.readyPromise.then(function() {
+            return root.contentReadyPromise.then(function() {
                 // Root has one child now, the root of the external tileset
                 expect(root.children.length).toEqual(1);
 
@@ -830,7 +830,7 @@ defineSuite([
             expect(stats.numberOfPendingRequests).toEqual(1);
             scene.primitives.remove(tileset);
 
-            return root.readyPromise.then(function(root) {
+            return root.contentReadyPromise.then(function(root) {
                 fail('should not resolve');
             }).otherwise(function(error) {
                 // Expect the root to not have added any children from the external tileset.json
@@ -850,7 +850,7 @@ defineSuite([
             scene.renderForSpecs(); // Request root
             scene.primitives.remove(tileset);
 
-            return root.readyPromise.then(function(root) {
+            return root.contentReadyPromise.then(function(root) {
                 fail('should not resolve');
             }).otherwise(function(error) {
                 expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
