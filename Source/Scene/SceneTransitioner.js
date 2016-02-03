@@ -239,7 +239,7 @@ define([
         if (this._previousMode === SceneMode.SCENE2D) {
             morphFrom2DTo3D(this, duration, ellipsoid, complete3DCallback);
         } else {
-            morphFromColumbusViewTo3D(this, duration, ellipsoid, complete3DCallback);
+            morphFromColumbusViewTo3D(this, duration, ellipsoid);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
@@ -299,19 +299,28 @@ define([
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
-    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete) {
+    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid) {
         var scene = transitioner._scene;
 
         var camera = scene.camera;
         camera._setTransform(Matrix4.IDENTITY);
 
-        var startPos = camera.position;
-        var startDir = camera.direction;
-        var startUp = camera.up;
+        var startPos = Cartesian3.clone(camera.position);
+        var startDir = Cartesian3.clone(camera.direction);
+        var startUp = Cartesian3.clone(camera.up);
 
-        var endPos = Cartesian3.clone(transitioner._camera2D.position);
-        var endDir = Cartesian3.clone(transitioner._camera2D.direction);
-        var endUp = Cartesian3.clone(transitioner._camera2D.up);
+        var positionCarto = scene.mapProjection.unproject(camera.position);
+        var position = ellipsoid.cartographicToCartesian(positionCarto);
+        var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
+
+        var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+
+        var endPos = Cartesian3.clone(position);
+        var endDir = Cartesian3.clone(startDir);
+        var endUp = Cartesian3.clone(startUp);
+
+        Matrix4.multiplyByPointAsVector(fromENU, endDir, endDir);
+        Matrix4.multiplyByPointAsVector(fromENU, endUp, endUp);
 
         function update(value) {
             camera.position = columbusViewMorph(startPos, endPos, value.time);
@@ -320,6 +329,7 @@ define([
             camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
         }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -332,6 +342,9 @@ define([
             update : update
         });
         transitioner._currentTweens.push(tween);
+
+        var complete = complete3DCallback();
+        createMorphHandler(transitioner, complete);
 
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
     }
@@ -690,30 +703,33 @@ define([
         }
     }
 
-    function complete3DCallback(transitioner) {
-        var scene = transitioner._scene;
-        scene._mode = SceneMode.SCENE3D;
-        scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
+    function complete3DCallback() {
+        return function(transitioner) {
+            var scene = transitioner._scene;
+            scene._mode = SceneMode.SCENE3D;
+            scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
-        destroyMorphHandler(transitioner);
-        updateFrustums(transitioner);
+            destroyMorphHandler(transitioner);
+            updateFrustums(transitioner);
 
-        if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
-            transitioner._morphCancelled = false;
+            if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
+                transitioner._morphCancelled = false;
 
-            // TODO: Match incoming columbus-view or 2D position
-            var camera = scene.camera;
-            camera.position = Cartesian3.clone(transitioner._camera3D.position);
-            camera.direction = Cartesian3.clone(transitioner._camera3D.direction);
-            camera.up = Cartesian3.clone(transitioner._camera3D.up);
-            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.normalize(camera.right, camera.right);
-        }
+                /*
+                var camera = scene.camera;
+                camera.position = Cartesian3.clone(camera3D.position);
+                camera.direction = Cartesian3.clone(camera3D.direction);
+                camera.up = Cartesian3.clone(camera3D.up);
+                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.normalize(camera.right, camera.right);
+                */
+            }
 
-        var wasMorphing = defined(transitioner._completeMorph);
-        transitioner._completeMorph = undefined;
-        scene.camera.update(scene.mode);
-        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+            var wasMorphing = defined(transitioner._completeMorph);
+            transitioner._completeMorph = undefined;
+            scene.camera.update(scene.mode);
+            transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+        };
     }
 
     function complete2DCallback(camera2D) {
