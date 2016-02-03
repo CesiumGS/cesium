@@ -556,7 +556,7 @@ define([
     function selectTile(selectedTiles, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
-        if (tile.isReady() && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
+        if (tile.contentReady && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
             selectedTiles.push(tile);
             tile.selected = true;
         }
@@ -624,7 +624,7 @@ define([
                 // If tile has tileset content, skip it and process its child instead (the tileset root)
                 // No need to check visibility or sse of the child because its bounding volume
                 // and geometric error are equal to its parent.
-                if (t.isReady()) {
+                if (t.contentReady) {
                     child = t.children[0];
                     child.parentPlaneMask = t.parentPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
