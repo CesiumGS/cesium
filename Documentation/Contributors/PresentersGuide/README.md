@@ -151,6 +151,6 @@ When presenting with a partner, strive to make it like a conversation.  For a gr
 
 ## Resources
 
-[10 tips for academic talks](http://matt.might.net/articles/academic-presentation-tips/) by Matt Might applies equally well to Cesium talks.
-
-
+* [10 tips for academic talks](http://matt.might.net/articles/academic-presentation-tips/) by Matt Might applies equally well to Cesium talks.
+* [Presentation Advice](http://cs.williams.edu/~morgan/presentation-advice.pdf) by Morgan McGuire
+* [Tips for Giving Clear Talks](http://www.cs.cmu.edu/~kayvonf/misc/cleartalktips.pdf) by Kayvon Fatahalian

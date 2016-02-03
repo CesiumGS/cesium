@@ -110,8 +110,6 @@ define([
      *
      * @see PolylineVolumeOutlineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume%20Outline.html|Cesium Sandcastle Polyline Volume Outline Demo}
-     *
      * @example
      * function computeCircle(radius) {
      *   var positions = [];
