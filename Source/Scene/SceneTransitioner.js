@@ -256,6 +256,16 @@ define([
         Matrix4.multiplyByPointAsVector(fromENU, endDir, endDir);
         Matrix4.multiplyByPointAsVector(fromENU, endUp, endUp);
 
+        var camera3D = {
+            position : Cartesian3.clone(endPos),
+            direction : Cartesian3.clone(endDir),
+            up : Cartesian3.clone(endUp)
+        };
+
+        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, endPos, endPos);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endDir, endDir);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endUp, endUp);
+
         function update(value) {
             camera.position = columbusViewMorph(startPos, endPos, value.time);
             camera.direction = columbusViewMorph(startDir, endDir, value.time);
@@ -277,7 +287,7 @@ define([
         });
         transitioner._currentTweens.push(tween);
 
-        var complete = complete3DCallback();
+        var complete = complete3DCallback(camera3D);
         createMorphHandler(transitioner, complete);
 
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
@@ -444,10 +454,12 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
+        var height = camera.frustum.right - camera.frustum.left;
+
         camera.frustum = cameraCV.frustum.clone();
         var endFOV = camera.frustum.fov;
         var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = camera.position.z * Math.tan(endFOV * 0.5);
+        var d = height * Math.tan(endFOV * 0.5);
         camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
 
         function update(value) {
@@ -542,7 +554,7 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function complete3DCallback() {
+    function complete3DCallback(camera3D) {
         return function(transitioner) {
             var scene = transitioner._scene;
             scene._mode = SceneMode.SCENE3D;
@@ -553,14 +565,12 @@ define([
             if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
                 transitioner._morphCancelled = false;
 
-                /*
                 var camera = scene.camera;
                 camera.position = Cartesian3.clone(camera3D.position);
                 camera.direction = Cartesian3.clone(camera3D.direction);
                 camera.up = Cartesian3.clone(camera3D.up);
                 camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.normalize(camera.right, camera.right);
-                */
             }
 
             var wasMorphing = defined(transitioner._completeMorph);
