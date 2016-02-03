@@ -308,10 +308,62 @@ define([
             frustum : frustum
         };
 
-        morphOrthographicToPerspective(transitioner, duration, camera3D, function() {
-            camera.frustum = camera3D.frustum.clone();
-            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid);
-        });
+        function columbusViewTo3D() {
+            var startPos = Cartesian3.clone(camera.position);
+            var startDir = Cartesian3.clone(camera.direction);
+            var startUp = Cartesian3.clone(camera.up);
+
+            var positionCarto = scene.mapProjection.unproject(camera.position);
+            var position = ellipsoid.cartographicToCartesian(positionCarto);
+            var surfacePoint = ellipsoid.scaleToGeodeticSurface(position);
+
+            var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+
+            var endPos = Cartesian3.clone(position);
+            var endDir = Cartesian3.clone(startDir);
+            var endUp = Cartesian3.clone(startUp);
+
+            Matrix4.multiplyByPointAsVector(fromENU, endDir, endDir);
+            Matrix4.multiplyByPointAsVector(fromENU, endUp, endUp);
+
+            var camera3D = {
+                position : Cartesian3.clone(endPos),
+                direction : Cartesian3.clone(endDir),
+                up : Cartesian3.clone(endUp)
+            };
+
+            Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, endPos, endPos);
+            Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endDir, endDir);
+            Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endUp, endUp);
+
+            function update(value) {
+                camera.position = columbusViewMorph(startPos, endPos, value.time);
+                camera.direction = columbusViewMorph(startDir, endDir, value.time);
+                camera.up = columbusViewMorph(startUp, endUp, value.time);
+                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.normalize(camera.right, camera.right);
+            }
+
+            var tween = scene.tweens.add({
+                duration : duration,
+                easingFunction : EasingFunction.QUARTIC_OUT,
+                startObject : {
+                    time : 0.0
+                },
+                stopObject : {
+                    time : 1.0
+                },
+                update : update
+            });
+            transitioner._currentTweens.push(tween);
+
+            var complete = complete3DCallback(camera3D);
+            createMorphHandler(transitioner, complete);
+
+            addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
+        }
+
+        morphOrthographicToPerspective(transitioner, duration, camera3D, columbusViewTo3D);
     }
 
     function columbusViewMorph(startPosition, endPosition, time) {
@@ -461,6 +513,7 @@ define([
         var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
         var d = height * Math.tan(endFOV * 0.5);
         camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
+        camera.frustum.fov = startFOV;
 
         function update(value) {
             camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
