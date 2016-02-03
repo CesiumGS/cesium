@@ -145,12 +145,10 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
-        updateFrustums(this);
         scene._mode = SceneMode.MORPHING;
-        createMorphHandler(this, complete2DCallback);
 
         if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
-            morphFromColumbusViewTo2D(this, duration, ellipsoid, complete2DCallback);
+            morphFromColumbusViewTo2D(this, duration);
         } else {
             morphFrom3DTo2D(this, duration, ellipsoid);
         }
@@ -173,7 +171,6 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
-        updateFrustums(this);
         scene._mode = SceneMode.MORPHING;
 
         var camera = scene.camera;
@@ -210,8 +207,11 @@ define([
             frustum : frustum
         };
 
+        var complete = completeColumbusViewCallback(cameraCV);
+        createMorphHandler(this, complete);
+
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DToColumbusView(this, duration, cameraCV, ellipsoid, completeColumbusViewCallback(cameraCV));
+            morphFrom2DToColumbusView(this, duration, cameraCV, complete);
         } else {
             var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
             var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
@@ -221,7 +221,7 @@ define([
             cameraCV.direction2D = direction2D;
             cameraCV.up2D = up2D;
 
-            morphFrom3DToColumbusView(this, duration, cameraCV, completeColumbusViewCallback(cameraCV));
+            morphFrom3DToColumbusView(this, duration, cameraCV, complete);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
@@ -242,7 +242,6 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
-        updateFrustums(this);
         scene._mode = SceneMode.MORPHING;
         createMorphHandler(this, complete3DCallback);
 
@@ -408,7 +407,7 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid) {
+    function morphFromColumbusViewTo2D(transitioner, duration) {
         duration *= 0.5;
 
         var scene = transitioner._scene;
@@ -538,12 +537,10 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFrom2DToColumbusView(transitioner, duration, cameraCV, ellipsoid, complete) {
+    function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
         camera._setTransform(Matrix4.IDENTITY);
-
-        createMorphHandler(transitioner, complete);
         morphOrthographicToPerspective(transitioner, duration, cameraCV, complete);
     }
 
@@ -611,37 +608,6 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function updateFrustums(transitioner) {
-        var scene = transitioner._scene;
-
-        var ratio = scene.drawingBufferHeight / scene.drawingBufferWidth;
-
-        var frustum = transitioner._camera2D.frustum;
-        frustum.top = frustum.right * ratio;
-        frustum.bottom = -frustum.top;
-
-        ratio = 1.0 / ratio;
-
-        frustum = transitioner._cameraCV.frustum;
-        frustum.aspectRatio = ratio;
-
-        frustum = transitioner._camera3D.frustum;
-        frustum.aspectRatio = ratio;
-
-        var camera = scene.camera;
-        switch (scene.mode) {
-        case SceneMode.SCENE3D:
-            camera.frustum = transitioner._camera3D.frustum.clone();
-            break;
-        case SceneMode.COLUMBUS_VIEW:
-            camera.frustum = transitioner._cameraCV.frustum.clone();
-            break;
-        case SceneMode.SCENE2D:
-            camera.frustum = transitioner._camera2D.frustum.clone();
-            break;
-        }
-    }
-
     function complete3DCallback() {
         return function(transitioner) {
             var scene = transitioner._scene;
@@ -649,7 +615,6 @@ define([
             scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
             destroyMorphHandler(transitioner);
-            updateFrustums(transitioner);
 
             if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
                 transitioner._morphCancelled = false;
