@@ -73,7 +73,7 @@ function loadTileset(url) {
             }
         }
 
-        tileset.style = Cesium.getCesium3DTileStyle(tileset, {
+        tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
                 "propertyName" : "id",
                 "autoBins" : [
@@ -368,7 +368,7 @@ function getStyleFunction(name) {
             colors[i] = [r, g, b];
         }
 
-        tileset.style = Cesium.getCesium3DTileStyle(tileset, {
+        tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
                 "propertyName" : name,
                 "autoBins" : colors
@@ -391,7 +391,7 @@ Sandcastle.addToolbarButton('bins++', function() {
     console.log('Number of bins: ' + numberOfBins);
 });
 
-Sandcastle.addToolbarButton('bins++', function() {
+Sandcastle.addToolbarButton('bins--', function() {
     numberOfBins = Math.max(numberOfBins - 1, 1);
     console.log('Number of bins: ' + numberOfBins);
 });
