@@ -21,7 +21,7 @@ define([
             }
 
             // exclude this test if we're filtering by category and it's not the selected category
-            // otherwise if we have not categories, excluded if the category matches
+            // otherwise if we have exlcuded categories, exclude this test if the category matches
             if (includedCategories && categories !== includedCategories) {
                 return;
             } else if (excludedCategories && categories === excludedCategories) {
