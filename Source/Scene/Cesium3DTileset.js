@@ -426,14 +426,20 @@ define([
             tileset._baseUrl = baseUrl;
             var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
 
+            var refiningTiles = [];
+
             // If there is a parentTile, add the root of the currently loading tileset
             // to parentTile's children, and increment its numberOfChildrenWithoutContent
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
                 ++parentTile.numberOfChildrenWithoutContent;
-            }
 
-            var refiningTiles = [];
+                // When an external tileset is loaded, its ancestor needs to recheck its refinement
+                var ancestor = getAncestorWithContent(parentTile);
+                if (defined(ancestor) && (ancestor.refine === Cesium3DTileRefine.REPLACE)) {
+                    refiningTiles.push(ancestor);
+                }
+            }
 
             var stack = [];
             stack.push({
@@ -477,6 +483,13 @@ define([
         });
     };
 
+    function getAncestorWithContent(ancestor) {
+        while(defined(ancestor) && !ancestor.hasContent) {
+            ancestor = ancestor.parent;
+        }
+        return ancestor;
+    }
+    
     function prepareRefiningTiles(refiningTiles) {
         var stack = [];
         var length = refiningTiles.length;
