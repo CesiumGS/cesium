@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Instanced3DModel3DTileContentProvider',
+        'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Scene/Cesium3DTileContentState',
@@ -8,7 +8,7 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Instanced3DModel3DTileContentProvider,
+        Instanced3DModel3DTileContent,
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTileContentState,
@@ -76,7 +76,7 @@ defineSuite([
     it('rejects readyPromise on error', function() {
         // Try loading a tile with an invalid url.
         // Expect promise to be rejected in Model, then in ModelInstanceCollection, and
-        // finally in Instanced3DModel3DTileContentProvider.
+        // finally in Instanced3DModel3DTileContent.
         var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             gltfFormat : 0
         });
@@ -97,7 +97,7 @@ defineSuite([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
-        var instancedTile = new Instanced3DModel3DTileContentProvider(tileset, tile, url);
+        var instancedTile = new Instanced3DModel3DTileContent(tileset, tile, url);
         instancedTile.initialize(arrayBuffer);
         // Expect the tile to never reach the ready state due to returning early in ModelInstanceCollection
         for (var i = 0; i < 10; ++i) {

@@ -48,29 +48,29 @@ define([
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Points/README.md|Points}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      *
-     * @alias Points3DTileContentProvider
+     * @alias Points3DTileContent
      * @constructor
      *
      * @private
      */
-    function Points3DTileContentProvider(tileset, tile, url) {
+    function Points3DTileContent(tileset, tile, url) {
         this._primitive = undefined;
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.contentReadyToProcessPromise = when.defer();
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.readyPromise = when.defer();
 
@@ -87,9 +87,9 @@ define([
         this._debugColorizeTiles = false;
     }
 
-    defineProperties(Points3DTileContentProvider.prototype, {
+    defineProperties(Points3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         featuresLength : {
             get : function() {
@@ -99,7 +99,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         innerContents : {
             get : function() {
@@ -109,17 +109,17 @@ define([
     });
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.hasProperty = function(name) {
+    Points3DTileContent.prototype.hasProperty = function(name) {
         // TODO: implement batchTable for pnts tile format
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Points3DTileContent.prototype.getFeature = function(batchId) {
         // TODO: implement batchTable for pnts tile format
         return undefined;
     };
@@ -127,9 +127,9 @@ define([
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.request = function() {
+    Points3DTileContent.prototype.request = function() {
         var that = this;
 
         var distance = this._tile.distanceToCamera;
@@ -155,9 +155,9 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
+    Points3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -222,17 +222,17 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    Points3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
         this._primitive.appearance.uniforms.highlightColor = color;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
+    Points3DTileContent.prototype.update = function(tiles3D, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
@@ -240,19 +240,19 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.isDestroyed = function() {
+    Points3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContentProvider.prototype.destroy = function() {
+    Points3DTileContent.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 
-    return Points3DTileContentProvider;
+    return Points3DTileContent;
 });

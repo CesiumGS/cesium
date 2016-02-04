@@ -2,7 +2,7 @@
 define([
         'Core/Color',
         'Core/defaultValue',
-        'Scene/Cesium3DTileContentProviderFactory',
+        'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
@@ -11,7 +11,7 @@ define([
     ], function(
         Color,
         defaultValue,
-        Cesium3DTileContentProviderFactory,
+        Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileset,
         TileBoundingSphere,
@@ -91,7 +91,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         expect(function() {
             content.initialize(arrayBuffer);
             content.update(tileset, scene.frameState);
@@ -109,7 +109,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         content.initialize(arrayBuffer);
         content.update(tileset, scene.frameState);
 
@@ -128,7 +128,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = 'invalid';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         content.request();
 
         return content.readyPromise.then(function(content) {
