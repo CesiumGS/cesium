@@ -7,6 +7,7 @@ Change Log
 * Deprecated
    *   
 * Fixed bug for causing `navigator is not defined` reference error in node
+* Added `Camera.flyHome` function for resetting the camera to the home view
 
 ### 1.18 - 2016-02-01
 * Breaking changes
