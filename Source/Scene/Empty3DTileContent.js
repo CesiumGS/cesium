@@ -97,7 +97,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContent.prototype.update = function(tiles3D, frameState) {
+    Empty3DTileContent.prototype.update = function(tileset, frameState) {
     };
 
     /**

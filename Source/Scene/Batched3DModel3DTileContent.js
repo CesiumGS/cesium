@@ -249,11 +249,11 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Batched3DModel3DTileContent.prototype.update = function(tiles3D, frameState) {
+    Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(tiles3D, frameState);
+        this._batchTableResources.update(tileset, frameState);
         this._model.update(frameState);
    };
 
