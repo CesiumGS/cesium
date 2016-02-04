@@ -7,6 +7,7 @@ defineSuite([
         'Core/Color',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/Rectangle',
         'Scene/OrthographicFrustum',
         'Specs/createScene'
     ], function(
@@ -17,6 +18,7 @@ defineSuite([
         Color,
         CesiumMath,
         NearFarScalar,
+        Rectangle,
         OrthographicFrustum,
         createScene) {
     "use strict";
@@ -781,20 +783,12 @@ defineSuite([
             position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = maxRadii * Math.PI;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = 0.01 * maxRadii;
-        orthoFrustum.far = 60.0 * maxRadii;
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
-        // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
-
-        camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
         var actual = scene.frameState.commandList[0].boundingVolume;
