@@ -278,6 +278,7 @@ Sandcastle.addToolbarMenu([{
 }]);
 
 Sandcastle.reset = function () {
+    viewer.camera.flyHome(0);
     viewer.entities.removeAll();
 };
 //Sandcastle_End
