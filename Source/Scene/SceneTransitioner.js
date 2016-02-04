@@ -176,7 +176,11 @@ define([
         if (this._previousMode === SceneMode.SCENE2D) {
             morphFrom2DTo3D(this, duration, ellipsoid);
         } else {
-            morphFromColumbusViewTo3D(this, duration, ellipsoid);
+            var camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
+            var complete = complete3DCallback(camera3D);
+            createMorphHandler(this, complete);
+
+            morphFromColumbusViewTo3D(this, duration, camera3D, complete);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
@@ -236,13 +240,9 @@ define([
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
-    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid) {
+    function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-
-        var startPos = Cartesian3.clone(camera.position);
-        var startDir = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
 
         var positionCarto = scene.mapProjection.unproject(camera.position);
         var position = ellipsoid.cartographicToCartesian(positionCarto);
@@ -251,21 +251,30 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
 
         var endPos = Cartesian3.clone(position);
-        var endDir = Cartesian3.clone(startDir);
-        var endUp = Cartesian3.clone(startUp);
+        var endDir = Cartesian3.clone(camera.direction);
+        var endUp = Cartesian3.clone(camera.up);
 
         Matrix4.multiplyByPointAsVector(fromENU, endDir, endDir);
         Matrix4.multiplyByPointAsVector(fromENU, endUp, endUp);
 
-        var camera3D = {
-            position : Cartesian3.clone(endPos),
-            direction : Cartesian3.clone(endDir),
-            up : Cartesian3.clone(endUp)
+        return {
+            position : endPos,
+            direction : endDir,
+            up : endUp
         };
+    }
 
-        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, endPos, endPos);
-        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endDir, endDir);
-        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endUp, endUp);
+    function morphFromColumbusViewTo3D(transitioner, duration, endCamera, complete) {
+        var scene = transitioner._scene;
+        var camera = scene.camera;
+
+        var startPos = Cartesian3.clone(camera.position);
+        var startDir = Cartesian3.clone(camera.direction);
+        var startUp = Cartesian3.clone(camera.up);
+
+        var endPos = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, endCamera.position, new Cartesian3());
+        var endDir = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endCamera.direction, new Cartesian3());
+        var endUp = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endCamera.up, new Cartesian3());
 
         function update(value) {
             camera.position = columbusViewMorph(startPos, endPos, value.time);
@@ -288,9 +297,6 @@ define([
         });
         transitioner._currentTweens.push(tween);
 
-        var complete = complete3DCallback(camera3D);
-        createMorphHandler(transitioner, complete);
-
         addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
     }
 
@@ -302,12 +308,14 @@ define([
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.fov = CesiumMath.toRadians(60.0);
 
-        var camera3D = {
-            frustum : frustum
-        };
+        var camera3D = getColumbusViewTo3DCamera(transitioner, ellipsoid);
+        camera3D.frustum = frustum;
+
+        var complete = complete3DCallback(camera3D);
+        createMorphHandler(transitioner, complete);
 
         morphOrthographicToPerspective(transitioner, duration, camera3D, function() {
-            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid);
+            morphFromColumbusViewTo3D(transitioner, duration, camera3D, complete);
         });
     }
 
