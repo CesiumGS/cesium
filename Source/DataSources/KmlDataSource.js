@@ -36,6 +36,7 @@ define([
         '../ThirdParty/when',
         '../ThirdParty/zip',
         './BillboardGraphics',
+        './CompositeEntityCollection',
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './DataSource',
@@ -90,6 +91,7 @@ define([
         when,
         zip,
         BillboardGraphics,
+        CompositeEntityCollection,
         CompositePositionProperty,
         ConstantPositionProperty,
         DataSource,
@@ -835,8 +837,8 @@ define([
         return promises;
     }
 
-    function createDropLine(dataSource, entity, styleEntity) {
-        var entityPosition = new ReferenceProperty(dataSource._entityCollection, entity.id, ['position']);
+    function createDropLine(entityCollection, entity, styleEntity) {
+        var entityPosition = new ReferenceProperty(entityCollection, entity.id, ['position']);
         var surfacePosition = new ScaledPositionProperty(entity.position);
         entity.polyline = defined(styleEntity.polyline) ? styleEntity.polyline.clone() : new PolylineGraphics();
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
@@ -926,7 +928,7 @@ define([
         }
     }
 
-    function processPoint(dataSource, geometryNode, entity, styleEntity) {
+    function processPoint(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var coordinatesString = queryStringValue(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
@@ -938,11 +940,11 @@ define([
         processPositionGraphics(dataSource, entity, styleEntity);
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
-            createDropLine(dataSource, entity, styleEntity);
+            createDropLine(entityCollection, entity, styleEntity);
         }
     }
 
-    function processLineStringOrLinearRing(dataSource, geometryNode, entity, styleEntity) {
+    function processLineStringOrLinearRing(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var coordinatesNode = queryFirstNode(geometryNode, 'coordinates', namespaces.kml);
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
@@ -978,7 +980,7 @@ define([
         }
     }
 
-    function processPolygon(dataSource, geometryNode, entity, styleEntity) {
+    function processPolygon(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var outerBoundaryIsNode = queryFirstNode(geometryNode, 'outerBoundaryIs', namespaces.kml);
         var linearRingNode = queryFirstNode(outerBoundaryIsNode, 'LinearRing', namespaces.kml);
         var coordinatesNode = queryFirstNode(linearRingNode, 'coordinates', namespaces.kml);
@@ -1019,7 +1021,7 @@ define([
         }
     }
 
-    function processTrack(dataSource, geometryNode, entity, styleEntity) {
+    function processTrack(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
@@ -1051,7 +1053,7 @@ define([
         }
 
         if (canExtrude && extrude) {
-            createDropLine(dataSource, entity, styleEntity);
+            createDropLine(entityCollection, entity, styleEntity);
         }
     }
 
@@ -1084,7 +1086,7 @@ define([
         }));
     }
 
-    function processMultiTrack(dataSource, geometryNode, entity, styleEntity) {
+    function processMultiTrack(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         // Multitrack options do not work in GE as detailed in the spec,
         // rather than altitudeMode being at the MultiTrack level,
         // GE just defers all settings to the underlying track.
@@ -1139,24 +1141,24 @@ define([
         processPositionGraphics(dataSource, entity, styleEntity);
         processPathGraphics(dataSource, entity, styleEntity);
         if (needDropLine) {
-            createDropLine(dataSource, entity, styleEntity);
+            createDropLine(entityCollection, entity, styleEntity);
             entity.polyline.show = dropShowProperty;
         }
     }
 
-    function processMultiGeometry(dataSource, geometryNode, entity, styleEntity) {
+    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var childNodes = geometryNode.childNodes;
         for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, dataSource._entityCollection);
+                var childEntity = getOrCreateEntity(childNode, entityCollection);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
                 childEntity.description = entity.description;
                 childEntity.kml = entity.kml;
-                geometryProcessor(dataSource, childNode, childEntity, styleEntity);
+                geometryProcessor(dataSource, entityCollection, childNode, childEntity, styleEntity);
             }
         }
     }
@@ -1290,7 +1292,9 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processFeature(dataSource, parent, featureNode, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+        var entityCollection = compositeEntityCollection.getCollection(0);
+
         var entity = getOrCreateEntity(featureNode, entityCollection);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
@@ -1347,7 +1351,7 @@ define([
         MultiGeometry : processMultiGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processDocument(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1360,21 +1364,23 @@ define([
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
                 if (child.localName === featureName && namespaces.kml.indexOf(child.namespaceURI) !== -1) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
+                    processFeatureNode(dataSource, parent, child, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processFolder(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+        processDocument(dataSource, r.entity, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processPlacemark(dataSource, parent, placemark, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, placemark, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
+
+        var entityCollection = compositeEntityCollection.getCollection(0);
 
         var hasGeometry = false;
         var childNodes = placemark.childNodes;
@@ -1382,7 +1388,7 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                geometryProcessor(dataSource, childNode, entity, styleEntity);
+                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity);
                 hasGeometry = true;
             }
         }
@@ -1393,8 +1399,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processGroundOverlay(dataSource, parent, groundOverlay, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, groundOverlay, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         var entity = r.entity;
 
         var geometry;
@@ -1472,12 +1478,12 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processUnsupported(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+    function processNetworkLink(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -1485,14 +1491,12 @@ define([
             var linkUrl = queryStringValue(link, 'href', namespaces.kml);
             if (defined(linkUrl)) {
                 linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
-                var networkLinkSource = new KmlDataSource(dataSource._proxy);
-                var promise = when(networkLinkSource.load(linkUrl), function() {
-                    var entities = networkLinkSource.entities.values;
+                var networkLinkCompositeCollection = new CompositeEntityCollection();
+                var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function() {
+                    compositeEntityCollection.addCollection(networkLinkCompositeCollection);
+                    var entities = networkLinkCompositeCollection.getCollection(0).entities.values;
                     for (var i = 0; i < entities.length; i++) {
-                        dataSource._entityCollection.suspendEvents();
                         entities[i].parent = networkEntity;
-                        dataSource._entityCollection.add(entities[i]);
-                        dataSource._entityCollection.resumeEvents();
                     }
                 });
 
@@ -1511,17 +1515,18 @@ define([
         ScreenOverlay : processUnsupported
     };
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
+    function processFeatureNode(dataSource, node, parent, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProocessor = featureTypes[node.localName];
         if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+            featureProocessor(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         } else {
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
 
-    function loadKml(dataSource, kml, sourceUri, uriResolver) {
-        var entityCollection = dataSource._entityCollection;
+    function loadKml(dataSource, compositeEntityCollection, kml, sourceUri, uriResolver) {
+        var deferred = when.defer();
+        var entityCollection = compositeEntityCollection.getCollection(0);
 
         dataSource._promises = [];
         entityCollection.removeAll();
@@ -1534,7 +1539,7 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
+        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -1546,63 +1551,15 @@ define([
                     }
                 }
             }
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
+            processFeatureNode(dataSource, element, undefined, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
 
-            return when.all(dataSource._promises, function() {
-                var clock;
-                var availability = entityCollection.computeAvailability();
-
-                var start = availability.start;
-                var stop = availability.stop;
-                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-                if (!isMinStart || !isMaxStop) {
-                    var date;
-
-                    //If start is min time just start at midnight this morning, local time
-                    if (isMinStart) {
-                        date = new Date();
-                        date.setHours(0, 0, 0, 0);
-                        start = JulianDate.fromDate(date);
-                    }
-
-                    //If stop is max value just stop at midnight tonight, local time
-                    if (isMaxStop) {
-                        date = new Date();
-                        date.setHours(24, 0, 0, 0);
-                        stop = JulianDate.fromDate(date);
-                    }
-
-                    clock = new DataSourceClock();
-                    clock.startTime = start;
-                    clock.stopTime = stop;
-                    clock.currentTime = JulianDate.clone(start);
-                    clock.clockRange = ClockRange.LOOP_STOP;
-                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
-                }
-                var changed = false;
-                if (dataSource._name !== name) {
-                    dataSource._name = name;
-                    changed = true;
-                }
-
-                if (clock !== dataSource._clock) {
-                    changed = true;
-                    dataSource._clock = clock;
-                }
-
-                if (changed) {
-                    dataSource._changed.raiseEvent(dataSource);
-                }
-
-                DataSource.setLoading(dataSource, false);
-                return dataSource;
-            });
+            deferred.resolve();
         });
+
+        return deferred.promise;
     }
 
-    function loadKmz(dataSource, blob, sourceUri) {
+    function loadKmz(dataSource, compositeEntityCollection, blob, sourceUri) {
         var deferred = when.defer();
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
@@ -1631,7 +1588,7 @@ define([
                         return;
                     }
                     uriResolver.keys = Object.keys(uriResolver);
-                    return loadKml(dataSource, uriResolver.kml, sourceUri, uriResolver);
+                    return loadKml(dataSource, compositeEntityCollection, uriResolver.kml, sourceUri, uriResolver);
                 }).then(deferred.resolve).otherwise(deferred.reject);
             });
         }, function(e) {
@@ -1641,7 +1598,7 @@ define([
         return deferred.promise;
     }
 
-    function load(dataSource, data, options) {
+    function load(dataSource, compositeEntityCollection, data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
 
@@ -1652,10 +1609,11 @@ define([
         }
 
         return when(promise, function(dataToLoad) {
+            compositeEntityCollection.addCollection(new EntityCollection(compositeEntityCollection));
             if (dataToLoad instanceof Blob) {
                 return isZipFile(dataToLoad).then(function(isZip) {
                     if (isZip) {
-                        return loadKmz(dataSource, dataToLoad, sourceUri);
+                        return loadKmz(dataSource, compositeEntityCollection, dataToLoad, sourceUri);
                     }
                     return when(readBlobAsText(dataToLoad)).then(function(text) {
                         //There's no official way to validate if a parse was successful.
@@ -1684,11 +1642,11 @@ define([
                             //Return the error
                             throw new RuntimeError(msg);
                         }
-                        return loadKml(dataSource, kml, sourceUri, undefined);
+                        return loadKml(dataSource, compositeEntityCollection, kml, sourceUri, undefined);
                     });
                 });
             } else {
-                return when(loadKml(dataSource, dataToLoad, sourceUri, undefined));
+                return when(loadKml(dataSource, compositeEntityCollection, dataToLoad, sourceUri, undefined));
             }
         }).otherwise(function(error) {
             dataSource._error.raiseEvent(dataSource, error);
@@ -1731,7 +1689,7 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._clock = undefined;
-        this._entityCollection = new EntityCollection(this);
+        this._entityCollection = new CompositeEntityCollection();
         this._name = undefined;
         this._isLoading = false;
         this._proxy = proxy;
@@ -1848,7 +1806,59 @@ define([
         DataSource.setLoading(this, true);
 
         var that = this;
-        return load(this, data, options).otherwise(function(error) {
+        return load(this, this._entityCollection, data, options).then(function() {
+            return when.all(that._promises, function() {
+                var clock;
+                var availability = that._entityCollection.computeAvailability();
+
+                var start = availability.start;
+                var stop = availability.stop;
+                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+                if (!isMinStart || !isMaxStop) {
+                    var date;
+
+                    //If start is min time just start at midnight this morning, local time
+                    if (isMinStart) {
+                        date = new Date();
+                        date.setHours(0, 0, 0, 0);
+                        start = JulianDate.fromDate(date);
+                    }
+
+                    //If stop is max value just stop at midnight tonight, local time
+                    if (isMaxStop) {
+                        date = new Date();
+                        date.setHours(24, 0, 0, 0);
+                        stop = JulianDate.fromDate(date);
+                    }
+
+                    clock = new DataSourceClock();
+                    clock.startTime = start;
+                    clock.stopTime = stop;
+                    clock.currentTime = JulianDate.clone(start);
+                    clock.clockRange = ClockRange.LOOP_STOP;
+                    clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+                    clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
+                }
+                var changed = false;
+                if (that._name !== name) {
+                    that._name = name;
+                    changed = true;
+                }
+
+                if (clock !== that._clock) {
+                    changed = true;
+                    that._clock = clock;
+                }
+
+                if (changed) {
+                    that._changed.raiseEvent(that);
+                }
+
+                DataSource.setLoading(that, false);
+                return that;
+            });
+        }).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
