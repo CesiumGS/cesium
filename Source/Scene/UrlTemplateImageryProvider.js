@@ -75,7 +75,7 @@ define([
      *     <li><code>{height}</code>: The height of each tile in pixels.</li>
      * </ul>
      * @param {String} [options.pickFeaturesUrl] The URL template to use to pick features.  If this property is not specified,
-     *                 {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+     *                 {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
      *                 features picked.  The URL template supports all of the keywords supported by the <code>url</code>
      *                 parameter, plus the following:
      * <ul>
@@ -87,7 +87,7 @@ define([
      *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
      *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
      *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
-     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
+     *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
      * </ul>
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
@@ -231,9 +231,9 @@ define([
 
         /**
          * Gets the URL template to use to use to pick features.  If this property is not specified,
-         * {@see UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
+         * {@link UrlTemplateImageryProvider#pickFeatures} will immediately returned undefined, indicating no
          * features picked.  The URL template supports all of the keywords supported by the
-         * {@see UrlTemplateImageryProvider#url} property, plus the following:
+         * {@link UrlTemplateImageryProvider#url} property, plus the following:
          * <ul>
          *     <li><code>{i}</code>: The pixel column (horizontal coordinate) of the picked position, where the Westernmost pixel is 0.</li>
          *     <li><code>{j}</code>: The pixel row (vertical coordinate) of the picked position, where the Northernmost pixel is 0.</li>
@@ -243,7 +243,7 @@ define([
          *     <li><code>{latitudeDegrees}</code>: The latitude of the picked position in degrees.</li>
          *     <li><code>{longitudeProjected}</code>: The longitude of the picked position in the projected coordinates of the tiling scheme.</li>
          *     <li><code>{latitudeProjected}</code>: The latitude of the picked position in the projected coordinates of the tiling scheme.</li>
-         *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@see GetFeatureInfoFormat}.</li>
+         *     <li><code>{format}</code>: The format in which to get feature information, as specified in the {@link GetFeatureInfoFormat}.</li>
          * </ul>
          * @type {String}
          * @readonly
@@ -487,7 +487,7 @@ define([
      * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
      * recommended because existing tiles provided by the imagery provider will not be updated.
      *
-     * @param {Promise|Object} options Any of the options that may be passed to the {@see UrlTemplateImageryProvider} constructor.
+     * @param {Promise|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
      */
     UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
         var that = this;
