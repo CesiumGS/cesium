@@ -288,12 +288,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     updateTiles(this, frameState);
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -555,12 +555,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-Cesium3DTileset.prototype._processTiles(tiles3D, frameState) {
+Cesium3DTileset.prototype._processTiles(tileset, frameState) {
     var tiles = this._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```
@@ -571,12 +571,12 @@ Cesium3DTileset.prototype.update = function(frameState) {
     // ...
 };
 
-function processTiles(tiles3D, frameState) {
-    var tiles = tiles3D._processingQueue;
+function processTiles(tileset, frameState) {
+    var tiles = tileset._processingQueue;
     var length = tiles.length;
 
     for (var i = length - 1; i >= 0; --i) {
-        tiles[i].process(tiles3D, frameState);
+        tiles[i].process(tileset, frameState);
     }
 }
 ```

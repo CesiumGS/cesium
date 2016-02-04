@@ -488,11 +488,11 @@ define([
         }
     }
 
-    function applyDebugSettings(tile, tiles3D, frameState) {
+    function applyDebugSettings(tile, tileset, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
-        var showVolume = tiles3D.debugShowBoundingVolume || (tiles3D.debugShowContentBoundingVolume && !hasContentBoundingVolume);
+        var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
         if (showVolume && workaround2657(tile._header.boundingVolume)) {
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
@@ -502,19 +502,19 @@ define([
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
 
-        if (tiles3D.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
+        if (tileset.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
             if (!defined(tile._debugContentBoundingVolume)) {
                 tile._debugContentBoundingVolume = tile._contentBoundingVolume.createDebugVolume(Color.BLUE);
             }
             tile._debugContentBoundingVolume.update(frameState);
-        } else if (!tiles3D.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
+        } else if (!tileset.debugShowContentBoundingVolume && defined(tile._debugContentBoundingVolume)) {
             tile._debugContentBoundingVolume = tile._debugContentBoundingVolume.destroy();
         }
 
-        if (tiles3D.debugColorizeTiles && !tile._debugColorizeTiles) {
+        if (tileset.debugColorizeTiles && !tile._debugColorizeTiles) {
             tile._debugColorizeTiles = true;
             tile._content.applyDebugSettings(true, tile._debugColor);
-        } else if (!tiles3D.debugColorizeTiles && tile._debugColorizeTiles) {
+        } else if (!tileset.debugColorizeTiles && tile._debugColorizeTiles) {
             tile._debugColorizeTiles = false;
             tile._content.applyDebugSettings(false, tile._debugColor);
         }
@@ -525,9 +525,9 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.update = function(tiles3D, frameState) {
-        applyDebugSettings(this, tiles3D, frameState);
-        this._content.update(tiles3D, frameState);
+    Cesium3DTile.prototype.update = function(tileset, frameState) {
+        applyDebugSettings(this, tileset, frameState);
+        this._content.update(tileset, frameState);
     };
 
     var scratchCommandList = [];
@@ -535,16 +535,16 @@ define([
     /**
      * Processes the tile's content, e.g., create WebGL resources, to move from the PROCESSING to READY state.
      *
-     * @param {Cesium3DTileset} tiles3D The tileset containing this tile.
+     * @param {Cesium3DTileset} tileset The tileset containing this tile.
      * @param {FrameState} frameState The frame state.
      *
      * @private
      */
-    Cesium3DTile.prototype.process = function(tiles3D, frameState) {
+    Cesium3DTile.prototype.process = function(tileset, frameState) {
         var savedCommandList = frameState.commandList;
         frameState.commandList = scratchCommandList;
 
-        this._content.update(tiles3D, frameState);
+        this._content.update(tileset, frameState);
 
         scratchCommandList.length = 0;
         frameState.commandList = savedCommandList;

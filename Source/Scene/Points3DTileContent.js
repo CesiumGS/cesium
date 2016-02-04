@@ -232,7 +232,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.update = function(tiles3D, frameState) {
+    Points3DTileContent.prototype.update = function(tileset, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.

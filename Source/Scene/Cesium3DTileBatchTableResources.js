@@ -630,7 +630,7 @@ define([
         });
     }
 
-    Cesium3DTileBatchTableResources.prototype.update = function(tiles3D, frameState) {
+    Cesium3DTileBatchTableResources.prototype.update = function(tileset, frameState) {
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 

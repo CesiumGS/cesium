@@ -207,10 +207,10 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContent.prototype.update = function(tiles3D, context, frameState, commandList) {
+    Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
         var length = this._contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contents[i].update(tiles3D, context, frameState, commandList);
+            this._contents[i].update(tileset, context, frameState, commandList);
         }
     };
 

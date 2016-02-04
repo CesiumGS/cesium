@@ -532,7 +532,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function requestContent(tiles3D, tile, outOfCore) {
+    function requestContent(tileset, tile, outOfCore) {
         if (!outOfCore) {
             return;
         }
@@ -543,12 +543,12 @@ define([
         tile.requestContent();
 
         if (!tile.contentUnloaded) {
-            var stats = tiles3D._statistics;
+            var stats = tileset._statistics;
             ++stats.numberOfPendingRequests;
-            addLoadProgressEvent(tiles3D);
+            addLoadProgressEvent(tileset);
 
-            var removeFunction = removeFromProcessingQueue(tiles3D, tile);
-            when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tiles3D, tile)).otherwise(removeFunction);
+            var removeFunction = removeFromProcessingQueue(tileset, tile);
+            when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
             when(tile.contentReadyPromise).then(removeFunction).otherwise(removeFunction);
         }
     }
@@ -565,34 +565,34 @@ define([
     var scratchStack = [];
     var scratchRefiningTiles = [];
 
-    function selectTiles(tiles3D, frameState, outOfCore) {
-        if (tiles3D.debugFreezeFrame) {
+    function selectTiles(tileset, frameState, outOfCore) {
+        if (tileset.debugFreezeFrame) {
             return;
         }
 
-        var maximumScreenSpaceError = tiles3D.maximumScreenSpaceError;
+        var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
         var cullingVolume = frameState.cullingVolume;
 
-        var selectedTiles = tiles3D._selectedTiles;
+        var selectedTiles = tileset._selectedTiles;
         selectedTiles.length = 0;
 
         scratchRefiningTiles.length = 0;
 
-        var root = tiles3D._root;
+        var root = tileset._root;
         root.distanceToCamera = root.distanceToTile(frameState);
         root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
-        if (getScreenSpaceError(tiles3D._geometricError, root, frameState) <= maximumScreenSpaceError) {
+        if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
 
         if (root.contentUnloaded) {
-            requestContent(tiles3D, root, outOfCore);
+            requestContent(tileset, root, outOfCore);
             return;
         }
 
-        var stats = tiles3D._statistics;
+        var stats = tileset._statistics;
 
         var stack = scratchStack;
         stack.push(root);
@@ -629,7 +629,7 @@ define([
                     child.parentPlaneMask = t.parentPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
                     if (child.contentUnloaded) {
-                        requestContent(tiles3D, child, outOfCore);
+                        requestContent(tileset, child, outOfCore);
                     } else {
                         stack.push(child);
                     }
@@ -669,7 +669,7 @@ define([
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 if (child.contentUnloaded) {
                                     if (child.visibility(cullingVolume) !== CullingVolume.MASK_OUTSIDE) {
-                                        requestContent(tiles3D, child, outOfCore);
+                                        requestContent(tileset, child, outOfCore);
                                     }
                                 } else {
                                     stack.push(child);
@@ -716,7 +716,7 @@ define([
                                 child = children[k];
 // TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
                                 if (child.contentUnloaded) {
-                                    requestContent(tiles3D, child, outOfCore);
+                                    requestContent(tileset, child, outOfCore);
                                 }
                             }
                         }
@@ -737,10 +737,10 @@ define([
             }
         }
 
-        checkRefiningTiles(scratchRefiningTiles, tiles3D, frameState);
+        checkRefiningTiles(scratchRefiningTiles, tileset, frameState);
     }
 
-    function checkRefiningTiles(refiningTiles, tiles3D, frameState) {
+    function checkRefiningTiles(refiningTiles, tileset, frameState) {
         // In the common case, a tile that uses replacement refinement is refinable once all its
         // children are loaded. However if it has an empty child, refining to its children would
         // show a visible gap. In this case, the empty child's children (or further descendants)
@@ -763,7 +763,7 @@ define([
             }
             if (!refinable) {
                 var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
-                selectTile(tiles3D._selectedTiles, refiningTile, fullyVisible, frameState);
+                selectTile(tileset._selectedTiles, refiningTile, fullyVisible, frameState);
                 for (j = 0; j < descendantsLength; ++j) {
                     descendant = refiningTile.descendantsWithContent[j];
                     descendant.selected = false;
@@ -774,65 +774,65 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function addToProcessingQueue(tiles3D, tile) {
+    function addToProcessingQueue(tileset, tile) {
         return function() {
-            tiles3D._processingQueue.push(tile);
+            tileset._processingQueue.push(tile);
 
-            --tiles3D._statistics.numberOfPendingRequests;
-            ++tiles3D._statistics.numberProcessing;
-            addLoadProgressEvent(tiles3D);
+            --tileset._statistics.numberOfPendingRequests;
+            ++tileset._statistics.numberProcessing;
+            addLoadProgressEvent(tileset);
         };
     }
 
-    function removeFromProcessingQueue(tiles3D, tile) {
+    function removeFromProcessingQueue(tileset, tile) {
         return function() {
-            var index = tiles3D._processingQueue.indexOf(tile);
+            var index = tileset._processingQueue.indexOf(tile);
             if (index >= 0) {
                 // Remove from processing queue
-                tiles3D._processingQueue.splice(index, 1);
-                --tiles3D._statistics.numberProcessing;
+                tileset._processingQueue.splice(index, 1);
+                --tileset._statistics.numberProcessing;
             } else {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
-                --tiles3D._statistics.numberOfPendingRequests;
+                --tileset._statistics.numberOfPendingRequests;
             }
 
-            addLoadProgressEvent(tiles3D);
+            addLoadProgressEvent(tileset);
         };
     }
 
-    function processTiles(tiles3D, frameState) {
-        var tiles = tiles3D._processingQueue;
+    function processTiles(tileset, frameState) {
+        var tiles = tileset._processingQueue;
         var length = tiles.length;
 
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         // Traverse backwards in case a tile is removed as a result of calling process()
         for (var i = length - 1; i >= 0; --i) {
-            tiles[i].process(tiles3D, frameState);
+            tiles[i].process(tileset, frameState);
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function clearStats(tiles3D) {
-        var stats = tiles3D._statistics;
+    function clearStats(tileset) {
+        var stats = tileset._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
     }
 
-    function showStats(tiles3D, isPick) {
-        var stats = tiles3D._statistics;
+    function showStats(tileset, isPick) {
+        var stats = tileset._statistics;
 
-        if (tiles3D.debugShowStatistics && (
+        if (tileset.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
-            stats.lastSelected !== tiles3D._selectedTiles.length ||
+            stats.lastSelected !== tileset._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing)) {
 
             stats.lastVisited = stats.visited;
             stats.lastNumberOfCommands = stats.numberOfCommands;
-            stats.lastSelected = tiles3D._selectedTiles.length;
+            stats.lastSelected = tileset._selectedTiles.length;
             stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
             stats.lastNumberProcessing = stats.numberProcessing;
 
@@ -843,7 +843,7 @@ define([
                 'Visited: ' + stats.visited +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
-                ', Selected: ' + tiles3D._selectedTiles.length +
+                ', Selected: ' + tileset._selectedTiles.length +
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
                 ', Commands: ' + stats.numberOfCommands +
@@ -855,49 +855,49 @@ define([
         }
     }
 
-    function updateTiles(tiles3D, frameState) {
+    function updateTiles(tileset, frameState) {
         var commandList = frameState.commandList;
         var numberOfCommands = commandList.length;
-        var selectedTiles = tiles3D._selectedTiles;
+        var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
-        var tileVisible = tiles3D.tileVisible;
+        var tileVisible = tileset.tileVisible;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             if (tile.selected) {
                 tileVisible.raiseEvent(tile);
-                tile.update(tiles3D, frameState);
+                tile.update(tileset, frameState);
             }
         }
 
-        tiles3D._statistics.numberOfCommands = (commandList.length - numberOfCommands);
+        tileset._statistics.numberOfCommands = (commandList.length - numberOfCommands);
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function addLoadProgressEvent(tiles3D) {
-        if (tiles3D.loadProgress.numberOfListeners > 0) {
-            var stats = tiles3D._statistics;
-            tiles3D._loadProgressEventsToRaise.push({
+    function addLoadProgressEvent(tileset) {
+        if (tileset.loadProgress.numberOfListeners > 0) {
+            var stats = tileset._statistics;
+            tileset._loadProgressEventsToRaise.push({
                 numberOfPendingRequests : stats.numberOfPendingRequests,
                 numberProcessing : stats.numberProcessing
             });
         }
     }
 
-    function evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing) {
+    function evenMoreComplicated(tileset, numberOfPendingRequests, numberProcessing) {
         return function() {
-            tiles3D.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
+            tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
         };
     }
 
-    function raiseLoadProgressEvents(tiles3D, frameState) {
-        var eventsToRaise = tiles3D._loadProgressEventsToRaise;
+    function raiseLoadProgressEvents(tileset, frameState) {
+        var eventsToRaise = tileset._loadProgressEventsToRaise;
         var length = eventsToRaise.length;
         for (var i = 0; i < length; ++i) {
             var numberOfPendingRequests = eventsToRaise[i].numberOfPendingRequests;
             var numberProcessing = eventsToRaise[i].numberProcessing;
 
-            frameState.afterRender.push(evenMoreComplicated(tiles3D, numberOfPendingRequests, numberProcessing));
+            frameState.afterRender.push(evenMoreComplicated(tileset, numberOfPendingRequests, numberProcessing));
         }
         eventsToRaise.length = 0;
     }

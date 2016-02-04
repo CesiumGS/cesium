@@ -177,12 +177,12 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
-     * @param {Cesium3DTileset} tiles3D The tileset containing this tile.
+     * @param {Cesium3DTileset} tileset The tileset containing this tile.
      * @param {FrameState} frameState The frame state.
      *
      * @private
      */
-    Cesium3DTileContent.prototype.update = function(tiles3D, frameState) {
+    Cesium3DTileContent.prototype.update = function(tileset, frameState) {
         DeveloperError.throwInstantiationError();
     };
 
