@@ -88,15 +88,12 @@
                     "technique": "LAMBERT",
                     "transparent": false,
                     "values": {
-                        "diffuse": {
-                            "type": 35666,
-                            "value": [
-                                0.800000011920929,
-                                0,
-                                0,
-                                1
-                            ]
-                        }
+                        "diffuse": [
+                            0.800000011920929,
+                            0,
+                            0,
+                            1
+                        ]
                     }
                 }
             },

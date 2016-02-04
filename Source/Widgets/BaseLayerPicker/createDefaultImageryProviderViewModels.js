@@ -5,8 +5,8 @@ define([
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
         '../../Scene/createOpenStreetMapImageryProvider',
+        '../../Scene/createTileMapServiceImageryProvider',
         '../../Scene/MapboxImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
@@ -14,8 +14,8 @@ define([
         BingMapsImageryProvider,
         BingMapsStyle,
         createOpenStreetMapImageryProvider,
+        createTileMapServiceImageryProvider,
         MapboxImageryProvider,
-        TileMapServiceImageryProvider,
         ProviderViewModel) {
     "use strict";
 
@@ -198,7 +198,7 @@ map of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
+                return createTileMapServiceImageryProvider({
                     url : '//cesiumjs.org/blackmarble',
                     maximumLevel : 8,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -211,7 +211,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
+                return createTileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }

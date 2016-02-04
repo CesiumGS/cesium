@@ -39,7 +39,6 @@ define([
      *
      * @see PolylineCollection
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polylines.html|Cesium Sandcastle Polyline Demo}
      */
     function Polyline(options, polylineCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
