@@ -302,25 +302,25 @@ define([
     function getGlslComputeSt(batchTableResources) {
         // GLSL batchId is zero-based: [0, featuresLength - 1]
         if (batchTableResources._textureDimensions.y === 1) {
-            return 'uniform vec4 tiles3d_textureStep; \n' +
+            return 'uniform vec4 tileset_textureStep; \n' +
                 'vec2 computeSt(float batchId) \n' +
                 '{ \n' +
-                '    float stepX = tiles3d_textureStep.x; \n' +
-                '    float centerX = tiles3d_textureStep.y; \n' +
+                '    float stepX = tileset_textureStep.x; \n' +
+                '    float centerX = tileset_textureStep.y; \n' +
                 '    return vec2(centerX + (batchId * stepX), 0.5); \n' +
                 '} \n';
         }
 
-        return 'uniform vec4 tiles3d_textureStep; \n' +
-            'uniform vec2 tiles3d_textureDimensions; \n' +
+        return 'uniform vec4 tileset_textureStep; \n' +
+            'uniform vec2 tileset_textureDimensions; \n' +
             'vec2 computeSt(float batchId) \n' +
             '{ \n' +
-            '    float stepX = tiles3d_textureStep.x; \n' +
-            '    float centerX = tiles3d_textureStep.y; \n' +
-            '    float stepY = tiles3d_textureStep.z; \n' +
-            '    float centerY = tiles3d_textureStep.w; \n' +
-            '    float xId = mod(batchId, tiles3d_textureDimensions.x); \n' +
-            '    float yId = floor(batchId / tiles3d_textureDimensions.x); \n' +
+            '    float stepX = tileset_textureStep.x; \n' +
+            '    float centerX = tileset_textureStep.y; \n' +
+            '    float stepY = tileset_textureStep.z; \n' +
+            '    float centerY = tileset_textureStep.w; \n' +
+            '    float xId = mod(batchId, tileset_textureDimensions.x); \n' +
+            '    float yId = floor(batchId / tileset_textureDimensions.x); \n' +
             '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
             '} \n';
     }
@@ -342,24 +342,24 @@ define([
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per model (e.g., building) show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'varying vec3 tiles3d_modelColor; \n' +
+                    'uniform sampler2D tileset_batchTexture; \n' +
+                    'varying vec3 tileset_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
-                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
+                    '    vec4 modelProperties = texture2D(tileset_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                        // Per batched model show/hide
-                    '    tiles3d_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
+                    '    tileset_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(a_batchId); \n' +
+                    '    tileset_modelSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
@@ -378,17 +378,17 @@ define([
             //var diffuse = 'diffuse = u_diffuse;';
             //var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
             //if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-            //    source = 'varying vec3 tiles3d_modelColor; \n' + source;
-            //    source = source.replace(diffuse, 'diffuse.rgb = tiles3d_modelColor;');
-            //    source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tiles3d_modelColor;');
+            //    source = 'varying vec3 tileset_modelColor; \n' + source;
+            //    source = source.replace(diffuse, 'diffuse.rgb = tileset_modelColor;');
+            //    source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tileset_modelColor;');
             //} else {
             //    source =
-            //        'uniform sampler2D tiles3d_batchTexture; \n' +
-            //        'varying vec2 tiles3d_modelSt; \n' +
+            //        'uniform sampler2D tileset_batchTexture; \n' +
+            //        'varying vec2 tileset_modelSt; \n' +
             //        source;
             //
             //    var readColor =
-            //        'vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
+            //        'vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
             //        'if (modelProperties.a == 0.0) { \n' +
             //        '    discard; \n' +
             //        '}';
@@ -407,19 +407,19 @@ define([
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'varying vec3 tiles3d_modelColor; \n' +
+                    'varying vec3 tileset_modelColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    gl_FragColor.rgb *= tiles3d_modelColor; \n' +
+                    '    gl_FragColor.rgb *= tileset_modelColor; \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform sampler2D tileset_batchTexture; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
+                    '    vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
                     '    if (modelProperties.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
@@ -441,14 +441,14 @@ define([
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
-                tiles3d_batchTexture : function() {
+                tileset_batchTexture : function() {
                     // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
                     return defaultValue(that._batchTexture, that._defaultTexture);
                 },
-                tiles3d_textureDimensions : function() {
+                tileset_textureDimensions : function() {
                     return that._textureDimensions;
                 },
-                tiles3d_textureStep : function() {
+                tileset_textureStep : function() {
                     return that._textureStep;
                 }
             };
@@ -471,24 +471,24 @@ define([
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform sampler2D tileset_batchTexture; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
-                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, st); \n' +
+                    '    vec4 modelProperties = texture2D(tileset_batchTexture, st); \n' +
                     '    float show = modelProperties.a; \n' +
                     '    gl_Position *= show; \n' +                       // Per batched model show/hide
-                    '    tiles3d_modelSt = st; \n' +
+                    '    tileset_modelSt = st; \n' +
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
-                    '    tiles3d_modelSt = computeSt(a_batchId); \n' +
+                    '    tileset_modelSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
@@ -510,24 +510,24 @@ define([
                 // When VTF is supported, per patched model (e.g., building) show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'uniform sampler2D tiles3d_pickTexture; \n' +
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform sampler2D tileset_pickTexture; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    gltf_main(); \n' +
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = texture2D(tiles3d_pickTexture, tiles3d_modelSt); \n' +
+                    '    gl_FragColor = texture2D(tileset_pickTexture, tileset_modelSt); \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D tiles3d_pickTexture; \n' +
-                    'uniform sampler2D tiles3d_batchTexture; \n' +
-                    'varying vec2 tiles3d_modelSt; \n' +
+                    'uniform sampler2D tileset_pickTexture; \n' +
+                    'uniform sampler2D tileset_batchTexture; \n' +
+                    'varying vec2 tileset_modelSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(tiles3d_batchTexture, tiles3d_modelSt); \n' +
+                    '    vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
                     '    if (modelProperties.a == 0.0) { \n' +
                     '        discard; \n' +                       // Per batched model show/hide
                     '    } \n' +
@@ -535,7 +535,7 @@ define([
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = texture2D(tiles3d_pickTexture, tiles3d_modelSt); \n' +
+                    '    gl_FragColor = texture2D(tileset_pickTexture, tileset_modelSt); \n' +
                     '}';
             }
 
@@ -552,16 +552,16 @@ define([
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
-                tiles3d_batchTexture : function() {
+                tileset_batchTexture : function() {
                     return defaultValue(that._batchTexture, that._defaultTexture);
                 },
-                tiles3d_textureDimensions : function() {
+                tileset_textureDimensions : function() {
                     return that._textureDimensions;
                 },
-                tiles3d_textureStep : function() {
+                tileset_textureStep : function() {
                     return that._textureStep;
                 },
-                tiles3d_pickTexture : function() {
+                tileset_pickTexture : function() {
                     return that._pickTexture;
                 }
             };
