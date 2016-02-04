@@ -86,20 +86,16 @@ define([
     Tileset3DTileContent.prototype.request = function() {
         var that = this;
 
-        var promise = this._tileset.loadTileset(this._url, this._tile);
-
-        if (defined(promise)) {
-            this.state = Cesium3DTileContentState.LOADING;
-            promise.then(function() {
-                that.state = Cesium3DTileContentState.PROCESSING;
-                that.contentReadyToProcessPromise.resolve(that);
-                that.state = Cesium3DTileContentState.READY;
-                that.readyPromise.resolve(that);
-            }).otherwise(function(error) {
-                that.state = Cesium3DTileContentState.FAILED;
-                that.readyPromise.reject(error);
-            });
-        }
+        this.state = Cesium3DTileContentState.LOADING;
+        this._tileset.loadTileset(this._url, this._tile).then(function() {
+            that.state = Cesium3DTileContentState.PROCESSING;
+            that.contentReadyToProcessPromise.resolve(that);
+            that.state = Cesium3DTileContentState.READY;
+            that.readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that.readyPromise.reject(error);
+        });
     };
 
     /**

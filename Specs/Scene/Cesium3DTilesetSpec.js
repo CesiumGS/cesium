@@ -8,7 +8,6 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTilesetState',
         'Scene/CullingVolume',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -23,7 +22,6 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
-        Cesium3DTilesetState,
         CullingVolume,
         Cesium3DTilesTester,
         createScene,
@@ -134,7 +132,6 @@ defineSuite([
             fail('should not resolve');
         }).otherwise(function(error) {
             expect(tileset.ready).toEqual(false);
-            expect(tileset._state).toEqual(Cesium3DTilesetState.FAILED);
         });
     });
 
@@ -206,31 +203,6 @@ defineSuite([
     it('passes version in query string to tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             expect(tileset._root.content._url).toEqual(tilesetUrl + 'parent.b3dm?v=0.0');
-        });
-    });
-
-    it('loads tileset.json once request scheduler has available slots', function() {
-        RequestScheduler.maximumRequests = 2;
-        viewNothing();
-
-        var options = {
-            url : tilesetUrl
-        };
-        var tileset1 = scene.primitives.add(new Cesium3DTileset(options));
-        var tileset2 = scene.primitives.add(new Cesium3DTileset(options));
-        var tileset3 = scene.primitives.add(new Cesium3DTileset(options));
-
-        scene.renderForSpecs();
-        expect(tileset1._state).toEqual(Cesium3DTilesetState.LOADING);
-        expect(tileset2._state).toEqual(Cesium3DTilesetState.LOADING);
-        expect(tileset3._state).toEqual(Cesium3DTilesetState.UNLOADED);
-
-        return pollToPromise(function() {
-            // Once the first tileset is ready, the third tileset should begin loading
-            scene.renderForSpecs();
-            return tileset1._state === Cesium3DTilesetState.READY;
-        }).then(function() {
-            expect(tileset3._state).toEqual(Cesium3DTilesetState.LOADING);
         });
     });
 

@@ -6,7 +6,6 @@ define([
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
-        'Scene/Cesium3DTilesetState',
         'Specs/pollToPromise'
     ], function(
         Color,
@@ -15,7 +14,6 @@ define([
         Cesium3DTileContentState,
         Cesium3DTileset,
         TileBoundingSphere,
-        Cesium3DTilesetState,
         pollToPromise) {
     "use strict";
 
@@ -75,10 +73,7 @@ define([
             url : url
         }));
 
-        return pollToPromise(function() {
-            scene.renderForSpecs();
-            return (tileset._state === Cesium3DTilesetState.READY);
-        }).then(function() {
+        return tileset.readyPromise.then(function() {
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                 return tileset;
             });
