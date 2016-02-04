@@ -130,6 +130,7 @@ define([
 
         if (this._previousMode === SceneMode.SCENE2D) {
             Cartesian3.clone(camera.position, position);
+            position.z = camera.frustum.right - camera.frustum.left;
             Cartesian3.negate(Cartesian3.UNIT_Z, direction);
             Cartesian3.clone(Cartesian3.UNIT_Y, up);
         } else {
@@ -340,6 +341,9 @@ define([
         frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
         frustum.fov = CesiumMath.toRadians(60.0);
 
+        var camera = scene.camera;
+        camera.position.z = camera.frustum.right - camera.frustum.left;
+
         var camera3D = getColumbusViewTo3DCamera(transitioner, ellipsoid);
         camera3D.frustum = frustum;
 
@@ -507,12 +511,10 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
-        var height = camera.frustum.right - camera.frustum.left;
-
         camera.frustum = cameraCV.frustum.clone();
         var endFOV = camera.frustum.fov;
         var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = height * Math.tan(endFOV * 0.5);
+        var d = cameraCV.position.z * Math.tan(endFOV * 0.5);
         camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
         camera.frustum.fov = startFOV;
 
@@ -641,6 +643,7 @@ define([
 
             var camera = scene.camera;
             Cartesian3.clone(camera2D.position, camera.position);
+            camera.position.z = scene.mapProjection.ellipsoid.maximumRadius * 2.0;
             Cartesian3.clone(camera2D.direction, camera.direction);
             Cartesian3.clone(camera2D.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
