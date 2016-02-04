@@ -41,7 +41,7 @@ define([
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
-        this._contentProviders = [];
+        this._content = [];
         this._factory = factory;
 
         /**
@@ -77,7 +77,7 @@ define([
          */
         innerContents : {
             get : function() {
-                return this._contentProviders;
+                return this._content;
             }
         }
     });
@@ -174,7 +174,7 @@ define([
             if (defined(contentFactory)) {
                 var content = contentFactory(this._tileset, this._tile, this._url);
                 content.initialize(arrayBuffer, byteOffset);
-                this._contentProviders.push(content);
+                this._content.push(content);
                 contentPromises.push(content.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
@@ -198,9 +198,9 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        var length = this._contentProviders.length;
+        var length = this._content.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].applyDebugSettings(enabled, color);
+            this._content[i].applyDebugSettings(enabled, color);
         }
     };
 
@@ -208,9 +208,9 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.update = function(tiles3D, context, frameState, commandList) {
-        var length = this._contentProviders.length;
+        var length = this._content.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].update(tiles3D, context, frameState, commandList);
+            this._content[i].update(tiles3D, context, frameState, commandList);
         }
     };
 
@@ -225,9 +225,9 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.destroy = function() {
-        var length = this._contentProviders.length;
+        var length = this._content.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].destroy();
+            this._content[i].destroy();
         }
         return destroyObject(this);
     };
