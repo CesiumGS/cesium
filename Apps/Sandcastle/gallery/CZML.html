@@ -33,9 +33,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 Sandcastle.addDefaultToolbarButton('Satellites', function() {
     viewer.dataSources.add(Cesium.CzmlDataSource.load('../../SampleData/simple.czml'));
     
-    viewer.homeButton.viewModel.duration = 0;
-    viewer.homeButton.viewModel.command();
-    viewer.homeButton.viewModel.duration = 3;
+    viewer.camera.flyHome(0);
 });
 
 Sandcastle.addToolbarButton('Vehicle', function() {

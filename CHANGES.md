@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.19 - 2016-03-01
+* Breaking changes
+   * 
+* Deprecated
+   *   
+* Fixed bug for causing `navigator is not defined` reference error in node
+* Added `Camera.flyHome` function for resetting the camera to the home view
+
 ### 1.18 - 2016-02-01
 * Breaking changes
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).
