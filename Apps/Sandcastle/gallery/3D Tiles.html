@@ -45,7 +45,6 @@ var pointsUrl = '../../../Specs/Data/Cesium3DTiles/Points/Points/';
 
 var tileset;
 var styleableElements = [];
-var numberOfBins = 6;
 
 function loadTileset(url) {
     reset();
@@ -76,7 +75,7 @@ function loadTileset(url) {
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
                 "propertyName" : "id",
-                "autoBins" : [
+                "colors" : [
                     [237, 248, 251],
                     [191, 211, 230],
                     [158, 188, 218],
@@ -357,21 +356,27 @@ Sandcastle.addToolbarButton('SSE--', function() {
 
 // Styling ////////////////////////////////////////////////////////////////////
 
+var numberofColors = 6;
+
+function getRandomColors() {
+    var colors = [];
+    for (var i = 0; i < numberofColors; ++i) {
+        var r = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+        var g  = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+        var b = Math.floor(Cesium.Math.nextRandomNumber() * 255);
+
+        colors[i] = [r, g, b];
+    }
+
+    return colors;
+}
+
 function getStyleFunction(name) {
     return function() {
-        var colors = [];
-        for (var i = 0; i < numberOfBins; ++i) {
-            var r = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-            var g  = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-            var b = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-
-            colors[i] = [r, g, b];
-        }
-
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
                 "propertyName" : name,
-                "autoBins" : colors
+                "colors" : getRandomColors()
             },
             "show" : {
                 "propertyName" : "Height",
@@ -386,14 +391,14 @@ Sandcastle.addToolbarButton('Remove style', function() {
     tileset.style = undefined;
 });
 
-Sandcastle.addToolbarButton('bins++', function() {
-    ++numberOfBins;
-    console.log('Number of bins: ' + numberOfBins);
+Sandcastle.addToolbarButton('colors++', function() {
+    ++numberofColors;
+    tileset.style.color.colors = getRandomColors();
 });
 
-Sandcastle.addToolbarButton('bins--', function() {
-    numberOfBins = Math.max(numberOfBins - 1, 1);
-    console.log('Number of bins: ' + numberOfBins);
+Sandcastle.addToolbarButton('colors--', function() {
+    numberofColors = Math.max(numberofColors - 1, 1);
+    tileset.style.color.colors = getRandomColors();
 });
 
 function addExpressionUI() {
@@ -493,7 +498,7 @@ function reset() {
         button.parentNode.removeChild(button);
     }
     styleableElements = [];
-    numberOfBins = 6;
+    numberofColors = 6;
 
     current.building = undefined;
     current.originalColor = new Cesium.Color();
