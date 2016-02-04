@@ -73,16 +73,30 @@ function loadTileset(url) {
         }
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
+//            "color" : {
+//                "type" : "map",
+//                "map" : {
+//                    "propertyName" : "id",
+//                    "map" : {
+//                        "1" : [255, 0, 0],
+//                        "2" : [0, 255, 0]
+//                    },
+//                    "default" : [255, 255, 255]
+//                }
+//            },
             "color" : {
-                "propertyName" : "id",
-                "colors" : [
-                    [237, 248, 251],
-                    [191, 211, 230],
-                    [158, 188, 218],
-                    [140, 150, 198],
-                    [136, 86, 167],
-                    [129, 15, 124]
-                ]
+                "type" : "ramp",
+                "ramp" : {
+                    "propertyName" : "id",
+                    "colors" : [
+                        [237, 248, 251],
+                        [191, 211, 230],
+                        [158, 188, 218],
+                        [140, 150, 198],
+                        [136, 86, 167],
+                        [129, 15, 124]
+                    ]
+                }
             },
             "show" : {
                 "propertyName" : "Height",
@@ -375,8 +389,11 @@ function getStyleFunction(name) {
     return function() {
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
-                "propertyName" : name,
-                "colors" : getRandomColors()
+                "type" : "ramp",
+                "ramp" : {
+                    "propertyName" : name,
+                    "colors" : getRandomColors()
+                }
             },
             "show" : {
                 "propertyName" : "Height",
