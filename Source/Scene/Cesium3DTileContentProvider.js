@@ -1,4 +1,4 @@
-/*global define*/
+\/*global define*/
 define([
         '../Core/defineProperties',
         '../Core/DeveloperError'
@@ -19,14 +19,14 @@ define([
      * @alias Cesium3DTileContentProvider
      * @constructor
      *
-     * @see {@link Batched3DModel3DTileContentProvider}
-     * @see {@link Instanced3DModel3DTileContentProvider}
-     * @see {@link Points3DTileContentProvider}
-     * @see {@link Composite3DTileContentProvider}
-     * @see {@link Tileset3DTileContentProvider}
-     * @see {@link Empty3DTileContentProvider}
+     * @see Batched3DModel3DTileContentProvider
+     * @see Instanced3DModel3DTileContentProvider
+     * @see Points3DTileContentProvider
+     * @see Composite3DTileContentProvider
+     * @see Tileset3DTileContentProvider
+     * @see Empty3DTileContentProvider
      */
-    function Cesium3DTileContentProvider(tileset, tile, url) {
+    function Cesium3DTileContentProvider() {
         // Private members are not exposed in the public Cesium API, but derived classes
         // need to implement them.  The scope should be treated like C#'s internal.  When
         // we're ready, we'll add these members to the public API so users can implement
