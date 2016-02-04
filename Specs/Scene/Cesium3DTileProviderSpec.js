@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Cesium3DTileContentProvider'
+        'Scene/Cesium3DTileContent'
     ], function(
-        Cesium3DTileContentProvider) {
+        Cesium3DTileContent) {
     "use strict";
 
     it('throws', function() {
-        var content = new Cesium3DTileContentProvider();
+        var content = new Cesium3DTileContent();
         expect(function() {
             return content.featuresLength;
         }).toThrowDeveloperError();

@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Tileset3DTileContentProvider',
+        'Scene/Tileset3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Scene/Cesium3DTileContentState',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Tileset3DTileContentProvider,
+        Tileset3DTileContent,
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTileContentState,

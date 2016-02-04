@@ -40,7 +40,7 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileBatchTableResources(contentProvider, featuresLength) {
+    function Cesium3DTileBatchTableResources(content, featuresLength) {
         featuresLength = defaultValue(featuresLength, 0);
 
         /**
@@ -61,7 +61,7 @@ define([
         this._pickTexture = undefined;
         this._pickIds = [];
 
-        this._contentProvider = contentProvider;
+        this._content = content;
 
         // Dimensions for batch and pick textures
         var textureDimensions;
@@ -596,14 +596,14 @@ define([
             var pickIds = batchTableResources._pickIds;
             var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
-            var contentProvider = batchTableResources._contentProvider;
+            var content = batchTableResources._content;
 
             // PERFORMANCE_IDEA: we could skip the pick texture completely by allocating
             // a continuous range of pickIds and then converting the base pickId + batchId
             // to RGBA in the shader.  The only consider is precision issues, which might
             // not be an issue in WebGL 2.
             for (var i = 0; i < featuresLength; ++i) {
-                var pickId = context.createPickId(contentProvider.getFeature(i));
+                var pickId = context.createPickId(content.getFeature(i));
                 pickIds.push(pickId);
 
                 var pickColor = pickId.color;

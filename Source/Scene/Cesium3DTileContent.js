@@ -16,17 +16,17 @@ define([
      * This type describes an interface and is not intended to be instantiated directly.
      * </p>
      *
-     * @alias Cesium3DTileContentProvider
+     * @alias Cesium3DTileContent
      * @constructor
      *
-     * @see {@link Batched3DModel3DTileContentProvider}
-     * @see {@link Instanced3DModel3DTileContentProvider}
-     * @see {@link Points3DTileContentProvider}
-     * @see {@link Composite3DTileContentProvider}
-     * @see {@link Tileset3DTileContentProvider}
-     * @see {@link Empty3DTileContentProvider}
+     * @see {@link Batched3DModel3DTileContent}
+     * @see {@link Instanced3DModel3DTileContent}
+     * @see {@link Points3DTileContent}
+     * @see {@link Composite3DTileContent}
+     * @see {@link Tileset3DTileContent}
+     * @see {@link Empty3DTileContent}
      */
-    function Cesium3DTileContentProvider(tileset, tile, url) {
+    function Cesium3DTileContent(tileset, tile, url) {
         // Private members are not exposed in the public Cesium API, but derived classes
         // need to implement them.  The scope should be treated like C#'s internal.  When
         // we're ready, we'll add these members to the public API so users can implement
@@ -47,7 +47,7 @@ define([
          * This happens after the content is downloaded but before the content is ready
          * to render.
          *
-         * @type {Promise.<Cesium3DTileContentProvider>}
+         * @type {Promise.<Cesium3DTileContent>}
          * @readonly
          *
          * @private
@@ -57,7 +57,7 @@ define([
         /**
          * Gets the promise that will be resolved when the tile's content is ready to render.
          *
-         * @type {Promise.<Cesium3DTileContentProvider>}
+         * @type {Promise.<Cesium3DTileContent>}
          * @readonly
          *
          * @private
@@ -65,11 +65,11 @@ define([
         this.readyPromise = undefined;
     }
 
-    defineProperties(Cesium3DTileContentProvider.prototype, {
+    defineProperties(Cesium3DTileContent.prototype, {
         /**
          * Gets the number of features in the tile.
          *
-         * @memberof Cesium3DTileContentProvider.prototype
+         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Number}
          * @readonly
@@ -81,10 +81,10 @@ define([
         },
 
         /**
-         * Gets the array of {@link Cesium3DTileContentProvider} objects that represent the
+         * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @memberof Composite3DTileContentProvider.prototype
+         * @memberof Composite3DTileContent.prototype
          *
          * @type {Array}
          * @readonly
@@ -103,7 +103,7 @@ define([
      * @param {String} name The case-sensitive name of the property.
      * @returns {Boolean} <code>true</code> if the property exists; otherwise, <code>false</code>.
      */
-    Cesium3DTileContentProvider.prototype.hasProperty = function(name) {
+    Cesium3DTileContent.prototype.hasProperty = function(name) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -115,9 +115,9 @@ define([
      * @param {Number} batchId The batchId for the feature.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
      *
-     * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContentProvider#featuresLength - 1}.
+     * @exception {DeveloperError} batchId must be between zero and {@link Cesium3DTileContent#featuresLength - 1}.
      */
-    Cesium3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Cesium3DTileContent.prototype.getFeature = function(batchId) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -127,13 +127,13 @@ define([
      * The request may not be made if the Cesium Request Scheduler can't prioritize it.
      * </p>
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.request = function() {
+    Cesium3DTileContent.prototype.request = function() {
         DeveloperError.throwInstantiationError();
     };
 
@@ -142,7 +142,7 @@ define([
      * necessarily move the state to READY since WebGL resource creation may be
      * amortized over several frames.
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
@@ -151,20 +151,20 @@ define([
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
+    Cesium3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         DeveloperError.throwInstantiationError();
     };
 
     /**
      * Called when {@link Cesium3DTileset#debugColorizeTiles} changes.
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    Cesium3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -173,7 +173,7 @@ define([
      * When the tile's content is in the PROCESSING state, this creates WebGL resources to ultimately
      * move to the READY state.
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
@@ -182,7 +182,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
+    Cesium3DTileContent.prototype.update = function(tiles3D, frameState) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -192,17 +192,17 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see Cesium3DTileContentProvider#destroy
+     * @see Cesium3DTileContent#destroy
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.isDestroyed = function() {
+    Cesium3DTileContent.prototype.isDestroyed = function() {
         DeveloperError.throwInstantiationError();
     };
 
@@ -214,7 +214,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * <p>
-     * This is used to implement the <code>Cesium3DTileContentProvider</code> interface, but is
+     * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
      *
@@ -225,13 +225,13 @@ define([
      * @example
      * content = content && content.destroy();
      *
-     * @see Cesium3DTileContentProvider#isDestroyed
+     * @see Cesium3DTileContent#isDestroyed
      *
      * @private
      */
-    Cesium3DTileContentProvider.prototype.destroy = function() {
+    Cesium3DTileContent.prototype.destroy = function() {
         DeveloperError.throwInstantiationError();
     };
 
-    return Cesium3DTileContentProvider;
+    return Cesium3DTileContent;
 });

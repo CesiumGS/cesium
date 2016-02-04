@@ -18,7 +18,7 @@ define([
      * modifications.
      * </p>
      * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTileContentProvider#getFeature}
+     * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
      * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
      * </p>
      *

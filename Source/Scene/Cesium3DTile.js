@@ -22,15 +22,15 @@ define([
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Cesium3DTileContentProviderFactory',
+        './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
-        './Empty3DTileContentProvider',
+        './Empty3DTileContent',
         './PerInstanceColorAppearance',
         './Primitive',
         './TileBoundingRegion',
         './TileBoundingSphere',
-        './Tileset3DTileContentProvider',
+        './Tileset3DTileContent',
         './TileOrientedBoundingBox'
     ], function(
         BoxOutlineGeometry,
@@ -55,15 +55,15 @@ define([
         SphereOutlineGeometry,
         Uri,
         when,
-        Cesium3DTileContentProviderFactory,
+        Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
-        Empty3DTileContentProvider,
+        Empty3DTileContent,
         PerInstanceColorAppearance,
         Primitive,
         TileBoundingRegion,
         TileBoundingSphere,
-        Tileset3DTileContentProvider,
+        Tileset3DTileContent,
         TileOrientedBoundingBox) {
     "use strict";
 
@@ -186,7 +186,7 @@ define([
             var url = joinUrls(baseUrl, contentUrl);
             requestServer = RequestScheduler.getRequestServer(url);
             var type = getExtensionFromUri(url);
-            var contentFactory = Cesium3DTileContentProviderFactory[type];
+            var contentFactory = Cesium3DTileContentFactory[type];
 
             if (type === 'json') {
                 hasContent = false;
@@ -204,7 +204,7 @@ define([
 
             content = contentFactory(tileset, this, url);
         } else {
-            content = new Empty3DTileContentProvider();
+            content = new Empty3DTileContent();
             hasContent = false;
             hasTilesetContent = false;
         }
@@ -291,7 +291,7 @@ define([
          *
          * @memberof Cesium3DTile.prototype
          *
-         * @type {Cesium3DTileContentProvider}
+         * @type {Cesium3DTileContent}
          * @readonly
          */
         content : {
@@ -323,7 +323,7 @@ define([
          *
          * @memberof Cesium3DTile.prototype
          *
-         * @type {Promise.<Cesium3DTileContentProvider>}
+         * @type {Promise.<Cesium3DTileContent>}
          * @readonly
          *
          * @private

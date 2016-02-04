@@ -1,13 +1,13 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Composite3DTileContentProvider',
+        'Scene/Composite3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Composite3DTileContentProvider,
+        Composite3DTileContent,
         Cartesian3,
         Color,
         HeadingPitchRange,
@@ -118,7 +118,7 @@ defineSuite([
     it('rejects readyPromise on error', function() {
         // Try loading a composite tile with an instanced tile that has an invalid url.
         // Expect promise to be rejected in Model, ModelInstanceCollection,
-        // Instanced3DModel3DTileContentProvider, and Composite3DTileContentProvider.
+        // Instanced3DModel3DTileContent, and Composite3DTileContent.
         var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             tiles : [Cesium3DTilesTester.generateInstancedTileBuffer({
                 gltfFormat : 0
