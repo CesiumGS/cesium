@@ -20,7 +20,6 @@ define([
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
-        './Cesium3DTilesetState',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -44,7 +43,6 @@ define([
         when,
         Cesium3DTile,
         Cesium3DTileRefine,
-        Cesium3DTilesetState,
         CullingVolume,
         SceneMode) {
     "use strict";
@@ -99,7 +97,6 @@ define([
         this._url = url;
         this._baseUrl = baseUrl;
         this._tilesetUrl = tilesetUrl;
-        this._state = Cesium3DTilesetState.UNLOADED;
         this._root = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
@@ -259,6 +256,19 @@ define([
         this.tileVisible = new Event();
 
         this._readyPromise = when.defer();
+
+        var that = this;
+
+        this.loadTileset(tilesetUrl).then(function(data) {
+            var tilesetJson = data.tilesetJson;
+            that._asset = tilesetJson.asset;
+            that._properties = tilesetJson.properties;
+            that._geometricError = tilesetJson.geometricError;
+            that._root = data.root;
+            that._readyPromise.resolve(that);
+        }).otherwise(function(error) {
+            that._readyPromise.reject(error);
+        });
     }
 
     defineProperties(Cesium3DTileset.prototype, {
@@ -400,21 +410,11 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.loadTileset = function(tilesetUrl, parentTile) {
-        var tileset = this;
+        var that = this;
 
         // We don't know the distance of the tileset until tiles.json is loaded, so use the default distance for now
-        var promise = RequestScheduler.schedule(new Request({
-            url : tilesetUrl,
-            requestFunction : loadJson,
-            type : RequestType.TILES3D
-        }));
-
-        if (!defined(promise)) {
-            return undefined;
-        }
-
-        return promise.then(function(tilesetJson) {
-            if (tileset.isDestroyed()) {
+        return RequestScheduler.request(tilesetUrl, loadJson, undefined, RequestType.TILES3D).then(function(tilesetJson) {
+            if (that.isDestroyed()) {
                 return when.reject('tileset is destroyed');
             }
 
@@ -422,9 +422,9 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = joinUrls(tileset._baseUrl, '?v=' + tilesetJson.asset.version);
-            tileset._baseUrl = baseUrl;
-            var rootTile = new Cesium3DTile(tileset, baseUrl, tilesetJson.root, parentTile);
+            var baseUrl = joinUrls(that._baseUrl, '?v=' + tilesetJson.asset.version);
+            that._baseUrl = baseUrl;
+            var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
             // to parentTile's children, and increment its numberOfChildrenWithoutContent
@@ -450,7 +450,7 @@ define([
                     var length = children.length;
                     for (var k = 0; k < length; ++k) {
                         var childHeader = children[k];
-                        var childTile = new Cesium3DTile(tileset, baseUrl, childHeader, tile3D);
+                        var childTile = new Cesium3DTile(that, baseUrl, childHeader, tile3D);
                         tile3D.children.push(childTile);
                         stack.push({
                             header : childHeader,
@@ -904,25 +904,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function loadTiles(tileset) {
-        var promise = tileset.loadTileset(tileset._tilesetUrl, undefined);
-        if (defined(promise)) {
-            tileset._state = Cesium3DTilesetState.LOADING;
-            promise.then(function(data) {
-                var tilesetJson = data.tilesetJson;
-                tileset._state = Cesium3DTilesetState.READY;
-                tileset._asset = tilesetJson.asset;
-                tileset._properties = tilesetJson.properties;
-                tileset._geometricError = tilesetJson.geometricError;
-                tileset._root = data.root;
-                tileset._readyPromise.resolve(tileset);
-            }).otherwise(function(error) {
-                tileset._state = Cesium3DTilesetState.FAILED;
-                tileset._readyPromise.reject(error);
-            });
-        }
-    }
-
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -934,10 +915,6 @@ define([
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status
      */
     Cesium3DTileset.prototype.update = function(frameState) {
-        if (this._state === Cesium3DTilesetState.UNLOADED) {
-            loadTiles(this);
-        }
-
         // TODO: Support 2D and CV
         if (!this.show || !defined(this._root) || (frameState.mode !== SceneMode.SCENE3D)) {
             return;
