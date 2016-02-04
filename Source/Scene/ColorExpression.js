@@ -35,11 +35,11 @@ define([
                 return this._propertyName;
             },
             set : function(value) {
-                // TODO: need to regenerate bins
                 if (this._propertyName !== value) {
                     this._propertyName = value;
-                    setIntervals(this);
                     this._tileset.styleEngine.makeDirty();
+
+                    setIntervals(this);
                 }
             }
         },
@@ -54,8 +54,9 @@ define([
             set : function(value) {
                 // TODO: throw if value is undefined?
                 this._colors = value.slice(0);
-                setIntervals(this);
                 this._tileset.styleEngine.makeDirty();
+
+                setIntervals(this);
             }
         }
     });

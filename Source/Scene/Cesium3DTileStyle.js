@@ -5,14 +5,16 @@ define([
        '../Core/DeveloperError',
        '../Core/freezeObject',
        './BooleanExpression',
-       './ColorExpression'
+       './ColorExpression',
+       './MapColorExpression',
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         freezeObject,
         BooleanExpression,
-        ColorExpression) {
+        ColorExpression,
+        MapColorExpression) {
     "use strict";
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
@@ -51,10 +53,17 @@ define([
          */
         this.timeDynamic = false;
 
+        var color;
+        if (colorExpression.type === 'map') {
+            color = new MapColorExpression(tileset.styleEngine, colorExpression.map);
+        } else if (colorExpression.type === 'ramp') {
+            color = new ColorExpression(tileset, colorExpression.ramp);
+        }
+
         /**
          * DOC_TBA
          */
-        this.color = new ColorExpression(tileset, colorExpression);
+        this.color = color;
 
         /**
          * DOC_TBA
