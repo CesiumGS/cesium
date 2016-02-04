@@ -592,7 +592,8 @@ defineSuite([
         //
         //          C
         //          T (external tileset ref)
-        //          C (root of external tileset)
+        //          E (root of external tileset)
+        //     C  C  C  C
         //
 
         viewRootOnly();
@@ -602,26 +603,21 @@ defineSuite([
             var root = tileset._root;
             expect(root.descendantsWithContent).toBeDefined();
             expect(root.descendantsWithContent.length).toEqual(0);
-            expect(root.selected).toEqual(true);
-            expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
 
             viewAllTiles();
             scene.renderForSpecs();
             return root.children[0].contentReadyPromise.then(function() {
-                // The external tileset json is loaded, but the external tileset root isn't.
+                // The external tileset json is loaded, but the external tileset isn't.
                 scene.renderForSpecs();
-                expect(root.descendantsWithContent.length).toEqual(1);
-                expect(root.selected).toEqual(true);
-                expect(stats.visited).toEqual(2); // Visit root and tileset tile
+                expect(root.descendantsWithContent.length).toEqual(4);
                 expect(stats.numberOfCommands).toEqual(1); // Render root
-                expect(stats.numberOfPendingRequests).toEqual(1); // Loading external tileset root
+                expect(stats.numberOfPendingRequests).toEqual(4); // Loading child content tiles
 
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(root.selected).toEqual(false);
-                    expect(stats.numberOfCommands).toEqual(1); // Render external tileset root
-                    expect(stats.visited).toEqual(3);
+                    expect(stats.numberOfCommands).toEqual(4); // Render child content tiles
                 });
             });
         });
