@@ -1,19 +1,27 @@
 /*global define*/
 define([
-       '../Core/Color',
        '../Core/defaultValue',
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/freezeObject',
-       './BooleanExpression'
+       './BooleanExpression',
+       './ColorExpression'
     ], function(
-        Color,
         defaultValue,
         defined,
         DeveloperError,
         freezeObject,
-        BooleanExpression) {
+        BooleanExpression,
+        ColorExpression) {
     "use strict";
+
+    // TODO: best name/directory for this?  For example, a user may want to evaluate a
+    // style/expression on mouse over, CZML may want to use this to evaluate expressions,
+    // a UI might want to use it, etc.
+
+    var DEFAULT_JSON_COLOR_EXPRESSION = freezeObject({
+        // TODO
+    });
 
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = freezeObject({
         operator : 'true' // Constant expression returning true
@@ -35,8 +43,7 @@ define([
         //>>includeEnd('debug');
 
         jsonStyle = defaultValue(jsonStyle, defaultValue.EMPTY_OBJECT);
-
-        var colorExpression = jsonStyle.color;
+        var colorExpression = defaultValue(jsonStyle.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(jsonStyle.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
 
         /**
@@ -47,31 +54,12 @@ define([
         /**
          * DOC_TBA
          */
-        this.color = {
-            propertyName : colorExpression.propertyName,
-            colors : createBins(tileset.properties[colorExpression.propertyName], colorExpression.autoBins)
-        };
+        this.color = new ColorExpression(tileset, colorExpression);
 
         /**
          * DOC_TBA
          */
         this.show = new BooleanExpression(tileset.styleEngine, showExpression);
-    }
-
-    function createBins(propertyMetadata, colors) {
-        var length = colors.length;
-        var min = propertyMetadata.minimum;
-        var max = propertyMetadata.maximum;
-        var delta = Math.max(max - min, 0) / length;
-        var colorBins = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            colorBins[i] = {
-                maximum : (i !== length - 1) ? Math.ceil(min + ((i + 1) * delta)) : max,
-                color : Color.fromBytes((colors[i])[0], (colors[i])[1], (colors[i])[2])
-            };
-        }
-
-        return colorBins;
     }
 
     return Cesium3DTileStyle;

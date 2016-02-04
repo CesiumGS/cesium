@@ -27,7 +27,9 @@ define([
         this._operand = jsonExpression.operand;
 
         /**
-         * @readonly
+         * DOC_TBA
+         *
+         * @function
          */
         this.evaluate = undefined;
 

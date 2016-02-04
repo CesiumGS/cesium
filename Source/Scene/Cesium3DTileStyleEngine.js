@@ -106,10 +106,11 @@ define([
 
     function styleContent(content, styleEngine) {
         var length = content.featuresLength;
+        var style = styleEngine._style;
 
         styleEngine.statistics.numberOfFeaturesStyled += length;
 
-        if (!defined(styleEngine._style)) {
+        if (!defined(style)) {
             clearStyle(content);
             return;
         }
@@ -118,30 +119,10 @@ define([
         // using Cesium3DTileBatchTableResources.  We might also be able to use less memory
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
-            styleFeature(content.getFeature(i), styleEngine);
+            var feature = content.getFeature(i);
+            feature.color = style.color.evaluate(feature);
+            feature.show = style.show.evaluate(feature);
         }
-    }
-
-    function styleFeature(feature, styleEngine) {
-        var runtimeStyle = styleEngine._style;
-
-        var styleColor = runtimeStyle.color;
-        var value = feature.getProperty(styleColor.propertyName);
-        var colorBins = styleColor.colors;
-        var numberOfBins = colorBins.length;
-
-        // PERFORMANCE_IDEA: colorBins is sorted so replace this linear search with a binary search.
-        // To improve the binary search, instead of making uniform splits, we could make non-uniform
-        // splits based on the histogram of distributed values in the tile
-        for (var j = 0; j < numberOfBins; ++j) {
-            if (value < colorBins[j].maximum) {
-                break;
-            }
-        }
-        j = Math.min(j, numberOfBins - 1); // In case, there is a precision issue
-        feature.color = colorBins[j].color;
-
-        feature.show = runtimeStyle.show.evaluate(feature);
     }
 
     function clearStyle(content) {
