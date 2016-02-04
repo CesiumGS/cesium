@@ -601,7 +601,7 @@ define([
 
         var billboard = targetEntity.billboard;
         if (!defined(billboard)) {
-            billboard = createDefaultBillboard(dataSource);
+            billboard = createDefaultBillboard();
             targetEntity.billboard = billboard;
         }
 
@@ -1641,6 +1641,62 @@ define([
         return deferred.promise;
     }
 
+    function load(dataSource, data, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var sourceUri = options.sourceUri;
+
+        var promise = data;
+        if (typeof data === 'string') {
+            promise = loadBlob(proxyUrl(data, dataSource._proxy));
+            sourceUri = defaultValue(sourceUri, data);
+        }
+
+        return when(promise, function(dataToLoad) {
+            if (dataToLoad instanceof Blob) {
+                return isZipFile(dataToLoad).then(function(isZip) {
+                    if (isZip) {
+                        return loadKmz(dataSource, dataToLoad, sourceUri);
+                    }
+                    return when(readBlobAsText(dataToLoad)).then(function(text) {
+                        //There's no official way to validate if a parse was successful.
+                        //The following check detects the error on various browsers.
+
+                        //IE raises an exception
+                        var kml;
+                        var error;
+                        try {
+                            kml = parser.parseFromString(text, 'application/xml');
+                        } catch (e) {
+                            error = e.toString();
+                        }
+
+                        //The parse succeeds on Chrome and Firefox, but the error
+                        //handling is different in each.
+                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
+                            //Firefox has error information as the firstChild nodeValue.
+                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
+
+                            //Chrome has it in the body text.
+                            if (!msg) {
+                                msg = kml.body.innerText;
+                            }
+
+                            //Return the error
+                            throw new RuntimeError(msg);
+                        }
+                        return loadKml(dataSource, kml, sourceUri, undefined);
+                    });
+                });
+            } else {
+                return when(loadKml(dataSource, dataToLoad, sourceUri, undefined));
+            }
+        }).otherwise(function(error) {
+            dataSource._error.raiseEvent(dataSource, error);
+            console.log(error);
+            return when.reject(error);
+        });
+    }
+
     /**
      * A {@link DataSource} which processes Keyhole Markup Language 2.2 (KML).
      * <p>
@@ -1791,56 +1847,8 @@ define([
 
         DataSource.setLoading(this, true);
 
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var sourceUri = options.sourceUri;
-
-        var promise = data;
-        if (typeof data === 'string') {
-            promise = loadBlob(proxyUrl(data, this._proxy));
-            sourceUri = defaultValue(sourceUri, data);
-        }
-
         var that = this;
-        return when(promise, function(dataToLoad) {
-            if (dataToLoad instanceof Blob) {
-                return isZipFile(dataToLoad).then(function(isZip) {
-                    if (isZip) {
-                        return loadKmz(that, dataToLoad, sourceUri);
-                    }
-                    return when(readBlobAsText(dataToLoad)).then(function(text) {
-                        //There's no official way to validate if a parse was successful.
-                        //The following check detects the error on various browsers.
-
-                        //IE raises an exception
-                        var kml;
-                        var error;
-                        try {
-                            kml = parser.parseFromString(text, 'application/xml');
-                        } catch (e) {
-                            error = e.toString();
-                        }
-
-                        //The pase succeeds on Chrome and Firefox, but the error
-                        //handling is different in each.
-                        if (defined(error) || kml.body || kml.documentElement.tagName === 'parsererror') {
-                            //Firefox has error information as the firstChild nodeValue.
-                            var msg = defined(error) ? error : kml.documentElement.firstChild.nodeValue;
-
-                            //Chrome has it in the body text.
-                            if (!msg) {
-                                msg = kml.body.innerText;
-                            }
-
-                            //Return the error
-                            throw new RuntimeError(msg);
-                        }
-                        return loadKml(that, kml, sourceUri, undefined);
-                    });
-                });
-            } else {
-                return when(loadKml(that, dataToLoad, sourceUri, undefined));
-            }
-        }).otherwise(function(error) {
+        return load(this, data, options).otherwise(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
