@@ -1,12 +1,12 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Points3DTileContentProvider',
+        'Scene/Points3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Points3DTileContentProvider,
+        Points3DTileContent,
         Cartesian3,
         HeadingPitchRange,
         Cesium3DTilesTester,

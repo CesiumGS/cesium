@@ -54,29 +54,29 @@ define([
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Instanced3DModel/README.md|Instanced 3D Model}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      *
-     * @alias Instanced3DModel3DTileContentProvider
+     * @alias Instanced3DModel3DTileContent
      * @constructor
      *
      * @private
      */
-    function Instanced3DModel3DTileContentProvider(tileset, tile, url) {
+    function Instanced3DModel3DTileContent(tileset, tile, url) {
         this._modelInstanceCollection = undefined;
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.contentReadyToProcessPromise = when.defer();
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.readyPromise = when.defer();
 
@@ -84,9 +84,9 @@ define([
         this._features = undefined;
     }
 
-    defineProperties(Instanced3DModel3DTileContentProvider.prototype, {
+    defineProperties(Instanced3DModel3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         featuresLength : {
             get : function() {
@@ -95,7 +95,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         innerContents : {
             get : function() {
@@ -117,16 +117,16 @@ define([
     }
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.hasProperty = function(name) {
+    Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
         return this._batchTableResources.hasProperty(name);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
         var featuresLength = this._modelInstanceCollection.length;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
@@ -143,9 +143,9 @@ define([
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.request = function() {
+    Instanced3DModel3DTileContent.prototype.request = function() {
         var that = this;
 
         var distance = this._tile.distanceToCamera;
@@ -171,9 +171,9 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
+    Instanced3DModel3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -302,39 +302,39 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
         this._batchTableResources.setAllColor(color);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
+    Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(tiles3D, frameState);
+        this._batchTableResources.update(tileset, frameState);
         this._modelInstanceCollection.update(frameState);
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.isDestroyed = function() {
+    Instanced3DModel3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Instanced3DModel3DTileContentProvider.prototype.destroy = function() {
+    Instanced3DModel3DTileContent.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
         this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
 
         return destroyObject(this);
     };
-    return Instanced3DModel3DTileContentProvider;
+    return Instanced3DModel3DTileContent;
 });

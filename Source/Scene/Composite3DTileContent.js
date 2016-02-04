@@ -32,37 +32,37 @@ define([
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      *
-     * @alias Composite3DTileContentProvider
+     * @alias Composite3DTileContent
      * @constructor
      *
      * @private
      */
-    function Composite3DTileContentProvider(tileset, tile, url, factory) {
+    function Composite3DTileContent(tileset, tile, url, factory) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
-        this._contentProviders = [];
+        this._contents = [];
         this._factory = factory;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.contentReadyToProcessPromise = when.defer();
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.readyPromise = when.defer();
     }
 
-    defineProperties(Composite3DTileContentProvider.prototype, {
+    defineProperties(Composite3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+         * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
          */
         featuresLength : {
@@ -72,38 +72,38 @@ define([
         },
 
         /**
-         * Gets the array of {@link Cesium3DTileContentProvider} objects that represent the
+         * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content of the composite's inner tiles, which can also be composites.
          */
         innerContents : {
             get : function() {
-                return this._contentProviders;
+                return this._contents;
             }
         }
     });
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
      * always returns <code>false</code>.  Instead call <code>hasProperty</code> for a tile in the composite.
      */
-    Composite3DTileContentProvider.prototype.hasProperty = function(name) {
+    Composite3DTileContent.prototype.hasProperty = function(name) {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Composite3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
      * always returns <code>undefined</code>.  Instead call <code>getFeature</code> for a tile in the composite.
      */
-    Composite3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Composite3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
     };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.request = function() {
+    Composite3DTileContent.prototype.request = function() {
         var that = this;
 
         var distance = this._tile.distanceToCamera;
@@ -129,9 +129,9 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.initialize = function(arrayBuffer, byteOffset) {
+    Composite3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -174,7 +174,7 @@ define([
             if (defined(contentFactory)) {
                 var content = contentFactory(this._tileset, this._tile, this._url);
                 content.initialize(arrayBuffer, byteOffset);
-                this._contentProviders.push(content);
+                this._contents.push(content);
                 contentPromises.push(content.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
@@ -195,42 +195,42 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
-        var length = this._contentProviders.length;
+    Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+        var length = this._contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].applyDebugSettings(enabled, color);
+            this._contents[i].applyDebugSettings(enabled, color);
         }
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.update = function(tiles3D, context, frameState, commandList) {
-        var length = this._contentProviders.length;
+    Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
+        var length = this._contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].update(tiles3D, context, frameState, commandList);
+            this._contents[i].update(tileset, context, frameState, commandList);
         }
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.isDestroyed = function() {
+    Composite3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Composite3DTileContentProvider.prototype.destroy = function() {
-        var length = this._contentProviders.length;
+    Composite3DTileContent.prototype.destroy = function() {
+        var length = this._contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contentProviders[i].destroy();
+            this._contents[i].destroy();
         }
         return destroyObject(this);
     };
 
-    return Composite3DTileContentProvider;
+    return Composite3DTileContent;
 });

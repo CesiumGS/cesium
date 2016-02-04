@@ -18,35 +18,35 @@ define([
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset whose
      * content points to another 3D Tiles tileset.
      *
-     * @alias Tileset3DTileContentProvider
+     * @alias Tileset3DTileContent
      * @constructor
      *
      * @private
      */
-    function Tileset3DTileContentProvider(tileset, tile, url) {
+    function Tileset3DTileContent(tileset, tile, url) {
         this._tileset = tileset;
         this._tile = tile;
         this._url = url;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.contentReadyToProcessPromise = when.defer();
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.readyPromise = when.defer();
     }
 
-    defineProperties(Tileset3DTileContentProvider.prototype, {
+    defineProperties(Tileset3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         featuresLength : {
             get : function() {
@@ -55,7 +55,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         innerContents : {
             get : function() {
@@ -65,25 +65,25 @@ define([
     });
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Tileset3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
      * always returns <code>false</code> since a tile of this type does not have any features.
      */
-    Tileset3DTileContentProvider.prototype.hasProperty = function(name) {
+    Tileset3DTileContent.prototype.hasProperty = function(name) {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Tileset3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Tileset3DTileContent</code>
      * always returns <code>undefined</code> since a tile of this type does not have any features.
      */
-    Tileset3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Tileset3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContentProvider.prototype.request = function() {
+    Tileset3DTileContent.prototype.request = function() {
         var that = this;
 
         var promise = this._tileset.loadTileset(this._url, this._tile);
@@ -103,30 +103,30 @@ define([
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
+    Tileset3DTileContent.prototype.update = function(tileset, frameState) {
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContentProvider.prototype.isDestroyed = function() {
+    Tileset3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Tileset3DTileContentProvider.prototype.destroy = function() {
+    Tileset3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
 
-    return Tileset3DTileContentProvider;
+    return Tileset3DTileContent;
 });

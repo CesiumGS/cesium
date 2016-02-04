@@ -7,7 +7,7 @@ Change Log
    * `Cesium3DTileset`
    * `Cesium3DTileStyle` and `BooleanExpression`
    * `Cesium3DTile`
-   * `Cesium3DTileContentProvider`
+   * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
    
 TODO: these are still private:

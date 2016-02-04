@@ -16,19 +16,19 @@ define([
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset that
      * do not have content, e.g., because they are used to optimize hierarchical culling.
      *
-     * @alias Empty3DTileContentProvider
+     * @alias Empty3DTileContent
      * @constructor
      *
      * @private
      */
-    function Empty3DTileContentProvider() {
+    function Empty3DTileContent() {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.state = undefined;
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.contentReadyToProcessPromise = when.defer();
 
@@ -37,7 +37,7 @@ define([
         this.contentReadyToProcessPromise.resolve(this);
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         this.readyPromise = when.defer();
 
@@ -46,9 +46,9 @@ define([
         this.readyPromise.resolve(this);
     }
 
-    defineProperties(Empty3DTileContentProvider.prototype, {
+    defineProperties(Empty3DTileContent.prototype, {
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         featuresLength : {
             get : function() {
@@ -57,7 +57,7 @@ define([
         },
 
         /**
-         * Part of the {@link Cesium3DTileContentProvider} interface.
+         * Part of the {@link Cesium3DTileContent} interface.
          */
         innerContents : {
             get : function() {
@@ -67,52 +67,52 @@ define([
     });
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Empty3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
      * always returns <code>false</code> since a tile of this type does not have any features.
      */
-    Empty3DTileContentProvider.prototype.hasProperty = function(name) {
+    Empty3DTileContent.prototype.hasProperty = function(name) {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.  <code>Empty3DTileContentProvider</code>
+     * Part of the {@link Cesium3DTileContent} interface.  <code>Empty3DTileContent</code>
      * always returns <code>undefined</code> since a tile of this type does not have any features.
      */
-    Empty3DTileContentProvider.prototype.getFeature = function(batchId) {
+    Empty3DTileContent.prototype.getFeature = function(batchId) {
         return undefined;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContentProvider.prototype.request = function() {
+    Empty3DTileContent.prototype.request = function() {
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContentProvider.prototype.applyDebugSettings = function(enabled, color) {
+    Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContentProvider.prototype.update = function(tiles3D, frameState) {
+    Empty3DTileContent.prototype.update = function(tileset, frameState) {
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContentProvider.prototype.isDestroyed = function() {
+    Empty3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * Part of the {@link Cesium3DTileContentProvider} interface.
+     * Part of the {@link Cesium3DTileContent} interface.
      */
-    Empty3DTileContentProvider.prototype.destroy = function() {
+    Empty3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
 
-    return Empty3DTileContentProvider;
+    return Empty3DTileContent;
 });
