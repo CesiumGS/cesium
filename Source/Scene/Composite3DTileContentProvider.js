@@ -52,7 +52,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
          */
-        this.processingPromise = when.defer();
+        this.contentReadyToProcessPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
@@ -159,7 +159,7 @@ define([
         byteOffset += sizeOfUint32;
 
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.processingPromise.resolve(this);
+        this.contentReadyToProcessPromise.resolve(this);
 
         var contentPromises = [];
 

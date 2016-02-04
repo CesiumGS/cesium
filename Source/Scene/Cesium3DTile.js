@@ -174,7 +174,7 @@ define([
          *
          * @private
          */
-        this.readyPromise = when.defer();
+        this.contentReadyPromise = when.defer();
 
         var content;
         var hasContent;
@@ -243,12 +243,12 @@ define([
                 --that.parent.numberOfChildrenWithoutContent;
             }
 
-            that.readyPromise.resolve(that);
+            that.contentReadyPromise.resolve(that);
         }).otherwise(function(error) {
             // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
             // and therefore that.parent will never refine.  If this becomes an issue, failed
             // requests can be reissued.
-            that.readyPromise.reject(error);
+            that.contentReadyPromise.reject(error);
         });
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
@@ -348,9 +348,9 @@ define([
          *
          * @private
          */
-        processingPromise : {
+        contentReadyToProcessPromise : {
             get : function() {
-                return this._content.processingPromise;
+                return this._content.contentReadyToProcessPromise;
             }
         },
 
@@ -362,31 +362,38 @@ define([
             get : function() {
                 return this._requestServer;
             }
+        },
+
+        /**
+         * Determines if the tile is ready to render. <code>true</code> if the tile
+         * is ready to render; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        contentReady : {
+            get : function() {
+                return this._content.state === Cesium3DTileContentState.READY;
+            }
+        },
+
+        /**
+         * Determines if the tile's content has not be requested. <code>true</code> if tile's
+         * content has not be requested; otherwise, <code>false</code>.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        contentUnloaded : {
+            get : function () {
+                return this._content.state === Cesium3DTileContentState.UNLOADED;
+            }
         }
     });
-
-    /**
-     * Determines if the tile is ready to render.
-     *
-     * @returns {Boolean} <code>true</code> if the tile is ready to render; otherwise, <code>false</code>.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.isReady = function() {
-        return this._content.state === Cesium3DTileContentState.READY;
-    };
-
-
-    /**
-     * Determines if the tile's content has not be requested.
-     *
-     * @returns {Boolean} <code>true</code> if tile's content has not be requested; otherwise, <code>false</code>.
-     *
-     * @private
-     */
-    Cesium3DTile.prototype.isContentUnloaded = function() {
-        return this._content.state === Cesium3DTileContentState.UNLOADED;
-    };
 
     /**
      * Requests the tile's content.

@@ -73,7 +73,7 @@ define([
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
          */
-        this.processingPromise = when.defer();
+        this.contentReadyToProcessPromise = when.defer();
 
         /**
          * Part of the {@link Cesium3DTileContentProvider} interface.
@@ -288,7 +288,7 @@ define([
         var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
         this._modelInstanceCollection = modelInstanceCollection;
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.processingPromise.resolve(this);
+        this.contentReadyToProcessPromise.resolve(this);
 
         var that = this;
 
