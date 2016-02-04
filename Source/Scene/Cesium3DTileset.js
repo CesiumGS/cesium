@@ -489,7 +489,7 @@ define([
         }
         return ancestor;
     }
-    
+
     function prepareRefiningTiles(refiningTiles) {
         var stack = [];
         var length = refiningTiles.length;
