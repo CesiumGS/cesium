@@ -159,6 +159,10 @@ In order to modify testing configurations, such as default browser or excluding 
 
 It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
 
+#### Run All Tests with WebGL Validation
+
+`npm run test-webgl-validation`
+
 #### Run Only WebGL Tests with Karma
 
 `npm run test-webgl`
