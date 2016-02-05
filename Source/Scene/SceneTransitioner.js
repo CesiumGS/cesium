@@ -10,6 +10,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Ray',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
         '../Core/Transforms',
@@ -28,6 +29,7 @@ define([
         Ellipsoid,
         CesiumMath,
         Matrix4,
+        Ray,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         Transforms,
@@ -395,9 +397,12 @@ define([
     var scratchCVTo2DStartPos = new Cartesian3();
     var scratchCVTo2DStartDir = new Cartesian3();
     var scratchCVTo2DStartUp = new Cartesian3();
+    var scratchCVTo2DEndPos = new Cartesian3();
     var scratchCVTo2DEndDir = new Cartesian3();
     var scratchCVTo2DEndUp = new Cartesian3();
     var scratchCVTo2DFrustum = new OrthographicFrustum();
+    var scratchCVTo2DRay = new Ray();
+    var scratchCVTo2DPickPos = new Cartesian3();
     var scratchCVTo2DCamera = {
         position : undefined,
         direction : undefined,
@@ -411,21 +416,31 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
-        var position = Cartesian3.clone(camera.position, scratchCVTo2DStartPos);
+        var startPos = Cartesian3.clone(camera.position, scratchCVTo2DStartPos);
         var startDir = Cartesian3.clone(camera.direction, scratchCVTo2DStartDir);
         var startUp = Cartesian3.clone(camera.up, scratchCVTo2DStartUp);
 
+        var endPos = Cartesian3.clone(startPos, scratchCVTo2DEndPos);
         var endDir = Cartesian3.negate(Cartesian3.UNIT_Z, scratchCVTo2DEndDir);
         var endUp = Cartesian3.clone(Cartesian3.UNIT_Y, scratchCVTo2DEndUp);
 
+        var ray = scratchCVTo2DRay;
+        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, startPos, ray.origin);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, startDir, ray.direction);
+        var pickPos = scene.globe.pick(ray, scene, scratchCVTo2DPickPos);
+        if (defined(pickPos)) {
+            Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
+            endPos.z += Cartesian3.distance(startPos, endPos);
+        }
+
         var frustum = scratchCVTo2DFrustum;
-        frustum.right = position.z * 0.5;
+        frustum.right = startPos.z * 0.5;
         frustum.left = -frustum.right;
         frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
         frustum.bottom = -frustum.top;
 
         var camera2D = scratchCVTo2DCamera;
-        camera2D.position = position;
+        camera2D.position = endPos;
         camera2D.direction = endDir;
         camera2D.up = endUp;
         camera2D.frustum = frustum;
@@ -434,6 +449,7 @@ define([
         createMorphHandler(transitioner, complete);
 
         function updateCV(value) {
+            columbusViewMorph(startPos, endPos, value.time, camera.position);
             columbusViewMorph(startDir, endDir, value.time, camera.direction);
             columbusViewMorph(startUp, endUp, value.time, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
