@@ -8,7 +8,7 @@ define([
              equalsMethodEqualityTester) {
     "use strict";
 
-    return function (env, includedCategory, excludedCategory) {
+    return function (env, includedCategory, excludedCategory, webglValidation) {
         window.defineSuite = function(deps, name, suite, categories) {
             /*global define,describe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
@@ -102,6 +102,10 @@ define([
                 });
             });
         };
+
+        if (webglValidation) {
+            window.webglValidation = true;
+        }
 
         //env.catchExceptions(true);
 

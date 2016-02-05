@@ -15,8 +15,9 @@
             function(customizeJasmine) {
                 var included = __karma__.config.args[0];
                 var excluded = __karma__.config.args[1];
+                var webglValidation = __karma__.config.args[2];
 
-                customizeJasmine(jasmine.getEnv(), included, excluded);
+                customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation);
 
                 var specFiles = Object.keys(__karma__.files).filter(function(file) {
                     return /Spec\.js$/.test(file);

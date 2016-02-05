@@ -340,6 +340,18 @@ gulp.task('test-webgl', ['build'], function(done) {
     });
 });
 
+gulp.task('test-webgl-validation', ['build'], function(done) {
+    karma.start({
+        configFile: karmaConfigFile,
+        client: {
+            args: ['', '', true]
+        }
+    }, function() {
+        return done();
+    });
+});
+
+
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
 
