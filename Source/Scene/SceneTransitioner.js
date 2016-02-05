@@ -487,6 +487,16 @@ define([
         up2D : new Cartesian3(),
         frustum : new OrthographicFrustum()
     };
+    var scratch3DTo2DEndCamera = {
+        position : new Cartesian3(),
+        direction : new Cartesian3(),
+        up : new Cartesian3(),
+        frustum : undefined
+    };
+    var scratch3DTo2DPickPosition = new Cartesian3();
+    var scratch3DTo2DRay = new Ray();
+    var scratch3DTo2DToENU = new Matrix4();
+    var scratch3DTo2DSurfacePoint = new Cartesian3();
 
     function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
         duration *= 0.5;
@@ -511,15 +521,16 @@ define([
         Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, camera2D.direction2D);
         Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, camera2D.up2D);
 
-        var rayDirection = Cartesian3.clone(camera.directionWC);
-        var surfacePoint = ellipsoid.scaleToGeodeticSurface(camera.positionWC);
-        var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+        var ray = scratch3DTo2DRay;
+        Cartesian3.clone(camera2D.position2D, ray.origin);
+        var rayDirection = Cartesian3.clone(camera.directionWC, ray.direction);
+        var surfacePoint = ellipsoid.scaleToGeodeticSurface(camera.positionWC, scratch3DTo2DSurfacePoint);
+        var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratch3DTo2DToENU);
         Matrix4.inverseTransformation(toENU, toENU);
         Matrix4.multiplyByPointAsVector(toENU, rayDirection, rayDirection);
         Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, rayDirection, rayDirection);
 
-        var ray = new Ray(camera2D.position2D, rayDirection);
-        var pickedPos = scene.globe.pick(ray, scene);
+        var pickedPos = scene.globe.pick(ray, scene, scratch3DTo2DPickPosition);
         if (defined(pickedPos)) {
             var height = Cartesian3.distance(camera2D.position2D, pickedPos);
             pickedPos.x += height;
@@ -530,13 +541,12 @@ define([
             camera.position.x = height;
         }
 
-        var endPos = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, camera2D.position2D, new Cartesian3());
-        var endCamera = {
-            position : endPos,
-            direction : camera2D.direction,
-            up : camera2D.up,
-            frustum : frustum
-        };
+        var endCamera = scratch3DTo2DEndCamera;
+        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, camera2D.position2D, endCamera.position);
+        Cartesian3.clone(camera2D.direction, endCamera.direction);
+        Cartesian3.clone(camera2D.up, endCamera.up);
+        endCamera.frustum = frustum;
+
         var complete = complete2DCallback(endCamera);
         createMorphHandler(transitioner, complete);
 
