@@ -159,6 +159,14 @@ In order to modify testing configurations, such as default browser or excluding 
 
 It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
 
+#### Run Only WebGL Tests with Karma
+
+`npm run test-webgl`
+
+#### Run Only Non-WebGL Tests with Karma
+ 
+ `npm run test-non-webgl`
+
 ## Testing Previous Versions of Cesium
 
 Sometimes it is useful to see if an issue exists in a previous version of Cesium.  The tests for all versions of Cesium back to b15 (April 2013) are hosted on the Cesium website via the [downloads page](http://cesiumjs.org/downloads.html).  Use the "Documentation, Sandcastle, tests, etc." links.
