@@ -511,10 +511,12 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
+        var height = camera.frustum.right - camera.frustum.left;
         camera.frustum = cameraCV.frustum.clone();
+
         var endFOV = camera.frustum.fov;
         var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = cameraCV.position.z * Math.tan(endFOV * 0.5);
+        var d = height * Math.tan(endFOV * 0.5);
         camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
         camera.frustum.fov = startFOV;
 
