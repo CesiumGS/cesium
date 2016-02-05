@@ -21,6 +21,7 @@ var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
+var minimist = require('minimist');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -297,8 +298,38 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
+    var argv = minimist(process.argv.slice(2));
+    console.dir(argv);
+
+    var enableAllBrowsers = false;
+    var includedCategories = '';
+    var excludedCategories = '';
+    var webglValidation = false;
+
+    if (argv.all) {
+        enableAllBrowsers = true;
+    }
+
+    if (argv.include) {
+        includedCategories = argv.include;
+    }
+
+    if (argv.exclude) {
+        excludedCategories = argv.exclude;
+    }
+
+    if (argv.webglValidation) {
+        webglValidation = true;
+    }
+
     karma.start({
-        configFile: karmaConfigFile
+        configFile: karmaConfigFile,
+        detectBrowsers : {
+            enabled: enableAllBrowsers
+        },
+        client: {
+            args: [includedCategories, excludedCategories, webglValidation]
+        }
     }, function() {
         //Failed tests case a return code of 1 to be passed into the callback
         //but we ignore because failing tests don't indicate that the script failed
@@ -306,51 +337,6 @@ gulp.task('test', ['build'], function(done) {
         return done();
     });
 });
-
-gulp.task('test-all', ['build'], function(done) {
-    karma.start({
-        configFile: karmaConfigFile,
-        detectBrowsers: {
-            enabled : true
-        }
-    }, function() {
-        return done();
-    });
-});
-
-gulp.task('test-non-webgl', ['build'], function(done) {
-    karma.start({
-        configFile: karmaConfigFile,
-        client: {
-            args: ['', 'WebGL']
-        }
-    }, function() {
-        return done();
-    });
-});
-
-gulp.task('test-webgl', ['build'], function(done) {
-    karma.start({
-        configFile: karmaConfigFile,
-        client: {
-            args: ['WebGL', '']
-        }
-    }, function() {
-        return done();
-    });
-});
-
-gulp.task('test-webgl-validation', ['build'], function(done) {
-    karma.start({
-        configFile: karmaConfigFile,
-        client: {
-            args: ['', '', true]
-        }
-    }, function() {
-        return done();
-    });
-});
-
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));

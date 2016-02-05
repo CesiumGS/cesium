@@ -57,10 +57,11 @@
     "karma-requirejs": "0.2.2",
     "karma-safari-launcher": "0.1.1",
     "karma-spec-reporter": "0.0.23",
+    "minimist": "1.2.0",
     "mkdirp": "0.5.1",
-    "strip-comments": "0.3.2",
     "request": "2.69.0",
     "rimraf": "2.5.1",
+    "strip-comments": "0.3.2",
     "yargs": "3.32.0"
   },
   "scripts": {
@@ -81,10 +82,10 @@
     "minifyRelease": "gulp minifyRelease",
     "release": "gulp release",
     "test": "gulp test",
-    "test-all": "gulp test-all",
-    "test-webgl": "gulp test-webgl",
-    "test-non-webgl": "gulp test-non-webgl",
-    "test-webgl-validation": "gulp test-webgl-validation",
+    "test-all": "gulp test --all",
+    "test-webgl": "gulp test --include WebGL",
+    "test-non-webgl": "gulp test --exclude WebGL",
+    "test-webgl-validation": "gulp test --webglValidation",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires"
   }
