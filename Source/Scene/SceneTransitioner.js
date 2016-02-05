@@ -492,9 +492,10 @@ define([
         duration *= 0.5;
 
         var scene = transitioner._scene;
+        var camera = scene.camera;
         var camera2D = scratch3DTo2DCamera;
 
-        ellipsoid.cartesianToCartographic(scene.camera.positionWC, scratch3DTo2DCartographic);
+        ellipsoid.cartesianToCartographic(camera.positionWC, scratch3DTo2DCartographic);
         var position = scene.mapProjection.project(scratch3DTo2DCartographic, camera2D.position);
 
         var frustum = camera2D.frustum;
@@ -510,11 +511,33 @@ define([
         Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, camera2D.direction2D);
         Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, camera2D.up2D);
 
+        var rayDirection = Cartesian3.clone(camera.directionWC);
+        var surfacePoint = ellipsoid.scaleToGeodeticSurface(camera.positionWC);
+        var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid);
+        Matrix4.inverseTransformation(toENU, toENU);
+        Matrix4.multiplyByPointAsVector(toENU, rayDirection, rayDirection);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, rayDirection, rayDirection);
+
+        var ray = new Ray(camera2D.position2D, rayDirection);
+        var pickedPos = scene.globe.pick(ray, scene);
+        if (defined(pickedPos)) {
+            var height = Cartesian3.distance(camera2D.position2D, pickedPos);
+            pickedPos.x += height;
+            Cartesian3.clone(pickedPos, camera2D.position2D);
+        }
+
         function updateHeight(camera, height) {
             camera.position.x = height;
         }
 
-        var complete = complete2DCallback(camera2D);
+        var endPos = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, camera2D.position2D, new Cartesian3());
+        var endCamera = {
+            position : endPos,
+            direction : camera2D.direction,
+            up : camera2D.up,
+            frustum : frustum
+        };
+        var complete = complete2DCallback(endCamera);
         createMorphHandler(transitioner, complete);
 
         function completeCallback() {
