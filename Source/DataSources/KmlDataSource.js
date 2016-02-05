@@ -1809,6 +1809,12 @@ define([
         return load(this, this._entityCollection, data, options).then(function() {
             return when.all(that._promises, function() {
                 var clock;
+
+                // TODO: Hack - We need to make the CompositeEntityCollection update its
+                //        lists or else computeAvailability will fail.
+                that._entityCollection.resumeEvents();
+                that._entityCollection.suspendEvents();
+
                 var availability = that._entityCollection.computeAvailability();
 
                 var start = availability.start;
