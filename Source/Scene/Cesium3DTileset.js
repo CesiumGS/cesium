@@ -613,6 +613,7 @@ define([
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
             t.selected = false;
+            t.replaced = false;
             ++stats.visited;
 
             var planeMask = t.visibility(cullingVolume);
@@ -742,6 +743,7 @@ define([
                             stack.push(child);
                         }
 
+                        t.replaced = true;
                         if (defined(t.descendantsWithContent)) {
                             scratchRefiningTiles.push(t);
                         }
@@ -768,8 +770,7 @@ define([
             var descendantsLength = refiningTile.descendantsWithContent.length;
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
-                if (!descendant.selected) {
-                    // TODO: also check that its visible
+                if (!descendant.selected && !descendant.replaced) {
                     refinable = false;
                     break;
                 }

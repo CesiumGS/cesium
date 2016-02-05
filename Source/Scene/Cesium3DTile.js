@@ -278,6 +278,13 @@ define([
          */
         this.selected = false;
 
+        /**
+         * Marks if the tile is replaced this frame.
+         *
+         * @type {Boolean}
+         */
+        this.replaced = false;
+
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
         this._debugColor = new Color.fromRandom({ alpha : 1.0 });
