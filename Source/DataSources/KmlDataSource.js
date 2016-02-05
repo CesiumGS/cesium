@@ -1482,6 +1482,12 @@ define([
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
+    var RefreshMode = {
+        INTERVAL : 0,
+        EXPIRE : 1,
+        STOP : 2
+    }
+
     function processNetworkLink(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         var networkEntity = r.entity;
@@ -1492,15 +1498,70 @@ define([
             if (defined(linkUrl)) {
                 linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
                 var networkLinkCompositeCollection = new CompositeEntityCollection();
-                var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function() {
+                networkLinkCompositeCollection.suspendEvents();
+                var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
                     compositeEntityCollection.addCollection(networkLinkCompositeCollection);
-                    var entities = networkLinkCompositeCollection.getCollection(0).entities.values;
+                    var entities = networkLinkCompositeCollection.getCollection(0).values;
                     for (var i = 0; i < entities.length; i++) {
                         entities[i].parent = networkEntity;
                     }
+                    networkLinkCompositeCollection.resumeEvents();
+
+                    // Add network links to a list if we need they will need to be updated
+                    var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
+                    var refreshInterval = defaultValue(queryNumericValue(link, 'refreshInterval', namespaces.kml), 0);
+                    var viewRefreshMode = queryNumericValue(link, 'viewRefreshMode', namespaces.kml);
+                    if ((refreshMode === 'onInterval' && refreshInterval > 0 ) || (refreshMode === 'onExpire') || (viewRefreshMode === 'onStop')) {
+                        var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
+                        var hasNetworkLinkControl = defined(networkLinkControl);
+
+                        var networkLinkInfo = {
+                            href : linkUrl,
+                            collection : networkLinkCompositeCollection,
+                            parentCollection : compositeEntityCollection,
+                            lastUpdated : JulianDate.now(),
+                            updating : false
+                        };
+
+                        if (hasNetworkLinkControl) {
+                            var cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
+                            networkLinkInfo.href += cookie;
+                        }
+
+                        if (refreshMode === 'onInterval') {
+                            if (hasNetworkLinkControl) {
+                                var minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+                                refreshInterval = Math.max(minRefreshPeriod, refreshInterval);
+                            }
+                            networkLinkInfo.refreshMode = RefreshMode.INTERVAL;
+                            networkLinkInfo.time = refreshInterval;
+                        } else if (refreshMode === 'onExpire') {
+                            if (hasNetworkLinkControl) {
+                                var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
+                                if (defined(expires)) {
+                                    try {
+                                        var date = JulianDate.fromIso8601(expires);
+                                        networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
+                                        networkLinkInfo.time = date;
+                                    } catch (e) {
+                                        // Invalid date/time - Ignore it
+                                    }
+                                }
+                            }
+                        } else {
+                            networkLinkInfo.refreshMode = RefreshMode.STOP;
+                            networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
+                        }
+
+                        if (defined(networkLinkInfo.refreshMode)) {
+                            dataSource._networkLinks.push(networkLinkInfo);
+                        }
+                    }
                 });
 
-                dataSource._promises.push(promise);
+                if (defined(dataSource._promises)) {
+                    dataSource._promises.push(promise);
+                }
             }
         }
     }
@@ -1553,7 +1614,7 @@ define([
             }
             processFeatureNode(dataSource, element, undefined, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
 
-            deferred.resolve();
+            deferred.resolve(kml.documentElement);
         });
 
         return deferred.promise;
@@ -1695,6 +1756,7 @@ define([
         this._proxy = proxy;
         this._pinBuilder = new PinBuilder();
         this._promises = [];
+        this._networkLinks = [];
     }
 
     /**
@@ -1862,6 +1924,10 @@ define([
                 }
 
                 DataSource.setLoading(that, false);
+
+                // We don't need to add anymore
+                that._promises = undefined;
+
                 return that;
             });
         }).otherwise(function(error) {
@@ -1870,6 +1936,136 @@ define([
             console.log(error);
             return when.reject(error);
         });
+    };
+
+    /**
+     * Updates any NetworkLink that require updating
+     * @function
+     *
+     * @param {JulianDate} time The simulation time.
+     * @returns {Boolean} True if this data source is ready to be displayed at the provided time, false otherwise.
+     */
+    KmlDataSource.prototype.update = function(time) {
+        var networkLinks = this._networkLinks;
+        var now = JulianDate.now();
+        var that = this;
+
+        var collectionsToIgnore = [];
+        function recurseIgnoreCompositeCollections(collection) {
+            var count = collection.getCollectionsLength();
+            for (var i=0;i<count;++i) {
+                var child = collection.getCollection(i);
+                if (child instanceof CompositeEntityCollection) {
+                    collectionsToIgnore.push(child);
+                    recurseIgnoreCompositeCollections(child);
+                }
+            }
+        }
+
+        function getNetworkLinkUpdateCallback(networkLink, newCompositeCollection, networkLinks) {
+            return function(rootElement) {
+                var remove = false;
+                var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
+                var refreshMode = networkLink.refreshMode;
+                if (refreshMode === RefreshMode.INTERVAL) {
+                    if (defined(networkLinkControl)) {
+                        var minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+                        networkLink.time = Math.max(minRefreshPeriod, networkLink.time);
+                    }
+                } else if (refreshMode === RefreshMode.EXPIRE) {
+                    if (defined(networkLinkControl)) {
+                        var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
+                        if (defined(expires)) {
+                            try {
+                                var date = JulianDate.fromIso8601(expires);
+                                networkLink.time = date;
+                            } catch (e) {
+                                remove = true;
+                            }
+                        } else {
+                            remove = true;
+                        }
+                    } else {
+                        remove = true;
+                    }
+                }
+
+                // No refresh information remove it, otherwise update lastUpdate time
+                if (remove) {
+                    networkLinks.splice(networkLinks.indexOf(networkLink), 1);
+                } else {
+                    networkLink.lastUpdated = JulianDate.now();
+                }
+                var parentCollection = networkLink.parentCollection;
+                parentCollection.suspendEvents();
+                parentCollection.removeCollection(networkLink.collection);
+                parentCollection.addCollection(newCompositeCollection);
+                networkLink.collection = newCompositeCollection;
+                newCompositeCollection.resumeEvents();
+                parentCollection.resumeEvents();
+
+                var availability = that._entityCollection.computeAvailability();
+
+                var start = availability.start;
+                var stop = availability.stop;
+                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+                if (!isMinStart || !isMaxStop) {
+                    var clock = that._clock;
+
+                    if (clock.startTime !== start ||  clock.stopTime !== stop) {
+                        clock.startTime = start;
+                        clock.stopTime = stop;
+                        that._changed.raiseEvent(that);
+                    }
+                }
+
+                networkLink.updating = false;
+            };
+        }
+
+        var newNetworkLinks = [];
+        var changed = false;
+        networkLinks.forEach(function(networkLink) {
+            var collection = networkLink.collection;
+            if (collectionsToIgnore.indexOf(collection) !== -1) {
+                return;
+            }
+
+            if (!networkLink.updating) {
+                var doUpdate = false;
+                if (networkLink.refreshMode === RefreshMode.INTERVAL) {
+                    if (JulianDate.secondsDifference(now, networkLink.lastUpdated) > networkLink.time) {
+                        doUpdate = true;
+                    }
+                }
+                else if (networkLink.refreshMode === RefreshMode.EXPIRE) {
+                    if (JulianDate.greaterThan(now, networkLink.time)) {
+                        doUpdate = true;
+                    }
+
+                }/* else if (networkLink.refreshMode === RefreshMode.STOP) {
+
+                }*/
+
+                if (doUpdate) {
+                    recurseIgnoreCompositeCollections(collection);
+                    networkLink.updating = true;
+                    var newCompositeCollection = new CompositeEntityCollection();
+                    newCompositeCollection.suspendEvents();
+                    load(that, newCompositeCollection, networkLink.href)
+                        .then(getNetworkLinkUpdateCallback(networkLink, newCompositeCollection, newNetworkLinks));
+                    changed = true;
+                }
+            }
+            newNetworkLinks.push(networkLink);
+        });
+
+        if (changed) {
+            this._networkLinks = newNetworkLinks;
+        }
+
+        return true;
     };
 
     /**
