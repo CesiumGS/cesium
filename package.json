@@ -57,7 +57,6 @@
     "karma-requirejs": "0.2.2",
     "karma-safari-launcher": "0.1.1",
     "karma-spec-reporter": "0.0.23",
-    "minimist": "1.2.0",
     "mkdirp": "0.5.1",
     "request": "2.69.0",
     "rimraf": "2.5.1",

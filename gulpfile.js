@@ -21,7 +21,7 @@ var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
-var minimist = require('minimist');
+var yargs = require('yargs');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -298,8 +298,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
-    var argv = minimist(process.argv.slice(2));
-    console.dir(argv);
+    var argv = yargs.argv;
 
     var enableAllBrowsers = false;
     var includedCategories = '';
