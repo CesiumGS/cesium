@@ -4,6 +4,7 @@
 @import url(./CesiumWidget/CesiumWidget.css);
 @import url(./CesiumInspector/CesiumInspector.css);
 @import url(./FullscreenButton/FullscreenButton.css);
+@import url(./VRButton/VRButton.css);
 @import url(./Geocoder/Geocoder.css);
 @import url(./InfoBox/InfoBox.css);
 @import url(./SceneModePicker/SceneModePicker.css);

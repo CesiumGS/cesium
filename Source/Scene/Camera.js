@@ -1648,7 +1648,7 @@ define([
      * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
      * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
@@ -1714,7 +1714,7 @@ define([
      * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
      * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
@@ -2433,7 +2433,7 @@ define([
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
-     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
@@ -2579,7 +2579,7 @@ define([
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center. If the range is
      * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
      * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
@@ -2621,7 +2621,7 @@ define([
      * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center. If the range is
      * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
      * <p>In 2D and Columbus View, there must be a top down view. The camera will be placed above the target looking down. The height above the
@@ -2629,7 +2629,7 @@ define([
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere to view, in world coordinates.
      * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.

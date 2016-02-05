@@ -52,14 +52,6 @@ define([
         // the ellipsoid is significantly smoother than actual terrain.
         this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
-        var width = 16;
-        var height = 16;
-        this._terrainData = new HeightmapTerrainData({
-            buffer : new Uint8Array(width * height),
-            width : 16,
-            height : 16
-        });
-
         this._errorEvent = new Event();
         this._readyPromise = when.resolve(true);
     }
@@ -168,7 +160,13 @@ define([
      *          pending and the request will be retried later.
      */
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, throttleRequests) {
-        return this._terrainData;
+        var width = 16;
+        var height = 16;
+        return new HeightmapTerrainData({
+            buffer : new Uint8Array(width * height),
+            width : width,
+            height : height
+        });
     };
 
     /**

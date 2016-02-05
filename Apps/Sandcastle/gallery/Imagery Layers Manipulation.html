@@ -139,7 +139,7 @@ function setupLayers() {
             }));
     addBaseLayerOption(
             'Natural Earth II (local)',
-            new Cesium.TileMapServiceImageryProvider({
+            Cesium.createTileMapServiceImageryProvider({
                 url : require.toUrl('Assets/Textures/NaturalEarthII')
             }));
     addBaseLayerOption(
@@ -181,7 +181,7 @@ function setupLayers() {
             }));
     addAdditionalLayerOption(
             'TileMapService Image',
-            new Cesium.TileMapServiceImageryProvider({
+            Cesium.createTileMapServiceImageryProvider({
                 url : '../images/cesium_maptiler/Cesium_Logo_Color'
             }),
             0.2);

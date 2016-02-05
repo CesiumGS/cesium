@@ -18,6 +18,7 @@ define([
         'Cesium/Scene/TileMapServiceImageryProvider',
         'Cesium/Scene/BingMapsImageryProvider',
         'Cesium/Scene/UrlTemplateImageryProvider',
+        'Cesium/Scene/createTileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -41,6 +42,7 @@ define([
         TileMapServiceImageryProvider,
         BingMapsImageryProvider,
         UrlTemplateImageryProvider,
+        createTileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
@@ -63,7 +65,7 @@ define([
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
-        imageryProvider = new TileMapServiceImageryProvider({
+        imageryProvider = createTileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
