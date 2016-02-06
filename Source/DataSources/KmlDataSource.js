@@ -1570,31 +1570,50 @@ define([
         return result;
     }
 
-    function processNetworkLinkQueryString(camera, queryString, viewBoundScale) {
+    function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
         if (defined(camera)) {
-            var rectangle = computeViewRectangle(camera, viewBoundScale);
-            queryString = queryString.replace('[bboxWest]', CesiumMath.toDegrees(rectangle.west).toString());
-            queryString = queryString.replace('[bboxSouth]', CesiumMath.toDegrees(rectangle.south).toString());
-            queryString = queryString.replace('[bboxEast]', CesiumMath.toDegrees(rectangle.east).toString());
-            queryString = queryString.replace('[bboxNorth]', CesiumMath.toDegrees(rectangle.north).toString());
+            bbox = defaultValue(bbox, computeViewRectangle(camera));
+            if (defined(viewBoundScale) && CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
+                // TODO: Scale bbox
+            }
+
+            queryString = queryString.replace('[bboxWest]', CesiumMath.toDegrees(bbox.west).toString());
+            queryString = queryString.replace('[bboxSouth]', CesiumMath.toDegrees(bbox.south).toString());
+            queryString = queryString.replace('[bboxEast]', CesiumMath.toDegrees(bbox.east).toString());
+            queryString = queryString.replace('[bboxNorth]', CesiumMath.toDegrees(bbox.north).toString());
 
             // TODO: Give correct values
             queryString = queryString.replace('[lookatLon]', '');
             queryString = queryString.replace('[lookatLat]', '');
-            queryString = queryString.replace('[lookatRange]', '');
-            queryString = queryString.replace('[lookatTilt]', '');
+            queryString = queryString.replace('[lookatRange]', CesiumMath.toDegrees(camera.heading).toString());
+            queryString = queryString.replace('[lookatTilt]', CesiumMath.toDegrees(camera.pitch).toString());
             queryString = queryString.replace('[lookatHeading]', '');
             queryString = queryString.replace('[lookatTerrainLon]', '');
             queryString = queryString.replace('[lookatTerrainLat]', '');
             queryString = queryString.replace('[lookatTerrainAlt]', '');
 
-            queryString = queryString.replace('[cameraLon]', '');
-            queryString = queryString.replace('[cameraLat]', '');
-            queryString = queryString.replace('[cameraAlt]', '');
-            queryString = queryString.replace('[horizFov]', '');
-            queryString = queryString.replace('[vertFov]', '');
-            queryString = queryString.replace('[horizPixels]', '');
-            queryString = queryString.replace('[vertPixels]', '');
+            Ellipsoid.WGS84.cartesianToCartographic(camera.positionWC, scratchCartograhic);
+
+            queryString = queryString.replace('[cameraLon]', CesiumMath.toDegrees(scratchCartograhic.longitude).toString());
+            queryString = queryString.replace('[cameraLat]', CesiumMath.toDegrees(scratchCartograhic.latitude).toString());
+            queryString = queryString.replace('[cameraAlt]', CesiumMath.toDegrees(scratchCartograhic.height).toString());
+
+            var frustum = camera.frustum;
+            var aspectRatio = frustum.aspectRatio;
+            var horizFov = '';
+            var vertFov = '';
+            if (defined(aspectRatio)) {
+                var fov = CesiumMath.toDegrees(frustum.fov);
+                if (aspectRatio > 1.0) {
+                    horizFov = fov;
+                    vertFov = fov / aspectRatio;
+                } else {
+                    vertFov = fov;
+                    horizFov = fov * aspectRatio;
+                }
+            }
+            queryString = queryString.replace('[horizFov]', horizFov.toString());
+            queryString = queryString.replace('[vertFov]', vertFov.toString());
         } else {
             queryString = queryString.replace('[bboxWest]', '-180');
             queryString = queryString.replace('[bboxSouth]', '-90');
@@ -1615,6 +1634,12 @@ define([
             queryString = queryString.replace('[cameraAlt]', '');
             queryString = queryString.replace('[horizFov]', '');
             queryString = queryString.replace('[vertFov]', '');
+        }
+
+        if (defined(canvas)) {
+            queryString = queryString.replace('[horizPixels]', canvas.width);
+            queryString = queryString.replace('[vertPixels]', canvas.height);
+        } else {
             queryString = queryString.replace('[horizPixels]', '');
             queryString = queryString.replace('[vertPixels]', '');
         }
@@ -1646,7 +1671,7 @@ define([
 
                 var networkLinkCompositeCollection = new CompositeEntityCollection();
                 networkLinkCompositeCollection.suspendEvents();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, href + '?' + queryString, viewBoundScale);
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, href + '?' + queryString, viewBoundScale);
 
                 var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
                     compositeEntityCollection.addCollection(networkLinkCompositeCollection);
@@ -1708,7 +1733,6 @@ define([
                             if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
                                 networkLinkInfo.refreshMode = RefreshMode.STOP;
                                 networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
-                                dataSource._hasOnStopRefreshes = true;
                             } else {
                                 console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
                             }
@@ -1896,7 +1920,8 @@ define([
      * @constructor
      *
      * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
-     * @param {Camera} [camera] A camera that is used when network link's viewRefreshMode is onStop.
+     * @param {Camera} [camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
+     * @param {Canvas} [canvas] The canvas that is used for sending viewer properties to network links.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -1907,7 +1932,7 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
-    function KmlDataSource(proxy, camera) {
+    function KmlDataSource(proxy, camera, canvas) {
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
@@ -1920,7 +1945,7 @@ define([
         this._promises = [];
         this._networkLinks = [];
 
-        this._hasOnStopRefreshes = false;
+        this._canvas = canvas;
         this._camera = camera;
         this._lastCameraView = undefined;
         if (defined(camera)) {
@@ -1929,7 +1954,8 @@ define([
                 direction : Cartesian3.clone(camera.directionWC),
                 up : Cartesian3.clone(camera.upWC),
                 time : JulianDate.now(),
-                needsUpdate : false
+                needsUpdate : false,
+                bbox : computeViewRectangle(camera)
             };
         }
     }
@@ -1941,12 +1967,14 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Camera} [options.camera] A camera that is used when network link's viewRefreshMode is onStop.
+     * @param {Camera} [options.camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
+     * @param {Canvas} [options.canvas] The canvas that is used for sending viewer properties to network links.
+     *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
     KmlDataSource.load = function(data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var dataSource = new KmlDataSource(options.proxy, options.camera);
+        var dataSource = new KmlDataSource(options.proxy, options.camera, options.canvas);
         return dataSource.load(data, options);
     };
 
@@ -2219,10 +2247,10 @@ define([
 
         var lastCameraView = this._lastCameraView;
         var camera = this._camera;
-        if (this._hasOnStopRefreshes &&
-            !(camera.positionWC.equals(lastCameraView.position) &&
-              camera.directionWC.equals(lastCameraView.direction) &&
-              camera.up.equals(lastCameraView.up))) {
+        if (defined(camera) &&
+            !(camera.positionWC.equalsEpsilon(lastCameraView.position, CesiumMath.EPSILON7) &&
+              camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
+              camera.up.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
 
             // Camera has changed so update the last view
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
@@ -2230,6 +2258,7 @@ define([
             lastCameraView.up = Cartesian3.clone(camera.upWC);
             lastCameraView.time = now;
             lastCameraView.needsUpdate = true;
+            lastCameraView.bbox = computeViewRectangle(camera);
         }
 
         var newNetworkLinks = [];
@@ -2255,7 +2284,6 @@ define([
                 } else if (networkLink.refreshMode === RefreshMode.STOP) {
                     if (lastCameraView.needsUpdate && JulianDate.secondsDifference(now, lastCameraView.time) > networkLink.time) {
                         doUpdate = true;
-                        lastCameraView.needsUpdate = false;
                     }
                 }
 
@@ -2265,7 +2293,7 @@ define([
                     var newCompositeCollection = new CompositeEntityCollection();
                     newCompositeCollection.suspendEvents();
                     var href = networkLink.href + '?' + makeQueryString(networkLink.cookie, networkLink.queryString);
-                    href = processNetworkLinkQueryString(that._camera, href, networkLink.viewBoundScale);
+                    href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newCompositeCollection, href)
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newCompositeCollection, newNetworkLinks));
                     changed = true;
@@ -2276,6 +2304,7 @@ define([
 
         if (changed) {
             this._networkLinks = newNetworkLinks;
+            lastCameraView.needsUpdate = false;
         }
 
         return true;
