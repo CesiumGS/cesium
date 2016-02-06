@@ -1486,7 +1486,7 @@ define([
         INTERVAL : 0,
         EXPIRE : 1,
         STOP : 2
-    }
+    };
 
     function processNetworkLink(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
@@ -1515,22 +1515,25 @@ define([
                         var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
                         var hasNetworkLinkControl = defined(networkLinkControl);
 
+                        var now = JulianDate.now();
                         var networkLinkInfo = {
                             href : linkUrl,
+                            cookie : '',
                             collection : networkLinkCompositeCollection,
                             parentCollection : compositeEntityCollection,
-                            lastUpdated : JulianDate.now(),
-                            updating : false
+                            lastUpdated : now,
+                            updating : false,
+                            entity : networkEntity
                         };
 
+                        var minRefreshPeriod;
                         if (hasNetworkLinkControl) {
-                            var cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
-                            networkLinkInfo.href += cookie;
+                            networkLinkInfo.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
+                            minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
                         }
 
                         if (refreshMode === 'onInterval') {
                             if (hasNetworkLinkControl) {
-                                var minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
                                 refreshInterval = Math.max(minRefreshPeriod, refreshInterval);
                             }
                             networkLinkInfo.refreshMode = RefreshMode.INTERVAL;
@@ -1541,6 +1544,9 @@ define([
                                 if (defined(expires)) {
                                     try {
                                         var date = JulianDate.fromIso8601(expires);
+                                        if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
+                                            JulianDate.addSeconds(now, minRefreshPeriod, date);
+                                        }
                                         networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
                                         networkLinkInfo.time = date;
                                     } catch (e) {
@@ -1966,10 +1972,18 @@ define([
             return function(rootElement) {
                 var remove = false;
                 var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
+                var hasNetworkLinkControl = defined(networkLinkControl);
+
+                var minRefreshPeriod;
+                if (hasNetworkLinkControl) {
+                    networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
+                    minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+                }
+
+                var now = JulianDate.now();
                 var refreshMode = networkLink.refreshMode;
                 if (refreshMode === RefreshMode.INTERVAL) {
                     if (defined(networkLinkControl)) {
-                        var minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
                         networkLink.time = Math.max(minRefreshPeriod, networkLink.time);
                     }
                 } else if (refreshMode === RefreshMode.EXPIRE) {
@@ -1978,6 +1992,9 @@ define([
                         if (defined(expires)) {
                             try {
                                 var date = JulianDate.fromIso8601(expires);
+                                if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
+                                    JulianDate.addSeconds(now, minRefreshPeriod, date);
+                                }
                                 networkLink.time = date;
                             } catch (e) {
                                 remove = true;
@@ -1990,11 +2007,17 @@ define([
                     }
                 }
 
+                var networkLinkEntity = networkLink.entity;
+                var entities = newCompositeCollection.getCollection(0).values;
+                for (var i = 0; i < entities.length; i++) {
+                    entities[i].parent = networkLinkEntity;
+                }
+
                 // No refresh information remove it, otherwise update lastUpdate time
                 if (remove) {
                     networkLinks.splice(networkLinks.indexOf(networkLink), 1);
                 } else {
-                    networkLink.lastUpdated = JulianDate.now();
+                    networkLink.lastUpdated = now;
                 }
                 var parentCollection = networkLink.parentCollection;
                 parentCollection.suspendEvents();
@@ -2053,7 +2076,7 @@ define([
                     networkLink.updating = true;
                     var newCompositeCollection = new CompositeEntityCollection();
                     newCompositeCollection.suspendEvents();
-                    load(that, newCompositeCollection, networkLink.href)
+                    load(that, newCompositeCollection, networkLink.href + networkLink.cookie)
                         .then(getNetworkLinkUpdateCallback(networkLink, newCompositeCollection, newNetworkLinks));
                     changed = true;
                 }
