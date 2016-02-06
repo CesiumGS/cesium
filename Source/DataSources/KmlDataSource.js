@@ -1585,9 +1585,9 @@ define([
             // TODO: Give correct values
             queryString = queryString.replace('[lookatLon]', '');
             queryString = queryString.replace('[lookatLat]', '');
-            queryString = queryString.replace('[lookatRange]', CesiumMath.toDegrees(camera.heading).toString());
+            queryString = queryString.replace('[lookatRange]', '');
             queryString = queryString.replace('[lookatTilt]', CesiumMath.toDegrees(camera.pitch).toString());
-            queryString = queryString.replace('[lookatHeading]', '');
+            queryString = queryString.replace('[lookatHeading]', CesiumMath.toDegrees(camera.heading).toString());
             queryString = queryString.replace('[lookatTerrainLon]', '');
             queryString = queryString.replace('[lookatTerrainLat]', '');
             queryString = queryString.replace('[lookatTerrainAlt]', '');
