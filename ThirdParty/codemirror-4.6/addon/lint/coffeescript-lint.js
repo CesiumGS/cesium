@@ -13,7 +13,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.registerHelper("lint", "coffeescript", function(text) {
   var found = [];

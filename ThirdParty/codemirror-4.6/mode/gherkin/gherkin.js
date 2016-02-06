@@ -24,7 +24,7 @@ Report bugs/issues here: https://github.com/marijnh/CodeMirror/issues
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("gherkin", function () {
   return {

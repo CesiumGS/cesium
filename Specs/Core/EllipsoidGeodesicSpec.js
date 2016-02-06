@@ -9,7 +9,7 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('throws without start', function() {
         expect(function() {

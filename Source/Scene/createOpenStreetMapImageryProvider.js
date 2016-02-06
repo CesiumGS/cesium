@@ -13,7 +13,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');

@@ -3,7 +3,7 @@ define([
 	"./Promise",
 	"../Evented"
 ], function(lang, Promise, Evented){
-	"use strict";
+	'use strict';
 
 	// module:
 	//		dojo/promise/tracer

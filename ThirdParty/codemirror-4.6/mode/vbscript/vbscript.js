@@ -20,7 +20,7 @@ E.G.:
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("vbscript", function(conf, parserConf) {
     var ERRORCLASS = 'error';

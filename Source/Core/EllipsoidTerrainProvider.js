@@ -19,7 +19,7 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * A very simple {@link TerrainProvider} that produces geometry by tessellating an ellipsoidal

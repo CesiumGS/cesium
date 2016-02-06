@@ -17,7 +17,7 @@ define([
         Ellipsoid,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A two dimensional region specified as longitude and latitude coordinates.

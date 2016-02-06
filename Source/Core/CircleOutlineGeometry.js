@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipseOutlineGeometry,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a circle on the ellipsoid.

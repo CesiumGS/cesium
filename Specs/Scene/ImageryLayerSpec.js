@@ -45,7 +45,7 @@ defineSuite([
         createContext,
         createFrameState,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var context;
     var frameState;

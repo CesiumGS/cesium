@@ -9,7 +9,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Math functions.

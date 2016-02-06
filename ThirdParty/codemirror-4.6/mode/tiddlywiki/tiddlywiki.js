@@ -26,7 +26,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("tiddlywiki", function () {
   // Tokenizer

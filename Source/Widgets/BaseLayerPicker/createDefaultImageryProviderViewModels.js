@@ -17,7 +17,7 @@ define([
         MapboxImageryProvider,
         TileMapServiceImageryProvider,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

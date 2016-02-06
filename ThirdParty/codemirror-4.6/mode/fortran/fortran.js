@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("fortran", function() {
   function words(array) {

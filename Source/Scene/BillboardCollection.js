@@ -61,7 +61,7 @@ define([
         Pass,
         SceneMode,
         TextureAtlas) {
-    "use strict";
+    'use strict';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;

@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineOption("fullScreen", false, function(cm, val, old) {
     if (old == CodeMirror.Init) old = false;

@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   function keywords(str) {
     var obj = {}, words = str.split(" ");

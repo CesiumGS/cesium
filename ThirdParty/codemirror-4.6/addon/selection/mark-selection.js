@@ -15,7 +15,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineOption("styleSelectedText", false, function(cm, val, old) {
     var prev = old && old != CodeMirror.Init;

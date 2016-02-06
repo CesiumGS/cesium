@@ -13,7 +13,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     var west = -0.9;
     var south = 0.5;

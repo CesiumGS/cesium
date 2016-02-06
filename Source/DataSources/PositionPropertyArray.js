@@ -17,7 +17,7 @@ define([
         EventHelper,
         ReferenceFrame,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link PositionProperty} whose value is an array whose items are the computed value

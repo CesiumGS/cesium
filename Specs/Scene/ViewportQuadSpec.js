@@ -19,7 +19,7 @@ defineSuite([
         Material,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     var viewportQuad;

@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.runMode = function(string, modespec, callback, options) {
   var mode = CodeMirror.getMode(CodeMirror.defaults, modespec);

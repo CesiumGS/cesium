@@ -7,7 +7,7 @@ define([
         defined,
         Ellipsoid,
         PolylineVolumeOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     function createPolylineVolumeOutlineGeometry(polylineVolumeOutlineGeometry, offset) {
         if (defined(offset)) {

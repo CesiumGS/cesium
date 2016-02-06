@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.registerGlobalHelper("fold", "comment", function(mode) {
   return mode.blockCommentStart && mode.blockCommentEnd;

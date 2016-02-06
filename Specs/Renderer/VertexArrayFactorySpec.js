@@ -25,7 +25,7 @@ defineSuite([
         ShaderProgram,
         VertexArray,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
     var va;

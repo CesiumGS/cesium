@@ -23,12 +23,12 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMIME("text/x-erlang", "erlang");
 
 CodeMirror.defineMode("erlang", function(cmCfg) {
-  "use strict";
+  'use strict';
 
 /////////////////////////////////////////////////////////////////////////////
 // constants

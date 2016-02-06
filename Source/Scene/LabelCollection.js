@@ -29,7 +29,7 @@ define([
         LabelStyle,
         TextureAtlas,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into

@@ -51,7 +51,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
   // declare global: tern
 
   CodeMirror.TernServer = function(options) {

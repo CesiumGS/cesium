@@ -13,7 +13,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("lua", function(config, parserConfig) {
   var indentUnit = config.indentUnit;

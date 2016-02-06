@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineMode("jinja2", function() {
     var keywords = ["and", "as", "block", "endblock", "by", "cycle", "debug", "else", "elif",

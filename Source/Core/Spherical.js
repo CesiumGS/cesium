@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A set of curvilinear 3-dimensional coordinates.

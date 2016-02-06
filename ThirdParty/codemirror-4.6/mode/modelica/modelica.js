@@ -13,7 +13,7 @@
 })
 
 (function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineMode("modelica", function(config, parserConfig) {
 

@@ -3,7 +3,7 @@ define([
         'DataSources/ColorMaterialProperty'
     ], function(
         ColorMaterialProperty) {
-    "use strict";
+    'use strict';
 
     function testMaterialDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');

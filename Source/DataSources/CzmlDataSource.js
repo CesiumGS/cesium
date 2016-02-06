@@ -143,7 +143,7 @@ define([
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     var currentId;
 

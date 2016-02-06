@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();

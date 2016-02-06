@@ -182,7 +182,7 @@ defineSuite([
         'Core/Cartesian3'
     ], function(
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();
@@ -568,7 +568,7 @@ defineSuite([
     ], function(
         DebugModelMatrixPrimitive,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 

@@ -33,7 +33,7 @@ defineSuite([
         OrthographicFrustum,
         VerticalOrigin,
         createScene) {
-    "use strict";
+    'use strict';
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 

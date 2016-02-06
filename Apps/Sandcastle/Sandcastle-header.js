@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
 
     var defaultAction;
     var bucket = window.location.href;

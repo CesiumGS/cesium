@@ -17,7 +17,7 @@ define([
         createPropertyDescriptor,
         NodeTransformationProperty,
         PropertyBag) {
-    "use strict";
+    'use strict';
 
     function createNodeTransformationProperty(value) {
         return new NodeTransformationProperty(value);

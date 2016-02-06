@@ -19,7 +19,7 @@ define([
         PolylineFS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
     var defaultFragmentShaderSource = PolylineFS;

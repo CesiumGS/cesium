@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a {@link Packable} number that always interpolates values

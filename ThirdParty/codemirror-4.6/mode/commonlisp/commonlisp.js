@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("commonlisp", function (config) {
   var assumeBody = /^with|^def|^do|^prog|case$|^cond$|bind$|when$|unless$/;

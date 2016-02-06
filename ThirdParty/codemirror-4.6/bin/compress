@@ -20,7 +20,7 @@
 // or mode/xml/xml to be more precise. In fact, even the .js suffix
 // may be speficied, if wanted.
 
-"use strict";
+'use strict';
 
 var fs = require("fs");
 

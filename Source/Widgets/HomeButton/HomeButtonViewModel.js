@@ -23,7 +23,7 @@ define([
         SceneMode,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     var pitchScratch = new Cartesian3();
     function viewHome(scene, duration) {

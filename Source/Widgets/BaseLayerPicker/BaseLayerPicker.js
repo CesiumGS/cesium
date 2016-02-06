@@ -17,7 +17,7 @@ define([
         knockout,
         getElement,
         BaseLayerPickerViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * <span style="display: block; text-align: center;">

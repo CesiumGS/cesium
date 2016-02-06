@@ -79,7 +79,7 @@ define([
         SelectionIndicator,
         subscribeAndEvaluate,
         Timeline) {
-    "use strict";
+    'use strict';
 
     var boundingSphereScratch = new BoundingSphere();
 

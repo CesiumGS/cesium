@@ -27,7 +27,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
     var cos = Math.cos;

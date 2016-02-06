@@ -13,7 +13,7 @@ define([
         getImagePixels,
         loadImageViaBlob,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A policy for discarding tile images that match a known image containing a

@@ -41,7 +41,7 @@ define([
         BlendingState,
         CullFace,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * An atmosphere drawn around the limb of the provided ellipsoid.  Based on

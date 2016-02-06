@@ -15,7 +15,7 @@
   else // Plain browser env
     this.CodeMirror = mod();
 })(function() {
-  "use strict";
+  'use strict';
 
   // BROWSER SNIFFING
 

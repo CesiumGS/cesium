@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Given a URI, returns the base path of the URI.

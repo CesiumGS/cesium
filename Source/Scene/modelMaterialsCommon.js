@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     function webGLConstantToGlslType(webGLValue) {
         switch(webGLValue) {

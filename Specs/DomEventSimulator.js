@@ -3,7 +3,7 @@ define([
         'Core/defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     function createMouseEvent(type, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

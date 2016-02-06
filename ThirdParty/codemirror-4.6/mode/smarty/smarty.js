@@ -13,10 +13,10 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("smarty", function(config) {
-  "use strict";
+  'use strict';
 
   // our default settings; check to see if they're overridden
   var settings = {

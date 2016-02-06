@@ -27,7 +27,7 @@ define([
         Matrix4,
         Plane,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * A bounding sphere with a center and a radius.

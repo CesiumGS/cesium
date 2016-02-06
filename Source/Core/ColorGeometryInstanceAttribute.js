@@ -13,7 +13,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Value and type information for per-instance geometry color.

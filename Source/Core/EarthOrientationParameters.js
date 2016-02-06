@@ -25,7 +25,7 @@ define([
         RuntimeError,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.

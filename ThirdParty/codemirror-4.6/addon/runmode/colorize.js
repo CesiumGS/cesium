@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var isBlock = /^(p|li|div|h\\d|pre|blockquote|td)$/;
 

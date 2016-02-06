@@ -15,7 +15,7 @@ define([
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState) {
-    "use strict";
+    'use strict';
 
     var colorScratch = new Color();
 

@@ -13,7 +13,7 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         Entity) {
-    "use strict";
+    'use strict';
 
     function CollectionListener() {
         this.timesCalled = 0;

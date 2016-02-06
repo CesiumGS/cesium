@@ -49,7 +49,7 @@ define([
         CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * The camera is defined by a position, orientation, and view frustum.

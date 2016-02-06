@@ -37,7 +37,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
-    "use strict";
+    'use strict';
 
     /**
      * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into

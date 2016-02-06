@@ -45,7 +45,7 @@ define([
         TerrainState,
         TileBoundingBox,
         TileTerrain) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and

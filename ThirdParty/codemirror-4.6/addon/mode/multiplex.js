@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.multiplexingMode = function(outer /*, others */) {
   // Others should be {open, close, mode [, delimStyle] [, innerStyle]} objects

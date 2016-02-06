@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
   var GUTTER_ID = "CodeMirror-lint-markers";
 
   function showTooltip(e, content) {

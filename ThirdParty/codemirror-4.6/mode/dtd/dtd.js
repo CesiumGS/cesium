@@ -16,7 +16,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("dtd", function(config) {
   var indentUnit = config.indentUnit, type;

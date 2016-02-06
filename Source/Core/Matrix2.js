@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.

@@ -19,7 +19,7 @@ defineSuite([
         Entity,
         createScene,
         MockDataSource) {
-    "use strict";
+    'use strict';
 
     var dataSourceCollection;
     var scene;

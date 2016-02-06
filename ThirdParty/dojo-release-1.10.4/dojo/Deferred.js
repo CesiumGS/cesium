@@ -5,7 +5,7 @@ define([
 	"./promise/Promise",
 	"./has!config-deferredInstrumentation?./promise/instrumentation"
 ], function(has, lang, CancelError, Promise, instrumentation){
-	"use strict";
+	'use strict';
 
 	// module:
 	//		dojo/Deferred

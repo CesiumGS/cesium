@@ -21,7 +21,7 @@ define([
         Rectangle,
         when,
         ImageryLayer) {
-    "use strict";
+    'use strict';
 
     /**
      * An ordered collection of imagery layers.

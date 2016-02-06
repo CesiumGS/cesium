@@ -3,7 +3,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The render pass for a command.

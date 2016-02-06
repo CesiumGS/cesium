@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         ConstantProperty) {
-    "use strict";
+    'use strict';
 
     return function(value) {
         var property = new ConstantProperty(value);

@@ -1,5 +1,5 @@
 define(["./has"], function(has){
-	"use strict";
+	'use strict';
 	var hasJSON = typeof JSON != "undefined";
 	has.add("json-parse", hasJSON); // all the parsers work fine
 		// Firefox 3.5/Gecko 1.9 fails to use replacer in stringify properly https://bugzilla.mozilla.org/show_bug.cgi?id=509184

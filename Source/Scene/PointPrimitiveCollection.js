@@ -55,7 +55,7 @@ define([
         Pass,
         PointPrimitive,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX;

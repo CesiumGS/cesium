@@ -17,7 +17,7 @@ define([
         PerInstanceFlatColorAppearanceFS,
         PerInstanceFlatColorAppearanceVS,
         Appearance) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for {@link GeometryInstance} instances with color attributes.

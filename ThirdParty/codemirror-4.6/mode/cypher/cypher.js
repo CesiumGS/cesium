@@ -12,7 +12,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
   var wordRegexp = function(words) {
     return new RegExp("^(?:" + words.join("|") + ")$", "i");
   };

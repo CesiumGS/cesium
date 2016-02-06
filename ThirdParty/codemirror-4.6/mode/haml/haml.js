@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
   // full haml mode. This handled embeded ruby and html fragments too
   CodeMirror.defineMode("haml", function(config) {

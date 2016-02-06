@@ -17,7 +17,7 @@ define([
         PolygonPipeline,
         PolylinePipeline,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     /**
      * private

@@ -27,7 +27,7 @@ define([
         Uri,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.

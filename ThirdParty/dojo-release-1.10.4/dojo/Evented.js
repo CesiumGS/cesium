@@ -2,7 +2,7 @@ define(["./aspect", "./on"], function(aspect, on){
 	// module:
 	//		dojo/Evented
 
- 	"use strict";
+ 	'use strict';
  	var after = aspect.after;
 	function Evented(){
 		// summary:

@@ -17,7 +17,7 @@ defineSuite([
         Matrix3,
         Matrix4,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

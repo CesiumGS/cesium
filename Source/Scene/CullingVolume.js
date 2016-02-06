@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Intersect,
         Plane) {
-    "use strict";
+    'use strict';
 
     /**
      * The culling volume defined by planes.

@@ -15,7 +15,7 @@ define([
         PolylineColorAppearanceVS,
         PolylineCommon,
         Appearance) {
-    "use strict";
+    'use strict';
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;

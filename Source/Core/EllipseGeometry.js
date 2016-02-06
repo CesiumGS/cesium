@@ -45,7 +45,7 @@ define([
         PrimitiveType,
         Quaternion,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();

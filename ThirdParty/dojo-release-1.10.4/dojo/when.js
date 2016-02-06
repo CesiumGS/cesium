@@ -2,7 +2,7 @@ define([
 	"./Deferred",
 	"./promise/Promise"
 ], function(Deferred, Promise){
-	"use strict";
+	'use strict';
 
 	// module:
 	//		dojo/when

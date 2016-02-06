@@ -29,7 +29,7 @@ defineSuite([
         Plane,
         Rectangle,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);

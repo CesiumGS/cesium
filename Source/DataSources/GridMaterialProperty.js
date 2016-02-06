@@ -17,7 +17,7 @@ define([
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultCellAlpha = 0.1;

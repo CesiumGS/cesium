@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     var _supportsFullscreen;
     var _names = {

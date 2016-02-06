@@ -47,7 +47,7 @@ define([
         DiscardMissingTileImagePolicy,
         ImageryLayerFeatureInfo,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are

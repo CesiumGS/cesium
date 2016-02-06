@@ -3,7 +3,7 @@ define([
         '../Core/ComponentDatatype'
     ], function(
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     var ComponentsPerAttribute = {
         SCALAR : 1,

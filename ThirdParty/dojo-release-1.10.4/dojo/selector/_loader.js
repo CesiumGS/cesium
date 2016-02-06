@@ -1,7 +1,7 @@
 define(["../has", "require"],
 		function(has, require){
 
-"use strict";
+'use strict';
 var testDiv = document.createElement("div");
 has.add("dom-qsa2.1", !!testDiv.querySelectorAll);
 has.add("dom-qsa3", function(){

@@ -17,7 +17,7 @@ define([
         Ellipsoid,
         CesiumMath,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.

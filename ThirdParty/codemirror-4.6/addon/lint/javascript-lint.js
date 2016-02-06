@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
   // declare global: JSHINT
 
   var bogus = [ "Dangerous comment" ];

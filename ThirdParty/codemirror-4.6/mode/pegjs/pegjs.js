@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("pegjs", function (config) {
   var jsMode = CodeMirror.getMode(config, "javascript");

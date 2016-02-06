@@ -15,7 +15,7 @@ define([
         EventHelper,
         JulianDate,
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model which exposes a {@link Clock} for user interfaces.
