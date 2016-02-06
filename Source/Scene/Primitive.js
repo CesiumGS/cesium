@@ -318,11 +318,16 @@ define([
         this._colorCommands = [];
         this._pickCommands = [];
 
+        this._readOnlyInstanceAttributes = options._readOnlyInstanceAttributes;
+
         this._createBoundingVolumeFunction = options._createBoundingVolumeFunction;
         this._createRenderStatesFunction = options._createRenderStatesFunction;
         this._createShaderProgramFunction = options._createShaderProgramFunction;
         this._createCommandsFunction = options._createCommandsFunction;
         this._updateAndQueueCommandsFunction = options._updateAndQueueCommandsFunction;
+
+        this._createPickOffsets = options._createPickOffsets;
+        this._pickOffsets = undefined;
 
         this._createGeometryResults = undefined;
         this._ready = false;
@@ -834,7 +839,8 @@ define([
                 allowPicking : allowPicking,
                 vertexCacheOptimize : primitive.vertexCacheOptimize,
                 compressVertices : primitive.compressVertices,
-                modelMatrix : primitive.modelMatrix
+                modelMatrix : primitive.modelMatrix,
+                createPickOffsets : primitive._createPickOffsets
             }, transferableObjects), transferableObjects);
 
             primitive._createGeometryResults = undefined;
@@ -848,6 +854,7 @@ define([
                 primitive._perInstanceAttributeLocations = result.perInstanceAttributeLocations;
                 primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
                 primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
+                primitive._pickOffsets = result.pickOffsets;
 
                 var validInstancesIndices = packedResult.validInstancesIndices;
                 var invalidInstancesIndices = packedResult.invalidInstancesIndices;
@@ -929,7 +936,8 @@ define([
             allowPicking : allowPicking,
             vertexCacheOptimize : primitive.vertexCacheOptimize,
             compressVertices : primitive.compressVertices,
-            modelMatrix : primitive.modelMatrix
+            modelMatrix : primitive.modelMatrix,
+            createPickOffsets : primitive._createPickOffsets
         });
 
         primitive._geometries = result.geometries;
@@ -938,6 +946,7 @@ define([
         primitive._perInstanceAttributeLocations = result.vaAttributeLocations;
         primitive.modelMatrix = Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
         primitive._validModelMatrix = !Matrix4.equals(primitive.modelMatrix, Matrix4.IDENTITY);
+        primitive._pickOffsets = result.pickOffsets;
 
         for (i = 0; i < invalidInstances.length; ++i) {
             instance = invalidInstances[i];
@@ -1441,6 +1450,8 @@ define([
         };
     }
 
+    var readOnlyInstanceAttributesScratch = ['boundingSphere', 'boundingSphereCV'];
+    
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
@@ -1496,7 +1507,28 @@ define([
                     get : createGetFunction(name, perInstanceAttributes)
                 };
 
-                if (name !== 'boundingSphere' && name !== 'boundingSphereCV') {
+                var createSetter = true;
+                var readOnlyAttributes = readOnlyInstanceAttributesScratch;
+                length = readOnlyAttributes.length;
+                for (var j = 0; j < length; ++j) {
+                    if (name === readOnlyInstanceAttributesScratch[j]) {
+                        createSetter = false;
+                        break;
+                    }
+                }
+
+                readOnlyAttributes = this._readOnlyInstanceAttributes;
+                if (createSetter && defined(readOnlyAttributes)) {
+                    length = readOnlyAttributes.length;
+                    for (var k = 0; k < length; ++k) {
+                        if (name === readOnlyAttributes[k]) {
+                            createSetter = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (createSetter) {
                     properties[name].set = createSetFunction(name, perInstanceAttributes, this._dirtyAttributes);
                 }
             }

@@ -57,7 +57,6 @@ defineSuite([
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
-    var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
@@ -522,6 +521,20 @@ defineSuite([
         });
     });
 
+    it('Throws because of invalid extension', function() {
+        return loadJson(boxUrl).then(function(gltf) {
+            gltf.extensionsUsed = ['CESIUM_binary_glTF'];
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
+
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+            primitives.remove(model);
+        });
+    });
+
     it('loads a glTF v0.8 model', function() {
         return loadModel(cesiumAir_0_8Url, {
             minimumPixelSize : 1
@@ -557,31 +570,6 @@ defineSuite([
         return loadModel(texturedBoxCustomUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
-        });
-    });
-
-    it('renders a model with the CESIUM_binary_glTF extension', function() {
-        return loadModel(texturedBoxBinaryUrl).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
-    });
-
-    it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
-        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            return loadModelJson(arrayBuffer).then(function(model) {
-                verifyRender(model);
-                primitives.remove(model);
-            });
-        });
-    });
-
-    it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
-        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
-                verifyRender(model);
-                primitives.remove(model);
-            });
         });
     });
 

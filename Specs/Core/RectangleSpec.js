@@ -501,6 +501,74 @@ defineSuite([
         expect(Rectangle.intersection(rectangle1, rectangle2)).not.toBeDefined();
         expect(Rectangle.intersection(rectangle2, rectangle1)).not.toBeDefined();
     });
+    
+    it('union works without a result parameter', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+        var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('union works with a result parameter', function() {
+        var rectangle1 = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var rectangle2 = new Rectangle(0.4, 0.0, 0.85, 0.8);
+        var expected = new Rectangle(0.4, 0.0, 0.85, 0.9);
+        var result = new Rectangle(-1.0, -1.0, 10.0, 10.0);
+        var returnedResult = Rectangle.union(rectangle1, rectangle2, result);
+        expect(result).toBe(returnedResult);
+        expect(returnedResult).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow right', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.85, 0.5);
+        var expected = new Rectangle(0.5, 0.1, 0.85, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow left', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.4, 0.5);
+        var expected = new Rectangle(0.4, 0.1, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow up', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 1.0);
+        var expected = new Rectangle(0.5, 0.1, 0.75, 1.0);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle needs to grow down', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 0.0);
+        var expected = new Rectangle(0.5, 0.0, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works if rectangle does not need to grow', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.6, 0.5);
+        var expected = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var result = Rectangle.expand(rectangle, cartographic);
+        expect(result).toEqual(expected);
+    });
+
+    it('expand works with a result parameter', function() {
+        var rectangle = new Rectangle(0.5, 0.1, 0.75, 0.9);
+        var cartographic = new Cartographic(0.85, 1.0);
+        var expected = new Rectangle(0.5, 0.1, 0.85, 1.0);
+        var result = new Rectangle();
+        var returnedResult = Rectangle.expand(rectangle, cartographic, result);
+        expect(returnedResult).toBe(returnedResult);
+        expect(result).toEqual(expected);
+    });
 
     it('contains works', function() {
         var rectangle = new Rectangle(west, south, east, north);
@@ -646,6 +714,32 @@ defineSuite([
         var rectangle = new Rectangle(west, south, east, north);
         expect(function() {
             Rectangle.intersection(rectangle, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('union throws with no rectangle', function() {
+        expect(function() {
+            Rectangle.union(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('union throws with no otherRectangle', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        expect(function() {
+            Rectangle.intersection(rectangle, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('expand throws with no rectangle', function() {
+        expect(function() {
+            Rectangle.expand(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('expand throws with no cartographic', function() {
+        var rectangle = new Rectangle(west, south, east, north);
+        expect(function() {
+            Rectangle.expand(rectangle, undefined);
         }).toThrowDeveloperError();
     });
 

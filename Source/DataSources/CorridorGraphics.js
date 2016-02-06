@@ -29,8 +29,8 @@ define([
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
      * @param {Property} [options.width] A numeric Property specifying the distance between the edges of the corridor.
      * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the corridor.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the corridor is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the corridor.

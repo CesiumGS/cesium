@@ -253,6 +253,7 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
         camera.frustum = createOrthographicFrustum();
+        camera.update(scene.mode);
         var frustum = camera.frustum;
         var destination = Cartesian3.clone(camera.position);
         destination.z = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);

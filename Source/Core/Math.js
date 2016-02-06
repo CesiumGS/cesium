@@ -781,6 +781,25 @@ define([
     };
 
     /**
+     * Finds the logarithm of a number to a base.
+     *
+     * @param {Number} number The number.
+     * @param {Number} base The base.
+     * @returns {Number} The result.
+     */
+    CesiumMath.logBase = function(number, base) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(number)) {
+            throw new DeveloperError('number is required.');
+        }
+        if (!defined(base)) {
+            throw new DeveloperError('base is required.');
+        }
+        //>>includeEnd('debug');
+        return Math.log(number) / Math.log(base);
+    };
+
+    /**
      * @private
      */
     CesiumMath.fog = function(distanceToCamera, density) {

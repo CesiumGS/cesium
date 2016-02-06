@@ -169,6 +169,20 @@ define([
         return event;
     }
 
+    function createDeviceOrientationEvent(type, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var canBubble = defaultValue(options.canBubble, true);
+        var cancelable = defaultValue(options.cancelable, true);
+        var alpha = defaultValue(options.alpha, 0.0);
+        var beta = defaultValue(options.beta, 0.0);
+        var gamma = defaultValue(options.gamma, 0.0);
+        var absolute = defaultValue(options.absolute, false);
+
+        var event = document.createEvent('DeviceOrientationEvent');
+        event.initDeviceOrientationEvent(type, canBubble, cancelable, alpha, beta, gamma, absolute);
+        return event;
+    }
+
     var DomEventSimulator = {
         fireMouseDown : function(element, options) {
             element.dispatchEvent(createMouseEvent('mousedown', options));
@@ -208,6 +222,9 @@ define([
         },
         firePointerMove : function(element, options) {
             element.dispatchEvent(createPointerEvent('pointermove', options));
+        },
+        fireDeviceOrientation : function(element, options) {
+            element.dispatchEvent(createDeviceOrientationEvent('deviceorientation', options));
         },
         fireMockEvent : function(eventHandler, event) {
             eventHandler.call(window, event);
