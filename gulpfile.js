@@ -280,7 +280,7 @@ gulp.task('generateStubs', ['build'], function(done) {
     var contents = '\
 /*global define,Cesium*/\n\
 (function() {\n\
-'use strict';\n\
+"use strict";\n\
 /*jshint sub:true*/\n';
     var modulePathMappings = [];
 
@@ -301,7 +301,7 @@ define(\'' + moduleId + '\', function() {\n\
     var paths = '\
 /*global define*/\n\
 define(function() {\n\
-    'use strict';\n\
+    "use strict";\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
     };\n\
 });';
@@ -620,7 +620,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 //This file is automatically rebuilt by the Cesium build process.\n\
 /*global define*/\n\
 define(function() {\n\
-    'use strict';\n\
+    "use strict";\n\
     return "' + contents + '";\n\
 });';
 
@@ -665,7 +665,7 @@ define([\n' +
                        '\n    ], function(\n' +
                        contents.amdClassName +
                        ') {\n\
-                           'use strict';\n\
+                           "use strict";\n\
                            return {\n' + contents.builtinLookup + '};\n\
 });';
 
@@ -699,7 +699,7 @@ function createCesiumJs() {
     var contents = '\
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
-  'use strict';\n\
+  "use strict";\n\
   /*jshint sub:true*/\n\
   var Cesium = {\n\
     VERSION : "' + version + '",\n\
