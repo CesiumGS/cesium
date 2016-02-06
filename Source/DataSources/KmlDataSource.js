@@ -1510,7 +1510,7 @@ define([
                     // Add network links to a list if we need they will need to be updated
                     var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
                     var refreshInterval = defaultValue(queryNumericValue(link, 'refreshInterval', namespaces.kml), 0);
-                    var viewRefreshMode = queryNumericValue(link, 'viewRefreshMode', namespaces.kml);
+                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
                     if ((refreshMode === 'onInterval' && refreshInterval > 0 ) || (refreshMode === 'onExpire') || (viewRefreshMode === 'onStop')) {
                         var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
                         var hasNetworkLinkControl = defined(networkLinkControl);
@@ -1555,8 +1555,13 @@ define([
                                 }
                             }
                         } else {
-                            networkLinkInfo.refreshMode = RefreshMode.STOP;
-                            networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
+                            if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
+                                networkLinkInfo.refreshMode = RefreshMode.STOP;
+                                networkLinkInfo.time = defaultValue(queryNumericValue(link, 'viewRefreshTime', namespaces.kml), 0);
+                                dataSource._hasOnStopRefreshes = true;
+                            } else {
+                                console.log('A NetworkLink with viewRefreshMode=onStop requires a camera be passed in when creating the KmlDataSource');
+                            }
                         }
 
                         if (defined(networkLinkInfo.refreshMode)) {
@@ -1741,6 +1746,7 @@ define([
      * @constructor
      *
      * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
+     * @param {Camera} [camera] A camera that is used when network link's viewRefreshMode is onStop.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -1751,7 +1757,7 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
      */
-    function KmlDataSource(proxy) {
+    function KmlDataSource(proxy, camera) {
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
@@ -1763,6 +1769,19 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = [];
+
+        this._hasOnStopRefreshes = false;
+        this._camera = camera;
+        this._lastCameraView = undefined;
+        if (defined(camera)) {
+            this._lastCameraView = {
+                position : Cartesian3.clone(camera.positionWC),
+                direction : Cartesian3.clone(camera.directionWC),
+                up : Cartesian3.clone(camera.upWC),
+                time : JulianDate.now(),
+                needsUpdate : false
+            };
+        }
     }
 
     /**
@@ -1772,11 +1791,12 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @param {Camera} [options.camera] A camera that is used when network link's viewRefreshMode is onStop.
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
     KmlDataSource.load = function(data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var dataSource = new KmlDataSource(options.proxy);
+        var dataSource = new KmlDataSource(options.proxy, options.camera);
         return dataSource.load(data, options);
     };
 
@@ -2047,6 +2067,22 @@ define([
             };
         }
 
+        var lastCameraView = this._lastCameraView;
+        var camera = this._camera;
+        if (this._hasOnStopRefreshes &&
+            !(camera.positionWC.equals(lastCameraView.position) &&
+              camera.directionWC.equals(lastCameraView.direction) &&
+              camera.up.equals(lastCameraView.up))) {
+
+            // Camera has changed so update the last view
+            lastCameraView.position = Cartesian3.clone(camera.positionWC);
+            lastCameraView.direction = Cartesian3.clone(camera.directionWC);
+            lastCameraView.up = Cartesian3.clone(camera.upWC);
+            lastCameraView.time = now;
+            lastCameraView.needsUpdate = true;
+        }
+
+        //var bbox;
         var newNetworkLinks = [];
         var changed = false;
         networkLinks.forEach(function(networkLink) {
@@ -2067,9 +2103,14 @@ define([
                         doUpdate = true;
                     }
 
-                }/* else if (networkLink.refreshMode === RefreshMode.STOP) {
-
-                }*/
+                } else if (networkLink.refreshMode === RefreshMode.STOP) {
+                    if (lastCameraView.needsUpdate && JulianDate.secondsDifference(now, lastCameraView.time) > networkLink.time) {
+                        doUpdate = true;
+                        lastCameraView.needsUpdate = false;
+                        //if (!defined(bbox)) {
+                        //}
+                    }
+                }
 
                 if (doUpdate) {
                     recurseIgnoreCompositeCollections(collection);
