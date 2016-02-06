@@ -3,6 +3,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/Color',
@@ -58,6 +59,7 @@ define([
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         ClockRange,
         ClockStep,
         Color,
@@ -1488,17 +1490,164 @@ define([
         STOP : 2
     };
 
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
+    var scratchCartograhic = new Cartographic();
+    function computeViewRectangle(camera) {
+        var wgs84 = Ellipsoid.WGS84;
+        var radii = wgs84.radii;
+        var p = camera.positionWC;
+
+        // Find the corresponding position in the scaled space of the ellipsoid.
+        var q = Cartesian3.multiplyComponents(wgs84.oneOverRadii, p, scratchCartesian1);
+
+        var qMagnitude = Cartesian3.magnitude(q);
+        var qUnit = Cartesian3.normalize(q, scratchCartesian2);
+
+        // Determine the east and north directions at q.
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3), scratchCartesian3);
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian4), scratchCartesian4);
+
+        // Determine the radius of the 'limb' of the ellipsoid.
+        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
+
+        // Compute the center and offsets.
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian1);
+        var scalar = wMagnitude / qMagnitude;
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
+
+
+        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
+        var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
+        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+        wgs84.cartesianToCartographic(upperLeft, scratchCartograhic);
+        var result = new Rectangle(scratchCartograhic.longitude, scratchCartograhic.latitude,
+            scratchCartograhic.longitude, scratchCartograhic.latitude);
+
+        var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
+        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+        wgs84.cartesianToCartographic(lowerLeft, scratchCartograhic);
+        Rectangle.expand(result, scratchCartograhic, result);
+
+        var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+        wgs84.cartesianToCartographic(upperRight, scratchCartograhic);
+        Rectangle.expand(result, scratchCartograhic, result);
+
+        var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
+        Cartesian3.add(lowerRight, eastOffset, lowerRight);
+        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+        wgs84.cartesianToCartographic(lowerRight, scratchCartograhic);
+        Rectangle.expand(result, scratchCartograhic, result);
+
+        return result;
+    }
+
+    function makeQueryString() {
+        var result = '';
+        for(var i=0;i<arguments.length;++i) {
+            var arg = arguments[i];
+            if (defined(arg) && arg.length > 0) {
+                var argFirst = arg.charAt(0);
+                if (argFirst === '?' || argFirst === '&') {
+                    arg.splice(0, 1);
+                }
+
+                var last = result.slice(-1);
+                if (result.length > 0 && last !== '?' && last !== '&') {
+                    result += '&';
+                }
+                result += arguments[i];
+            }
+        }
+
+        return result;
+    }
+
+    function processNetworkLinkQueryString(camera, queryString, viewBoundScale) {
+        if (defined(camera)) {
+            var rectangle = computeViewRectangle(camera, viewBoundScale);
+            queryString = queryString.replace('[bboxWest]', CesiumMath.toDegrees(rectangle.west).toString());
+            queryString = queryString.replace('[bboxSouth]', CesiumMath.toDegrees(rectangle.south).toString());
+            queryString = queryString.replace('[bboxEast]', CesiumMath.toDegrees(rectangle.east).toString());
+            queryString = queryString.replace('[bboxNorth]', CesiumMath.toDegrees(rectangle.north).toString());
+
+            // TODO: Give correct values
+            queryString = queryString.replace('[lookatLon]', '');
+            queryString = queryString.replace('[lookatLat]', '');
+            queryString = queryString.replace('[lookatRange]', '');
+            queryString = queryString.replace('[lookatTilt]', '');
+            queryString = queryString.replace('[lookatHeading]', '');
+            queryString = queryString.replace('[lookatTerrainLon]', '');
+            queryString = queryString.replace('[lookatTerrainLat]', '');
+            queryString = queryString.replace('[lookatTerrainAlt]', '');
+
+            queryString = queryString.replace('[cameraLon]', '');
+            queryString = queryString.replace('[cameraLat]', '');
+            queryString = queryString.replace('[cameraAlt]', '');
+            queryString = queryString.replace('[horizFov]', '');
+            queryString = queryString.replace('[vertFov]', '');
+            queryString = queryString.replace('[horizPixels]', '');
+            queryString = queryString.replace('[vertPixels]', '');
+        } else {
+            queryString = queryString.replace('[bboxWest]', '-180');
+            queryString = queryString.replace('[bboxSouth]', '-90');
+            queryString = queryString.replace('[bboxEast]', '180');
+            queryString = queryString.replace('[bboxNorth]', '90');
+
+            queryString = queryString.replace('[lookatLon]', '');
+            queryString = queryString.replace('[lookatLat]', '');
+            queryString = queryString.replace('[lookatRange]', '');
+            queryString = queryString.replace('[lookatTilt]', '');
+            queryString = queryString.replace('[lookatHeading]', '');
+            queryString = queryString.replace('[lookatTerrainLon]', '');
+            queryString = queryString.replace('[lookatTerrainLat]', '');
+            queryString = queryString.replace('[lookatTerrainAlt]', '');
+
+            queryString = queryString.replace('[cameraLon]', '');
+            queryString = queryString.replace('[cameraLat]', '');
+            queryString = queryString.replace('[cameraAlt]', '');
+            queryString = queryString.replace('[horizFov]', '');
+            queryString = queryString.replace('[vertFov]', '');
+            queryString = queryString.replace('[horizPixels]', '');
+            queryString = queryString.replace('[vertPixels]', '');
+        }
+
+        queryString = queryString.replace('[terrainEnabled]', '1');
+        queryString = queryString.replace('[clientVersion]', '1.18'); // TODO: Correct version?
+        queryString = queryString.replace('[kmlVersion]', '2.2');
+        queryString = queryString.replace('[clientName]', 'Cesium');
+        queryString = queryString.replace('[language]', 'English');
+
+        return queryString;
+    }
+
     function processNetworkLink(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
         var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
         if (defined(link)) {
-            var linkUrl = queryStringValue(link, 'href', namespaces.kml);
-            if (defined(linkUrl)) {
-                linkUrl = resolveHref(linkUrl, undefined, sourceUri, uriResolver);
+            var href = queryStringValue(link, 'href', namespaces.kml);
+            if (defined(href)) {
+                href = resolveHref(href, undefined, sourceUri, uriResolver);
+                var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
+                var viewBoundScale = defaultValue(queryStringValue(link, 'viewBoundScale', namespaces.kml), 1.0);
+                var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
+                var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
+                var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
+                var queryString = makeQueryString(viewFormat, httpQuery);
+
                 var networkLinkCompositeCollection = new CompositeEntityCollection();
                 networkLinkCompositeCollection.suspendEvents();
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, href + '?' + queryString, viewBoundScale);
+
                 var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
                     compositeEntityCollection.addCollection(networkLinkCompositeCollection);
                     var entities = networkLinkCompositeCollection.getCollection(0).values;
@@ -1510,20 +1659,21 @@ define([
                     // Add network links to a list if we need they will need to be updated
                     var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
                     var refreshInterval = defaultValue(queryNumericValue(link, 'refreshInterval', namespaces.kml), 0);
-                    var viewRefreshMode = queryStringValue(link, 'viewRefreshMode', namespaces.kml);
                     if ((refreshMode === 'onInterval' && refreshInterval > 0 ) || (refreshMode === 'onExpire') || (viewRefreshMode === 'onStop')) {
                         var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
                         var hasNetworkLinkControl = defined(networkLinkControl);
 
                         var now = JulianDate.now();
                         var networkLinkInfo = {
-                            href : linkUrl,
+                            href : href,
                             cookie : '',
+                            queryString : queryString,
                             collection : networkLinkCompositeCollection,
                             parentCollection : compositeEntityCollection,
                             lastUpdated : now,
                             updating : false,
-                            entity : networkEntity
+                            entity : networkEntity,
+                            viewBoundScale : viewBoundScale
                         };
 
                         var minRefreshPeriod;
@@ -1964,6 +2114,85 @@ define([
         });
     };
 
+    function getNetworkLinkUpdateCallback(dataSource, networkLink, newCompositeCollection, networkLinks) {
+        return function(rootElement) {
+            var remove = false;
+            var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
+            var hasNetworkLinkControl = defined(networkLinkControl);
+
+            var minRefreshPeriod;
+            if (hasNetworkLinkControl) {
+                networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
+                minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+            }
+
+            var now = JulianDate.now();
+            var refreshMode = networkLink.refreshMode;
+            if (refreshMode === RefreshMode.INTERVAL) {
+                if (defined(networkLinkControl)) {
+                    networkLink.time = Math.max(minRefreshPeriod, networkLink.time);
+                }
+            } else if (refreshMode === RefreshMode.EXPIRE) {
+                if (defined(networkLinkControl)) {
+                    var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
+                    if (defined(expires)) {
+                        try {
+                            var date = JulianDate.fromIso8601(expires);
+                            if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
+                                JulianDate.addSeconds(now, minRefreshPeriod, date);
+                            }
+                            networkLink.time = date;
+                        } catch (e) {
+                            remove = true;
+                        }
+                    } else {
+                        remove = true;
+                    }
+                } else {
+                    remove = true;
+                }
+            }
+
+            var networkLinkEntity = networkLink.entity;
+            var entities = newCompositeCollection.getCollection(0).values;
+            for (var i = 0; i < entities.length; i++) {
+                entities[i].parent = networkLinkEntity;
+            }
+
+            // No refresh information remove it, otherwise update lastUpdate time
+            if (remove) {
+                networkLinks.splice(networkLinks.indexOf(networkLink), 1);
+            } else {
+                networkLink.lastUpdated = now;
+            }
+            var parentCollection = networkLink.parentCollection;
+            parentCollection.suspendEvents();
+            parentCollection.removeCollection(networkLink.collection);
+            parentCollection.addCollection(newCompositeCollection);
+            networkLink.collection = newCompositeCollection;
+            newCompositeCollection.resumeEvents();
+            parentCollection.resumeEvents();
+
+            var availability = dataSource._entityCollection.computeAvailability();
+
+            var start = availability.start;
+            var stop = availability.stop;
+            var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
+            var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
+            if (!isMinStart || !isMaxStop) {
+                var clock = dataSource._clock;
+
+                if (clock.startTime !== start ||  clock.stopTime !== stop) {
+                    clock.startTime = start;
+                    clock.stopTime = stop;
+                    dataSource._changed.raiseEvent(dataSource);
+                }
+            }
+
+            networkLink.updating = false;
+        };
+    }
+
     /**
      * Updates any NetworkLink that require updating
      * @function
@@ -1988,85 +2217,6 @@ define([
             }
         }
 
-        function getNetworkLinkUpdateCallback(networkLink, newCompositeCollection, networkLinks) {
-            return function(rootElement) {
-                var remove = false;
-                var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
-                var hasNetworkLinkControl = defined(networkLinkControl);
-
-                var minRefreshPeriod;
-                if (hasNetworkLinkControl) {
-                    networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
-                    minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
-                }
-
-                var now = JulianDate.now();
-                var refreshMode = networkLink.refreshMode;
-                if (refreshMode === RefreshMode.INTERVAL) {
-                    if (defined(networkLinkControl)) {
-                        networkLink.time = Math.max(minRefreshPeriod, networkLink.time);
-                    }
-                } else if (refreshMode === RefreshMode.EXPIRE) {
-                    if (defined(networkLinkControl)) {
-                        var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
-                        if (defined(expires)) {
-                            try {
-                                var date = JulianDate.fromIso8601(expires);
-                                if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
-                                    JulianDate.addSeconds(now, minRefreshPeriod, date);
-                                }
-                                networkLink.time = date;
-                            } catch (e) {
-                                remove = true;
-                            }
-                        } else {
-                            remove = true;
-                        }
-                    } else {
-                        remove = true;
-                    }
-                }
-
-                var networkLinkEntity = networkLink.entity;
-                var entities = newCompositeCollection.getCollection(0).values;
-                for (var i = 0; i < entities.length; i++) {
-                    entities[i].parent = networkLinkEntity;
-                }
-
-                // No refresh information remove it, otherwise update lastUpdate time
-                if (remove) {
-                    networkLinks.splice(networkLinks.indexOf(networkLink), 1);
-                } else {
-                    networkLink.lastUpdated = now;
-                }
-                var parentCollection = networkLink.parentCollection;
-                parentCollection.suspendEvents();
-                parentCollection.removeCollection(networkLink.collection);
-                parentCollection.addCollection(newCompositeCollection);
-                networkLink.collection = newCompositeCollection;
-                newCompositeCollection.resumeEvents();
-                parentCollection.resumeEvents();
-
-                var availability = that._entityCollection.computeAvailability();
-
-                var start = availability.start;
-                var stop = availability.stop;
-                var isMinStart = JulianDate.equals(start, Iso8601.MINIMUM_VALUE);
-                var isMaxStop = JulianDate.equals(stop, Iso8601.MAXIMUM_VALUE);
-                if (!isMinStart || !isMaxStop) {
-                    var clock = that._clock;
-
-                    if (clock.startTime !== start ||  clock.stopTime !== stop) {
-                        clock.startTime = start;
-                        clock.stopTime = stop;
-                        that._changed.raiseEvent(that);
-                    }
-                }
-
-                networkLink.updating = false;
-            };
-        }
-
         var lastCameraView = this._lastCameraView;
         var camera = this._camera;
         if (this._hasOnStopRefreshes &&
@@ -2082,7 +2232,6 @@ define([
             lastCameraView.needsUpdate = true;
         }
 
-        //var bbox;
         var newNetworkLinks = [];
         var changed = false;
         networkLinks.forEach(function(networkLink) {
@@ -2107,8 +2256,6 @@ define([
                     if (lastCameraView.needsUpdate && JulianDate.secondsDifference(now, lastCameraView.time) > networkLink.time) {
                         doUpdate = true;
                         lastCameraView.needsUpdate = false;
-                        //if (!defined(bbox)) {
-                        //}
                     }
                 }
 
@@ -2117,8 +2264,10 @@ define([
                     networkLink.updating = true;
                     var newCompositeCollection = new CompositeEntityCollection();
                     newCompositeCollection.suspendEvents();
-                    load(that, newCompositeCollection, networkLink.href + networkLink.cookie)
-                        .then(getNetworkLinkUpdateCallback(networkLink, newCompositeCollection, newNetworkLinks));
+                    var href = networkLink.href + '?' + makeQueryString(networkLink.cookie, networkLink.queryString);
+                    href = processNetworkLinkQueryString(that._camera, href, networkLink.viewBoundScale);
+                    load(that, newCompositeCollection, href)
+                        .then(getNetworkLinkUpdateCallback(that, networkLink, newCompositeCollection, newNetworkLinks));
                     changed = true;
                 }
             }
