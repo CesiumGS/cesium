@@ -59,6 +59,7 @@ define([
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
+        this._show = true;
     }
 
     /**
@@ -138,6 +139,56 @@ define([
         values : {
             get : function() {
                 return this._entities.values;
+            }
+        },
+        /**
+         * Gets whether or not this entity collection should be
+         * displayed.  When true, each entity is only displayed if
+         * its own show property is also true.
+         * @memberof EntityCollection.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._show;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (value === this._show) {
+                    return;
+                }
+
+                //Since entity.isShowing includes the EntityCollection.show state
+                //in its calculation, we need to loop over the entities array
+                //twice, once to get the old showing value and a second time
+                //to raise the changed event.
+                this.suspendEvents();
+
+                var i;
+                var oldShows = [];
+                var entities = this._entities.values;
+                var entitiesLength = entities.length;
+
+                for (i = 0; i < entitiesLength; i++) {
+                    oldShows.push(entities[i].isShowing);
+                }
+
+                this._show = value;
+
+                for (i = 0; i < entitiesLength; i++) {
+                    var oldShow = oldShows[i];
+                    var entity = entities[i];
+                    if (oldShow !== entity.isShowing) {
+                        entity.definitionChanged.raiseEvent(entity, 'isShowing', entity.isShowing, oldShow);
+                    }
+                }
+
+                this.resumeEvents();
             }
         },
         /**

@@ -102,6 +102,19 @@ defineSuite([
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new KmlDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('load throws with undefined KML', function() {

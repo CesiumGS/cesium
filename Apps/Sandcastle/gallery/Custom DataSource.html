@@ -183,6 +183,19 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
             }
             this._heightScale = value;
         }
+    },
+    /**
+     * Gets whether or not this data source should be displayed.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {Boolean}
+     */
+    show : {
+        get : function() {
+            return this._entityCollection;
+        },
+        set : function(value) {
+            this._entityCollection = value;
+        }
     }
 });
 

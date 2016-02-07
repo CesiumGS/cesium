@@ -8,6 +8,7 @@ Change Log
    *   
 * Fixed bug for causing `navigator is not defined` reference error in node
 * Added `Camera.flyHome` function for resetting the camera to the home view
+* Added `show` property to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource`, `CustomDataSource`, and `EntityCollection` for easily toggling display of entire data sources.
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 
 ### 1.18 - 2016-02-01
