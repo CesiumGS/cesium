@@ -81,7 +81,8 @@ define([
         SceneModePicker,
         SelectionIndicator,
         subscribeAndEvaluate,
-        Timeline) {
+        Timeline,
+        VRButton) {
     'use strict';
 
     var boundingSphereScratch = new BoundingSphere();
