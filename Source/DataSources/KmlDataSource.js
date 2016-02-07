@@ -1496,6 +1496,9 @@ define([
     var scratchCartesian4 = new Cartesian3();
     var scratchCartograhic = new Cartographic();
     function computeViewRectangle(camera) {
+        if (!defined(camera)) {
+            return undefined;
+        }
         var wgs84 = Ellipsoid.WGS84;
         var radii = wgs84.radii;
         var p = camera.positionWC;
@@ -1570,12 +1573,21 @@ define([
         return result;
     }
 
+    function appendQueryString(url, queryString) {
+        if (defined(queryString) && queryString.length > 0) {
+            var c = (url.indexOf('?') === -1) ? '?' : '&';
+            return url + c + queryString;
+        }
+
+        return url;
+    }
+
     function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
         if (defined(camera)) {
             bbox = defaultValue(bbox, computeViewRectangle(camera));
-            if (defined(viewBoundScale) && CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
+            //if (defined(viewBoundScale) && CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
                 // TODO: Scale bbox
-            }
+            //}
 
             queryString = queryString.replace('[bboxWest]', CesiumMath.toDegrees(bbox.west).toString());
             queryString = queryString.replace('[bboxSouth]', CesiumMath.toDegrees(bbox.south).toString());
@@ -1583,14 +1595,14 @@ define([
             queryString = queryString.replace('[bboxNorth]', CesiumMath.toDegrees(bbox.north).toString());
 
             // TODO: Give correct values
-            queryString = queryString.replace('[lookatLon]', '');
-            queryString = queryString.replace('[lookatLat]', '');
-            queryString = queryString.replace('[lookatRange]', '');
+                queryString = queryString.replace('[lookatLon]', '');
+                queryString = queryString.replace('[lookatLat]', '');
+                queryString = queryString.replace('[lookatRange]', '');
             queryString = queryString.replace('[lookatTilt]', CesiumMath.toDegrees(camera.pitch).toString());
             queryString = queryString.replace('[lookatHeading]', CesiumMath.toDegrees(camera.heading).toString());
-            queryString = queryString.replace('[lookatTerrainLon]', '');
-            queryString = queryString.replace('[lookatTerrainLat]', '');
-            queryString = queryString.replace('[lookatTerrainAlt]', '');
+                queryString = queryString.replace('[lookatTerrainLon]', '');
+                queryString = queryString.replace('[lookatTerrainLat]', '');
+                queryString = queryString.replace('[lookatTerrainAlt]', '');
 
             Ellipsoid.WGS84.cartesianToCartographic(camera.positionWC, scratchCartograhic);
 
@@ -1671,7 +1683,7 @@ define([
 
                 var networkLinkCompositeCollection = new CompositeEntityCollection();
                 networkLinkCompositeCollection.suspendEvents();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, href + '?' + queryString, viewBoundScale);
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, appendQueryString(href, queryString), viewBoundScale);
 
                 var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
                     compositeEntityCollection.addCollection(networkLinkCompositeCollection);
@@ -1947,17 +1959,14 @@ define([
 
         this._canvas = canvas;
         this._camera = camera;
-        this._lastCameraView = undefined;
-        if (defined(camera)) {
-            this._lastCameraView = {
-                position : Cartesian3.clone(camera.positionWC),
-                direction : Cartesian3.clone(camera.directionWC),
-                up : Cartesian3.clone(camera.upWC),
-                time : JulianDate.now(),
-                needsUpdate : false,
-                bbox : computeViewRectangle(camera)
-            };
-        }
+        this._lastCameraView = {
+            position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
+            direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
+            up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
+            time : JulianDate.now(),
+            needsUpdate : false,
+            bbox : computeViewRectangle(camera)
+        };
     }
 
     /**
@@ -2150,6 +2159,12 @@ define([
 
             var minRefreshPeriod;
             if (hasNetworkLinkControl) {
+                if (defined(queryFirstNode(networkLinkControl, 'Update', namespaces.kml))) {
+                    console.log('KML - NetworkLinkControl updates aren\'t supported.');
+                    networkLink.updating = false;
+                    networkLinks.splice(networkLinks.indexOf(networkLink), 1);
+                    return;
+                }
                 networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
                 minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
             }
@@ -2230,6 +2245,10 @@ define([
      */
     KmlDataSource.prototype.update = function(time) {
         var networkLinks = this._networkLinks;
+        if (networkLinks.length === 0) {
+            return true;
+        }
+
         var now = JulianDate.now();
         var that = this;
 
@@ -2292,7 +2311,7 @@ define([
                     networkLink.updating = true;
                     var newCompositeCollection = new CompositeEntityCollection();
                     newCompositeCollection.suspendEvents();
-                    var href = networkLink.href + '?' + makeQueryString(networkLink.cookie, networkLink.queryString);
+                    var href = appendQueryString(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString));
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newCompositeCollection, href)
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newCompositeCollection, newNetworkLinks));
