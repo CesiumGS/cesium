@@ -73,21 +73,35 @@ function loadTileset(url) {
         }
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
-//            "color" : {
-//                "type" : "map",
-//                "map" : {
-//                    "propertyName" : "id",
-//                    "map" : {
-//                        "1" : [255, 0, 0],
-//                        "2" : [0, 255, 0]
-//                    },
-//                    "default" : [255, 255, 255]
-//                }
-//            },
+            "color" : {
+                "type" : "map",
+                "map" : {
+                    "propertyName" : "id",
+                    "map" : {
+                        "1" : [255, 0, 0],
+                        "2" : [0, 255, 0]
+                    },
+                    "default" : [255, 255, 255]
+                }
+            },
+/*
             "color" : {
                 "type" : "ramp",
                 "ramp" : {
-                    "propertyName" : "id",
+                    "expression" : {
+                        "leftOperand" : "${Height}",
+                        "operator" : "+",
+                        "rightOperand" : 0
+                    },
+//                    "intervals" : [
+//                        1,  // [1, 10)
+//                        10, // [10, 30)
+//                        30, // [30, 50)
+//                        50, // [50, 70)
+//                        70, // [70, 100)
+//                        100 // [100, infinity)
+//                    ],
+                    "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, 'Height', 6),
                     "colors" : [
                         [237, 248, 251],
                         [191, 211, 230],
@@ -98,6 +112,7 @@ function loadTileset(url) {
                     ]
                 }
             },
+*/
             "show" : {
                 "leftOperand" : "${Height}",
                 "operator" : ">",
@@ -371,6 +386,7 @@ Sandcastle.addToolbarButton('SSE--', function() {
 // Styling ////////////////////////////////////////////////////////////////////
 
 var numberofColors = 6;
+var currentPropertyName = '';
 
 function getRandomColors() {
     var colors = [];
@@ -391,16 +407,23 @@ function getStyleFunction(name) {
             "color" : {
                 "type" : "ramp",
                 "ramp" : {
-                    "propertyName" : name,
+                    "expression" : {
+                        "leftOperand" : "${" + name + "}",
+                        "operator" : "+",
+                        "rightOperand" : 0
+                    },
+                    "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
                     "colors" : getRandomColors()
                 }
             },
             "show" : {
-                "leftOperand" : "${Height}",
+                "leftOperand" : "${" + name + "}",
                 "operator" : ">",
                 "rightOperand" : 0
             }
         });
+
+        currentPropertyName = name;
     };
 }
 
@@ -410,11 +433,15 @@ Sandcastle.addToolbarButton('Remove style', function() {
 
 Sandcastle.addToolbarButton('colors++', function() {
     ++numberofColors;
+
+    tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
     tileset.style.color.colors = getRandomColors();
 });
 
 Sandcastle.addToolbarButton('colors--', function() {
     numberofColors = Math.max(numberofColors - 1, 1);
+
+    tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
     tileset.style.color.colors = getRandomColors();
 });
 
