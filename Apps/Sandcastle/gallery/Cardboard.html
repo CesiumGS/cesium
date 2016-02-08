@@ -31,6 +31,136 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     vrButton : true
 });
 // Click the VR button in the bottom right of the screen to switch to VR mode.
+
+viewer.scene.globe.enableLighting = true;
+
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestVertexNormals : true
+});
+
+viewer.scene.globe.depthTestAgainstTerrain = true;
+
+// Follow the path of a plane. See the interpolation Sandcastle example.
+Cesium.Math.setRandomNumberSeed(3);
+
+var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
+
+viewer.clock.startTime = start.clone();
+viewer.clock.stopTime = stop.clone();
+viewer.clock.currentTime = start.clone();
+viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+viewer.clock.multiplier = 1.0;
+
+function computeCirclularFlight(lon, lat, radius) {
+    var property = new Cesium.SampledPositionProperty();
+    for (var i = 0; i <= 360; i += 45) {
+        var radians = Cesium.Math.toRadians(i);
+        var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
+        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
+        property.addSample(time, position);
+        viewer.entities.add({
+            position : position,
+            point : {
+                pixelSize : 8,
+                color : Cesium.Color.TRANSPARENT,
+                outlineColor : Cesium.Color.YELLOW,
+                outlineWidth : 3
+            }
+        });
+    }
+    return property;
+}
+
+var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+
+var entity = viewer.entities.add({
+    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+        start : start,
+        stop : stop
+    })]),
+    position : position,
+    orientation : new Cesium.VelocityOrientationProperty(position),
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        minimumPixelSize : 64
+    },
+    path : {
+        resolution : 1,
+        material : new Cesium.PolylineGlowMaterialProperty({
+            glowPower : 0.1,
+            color : Cesium.Color.YELLOW
+        }),
+        width : 10
+    }
+});
+
+entity.position.setInterpolationOptions({
+    interpolationDegree : 2,
+    interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+});
+
+var camera = viewer.camera;
+
+function setCameraPosition(time) {
+    if (viewer.scene.mode === Cesium.SceneMode.MORPHING) {
+        return;
+    }
+
+    // set the camera to be in VVLH of the plane, and use the original camera
+    // position and orientation. the position is a constant offset from the origin.
+    // the orientation will be set from the device orientation event.
+    var deltaTime = Cesium.JulianDate.addSeconds(time, 0.001, new Cesium.JulianDate());
+
+    var startPosition = position.getValue(time);
+    var endPosition = position.getValue(deltaTime);
+
+    var xAxis = Cesium.Cartesian3.subtract(endPosition, startPosition, new Cesium.Cartesian3());
+    Cesium.Cartesian3.normalize(xAxis, xAxis);
+    var zAxis = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(startPosition);
+    var yAxis = Cesium.Cartesian3.cross(zAxis, xAxis, new Cesium.Cartesian3());
+    Cesium.Cartesian3.normalize(yAxis, yAxis);
+    Cesium.Cartesian3.cross(xAxis, yAxis, zAxis);
+    Cesium.Cartesian3.normalize(zAxis, zAxis);
+
+    var basis = new Cesium.Matrix3();
+    Cesium.Matrix3.setColumn(basis, 0, xAxis, basis);
+    Cesium.Matrix3.setColumn(basis, 1, yAxis, basis);
+    Cesium.Matrix3.setColumn(basis, 2, zAxis, basis);
+
+    var transform = Cesium.Matrix4.fromRotationTranslation(basis, startPosition);
+
+    var offset = Cesium.Cartesian3.clone(camera.position);
+    var direction = Cesium.Cartesian3.clone(camera.direction);
+    var up = Cesium.Cartesian3.clone(camera.up);
+
+    camera.lookAtTransform(transform);
+
+    Cesium.Cartesian3.clone(offset, camera.position);
+    Cesium.Cartesian3.clone(direction, camera.direction);
+    Cesium.Cartesian3.clone(up, camera.up);
+    Cesium.Cartesian3.cross(direction, up, camera.right);
+}
+
+// set the initial camera position and orientation as if it was in the
+// aircraft's reference frame.
+var cameraPosition = new Cesium.Cartesian3(-1.0, 0.0, 1.0);
+Cesium.Cartesian3.normalize(cameraPosition, cameraPosition);
+Cesium.Cartesian3.multiplyByScalar(cameraPosition, 40.0, cameraPosition);
+Cesium.Cartesian3.clone(cameraPosition, camera.position);
+
+Cesium.Cartesian3.clone(camera.position, camera.direction);
+Cesium.Cartesian3.negate(camera.direction, camera.direction);
+Cesium.Cartesian3.normalize(camera.direction, camera.direction);
+Cesium.Cartesian3.cross(camera.direction, Cesium.Cartesian3.UNIT_Z, camera.right);
+Cesium.Cartesian3.cross(camera.right, camera.direction, camera.up);
+Cesium.Cartesian3.cross(camera.direction, camera.up, camera.right);
+
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    // update the camera after all normal input, but before rendering.
+    setCameraPosition(time);
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
