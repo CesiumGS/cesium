@@ -14,6 +14,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
+        '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -85,6 +86,7 @@ define([
         Ellipsoid,
         Event,
         ExtrapolationType,
+        getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -187,9 +189,7 @@ define([
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+            result = getAbsoluteUri(result, getAbsoluteUri(sourceUri));
         }
         return result;
     }
@@ -600,7 +600,10 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
         if (!isReference) {
-            referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
+            if (defined(packetData.referenceFrame)) {
+                referenceFrame = ReferenceFrame[packetData.referenceFrame];
+            }
+            referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
             unwrappedInterval = unwrapCartesianInterval(packetData);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
             isSampled = unwrappedIntervalLength > packedLength;
@@ -799,6 +802,7 @@ define([
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
             processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'alpha', materialData.alpha, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
