@@ -875,12 +875,11 @@ define([
         var lastNumberOfPendingRequest = tileset._statistics.lastNumberOfPendingRequests;
         var lastNumberProcessing = tileset._statistics.lastNumberProcessing;
 
-        if ((numberOfPendingRequests === lastNumberOfPendingRequest) && (numberProcessing === lastNumberProcessing)) {
-            return;
+        if ((numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing)) {
+            frameState.afterRender.push(function() {
+                tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
+            });
         }
-        frameState.afterRender.push(function() {
-            tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
-        });
     }
 
     ///////////////////////////////////////////////////////////////////////////
