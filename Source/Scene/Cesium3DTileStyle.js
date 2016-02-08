@@ -5,15 +5,15 @@ define([
        '../Core/DeveloperError',
        '../Core/freezeObject',
        './BooleanExpression',
-       './ColorExpression',
-       './MapColorExpression',
+       './ColorRampExpression',
+       './MapColorExpression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         freezeObject,
         BooleanExpression,
-        ColorExpression,
+        ColorRampExpression,
         MapColorExpression) {
     "use strict";
 
@@ -37,11 +37,6 @@ define([
         if (!defined(tileset)) {
             throw new DeveloperError('tileset is required.');
         }
-
-        // TODO: wait for readyPromise here instead of throwing?
-        if (!tileset.ready) {
-            throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
-        }
         //>>includeEnd('debug');
 
         jsonStyle = defaultValue(jsonStyle, defaultValue.EMPTY_OBJECT);
@@ -57,7 +52,7 @@ define([
         if (colorExpression.type === 'map') {
             color = new MapColorExpression(tileset.styleEngine, colorExpression.map);
         } else if (colorExpression.type === 'ramp') {
-            color = new ColorExpression(tileset, colorExpression.ramp);
+            color = new ColorRampExpression(tileset.styleEngine, colorExpression.ramp);
         }
 
         /**
