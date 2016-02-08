@@ -5,6 +5,7 @@ define([
        '../Core/defined',
        '../Core/defineProperties',
        '../Core/DeveloperError',
+       '../ThirdParty/chroma',
        './NumberExpression',
     ], function(
         clone,
@@ -12,6 +13,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        chroma,
         NumberExpression) {
     "use strict";
 
@@ -109,6 +111,9 @@ define([
         return intervals[j].color;
     };
 
+    // TODO: Add direct schema support for these static helpers?  Move them
+    // to server-side only (one uses a third-party library)
+
     /**
      * DOC_TBA
      */
@@ -149,6 +154,36 @@ define([
         }
 
         return intervals;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    ColorRampExpression.computePalette = function(colors, length) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(colors) || !defined(length)) {
+            throw new DeveloperError('colors and length are required.');
+        }
+
+        if (length <= 0) {
+            throw new DeveloperError('length must be greater than zero.');
+        }
+        //>>includeEnd('debug');
+
+        var inLength = colors.length;
+        var inColors = new Array(inLength);
+        for (var i = 0; i < inLength; ++i) {
+            inColors[i] = chroma(colors[i]);
+        }
+
+        var computedColors = chroma.scale(inColors).colors(length);
+
+        var outColors = new Array(length);
+        for (var j = 0; j < length; ++j) {
+            outColors[j] = chroma(computedColors[j]).rgb();
+        }
+
+        return outColors;
     };
 
     return ColorRampExpression;
