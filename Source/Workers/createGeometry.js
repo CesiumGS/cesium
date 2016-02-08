@@ -11,7 +11,7 @@ define([
         when,
         createTaskProcessorWorker,
         require) {
-    "use strict";
+    'use strict';
 
     var moduleCache = {};
 

@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         ShaderCache,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

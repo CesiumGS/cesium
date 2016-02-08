@@ -47,7 +47,7 @@ define([
         Quaternion,
         VertexFormat,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     var computeBoundingRectangleCartesian2 = new Cartesian2();
     var computeBoundingRectangleCartesian3 = new Cartesian3();

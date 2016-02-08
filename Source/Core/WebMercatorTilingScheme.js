@@ -15,7 +15,7 @@ define([
         Ellipsoid,
         Rectangle,
         WebMercatorProjection) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry referenced to a {@link WebMercatorProjection}, EPSG:3857.  This is

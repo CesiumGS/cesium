@@ -3,7 +3,7 @@ define([
         '../Core/defineProperties'
     ], function(
         defineProperties) {
-    "use strict";
+    'use strict';
 
     /**
      * A model's mesh and its materials.

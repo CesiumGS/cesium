@@ -17,7 +17,7 @@ define([
         CesiumMath,
         Matrix2,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     var cos = Math.cos;
     var sin = Math.sin;

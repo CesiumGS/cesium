@@ -3,7 +3,7 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Wraps a function on the provided objects with another function called in the

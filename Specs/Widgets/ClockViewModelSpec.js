@@ -11,7 +11,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();

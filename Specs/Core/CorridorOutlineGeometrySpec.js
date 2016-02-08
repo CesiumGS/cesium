@@ -11,7 +11,7 @@ defineSuite([
         CornerType,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without positions', function() {
         expect(function() {

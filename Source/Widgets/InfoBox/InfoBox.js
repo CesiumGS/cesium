@@ -21,7 +21,7 @@ define([
         getElement,
         subscribeAndEvaluate,
         InfoBoxViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * A widget for displaying information or a description.

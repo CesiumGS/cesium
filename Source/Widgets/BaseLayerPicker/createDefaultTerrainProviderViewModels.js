@@ -9,7 +9,7 @@ define([
         CesiumTerrainProvider,
         EllipsoidTerrainProvider,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

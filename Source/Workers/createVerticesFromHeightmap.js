@@ -9,7 +9,7 @@ define([
         HeightmapTessellator,
         Rectangle,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     function createVerticesFromHeightmap(parameters, transferableObjects) {
         var arrayWidth = parameters.width;

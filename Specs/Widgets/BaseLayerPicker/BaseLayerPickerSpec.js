@@ -11,7 +11,7 @@ defineSuite([
         FeatureDetection,
         ImageryLayerCollection,
         DomEventSimulator) {
-    "use strict";
+    'use strict';
 
     function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();

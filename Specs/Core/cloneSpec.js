@@ -3,7 +3,7 @@ defineSuite([
         'Core/clone'
     ], function(
         clone) {
-    "use strict";
+    'use strict';
 
     it('can make shallow clones', function() {
         var obj = {

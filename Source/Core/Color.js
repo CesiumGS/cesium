@@ -13,7 +13,7 @@ define([
         FeatureDetection,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     function hue2rgb(m1, m2, h) {
         if (h < 0) {

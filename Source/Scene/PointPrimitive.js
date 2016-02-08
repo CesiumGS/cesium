@@ -25,7 +25,7 @@ define([
         NearFarScalar,
         SceneMode,
         SceneTransforms) {
-    "use strict";
+    'use strict';
 
     /**
      * A graphical point positioned in the 3D scene, that is created

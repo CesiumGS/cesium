@@ -19,7 +19,7 @@ define([
         Matrix3,
         Matrix4,
         TerrainQuantization) {
-    "use strict";
+    'use strict';
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3DimScratch = new Cartesian3();

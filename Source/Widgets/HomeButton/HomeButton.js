@@ -15,7 +15,7 @@ define([
         knockout,
         getElement,
         HomeButtonViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * A single button widget for returning to the default camera view of the current scene.

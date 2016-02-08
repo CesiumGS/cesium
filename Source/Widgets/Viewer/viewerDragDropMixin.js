@@ -21,7 +21,7 @@ define([
         GeoJsonDataSource,
         KmlDataSource,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.

@@ -45,7 +45,7 @@ define([
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides imagery by requesting tiles using a specified URL template.

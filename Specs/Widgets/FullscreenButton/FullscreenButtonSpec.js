@@ -3,7 +3,7 @@ defineSuite([
         'Widgets/FullscreenButton/FullscreenButton'
     ], function(
         FullscreenButton) {
-    "use strict";
+    'use strict';
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);

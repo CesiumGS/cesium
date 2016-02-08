@@ -11,7 +11,7 @@ define([
         TerrainQuantization,
         ShaderProgram,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
         this.numberOfDayTextures = numberOfDayTextures;

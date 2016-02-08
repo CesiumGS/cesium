@@ -7,7 +7,7 @@ defineSuite([
         TaskProcessor,
         require,
         when) {
-    "use strict";
+    'use strict';
 
     var taskProcessor;
 

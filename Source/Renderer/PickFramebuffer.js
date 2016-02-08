@@ -21,7 +21,7 @@ define([
         Renderbuffer,
         RenderbufferFormat,
         Texture) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
