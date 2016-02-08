@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/defined',
+        'Core/Event',
         'Core/HeadingPitchRange',
         'Core/RequestScheduler',
         'Scene/Cesium3DTile',
@@ -17,6 +18,7 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         defined,
+        Event,
         HeadingPitchRange,
         RequestScheduler,
         Cesium3DTile,
@@ -758,6 +760,14 @@ defineSuite([
             });
 
             scene.renderForSpecs();
+        });
+    });
+
+    it('tile visible event was called', function() {
+        spyOn(Event.prototype, 'raiseEvent');
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            expect(Event.prototype.raiseEvent).toHaveBeenCalled();
         });
     });
 
