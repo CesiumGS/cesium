@@ -751,7 +751,7 @@ defineSuite([
         });
     });
 
-    it('tile visible event is raised and was called', function() {
+    it('tile visible event is raised', function() {
         spyOn(Event.prototype, 'raiseEvent');
 
         viewRootOnly();
