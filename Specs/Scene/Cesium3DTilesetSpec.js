@@ -730,6 +730,8 @@ defineSuite([
     });
 
     it('load progress events are raised', function() {
+        spyOn(Event.prototype, 'raiseEvent');
+
         // [numberOfPendingRequests, numberProcessing]
         var results = [
             [1, 0],
@@ -744,6 +746,7 @@ defineSuite([
                 var expected = results[i++];
                 expect(numberOfPendingRequests).toEqual(expected[0]);
                 expect(numberProcessing).toEqual(expected[1]);
+                expect(Event.prototype.raiseEvent).toHaveBeenCalled();
             });
             viewRootOnly();
             scene.renderForSpecs();
