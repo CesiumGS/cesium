@@ -170,6 +170,10 @@ It is also possible for Karma to run all tests against each browser installed on
 #### Run Only Non-WebGL Tests with Karma
  
  `npm run test-non-webgl`
+ 
+#### Run All Tests Against the Minified Release Version of Cesium
+
+ `npm run test-release`
 
 ## Testing Previous Versions of Cesium
 

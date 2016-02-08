@@ -299,11 +299,17 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
     var argv = yargs.argv;
+    var files = [
+        'Specs/karma-main.js',
+        {pattern : 'Source/**', included : false},
+        {pattern : 'Specs/**', included : false}
+    ];
 
     var enableAllBrowsers = false;
     var includedCategories = '';
     var excludedCategories = '';
     var webglValidation = false;
+    var release = false;
 
     if (argv.all) {
         enableAllBrowsers = true;
@@ -321,13 +327,19 @@ gulp.task('test', ['build'], function(done) {
         webglValidation = true;
     }
 
+    if (argv.release) {
+        release = true;
+        files.push({pattern : 'Build/**', included : false});
+    }
+
     karma.start({
         configFile: karmaConfigFile,
         detectBrowsers : {
             enabled: enableAllBrowsers
         },
+        files: files,
         client: {
-            args: [includedCategories, excludedCategories, webglValidation]
+            args: [includedCategories, excludedCategories, webglValidation, release]
         }
     }, function() {
         //Failed tests case a return code of 1 to be passed into the callback
