@@ -99,7 +99,7 @@ function loadTileset(url) {
                 }
             },
             "show" : {
-                "leftOperand" : "{Height}",
+                "leftOperand" : "${Height}",
                 "operator" : ">",
                 "rightOperand" : 0
             }
@@ -396,7 +396,7 @@ function getStyleFunction(name) {
                 }
             },
             "show" : {
-                "leftOperand" : "{Height}",
+                "leftOperand" : "${Height}",
                 "operator" : ">",
                 "rightOperand" : 0
             }
@@ -478,7 +478,7 @@ function addOperands(text, getOperandFunction) {
     var properties = tileset.properties;
     for (var name in properties) {
         if (properties.hasOwnProperty(name)) {
-            var property = '{' + name + '}';
+            var property = '${' + name + '}';
             expressionOperands.push({
                 text : property,
                 onselect : getOperandFunction(property)
