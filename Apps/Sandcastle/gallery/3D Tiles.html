@@ -73,18 +73,17 @@ function loadTileset(url) {
         }
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
-            "color" : {
-                "type" : "map",
-                "map" : {
-                    "propertyName" : "id",
-                    "map" : {
-                        "1" : [255, 0, 0],
-                        "2" : [0, 255, 0]
-                    },
-                    "default" : [255, 255, 255]
-                }
-            },
-/*
+//            "color" : {
+//                "type" : "map",
+//                "map" : {
+//                    "propertyName" : "id",
+//                    "map" : {
+//                        "1" : [255, 0, 0],
+//                        "2" : [0, 255, 0]
+//                    },
+//                    "default" : [255, 255, 255]
+//                }
+//            },
             "color" : {
                 "type" : "ramp",
                 "ramp" : {
@@ -93,15 +92,14 @@ function loadTileset(url) {
                         "operator" : "+",
                         "rightOperand" : 0
                     },
-//                    "intervals" : [
-//                        1,  // [1, 10)
-//                        10, // [10, 30)
-//                        30, // [30, 50)
-//                        50, // [50, 70)
-//                        70, // [70, 100)
-//                        100 // [100, infinity)
-//                    ],
-                    "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, 'Height', 6),
+                    "intervals" : [
+                        1,  // [1, 10)
+                        10, // [10, 30)
+                        30, // [30, 50)
+                        50, // [50, 70)
+                        70, // [70, 100)
+                        100 // [100, infinity)
+                    ],
                     "colors" : [
                         [237, 248, 251],
                         [191, 211, 230],
@@ -112,7 +110,6 @@ function loadTileset(url) {
                     ]
                 }
             },
-*/
             "show" : {
                 "leftOperand" : "${Height}",
                 "operator" : ">",
@@ -426,6 +423,23 @@ function getStyleFunction(name) {
         currentPropertyName = name;
     };
 }
+
+Sandcastle.addToolbarButton('Custom style', function() {
+    tileset.style = {
+        show : {
+            evaluate : function(feature) {
+                tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
+                return Cesium.Math.nextRandomNumber() > 0.5;
+            }
+        },
+        color : {
+            evaluate : function(feature) {
+                tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
+                return Cesium.Color.fromRandom();
+            }
+        }
+    };
+});
 
 Sandcastle.addToolbarButton('Remove style', function() {
     tileset.style = undefined;
