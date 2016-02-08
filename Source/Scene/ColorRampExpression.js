@@ -150,7 +150,7 @@ define([
         var intervals = new Array(length);
         intervals[0] = min;
         for (var i = 1; i < length; ++i) {
-            intervals[i] = (i !== length - 1) ? Math.ceil(min + ((i + 1) * delta)) : max
+            intervals[i] = (i !== length - 1) ? Math.ceil(min + ((i + 1) * delta)) : max;
         }
 
         return intervals;
