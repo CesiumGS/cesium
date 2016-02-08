@@ -20,6 +20,7 @@ define([
         './Matrix3',
         './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
+        './Rectangle',
         './RuntimeError',
         './TerrainProvider',
         './throttleRequestByServer',
@@ -45,6 +46,7 @@ define([
         Matrix3,
         OrientedBoundingBox,
         QuantizedMeshTerrainData,
+        Rectangle,
         RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
@@ -749,33 +751,75 @@ define([
         }
     };
 
-    /**
-     * Determines the maximum tile level available for a position.
-     *
-     * @param {Cartographic} position The cartographic query position.
-     * @returns {Number} The maximum tile level available for this terrain dataset.
-     */
-    CesiumTerrainProvider.prototype.getMaximumTileLevel = function(position) {
-        if (!this._ready) {
-            throw new DeveloperError('getMaximumTileLevel must not be called before the terrain provider is ready.');
-        }
-
-        var available = this._availableTiles;
-        if (!available || available.length === 0) {
-            throw new DeveloperError('getMaximumTileLevel must only be called on terrain datasets that can calculate availability.');
-        }
-
-        for (var level = available.length - 1; level >= 0; level--) {
-            var xy = this._tilingScheme.positionToTileXY(position, level);
-            if (defined(xy)) {
-                if (this.getTileDataAvailable(xy.x, xy.y, level)) {
-                    return level;
+    CesiumTerrainProvider.prototype.getTileDataAvailableForRange = function(ll, ur, level) {
+        for (var y = ll.y; y <= ur.y; ++y) {
+            for (var x = ll.x; x <= ur.x; ++x) {
+                if (!this.getTileDataAvailable(x, y, level)) {
+                    return false;
                 }
             }
         }
-
-        return 0;
+        return true;
     };
+
+    /**
+     * Determines the maximum tile level where each tile within the query rectangle is defined.
+     *
+     * @param {Rectangle} rectangle The query region to test against.
+     * @returns {Number} The maximum tile level available for this terrain dataset.
+     */
+    CesiumTerrainProvider.prototype.getMaximumTileLevel = function(rectangle) {
+        var available = this._availableTiles;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!this._ready) {
+            throw new DeveloperError('getMaximumTileLevel must not be called before the terrain provider is ready.');
+        }
+        if (!available || available.length === 0) {
+            throw new DeveloperError('getMaximumTileLevel must only be called on terrain datasets that can calculate availability.');
+        }
+        //>>includeEnd('debug');
+
+        var southeast = Rectangle.southeast(rectangle);
+        var northwest = Rectangle.northwest(rectangle);
+
+        if (0) {
+
+            var maxLevel = 0;
+
+            // Top down
+            for (var level = 0; level < available.length; ++level) {
+                var ll = this._tilingScheme.positionToTileXY(northwest, level);
+                var ur = this._tilingScheme.positionToTileXY(southeast, level);
+
+                if (this.getTileDataAvailableForRange(ll, ur, level)) {
+                    maxLevel = level;
+                } else {
+                    return maxLevel;
+                }
+            }
+
+            return maxLevel;
+
+        } else {
+
+            // Bottom up
+            for (var level = available.length - 1; level >= 0; level--) {
+                var ll = this._tilingScheme.positionToTileXY(northwest, level);
+                var ur = this._tilingScheme.positionToTileXY(southeast, level);
+                if (this.getTileDataAvailableForRange(ll, ur, level)) {
+                    return level;
+                }
+            }
+
+            return 0;
+        }
+
+    };
+
+
+
+
 
     return CesiumTerrainProvider;
 });

@@ -48,23 +48,20 @@ defineSuite([
     it('uses a suitable common tile height for a range of locations', function() {
         var positions = [
                          Cartographic.fromDegrees(86.925145, 27.988257),
-                         Cartographic.fromDegrees(0.0, 89.0, 0.0),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
         return sampleTerrainMostDetailed(terrainProvider, positions).then(function() {
             expect(positions[0].height).toBeGreaterThan(5000);
             expect(positions[0].height).toBeLessThan(10000);
-            expect(positions[1].height).toBeGreaterThan(0);
-            expect(positions[2].height).toBeGreaterThan(5000);
-            expect(positions[2].height).toBeLessThan(10000);
+            expect(positions[1].height).toBeGreaterThan(5000);
+            expect(positions[1].height).toBeLessThan(10000);
         });
     });
 
     it('requires terrainProvider and positions', function() {
         var positions = [
                          Cartographic.fromDegrees(86.925145, 27.988257),
-                         Cartographic.fromDegrees(0.0, 0.0, 0.0),
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 

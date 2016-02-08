@@ -3,12 +3,14 @@ define([
     '../ThirdParty/when',
     './defined',
     './sampleTerrain',
-    './DeveloperError'
+    './DeveloperError',
+    './Rectangle'
 ], function(
     when,
     defined,
     sampleTerrain,
-    DeveloperError) {
+    DeveloperError,
+    Rectangle) {
     "use strict";
 
     /**
@@ -36,7 +38,7 @@ define([
      * });
      */
     function sampleTerrainMostDetailed(terrainProvider, positions) {
-
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
         }
@@ -46,13 +48,13 @@ define([
         if (!defined(terrainProvider.getMaximumTileLevel)) {
             throw new DeveloperError('getMaximumTileLevel() must be supported by the terrain provider.');
         }
+        //>>includeEnd('debug');
 
         return terrainProvider.readyPromise.then(function() {
-            var tileLevels = positions.map(function(position) {
-                return terrainProvider.getMaximumTileLevel(position);
-            });
-            var minTileLevel = Math.min.apply(null, tileLevels);
-            return sampleTerrain(terrainProvider, minTileLevel, positions);
+            var rectangle = Rectangle.fromCartographicArray(positions);
+            var start = Date.now();
+            var tileLevel = terrainProvider.getMaximumTileLevel(rectangle);
+            return sampleTerrain(terrainProvider, tileLevel, positions);
         });
     }
 
