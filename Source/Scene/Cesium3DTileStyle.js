@@ -6,7 +6,7 @@ define([
        '../Core/freezeObject',
        './BooleanExpression',
        './ColorRampExpression',
-       './MapColorExpression'
+       './ColorMapExpression'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +14,7 @@ define([
         freezeObject,
         BooleanExpression,
         ColorRampExpression,
-        MapColorExpression) {
+        ColorMapExpression) {
     "use strict";
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
@@ -50,7 +50,7 @@ define([
 
         var color;
         if (colorExpression.type === 'map') {
-            color = new MapColorExpression(tileset.styleEngine, colorExpression.map);
+            color = new ColorMapExpression(tileset.styleEngine, colorExpression.map);
         } else if (colorExpression.type === 'ramp') {
             color = new ColorRampExpression(tileset.styleEngine, colorExpression.ramp);
         }

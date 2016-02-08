@@ -21,7 +21,7 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function MapColorExpression(styleEngine, jsonExpression) {
+    function ColorMapExpression(styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
         this._propertyName = jsonExpression.propertyName;
         this._map = clone(jsonExpression.map, true);
@@ -33,7 +33,7 @@ define([
         setRuntime(this);
     }
 
-    defineProperties(MapColorExpression.prototype, {
+    defineProperties(ColorMapExpression.prototype, {
         /**
          * DOC_TBA
          */
@@ -106,7 +106,7 @@ define([
     /**
      * DOC_TBA
      */
-    MapColorExpression.prototype.evaluate = function(feature) {
+    ColorMapExpression.prototype.evaluate = function(feature) {
         var value = feature.getProperty(this._propertyName);
 
         var defaultColor = this._runtimeDefault;
@@ -118,5 +118,5 @@ define([
         return defaultColor;
     };
 
-    return MapColorExpression;
+    return ColorMapExpression;
 });
