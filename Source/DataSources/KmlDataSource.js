@@ -1490,64 +1490,47 @@ define([
         STOP : 2
     };
 
-    var scratchCartesian1 = new Cartesian3();
-    var scratchCartesian2 = new Cartesian3();
-    var scratchCartesian3 = new Cartesian3();
-    var scratchCartesian4 = new Cartesian3();
+    var scrathCartesian2 = new Cartesian2();
+    var scrathCartesian3 = new Cartesian3();
     var scratchCartograhic = new Cartographic();
-    function computeViewRectangle(camera) {
-        if (!defined(camera)) {
-            return undefined;
+    function computeViewRectangle(camera, canvas) {
+        if (!defined(camera) || !defined(canvas)) {
+            return Rectangle.MAX_VALUE;
         }
+
         var wgs84 = Ellipsoid.WGS84;
-        var radii = wgs84.radii;
-        var p = camera.positionWC;
 
-        // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(wgs84.oneOverRadii, p, scratchCartesian1);
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
 
-        var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = Cartesian3.normalize(q, scratchCartesian2);
+        var result;
+        var count = 0;
+        function addToResult(x, y) {
+            scrathCartesian2.x = x;
+            scrathCartesian2.y = y;
+            var r = camera.pickEllipsoid(scrathCartesian2, wgs84, scrathCartesian3);
+            if (defined(r)) {
+                wgs84.cartesianToCartographic(r, scratchCartograhic);
+                if (!defined(result)) {
+                    result = new Rectangle(scratchCartograhic.longitude, scratchCartograhic.latitude,
+                        scratchCartograhic.longitude, scratchCartograhic.latitude);
+                } else {
+                    Rectangle.expand(result, scratchCartograhic, result);
+                }
+                ++count;
+            }
+        }
 
-        // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3), scratchCartesian3);
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian4), scratchCartesian4);
+        addToResult(0, 0);
+        addToResult(0, height);
+        addToResult(width, 0);
+        addToResult(width, height);
 
-        // Determine the radius of the 'limb' of the ellipsoid.
-        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
-
-        // Compute the center and offsets.
-        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian1);
-        var scalar = wMagnitude / qMagnitude;
-        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian2);
-        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3);
-
-
-        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = Cartesian3.add(center, northOffset, scratchCartesian4);
-        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
-        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
-        wgs84.cartesianToCartographic(upperLeft, scratchCartograhic);
-        var result = new Rectangle(scratchCartograhic.longitude, scratchCartograhic.latitude,
-            scratchCartograhic.longitude, scratchCartograhic.latitude);
-
-        var lowerLeft = Cartesian3.subtract(center, northOffset, scratchCartesian4);
-        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
-        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
-        wgs84.cartesianToCartographic(lowerLeft, scratchCartograhic);
-        Rectangle.expand(result, scratchCartograhic, result);
-
-        var upperRight = Cartesian3.add(center, northOffset, scratchCartesian4);
-        Cartesian3.add(upperRight, eastOffset, upperRight);
-        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
-        wgs84.cartesianToCartographic(upperRight, scratchCartograhic);
-        Rectangle.expand(result, scratchCartograhic, result);
-
-        var lowerRight = Cartesian3.subtract(center, northOffset, scratchCartesian4);
-        Cartesian3.add(lowerRight, eastOffset, lowerRight);
-        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
-        wgs84.cartesianToCartographic(lowerRight, scratchCartograhic);
-        Rectangle.expand(result, scratchCartograhic, result);
+        // If we are looking at space at all, then just return the whole globe.
+        // This could be better but this is should be fine for now.
+        if (count !== 4) {
+            return Rectangle.MAX_VALUE;
+        }
 
         return result;
     }
@@ -1583,29 +1566,65 @@ define([
     }
 
     function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
+        function fixLatitude(value) {
+            if (value < -CesiumMath.PI_OVER_TWO) {
+                return -CesiumMath.PI_OVER_TWO;
+            } else if (value > CesiumMath.PI_OVER_TWO) {
+                return CesiumMath.PI_OVER_TWO;
+            }
+            return value;
+        }
+
+        function fixLongitude(value) {
+            if (value > CesiumMath.PI) {
+                return value - CesiumMath.TWO_PI;
+            } else if (value < -CesiumMath.PI) {
+                return value + CesiumMath.TWO_PI;
+            }
+
+            return value;
+        }
+
         if (defined(camera)) {
-            bbox = defaultValue(bbox, computeViewRectangle(camera));
-            //if (defined(viewBoundScale) && CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
-                // TODO: Scale bbox
-            //}
+            var wgs84 = Ellipsoid.WGS84;
+            var centerCartesian;
+
+            bbox = defaultValue(bbox, computeViewRectangle(camera, canvas));
+            if (defined(canvas)) {
+                scrathCartesian2.x = canvas.clientWidth * 0.5;
+                scrathCartesian2.y = canvas.clientHeight * 0.5;
+                centerCartesian = camera.pickEllipsoid(scrathCartesian2, wgs84, scrathCartesian3);
+            }
+            centerCartesian = defaultValue(centerCartesian, Rectangle.center(bbox, scratchCartograhic));
+            var centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartograhic);
+
+            if (defined(viewBoundScale) && !CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
+                var newHalfWidth = bbox.width * viewBoundScale * 0.5;
+                var newHalfHeight = bbox.height * viewBoundScale * 0.5;
+                bbox = new Rectangle(fixLongitude(centerCartographic.longitude - newHalfWidth),
+                    fixLatitude(centerCartographic.latitude - newHalfHeight),
+                    fixLongitude(centerCartographic.longitude + newHalfWidth),
+                    fixLatitude(centerCartographic.latitude + newHalfHeight)
+                );
+            }
 
             queryString = queryString.replace('[bboxWest]', CesiumMath.toDegrees(bbox.west).toString());
             queryString = queryString.replace('[bboxSouth]', CesiumMath.toDegrees(bbox.south).toString());
             queryString = queryString.replace('[bboxEast]', CesiumMath.toDegrees(bbox.east).toString());
             queryString = queryString.replace('[bboxNorth]', CesiumMath.toDegrees(bbox.north).toString());
 
-            // TODO: Give correct values
-                queryString = queryString.replace('[lookatLon]', '');
-                queryString = queryString.replace('[lookatLat]', '');
-                queryString = queryString.replace('[lookatRange]', '');
+            var lon = CesiumMath.toDegrees(centerCartographic.longitude).toString();
+            var lat = CesiumMath.toDegrees(centerCartographic.latitude).toString();
+            queryString = queryString.replace('[lookatLon]', lon);
+            queryString = queryString.replace('[lookatLat]', lat);
             queryString = queryString.replace('[lookatTilt]', CesiumMath.toDegrees(camera.pitch).toString());
             queryString = queryString.replace('[lookatHeading]', CesiumMath.toDegrees(camera.heading).toString());
-                queryString = queryString.replace('[lookatTerrainLon]', '');
-                queryString = queryString.replace('[lookatTerrainLat]', '');
-                queryString = queryString.replace('[lookatTerrainAlt]', '');
+            queryString = queryString.replace('[lookatRange]', Cartesian3.distance(camera.positionWC, centerCartesian));
+            queryString = queryString.replace('[lookatTerrainLon]', lon);
+            queryString = queryString.replace('[lookatTerrainLat]', lat);
+            queryString = queryString.replace('[lookatTerrainAlt]', centerCartographic.height.toString());
 
-            Ellipsoid.WGS84.cartesianToCartographic(camera.positionWC, scratchCartograhic);
-
+            wgs84.cartesianToCartographic(camera.positionWC, scratchCartograhic);
             queryString = queryString.replace('[cameraLon]', CesiumMath.toDegrees(scratchCartograhic.longitude).toString());
             queryString = queryString.replace('[cameraLat]', CesiumMath.toDegrees(scratchCartograhic.latitude).toString());
             queryString = queryString.replace('[cameraAlt]', CesiumMath.toDegrees(scratchCartograhic.height).toString());
@@ -1649,8 +1668,8 @@ define([
         }
 
         if (defined(canvas)) {
-            queryString = queryString.replace('[horizPixels]', canvas.width);
-            queryString = queryString.replace('[vertPixels]', canvas.height);
+            queryString = queryString.replace('[horizPixels]', canvas.clientWidth);
+            queryString = queryString.replace('[vertPixels]', canvas.clientHeight);
         } else {
             queryString = queryString.replace('[horizPixels]', '');
             queryString = queryString.replace('[vertPixels]', '');
@@ -1710,7 +1729,9 @@ define([
                             lastUpdated : now,
                             updating : false,
                             entity : networkEntity,
-                            viewBoundScale : viewBoundScale
+                            viewBoundScale : viewBoundScale,
+                            needsUpdate : false,
+                            cameraUpdateTime : now
                         };
 
                         var minRefreshPeriod;
@@ -1963,9 +1984,7 @@ define([
             position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
             direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
             up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-            time : JulianDate.now(),
-            needsUpdate : false,
-            bbox : computeViewRectangle(camera)
+            bbox : computeViewRectangle(camera, canvas)
         };
     }
 
@@ -2233,6 +2252,7 @@ define([
             }
 
             networkLink.updating = false;
+            networkLink.needsUpdate = false;
         };
     }
 
@@ -2264,6 +2284,7 @@ define([
             }
         }
 
+        var cameraViewUpdate = false;
         var lastCameraView = this._lastCameraView;
         var camera = this._camera;
         if (defined(camera) &&
@@ -2275,9 +2296,8 @@ define([
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
             lastCameraView.direction = Cartesian3.clone(camera.directionWC);
             lastCameraView.up = Cartesian3.clone(camera.upWC);
-            lastCameraView.time = now;
-            lastCameraView.needsUpdate = true;
-            lastCameraView.bbox = computeViewRectangle(camera);
+            lastCameraView.bbox = computeViewRectangle(camera, this._canvas);
+            cameraViewUpdate = true;
         }
 
         var newNetworkLinks = [];
@@ -2301,7 +2321,11 @@ define([
                     }
 
                 } else if (networkLink.refreshMode === RefreshMode.STOP) {
-                    if (lastCameraView.needsUpdate && JulianDate.secondsDifference(now, lastCameraView.time) > networkLink.time) {
+                    if (cameraViewUpdate) {
+                        networkLink.needsUpdate = true;
+                        networkLink.cameraUpdateTime = now;
+                    }
+                    else if (networkLink.needsUpdate && JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) > networkLink.time) {
                         doUpdate = true;
                     }
                 }
@@ -2323,7 +2347,6 @@ define([
 
         if (changed) {
             this._networkLinks = newNetworkLinks;
-            lastCameraView.needsUpdate = false;
         }
 
         return true;
