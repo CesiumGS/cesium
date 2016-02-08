@@ -99,9 +99,9 @@ function loadTileset(url) {
                 }
             },
             "show" : {
-                "propertyName" : "Height",
+                "leftOperand" : "{Height}",
                 "operator" : ">",
-                "operand" : 0
+                "rightOperand" : 0
             }
         });
 
@@ -396,9 +396,9 @@ function getStyleFunction(name) {
                 }
             },
             "show" : {
-                "propertyName" : "Height",
+                "leftOperand" : "{Height}",
                 "operator" : ">",
-                "operand" : 0
+                "rightOperand" : 0
             }
         });
     };
@@ -424,33 +424,16 @@ function addExpressionUI() {
         return;
     }
 
-    // Property name
+    // Left operand (properties and literals)
 
-    var expressionPropertyNames = [{
-        text : 'Expression property name',
-        onselect : function() {
-        }
-    }];
-
-    function getPropertyNameFunction(name) {
+    function getLeftOperandFunction(name) {
         return function() {
-            tileset.style.show.propertyName = name;
+            tileset.style.show.leftOperand = name;
         };
     }
-
-    for (var name in properties) {
-        if (properties.hasOwnProperty(name)) {
-            expressionPropertyNames.push({
-                text : name,
-                onselect : getPropertyNameFunction(name)
-            });
-        }
-    }
+    addOperands('Expression left operand', getLeftOperandFunction);
 
     // Operator
-
-    var menu = Sandcastle.addToolbarMenu(expressionPropertyNames);
-    styleableElements.push(menu);
 
     var ops = ['true', 'false', '<', '<=', '>', '>=', '===', '!=='];
     var operators = [{
@@ -472,32 +455,46 @@ function addExpressionUI() {
        });
     }
 
-    menu = Sandcastle.addToolbarMenu(operators);
+    var menu = Sandcastle.addToolbarMenu(operators);
     styleableElements.push(menu);
 
-    // Operand
+    // Right operand
 
-    var oprs = [1, 10, 50, 100];
-    var operands = [{
-        text : 'Operand',
+    function getRightOperandFunction(operand) {
+        return function() {
+            tileset.style.show.rightOperand = operand;
+        };
+    }
+    addOperands('Right operand', getRightOperandFunction);
+}
+
+function addOperands(text, getOperandFunction) {
+    var expressionOperands = [{
+        text : text,
         onselect : function() {
         }
     }];
 
-    function getOperandFunction(operand) {
-        return function() {
-            tileset.style.show.operand = operand;
-        };
+    var properties = tileset.properties;
+    for (var name in properties) {
+        if (properties.hasOwnProperty(name)) {
+            var property = '{' + name + '}';
+            expressionOperands.push({
+                text : property,
+                onselect : getOperandFunction(property)
+            });
+        }
     }
 
+    var oprs = [1, 10, 50, 100];
     for (var j = 0; j < oprs.length; ++j) {
-        operands.push({
+        expressionOperands.push({
             text : oprs[j],
             onselect : getOperandFunction(oprs[j])
         });
     }
 
-    menu = Sandcastle.addToolbarMenu(operands);
+    var menu = Sandcastle.addToolbarMenu(expressionOperands);
     styleableElements.push(menu);
 }
 
