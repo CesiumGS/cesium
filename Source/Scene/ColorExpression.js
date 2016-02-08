@@ -61,9 +61,9 @@ define([
         }
     });
 
-    function setIntervals(colorExpression) {
-        var propertyMetadata = colorExpression._tileset.properties[colorExpression._propertyName];
-        var colors = colorExpression._colors;
+    function setIntervals(expression) {
+        var propertyMetadata = expression._tileset.properties[expression._propertyName];
+        var colors = expression._colors;
         var length = colors.length;
         var min = propertyMetadata.minimum;
         var max = propertyMetadata.maximum;
@@ -77,7 +77,7 @@ define([
             };
         }
 
-        colorExpression._intervals = intervals;
+        expression._intervals = intervals;
     }
 
     /**
