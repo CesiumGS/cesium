@@ -298,54 +298,56 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
 gulp.task('test', ['build'], function(done) {
     var argv = yargs.argv;
-    var files = [
-        'Specs/karma-main.js',
-        {pattern : 'Source/**', included : false},
-        {pattern : 'Specs/**', included : false}
-    ];
 
     var enableAllBrowsers = false;
-    var includedCategories = '';
-    var excludedCategories = '';
+    var includeCategory = '';
+    var excludeCategory = '';
     var webglValidation = false;
-    var release = false;
 
     if (argv.all) {
         enableAllBrowsers = true;
     }
 
     if (argv.include) {
-        includedCategories = argv.include;
+        includeCategory = argv.include;
     }
 
     if (argv.exclude) {
-        excludedCategories = argv.exclude;
+        excludeCategory = argv.exclude;
     }
 
     if (argv.webglValidation) {
         webglValidation = true;
     }
 
-    if (argv.release) {
-        release = true;
-        files.push({pattern : 'Build/**', included : false});
+    test(enableAllBrowsers, includeCategory, excludeCategory, webglValidation, false, done);
+});
+
+gulp.task('test-release', ['minifyRelease'], function(done){
+    var argv = yargs.argv;
+
+    var enableAllBrowsers = false;
+    var includeCategory = '';
+    var excludeCategory = '';
+    var webglValidation = false;
+
+    if (argv.all) {
+        enableAllBrowsers = true;
     }
 
-    karma.start({
-        configFile: karmaConfigFile,
-        detectBrowsers : {
-            enabled: enableAllBrowsers
-        },
-        files: files,
-        client: {
-            args: [includedCategories, excludedCategories, webglValidation, release]
-        }
-    }, function() {
-        //Failed tests case a return code of 1 to be passed into the callback
-        //but we ignore because failing tests don't indicate that the script failed
-        //to run.
-        return done();
-    });
+    if (argv.include) {
+        includeCategory = argv.include;
+    }
+
+    if (argv.exclude) {
+        excludeCategory = argv.exclude;
+    }
+
+    if (argv.webglValidation) {
+        webglValidation = true;
+    }
+
+    test(enableAllBrowsers, includeCategory, excludeCategory, webglValidation, true, done);
 });
 
 gulp.task('generateStubs', ['build'], function(done) {
@@ -937,5 +939,30 @@ function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
         stream.on('end', reject);
+    });
+}
+
+function test (enableAllBrowsers, includeCategory, excludeCategory, webglValidation, release, done) {
+    var files = [
+        'Specs/karma-main.js',
+        {pattern: 'Source/**', included: false},
+        {pattern: 'Specs/**', included: false}
+    ];
+
+    if (release) {
+        files.push({pattern: 'Build/**', included: false});
+    }
+
+    karma.start({
+        configFile: karmaConfigFile,
+        detectBrowsers : {
+            enabled: enableAllBrowsers
+        },
+        files: files,
+        client: {
+            args: [includeCategory, excludeCategory, webglValidation, release]
+        }
+    }, function() {
+        return done();
     });
 }
