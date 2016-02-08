@@ -825,12 +825,6 @@ define([
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing)) {
 
-            stats.lastVisited = stats.visited;
-            stats.lastNumberOfCommands = stats.numberOfCommands;
-            stats.lastSelected = tileset._selectedTiles.length;
-            stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
-            stats.lastNumberProcessing = stats.numberProcessing;
-
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
             var s = isPick ? '[Pick ]: ' : '[Color]: ';
