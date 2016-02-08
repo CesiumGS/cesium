@@ -410,7 +410,7 @@ function getStyleFunction(name) {
                         "rightOperand" : 0
                     },
                     "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
-                    "colors" : getRandomColors()
+                    "colors" :  Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors)
                 }
             },
             "show" : {
@@ -449,14 +449,14 @@ Sandcastle.addToolbarButton('colors++', function() {
     ++numberofColors;
 
     tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
-    tileset.style.color.colors = getRandomColors();
+    tileset.style.color.colors = Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors);
 });
 
 Sandcastle.addToolbarButton('colors--', function() {
     numberofColors = Math.max(numberofColors - 1, 1);
 
     tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
-    tileset.style.color.colors = getRandomColors();
+    tileset.style.color.colors = Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors);
 });
 
 function addExpressionUI() {
