@@ -751,23 +751,18 @@ defineSuite([
         });
     });
 
-    it('tile visible event is raised', function() {
+    it('tile visible event is raised and was called', function() {
+        spyOn(Event.prototype, 'raiseEvent');
+
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.tileVisible.addEventListener(function(tile) {
                 expect(tile).toBe(tileset._root);
                 expect(tileset._root.visibility(scene.frameState.cullingVolume)).not.toEqual(CullingVolume.MASK_OUTSIDE);
+                expect(Event.prototype.raiseEvent).toHaveBeenCalled();
             });
 
             scene.renderForSpecs();
-        });
-    });
-
-    it('tile visible event was called', function() {
-        spyOn(Event.prototype, 'raiseEvent');
-
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            expect(Event.prototype.raiseEvent).toHaveBeenCalled();
         });
     });
 
