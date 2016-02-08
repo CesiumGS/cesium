@@ -422,8 +422,14 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = joinUrls(that._baseUrl, '?v=' + tilesetJson.asset.version);
-            that._baseUrl = baseUrl;
+            // Append the version to the baseUrl
+            var versionQuery = '?v=' + tilesetJson.asset.version;
+            that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+
+            // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+            // Get the baseUrl relative to the external tileset.
+            var baseUrl = getBaseUri(tilesetUrl);
+            baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
