@@ -854,6 +854,7 @@ function removeExtension(p) {
 }
 
 function requirejsOptimize(config) {
+    config.logLevel = 1;
     return new Promise(function(resolve, reject) {
         requirejs.optimize(config, resolve, reject);
     });
