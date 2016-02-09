@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var Pos = CodeMirror.Pos;
   function cmp(a, b) { return a.line - b.line || a.ch - b.ch; }

@@ -4,7 +4,7 @@
 window.CodeMirror = {};
 
 (function() {
-"use strict";
+'use strict';
 
 function splitLines(string){ return string.split(/\r?\n|\r/); };
 

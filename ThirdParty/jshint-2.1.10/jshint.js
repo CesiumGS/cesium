@@ -245,7 +245,7 @@ EventEmitter.prototype.listeners = function(type) {
 },{"__browserify_process":1}],3:[function(require,module,exports){
 (function(){// jshint -W001
 
-"use strict";
+'use strict';
 
 // Identifiers provided by the ECMAScript standard.
 
@@ -870,7 +870,7 @@ exports.javascriptURL = /^(?:javascript|jscript|ecmascript|vbscript|mocha|livesc
 exports.fallsThrough = /^\s*\/\*\s*falls?\sthrough\s*\*\/\s*$/;
 
 },{}],5:[function(require,module,exports){
-"use strict";
+'use strict';
 
 var state = {
 	syntax: {},
@@ -896,7 +896,7 @@ var state = {
 exports.state = state;
 
 },{}],6:[function(require,module,exports){
-(function(){"use strict";
+(function(){'use strict';
 
 exports.register = function (linter) {
 	// Check for properties named __proto__. This special property was
@@ -1069,7 +1069,7 @@ exports.register = function (linter) {
 };
 })()
 },{}],7:[function(require,module,exports){
-(function(){"use strict";
+(function(){'use strict';
 
 var _ = require("underscore");
 
@@ -1294,7 +1294,7 @@ _.each(info, function (desc, code) {
  * Lexical analysis and token construction.
  */
 
-"use strict";
+'use strict';
 
 var _      = require("underscore");
 var events = require("events");
@@ -2409,7 +2409,7 @@ Lexer.prototype = {
 						line: this.line,
 						character: this.char
 					}, checks,
-					function () { return n >= 0 && n <= 7 && state.directive["use strict"]; });
+					function () { return n >= 0 && n <= 7 && state.directive['use strict']; });
 					break;
 				case "u":
 					char = String.fromCharCode(parseInt(this.input.substr(1, 4), 16));
@@ -2794,7 +2794,7 @@ Lexer.prototype = {
 				// Some ES5 FutureReservedWord identifiers are active only
 				// within a strict mode environment.
 				if (meta.strictOnly) {
-					if (!state.option.strict && !state.directive["use strict"]) {
+					if (!state.option.strict && !state.directive['use strict']) {
 						return false;
 					}
 				}
@@ -2938,7 +2938,7 @@ Lexer.prototype = {
 					line: this.line,
 					character: this.char
 				}, checks, function () {
-					return state.directive["use strict"] && token.base === 8; 
+					return state.directive['use strict'] && token.base === 8; 
 				});
 
 				this.trigger("Number", {
@@ -3129,7 +3129,7 @@ var console = require("console-browserify");
 // the JSHINT function itself.
 
 var JSHINT = (function () {
-	"use strict";
+	'use strict';
 
 	var anonname, // The guessed name for anonymous functions.
 		api, // Extension API
@@ -3174,7 +3174,7 @@ var JSHINT = (function () {
 			forin       : true, // if for in statements must filter
 			funcscope   : true, // if only function scope should be used for scope tests
 			gcl         : true, // if JSHint should be compatible with Google Closure Linter
-			globalstrict: true, // if global "use strict"; should be allowed (also enables 'strict')
+			globalstrict: true, // if global 'use strict'; should be allowed (also enables 'strict')
 			immed       : true, // if immediate invocations must be wrapped in parens
 			iterator    : true, // if the `__iterator__` property should be allowed
 			jquery      : true, // if jQuery globals should be predefined
@@ -3212,7 +3212,7 @@ var JSHINT = (function () {
 			shadow      : true, // if variable shadowing should be tolerated
 			smarttabs   : true, // if smarttabs should be tolerated
 			                    // (http://www.emacswiki.org/emacs/SmartTabs)
-			strict      : true, // require the "use strict"; pragma
+			strict      : true, // require the 'use strict'; pragma
 			sub         : true, // if all forms of subscript notation are tolerated
 			supernew    : true, // if `new function () { ... };` and `new Object;`
 			                    // should be tolerated
@@ -3361,7 +3361,7 @@ var JSHINT = (function () {
 			// Some ES5 FutureReservedWord identifiers are active only
 			// within a strict mode environment.
 			if (meta.strictOnly) {
-				if (!state.option.strict && !state.directive["use strict"]) {
+				if (!state.option.strict && !state.directive['use strict']) {
 					return false;
 				}
 			}
@@ -4423,7 +4423,7 @@ var JSHINT = (function () {
 				if (left.id === ".") {
 					if (!left.left) {
 						warning("E031", that);
-					} else if (left.left.value === "arguments" && !state.directive["use strict"]) {
+					} else if (left.left.value === "arguments" && !state.directive['use strict']) {
 						warning("E031", that);
 					}
 
@@ -4438,7 +4438,7 @@ var JSHINT = (function () {
 						});
 					} else if (!left.left) {
 						warning("E031", that);
-					} else if (left.left.value === "arguments" && !state.directive["use strict"]) {
+					} else if (left.left.value === "arguments" && !state.directive['use strict']) {
 						warning("E031", that);
 					}
 					that.right = expression(10);
@@ -4762,7 +4762,7 @@ var JSHINT = (function () {
 					warning("W034", state.tokens.curr, state.tokens.curr.value);
 				}
 
-				if (state.tokens.curr.value === "use strict") {
+				if (state.tokens.curr.value === 'use strict') {
 					if (!state.option["(explicitNewcap)"])
 						state.option.newcap = true;
 					state.option.undef = true;
@@ -4834,7 +4834,7 @@ var JSHINT = (function () {
 					directives();
 
 					if (state.option.strict && funct["(context)"]["(global)"]) {
-						if (!m["use strict"] && !state.directive["use strict"]) {
+						if (!m['use strict'] && !state.directive['use strict']) {
 							warning("E007");
 						}
 					}
@@ -4877,7 +4877,7 @@ var JSHINT = (function () {
 				expression(10);
 
 				if (state.option.strict && funct["(context)"]["(global)"]) {
-					if (!m["use strict"] && !state.directive["use strict"]) {
+					if (!m['use strict'] && !state.directive['use strict']) {
 						warning("E007");
 					}
 				}
@@ -5116,7 +5116,7 @@ var JSHINT = (function () {
 	reserve("default").reach = true;
 	reserve("finally");
 	reservevar("arguments", function (x) {
-		if (state.directive["use strict"] && funct["(global)"]) {
+		if (state.directive['use strict'] && funct["(global)"]) {
 			warning("E008", x);
 		}
 	});
@@ -5125,7 +5125,7 @@ var JSHINT = (function () {
 	reservevar("Infinity");
 	reservevar("null");
 	reservevar("this", function (x) {
-		if (state.directive["use strict"] && !state.option.validthis && ((funct["(statement)"] &&
+		if (state.directive['use strict'] && !state.option.validthis && ((funct["(statement)"] &&
 				funct["(name)"].charAt(0) > "Z") || funct["(global)"])) {
 			warning("W040", x);
 		}
@@ -5385,7 +5385,7 @@ var JSHINT = (function () {
 		if (left && left.value === "arguments" && (m === "callee" || m === "caller")) {
 			if (state.option.noarg)
 				warning("W059", left, m);
-			else if (state.directive["use strict"])
+			else if (state.directive['use strict'])
 				error("E008");
 		} else if (!state.option.evil && left && left.value === "document" &&
 				(m === "write" || m === "writeln")) {
@@ -6433,7 +6433,7 @@ var JSHINT = (function () {
 	}
 
 	function classtail(c) {
-		var strictness = state.directive["use strict"];
+		var strictness = state.directive['use strict'];
 
 		// ClassHeritage(opt)
 		if (state.tokens.next.value === "extends") {
@@ -6442,11 +6442,11 @@ var JSHINT = (function () {
 		}
 
 		// A ClassBody is always strict code.
-		state.directive["use strict"] = true;
+		state.directive['use strict'] = true;
 		advance("{");
 		// ClassBody(opt)
 		c.body = state.syntax["{"].nud(true);
-		state.directive["use strict"] = strictness;
+		state.directive['use strict'] = strictness;
 	}
 
 	blockstmt("function", function () {
@@ -6629,7 +6629,7 @@ var JSHINT = (function () {
 
 	blockstmt("with", function () {
 		var t = state.tokens.next;
-		if (state.directive["use strict"]) {
+		if (state.directive['use strict']) {
 			error("E010", state.tokens.curr);
 		} else if (!state.option.withstmt) {
 			warning("W085", state.tokens.curr);
@@ -7653,7 +7653,7 @@ var JSHINT = (function () {
 			default:
 				directives();
 
-				if (state.directive["use strict"]) {
+				if (state.directive['use strict']) {
 					if (!state.option.globalstrict && !(state.option.node || state.option.phantom)) {
 						warning("W097", state.tokens.prev);
 					}

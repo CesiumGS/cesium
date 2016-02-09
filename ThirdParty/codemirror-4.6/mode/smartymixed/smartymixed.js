@@ -20,7 +20,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("smartymixed", function(config) {
   var htmlMixedMode = CodeMirror.getMode(config, "htmlmixed");

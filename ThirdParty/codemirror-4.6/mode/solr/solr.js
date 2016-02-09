@@ -9,10 +9,10 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("solr", function() {
-  "use strict";
+  'use strict';
 
   var isStringChar = /[^\s\|\!\+\-\*\?\~\^\&\:\(\)\[\]\{\}\^\"\\]/;
   var isOperatorChar = /[\|\!\+\-\*\?\~\^\&]/;

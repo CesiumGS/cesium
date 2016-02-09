@@ -123,7 +123,7 @@ define([
         ScreenSpaceCameraController,
         SunPostProcess,
         TweenCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,

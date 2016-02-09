@@ -19,7 +19,7 @@ defineSuite([
         Rectangle,
         SceneMode,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var frameState;
     var camera;

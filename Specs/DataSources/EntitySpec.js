@@ -53,7 +53,7 @@ defineSuite([
         PolylineVolumeGraphics,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();

@@ -13,7 +13,7 @@ define([
         DeveloperError,
         loadImage,
         writeTextToCanvas) {
-    "use strict";
+    'use strict';
 
     /**
      * A utility class for generating custom map pins as canvas elements.

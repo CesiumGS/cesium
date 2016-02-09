@@ -27,7 +27,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {

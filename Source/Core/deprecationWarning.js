@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var warnings = {};
 

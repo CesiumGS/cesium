@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.registerHelper("fold", "indent", function(cm, start) {
   var tabSize = cm.getOption("tabSize"), firstLine = cm.getLine(start.line);

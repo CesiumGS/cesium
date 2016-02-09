@@ -26,7 +26,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var DEFAULT_MIN_CHARS = 2;
   var DEFAULT_TOKEN_STYLE = "matchhighlight";

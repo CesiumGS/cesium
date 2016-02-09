@@ -11,7 +11,7 @@ defineSuite([
         ClockStep,
         JulianDate,
         ClockViewModel) {
-    "use strict";
+    'use strict';
 
     var clockViewModel;
     beforeEach(function() {

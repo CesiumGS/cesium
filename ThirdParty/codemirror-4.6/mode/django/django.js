@@ -11,7 +11,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineMode("django:inner", function() {
     var keywords = ["block", "endblock", "for", "endfor", "in", "true", "false",

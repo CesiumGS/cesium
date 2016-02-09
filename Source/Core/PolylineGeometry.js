@@ -35,7 +35,7 @@ define([
         PolylinePipeline,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchInterpolateColorsArray = [];
 

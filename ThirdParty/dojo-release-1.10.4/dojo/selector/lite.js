@@ -1,5 +1,5 @@
 define(["../has", "../_base/kernel"], function(has, dojo){
-"use strict";
+'use strict';
 
 var testDiv = document.createElement("div");
 var matchesSelector = testDiv.matches || testDiv.webkitMatchesSelector || testDiv.mozMatchesSelector || testDiv.msMatchesSelector || testDiv.oMatchesSelector;

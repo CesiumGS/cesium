@@ -15,7 +15,7 @@ defineSuite([
         TimeIntervalCollection,
         ColorMaterialProperty,
         GridMaterialProperty) {
-    "use strict";
+    'use strict';
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();

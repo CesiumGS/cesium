@@ -21,7 +21,7 @@ define([
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch) {
-    "use strict";
+    'use strict';
 
     var emptyArray = [];
 

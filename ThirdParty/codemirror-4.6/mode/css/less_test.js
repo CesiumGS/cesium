@@ -2,7 +2,7 @@
 // Distributed under an MIT license: http://codemirror.net/LICENSE
 
 (function() {
-  "use strict";
+  'use strict';
 
   var mode = CodeMirror.getMode({indentUnit: 2}, "text/x-less");
   function MT(name) { test.mode(name, mode, Array.prototype.slice.call(arguments, 1), "less"); }

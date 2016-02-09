@@ -17,7 +17,7 @@ defineSuite([
         OrthographicFrustum,
         SceneMode,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 

@@ -3,7 +3,7 @@ defineSuite([
         'Core/combine'
     ], function(
         combine) {
-    "use strict";
+    'use strict';
 
     it('can combine shallow references', function() {
         var obj1 = {

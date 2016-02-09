@@ -39,7 +39,7 @@ defineSuite([
         VertexArray,
         WebGLConstants,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
     var sp;

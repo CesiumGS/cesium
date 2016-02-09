@@ -1,5 +1,5 @@
 (function() {
-  "use strict";
+  'use strict';
 
   function test(name) {
     var text = Array.prototype.slice.call(arguments, 1, arguments.length - 1).join("\n");

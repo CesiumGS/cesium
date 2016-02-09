@@ -1,7 +1,7 @@
 define([
 	"../_base/lang"
 ], function(lang){
-	"use strict";
+	'use strict';
 
 	// module:
 	//		dojo/promise/Promise

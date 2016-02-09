@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 // Depends on js-yaml.js from https://github.com/nodeca/js-yaml
 

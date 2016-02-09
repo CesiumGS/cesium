@@ -35,7 +35,7 @@ defineSuite([
         VerticalOrigin,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     var visualizer;

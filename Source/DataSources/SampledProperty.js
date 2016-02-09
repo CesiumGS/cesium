@@ -19,7 +19,7 @@ define([
         ExtrapolationType,
         JulianDate,
         LinearApproximation) {
-    "use strict";
+    'use strict';
 
     var PackableNumber = {
         packedLength : 1,

@@ -47,7 +47,7 @@ define([
         SkyBox,
         Sun,
         getElement) {
-    "use strict";
+    'use strict';
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');

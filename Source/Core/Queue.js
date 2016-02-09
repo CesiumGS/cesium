@@ -3,7 +3,7 @@ define([
         '../Core/defineProperties'
     ], function(
         defineProperties) {
-    "use strict";
+    'use strict';
 
     /**
      * A queue that can enqueue items at the end, and dequeue items from the front.

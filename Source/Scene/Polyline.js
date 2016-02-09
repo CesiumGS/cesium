@@ -21,7 +21,7 @@ define([
         Matrix4,
         PolylinePipeline,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * A renderable polyline. Create this by calling {@link PolylineCollection#add}

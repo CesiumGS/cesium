@@ -61,7 +61,7 @@ define([
         StripeMaterial,
         WaterMaterial,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A Material defines surface appearance through a combination of diffuse, specular,

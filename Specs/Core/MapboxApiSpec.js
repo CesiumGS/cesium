@@ -3,7 +3,7 @@ defineSuite([
         'Core/MapboxApi'
     ], function(
         MapboxApi) {
-    "use strict";
+    'use strict';
 
     it('getAccessToken returns provided access token if one is provided', function() {
         expect(MapboxApi.getAccessToken('foo')).toEqual('foo');

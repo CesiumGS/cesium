@@ -12,7 +12,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var map = CodeMirror.keyMap.sublime = {fallthrough: "default"};
   var cmds = CodeMirror.commands;

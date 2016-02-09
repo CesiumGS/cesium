@@ -15,7 +15,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("pig", function(_config, parserConfig) {
   var keywords = parserConfig.keywords,

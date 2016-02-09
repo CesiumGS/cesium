@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var pseudoClasses = {link: 1, visited: 1, active: 1, hover: 1, focus: 1,
                        "first-letter": 1, "first-line": 1, "first-child": 1,

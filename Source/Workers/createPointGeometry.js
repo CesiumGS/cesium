@@ -3,7 +3,7 @@ define([
         '../Core/PointGeometry'
     ], function(
         PointGeometry) {
-    "use strict";
+    'use strict';
 
     return PointGeometry.createGeometry;
 });

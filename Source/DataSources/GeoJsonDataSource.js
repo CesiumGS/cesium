@@ -53,7 +53,7 @@ define([
         EntityCollection,
         PolygonGraphics,
         PolylineGraphics) {
-    "use strict";
+    'use strict';
 
     function defaultCrsFunction(coordinates) {
         return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);

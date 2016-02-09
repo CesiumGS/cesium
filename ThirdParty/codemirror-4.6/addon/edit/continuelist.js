@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   var listRE = /^(\s*)([*+-]|(\d+)\.)(\s+)/,
       unorderedBullets = "*+-";

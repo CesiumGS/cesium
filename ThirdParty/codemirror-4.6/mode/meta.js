@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
 CodeMirror.modeInfo = [
   {name: "APL", mime: "text/apl", mode: "apl"},

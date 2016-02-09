@@ -80,7 +80,7 @@ require({
         when,
         LinkButton,
         Cesium) {
-    "use strict";
+    'use strict';
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
     window.Cesium = Cesium;

@@ -21,7 +21,7 @@ defineSuite([
         CallbackProperty,
         EntityCollection,
         when) {
-    "use strict";
+    'use strict';
 
     var defaultMarkerSize;
     var defaultSymbol;

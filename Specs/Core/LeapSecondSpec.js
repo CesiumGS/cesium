@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         LeapSecond,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     it('default constructor sets expected values', function() {
         var leapSecond = new LeapSecond();

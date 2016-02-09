@@ -15,7 +15,7 @@ defineSuite([
         Ellipsoid,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
     var shape;
 
     beforeAll(function() {

@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PolylinePipeline,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
         var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);

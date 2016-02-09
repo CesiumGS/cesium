@@ -21,7 +21,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         CameraEventType) {
-    "use strict";
+    'use strict';
 
     function getKey(type, modifier) {
         var key = type;

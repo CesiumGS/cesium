@@ -14,7 +14,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("clojure", function (options) {
     var BUILTIN = "builtin", COMMENT = "comment", STRING = "string", CHARACTER = "string-2",

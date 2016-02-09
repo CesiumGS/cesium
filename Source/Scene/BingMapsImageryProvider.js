@@ -37,7 +37,7 @@ define([
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.

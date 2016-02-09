@@ -13,7 +13,7 @@ define([
         Event,
         CompositeProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link CompositeProperty} which is also a {@link MaterialProperty}.

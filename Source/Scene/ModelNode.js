@@ -7,7 +7,7 @@ define([
         defaultValue,
         defineProperties,
         Matrix4) {
-    "use strict";
+    'use strict';
 
     /**
      * A model node with a transform for user-defined animations.  A glTF asset can

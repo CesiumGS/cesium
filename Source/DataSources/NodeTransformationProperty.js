@@ -15,7 +15,7 @@ define([
         TranslationRotationScale,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultNodeTransformation = new TranslationRotationScale();
 

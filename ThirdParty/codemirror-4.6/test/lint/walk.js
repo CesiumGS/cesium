@@ -5,7 +5,7 @@
   if (typeof define == "function" && define.amd) return define(["exports"], mod); // AMD
   mod((this.acorn || (this.acorn = {})).walk = {}); // Plain browser env
 })(function(exports) {
-  "use strict";
+  'use strict';
 
   // A simple walk is one where you simply specify callbacks to be
   // called on specific nodes. The last two arguments are optional. A

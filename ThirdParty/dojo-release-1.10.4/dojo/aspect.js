@@ -3,7 +3,7 @@ define([], function(){
 	// module:
 	//		dojo/aspect
 
-	"use strict";
+	'use strict';
 	var undefined, nextId = 0;
 	function advise(dispatcher, type, advice, receiveArguments){
 		var previous = dispatcher[type];

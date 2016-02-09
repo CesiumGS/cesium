@@ -19,7 +19,7 @@ define([
         Matrix4,
         PerInstanceColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates a {@link Primitive} to visualize well-known vector vertex attributes:

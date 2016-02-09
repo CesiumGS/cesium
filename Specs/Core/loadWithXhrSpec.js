@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         loadWithXhr,
         loadImage) {
-    "use strict";
+    'use strict';
 
     describe('data URI loading', function() {
         it('can load URI escaped text with default response type', function() {

@@ -9,7 +9,7 @@ define([
         Event,
         DataSource,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link DataSource} implementation which can be used to manually manage a group of entities.

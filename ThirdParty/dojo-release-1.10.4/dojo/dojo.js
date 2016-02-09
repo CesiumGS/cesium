@@ -1373,7 +1373,7 @@
 			evalModuleText = function(text, module){
 				// see def() for the injectingCachedModule bracket; it simply causes a short, safe circuit
 				if(has("config-stripStrict")){
-					text = text.replace(/"use strict"/g, '');
+					text = text.replace(/'use strict'/g, '');
 				}
 				injectingCachedModule = 1;
 				if(has("config-dojo-loader-catches")){

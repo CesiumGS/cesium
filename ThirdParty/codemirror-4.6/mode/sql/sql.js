@@ -9,10 +9,10 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-"use strict";
+'use strict';
 
 CodeMirror.defineMode("sql", function(config, parserConfig) {
-  "use strict";
+  'use strict';
 
   var client         = parserConfig.client || {},
       atoms          = parserConfig.atoms || {"false": true, "true": true, "null": true},
@@ -203,7 +203,7 @@ CodeMirror.defineMode("sql", function(config, parserConfig) {
 });
 
 (function() {
-  "use strict";
+  'use strict';
 
   // `identifier`
   function hookIdentifier(stream) {

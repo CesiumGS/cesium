@@ -25,7 +25,7 @@
   if (typeof define == "function" && define.amd) return define(["exports"], mod); // AMD
   mod(root.acorn || (root.acorn = {})); // Plain browser env
 })(this, function(exports) {
-  "use strict";
+  'use strict';
 
   exports.version = "0.4.1";
 
@@ -980,7 +980,7 @@
   }
 
   // Enter strict mode. Re-reads the next token to please pedantic
-  // tests ("use strict"; 010; -- should fail).
+  // tests ('use strict'; 010; -- should fail).
 
   function setStrict(strct) {
     strict = strct;
@@ -1049,11 +1049,11 @@
     return node;
   }
 
-  // Test whether a statement node is the string literal `"use strict"`.
+  // Test whether a statement node is the string literal `'use strict'`.
 
   function isUseStrict(stmt) {
     return options.ecmaVersion >= 5 && stmt.type === "ExpressionStatement" &&
-      stmt.expression.type === "Literal" && stmt.expression.value === "use strict";
+      stmt.expression.type === "Literal" && stmt.expression.value === 'use strict';
   }
 
   // Predicate that tests whether the next token is of the given

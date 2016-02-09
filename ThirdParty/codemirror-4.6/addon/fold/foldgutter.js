@@ -9,7 +9,7 @@
   else // Plain browser env
     mod(CodeMirror);
 })(function(CodeMirror) {
-  "use strict";
+  'use strict';
 
   CodeMirror.defineOption("foldGutter", false, function(cm, val, old) {
     if (old && old != CodeMirror.Init) {
