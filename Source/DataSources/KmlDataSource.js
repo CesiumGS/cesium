@@ -1816,6 +1816,10 @@ define([
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
+        if (dataSource._name !== name) {
+            dataSource._name = name;
+            dataSource._changed.raiseEvent(dataSource);
+        }
 
         var styleCollection = new EntityCollection(dataSource);
         when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
@@ -1969,6 +1973,7 @@ define([
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
+        this._refresh = new Event();
         this._clock = undefined;
         this._entityCollection = new CompositeEntityCollection();
         this._name = undefined;
@@ -2079,6 +2084,16 @@ define([
             get : function() {
                 return this._loading;
             }
+        },
+        /**
+         * Gets an event that will be raised when the data source refreshes a network link.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        refreshEvent : {
+            get : function() {
+                return this._refresh;
+            }
         }
     });
 
@@ -2140,18 +2155,9 @@ define([
                     clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
                     clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
                 }
-                var changed = false;
-                if (that._name !== name) {
-                    that._name = name;
-                    changed = true;
-                }
 
                 if (clock !== that._clock) {
-                    changed = true;
                     that._clock = clock;
-                }
-
-                if (changed) {
                     that._changed.raiseEvent(that);
                 }
 
@@ -2253,6 +2259,7 @@ define([
 
             networkLink.updating = false;
             networkLink.needsUpdate = false;
+            dataSource._refresh.raiseEvent(dataSource, networkLink.href);
         };
     }
 

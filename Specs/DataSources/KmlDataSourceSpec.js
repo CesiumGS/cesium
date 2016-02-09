@@ -18,6 +18,7 @@ defineSuite([
         'Core/RequestErrorEvent',
         'Core/RuntimeError',
         'DataSources/ColorMaterialProperty',
+        'DataSources/CompositeEntityCollection',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'Scene/HorizontalOrigin',
@@ -41,6 +42,7 @@ defineSuite([
         RequestErrorEvent,
         RuntimeError,
         ColorMaterialProperty,
+        CompositeEntityCollection,
         EntityCollection,
         ImageMaterialProperty,
         HorizontalOrigin,
@@ -97,7 +99,7 @@ defineSuite([
         var dataSource = new KmlDataSource();
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.clock).toBeUndefined();
-        expect(dataSource.entities).toBeInstanceOf(EntityCollection);
+        expect(dataSource.entities).toBeInstanceOf(CompositeEntityCollection);
         expect(dataSource.isLoading).toBe(false);
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
@@ -529,7 +531,7 @@ defineSuite([
         </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
+            var entity = dataSource.entities.getCollection(0).values[0];
             expect(entity.show).toBe(false);
         });
     });
@@ -1935,10 +1937,11 @@ defineSuite([
         </Folder>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var folder = dataSource.entities.getById('parent');
-            var placemark = dataSource.entities.getById('child');
+            var entities = dataSource.entities.getCollection(0);
+            var folder = entities.getById('parent');
+            var placemark = entities.getById('child');
 
-            expect(dataSource.entities.values.length).toBe(2);
+            expect(entities.values.length).toBe(2);
             expect(folder).toBeDefined();
             expect(placemark.parent).toBe(folder);
         });
@@ -2791,13 +2794,13 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(3);
+            var entities = dataSource.entities.getCollection(0);
+            expect(entities.values.length).toEqual(3);
 
-            var multi = dataSource.entities.getById('testID');
+            var multi = entities.getById('testID');
             expect(multi).toBeDefined();
 
-            var point1 = dataSource.entities.getById('point1');
+            var point1 = entities.getById('point1');
             expect(point1).toBeDefined();
             expect(point1.parent).toBe(multi);
             expect(point1.name).toBe(multi.name);
@@ -2805,7 +2808,7 @@ defineSuite([
             expect(point1.kml).toBe(multi.kml);
             expect(point1.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON13);
 
-            var point2 = dataSource.entities.getById('point2');
+            var point2 = entities.getById('point2');
             expect(point2).toBeDefined();
             expect(point2.parent).toBe(multi);
             expect(point2.name).toBe(multi.name);
@@ -2817,10 +2820,13 @@ defineSuite([
 
     it('NetworkLink: Loads data', function() {
         return KmlDataSource.load('Data/KML/networkLink.kml').then(function(dataSource) {
-            var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(2);
+            expect(dataSource.entities.getCollectionsLength()).toBe(2);
+            var entities = dataSource.entities.getCollection(0).values;
+            var linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+            expect(entities.length).toEqual(1);
+            expect(linkEntities.length).toEqual(1);
             expect(entities[0].id).toEqual('link');
-            expect(entities[1].parent).toBe(entities[0]);
+            expect(linkEntities[0].parent).toBe(entities[0]);
         });
     });
 
@@ -2893,7 +2899,7 @@ defineSuite([
             </Polygon>\
           </Placemark>';
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entityCollection = dataSource.entities;
+            var entityCollection = dataSource.entities.getCollection(0);
             var entity = entityCollection.values[0];
             expect(entity.entityCollection).toEqual(entityCollection);
         });
