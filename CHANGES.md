@@ -43,7 +43,6 @@ Change Log
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
 * Added helper functions: `getExtensionFromUri`, `getAbsoluteUri`, and `Math.logBase`.
 * Added `Rectangle.union` and `Rectangle.expand`.
->>>>>>> upstream-master
 
 ### 1.17 - 2016-01-04
 
