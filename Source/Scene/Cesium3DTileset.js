@@ -227,7 +227,6 @@ define([
          * });
          */
         this.loadProgress = new Event();
-        this._loadProgressEventsToRaise = [];
 
         // TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
         // lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
@@ -465,8 +464,14 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
-            var baseUrl = joinUrls(that._baseUrl, '?v=' + tilesetJson.asset.version);
-            that._baseUrl = baseUrl;
+            // Append the version to the baseUrl
+            var versionQuery = '?v=' + tilesetJson.asset.version;
+            that._baseUrl = joinUrls(that._baseUrl, versionQuery);
+
+            // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
+            // Get the baseUrl relative to the external tileset.
+            var baseUrl = getBaseUri(tilesetUrl);
+            baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
             // If there is a parentTile, add the root of the currently loading tileset
@@ -588,7 +593,6 @@ define([
         if (!tile.contentUnloaded) {
             var stats = tileset._statistics;
             ++stats.numberOfPendingRequests;
-            addLoadProgressEvent(tileset);
 
             var removeFunction = removeFromProcessingQueue(tileset, tile);
             when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
@@ -829,7 +833,6 @@ define([
 
             --tileset._statistics.numberOfPendingRequests;
             ++tileset._statistics.numberProcessing;
-            addLoadProgressEvent(tileset);
         };
     }
 
@@ -845,8 +848,6 @@ define([
                 // For example, when a url request fails and the ready promise is rejected
                 --tileset._statistics.numberOfPendingRequests;
             }
-
-            addLoadProgressEvent(tileset);
         };
     }
 
@@ -886,14 +887,6 @@ define([
             styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
             styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
 
-            stats.lastVisited = stats.visited;
-            stats.lastNumberOfCommands = stats.numberOfCommands;
-            stats.lastSelected = tileset._selectedTiles.length;
-            stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
-            stats.lastNumberProcessing = stats.numberProcessing;
-            styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
-            styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
-
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
             var s = isPick ? '[Pick ]: ' : '[Color]: ';
@@ -913,6 +906,14 @@ define([
             /*global console*/
             console.log(s);
         }
+
+        stats.lastVisited = stats.visited;
+        stats.lastNumberOfCommands = stats.numberOfCommands;
+        stats.lastSelected = tileset._selectedTiles.length;
+        stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
+        stats.lastNumberProcessing = stats.numberProcessing;
+        styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
+        styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
     }
 
     function updateTiles(tileset, frameState) {
@@ -939,32 +940,17 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function addLoadProgressEvent(tileset) {
-        if (tileset.loadProgress.numberOfListeners > 0) {
-            var stats = tileset._statistics;
-            tileset._loadProgressEventsToRaise.push({
-                numberOfPendingRequests : stats.numberOfPendingRequests,
-                numberProcessing : stats.numberProcessing
+    function raiseLoadProgressEvent(tileset, frameState) {
+        var numberOfPendingRequests = tileset._statistics.numberOfPendingRequests;
+        var numberProcessing = tileset._statistics.numberProcessing;
+        var lastNumberOfPendingRequest = tileset._statistics.lastNumberOfPendingRequests;
+        var lastNumberProcessing = tileset._statistics.lastNumberProcessing;
+
+        if ((numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing)) {
+            frameState.afterRender.push(function() {
+                tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
             });
         }
-    }
-
-    function evenMoreComplicated(tileset, numberOfPendingRequests, numberProcessing) {
-        return function() {
-            tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberProcessing);
-        };
-    }
-
-    function raiseLoadProgressEvents(tileset, frameState) {
-        var eventsToRaise = tileset._loadProgressEventsToRaise;
-        var length = eventsToRaise.length;
-        for (var i = 0; i < length; ++i) {
-            var numberOfPendingRequests = eventsToRaise[i].numberOfPendingRequests;
-            var numberProcessing = eventsToRaise[i].numberProcessing;
-
-            frameState.afterRender.push(evenMoreComplicated(tileset, numberOfPendingRequests, numberProcessing));
-        }
-        eventsToRaise.length = 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1002,7 +988,7 @@ define([
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
-        raiseLoadProgressEvents(this, frameState);
+        raiseLoadProgressEvent(this, frameState);
 
         showStats(this, isPick);
     };

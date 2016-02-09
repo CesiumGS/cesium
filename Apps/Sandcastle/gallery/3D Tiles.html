@@ -135,7 +135,17 @@ function loadTileset(url) {
 
         addExpressionUI();
     });
+
+    tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+        if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
+            //console.log('Stopped loading');
+            return;
+        }
+
+        console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+    });
 }
+
 
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
@@ -323,19 +333,6 @@ handler.setInputAction(function(movement) {
         current.building.show = false;
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
-
-///////////////////////////////////////////////////////////////////////////////
-
-/*
-tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
-    if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
-        console.log('Stopped loading');
-        return;
-    }
-
-    console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
-});
-*/
 
 ///////////////////////////////////////////////////////////////////////////////
 
