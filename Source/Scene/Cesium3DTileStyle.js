@@ -6,7 +6,8 @@ define([
        '../Core/freezeObject',
        './BooleanExpression',
        './ColorRampExpression',
-       './ColorMapExpression'
+       './ColorMapExpression',
+       './ConstantColorExpression'
     ], function(
         defaultValue,
         defined,
@@ -14,7 +15,8 @@ define([
         freezeObject,
         BooleanExpression,
         ColorRampExpression,
-        ColorMapExpression) {
+        ColorMapExpression,
+        ConstantColorExpression) {
     "use strict";
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
@@ -22,7 +24,10 @@ define([
     // a UI might want to use it, etc.
 
     var DEFAULT_JSON_COLOR_EXPRESSION = freezeObject({
-        // TODO
+        type : 'constant',
+        constant : {
+            color : [255, 255, 255]
+        }
     });
 
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = freezeObject({
@@ -53,6 +58,8 @@ define([
             color = new ColorMapExpression(tileset.styleEngine, colorExpression.map);
         } else if (colorExpression.type === 'ramp') {
             color = new ColorRampExpression(tileset.styleEngine, colorExpression.ramp);
+        } else if (colorExpression.type === 'constant') {
+            color = new ConstantColorExpression(tileset.styleEngine, colorExpression.constant);
         }
 
         /**
