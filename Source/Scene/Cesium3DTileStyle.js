@@ -5,6 +5,7 @@ define([
        '../Core/DeveloperError',
        '../Core/freezeObject',
        './BooleanExpression',
+       './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
        './ConstantColorExpression'
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         freezeObject,
         BooleanExpression,
+        BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
         ConstantColorExpression) {
@@ -48,6 +50,8 @@ define([
         var colorExpression = defaultValue(jsonStyle.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(jsonStyle.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
 
+        var styleEngine = tileset.styleEngine;
+
         /**
          * DOC_TBA
          */
@@ -55,11 +59,11 @@ define([
 
         var color;
         if (colorExpression.type === 'map') {
-            color = new ColorMapExpression(tileset.styleEngine, colorExpression.map);
+            color = new ColorMapExpression(styleEngine, colorExpression.map);
         } else if (colorExpression.type === 'ramp') {
-            color = new ColorRampExpression(tileset.styleEngine, colorExpression.ramp);
+            color = new ColorRampExpression(styleEngine, colorExpression.ramp);
         } else if (colorExpression.type === 'constant') {
-            color = new ConstantColorExpression(tileset.styleEngine, colorExpression.constant);
+            color = new ConstantColorExpression(styleEngine, colorExpression.constant);
         }
 
         /**
@@ -67,10 +71,17 @@ define([
          */
         this.color = color;
 
+        var show;
+        if (defined(showExpression.operator)) {
+            show = new BooleanExpression(styleEngine, showExpression);
+        } else if (defined(showExpression.pattern)) {
+            show = new BooleanRegularExpression(styleEngine, showExpression);
+        }
+
         /**
          * DOC_TBA
          */
-        this.show = new BooleanExpression(tileset.styleEngine, showExpression);
+        this.show = show;
     }
 
     return Cesium3DTileStyle;

@@ -196,6 +196,8 @@ define([
         expression.evaluate = evaluate;
     }
 
+    // TODO: break true/false out into a "Constant boolean expression"
+
     BooleanExpression.prototype._true = function(feature) {
         return true;
     };
