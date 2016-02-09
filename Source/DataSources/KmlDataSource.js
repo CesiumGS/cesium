@@ -1588,6 +1588,7 @@ define([
         if (defined(camera)) {
             var wgs84 = Ellipsoid.WGS84;
             var centerCartesian;
+            var centerCartographic;
 
             bbox = defaultValue(bbox, computeViewRectangle(camera, canvas));
             if (defined(canvas)) {
@@ -1595,8 +1596,14 @@ define([
                 scrathCartesian2.y = canvas.clientHeight * 0.5;
                 centerCartesian = camera.pickEllipsoid(scrathCartesian2, wgs84, scrathCartesian3);
             }
-            centerCartesian = defaultValue(centerCartesian, Rectangle.center(bbox, scratchCartograhic));
-            var centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartograhic);
+
+            if (defined(centerCartesian)) {
+                centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartograhic);
+            } else {
+                centerCartographic = Rectangle.center(bbox, scratchCartograhic);
+                centerCartesian = wgs84.cartographicToCartesian(centerCartographic);
+            }
+
 
             if (defined(viewBoundScale) && !CesiumMath.equalsEpsilon(viewBoundScale, 1.0, CesiumMath.EPSILON9)) {
                 var newHalfWidth = bbox.width * viewBoundScale * 0.5;
@@ -1676,7 +1683,7 @@ define([
         }
 
         queryString = queryString.replace('[terrainEnabled]', '1');
-        queryString = queryString.replace('[clientVersion]', '1.18'); // TODO: Correct version?
+        queryString = queryString.replace('[clientVersion]', '1');
         queryString = queryString.replace('[kmlVersion]', '2.2');
         queryString = queryString.replace('[clientName]', 'Cesium');
         queryString = queryString.replace('[language]', 'English');
@@ -1700,17 +1707,17 @@ define([
                 var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
                 var queryString = makeQueryString(viewFormat, httpQuery);
 
-                var networkLinkCompositeCollection = new CompositeEntityCollection();
+                var networkLinkCompositeCollection = new CompositeEntityCollection(undefined, compositeEntityCollection);
                 networkLinkCompositeCollection.suspendEvents();
                 var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, appendQueryString(href, queryString), viewBoundScale);
 
                 var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
-                    compositeEntityCollection.addCollection(networkLinkCompositeCollection);
                     var entities = networkLinkCompositeCollection.getCollection(0).values;
                     for (var i = 0; i < entities.length; i++) {
                         entities[i].parent = networkEntity;
                     }
                     networkLinkCompositeCollection.resumeEvents();
+                    compositeEntityCollection.addCollection(networkLinkCompositeCollection);
 
                     // Add network links to a list if we need they will need to be updated
                     var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
@@ -1734,10 +1741,10 @@ define([
                             cameraUpdateTime : now
                         };
 
-                        var minRefreshPeriod;
+                        var minRefreshPeriod = 0;
                         if (hasNetworkLinkControl) {
                             networkLinkInfo.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
-                            minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+                            minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), 0);
                         }
 
                         if (refreshMode === 'onInterval') {
@@ -1752,7 +1759,8 @@ define([
                                 if (defined(expires)) {
                                     try {
                                         var date = JulianDate.fromIso8601(expires);
-                                        if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
+                                        var diff = JulianDate.secondsDifference(date, now);
+                                        if (diff > 0 && diff < minRefreshPeriod) {
                                             JulianDate.addSeconds(now, minRefreshPeriod, date);
                                         }
                                         networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
@@ -1975,7 +1983,7 @@ define([
         this._loading = new Event();
         this._refresh = new Event();
         this._clock = undefined;
-        this._entityCollection = new CompositeEntityCollection();
+        this._entityCollection = new CompositeEntityCollection(undefined, this);
         this._name = undefined;
         this._isLoading = false;
         this._proxy = proxy;
@@ -2182,7 +2190,7 @@ define([
             var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
             var hasNetworkLinkControl = defined(networkLinkControl);
 
-            var minRefreshPeriod;
+            var minRefreshPeriod = 0;
             if (hasNetworkLinkControl) {
                 if (defined(queryFirstNode(networkLinkControl, 'Update', namespaces.kml))) {
                     console.log('KML - NetworkLinkControl updates aren\'t supported.');
@@ -2191,7 +2199,7 @@ define([
                     return;
                 }
                 networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
-                minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), Number.MAX_VALUE);
+                minRefreshPeriod = defaultValue(queryNumericValue(networkLinkControl, 'minRefreshPeriod', namespaces.kml), 0);
             }
 
             var now = JulianDate.now();
@@ -2206,7 +2214,8 @@ define([
                     if (defined(expires)) {
                         try {
                             var date = JulianDate.fromIso8601(expires);
-                            if (JulianDate.secondsDifference(date, now) < minRefreshPeriod) {
+                            var diff = JulianDate.secondsDifference(date, now);
+                            if (diff > 0 && diff < minRefreshPeriod) {
                                 JulianDate.addSeconds(now, minRefreshPeriod, date);
                             }
                             networkLink.time = date;
@@ -2226,6 +2235,7 @@ define([
             for (var i = 0; i < entities.length; i++) {
                 entities[i].parent = networkLinkEntity;
             }
+            newCompositeCollection.resumeEvents();
 
             // No refresh information remove it, otherwise update lastUpdate time
             if (remove) {
@@ -2238,7 +2248,6 @@ define([
             parentCollection.removeCollection(networkLink.collection);
             parentCollection.addCollection(newCompositeCollection);
             networkLink.collection = newCompositeCollection;
-            newCompositeCollection.resumeEvents();
             parentCollection.resumeEvents();
 
             var availability = dataSource._entityCollection.computeAvailability();
@@ -2297,7 +2306,7 @@ define([
         if (defined(camera) &&
             !(camera.positionWC.equalsEpsilon(lastCameraView.position, CesiumMath.EPSILON7) &&
               camera.directionWC.equalsEpsilon(lastCameraView.direction, CesiumMath.EPSILON7) &&
-              camera.up.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
+              camera.upWC.equalsEpsilon(lastCameraView.up, CesiumMath.EPSILON7))) {
 
             // Camera has changed so update the last view
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
@@ -2332,7 +2341,8 @@ define([
                         networkLink.needsUpdate = true;
                         networkLink.cameraUpdateTime = now;
                     }
-                    else if (networkLink.needsUpdate && JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) > networkLink.time) {
+
+                    if (networkLink.needsUpdate && JulianDate.secondsDifference(now, networkLink.cameraUpdateTime) >= networkLink.time) {
                         doUpdate = true;
                     }
                 }
@@ -2340,7 +2350,7 @@ define([
                 if (doUpdate) {
                     recurseIgnoreCompositeCollections(collection);
                     networkLink.updating = true;
-                    var newCompositeCollection = new CompositeEntityCollection();
+                    var newCompositeCollection = new CompositeEntityCollection(undefined, networkLink.parentCollection);
                     newCompositeCollection.suspendEvents();
                     var href = appendQueryString(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString));
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);

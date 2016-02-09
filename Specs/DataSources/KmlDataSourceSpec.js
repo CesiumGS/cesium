@@ -22,7 +22,8 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'Scene/HorizontalOrigin',
-        'Scene/LabelStyle'
+        'Scene/LabelStyle',
+        'Specs/pollToPromise'
     ], function(
         KmlDataSource,
         BoundingRectangle,
@@ -46,7 +47,8 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         HorizontalOrigin,
-        LabelStyle) {
+        LabelStyle,
+        pollToPromise) {
     "use strict";
 
     var parser = new DOMParser();
@@ -2829,6 +2831,149 @@ defineSuite([
             expect(linkEntities[0].parent).toBe(entities[0]);
         });
     });
+
+    it('NetworkLink: onInterval', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onInterval</refreshMode>\
+              <refreshInterval>1</refreshInterval>\
+            </Link>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            expect(dataSource.entities.getCollectionsLength()).toBe(2);
+            var entities = dataSource.entities.getCollection(0).values;
+            var linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+            expect(entities.length).toEqual(1);
+            expect(linkEntities.length).toEqual(1);
+            expect(entities[0].id).toEqual('link');
+            var e1 = linkEntities[0];
+            expect(e1.parent).toBe(entities[0]);
+
+            var spy = jasmine.createSpy('refreshEvent');
+            dataSource.refreshEvent.addEventListener(spy);
+
+            return pollToPromise(function() {
+                dataSource.update(0);
+                return (spy.calls.count() > 0);
+            }).then(function() {
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/simple.kml');
+
+                expect(dataSource.entities.getCollectionsLength()).toBe(2);
+                var entities = dataSource.entities.getCollection(0).values;
+                var linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+                expect(entities.length).toEqual(1);
+                expect(linkEntities.length).toEqual(1);
+                expect(entities[0].id).toEqual('link');
+                var e2 = linkEntities[0];
+                expect(e2.parent).toBe(entities[0]);
+                expect(e2).not.toEqual(e1);
+            });
+        });
+    });
+
+    it('NetworkLink: onExpire', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/expires.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            expect(dataSource.entities.getCollectionsLength()).toBe(2);
+            var entities = dataSource.entities.getCollection(0).values;
+            var linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+            expect(entities.length).toEqual(1);
+            expect(linkEntities.length).toEqual(1);
+            expect(entities[0].id).toEqual('link');
+            var e1 = linkEntities[0];
+            expect(e1.parent).toBe(entities[0]);
+
+            var spy = jasmine.createSpy('refreshEvent');
+            dataSource.refreshEvent.addEventListener(spy);
+
+            dataSource.update(0); // Document is already expired so call once
+            return pollToPromise(function() {
+                return (spy.calls.count() > 0);
+            }).then(function() {
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/expires.kml');
+
+                expect(dataSource.entities.getCollectionsLength()).toBe(2);
+                entities = dataSource.entities.getCollection(0).values;
+                linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+                expect(entities.length).toEqual(1);
+                expect(linkEntities.length).toEqual(1);
+                expect(entities[0].id).toEqual('link');
+                var e2 = linkEntities[0];
+                expect(e2.parent).toBe(entities[0]);
+                expect(e2).not.toEqual(e1);
+            });
+        });
+    });
+
+    it('NetworkLink: onStop', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <viewRefreshMode>onStop</viewRefreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        // Mock up a camera
+        var options = {
+            camera : {
+                positionWC : new Cartesian3(0.0, 0.0, 0.0),
+                directionWC : new Cartesian3(0.0, 0.0, 1.0),
+                upWC : new Cartesian3(0.0, 1.0, 0.0),
+                pitch : 0.0,
+                heading : 0.0,
+                frustum : {
+                    aspectRatio : 1.0,
+                    fov : CesiumMath.PI_OVER_FOUR
+                }
+            }
+        };
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.entities.getCollectionsLength()).toBe(2);
+            var entities = dataSource.entities.getCollection(0).values;
+            var linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+            expect(entities.length).toEqual(1);
+            expect(linkEntities.length).toEqual(1);
+            expect(entities[0].id).toEqual('link');
+            var e1 = linkEntities[0];
+            expect(e1.parent).toBe(entities[0]);
+
+            var spy = jasmine.createSpy('refreshEvent');
+            dataSource.refreshEvent.addEventListener(spy);
+
+            // Move the camera and call update to set the last camera view
+            options.camera.positionWC.x = 1.0;
+            dataSource.update(0);
+
+            return pollToPromise(function() {
+                return (spy.calls.count() > 0);
+            }).then(function() {
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/simple.kml');
+
+                expect(dataSource.entities.getCollectionsLength()).toBe(2);
+                entities = dataSource.entities.getCollection(0).values;
+                linkEntities = dataSource.entities.getCollection(1).getCollection(0).values;
+                expect(entities.length).toEqual(1);
+                expect(linkEntities.length).toEqual(1);
+                expect(entities[0].id).toEqual('link');
+                var e2 = linkEntities[0];
+                expect(e2.parent).toBe(entities[0]);
+                expect(e2).not.toEqual(e1);
+            });
+        });
+    });
+
 
     it('can load a KML file with explicit namespaces', function() {
         return KmlDataSource.load('Data/KML/namespaced.kml').then(function(dataSource) {
