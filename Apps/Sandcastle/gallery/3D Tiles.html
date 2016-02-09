@@ -74,6 +74,12 @@ function loadTileset(url) {
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
 //            "color" : {
+//                "type" : "constant",
+//                "constant" : {
+//                    "color" : [255, 255, 255]
+//                }
+//            },
+//            "color" : {
 //                "type" : "map",
 //                "map" : {
 //                    "propertyName" : "id",
@@ -110,6 +116,16 @@ function loadTileset(url) {
                     ]
                 }
             },
+
+//            "show" : {
+//                "pattern" : "^Seattle_South_9",
+//                "propertyName" : "Building_ID"
+//            }
+//            "show" : {
+//                "leftOperand" : "${Building_ID}",  // String compare
+//                "operator" : "===",
+//                "rightOperand" : "Seattle_South_919"
+//            }
             "show" : {
                 "leftOperand" : "${Height}",
                 "operator" : ">",
