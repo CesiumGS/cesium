@@ -110,11 +110,7 @@ define([
         var rightOperandIsProperty = defined(expression._rightPropertyName);
         var rightOperandIsLiteral = !rightOperandIsProperty;
 
-        if (operator === 'true') {
-            evaluate = expression._true;
-        } else if (operator === 'false') {
-            evaluate = expression._false;
-        } else if (operator === '>') {
+        if (operator === '>') {
             if (leftOperandIsLiteral && rightOperandIsLiteral) {
                 evaluate = expression._greaterLiteralLiteral;
             } else if (leftOperandIsLiteral && rightOperandIsProperty) {
@@ -180,18 +176,6 @@ define([
 
         expression.evaluate = evaluate;
     }
-
-    // TODO: break true/false out into a "Constant boolean expression"
-
-    BooleanExpression.prototype._true = function(feature) {
-        return true;
-    };
-
-    BooleanExpression.prototype._false = function(feature) {
-        return false;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
 
     BooleanExpression.prototype._greaterLiteralLiteral = function(feature) {
         return this._leftOperand > this._rightOperand;

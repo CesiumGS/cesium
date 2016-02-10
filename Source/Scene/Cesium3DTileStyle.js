@@ -8,7 +8,8 @@ define([
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
-       './ConstantColorExpression'
+       './ConstantColorExpression',
+       './LiteralBooleanExpression'
     ], function(
         defaultValue,
         defined,
@@ -18,7 +19,8 @@ define([
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
-        ConstantColorExpression) {
+        ConstantColorExpression,
+        LiteralBooleanExpression) {
     'use strict';
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
@@ -72,7 +74,9 @@ define([
         this.color = color;
 
         var show;
-        if (defined(showExpression.operator)) {
+        if (typeof(showExpression) === 'boolean') {
+            show = new LiteralBooleanExpression(styleEngine, showExpression);
+        } else if (defined(showExpression.operator)) {
             show = new BooleanExpression(styleEngine, showExpression);
         } else if (defined(showExpression.pattern)) {
             show = new BooleanRegularExpression(styleEngine, showExpression);
