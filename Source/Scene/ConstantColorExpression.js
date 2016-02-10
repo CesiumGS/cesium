@@ -9,7 +9,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?
 

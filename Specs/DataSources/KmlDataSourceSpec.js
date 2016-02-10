@@ -45,7 +45,7 @@ defineSuite([
         ImageMaterialProperty,
         HorizontalOrigin,
         LabelStyle) {
-    "use strict";
+    'use strict';
 
     var parser = new DOMParser();
 

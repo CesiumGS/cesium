@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

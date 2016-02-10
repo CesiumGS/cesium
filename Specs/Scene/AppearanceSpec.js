@@ -9,7 +9,7 @@ defineSuite([
         WebGLConstants,
         BlendingState,
         Material) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var material = Material.fromType('Color');

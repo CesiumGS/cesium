@@ -35,7 +35,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var fakeProvider = {
             isReady : function() { return false; }

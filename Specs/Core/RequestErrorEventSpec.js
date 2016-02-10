@@ -3,7 +3,7 @@ defineSuite([
         'Core/RequestErrorEvent'
     ], function(
         RequestErrorEvent) {
-    "use strict";
+    'use strict';
 
     it('parses response headers provided as a string', function() {
         var event = new RequestErrorEvent(404, 'foo', 'This-is-a-test: first\r\nAnother: second value!');

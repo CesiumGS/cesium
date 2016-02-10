@@ -41,7 +41,7 @@ define([
         RequestType,
         TerrainProvider,
         TileProviderError) {
-    "use strict";
+    'use strict';
 
     function DataRectangle(rectangle, maxLevel) {
         this.rectangle = rectangle;

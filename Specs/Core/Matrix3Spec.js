@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();

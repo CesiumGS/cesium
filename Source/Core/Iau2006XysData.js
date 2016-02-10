@@ -19,7 +19,7 @@ define([
         loadJson,
         RequestScheduler,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     /**
      * A set of IAU2006 XYS data that is used to evaluate the transformation between the International

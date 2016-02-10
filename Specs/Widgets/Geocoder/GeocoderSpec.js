@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         Geocoder,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeEach(function() {

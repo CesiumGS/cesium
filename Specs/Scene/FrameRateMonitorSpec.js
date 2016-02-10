@@ -9,7 +9,7 @@ defineSuite([
         defined,
         getTimestamp,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function() {

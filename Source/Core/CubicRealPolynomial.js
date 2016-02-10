@@ -5,7 +5,7 @@ define([
     ], function(
         DeveloperError,
         QuadraticRealPolynomial) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines functions for 3rd order polynomial functions of one variable with only real coefficients.

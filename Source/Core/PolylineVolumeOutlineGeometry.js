@@ -41,7 +41,7 @@ define([
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     function computeAttributes(positions, shape) {
         var attributes = new GeometryAttributes();

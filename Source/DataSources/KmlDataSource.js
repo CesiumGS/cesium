@@ -109,7 +109,7 @@ define([
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
     if (typeof DOMParser === 'undefined') {

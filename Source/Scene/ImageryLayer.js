@@ -83,7 +83,7 @@ define([
         Imagery,
         ImageryState,
         TileImagery) {
-    "use strict";
+    'use strict';
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
@@ -344,7 +344,7 @@ define([
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
-     * 
+     *
      * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {

@@ -26,7 +26,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -133,16 +133,16 @@ function loadTileset(url) {
             }
         });
 
+        tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
+            if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
+                //console.log('Stopped loading');
+                return;
+            }
+
+            console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+        });
+
         addExpressionUI();
-    });
-
-    tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
-        if ((numberOfPendingRequests === 0) && (numberProcessing === 0)) {
-            //console.log('Stopped loading');
-            return;
-        }
-
-        console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
     });
 }
 

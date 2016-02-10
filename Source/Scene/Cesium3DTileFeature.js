@@ -5,7 +5,7 @@ define([
     ], function(
         Color,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides access to a feature's properties stored in the 3D tile's batch table, as well

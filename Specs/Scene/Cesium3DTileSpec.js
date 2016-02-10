@@ -19,7 +19,7 @@ defineSuite([
         Rectangle,
         SphereOutlineGeometry,
         createScene) {
-    "use strict";
+    'use strict';
 
     var tileWithBoundingSphere = {
         geometricError : 1,

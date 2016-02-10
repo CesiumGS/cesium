@@ -31,7 +31,7 @@ define([
         when,
         TerrainState,
         TileBoundingRegion) {
-    "use strict";
+    'use strict';
 
     /**
      * Manages details of the terrain load or upsample process.

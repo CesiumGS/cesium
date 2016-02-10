@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of a sphere centered at the origin.

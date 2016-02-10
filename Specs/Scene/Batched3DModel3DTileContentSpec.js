@@ -11,7 +11,7 @@ defineSuite([
         HeadingPitchRange,
         Cesium3DTilesTester,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var centerLongitude = -1.31968;

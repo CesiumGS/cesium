@@ -25,7 +25,7 @@ define([
         RequestType,
         when,
         Cesium3DTileContentState) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the contents of a

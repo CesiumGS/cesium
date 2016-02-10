@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?
 

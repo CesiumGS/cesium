@@ -9,7 +9,7 @@ defineSuite([
         defined,
         loadArrayBuffer,
         when) {
-    "use strict";
+    'use strict';
 
     it('can load an image', function() {
         return loadArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {

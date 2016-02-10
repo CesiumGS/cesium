@@ -9,7 +9,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var selectionIndicatorElement = document.createElement('div');

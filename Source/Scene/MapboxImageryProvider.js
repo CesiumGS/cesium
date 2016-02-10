@@ -15,7 +15,7 @@ define([
         DeveloperError,
         MapboxApi,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
@@ -48,7 +48,7 @@ define([
      *     mapId: 'mapbox.streets',
      *     accessToken: 'thisIsMyAccessToken'
      * });
-     * 
+     *
      * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
      * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
      */

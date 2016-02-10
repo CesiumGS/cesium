@@ -17,7 +17,7 @@ defineSuite([
         CesiumMath,
         PrimitiveType,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws with no positions', function() {
         expect(function() {

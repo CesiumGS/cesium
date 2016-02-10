@@ -3,7 +3,7 @@ defineSuite([
         'Core/parseResponseHeaders'
     ], function(
         parseResponseHeaders) {
-    "use strict";
+    'use strict';
 
     it('returns an empty object literal when given falsy input', function() {
         expect(parseResponseHeaders()).toEqual({});

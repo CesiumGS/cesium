@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         getTimestamp) {
-    "use strict";
+    'use strict';
 
     if (typeof window === 'undefined') {
         return;

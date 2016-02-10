@@ -23,7 +23,7 @@ defineSuite([
         VertexArray,
         createContext,
         when) {
-    "use strict";
+    'use strict';
 
     var context;
 

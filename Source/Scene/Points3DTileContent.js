@@ -41,7 +41,7 @@ define([
         Cesium3DTileContentState,
         PointAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the contents of a

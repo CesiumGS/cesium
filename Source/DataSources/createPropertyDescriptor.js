@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         ConstantProperty) {
-    "use strict";
+    'use strict';
 
     function createProperty(name, privateName, subscriptionName, configurable, createPropertyCallback) {
         return {

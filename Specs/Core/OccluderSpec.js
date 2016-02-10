@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         Visibility) {
-    "use strict";
+    'use strict';
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {

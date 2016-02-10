@@ -9,7 +9,7 @@ define([
         defaultValue,
         defineProperties,
         Matrix4) {
-    "use strict";
+    'use strict';
 
     /**
      * DOC_TBA

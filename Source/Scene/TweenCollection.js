@@ -19,7 +19,7 @@ define([
         getTimestamp,
         TimeConstants,
         TweenJS) {
-    "use strict";
+    'use strict';
 
     /**
      * A tween is an animation that interpolates the properties of two objects using an {@link EasingFunction}.  Create

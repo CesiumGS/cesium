@@ -15,7 +15,7 @@ define([
         Cesium3DTileset,
         TileBoundingSphere,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     function Cesium3DTilesTester() {
     }

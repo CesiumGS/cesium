@@ -19,7 +19,7 @@ define([
         FeatureDetection,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
-    "use strict";
+    'use strict';
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;

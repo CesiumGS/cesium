@@ -39,7 +39,7 @@ define([
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * @deprecated

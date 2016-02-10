@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A convenience object that simplifies the common pattern of attaching event listeners

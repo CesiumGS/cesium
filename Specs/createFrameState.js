@@ -15,7 +15,7 @@ define([
         CreditDisplay,
         FrameState,
         JobScheduler) {
-    "use strict";
+    'use strict';
 
     function createFrameState(context, camera, frameNumber, time) {
         // Mock frame-state for testing.
