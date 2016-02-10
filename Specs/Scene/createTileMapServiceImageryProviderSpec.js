@@ -15,8 +15,8 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/UrlTemplateImageryProvider',
         'Scene/ImageryState',
+        'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -35,8 +35,8 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        UrlTemplateImageryProvider,
         ImageryState,
+        UrlTemplateImageryProvider,
         pollToPromise,
         when) {
     'use strict';
