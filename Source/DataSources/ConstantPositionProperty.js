@@ -17,7 +17,7 @@ define([
         Event,
         ReferenceFrame,
         PositionProperty) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link PositionProperty} whose value does not change in respect to the

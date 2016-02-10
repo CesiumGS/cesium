@@ -27,7 +27,7 @@ define([
         TileCoordinatesImageryProvider,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     function frustumStatsToString(stats) {
         var str;

@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Encapsulates an algorithm to optimize triangles for the post

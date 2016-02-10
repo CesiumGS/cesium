@@ -9,7 +9,7 @@ defineSuite([
         Cartesian4,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();

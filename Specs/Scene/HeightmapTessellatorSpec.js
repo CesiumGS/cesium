@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         WebMercatorProjection) {
-    "use strict";
+    'use strict';
 
     it('throws when heightmap is not provided', function() {
         expect(function() {

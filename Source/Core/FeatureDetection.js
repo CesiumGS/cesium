@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         Fullscreen) {
-    "use strict";
+    'use strict';
 
     var theNavigator;
     if (typeof navigator !== 'undefined') {

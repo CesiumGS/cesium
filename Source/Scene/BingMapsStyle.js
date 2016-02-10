@@ -3,7 +3,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The types of imagery provided by Bing Maps.

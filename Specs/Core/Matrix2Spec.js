@@ -7,7 +7,7 @@ defineSuite([
         Matrix2,
         Cartesian2,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();

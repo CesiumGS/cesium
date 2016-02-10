@@ -13,7 +13,7 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A 3x3 matrix, indexable as a column-major order array.

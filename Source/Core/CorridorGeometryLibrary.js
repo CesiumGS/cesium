@@ -19,7 +19,7 @@ define([
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

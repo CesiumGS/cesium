@@ -30,7 +30,7 @@ define([
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
-    "use strict";
+    'use strict';
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.

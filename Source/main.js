@@ -5,7 +5,7 @@ require([
         'Cesium'
     ], function(
         Cesium) {
-    "use strict";
+    'use strict';
     /*global self*/
     var scope = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {};
 

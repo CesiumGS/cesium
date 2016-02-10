@@ -31,7 +31,7 @@ define([
         CesiumMath,
         TerrainProvider,
         throttleRequestByServer) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps

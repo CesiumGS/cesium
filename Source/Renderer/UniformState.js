@@ -29,7 +29,7 @@ define([
         Simon1994PlanetaryPositions,
         Transforms,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

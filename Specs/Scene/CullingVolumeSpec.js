@@ -13,7 +13,7 @@ defineSuite([
         Cartesian3,
         Intersect,
         PerspectiveFrustum) {
-    "use strict";
+    'use strict';
 
     var cullingVolume;
 

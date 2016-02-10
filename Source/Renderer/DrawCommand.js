@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a command to the renderer for drawing.

@@ -9,7 +9,7 @@ define([
         defined,
         CesiumMath,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional

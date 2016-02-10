@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Event,
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * Create a Command from a given function, for use with ViewModels.

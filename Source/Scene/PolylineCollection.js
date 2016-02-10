@@ -65,7 +65,7 @@ define([
         Pass,
         Polyline,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var SHOW_INDEX = Polyline.SHOW_INDEX;
     var WIDTH_INDEX = Polyline.WIDTH_INDEX;

@@ -33,7 +33,7 @@ defineSuite([
         Primitive,
         VerticalOrigin,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;

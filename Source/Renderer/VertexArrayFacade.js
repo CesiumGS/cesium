@@ -19,7 +19,7 @@ define([
         Buffer,
         BufferUsage,
         VertexArray) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

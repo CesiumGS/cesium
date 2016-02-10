@@ -5,7 +5,7 @@ define([
     ], function(
         RuntimeError,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     return createTaskProcessorWorker(function(parameters, transferableObjects) {
         throw new RuntimeError(parameters.message);
