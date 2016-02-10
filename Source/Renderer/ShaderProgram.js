@@ -23,7 +23,7 @@ define([
         ContextLimits,
         createUniform,
         createUniformArray) {
-    "use strict";
+    'use strict';
 
     var nextShaderProgramId = 0;
 

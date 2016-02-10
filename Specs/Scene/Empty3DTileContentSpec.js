@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         Empty3DTileContent,
         Cesium3DTileContentState) {
-    "use strict";
+    'use strict';
 
     it('resolves readyPromise', function() {
         var content = new Empty3DTileContent();

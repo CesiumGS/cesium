@@ -65,7 +65,7 @@ define([
         TileBoundingSphere,
         Tileset3DTileContent,
         TileOrientedBoundingBox) {
-    "use strict";
+    'use strict';
 
     /**
      * A tile in a 3D Tiles tileset.  When a tile is first created, its content is not loaded;

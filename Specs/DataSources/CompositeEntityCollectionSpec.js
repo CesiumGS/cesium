@@ -23,7 +23,7 @@ defineSuite([
         ConstantProperty,
         Entity,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     function CollectionListener() {
         this.timesCalled = 0;

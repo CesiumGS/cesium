@@ -19,7 +19,7 @@ defineSuite([
         Matrix4,
         TerrainQuantization,
         Transforms) {
-    "use strict";
+    'use strict';
 
     var center;
     var maximum;

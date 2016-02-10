@@ -11,7 +11,7 @@ define([
         destroyObject,
         when,
         Cesium3DTileContentState) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents content for a tile in a

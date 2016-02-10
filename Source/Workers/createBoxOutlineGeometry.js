@@ -5,7 +5,7 @@ define([
     ], function(
         BoxOutlineGeometry,
         defined) {
-    "use strict";
+    'use strict';
 
     return function(boxGeometry, offset) {
         if (defined(offset)) {

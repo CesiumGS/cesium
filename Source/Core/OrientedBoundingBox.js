@@ -31,7 +31,7 @@ define([
         Matrix3,
         Plane,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates an instance of an OrientedBoundingBox.

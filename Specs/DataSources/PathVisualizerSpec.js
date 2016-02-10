@@ -41,7 +41,7 @@ defineSuite([
         TimeIntervalCollectionPositionProperty,
         SceneMode,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var visualizer;

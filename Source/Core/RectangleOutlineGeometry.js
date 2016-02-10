@@ -35,7 +35,7 @@ define([
         PrimitiveType,
         Rectangle,
         RectangleGeometryLibrary) {
-    "use strict";
+    'use strict';
 
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();

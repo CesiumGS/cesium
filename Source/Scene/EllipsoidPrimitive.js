@@ -47,7 +47,7 @@ define([
         Material,
         Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var attributeLocations = {
         position : 0

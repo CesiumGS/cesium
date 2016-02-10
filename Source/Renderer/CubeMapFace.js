@@ -9,7 +9,7 @@ define([
         defineProperties,
         DeveloperError,
         PixelDatatype) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         EllipsoidOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a sphere.

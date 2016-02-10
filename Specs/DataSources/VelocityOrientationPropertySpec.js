@@ -21,7 +21,7 @@ defineSuite([
         Transforms,
         CallbackProperty,
         SampledPositionProperty) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

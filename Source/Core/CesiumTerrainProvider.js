@@ -53,7 +53,7 @@ define([
         RuntimeError,
         TerrainProvider,
         TileProviderError) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TerrainProvider} that access terrain data in a Cesium terrain format.

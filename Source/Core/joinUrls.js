@@ -11,7 +11,7 @@ define([
         defined,
         definedNotNull,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Function for joining URLs in a manner that is aware of query strings and fragments.

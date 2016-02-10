@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         joinUrls,
         URI) {
-    "use strict";
+    'use strict';
 
     var queryString = "a=some&b=query";
     var fragment = "#iamaframent";

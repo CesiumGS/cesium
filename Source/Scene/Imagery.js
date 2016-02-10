@@ -7,7 +7,7 @@ define([
         defined,
         destroyObject,
         ImageryState) {
-    "use strict";
+    'use strict';
 
     /**
      * Stores details about a tile of imagery.

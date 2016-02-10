@@ -17,7 +17,7 @@ define([
         Matrix3,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions for finding the Cartesian coordinates of the sun and the moon in the

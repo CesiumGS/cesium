@@ -17,7 +17,7 @@ defineSuite([
         Rectangle,
         TilingScheme,
         WebMercatorProjection) {
-    "use strict";
+    'use strict';
 
     var tilingScheme;
     beforeEach(function() {

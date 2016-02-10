@@ -61,7 +61,7 @@ define([
         StripeMaterial,
         WaterMaterial,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A Material defines surface appearance through a combination of diffuse, specular,
@@ -498,7 +498,7 @@ define([
      *
      * @example
      * material = material && material.destroy();
-     * 
+     *
      * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {

@@ -3,7 +3,7 @@ define([
         './SceneMode'
     ], function(
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * State information about the current frame.  An instance of this class

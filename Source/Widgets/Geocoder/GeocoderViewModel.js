@@ -31,7 +31,7 @@ define([
         knockout,
         when,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for the {@link Geocoder} widget.

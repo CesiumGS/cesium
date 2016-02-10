@@ -3,7 +3,7 @@ define([
         '../ThirdParty/o3dgc'
     ], function(
         o3dgc) {
-    "use strict";
+    'use strict';
 
     function alignOffset(offset, alignment) {
         offset = offset | 0;

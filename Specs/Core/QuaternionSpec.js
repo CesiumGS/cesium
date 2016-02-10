@@ -11,7 +11,7 @@ defineSuite([
         CesiumMath,
         Matrix3,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var quaternion = new Quaternion();

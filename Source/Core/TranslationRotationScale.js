@@ -11,7 +11,7 @@ define([
         defined,
         Matrix4,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
     var defaultTranslation = Cartesian3.ZERO;

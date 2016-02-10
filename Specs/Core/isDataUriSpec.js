@@ -3,7 +3,7 @@ defineSuite([
         'Core/isDataUri'
     ], function(
         isDataUri) {
-    "use strict";
+    'use strict';
 
     it('Determines that a uri is not a data uri', function() {
         expect(isDataUri(undefined)).toEqual(false);

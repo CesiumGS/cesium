@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         JobScheduler,
         JobType) {
-    "use strict";
+    'use strict';
 
     var originalGetTimestamp;
 

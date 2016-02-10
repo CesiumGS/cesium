@@ -15,7 +15,7 @@ define([
         Event,
         GeographicTilingScheme,
         when) {
-    "use strict";
+    'use strict';
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
     var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);

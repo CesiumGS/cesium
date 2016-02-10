@@ -35,7 +35,7 @@ define([
         RequestScheduler,
         RequestType,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps

@@ -3,7 +3,7 @@ defineSuite([
         'Core/definedNotNull'
     ], function(
         definedNotNull) {
-    "use strict";
+    'use strict';
 
     it('works', function() {
         expect(definedNotNull(0)).toEqual(true);

@@ -7,7 +7,7 @@ defineSuite([
         EllipsoidOutlineGeometry,
         Cartesian3,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {

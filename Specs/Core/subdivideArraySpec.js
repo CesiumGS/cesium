@@ -3,7 +3,7 @@ defineSuite([
         'Core/subdivideArray'
     ], function(
         subdivideArray) {
-    "use strict";
+    'use strict';
 
     it('Splits evenly divided arrays', function() {
         var values = [1, 2, 3, 4];

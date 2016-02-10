@@ -11,7 +11,7 @@ define([
         defineProperties,
         DeveloperError,
         Iso8601) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for all properties, which represent a value that can optionally vary over time.

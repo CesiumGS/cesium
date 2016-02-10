@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         Timeline,
         Clock) {
-    "use strict";
+    'use strict';
 
     var container;
     beforeEach(function(){

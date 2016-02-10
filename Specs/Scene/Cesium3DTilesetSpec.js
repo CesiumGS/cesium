@@ -27,7 +27,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var centerLongitude = -1.31968;

@@ -7,7 +7,7 @@ define([
         when,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by

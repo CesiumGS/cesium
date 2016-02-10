@@ -67,7 +67,7 @@ defineSuite([
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
-    "use strict";
+    'use strict';
 
     var testProvider = {
         isReady : function() {

@@ -3,7 +3,7 @@ defineSuite([
         'Core/AssociativeArray'
     ], function(
         AssociativeArray) {
-    "use strict";
+    'use strict';
 
     it('constructor has expected default values', function() {
         var associativeArray = new AssociativeArray();
