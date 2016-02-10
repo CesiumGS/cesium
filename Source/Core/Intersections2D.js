@@ -7,7 +7,7 @@ define([
         Cartesian3,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions for operating on 2D triangles.

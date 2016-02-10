@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Camera,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var defaultCamera;

@@ -29,7 +29,7 @@ define([
         VerticalOrigin,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultScale = 1.0;
     var defaultFont = '30px sans-serif';

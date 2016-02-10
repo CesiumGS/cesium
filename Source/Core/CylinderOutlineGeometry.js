@@ -27,7 +27,7 @@ define([
         GeometryAttributes,
         IndexDatatype,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var radiusScratch = new Cartesian2();
 

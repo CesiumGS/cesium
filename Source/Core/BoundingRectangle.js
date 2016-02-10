@@ -17,7 +17,7 @@ define([
         GeographicProjection,
         Intersect,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * A bounding rectangle given by a corner, width and height.

@@ -17,7 +17,7 @@ define([
         EllipsoidSurfaceAppearanceVS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}

@@ -43,7 +43,7 @@ defineSuite([
         PerspectiveFrustum,
         SceneMode,
         TweenCollection) {
-    "use strict";
+    'use strict';
 
     var scene;
     var camera;
@@ -2183,6 +2183,46 @@ defineSuite([
 
         expect(camera.direction).toEqualEpsilon(direction, CesiumMath.EPSILON6);
         expect(camera.up).toEqualEpsilon(up, CesiumMath.EPSILON6);
+    });
+
+    it('flyHome works in 3D', function() {
+        camera._mode = SceneMode.SCENE3D;
+
+        var destination = Cartesian3.fromDegrees(30, 20, 1000);
+        camera.setView({
+            destination: destination
+        });
+        camera.flyHome(0);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(2515865.110478756, -19109892.759980734, 13550929.353715947), CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(-0.10654051334260287, 0.8092555423939248, -0.5777149696185906), CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(-0.07540693517283716, 0.5727725379670786, 0.8162385765685121), CesiumMath.EPSILON8);
+    });
+
+    it ('flyHome works in 2D', function() {
+        camera._mode = SceneMode.SCENE2D;
+
+        var destination = Cartesian3.fromDegrees(30, 20, 1000);
+        camera.setView({
+            destination: destination
+        });
+        camera.flyHome(0);
+        expect(camera.position).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0, 0, -1), CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON8);
+    });
+
+    it('flyHome works in CV', function() {
+        var sq2Over2 = Math.sqrt(2)*0.5;
+        camera._mode = SceneMode.COLUMBUS_VIEW;
+
+        var destination = Cartesian3.fromDegrees(30, 20, 1000);
+        camera.setView({
+            destination: destination
+        });
+        camera.flyHome(0);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0, -22550119.620184112, 22550119.62018411), CesiumMath.EPSILON8);
+        expect(camera.direction).toEqualEpsilon(new Cartesian3(0, sq2Over2, -sq2Over2), CesiumMath.EPSILON8);
+        expect(camera.up).toEqualEpsilon(new Cartesian3(0, sq2Over2, sq2Over2), CesiumMath.EPSILON8);
     });
 
     it('viewBoundingSphere', function() {

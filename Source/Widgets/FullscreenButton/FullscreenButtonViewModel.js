@@ -17,7 +17,7 @@ define([
         knockout,
         createCommand,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link FullscreenButton}.

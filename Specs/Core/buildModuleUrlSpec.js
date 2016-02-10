@@ -7,7 +7,7 @@ defineSuite([
         buildModuleUrl,
         loadText,
         Uri) {
-    "use strict";
+    'use strict';
 
     it('produces an absolute URL for a module', function() {
         var url = buildModuleUrl('Workers/transferTypedArrayTest.js');

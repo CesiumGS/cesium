@@ -67,7 +67,7 @@ defineSuite([
         equals,
         pollToPromise,
         render) {
-    "use strict";
+    'use strict';
 
     var scene;
 

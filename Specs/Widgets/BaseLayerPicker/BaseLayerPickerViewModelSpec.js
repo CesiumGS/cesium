@@ -9,7 +9,7 @@ defineSuite([
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();

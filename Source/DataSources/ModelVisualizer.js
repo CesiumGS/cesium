@@ -21,7 +21,7 @@ define([
         ModelAnimationLoop,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;

@@ -7,7 +7,7 @@ defineSuite([
         EllipsoidTerrainProvider,
         TerrainProvider,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

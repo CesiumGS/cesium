@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         getAbsoluteUri,
         getBaseUri) {
-    "use strict";
+    'use strict';
 
     it('works as expected', function() {
         var result = getAbsoluteUri('http://www.mysite.com/awesome?makeitawesome=true');

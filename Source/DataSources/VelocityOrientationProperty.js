@@ -25,7 +25,7 @@ define([
         Quaternion,
         Transforms,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} which evaluates to a {@link Quaternion} rotation

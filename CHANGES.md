@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 1.19 - 2016-03-01
+* Breaking changes
+   * 
+* Deprecated
+   *   
+* Fixed bug for causing `navigator is not defined` reference error in node
+* Added `Camera.flyHome` function for resetting the camera to the home view
+* Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
+
 ### 1.18 - 2016-02-01
 * Breaking changes
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).

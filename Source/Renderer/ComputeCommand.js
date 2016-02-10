@@ -7,7 +7,7 @@ define([
         defaultValue,
         PrimitiveType,
         Pass) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a command to the renderer for GPU Compute (using old-school GPGPU).

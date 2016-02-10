@@ -49,7 +49,7 @@ define([
         Rectangle,
         RectangleGeometryLibrary,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var positionScratch = new Cartesian3();
     var normalScratch = new Cartesian3();

@@ -3,7 +3,7 @@ defineSuite([
         'Renderer/PassState'
     ], function(
         PassState) {
-    "use strict";
+    'use strict';
 
     it('creates a pass state', function() {
         var context = {};

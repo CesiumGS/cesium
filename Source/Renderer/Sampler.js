@@ -15,7 +15,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

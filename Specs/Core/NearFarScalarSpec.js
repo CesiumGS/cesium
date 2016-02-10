@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         NearFarScalar,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructs without arguments', function() {
         var scalar = new NearFarScalar();

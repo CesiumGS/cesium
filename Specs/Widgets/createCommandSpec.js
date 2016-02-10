@@ -7,7 +7,7 @@ defineSuite([
         createCommand,
         getArguments,
         knockout) {
-    "use strict";
+    'use strict';
 
     var spyFunction;
     var spyFunctionReturnValue = 5;

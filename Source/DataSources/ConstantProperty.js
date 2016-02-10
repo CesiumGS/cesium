@@ -11,7 +11,7 @@ define([
         defineProperties,
         DeveloperError,
         Event) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} whose value does not change with respect to simulation time.

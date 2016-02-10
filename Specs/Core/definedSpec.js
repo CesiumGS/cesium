@@ -3,7 +3,7 @@ defineSuite([
         'Core/defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     var obj = 42;
     var obj2;

@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Values and type information for per-instance geometry attributes.

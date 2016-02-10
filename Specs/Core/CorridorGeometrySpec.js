@@ -13,7 +13,7 @@ defineSuite([
         Ellipsoid,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without positions', function() {
         expect(function() {

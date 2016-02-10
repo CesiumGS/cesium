@@ -219,7 +219,7 @@ defineSuite([
         'Core/Cartesian3'
     ], function(
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();
@@ -472,7 +472,7 @@ Sometimes, a test requires sample data, like a CZML file or glTF model, or a ser
 When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data).  Avoid bloating the repo with an unnecessarily large file.  Update [LICENSE.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md) if the data requires a license or attribution.  Include a README file when useful, for example, see [Specs/Data/Models/Box-Textured-Custom](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data/Models/Box-Textured-Custom).
 
 Make external requests that assume the tests are being used with an Internet connection very sparingly.  We anticipate being able to run the tests offline.
- 
+
 ### Promises
 
 (For an introduction to promises, see [JavaScript Promises - There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)).
@@ -605,7 +605,7 @@ defineSuite([
     ], function(
         DebugModelMatrixPrimitive,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 

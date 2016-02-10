@@ -15,7 +15,7 @@ defineSuite([
         Matrix3,
         TimeStandard,
         Transforms) {
-    "use strict";
+    'use strict';
 
     // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the
     // sun center of mass point and the earth J2000 reference frame.

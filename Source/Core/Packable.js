@@ -3,7 +3,7 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Static interface for types which can store their values as packed

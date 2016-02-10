@@ -7,7 +7,7 @@ define([
         when,
         loadBlob,
         loadImage) {
-    "use strict";
+    'use strict';
 
     var dataUriRegex = /^data:/;
 

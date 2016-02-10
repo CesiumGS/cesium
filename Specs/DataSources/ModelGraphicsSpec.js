@@ -15,7 +15,7 @@ defineSuite([
         ConstantProperty,
         NodeTransformationProperty,
         PropertyBag) {
-    "use strict";
+    'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

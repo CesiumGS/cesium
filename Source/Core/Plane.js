@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A plane in Hessian Normal Form defined by
