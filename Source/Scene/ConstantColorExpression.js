@@ -22,7 +22,7 @@ define([
     function ConstantColorExpression(styleEngine, literal) {
         this._styleEngine = styleEngine;
 
-        this._color = Color.fromBytes(literal[0], literal[1], literal[2]);
+        this._color = Color.fromCssColorString(literal);
     }
 
     defineProperties(ConstantColorExpression.prototype, {
