@@ -513,7 +513,7 @@ require({
 
     function getScriptFromEditor(addExtraLine) {
         return 'function startup(Cesium) {\n' +
-               '    "use strict";\n' +
+               '    \'use strict\';\n' +
                '//Sandcastle_Begin\n' +
                (addExtraLine ? '\n' : '') +
                jsEditor.getValue() +
