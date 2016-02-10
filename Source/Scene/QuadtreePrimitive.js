@@ -271,20 +271,13 @@ define([
         var passes = frameState.passes;
 
         if (passes.render) {
-            if (frameState.mode !== SceneMode.MORPHING) {
-                this._tileProvider.beginUpdate(frameState);
+            this._tileProvider.beginUpdate(frameState);
 
-                selectTilesForRendering(this, frameState);
-                processTileLoadQueue(this, frameState);
-                createRenderCommandsForSelectedTiles(this, frameState);
+            selectTilesForRendering(this, frameState);
+            processTileLoadQueue(this, frameState);
+            createRenderCommandsForSelectedTiles(this, frameState);
 
-                this._tileProvider.endUpdate(frameState);
-            } else {
-                // Do not update tiles when morphing. Render all tiles in the last frame before the morph started.
-                this._tileProvider.beginUpdate(frameState);
-                createRenderCommandsForSelectedTiles(this, frameState);
-                this._tileProvider.endUpdate(frameState);
-            }
+            this._tileProvider.endUpdate(frameState);
         }
 
         if (passes.pick && this._tilesToRender.length > 0) {
