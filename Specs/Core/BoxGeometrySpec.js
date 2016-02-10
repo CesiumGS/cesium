@@ -11,7 +11,7 @@ defineSuite([
         Cartesian3,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws without maximum corner', function() {
         expect(function() {

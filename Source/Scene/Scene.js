@@ -123,7 +123,7 @@ define([
         ScreenSpaceCameraController,
         SunPostProcess,
         TweenCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -1634,7 +1634,7 @@ define([
 
     function executeViewportCommands(scene, passState) {
         var context = scene._context;
-        
+
         var viewport = passState.viewport;
 
         var frameState = scene._frameState;

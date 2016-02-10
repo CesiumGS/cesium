@@ -81,7 +81,7 @@ define([
         subscribeAndEvaluate,
         Timeline,
         VRButton) {
-    "use strict";
+    'use strict';
 
     var boundingSphereScratch = new BoundingSphere();
 

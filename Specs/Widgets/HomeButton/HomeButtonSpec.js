@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         HomeButton,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function() {

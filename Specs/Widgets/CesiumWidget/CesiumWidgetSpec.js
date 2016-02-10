@@ -29,7 +29,7 @@ defineSuite([
         TileCoordinatesImageryProvider,
         DomEventSimulator,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var container;
     var widget;

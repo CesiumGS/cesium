@@ -3,7 +3,7 @@ define([
         './deprecationWarning'
     ], function(
         deprecationWarning) {
-    "use strict";
+    'use strict';
 
     /**
      * @exports definedNotNull

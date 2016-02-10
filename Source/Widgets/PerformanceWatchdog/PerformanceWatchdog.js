@@ -15,7 +15,7 @@ define([
         knockout,
         getElement,
         PerformanceWatchdogViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * Monitors performance of the application and displays a message if poor performance is detected.

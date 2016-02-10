@@ -21,7 +21,7 @@ define([
         Matrix4,
         Spline,
         TridiagonalSystemSolver) {
-    "use strict";
+    'use strict';
 
     var scratchLower = [];
     var scratchDiagonal = [];

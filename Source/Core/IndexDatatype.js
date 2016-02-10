@@ -11,7 +11,7 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Constants for WebGL index datatypes.  These corresponds to the

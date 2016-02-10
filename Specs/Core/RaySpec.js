@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         Ray,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     it('default constructor create zero valued Ray', function() {
         var ray = new Ray();

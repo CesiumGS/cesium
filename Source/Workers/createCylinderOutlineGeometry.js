@@ -5,7 +5,7 @@ define([
     ], function(
         CylinderOutlineGeometry,
         defined) {
-    "use strict";
+    'use strict';
 
     return function(cylinderGeometry, offset) {
         if (defined(offset)) {

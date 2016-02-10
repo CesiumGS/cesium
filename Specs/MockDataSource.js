@@ -5,7 +5,7 @@ define([
     ], function(
         Event,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     function MockDataSource() {
         //Values to be fiddled with by the test

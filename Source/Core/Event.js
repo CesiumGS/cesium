@@ -7,7 +7,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A generic utility class for managing subscribers for a particular event.

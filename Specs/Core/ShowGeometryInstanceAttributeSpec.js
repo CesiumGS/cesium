@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         ShowGeometryInstanceAttribute,
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var attribute = new ShowGeometryInstanceAttribute(false);

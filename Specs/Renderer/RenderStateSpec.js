@@ -11,7 +11,7 @@ defineSuite([
         ContextLimits,
         WebGLConstants,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

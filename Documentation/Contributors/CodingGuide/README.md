@@ -60,7 +60,7 @@ this._canvas = canvas;
 ```javascript
 Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
 ```
-* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g., 
+* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g.,
 ```javascript
 Cartesian3.maximumComponent() // Not Cartesian3.maxComponent()
 
@@ -241,7 +241,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
@@ -265,7 +265,7 @@ byteOffset += sizeOfUint32; // Skip length field
 ## Functions
 
 * :art: Functions should be **cohesive**; they should only do one task.
-* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g., 
+* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g.,
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     var tiles = this._processingQueue;
@@ -341,7 +341,7 @@ var p = new Cartesian3({
     z : 3.0
 });
 ```
-is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of 
+is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```

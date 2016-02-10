@@ -55,7 +55,7 @@ defineSuite([
         VerticalOrigin,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     function makePacket(packet) {
         return [{

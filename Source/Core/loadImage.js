@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         isCrossOriginUrl) {
-    "use strict";
+    'use strict';
 
     var dataUriRegex = /^data:/;
 

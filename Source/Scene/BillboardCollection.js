@@ -61,7 +61,7 @@ define([
         Pass,
         SceneMode,
         TextureAtlas) {
-    "use strict";
+    'use strict';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -237,7 +237,7 @@ define([
          *   image : 'url/to/image',
          *   position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0) // up
          * });
-         * 
+         *
          * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
@@ -394,7 +394,7 @@ define([
      * var b = billboards.add({
      *   position : Cesium.Cartesian3.fromDegrees(longitude, latitude, height)
      * });
-     * 
+     *
      * @see BillboardCollection#remove
      * @see BillboardCollection#removeAll
      */
@@ -426,7 +426,7 @@ define([
      * @example
      * var b = billboards.add(...);
      * billboards.remove(b);  // Returns true
-     * 
+     *
      * @see BillboardCollection#add
      * @see BillboardCollection#removeAll
      * @see Billboard#show
@@ -456,7 +456,7 @@ define([
      * billboards.add(...);
      * billboards.add(...);
      * billboards.removeAll();
-     * 
+     *
      * @see BillboardCollection#add
      * @see BillboardCollection#remove
      */
@@ -533,7 +533,7 @@ define([
      *   var b = billboards.get(i);
      *   b.show = !b.show;
      * }
-     * 
+     *
      * @see BillboardCollection#length
      */
     BillboardCollection.prototype.get = function(index) {
@@ -1556,7 +1556,7 @@ define([
      *
      * @example
      * billboards = billboards && billboards.destroy();
-     * 
+     *
      * @see BillboardCollection#isDestroyed
      */
     BillboardCollection.prototype.destroy = function() {

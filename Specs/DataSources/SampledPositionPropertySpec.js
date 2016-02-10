@@ -17,7 +17,7 @@ defineSuite([
         LinearApproximation,
         ReferenceFrame,
         PositionProperty) {
-    "use strict";
+    'use strict';
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();

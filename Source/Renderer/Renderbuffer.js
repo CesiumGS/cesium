@@ -15,7 +15,7 @@ define([
         DeveloperError,
         ContextLimits,
         RenderbufferFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

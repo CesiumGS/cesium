@@ -17,7 +17,7 @@ define([
         EasingFunction,
         SceneTransforms,
         knockout) {
-    "use strict";
+    'use strict';
 
     var screenSpacePos = new Cartesian2();
     var offScreen = '-1000px';

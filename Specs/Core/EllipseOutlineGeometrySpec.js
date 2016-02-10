@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without a center', function() {
         expect(function() {

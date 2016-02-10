@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a box. The center position and orientation are determined by the containing {@link Entity}.

@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a

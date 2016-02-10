@@ -13,7 +13,7 @@ define([
         GeographicProjection,
         Matrix4,
         Camera) {
-    "use strict";
+    'use strict';
 
     function MockScene(canvas) {
         canvas = defaultValue(canvas, {
