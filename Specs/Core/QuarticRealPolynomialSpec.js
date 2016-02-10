@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         QuarticRealPolynomial,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('discriminant throws without a', function() {
         expect(function() {

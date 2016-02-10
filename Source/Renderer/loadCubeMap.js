@@ -11,7 +11,7 @@ define([
         loadImage,
         when,
         CubeMap) {
-    "use strict";
+    'use strict';
 
     /**
      * Asynchronously loads six images and creates a cube map.  Returns a promise that

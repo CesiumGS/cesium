@@ -17,7 +17,7 @@ define([
         getElement,
         TimelineHighlightRange,
         TimelineTrack) {
-    "use strict";
+    'use strict';
 
     var timelineWheelDelta = 1e12;
 

@@ -11,7 +11,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     var ellipsoid = Ellipsoid.WGS84;
 

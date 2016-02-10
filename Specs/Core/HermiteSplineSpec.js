@@ -7,7 +7,7 @@ defineSuite([
         HermiteSpline,
         Cartesian3,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var points;
     var times;

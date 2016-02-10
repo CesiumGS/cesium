@@ -21,7 +21,7 @@ define([
         PositionProperty,
         Property,
         SampledProperty) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.

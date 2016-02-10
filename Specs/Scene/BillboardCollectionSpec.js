@@ -43,7 +43,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;

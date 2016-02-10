@@ -3,7 +3,7 @@ defineSuite([
         'Core/RuntimeError'
     ], function(
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     var name = 'RuntimeError';
     var testMessage = 'Testing';

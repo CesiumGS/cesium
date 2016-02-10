@@ -23,7 +23,7 @@ defineSuite([
         QuadtreeTileLoadState,
         createContext,
         createFrameState) {
-    "use strict";
+    'use strict';
     /*global jasmine,it,expect,beforeEach,afterEach,beforeAll,afterAll*/
 
     var context;

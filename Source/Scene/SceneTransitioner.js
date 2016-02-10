@@ -37,7 +37,7 @@ define([
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

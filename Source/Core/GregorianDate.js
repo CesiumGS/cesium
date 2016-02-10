@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a Gregorian date in a more precise format than the JavaScript Date object.

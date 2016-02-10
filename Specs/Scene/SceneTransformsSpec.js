@@ -17,7 +17,7 @@ defineSuite([
         Rectangle,
         Camera,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var defaultCamera;

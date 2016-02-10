@@ -9,7 +9,7 @@ defineSuite([
         Cartographic,
         CesiumTerrainProvider,
         when) {
-    "use strict";
+    'use strict';
 
     var terrainProvider = new CesiumTerrainProvider({
         url : '//assets.agi.com/stk-terrain/world'

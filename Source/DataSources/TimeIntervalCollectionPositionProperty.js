@@ -19,7 +19,7 @@ define([
         TimeIntervalCollection,
         PositionProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.

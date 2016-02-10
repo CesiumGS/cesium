@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided

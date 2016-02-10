@@ -21,7 +21,7 @@ defineSuite([
         Rectangle,
         OrthographicFrustum,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var camera;

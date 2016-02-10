@@ -11,7 +11,7 @@ define([
         DeveloperError,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A 4D Cartesian point.

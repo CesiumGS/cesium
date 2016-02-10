@@ -15,7 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by

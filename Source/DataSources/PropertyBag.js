@@ -17,7 +17,7 @@ define([
         ConstantProperty,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.

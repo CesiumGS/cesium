@@ -15,7 +15,7 @@ defineSuite([
         loadWithXhr,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;

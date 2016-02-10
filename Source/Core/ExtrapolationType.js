@@ -3,7 +3,7 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Constants to determine how an interpolated value is extrapolated

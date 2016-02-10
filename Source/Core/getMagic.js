@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         getStringFromTypedArray) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

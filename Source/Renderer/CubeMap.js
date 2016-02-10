@@ -31,7 +31,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap) {
-    "use strict";
+    'use strict';
 
     function CubeMap(options) {
 

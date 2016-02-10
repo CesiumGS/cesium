@@ -27,7 +27,7 @@ define([
         TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap

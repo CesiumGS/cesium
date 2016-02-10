@@ -37,7 +37,7 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TileReplacementQueue) {
-    "use strict";
+    'use strict';
 
     /**
      * Renders massive sets of data by utilizing level-of-detail and culling.  The globe surface is divided into
@@ -244,6 +244,14 @@ define([
         };
 
         object.removeFunc = function() {
+            var addedCallbacks = primitive._addHeightCallbacks;
+            var length = addedCallbacks.length;
+            for (var i = 0; i < length; ++i) {
+                if (addedCallbacks[i] === object) {
+                    addedCallbacks.splice(i, 1);
+                    break;
+                }
+            }
             primitive._removeHeightCallbacks.push(object);
         };
 

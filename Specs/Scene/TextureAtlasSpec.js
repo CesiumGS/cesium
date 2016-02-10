@@ -31,7 +31,7 @@ defineSuite([
         VertexArray,
         createScene,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var atlas;

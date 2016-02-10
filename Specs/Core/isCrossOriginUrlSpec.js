@@ -7,7 +7,7 @@ defineSuite([
         getAbsoluteUri,
         isCrossOriginUrl,
         Uri) {
-    "use strict";
+    'use strict';
 
     it('returns false for relative urls', function() {
         expect(isCrossOriginUrl('/some/url.jpg')).toEqual(false);

@@ -7,7 +7,7 @@ defineSuite([
         DrawCommand,
         PrimitiveType,
         Pass) {
-    "use strict";
+    'use strict';
 
     it('constructs', function() {
         var c = new DrawCommand();

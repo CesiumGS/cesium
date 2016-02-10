@@ -51,7 +51,7 @@ define([
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
