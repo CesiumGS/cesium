@@ -296,13 +296,14 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
-gulp.task('test', ['build'], function(done) {
+gulp.task('test', function(done) {
     var argv = yargs.argv;
 
     var enableAllBrowsers = false;
     var includeCategory = '';
     var excludeCategory = '';
     var webglValidation = false;
+    var release = false;
 
     if (argv.all) {
         enableAllBrowsers = true;
@@ -320,34 +321,32 @@ gulp.task('test', ['build'], function(done) {
         webglValidation = true;
     }
 
-    test(enableAllBrowsers, includeCategory, excludeCategory, webglValidation, false, done);
-});
-
-gulp.task('test-release', ['minifyRelease'], function(done){
-    var argv = yargs.argv;
-
-    var enableAllBrowsers = false;
-    var includeCategory = '';
-    var excludeCategory = '';
-    var webglValidation = false;
-
-    if (argv.all) {
-        enableAllBrowsers = true;
+    if (argv.release) {
+        release = true;
     }
 
-    if (argv.include) {
-        includeCategory = argv.include;
+    var files = [
+        'Specs/karma-main.js',
+        {pattern: 'Source/**', included: false},
+        {pattern: 'Specs/**', included: false}
+    ];
+
+    if (release) {
+        files.push({pattern: 'Build/**', included: false});
     }
 
-    if (argv.exclude) {
-        excludeCategory = argv.exclude;
-    }
-
-    if (argv.webglValidation) {
-        webglValidation = true;
-    }
-
-    test(enableAllBrowsers, includeCategory, excludeCategory, webglValidation, true, done);
+    karma.start({
+        configFile: karmaConfigFile,
+        detectBrowsers : {
+            enabled: enableAllBrowsers
+        },
+        files: files,
+        client: {
+            args: [includeCategory, excludeCategory, webglValidation, release]
+        }
+    }, function() {
+        return done();
+    });
 });
 
 gulp.task('generateStubs', ['build'], function(done) {
@@ -939,30 +938,5 @@ function streamToPromise(stream) {
     return new Promise(function(resolve, reject) {
         stream.on('finish', resolve);
         stream.on('end', reject);
-    });
-}
-
-function test (enableAllBrowsers, includeCategory, excludeCategory, webglValidation, release, done) {
-    var files = [
-        'Specs/karma-main.js',
-        {pattern: 'Source/**', included: false},
-        {pattern: 'Specs/**', included: false}
-    ];
-
-    if (release) {
-        files.push({pattern: 'Build/**', included: false});
-    }
-
-    karma.start({
-        configFile: karmaConfigFile,
-        detectBrowsers : {
-            enabled: enableAllBrowsers
-        },
-        files: files,
-        client: {
-            args: [includeCategory, excludeCategory, webglValidation, release]
-        }
-    }, function() {
-        return done();
     });
 }

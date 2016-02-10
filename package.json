@@ -85,7 +85,7 @@
     "test-webgl": "gulp test --include WebGL",
     "test-non-webgl": "gulp test --exclude WebGL",
     "test-webgl-validation": "gulp test --webglValidation",
-    "test-release" : "gulp test-release",
+    "test-release" : "gulp test --release",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires"
   }
