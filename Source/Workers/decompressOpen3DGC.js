@@ -5,7 +5,7 @@ define([
     ], function(
         decompressOpen3DGC,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     function decompressOpen3DGCWorker(parameters, transferableObjects) {
         var decompressedByteLength = parameters.decompressedByteLength;
