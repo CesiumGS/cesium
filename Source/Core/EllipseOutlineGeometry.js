@@ -138,8 +138,8 @@ define([
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.extrudedHeight] The height of the extrusion.
+     * @param {Number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The angle from north (counter-clockwise) in radians.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {Number} [options.numberOfVerticalLines=16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
@@ -149,8 +149,6 @@ define([
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @see EllipseOutlineGeometry.createGeometry
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipse%20Outline.html|Cesium Sandcastle Ellipse Outline Demo}
      *
      * @example
      * var ellipse = new Cesium.EllipseOutlineGeometry({
@@ -215,7 +213,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipseOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

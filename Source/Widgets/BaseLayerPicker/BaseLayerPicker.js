@@ -45,9 +45,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see TerrainProvider
-     * @see ImageryProvider
-     * @see ImageryLayerCollection
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
@@ -75,7 +72,7 @@ define([
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return Cesium.createTileMapServiceImageryProvider({
      *              url : '//cesiumjs.org/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -88,7 +85,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return Cesium.createTileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
@@ -103,6 +100,10 @@ define([
      *     globe : cesiumWidget.scene.globe,
      *     imageryProviderViewModels : imageryViewModels
      * });
+     * 
+     * @see TerrainProvider
+     * @see ImageryProvider
+     * @see ImageryLayerCollection
      */
     function BaseLayerPicker(container, options) {
         //>>includeStart('debug', pragmas.debug);

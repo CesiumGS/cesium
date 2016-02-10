@@ -632,7 +632,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance in meters between the ellipsoid surface and the positions.
-     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extrusion.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipsoid surface and the extruded face.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
@@ -681,7 +681,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CorridorGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

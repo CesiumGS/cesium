@@ -39,8 +39,6 @@ define([
      * @see BoxOutlineGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
-     *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
      *   maximum : new Cesium.Cartesian3(250000.0, 250000.0, 250000.0),
@@ -77,13 +75,14 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxOutlineGeometry.createGeometry
-     *
+     * 
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * 
+     * @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -112,9 +111,7 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxOutlineGeometry}
      *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
-     * @see BoxOutlineGeometry.createGeometry
      *
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
@@ -125,6 +122,8 @@ define([
      *      -68.0, 40.0
      * ]));
      * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     * 
+     *  @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
         if (!defined(boundingBox)) {
@@ -145,7 +144,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {BoxOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

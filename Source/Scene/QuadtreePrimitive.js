@@ -244,6 +244,14 @@ define([
         };
 
         object.removeFunc = function() {
+            var addedCallbacks = primitive._addHeightCallbacks;
+            var length = addedCallbacks.length;
+            for (var i = 0; i < length; ++i) {
+                if (addedCallbacks[i] === object) {
+                    addedCallbacks.splice(i, 1);
+                    break;
+                }
+            }
             primitive._removeHeightCallbacks.push(object);
         };
 
@@ -307,10 +315,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see QuadtreePrimitive#isDestroyed
      *
      * @example
      * primitive = primitive && primitive.destroy();
+     * 
+     * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
         this._tileProvider = this._tileProvider && this._tileProvider.destroy();

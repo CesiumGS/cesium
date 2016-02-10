@@ -58,8 +58,7 @@ define([
     /**
      * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
      *
-     * @namespace
-     * @alias HermitePolynomialApproximation
+     * @exports HermitePolynomialApproximation
      */
     var HermitePolynomialApproximation = {
         type : 'Hermite'

@@ -217,7 +217,7 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @returns {ImageryLayer} The imagery layer at the given index.
      */
     ImageryLayerCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -486,10 +486,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * 
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);

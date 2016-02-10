@@ -61,8 +61,6 @@ define([
      *
      * @see CylinderGeometry.createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
-     *
      * @example
      * // create cylinder geometry
      * var cylinder = new Cesium.CylinderGeometry({
@@ -115,7 +113,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CylinderGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

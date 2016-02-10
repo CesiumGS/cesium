@@ -618,8 +618,8 @@ define([
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.extrudedHeight] The height of the extrusion.
+     * @param {Number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
@@ -629,7 +629,6 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be greater than or equal to the semiMinorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
-     * @see EllipseGeometry.createGeometry
      *
      * @example
      * // Create an ellipse.
@@ -640,6 +639,8 @@ define([
      *   rotation : Cesium.Math.toRadians(60.0)
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
+     *
+     * @see EllipseGeometry.createGeometry
      */
     function EllipseGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -697,7 +698,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipseGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

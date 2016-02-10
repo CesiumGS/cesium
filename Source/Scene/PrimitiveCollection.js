@@ -131,11 +131,12 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#destroyPrimitives
      *
      * @example
      * var billboards = scene.primitives.add(new Cesium.BillboardCollection());
      * scene.primitives.remove(p);  // Returns true
+     * 
+     * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.remove = function(primitive) {
         // PERFORMANCE_IDEA:  We can obviously make this a lot faster.
@@ -327,7 +328,6 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#length
      *
      * @example
      * // Toggle the show property of every primitive in the collection.
@@ -337,6 +337,8 @@ define([
      *   var p = primitives.get(i);
      *   p.show = !p.show;
      * }
+     * 
+     * @see PrimitiveCollection#length
      */
     PrimitiveCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -395,10 +397,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see PrimitiveCollection#isDestroyed
      *
      * @example
      * primitives = primitives && primitives.destroy();
+     * 
+     * @see PrimitiveCollection#isDestroyed
      */
     PrimitiveCollection.prototype.destroy = function() {
         this.removeAll();

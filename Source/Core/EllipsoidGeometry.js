@@ -60,8 +60,6 @@ define([
      *
      * @see EllipsoidGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid.html|Cesium Sandcastle Ellipsoid Demo}
-     *
      * @example
      * var ellipsoid = new Cesium.EllipsoidGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
@@ -101,7 +99,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipsoidGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

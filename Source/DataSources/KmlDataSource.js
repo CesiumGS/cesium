@@ -14,6 +14,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/getAbsoluteUri',
+        '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -66,6 +68,8 @@ define([
         DeveloperError,
         Ellipsoid,
         Event,
+        getAbsoluteUri,
+        getExtensionFromUri,
         getFilenameFromUri,
         Iso8601,
         JulianDate,
@@ -171,7 +175,7 @@ define([
 
         detectFromFilename : function(filename) {
             var ext = filename.toLowerCase();
-            ext = ext.substr(ext.lastIndexOf('.') + 1);
+            ext = getExtensionFromUri(ext);
             return MimeTypes[ext];
         }
     };
@@ -435,9 +439,7 @@ define([
             }
         }
         if (!hrefResolved && defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            href = new Uri(href).resolve(sourceUri.resolve(baseUri)).toString();
+            href = getAbsoluteUri(href, getAbsoluteUri(sourceUri));
             href = proxyUrl(href, proxy);
         }
         return href;
@@ -822,9 +824,7 @@ define([
                     var uri = tokens[0];
                     if (!defined(externalStyleHash[uri])) {
                         if (defined(sourceUri)) {
-                            var baseUri = new Uri(document.location.href);
-                            sourceUri = new Uri(sourceUri);
-                            uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                            uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
                         }
                         promises.push(processExternalStyles(dataSource, uri, styleCollection, sourceUri));
                     }

@@ -39,6 +39,7 @@ define([
         './CreditDisplay',
         './CullingVolume',
         './DepthPlane',
+        './DeviceOrientationCameraController',
         './Fog',
         './FrameState',
         './FrustumCommands',
@@ -100,6 +101,7 @@ define([
         CreditDisplay,
         CullingVolume,
         DepthPlane,
+        DeviceOrientationCameraController,
         Fog,
         FrameState,
         FrustumCommands,
@@ -501,6 +503,14 @@ define([
         this.fxaa = true;
 
         /**
+         * When <code>true</code>, enables picking using the depth buffer.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.useDepthPicking = true;
+
+        /**
          * The time in milliseconds to wait before checking if the camera has not moved and fire the cameraMoveEnd event.
          * @type {Number}
          * @default 500.0
@@ -556,6 +566,10 @@ define([
             useOIT : false,
             useFXAA : false
         };
+
+        this._useWebVR = false;
+        this._cameraVR = undefined;
+        this._aspectRatioVR = undefined;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -969,6 +983,38 @@ define([
         terrainExaggeration : {
             get : function() {
                 return this._terrainExaggeration;
+            }
+        },
+
+        /**
+         * When <code>true</code>, splits the scene into two viewports with steroscopic views for the left and right eyes.
+         * Used for cardboard and WebVR.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        useWebVR : {
+            get : function() {
+                return this._useWebVR;
+            },
+            set : function(value) {
+                this._useWebVR = value;
+                if (this._useWebVR) {
+                    this._frameState.creditDisplay.container.style.visibility = 'hidden';
+                    this._cameraVR = new Camera(this);
+                    if (!defined(this._deviceOrientationCameraController)) {
+                        this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
+                    }
+
+                    this._aspectRatioVR = this._camera.frustum.aspectRatio;
+                } else {
+                    this._frameState.creditDisplay.container.style.visibility = 'visible';
+                    this._cameraVR = undefined;
+                    this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
+
+                    this._camera.frustum.aspectRatio = this._aspectRatioVR;
+                    this._camera.frustum.xOffset = 0.0;
+                }
             }
         }
     });
@@ -1444,7 +1490,7 @@ define([
 
         if (environmentState.isSunVisible) {
             environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom) {
+            if (scene.sunBloom && !scene._useWebVR) {
                 var framebuffer;
                 if (environmentState.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
@@ -1555,7 +1601,7 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
@@ -1583,6 +1629,78 @@ define([
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             commandList[i].execute(context, passState);
+        }
+    }
+
+    function executeViewportCommands(scene, passState) {
+        var context = scene._context;
+        
+        var viewport = passState.viewport;
+
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
+
+        if (scene._useWebVR) {
+            if (frameState.mode !== SceneMode.SCENE2D) {
+                // Based on Calculating Stereo pairs by Paul Bourke
+                // http://paulbourke.net/stereographics/stereorender/
+
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth * 0.5;
+                viewport.height = context.drawingBufferHeight;
+
+                var savedCamera = Camera.clone(camera, scene._cameraVR);
+
+                var near = camera.frustum.near;
+                var fo = near * 5.0;
+                var eyeSeparation = fo / 30.0;
+                var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+
+                camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+                var offset = 0.5 * eyeSeparation * near / fo;
+
+                Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = offset;
+
+                executeCommands(scene, passState);
+
+                viewport.x = passState.viewport.width;
+
+                Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+                camera.frustum.xOffset = -offset;
+
+                executeCommands(scene, passState);
+
+                Camera.clone(savedCamera, camera);
+            } else {
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth * 0.5;
+                viewport.height = context.drawingBufferHeight;
+
+                var savedTop = camera.frustum.top;
+
+                camera.frustum.top = camera.frustum.right * (viewport.height / viewport.width);
+                camera.frustum.bottom = -camera.frustum.top;
+
+                executeCommands(scene, passState);
+
+                viewport.x = passState.viewport.width;
+
+                executeCommands(scene, passState);
+
+                camera.frustum.top = savedTop;
+                camera.frustum.bottom = -savedTop;
+            }
+        } else {
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth;
+            viewport.height = context.drawingBufferHeight;
+
+            executeCommands(scene, passState);
         }
     }
 
@@ -1628,7 +1746,7 @@ define([
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom) {
+            if (scene.sunBloom && !scene._useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();
             } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
@@ -1678,7 +1796,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (environmentState.isSunVisible && scene.sunBloom) {
+        if (environmentState.isSunVisible && scene.sunBloom && !scene._useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -1752,8 +1870,14 @@ define([
 
         this._tweens.update();
         this._camera.update(this._mode);
+
         this._screenSpaceCameraController.update();
+        if (defined(this._deviceOrientationCameraController)) {
+            this._deviceOrientationCameraController.update();
+        }
     };
+
+    var scratchEyeTranslation = new Cartesian3();
 
     function render(scene, time) {
         if (!defined(time)) {
@@ -1796,19 +1920,18 @@ define([
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
 
-        passState.viewport.x = 0;
-        passState.viewport.y = 0;
-        passState.viewport.width = context.drawingBufferWidth;
-        passState.viewport.height = context.drawingBufferHeight;
+        var viewport = passState.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
 
         updateEnvironment(scene);
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-
         executeComputeCommands(scene);
-        executeCommands(scene, passState);
-
+        executeViewportCommands(scene, passState);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
@@ -1982,13 +2105,13 @@ define([
 
         us.update(frameState);
 
+        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
+        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
+
         var passState = this._pickFramebuffer.begin(scratchRectangle);
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
         updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-
-        scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
-        scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         executeCommands(this, passState);
         resolveFramebuffers(this, passState);
@@ -2013,6 +2136,10 @@ define([
      * @exception {DeveloperError} 2D is not supported. An orthographic projection matrix is not invertible.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
+        if (!this.useDepthPicking) {
+            return undefined;
+        }
+
         //>>includeStart('debug', pragmas.debug);
         if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
@@ -2230,15 +2357,17 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Scene#isDestroyed
      *
      * @example
      * scene = scene && scene.destroy();
+     *
+     * @see Scene#isDestroyed
      */
     Scene.prototype.destroy = function() {
         this._tweens.removeAll();
         this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
+        this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
         this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();

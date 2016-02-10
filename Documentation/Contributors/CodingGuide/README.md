@@ -100,6 +100,17 @@ if (!defined(result)) {
    // ...
 }
 ```
+* Use curly braces even for single line `if`, `for`, and `while` blocks, e.g.,
+```javascript
+if (!defined(result))
+    result = new Cartesian3();
+```
+is better written as
+```javascript
+if (!defined(result)) {
+    result = new Cartesian3();
+}
+```
 * Use parenthesis judiciously, e.g.,
 ```javascript
 var foo = x > 0.0 && y !== 0.0;
@@ -196,6 +207,20 @@ state.isSkyAtmosphereVisible = true
 state.isSunVisible = true;
 state.isMoonVisible = false;
 ```
+* Do not create a local variable that is used only once unless it significantly improves readability, e.g.,
+```javascript
+function radiiEquals(left, right) {
+    var leftRadius = left.radius;
+    var rightRadius = right.radius;
+    return (leftRadius === rightRadius);
+}
+```
+is better written as
+```javascript
+function radiiEquals(left, right) {
+    return (left.radius === right.radius);
+}
+```
 * Use `undefined` instead of `null`.
 * Test if a variable is defined using Cesium's `defined` function, e.g.,
 ```javascript
@@ -270,6 +295,26 @@ function processTiles(tiles3D, frameState) {
     for (var i = length - 1; i >= 0; --i) {
         tiles[i].process(tiles3D, frameState);
     }
+}
+```
+* Do not use an unnecessary `else` block at the end of a function, e.g.,
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    } else {
+        return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
+    }
+}
+```
+is better written as
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    }
+
+    return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
 }
 ```
 * :speedboat: Smaller functions are more likely to be optimized by JavaScript engines.  Consider this for code that is likely to be a hot spot.
@@ -653,6 +698,23 @@ It is usually obvious what directory a file belongs in.  When it isn't, the deci
 
 Modules (files) should only reference modules in the same level or a lower level of the stack.  For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
+* Modules in `define` statements should be in alphabetical order.  This can be done automatically with `npm run sortRequires`, see the [Build Guide](../BuildGuide/README.md).  For example, the modules required by `Scene/ModelAnimation.js` are:
+```javascript
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties',
+        '../Core/Event',
+        '../Core/JulianDate',
+        './ModelAnimationLoop',
+        './ModelAnimationState'
+    ], function(
+        defaultValue,
+        defineProperties,
+        Event,
+        JulianDate,
+        ModelAnimationLoop,
+        ModelAnimationState) { /* ... */ });
+```
 * WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 ```javascript
 var primitive = new Primitive(/* ... */);
