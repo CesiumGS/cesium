@@ -73,14 +73,14 @@ function loadTileset(url) {
         }
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
-//            "color" : [255, 255, 255]
+//            "color" : "#ff00ff",
 //            "color" : {
 //                "propertyName" : "id",
 //                "map" : {
-//                    "1" : [255, 0, 0],
-//                    "2" : [0, 255, 0]
+//                    "1" : "#ff0000",
+//                    "2" : "#ff0000"
 //                },
-//                "default" : [255, 255, 255]
+//                "default" : "#ffffff"
 //            },
             "color" : {
                 "expression" : {
@@ -97,12 +97,12 @@ function loadTileset(url) {
                     100 // [100, infinity)
                 ],
                 "colors" : [
-                    [237, 248, 251],
-                    [191, 211, 230],
-                    [158, 188, 218],
-                    [140, 150, 198],
-                    [136, 86, 167],
-                    [129, 15, 124]
+                    "#ff00ff",
+                    "#ff0000",
+                    "#ffff00",
+                    "#00ff00",
+                    "#00ffff",
+                    "#0000ff"
                 ]
             },
 //                "show": false
@@ -390,11 +390,7 @@ var currentPropertyName = '';
 function getRandomColors() {
     var colors = [];
     for (var i = 0; i < numberofColors; ++i) {
-        var r = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-        var g  = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-        var b = Math.floor(Cesium.Math.nextRandomNumber() * 255);
-
-        colors[i] = [r, g, b];
+        colors[i] = Cesium.Color.fromRandom().toCssColorString();
     }
 
     return colors;
