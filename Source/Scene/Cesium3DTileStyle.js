@@ -3,7 +3,7 @@ define([
        '../Core/defaultValue',
        '../Core/defined',
        '../Core/DeveloperError',
-       '../Core/freezeObject',
+       '../Core/isArray',
        './BooleanExpression',
        './BooleanRegularExpression',
        './ColorRampExpression',
@@ -14,7 +14,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
-        freezeObject,
+        isArray,
         BooleanExpression,
         BooleanRegularExpression,
         ColorRampExpression,
@@ -27,16 +27,8 @@ define([
     // style/expression on mouse over, CZML may want to use this to evaluate expressions,
     // a UI might want to use it, etc.
 
-    var DEFAULT_JSON_COLOR_EXPRESSION = freezeObject({
-        type : 'constant',
-        constant : {
-            color : [255, 255, 255]
-        }
-    });
-
-    var DEFAULT_JSON_BOOLEAN_EXPRESSION = freezeObject({
-        operator : 'true' // Constant expression returning true
-    });
+    var DEFAULT_JSON_COLOR_EXPRESSION = [255, 255, 255];
+    var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 
     /**
      * DOC_TBA
@@ -60,12 +52,12 @@ define([
         this.timeDynamic = false;
 
         var color;
-        if (colorExpression.type === 'map') {
-            color = new ColorMapExpression(styleEngine, colorExpression.map);
-        } else if (colorExpression.type === 'ramp') {
-            color = new ColorRampExpression(styleEngine, colorExpression.ramp);
-        } else if (colorExpression.type === 'constant') {
-            color = new ConstantColorExpression(styleEngine, colorExpression.constant);
+        if (isArray(colorExpression)) {
+            color = new ConstantColorExpression(styleEngine, colorExpression);
+        } else if (defined(colorExpression.map)) {
+            color = new ColorMapExpression(styleEngine, colorExpression);
+        } else if (defined(colorExpression.intervals)) {
+            color = new ColorRampExpression(styleEngine, colorExpression);
         }
 
         /**

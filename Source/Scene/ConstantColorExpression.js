@@ -19,12 +19,10 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ConstantColorExpression(styleEngine, jsonExpression) {
+    function ConstantColorExpression(styleEngine, literal) {
         this._styleEngine = styleEngine;
 
-        var color = jsonExpression.color;
-        this._color = color.slice(0);
-        this._runtimeColor = Color.fromBytes(color[0], color[1], color[2]);
+        this._color = Color.fromBytes(literal[0], literal[1], literal[2]);
     }
 
     defineProperties(ConstantColorExpression.prototype, {
@@ -40,15 +38,12 @@ define([
                 if (!defined(value)) {
                     throw new DeveloperError('color is required.');
                 }
-
-                if (value.length !== 3) {
-                    throw new DeveloperError('color.length must equal three.');
-                }
                 //>>includeEnd('debug');
 
-                this._color = value.slice(0);
-                this._runtimeColor = Color.fromBytes(value[0], value[1], value[2], 255, this._runtimeColor);
-                this._styleEngine.makeDirty();
+                if (!Color.equals(this._color, value)) {
+                    this._color = Color.clone(value, this._color);
+                    this._styleEngine.makeDirty();
+                }
             }
         }
     });
@@ -57,7 +52,7 @@ define([
      * DOC_TBA
      */
     ConstantColorExpression.prototype.evaluate = function(feature) {
-        return this._runtimeColor;
+        return this._color;
     };
 
     return ConstantColorExpression;
