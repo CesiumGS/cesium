@@ -47,7 +47,7 @@ define([
         Cesium3DTileBatchTableResources,
         Cesium3DTileContentState,
         ModelInstanceCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the contents of a

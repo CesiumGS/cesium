@@ -25,7 +25,7 @@ define([
         OrientedBoundingBox,
         PerInstanceColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     var TileOrientedBoundingBox = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

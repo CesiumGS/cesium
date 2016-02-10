@@ -9,7 +9,7 @@ define([
         destroyObject,
         when,
         Cesium3DTileContentState) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents empty content for tiles in a

@@ -17,7 +17,7 @@ defineSuite([
         Matrix3,
         Plane,
         createFrameState) {
-    "use strict";
+    'use strict';
     
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());

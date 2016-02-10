@@ -27,7 +27,7 @@ defineSuite([
         Cesium3DTile,
         SceneMode,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
     var regionBox = boundingVolumeRegion.slice(0, 4);
