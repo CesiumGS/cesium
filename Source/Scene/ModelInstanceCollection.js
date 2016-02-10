@@ -39,7 +39,7 @@ define([
         when,
         Model,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var LoadState = {
         NEEDS_LOAD : 0,

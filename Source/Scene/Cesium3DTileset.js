@@ -45,7 +45,7 @@ define([
         Cesium3DTileRefine,
         CullingVolume,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},

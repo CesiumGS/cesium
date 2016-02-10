@@ -23,7 +23,7 @@ define([
         SphereOutlineGeometry,
         PerInstanceColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     var TileBoundingSphere = function(center, radius) {
         this.boundingSphere = new BoundingSphere(center, radius);

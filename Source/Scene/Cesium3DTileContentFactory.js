@@ -11,7 +11,7 @@ define([
         Instanced3DModel3DTileContent,
         Points3DTileContent,
         Tileset3DTileContent) {
-    "use strict";
+    'use strict';
 
     /**
      * Maps a tile's extension (and a tile's magic field in its header) to a new

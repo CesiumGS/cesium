@@ -3,7 +3,7 @@ define([
         './defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     /**
      * Stores information for making a request using {@link RequestScheduler}.

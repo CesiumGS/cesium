@@ -3,7 +3,7 @@ defineSuite([
         'Scene/TileBoundingVolume'
     ], function(
         TileBoundingVolume) {
-    "use strict";
+    'use strict';
 
     it('throws', function() {
         var boundingVolume = new TileBoundingVolume();

@@ -11,7 +11,7 @@ define([
         DeveloperError,
         getTimestamp,
         JobType) {
-    "use strict";
+    'use strict';
 
     function JobTypeBudget(total) {
         /**

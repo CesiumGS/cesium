@@ -9,7 +9,7 @@ defineSuite([
         Request,
         RequestType,
         when) {
-    "use strict";
+    'use strict';
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;

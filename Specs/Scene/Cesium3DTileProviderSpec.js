@@ -3,7 +3,7 @@ defineSuite([
         'Scene/Cesium3DTileContent'
     ], function(
         Cesium3DTileContent) {
-    "use strict";
+    'use strict';
 
     it('throws', function() {
         var content = new Cesium3DTileContent();

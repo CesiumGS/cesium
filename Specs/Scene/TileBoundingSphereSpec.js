@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Plane,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var tileBoundingSphere = new TileBoundingSphere(new Cartesian3(0.0, 0.0, 0.0), 1.0);
     var frameState = createFrameState();
