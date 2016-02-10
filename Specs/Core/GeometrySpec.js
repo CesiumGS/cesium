@@ -15,7 +15,7 @@ defineSuite([
         GeometryAttribute,
         GeometryType,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var attributes = {

@@ -13,7 +13,7 @@ define([
         declare,
         domClass,
         template) {
-    "use strict";
+    'use strict';
 
     return declare('Sandcastle.LinkButton', [_WidgetBase, _TemplatedMixin, _CssStateMixin], {
         baseClass : "dijitButton",

@@ -17,7 +17,7 @@ define([
         Ellipsoid,
         Rectangle,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @param {Object} options Object with the following properties:
@@ -25,7 +25,7 @@ define([
      * @param {Number} [options.minimumHeight=0.0]
      * @param {Number} [options.maximumHeight=0.0]
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84]
-     * 
+     *
      * @private
      */
     var TileBoundingBox = function(options) {

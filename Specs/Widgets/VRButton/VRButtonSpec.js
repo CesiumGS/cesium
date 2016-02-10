@@ -3,7 +3,7 @@ defineSuite([
         'Widgets/VRButton/VRButton'
     ], function(
         VRButton) {
-    "use strict";
+    'use strict';
 
     it('constructor sets default values', function() {
         var vrButton = new VRButton(document.body, {});

@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         loadArrayBuffer,
         RequestErrorEvent) {
-    "use strict";
+    'use strict';
 
     var fakeXHR;
 

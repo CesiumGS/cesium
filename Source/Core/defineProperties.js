@@ -3,7 +3,7 @@ define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     var definePropertyWorks = (function() {
         try {

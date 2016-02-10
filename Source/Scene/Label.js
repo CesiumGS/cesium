@@ -27,7 +27,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
@@ -705,7 +705,7 @@ define([
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
-     * 
+     *
      * @see Label#eyeOffset
      * @see Label#pixelOffset
      */

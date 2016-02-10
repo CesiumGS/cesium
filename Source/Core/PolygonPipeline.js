@@ -33,7 +33,7 @@ define([
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     var uScratch = new Cartesian2();
     var vScratch = new Cartesian2();

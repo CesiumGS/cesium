@@ -3,7 +3,7 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Constants used by {@link Clock#tick} to determine behavior

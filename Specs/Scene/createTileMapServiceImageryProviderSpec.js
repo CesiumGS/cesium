@@ -39,7 +39,7 @@ defineSuite([
         ImageryState,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -251,6 +251,23 @@ defineSuite([
 
         return requestMetadata.promise.then(function(url) {
             expect(url.indexOf(proxy.getURL('server.invalid'))).toEqual(0);
+        });
+    });
+
+    it('resource request takes a query string', function() {
+        /*jshint unused: false*/
+        var requestMetadata = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestMetadata.resolve(url);
+            deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+        });
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'server.invalid?query=1',
+        });
+
+        return requestMetadata.promise.then(function(url) {
+            expect(/\?query=1$/.test(url)).toEqual(true);
         });
     });
 

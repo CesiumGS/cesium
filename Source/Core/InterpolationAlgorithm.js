@@ -3,7 +3,7 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for interpolation algorithms.

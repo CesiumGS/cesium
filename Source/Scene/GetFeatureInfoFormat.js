@@ -15,7 +15,7 @@ define([
         DeveloperError,
         RuntimeError,
         ImageryLayerFeatureInfo) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.

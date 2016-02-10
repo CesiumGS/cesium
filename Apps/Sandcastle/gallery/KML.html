@@ -26,20 +26,20 @@
 
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 Sandcastle.addToolbarMenu([{
     text : 'KML - Global Science Facilities',
     onselect : function() {
-        viewer.homeButton.viewModel.command();
+        viewer.camera.flyHome(0);
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml'));
     }
 }, {
     text : 'KMZ with embedded data - GDP per capita',
     onselect : function() {
-        viewer.homeButton.viewModel.command();
+        viewer.camera.flyHome(0);
         viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
     }
 }, {

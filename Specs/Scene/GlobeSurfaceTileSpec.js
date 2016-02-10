@@ -45,7 +45,7 @@ defineSuite([
         createFrameState,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     describe('processStateMachine', function() {
         var frameState;

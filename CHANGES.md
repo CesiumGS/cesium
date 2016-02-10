@@ -1,8 +1,16 @@
 Change Log
 ==========
 
-### 1.18 - 2016-02-01
+### 1.19 - 2016-03-01
+* Breaking changes
+   * 
+* Deprecated
+   *   
+* Fixed bug for causing `navigator is not defined` reference error in node
+* Added `Camera.flyHome` function for resetting the camera to the home view
+* Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 
+### 1.18 - 2016-02-01
 * Breaking changes
     * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).
 * Deprecated
@@ -19,7 +27,9 @@ Change Log
     }
     ```
 * `GroundPrimitive` now supports batching geometry for better performance.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 * Added `ImageryLayer.getViewableRectangle` to make it easy to get the effective bounds of an imagery layer.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
 * Fixed a picking issue that sometimes prevented objects being selected. [#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)
 * Fixed cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
 * Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.

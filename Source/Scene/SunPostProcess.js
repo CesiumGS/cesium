@@ -47,7 +47,7 @@ define([
         BrightPass,
         GaussianBlur1D,
         PassThrough) {
-    "use strict";
+    'use strict';
 
     function SunPostProcess() {
         this._fbo = undefined;

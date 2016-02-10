@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile.  This type describes an
