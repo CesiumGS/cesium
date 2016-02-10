@@ -7,7 +7,7 @@ define([
         Color,
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

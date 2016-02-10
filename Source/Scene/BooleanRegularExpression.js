@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?
     // TODO: replace with a real parser/AST

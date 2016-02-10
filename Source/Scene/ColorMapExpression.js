@@ -11,7 +11,7 @@ define([
         defaultValue,
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?
 

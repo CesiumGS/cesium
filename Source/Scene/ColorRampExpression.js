@@ -15,7 +15,7 @@ define([
         DeveloperError,
         chroma,
         NumberExpression) {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?
 

@@ -19,7 +19,7 @@ define([
         ColorRampExpression,
         ColorMapExpression,
         ConstantColorExpression) {
-    "use strict";
+    'use strict';
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
     // style/expression on mouse over, CZML may want to use this to evaluate expressions,
