@@ -1452,6 +1452,38 @@ define([
             getValue : function(uniformState) {
                 return uniformState.fogDensity;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map depth texture.
+         *
+         * @private
+         *
+         * @alias czm_shadowMapTexture
+         * @glslUniform
+         */
+        czm_shadowMapTexture : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.shadowMapTexture;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map matrix.
+         *
+         * @private
+         *
+         * @alias czm_shadowMapMatrix
+         * @glslUniform
+         */
+        czm_shadowMapMatrix : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_MAT4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMapMatrix;
+            }
         })
     };
 
