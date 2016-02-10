@@ -21,7 +21,7 @@ define([
         NoSleep,
         createCommand,
         getElement) {
-    "use strict";
+    'use strict';
 
     function lockScreen(orientation) {
         var locked = false;

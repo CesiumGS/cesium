@@ -25,7 +25,7 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     beforeEach(function() {
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {

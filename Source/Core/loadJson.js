@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         loadText) {
-    "use strict";
+    'use strict';
 
     var defaultHeaders = {
         Accept : 'application/json,*/*;q=0.01'

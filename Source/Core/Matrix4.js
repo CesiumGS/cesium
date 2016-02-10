@@ -19,7 +19,7 @@ define([
         CesiumMath,
         Matrix3,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     /**
      * A 4x4 matrix, indexable as a column-major order array.

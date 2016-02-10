@@ -33,7 +33,7 @@ defineSuite([
         pollToPromise,
         Uri,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadWithXhr.load = loadWithXhr.defaultLoad;

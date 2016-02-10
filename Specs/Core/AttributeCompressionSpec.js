@@ -9,7 +9,7 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     it('oct decode(0, 0)', function() {

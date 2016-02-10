@@ -49,7 +49,7 @@ define([
         SceneMode,
         SceneTransforms,
         TweenCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * Modifies the camera position and orientation based on mouse input to a canvas.

@@ -17,7 +17,7 @@ defineSuite([
         CesiumMath,
         Ray,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);

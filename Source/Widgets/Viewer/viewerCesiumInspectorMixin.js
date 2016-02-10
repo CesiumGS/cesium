@@ -9,7 +9,7 @@ define([
         defineProperties,
         DeveloperError,
         CesiumInspector) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds the CesiumInspector widget to the Viewer widget.

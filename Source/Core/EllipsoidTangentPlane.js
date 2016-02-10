@@ -31,7 +31,7 @@ define([
         Plane,
         Ray,
         Transforms) {
-    "use strict";
+    'use strict';
 
     var scratchCart4 = new Cartesian4();
     /**

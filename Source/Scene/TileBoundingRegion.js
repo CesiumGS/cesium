@@ -33,7 +33,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @param {Object} options Object with the following properties:

@@ -33,7 +33,7 @@ define([
         Rectangle,
         TerrainEncoding,
         Transforms) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions to create a mesh from a heightmap image.

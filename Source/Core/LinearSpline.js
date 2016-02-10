@@ -13,7 +13,7 @@ define([
         defineProperties,
         DeveloperError,
         Spline) {
-    "use strict";
+    'use strict';
 
     /**
      * A spline that uses piecewise linear interpolation to create a curve.

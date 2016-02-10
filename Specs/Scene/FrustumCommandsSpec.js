@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         FrustumCommands,
         Pass) {
-    "use strict";
+    'use strict';
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();

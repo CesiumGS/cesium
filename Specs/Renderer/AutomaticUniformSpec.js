@@ -21,7 +21,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var context;
 

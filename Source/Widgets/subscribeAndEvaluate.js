@@ -3,7 +3,7 @@ define([
         '../ThirdParty/knockout'
     ], function(
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * Subscribe to a Knockout observable ES5 property, and immediately fire

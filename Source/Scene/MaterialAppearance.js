@@ -27,7 +27,7 @@ define([
         TexturedMaterialAppearanceVS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)

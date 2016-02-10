@@ -3,7 +3,7 @@ defineSuite([
         'Core/Intersections2D'
     ], function(
         Intersections2D) {
-    "use strict";
+    'use strict';
 
     describe('clipTriangleAtAxisAlignedThreshold', function() {
         it('eliminates a triangle that is entirely on the wrong side of the threshold', function() {

@@ -3,7 +3,7 @@ define([
         './defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the closed interval [start, stop].

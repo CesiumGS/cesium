@@ -87,7 +87,7 @@ defineSuite([
         pick,
         pollToPromise,
         render) {
-    "use strict";
+    'use strict';
 
     var context;
     var ellipsoid;

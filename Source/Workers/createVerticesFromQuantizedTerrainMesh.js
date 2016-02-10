@@ -35,7 +35,7 @@ define([
         TerrainEncoding,
         Transforms,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     var maxShort = 32767;
 

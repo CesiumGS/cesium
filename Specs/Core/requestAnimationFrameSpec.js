@@ -7,7 +7,7 @@ defineSuite([
         requestAnimationFrame,
         cancelAnimationFrame,
         when) {
-    "use strict";
+    'use strict';
 
     it('calls the callback', function() {
         var deferred = when.defer();

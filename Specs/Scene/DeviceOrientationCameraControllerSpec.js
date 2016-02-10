@@ -15,7 +15,7 @@ defineSuite([
         createCanvas,
         destroyCanvas,
         DomEventSimulator) {
-    "use strict";
+    'use strict';
 
     var scene;
     var canvas;

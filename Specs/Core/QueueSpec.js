@@ -3,7 +3,7 @@ defineSuite([
         'Core/Queue'
     ], function(
         Queue) {
-    "use strict";
+    'use strict';
 
     var queue;
     beforeEach(function() {
