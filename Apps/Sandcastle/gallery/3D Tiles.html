@@ -73,48 +73,37 @@ function loadTileset(url) {
         }
 
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
+//            "color" : [255, 255, 255]
 //            "color" : {
-//                "type" : "constant",
-//                "constant" : {
-//                    "color" : [255, 255, 255]
-//                }
-//            },
-//            "color" : {
-//                "type" : "map",
+//                "propertyName" : "id",
 //                "map" : {
-//                    "propertyName" : "id",
-//                    "map" : {
-//                        "1" : [255, 0, 0],
-//                        "2" : [0, 255, 0]
-//                    },
-//                    "default" : [255, 255, 255]
-//                }
+//                    "1" : [255, 0, 0],
+//                    "2" : [0, 255, 0]
+//                },
+//                "default" : [255, 255, 255]
 //            },
             "color" : {
-                "type" : "ramp",
-                "ramp" : {
-                    "expression" : {
-                        "leftOperand" : "${Height}",
-                        "operator" : "+",
-                        "rightOperand" : 0
-                    },
-                    "intervals" : [
-                        1,  // [1, 10)
-                        10, // [10, 30)
-                        30, // [30, 50)
-                        50, // [50, 70)
-                        70, // [70, 100)
-                        100 // [100, infinity)
-                    ],
-                    "colors" : [
-                        [237, 248, 251],
-                        [191, 211, 230],
-                        [158, 188, 218],
-                        [140, 150, 198],
-                        [136, 86, 167],
-                        [129, 15, 124]
-                    ]
-                }
+                "expression" : {
+                    "leftOperand" : "${Height}",
+                    "operator" : "+",
+                    "rightOperand" : 0
+                },
+                "intervals" : [
+                    1,  // [1, 10)
+                    10, // [10, 30)
+                    30, // [30, 50)
+                    50, // [50, 70)
+                    70, // [70, 100)
+                    100 // [100, infinity)
+                ],
+                "colors" : [
+                    [237, 248, 251],
+                    [191, 211, 230],
+                    [158, 188, 218],
+                    [140, 150, 198],
+                    [136, 86, 167],
+                    [129, 15, 124]
+                ]
             },
 //                "show": false
 //            "show" : {
@@ -415,16 +404,13 @@ function getStyleFunction(name) {
     return function() {
         tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
             "color" : {
-                "type" : "ramp",
-                "ramp" : {
-                    "expression" : {
-                        "leftOperand" : "${" + name + "}",
-                        "operator" : "+",
-                        "rightOperand" : 0
-                    },
-                    "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
-                    "colors" :  Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors)
-                }
+                "expression" : {
+                    "leftOperand" : "${" + name + "}",
+                    "operator" : "+",
+                    "rightOperand" : 0
+                },
+                "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
+                "colors" :  Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors)
             },
             "show" : {
                 "leftOperand" : "${" + name + "}",
