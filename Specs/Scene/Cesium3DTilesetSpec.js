@@ -736,21 +736,17 @@ defineSuite([
             [0, 1],
             [0, 0]
         ];
-        var i = 0;
+        var spyUpdate = jasmine.createSpy('listener');
 
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
-                var expected = results[i++];
-                expect(numberOfPendingRequests).toEqual(expected[0]);
-                expect(numberProcessing).toEqual(expected[1]);
-            });
-            viewRootOnly();
-            var spyUpdate = jasmine.createSpy('listener');
             tileset.loadProgress.addEventListener(spyUpdate);
-            scene.renderForSpecs();
-            expect(spyUpdate.calls.count()).toEqual(1);
-            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset);
+            viewRootOnly();
+            return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                scene.renderForSpecs();
+                expect(spyUpdate.calls.count()).toEqual(3);
+                expect(spyUpdate.calls.allArgs()).toEqual(results);
+            });
         });
     });
 
@@ -763,9 +759,10 @@ defineSuite([
             });
 
             var spyUpdate = jasmine.createSpy('listener');
-            tileset.loadProgress.addEventListener(spyUpdate);
+            tileset.tileVisible.addEventListener(spyUpdate);
             scene.renderForSpecs();
             expect(spyUpdate.calls.count()).toEqual(1);
+            expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
         });
     });
 
