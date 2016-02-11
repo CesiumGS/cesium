@@ -730,8 +730,6 @@ defineSuite([
     });
 
     it('load progress events are raised', function() {
-        spyOn(Event.prototype, 'raiseEvent');
-
         // [numberOfPendingRequests, numberProcessing]
         var results = [
             [1, 0],
@@ -746,26 +744,28 @@ defineSuite([
                 var expected = results[i++];
                 expect(numberOfPendingRequests).toEqual(expected[0]);
                 expect(numberProcessing).toEqual(expected[1]);
-                expect(Event.prototype.raiseEvent).toHaveBeenCalled();
             });
             viewRootOnly();
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.loadProgress.addEventListener(spyUpdate);
             scene.renderForSpecs();
+            expect(spyUpdate.calls.count()).toEqual(1);
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset);
         });
     });
 
     it('tile visible event is raised', function() {
-        spyOn(Event.prototype, 'raiseEvent');
-
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset.tileVisible.addEventListener(function(tile) {
                 expect(tile).toBe(tileset._root);
                 expect(tileset._root.visibility(scene.frameState.cullingVolume)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-                expect(Event.prototype.raiseEvent).toHaveBeenCalled();
             });
 
+            var spyUpdate = jasmine.createSpy('listener');
+            tileset.loadProgress.addEventListener(spyUpdate);
             scene.renderForSpecs();
+            expect(spyUpdate.calls.count()).toEqual(1);
         });
     });
 
