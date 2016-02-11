@@ -93,7 +93,7 @@ define([
                 var color = Color.fromCssColorString(map[name]);
                 //>>includeStart('debug', pragmas.debug);
                 if (color === undefined) {
-                    throw new DeveloperError('color must be a valid CSS color');
+                    throw new DeveloperError('color must be defined');
                 }
                 //>>includeEnd('debug');
 
