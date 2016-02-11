@@ -22,7 +22,15 @@ define([
     function ConstantColorExpression(styleEngine, literal) {
         this._styleEngine = styleEngine;
 
-        this._color = Color.fromBytes(literal[0], literal[1], literal[2]);
+        var color = Color.fromCssColorString(literal);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (color === undefined) {
+            throw new DeveloperError('color must be defined');
+        }
+        //>>includeEnd('debug');
+
+        this._color = color;
     }
 
     defineProperties(ConstantColorExpression.prototype, {

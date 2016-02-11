@@ -77,10 +77,18 @@ define([
         var runtimeIntervals = new Array(length);
         for (var i = 0; i < length; ++i) {
             var color = colors[i];
+            var c = Color.fromCssColorString(color);
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(c)) {
+                throw new DeveloperError('color must be defined');
+            }
+            //>>includeEnd('debug');
+
             runtimeIntervals[i] = {
 // TODO: what about intervals[0] and inclusive/exclusive flag?
                 maximum : (i !== length - 1) ? intervals[i + 1] : Number.POSITIVE_INFINITY,
-                color : Color.fromBytes(color[0], color[1], color[2])
+                color : c
             };
         }
 
@@ -180,7 +188,7 @@ define([
 
         var outColors = new Array(length);
         for (var j = 0; j < length; ++j) {
-            outColors[j] = chroma(computedColors[j]).rgb();
+            outColors[j] = chroma(computedColors[j]).hex();
         }
 
         return outColors;

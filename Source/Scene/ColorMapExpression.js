@@ -89,7 +89,7 @@ define([
         for (var name in map) {
             if (map.hasOwnProperty(name)) {
                 var color = map[name];
-                runtimeMap[name] = Color.fromBytes(color[0], color[1], color[2]);
+                runtimeMap[name] = Color.fromCssColorString(color);
             }
         }
 
@@ -97,7 +97,7 @@ define([
 
         var c = expression._default;
         if (defined(c)) {
-            expression._runtimeDefault = Color.fromBytes(c[0], c[1], c[2], 255, expression._runtimeDefault);
+            expression._runtimeDefault = Color.clone(Color.fromCssColorString(c), expression._runtimeDefault);
         } else {
             expression._runtimeDefault = Color.clone(Color.WHITE, expression._runtimeDefault);
         }

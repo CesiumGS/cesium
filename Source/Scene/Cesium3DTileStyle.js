@@ -27,7 +27,7 @@ define([
     // style/expression on mouse over, CZML may want to use this to evaluate expressions,
     // a UI might want to use it, etc.
 
-    var DEFAULT_JSON_COLOR_EXPRESSION = [255, 255, 255];
+    var DEFAULT_JSON_COLOR_EXPRESSION = "#ffffff";
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 
     /**
@@ -52,7 +52,7 @@ define([
         this.timeDynamic = false;
 
         var color;
-        if (isArray(colorExpression)) {
+        if (typeof(colorExpression) === 'string') {
             color = new ConstantColorExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.map)) {
             color = new ColorMapExpression(styleEngine, colorExpression);
