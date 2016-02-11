@@ -80,8 +80,8 @@ define([
             var c = Color.fromCssColorString(color);
 
             //>>includeStart('debug', pragmas.debug);
-            if (c === undefined) {
-                throw new DeveloperError('color must be a valid CSS color');
+            if (!defined(c)) {
+                throw new DeveloperError('color must be defined');
             }
             //>>includeEnd('debug');
 
