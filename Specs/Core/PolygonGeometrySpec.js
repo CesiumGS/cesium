@@ -421,9 +421,31 @@ defineSuite([
 
         var st = p.attributes.st.values;
         for (var i = 0; i < st.length; i++) {
-            expect(st[i] + CesiumMath.EPSILON10 >= 0 && st[i] - CesiumMath.EPSILON10 <= 1).toEqual(true);
+            expect(st[i]).toBeGreaterThanOrEqualTo(0);
+            expect(st[i]).toBeLessThanOrEqualTo(1);
         }
     });
+
+    it('computes correct texture coordinates for polygon with position heights', function() {
+        var p = PolygonGeometry.createGeometry(new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])},
+            granularity: CesiumMath.PI
+        }));
+
+        var st = p.attributes.st.values;
+        for (var i = 0; i < st.length; i++) {
+            expect(st[i]).toBeGreaterThanOrEqualTo(0);
+            expect(st[i]).toBeLessThanOrEqualTo(1);
+        }
+    });
+
 
     it('creates a polygon from hierarchy extruded', function() {
         var hierarchy = {

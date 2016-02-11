@@ -54,6 +54,10 @@ define([
     var computeBoundingRectangleQuaternion = new Quaternion();
     var computeBoundingRectangleMatrix3 = new Matrix3();
 
+    function zeroToOne(n){
+        return Math.min(Math.max(n, 0), 1);
+    }
+
     function computeBoundingRectangle(tangentPlane, positions, angle, result) {
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
@@ -99,12 +103,18 @@ define([
     var appendTextureCoordinatesQuaternion = new Quaternion();
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
-    function computeAttributes(vertexFormat, geometry, outerPositions, ellipsoid, stRotation, bottom, wall) {
+    function computeAttributes(options) {
+        var vertexFormat = options.vertexFormat;
+        var geometry = options.geometry;
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
-            var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
+            var boundingRectangle = options.boundingRectangle;
+            var tangentPlane = options.tangentPlane;
+            var ellipsoid = options.ellipsoid;
+            var stRotation = options.stRotation;
+            var bottom = options.bottom;
+            var wall = options.wall;
 
             var origin = appendTextureCoordinatesOrigin;
             origin.x = boundingRectangle.x;
@@ -145,13 +155,15 @@ define([
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
 
+                    var stx = zeroToOne(st.x / boundingRectangle.width);
+                    var sty = zeroToOne(st.y / boundingRectangle.height);
                     if (bottom) {
-                        textureCoordinates[textureCoordIndex + bottomOffset2] = st.x / boundingRectangle.width;
-                        textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = st.y / boundingRectangle.height;
+                        textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
+                        textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
                     }
 
-                    textureCoordinates[textureCoordIndex] = st.x / boundingRectangle.width;
-                    textureCoordinates[textureCoordIndex + 1] = st.y / boundingRectangle.height;
+                    textureCoordinates[textureCoordIndex] = stx;
+                    textureCoordinates[textureCoordIndex + 1] = sty;
 
                     textureCoordIndex += 2;
                 }
@@ -661,30 +673,48 @@ define([
         var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
+        var i;
 
         if (polygons.length === 0) {
             return undefined;
         }
 
-        outerPositions = polygons[0];
+        outerPositions = polygons[0].slice();
+        for (i = 0; i < outerPositions.length; i++) {
+            outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
+        }
+
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometry;
         var geometries = [];
-        var i;
 
+        var options = {
+            vertexFormat: vertexFormat,
+            geometry: undefined,
+            tangentPlane: tangentPlane,
+            boundingRectangle: boundingRectangle,
+            ellipsoid: ellipsoid,
+            stRotation: stRotation,
+            bottom: false,
+            wall: false
+        };
         if (extrude) {
+            options.bottom = true;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight);
                 topAndBottom = geometry.topAndBottom;
-                topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
+                options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                topAndBottom.geometry = computeAttributes(options);
                 geometries.push(topAndBottom);
 
                 walls = geometry.walls;
+                options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
-                    wall.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
-                    wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
+                    options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
+                    wall.geometry = computeAttributes(options);
                     geometries.push(wall);
                 }
             }
@@ -693,8 +723,8 @@ define([
                 geometry = new GeometryInstance({
                     geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight)
                 });
-                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
-                geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
+                options.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometry.geometry = computeAttributes(options);
                 geometries.push(geometry);
             }
         }
