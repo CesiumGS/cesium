@@ -97,6 +97,24 @@ defineSuite([
     var uberLabelColor = Color.fromBytes(0xee, 0xee, 0xee, 0xee);
     var uberLabelScale = 4;
 
+    var oldConsoleLog;
+    var consoleMessages;
+
+    beforeAll(function() {
+        oldConsoleLog = console.log;
+        console.log = function(msg) {
+            consoleMessages.push(msg);
+        };
+    });
+
+    afterAll(function() {
+        console.log = oldConsoleLog;
+    });
+
+    beforeEach(function() {
+        consoleMessages = [];
+    });
+
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
         expect(dataSource.name).toBeUndefined();
@@ -991,8 +1009,7 @@ defineSuite([
         <Document xmlns="http://www.opengis.net/kml/2.2"\
                   xmlns:gx="http://www.google.com/kml/ext/2.2">\
           <Placemark>' + uberStyle + '\
-            <name>TheName</name>\
-            <Polygon>\
+          <Polygon>\
             <extrude>1</extrude>\
             <altitudeMode>absolute</altitudeMode>\
               <outerBoundaryIs>\
@@ -1005,11 +1022,12 @@ defineSuite([
                 </LinearRing>\
               </outerBoundaryIs>\
             </Polygon>\
-          </Placemark>\
+            </Placemark>\
         </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
+            var entitiesCollection = dataSource.entities.getCollection(0);
+            var entity = entitiesCollection.values[0];
 
             expect(entity.polygon.material).toBeInstanceOf(ColorMaterialProperty);
             expect(entity.polygon.material.color.getValue()).toEqual(uberPolyColor);
@@ -1186,7 +1204,7 @@ defineSuite([
         });
     });
 
-    xit('Styles: Applies local StyleMap', function() {
+    it('Styles: Applies local StyleMap', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
         <Document xmlns="http://www.opengis.net/kml/2.2">\
           <Placemark>\
@@ -1286,9 +1304,28 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entities = dataSource.entities.values;
+            var entities = dataSource.entities.getCollection(0).values;
             var billboard = entities[0].billboard;
             expect(billboard.image.getValue()).toEqual('http://test.invalid/image.png');
+        });
+    });
+
+    it('IconStyle: Sets billboard with root:// Url', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+              <Style>\
+                  <IconStyle>\
+                      <Icon>\
+                          <href>root://icons/palette-3</href>\
+                      </Icon>\
+                  </IconStyle>\
+              </Style>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entities = dataSource.entities.getCollection(0).values;
+            var billboard = entities[0].billboard;
+            expect(billboard.image.getValue()).toEqual('//maps.google.com/mapfiles/kml/pal3/icon56.png');
         });
     });
 
@@ -2977,7 +3014,8 @@ defineSuite([
 
     it('can load a KML file with explicit namespaces', function() {
         return KmlDataSource.load('Data/KML/namespaced.kml').then(function(dataSource) {
-            expect(dataSource.entities.values.length).toBe(2);
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toBe(2);
         });
     });
 
@@ -2991,7 +3029,8 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
+            var entityCollection = dataSource.entities.getCollection(0);
+            var entity = entityCollection.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
     });
@@ -3006,7 +3045,8 @@ defineSuite([
           </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
+            var entityCollection = dataSource.entities.getCollection(0);
+            var entity = entityCollection.values[0];
             expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
         });
     });
@@ -3022,7 +3062,8 @@ defineSuite([
             </kml>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
+            var entityCollection = dataSource.entities.getCollection(0);
+            var entity = entityCollection.values[0];
             expect(entity.name).toBe('bob');
             expect(entity.label).toBeDefined();
             expect(entity.label.text.getValue()).toBe('bob');
@@ -3050,4 +3091,287 @@ defineSuite([
         });
     });
 
+    it('GroundOverly Icon with refreshMode shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+                <refreshMode>onInterval</refreshMode>\
+            </Icon>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported Icon refreshMode: onInterval');
+        });
+    });
+
+    it('GroundOverly Icon with viewRefreshMode shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+                <viewRefreshMode>onStop</viewRefreshMode>\
+            </Icon>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported Icon viewRefreshMode: onStop');
+        });
+    });
+
+    it('GroundOverly Icon with gx:x, gx:y, gx:w, gx:h shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <GroundOverlay>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+                <gx:x>1</gx:x>\
+            </Icon>\
+          </GroundOverlay>\
+        </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
+        });
+    });
+
+    it('LineStyle with gx extensions show warnings', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+          <Placemark>\
+            <Style>\
+              <LineStyle>\
+                <gx:outerColor>dddddddd</gx:outerColor>\
+                <gx:outerWidth>0.0</gx:outerWidth>\
+                <gx:physicalWidth>0.0</gx:physicalWidth>\
+                <gx:labelVisibility>0</gx:labelVisibility>\
+              </LineStyle>\
+            </Style>\
+            <LineString>\
+            <coordinates>1,2,3 \
+                         4,5,6 \
+            </coordinates>\
+            </LineString>\
+          </Placemark>\
+        </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(4);
+            expect(consoleMessages[0]).toEqual('KML - gx:outerColor is not supported in a LineStyle');
+            expect(consoleMessages[1]).toEqual('KML - gx:outerWidth is not supported in a LineStyle');
+            expect(consoleMessages[2]).toEqual('KML - gx:physicalWidth is not supported in a LineStyle');
+            expect(consoleMessages[3]).toEqual('KML - gx:labelVisibility is not supported in a LineStyle');
+        });
+    });
+
+    it('Folder with radioFolder listItemType shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Folder>\
+            <Style>\
+                <ListStyle>\
+                  <listItemType>radioFolder</listItemType>\
+                </ListStyle>\
+            </Style>\
+        </Folder>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported ListStyle with listItemType: radioFolder');
+        });
+    });
+
+    it('StyleMap with highlighted key shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Placemark>\
+          <StyleMap>\
+            <Pair>\
+              <key>normal</key>\
+              <Style>\
+              </Style>\
+            </Pair>\
+            <Pair>\
+              <key>highlighted</key>\
+              <Style>\
+              </Style>\
+            </Pair>\
+          </StyleMap>\
+        </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported StyleMap key: highlighted');
+        });
+    });
+
+    it('Linestrings with gx:drawOrder shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark>\
+            <LineString>\
+                <gx:drawOrder>1</gx:drawOrder>\
+                <coordinates>1,2,3 \
+                         4,5,6 \
+            </coordinates>\
+            </LineString>\
+            </Placemark>\
+          <Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - gx:drawOrder is not supported in LineStrings');
+        });
+    });
+
+    it('gx:Track with gx:angles shows warning)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Track>\
+                <when>2000-01-01T00:00:00Z</when>\
+                <gx:coord>1 2 3</gx:coord>\
+                <gx:angles>4 5 6</gx:angles>\
+              </gx:Track>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - gx:angles are not supported in gx:Tracks');
+        });
+    });
+
+    it('Model geometry shows warning)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <Model></Model>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported geometry: Model');
+        });
+    });
+
+    it('ExtendedData with SchemaData or custom XML show warnings', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <LineString>\
+                <gx:drawOrder>1</gx:drawOrder>\
+                <coordinates>1,2,3 \
+                         4,5,6 \
+                </coordinates>\
+              </LineString>\
+              <ExtendedData xmlns:prefix="test">\
+                <SchemaData></SchemaData>\
+              </ExtendedData>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(2);
+            expect(consoleMessages[0]).toEqual('KML - SchemaData is unsupported');
+            expect(consoleMessages[1]).toEqual('KML - ExtendedData with xmlns:prefix is unsupported');
+        });
+    });
+
+    it('Features with an AbstractView show warnings', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <LineString>\
+                <gx:drawOrder>1</gx:drawOrder>\
+                <coordinates>1,2,3 \
+                         4,5,6 \
+                </coordinates>\
+              </LineString>\
+              <Camera></Camera>\
+              <LookAt></LookAt>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(2);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported view: Camera');
+            expect(consoleMessages[1]).toEqual('KML - Unsupported view: LookAt');
+        });
+    });
+
+    it('Features with a Region shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <LineString>\
+                <gx:drawOrder>1</gx:drawOrder>\
+                <coordinates>1,2,3 \
+                         4,5,6 \
+                </coordinates>\
+              </LineString>\
+              <Region></Region>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Placemark Regions are unsupported');
+        });
+    });
+
+
+
+    it('NetworkLink with a viewRefreshMode=onRegion shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <viewRefreshMode>onRegion</viewRefreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(1);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported viewRefreshMode: onRegion');
+        });
+    });
+
+    it('Having a gx:Tour shows warning)', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Document xmlns="http://www.opengis.net/kml/2.2"\
+                       xmlns:gx="http://www.google.com/kml/ext/2.2">\
+              <gx:Tour>\
+              </gx:Tour>\
+            </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            var entityCollection = dataSource.entities.getCollection(0);
+            expect(entityCollection.values.length).toEqual(0);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - Unsupported feature: Tour');
+        });
+    });
 });

@@ -584,14 +584,57 @@ define([
         return label;
     }
 
+    function getIconHref(iconNode, dataSource, sourceUri, uriResolver, canRefresh) {
+        var href = queryStringValue(iconNode, 'href', namespaces.kml);
+        if (!defined(href) || (href.length === 0)) {
+            return undefined;
+        }
+
+        if (href.indexOf('root://icons/palette-') === 0) {
+            var palette = href.charAt(21);
+
+            // Get the icon number
+            var x = defaultValue(queryNumericValue(iconNode, 'x', namespaces.gx), 0);
+            var y = defaultValue(queryNumericValue(iconNode, 'y', namespaces.gx), 0);
+            x = Math.min(x / 32, 7);
+            y = 7 - Math.min(y / 32, 7);
+            var iconNum = (8 * y) + x;
+
+            href = '//maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
+        }
+
+        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver)
+
+        if (canRefresh) {
+            var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
+            var viewRefreshMode = queryStringValue(iconNode, 'viewRefreshMode', namespaces.kml);
+            if (refreshMode === 'onInterval' || refreshMode === 'onExpire') {
+                console.log('KML - Unsupported Icon refreshMode: ' + refreshMode);
+            } else if (viewRefreshMode === 'onStop' || viewRefreshMode === 'onRegion') {
+                console.log('KML - Unsupported Icon viewRefreshMode: ' + viewRefreshMode);
+            }
+
+            var viewBoundScale = defaultValue(queryStringValue(iconNode, 'viewBoundScale', namespaces.kml), 1.0);
+            var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
+            var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
+            var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
+            var queryString = makeQueryString(viewFormat, httpQuery);
+
+            var icon = appendQueryString(href, queryString);
+            return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, icon, viewBoundScale);
+        }
+
+        return href;
+    }
+
     function processBillboardIcon(dataSource, node, targetEntity, sourceUri, uriResolver) {
         var scale = queryNumericValue(node, 'scale', namespaces.kml);
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
+
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
-        var href = queryStringValue(iconNode, 'href', namespaces.kml);
-        var icon = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
+        var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
         var y = queryNumericValue(iconNode, 'y', namespaces.gx);
         var w = queryNumericValue(iconNode, 'w', namespaces.gx);
@@ -681,6 +724,18 @@ define([
                 }
                 polyline.width = queryNumericValue(node, 'width', namespaces.kml);
                 polyline.material = queryColorValue(node, 'color', namespaces.kml);
+                if (defined(queryColorValue(node, 'outerColor', namespaces.gx))) {
+                    console.log('KML - gx:outerColor is not supported in a LineStyle');
+                }
+                if (defined(queryNumericValue(node, 'outerWidth', namespaces.gx))) {
+                    console.log('KML - gx:outerWidth is not supported in a LineStyle');
+                }
+                if (defined(queryNumericValue(node, 'physicalWidth', namespaces.gx))) {
+                    console.log('KML - gx:physicalWidth is not supported in a LineStyle');
+                }
+                if (defined(queryBooleanValue(node, 'labelVisibility', namespaces.gx))) {
+                    console.log('KML - gx:labelVisibility is not supported in a LineStyle');
+                }
             } else if (node.localName === 'PolyStyle') {
                 var polygon = targetEntity.polygon;
                 if (!defined(polygon)) {
@@ -703,6 +758,11 @@ define([
                     textColor : textColor,
                     text : text
                 };
+            } else if (node.localName === 'ListStyle') {
+                var listItemType = queryStringValue(node, 'listItemType', namespaces.kml);
+                if (listItemType === 'radioFolder' || listItemType === 'checkOffOnly') {
+                    console.log('KML - Unsupported ListStyle with listItemType: ' + listItemType);
+                }
             }
         }
     }
@@ -710,12 +770,47 @@ define([
     //Processes and merges any inline styles for the provided node into the provided entity.
     function computeFinalStyle(entity, dataSource, placeMark, styleCollection, sourceUri, uriResolver) {
         var result = new Entity();
+        var styleEntity;
 
-        var inlineStyles = queryChildNodes(placeMark, 'Style', namespaces.kml);
-        var inlineStylesLength = inlineStyles.length;
-        if (inlineStylesLength > 0) {
-            //Google earth seems to always use the last inline style only.
-            applyStyle(dataSource, inlineStyles[inlineStylesLength - 1], result, sourceUri, uriResolver);
+        //Google earth seems to always use the last inline Style/StyleMap only
+        var styleIndex = -1;
+        var childNodes = placeMark.childNodes;
+        var length = childNodes.length;
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            if (child.localName === 'Style' || child.localName === 'StyleMap') {
+                styleIndex = q;
+            }
+        }
+
+        if (styleIndex !== -1) {
+            var inlineStyleNode = childNodes[styleIndex];
+            if (inlineStyleNode.localName === 'Style') {
+                applyStyle(dataSource, inlineStyleNode, result, sourceUri, uriResolver);
+            } else { // StyleMap
+                var pairs = queryChildNodes(inlineStyleNode, 'Pair', namespaces.kml);
+                for (var p = 0; p < pairs.length; p++) {
+                    var pair = pairs[p];
+                    var key = queryStringValue(pair, 'key', namespaces.kml);
+                    if (key === 'normal') {
+                        var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
+                        if (defined(styleUrl)) {
+                            styleEntity = styleCollection.getById(styleUrl);
+                            if (!defined(styleEntity)) {
+                                styleEntity = styleCollection.getById('#' + styleUrl);
+                            }
+                            if (defined(styleEntity)) {
+                                result.merge(styleEntity);
+                            }
+                        } else {
+                            var node = queryFirstNode(pair, 'Style', namespaces.kml);
+                            applyStyle(dataSource, node, result, sourceUri, uriResolver);
+                        }
+                    } else {
+                        console.log('KML - Unsupported StyleMap key: ' + key);
+                    }
+                }
+            }
         }
 
         //Google earth seems to always use the first external style only.
@@ -725,7 +820,7 @@ define([
             //Without the below trim, some docs that load in Google Earth won't load
             //in cesium.
             var id = externalStyle;
-            var styleEntity = styleCollection.getById(id);
+            styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
             }
@@ -786,7 +881,8 @@ define([
                     var pairs = queryChildNodes(styleMap, 'Pair', namespaces.kml);
                     for (var p = 0; p < pairs.length; p++) {
                         var pair = pairs[p];
-                        if (queryStringValue(pair, 'key', namespaces.kml) === 'normal') {
+                        var key = queryStringValue(pair, 'key', namespaces.kml);
+                        if (key === 'normal') {
                             id = '#' + id;
                             if (isExternal && defined(sourceUri)) {
                                 id = sourceUri + id;
@@ -805,7 +901,8 @@ define([
                                     applyStyle(dataSource, node, styleEntity, sourceUri, uriResolver);
                                 }
                             }
-                            break;
+                        } else {
+                            console.log('KML - Unsupported StyleMap key: ' + key);
                         }
                     }
                 }
@@ -944,6 +1041,8 @@ define([
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(entityCollection, entity, styleEntity);
         }
+
+        return true;
     }
 
     function processLineStringOrLinearRing(dataSource, entityCollection, geometryNode, entity, styleEntity) {
@@ -953,6 +1052,10 @@ define([
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var tessellate = queryBooleanValue(geometryNode, 'tessellate', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+
+        if (defined(queryNumericValue(geometryNode, 'drawOrder', namespaces.gx))) {
+            console.log('KML - gx:drawOrder is not supported in LineStrings');
+        }
 
         var coordinates = readCoordinates(coordinatesNode);
         var polyline = styleEntity.polyline;
@@ -980,6 +1083,8 @@ define([
                 polyline.followSurface = false;
             }
         }
+
+        return true;
     }
 
     function processPolygon(dataSource, entityCollection, geometryNode, entity, styleEntity) {
@@ -1021,15 +1126,22 @@ define([
             }
             polygon.hierarchy = hierarchy;
         }
+
+        return true;
     }
 
     function processTrack(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var altitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.kml);
         var gxAltitudeMode = queryStringValue(geometryNode, 'altitudeMode', namespaces.gx);
         var coordNodes = queryChildNodes(geometryNode, 'coord', namespaces.gx);
+        var angleNodes = queryChildNodes(geometryNode, 'angles', namespaces.gx);
         var timeNodes = queryChildNodes(geometryNode, 'when', namespaces.kml);
         var extrude = queryBooleanValue(geometryNode, 'extrude', namespaces.kml);
         var canExtrude = isExtrudable(altitudeMode, gxAltitudeMode);
+
+        if (angleNodes.length > 0) {
+            console.log('KML - gx:angles are not supported in gx:Tracks');
+        }
 
         var length = Math.min(coordNodes.length, timeNodes.length);
         var coordinates = [];
@@ -1057,6 +1169,8 @@ define([
         if (canExtrude && extrude) {
             createDropLine(entityCollection, entity, styleEntity);
         }
+
+        return true;
     }
 
     function addToMultiTrack(times, positions, composite, availability, dropShowProperty, extrude, altitudeMode, gxAltitudeMode, includeEndPoints) {
@@ -1146,10 +1260,13 @@ define([
             createDropLine(entityCollection, entity, styleEntity);
             entity.polyline.show = dropShowProperty;
         }
+
+        return true;
     }
 
     function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
         var childNodes = geometryNode.childNodes;
+        var hasGeometry = false;
         for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
@@ -1160,9 +1277,17 @@ define([
                 childEntity.availability = entity.availability;
                 childEntity.description = entity.description;
                 childEntity.kml = entity.kml;
-                geometryProcessor(dataSource, entityCollection, childNode, childEntity, styleEntity);
+                if (geometryProcessor(dataSource, entityCollection, childNode, childEntity, styleEntity)) {
+                    hasGeometry = true;
+                }
             }
         }
+
+        return hasGeometry;
+    }
+    function processUnsupportedGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
+        console.log('KML - Unsupported geometry: ' + geometryNode.localName);
+        return false;
     }
 
     function processExtendedData(node, entity) {
@@ -1170,6 +1295,13 @@ define([
 
         if (!defined(extendedDataNode)) {
             return undefined;
+        }
+
+        if (defined(queryFirstNode(extendedDataNode, 'SchemaData', namespaces.kml))) {
+            console.log('KML - SchemaData is unsupported');
+        }
+        if (defined(queryStringAttribute(extendedDataNode, 'xmlns:prefix'))) {
+            console.log('KML - ExtendedData with xmlns:prefix is unsupported');
         }
 
         var result = {};
@@ -1337,6 +1469,16 @@ define([
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver);
 
+        if (defined(queryFirstNode(featureNode, 'Camera', namespaces.kml))) {
+            console.log('KML - Unsupported view: Camera');
+        }
+        if (defined(queryFirstNode(featureNode, 'LookAt', namespaces.kml))) {
+            console.log('KML - Unsupported view: LookAt');
+        }
+        if (defined(queryFirstNode(featureNode, 'Region', namespaces.kml))) {
+            console.log('KML - Placemark Regions are unsupported');
+        }
+
         return {
             entity : entity,
             styleEntity : styleEntity
@@ -1350,7 +1492,8 @@ define([
         Polygon : processPolygon,
         Track : processTrack,
         MultiTrack : processMultiTrack,
-        MultiGeometry : processMultiGeometry
+        MultiGeometry : processMultiGeometry,
+        Model : processUnsupportedGeometry
     };
 
     function processDocument(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1365,7 +1508,7 @@ define([
             var length = childNodes.length;
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
-                if (child.localName === featureName && namespaces.kml.indexOf(child.namespaceURI) !== -1) {
+                if (child.localName === featureName) {
                     processFeatureNode(dataSource, parent, child, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
                 }
             }
@@ -1447,12 +1590,21 @@ define([
         }
 
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
-        var href = queryStringValue(iconNode, 'href', namespaces.kml);
+        var href = getIconHref(iconNode, dataSource, sourceUri, uriResolver, true);
         if (defined(href)) {
             if (isLatLonQuad) {
                 console.log('KML - gx:LatLonQuad Icon does not support texture projection.');
             }
-            geometry.material = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
+            var x = queryNumericValue(iconNode, 'x', namespaces.gx);
+            var y = queryNumericValue(iconNode, 'y', namespaces.gx);
+            var w = queryNumericValue(iconNode, 'w', namespaces.gx);
+            var h = queryNumericValue(iconNode, 'h', namespaces.gx);
+
+            if (defined(x) || defined(y) || defined(w) || defined(h)) {
+                console.log('KML - gx:x, gx:y, gx:w, gx:h aren\'t supported for GroundOverlays');
+            }
+
+            geometry.material = href;
         } else {
             geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }
@@ -1782,6 +1934,8 @@ define([
                         if (defined(networkLinkInfo.refreshMode)) {
                             dataSource._networkLinks.push(networkLinkInfo);
                         }
+                    } else if (viewRefreshMode === 'onRegion'){
+                        console.log('KML - Unsupported viewRefreshMode: onRegion');
                     }
                 });
 
@@ -1799,7 +1953,8 @@ define([
         NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
         PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported
+        ScreenOverlay : processUnsupported,
+        Tour : processUnsupported
     };
 
     function processFeatureNode(dataSource, node, parent, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
