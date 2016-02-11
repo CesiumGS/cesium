@@ -1455,7 +1455,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the shadow map depth texture.
+         * An automatic GLSL uniform representing the sun's shadow map depth texture.
          *
          * @private
          *
@@ -1471,7 +1471,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the shadow map matrix.
+         * An automatic GLSL uniform representing the sun's shadow map matrix.
          *
          * @private
          *
