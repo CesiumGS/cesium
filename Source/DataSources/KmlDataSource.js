@@ -36,7 +36,6 @@ define([
         '../ThirdParty/when',
         '../ThirdParty/zip',
         './BillboardGraphics',
-        './CompositeEntityCollection',
         './CompositePositionProperty',
         './ConstantPositionProperty',
         './DataSource',
@@ -91,7 +90,6 @@ define([
         when,
         zip,
         BillboardGraphics,
-        CompositeEntityCollection,
         CompositePositionProperty,
         ConstantPositionProperty,
         DataSource,
@@ -601,7 +599,7 @@ define([
             href = '//maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
-        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver)
+        href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
 
         if (canRefresh) {
             var refreshMode = queryStringValue(iconNode, 'refreshMode', namespaces.kml);
@@ -1424,9 +1422,7 @@ define([
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
-        var entityCollection = compositeEntityCollection.getCollection(0);
-
+    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceUri, uriResolver) {
         var entity = getOrCreateEntity(featureNode, entityCollection);
         var kmlData = entity.kml;
         var styleEntity = computeFinalStyle(entity, dataSource, featureNode, styleCollection, sourceUri, uriResolver);
@@ -1494,7 +1490,7 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureTypeNames = Object.keys(featureTypes);
         var featureTypeNamesLength = featureTypeNames.length;
 
@@ -1507,23 +1503,21 @@ define([
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
                 if (child.localName === featureName) {
-                    processFeatureNode(dataSource, parent, child, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
                 }
             }
         }
     }
 
-    function processFolder(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
-        processDocument(dataSource, r.entity, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
-    function processPlacemark(dataSource, parent, placemark, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, placemark, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
-
-        var entityCollection = compositeEntityCollection.getCollection(0);
 
         var hasGeometry = false;
         var childNodes = placemark.childNodes;
@@ -1542,8 +1536,8 @@ define([
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, groundOverlay, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceUri, uriResolver);
         var entity = r.entity;
 
         var geometry;
@@ -1630,7 +1624,7 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1841,8 +1835,8 @@ define([
         return queryString;
     }
 
-    function processNetworkLink(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
-        var r = processFeature(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
@@ -1857,17 +1851,20 @@ define([
                 var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
                 var queryString = makeQueryString(viewFormat, httpQuery);
 
-                var networkLinkCompositeCollection = new CompositeEntityCollection(undefined, compositeEntityCollection);
-                networkLinkCompositeCollection.suspendEvents();
+                var networkLinkCollection = new EntityCollection();
                 var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, appendQueryString(href, queryString), viewBoundScale);
 
-                var promise = when(load(dataSource, networkLinkCompositeCollection, linkUrl), function(rootElement) {
-                    var entities = networkLinkCompositeCollection.getCollection(0).values;
-                    for (var i = 0; i < entities.length; i++) {
-                        entities[i].parent = networkEntity;
+                var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
+                    var entities = dataSource._entityCollection;
+                    var newEntities = networkLinkCollection.values;
+                    entities.suspendEvents();
+                    for (var i = 0; i < newEntities.length; i++) {
+                        if (!defined(newEntities[i].parent)) {
+                            newEntities[i].parent = networkEntity;
+                            entities.add(newEntities[i]);
+                        }
                     }
-                    networkLinkCompositeCollection.resumeEvents();
-                    compositeEntityCollection.addCollection(networkLinkCompositeCollection);
+                    entities.resumeEvents();
 
                     // Add network links to a list if we need they will need to be updated
                     var refreshMode = queryStringValue(link, 'refreshMode', namespaces.kml);
@@ -1881,8 +1878,6 @@ define([
                             href : href,
                             cookie : '',
                             queryString : queryString,
-                            collection : networkLinkCompositeCollection,
-                            parentCollection : compositeEntityCollection,
                             lastUpdated : now,
                             updating : false,
                             entity : networkEntity,
@@ -1955,18 +1950,17 @@ define([
         Tour : processUnsupported
     };
 
-    function processFeatureNode(dataSource, node, parent, compositeEntityCollection, styleCollection, sourceUri, uriResolver) {
+    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProocessor = featureTypes[node.localName];
         if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
 
-    function loadKml(dataSource, compositeEntityCollection, kml, sourceUri, uriResolver) {
+    function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {
         var deferred = when.defer();
-        var entityCollection = compositeEntityCollection.getCollection(0);
 
         dataSource._promises = [];
         entityCollection.removeAll();
@@ -1995,7 +1989,9 @@ define([
                     }
                 }
             }
-            processFeatureNode(dataSource, element, undefined, compositeEntityCollection, styleCollection, sourceUri, uriResolver);
+            entityCollection.suspendEvents();
+            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
+            entityCollection.resumeEvents();
 
             deferred.resolve(kml.documentElement);
         });
@@ -2003,7 +1999,7 @@ define([
         return deferred.promise;
     }
 
-    function loadKmz(dataSource, compositeEntityCollection, blob, sourceUri) {
+    function loadKmz(dataSource, entityCollection, blob, sourceUri) {
         var deferred = when.defer();
         zip.createReader(new zip.BlobReader(blob), function(reader) {
             reader.getEntries(function(entries) {
@@ -2032,7 +2028,7 @@ define([
                         return;
                     }
                     uriResolver.keys = Object.keys(uriResolver);
-                    return loadKml(dataSource, compositeEntityCollection, uriResolver.kml, sourceUri, uriResolver);
+                    return loadKml(dataSource, entityCollection, uriResolver.kml, sourceUri, uriResolver);
                 }).then(deferred.resolve).otherwise(deferred.reject);
             });
         }, function(e) {
@@ -2042,7 +2038,7 @@ define([
         return deferred.promise;
     }
 
-    function load(dataSource, compositeEntityCollection, data, options) {
+    function load(dataSource, entityCollection, data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
 
@@ -2053,11 +2049,10 @@ define([
         }
 
         return when(promise, function(dataToLoad) {
-            compositeEntityCollection.addCollection(new EntityCollection(compositeEntityCollection));
             if (dataToLoad instanceof Blob) {
                 return isZipFile(dataToLoad).then(function(isZip) {
                     if (isZip) {
-                        return loadKmz(dataSource, compositeEntityCollection, dataToLoad, sourceUri);
+                        return loadKmz(dataSource, entityCollection, dataToLoad, sourceUri);
                     }
                     return when(readBlobAsText(dataToLoad)).then(function(text) {
                         //There's no official way to validate if a parse was successful.
@@ -2086,11 +2081,11 @@ define([
                             //Return the error
                             throw new RuntimeError(msg);
                         }
-                        return loadKml(dataSource, compositeEntityCollection, kml, sourceUri, undefined);
+                        return loadKml(dataSource, entityCollection, kml, sourceUri, undefined);
                     });
                 });
             } else {
-                return when(loadKml(dataSource, compositeEntityCollection, dataToLoad, sourceUri, undefined));
+                return when(loadKml(dataSource, entityCollection, dataToLoad, sourceUri, undefined));
             }
         }).otherwise(function(error) {
             dataSource._error.raiseEvent(dataSource, error);
@@ -2136,7 +2131,7 @@ define([
         this._loading = new Event();
         this._refresh = new Event();
         this._clock = undefined;
-        this._entityCollection = new CompositeEntityCollection(undefined, this);
+        this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
         this._proxy = proxy;
@@ -2280,11 +2275,6 @@ define([
             return when.all(that._promises, function() {
                 var clock;
 
-                // TODO: Hack - We need to make the CompositeEntityCollection update its
-                //        lists or else computeAvailability will fail.
-                that._entityCollection.resumeEvents();
-                that._entityCollection.suspendEvents();
-
                 var availability = that._entityCollection.computeAvailability();
 
                 var start = availability.start;
@@ -2337,7 +2327,7 @@ define([
         });
     };
 
-    function getNetworkLinkUpdateCallback(dataSource, networkLink, newCompositeCollection, networkLinks) {
+    function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks) {
         return function(rootElement) {
             var remove = false;
             var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
@@ -2384,11 +2374,27 @@ define([
             }
 
             var networkLinkEntity = networkLink.entity;
-            var entities = newCompositeCollection.getCollection(0).values;
-            for (var i = 0; i < entities.length; i++) {
-                entities[i].parent = networkLinkEntity;
+            var entityCollection = dataSource._entityCollection;
+            var newEntities = newEntityCollection.values;
+
+            // Remove old entities
+            var entitiesCopy = entityCollection.values.slice();
+            for (var i=0;i<entitiesCopy.length;++i) {
+                if (entitiesCopy[i].parent === networkLinkEntity) {
+                    entitiesCopy[i].parent = undefined;
+                    entityCollection.remove(entitiesCopy[i]);
+                }
             }
-            newCompositeCollection.resumeEvents();
+
+            // Add new entities
+            entityCollection.suspendEvents();
+            for (i = 0; i < newEntities.length; i++) {
+                if (!defined(newEntities[i].parent)) {
+                    newEntities[i].parent = networkLinkEntity;
+                    entityCollection.add(newEntities[i]);
+                }
+            }
+            entityCollection.resumeEvents();
 
             // No refresh information remove it, otherwise update lastUpdate time
             if (remove) {
@@ -2396,14 +2402,8 @@ define([
             } else {
                 networkLink.lastUpdated = now;
             }
-            var parentCollection = networkLink.parentCollection;
-            parentCollection.suspendEvents();
-            parentCollection.removeCollection(networkLink.collection);
-            parentCollection.addCollection(newCompositeCollection);
-            networkLink.collection = newCompositeCollection;
-            parentCollection.resumeEvents();
 
-            var availability = dataSource._entityCollection.computeAvailability();
+            var availability = entityCollection.computeAvailability();
 
             var start = availability.start;
             var stop = availability.stop;
@@ -2441,15 +2441,14 @@ define([
         var now = JulianDate.now();
         var that = this;
 
-        var collectionsToIgnore = [];
-        function recurseIgnoreCompositeCollections(collection) {
-            var count = collection.getCollectionsLength();
+        var entitiesToIgnore = [];
+        function recurseIgnoreEntities(entity) {
+            var children = entity._children;
+            var count = children.length;
             for (var i=0;i<count;++i) {
-                var child = collection.getCollection(i);
-                if (child instanceof CompositeEntityCollection) {
-                    collectionsToIgnore.push(child);
-                    recurseIgnoreCompositeCollections(child);
-                }
+                var child = children[i];
+                entitiesToIgnore.push(child);
+                recurseIgnoreEntities(child);
             }
         }
 
@@ -2472,8 +2471,8 @@ define([
         var newNetworkLinks = [];
         var changed = false;
         networkLinks.forEach(function(networkLink) {
-            var collection = networkLink.collection;
-            if (collectionsToIgnore.indexOf(collection) !== -1) {
+            var entity = networkLink.entity;
+            if (entitiesToIgnore.indexOf(entity) !== -1) {
                 return;
             }
 
@@ -2501,14 +2500,13 @@ define([
                 }
 
                 if (doUpdate) {
-                    recurseIgnoreCompositeCollections(collection);
+                    recurseIgnoreEntities(entity);
                     networkLink.updating = true;
-                    var newCompositeCollection = new CompositeEntityCollection(undefined, networkLink.parentCollection);
-                    newCompositeCollection.suspendEvents();
+                    var newEntityCollection = new EntityCollection();
                     var href = appendQueryString(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString));
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
-                    load(that, newCompositeCollection, href)
-                        .then(getNetworkLinkUpdateCallback(that, networkLink, newCompositeCollection, newNetworkLinks));
+                    load(that, newEntityCollection, href)
+                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks));
                     changed = true;
                 }
             }
@@ -2517,6 +2515,7 @@ define([
 
         if (changed) {
             this._networkLinks = newNetworkLinks;
+            this._changed.raiseEvent(this);
         }
 
         return true;
