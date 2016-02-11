@@ -80,8 +80,8 @@ function loadTileset(url) {
 //            "color" : {
 //                "propertyName" : "id",
 //                "map" : {
-//                    "1" : "#ff0000",
-//                    "2" : "#00ff00"
+//                    "^[123]$" : "orange", // matches id's 1, 2, and 3
+//                    "1\\d" : "cyan"       // matches id's 10-19
 //                },
 //                "default" : "#ffffff"
 //            },
