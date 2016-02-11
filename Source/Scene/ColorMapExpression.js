@@ -4,13 +4,15 @@ define([
        '../Core/Color',
        '../Core/defaultValue',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       '../Core/DeveloperError',
     ], function(
         clone,
         Color,
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     // TODO: best name/directory for this?
@@ -83,13 +85,22 @@ define([
     });
 
     function setRuntime(expression) {
-        // PERFORMANCE_IDEA: this will be in dictionary mode, can we do something faster?
-        var runtimeMap = {};
         var map = expression._map;
+
+        var runtimeMap = [];
         for (var name in map) {
             if (map.hasOwnProperty(name)) {
-                var color = map[name];
-                runtimeMap[name] = Color.fromCssColorString(color);
+                var color = Color.fromCssColorString(map[name]);
+                //>>includeStart('debug', pragmas.debug);
+                if (color === undefined) {
+                    throw new DeveloperError('color must be a valid CSS color');
+                }
+                //>>includeEnd('debug');
+
+                runtimeMap.push({
+                    color : color,
+                    pattern : new RegExp(name)
+                });
             }
         }
 
@@ -112,11 +123,10 @@ define([
         var defaultColor = this._runtimeDefault;
         var runtimeMap = this._runtimeMap;
         if (defined(runtimeMap)) {
-            for (var value in runtimeMap) {
-                if (runtimeMap.hasOwnProperty(value)) {
-                    var exp = new RegExp(value);
-                    if (exp.test(name)) {
-                        return runtimeMap[value];
+            for (var entry in runtimeMap) {
+                if (runtimeMap.hasOwnProperty(entry)) {
+                    if (runtimeMap[entry].pattern.test(name)) {
+                        return runtimeMap[entry].color;
                     }
                 }
             }
