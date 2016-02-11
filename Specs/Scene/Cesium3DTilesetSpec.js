@@ -3,7 +3,6 @@ defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
         'Core/defined',
-        'Core/Event',
         'Core/HeadingPitchRange',
         'Core/RequestScheduler',
         'Scene/Cesium3DTile',
@@ -18,7 +17,6 @@ defineSuite([
         Cesium3DTileset,
         Cartesian3,
         defined,
-        Event,
         HeadingPitchRange,
         RequestScheduler,
         Cesium3DTile,
@@ -753,14 +751,10 @@ defineSuite([
     it('tile visible event is raised', function() {
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
-            tileset.tileVisible.addEventListener(function(tile) {
-                expect(tile).toBe(tileset._root);
-                expect(tileset._root.visibility(scene.frameState.cullingVolume)).not.toEqual(CullingVolume.MASK_OUTSIDE);
-            });
-
             var spyUpdate = jasmine.createSpy('listener');
             tileset.tileVisible.addEventListener(spyUpdate);
             scene.renderForSpecs();
+            expect(tileset._root.visibility(scene.frameState.cullingVolume)).not.toEqual(CullingVolume.MASK_OUTSIDE);
             expect(spyUpdate.calls.count()).toEqual(1);
             expect(spyUpdate.calls.argsFor(0)[0]).toBe(tileset._root);
         });
