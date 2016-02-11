@@ -5,7 +5,7 @@ define([
     ], function(
         freezeObject,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * Determines the action taken based on the result of the stencil test.

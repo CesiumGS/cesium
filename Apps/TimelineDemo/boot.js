@@ -37,7 +37,7 @@ require({
         win,
         domClass,
         parser) {
-    "use strict";
+    'use strict';
 
     parser.parse();
     domClass.remove(win.body(), 'loading');

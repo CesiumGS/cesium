@@ -7,7 +7,7 @@ defineSuite([
         TweenCollection,
         Color,
         EasingFunction) {
-    "use strict";
+    'use strict';
 
     it('add() adds a tween', function() {
         var startObject = {

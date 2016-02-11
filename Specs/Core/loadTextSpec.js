@@ -6,7 +6,7 @@ defineSuite([
     ], function(
         loadText,
         RequestErrorEvent) {
-    "use strict";
+    'use strict';
 
     var fakeXHR;
 

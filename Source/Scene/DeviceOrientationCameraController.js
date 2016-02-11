@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix3,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

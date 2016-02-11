@@ -19,7 +19,7 @@ define([
         QuaternionSpline,
         WebGLConstants,
         getModelAccessor) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

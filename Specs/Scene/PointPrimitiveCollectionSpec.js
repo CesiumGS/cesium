@@ -19,7 +19,7 @@ defineSuite([
         NearFarScalar,
         OrthographicFrustum,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var camera;

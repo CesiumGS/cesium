@@ -15,7 +15,7 @@ define([
         knockout,
         getElement,
         SelectionIndicatorViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * A widget for displaying an indicator on a selected object.

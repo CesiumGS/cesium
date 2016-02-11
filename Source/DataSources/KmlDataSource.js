@@ -9,7 +9,6 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -63,7 +62,6 @@ define([
         createGuid,
         defaultValue,
         defined,
-        definedNotNull,
         defineProperties,
         DeveloperError,
         Ellipsoid,
@@ -107,7 +105,7 @@ define([
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
     if (typeof DOMParser === 'undefined') {
@@ -288,7 +286,7 @@ define([
         }
 
         var digits = value.match(/[^\s,\n]+/g);
-        if (!definedNotNull(digits)) {
+        if (!defined(digits)) {
             return Cartesian3.fromDegrees(0, 0, 0);
         }
 
@@ -309,7 +307,7 @@ define([
         }
 
         var tuples = element.textContent.match(/[^\s\n]+/g);
-        if (!definedNotNull(tuples)) {
+        if (!defined(tuples)) {
             return undefined;
         }
 

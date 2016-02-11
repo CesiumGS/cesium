@@ -13,7 +13,7 @@ defineSuite([
         createViewer,
         DomEventSimulator,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var container;
     var viewer;

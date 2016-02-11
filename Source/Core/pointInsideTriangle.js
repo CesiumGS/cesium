@@ -5,7 +5,7 @@ define([
     ], function(
         barycentricCoordinates,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     var coords = new Cartesian3();
 

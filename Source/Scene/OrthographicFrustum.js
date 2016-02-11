@@ -17,7 +17,7 @@ define([
         DeveloperError,
         Matrix4,
         CullingVolume) {
-    "use strict";
+    'use strict';
 
     /**
      * The viewing frustum is defined by 6 planes.

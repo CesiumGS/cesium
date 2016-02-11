@@ -3,7 +3,7 @@ define([
         'Core/defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     var canvasCount = 0;
 

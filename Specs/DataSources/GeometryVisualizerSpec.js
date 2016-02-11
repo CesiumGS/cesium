@@ -49,7 +49,7 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

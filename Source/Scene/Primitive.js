@@ -69,7 +69,7 @@ define([
         PrimitivePipeline,
         PrimitiveState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}

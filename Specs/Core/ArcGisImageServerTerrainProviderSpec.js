@@ -23,7 +23,7 @@ defineSuite([
         TerrainProvider,
         Uri,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;

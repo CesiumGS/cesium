@@ -19,7 +19,7 @@ define([
         GeographicProjection,
         CesiumMath,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry referenced to a simple {@link GeographicProjection} where

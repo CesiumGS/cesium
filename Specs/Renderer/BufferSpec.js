@@ -9,7 +9,7 @@ defineSuite([
         IndexDatatype,
         BufferUsage,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
     var buffer;

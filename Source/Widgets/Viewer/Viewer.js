@@ -4,7 +4,6 @@ define([
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defined',
-        '../../Core/definedNotNull',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -46,7 +45,6 @@ define([
         Cartesian3,
         defaultValue,
         defined,
-        definedNotNull,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -83,7 +81,7 @@ define([
         subscribeAndEvaluate,
         Timeline,
         VRButton) {
-    "use strict";
+    'use strict';
 
     var boundingSphereScratch = new BoundingSphere();
 
@@ -524,7 +522,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             var showNavHelp = true;
             try {
                 //window.localStorage is null if disabled in Firefox or undefined in browsers with implementation
-                if (definedNotNull(window.localStorage)) {
+                if (defined(window.localStorage)) {
                     var hasSeenNavHelp = window.localStorage.getItem('cesium-hasSeenNavHelp');
                     if (defined(hasSeenNavHelp) && Boolean(hasSeenNavHelp)) {
                         showNavHelp = false;

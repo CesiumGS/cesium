@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         VRButtonViewModel,
         Fullscreen) {
-    "use strict";
+    'use strict';
 
     var scene;
 

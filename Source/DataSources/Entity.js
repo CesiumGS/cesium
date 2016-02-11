@@ -61,7 +61,7 @@ define([
         Property,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);

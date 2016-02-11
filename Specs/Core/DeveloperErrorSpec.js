@@ -3,7 +3,7 @@ defineSuite([
         'Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var name = 'DeveloperError';
     var testMessage = 'Testing';

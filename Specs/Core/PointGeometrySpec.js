@@ -7,7 +7,7 @@ defineSuite([
         PointGeometry,
         BoundingSphere,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     var positionsTypedArray = new Float32Array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
     var colorsTypedArray = new Uint8Array([255, 0, 0, 0, 255, 0]);
