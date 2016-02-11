@@ -9,7 +9,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.

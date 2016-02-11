@@ -15,7 +15,7 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         PositionProperty) {
-    "use strict";
+    'use strict';
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionPositionProperty();

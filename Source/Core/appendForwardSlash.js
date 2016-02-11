@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * @private

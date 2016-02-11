@@ -31,7 +31,7 @@ define([
         Matrix4,
         Transforms,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var updateTransformMatrix3Scratch1 = new Matrix3();
     var updateTransformMatrix3Scratch2 = new Matrix3();

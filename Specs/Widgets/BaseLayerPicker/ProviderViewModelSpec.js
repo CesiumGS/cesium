@@ -7,7 +7,7 @@ defineSuite([
         ProviderViewModel,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     var spyCreationFunction;
     beforeEach(function() {

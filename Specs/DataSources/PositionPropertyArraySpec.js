@@ -13,7 +13,7 @@ defineSuite([
         ReferenceFrame,
         ConstantPositionProperty,
         SampledPositionProperty) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

@@ -80,7 +80,7 @@ require({
         when,
         LinkButton,
         Cesium) {
-    "use strict";
+    'use strict';
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
     window.Cesium = Cesium;
@@ -513,7 +513,7 @@ require({
 
     function getScriptFromEditor(addExtraLine) {
         return 'function startup(Cesium) {\n' +
-               '    "use strict";\n' +
+               '    \'use strict\';\n' +
                '//Sandcastle_Begin\n' +
                (addExtraLine ? '\n' : '') +
                jsEditor.getValue() +

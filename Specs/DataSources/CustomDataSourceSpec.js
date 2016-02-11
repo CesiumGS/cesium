@@ -9,7 +9,7 @@ defineSuite([
         Event,
         DataSourceClock,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     it('constructor has expected defaults', function() {
         var dataSource = new CustomDataSource();

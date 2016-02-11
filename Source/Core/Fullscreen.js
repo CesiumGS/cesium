@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     var _supportsFullscreen;
     var _names = {
@@ -184,7 +184,7 @@ define([
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenElement';
-            if (defined(document[name])) {
+            if (document[name] !== undefined) {
                 _names.fullscreenElement = name;
             } else {
                 name = prefix + 'FullScreenElement';
@@ -196,7 +196,7 @@ define([
             // thankfully, event names are all lowercase per spec
             name = prefix + 'fullscreenchange';
             // event names do not have 'on' in the front, but the property on the document does
-            if (defined(document['on' + name])) {
+            if (document['on' + name] !== undefined) {
                 //except on IE
                 if (prefix === 'ms') {
                     name = 'MSFullscreenChange';
@@ -205,7 +205,7 @@ define([
             }
 
             name = prefix + 'fullscreenerror';
-            if (defined(document['on' + name])) {
+            if (document['on' + name] !== undefined) {
                 //except on IE
                 if (prefix === 'ms') {
                     name = 'MSFullscreenError';

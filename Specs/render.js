@@ -11,7 +11,7 @@ define([
         Intersect,
         Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     function executeCommands(frameState, commands) {
         var commandsExecuted = 0;

@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Entity,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     var entityOptionsScratch = {
         id : undefined

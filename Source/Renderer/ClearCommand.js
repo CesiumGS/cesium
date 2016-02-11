@@ -7,7 +7,7 @@ define([
         Color,
         defaultValue,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a command to the renderer for clearing a framebuffer.

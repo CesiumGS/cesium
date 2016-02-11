@@ -43,7 +43,7 @@ defineSuite([
         PerspectiveFrustum,
         SceneMode,
         TweenCollection) {
-    "use strict";
+    'use strict';
 
     var scene;
     var camera;

@@ -31,7 +31,7 @@ define([
         createCanvas,
         createFrameState,
         destroyCanvas) {
-    "use strict";
+    'use strict';
 
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties

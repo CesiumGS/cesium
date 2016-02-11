@@ -23,7 +23,7 @@ define([
         RuntimeError,
         TimeInterval,
         Entity) {
-    "use strict";
+    'use strict';
 
     var entityOptionsScratch = {
         id : undefined

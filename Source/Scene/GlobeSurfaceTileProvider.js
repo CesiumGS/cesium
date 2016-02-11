@@ -89,7 +89,7 @@ define([
         ImageryState,
         QuadtreeTileLoadState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used

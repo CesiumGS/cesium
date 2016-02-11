@@ -7,7 +7,7 @@ defineSuite([
         NavigationHelpButton,
         FeatureDetection,
         DomEventSimulator) {
-    "use strict";
+    'use strict';
 
     it('can create and destroy', function() {
         var container = document.createElement('span');

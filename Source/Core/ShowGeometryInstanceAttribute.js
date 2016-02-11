@@ -11,7 +11,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.

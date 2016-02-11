@@ -17,7 +17,7 @@ define([
         Event,
         JulianDate,
         TimeInterval) {
-    "use strict";
+    'use strict';
 
     function compareIntervalStartTimes(left, right) {
         return JulianDate.compare(left.start, right.start);

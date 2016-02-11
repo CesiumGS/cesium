@@ -3,7 +3,7 @@ defineSuite([
         'Core/Math'
     ], function(
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);

@@ -55,7 +55,7 @@ define([
         ImageryLayerCollection,
         QuadtreePrimitive,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})

@@ -15,7 +15,7 @@ define([
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultRepeat = new Cartesian2(1, 1);
     var defaultAlpha = 1.0;

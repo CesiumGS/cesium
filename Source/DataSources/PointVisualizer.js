@@ -21,7 +21,7 @@ define([
         PointPrimitiveCollection,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
