@@ -107,12 +107,19 @@ define([
      * DOC_TBA
      */
     ColorMapExpression.prototype.evaluate = function(feature) {
-        var value = feature.getProperty(this._propertyName);
+        var name = feature.getProperty(this._propertyName);
 
         var defaultColor = this._runtimeDefault;
         var runtimeMap = this._runtimeMap;
         if (defined(runtimeMap)) {
-            return defaultValue(runtimeMap[value], defaultColor);
+            for (var value in runtimeMap) {
+                if (runtimeMap.hasOwnProperty(value)) {
+                    var exp = new RegExp(value);
+                    if (exp.test(name)) {
+                        return runtimeMap[value];
+                    }
+                }
+            }
         }
 
         return defaultColor;
