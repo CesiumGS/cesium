@@ -3,13 +3,11 @@ define([
         '../ThirdParty/Uri',
         './defaultValue',
         './defined',
-        './definedNotNull',
         './DeveloperError'
     ], function(
         Uri,
         defaultValue,
         defined,
-        definedNotNull,
         DeveloperError) {
     'use strict';
 
@@ -46,7 +44,7 @@ define([
 
         // Uri.isAbsolute returns false for a URL like '//foo.com'.  So if we have an authority but
         // not a scheme, add a scheme matching the page's scheme.
-        if (definedNotNull(second.authority) && !definedNotNull(second.scheme)) {
+        if (defined(second.authority) && !defined(second.scheme)) {
             if (typeof document !== 'undefined' && defined(document.location) && defined(document.location.href)) {
                 second.scheme = new Uri(document.location.href).scheme;
             } else {
@@ -65,10 +63,10 @@ define([
         }
 
         var url = '';
-        if (definedNotNull(baseUri.scheme)) {
+        if (defined(baseUri.scheme)) {
             url += baseUri.scheme + ':';
         }
-        if (definedNotNull(baseUri.authority)) {
+        if (defined(baseUri.authority)) {
             url += '//' + baseUri.authority;
 
             if (baseUri.path !== '') {
@@ -89,8 +87,8 @@ define([
         }
 
         // Combine the queries and fragments.
-        var hasFirstQuery = definedNotNull(first.query);
-        var hasSecondQuery = definedNotNull(second.query);
+        var hasFirstQuery = defined(first.query);
+        var hasSecondQuery = defined(second.query);
         if (hasFirstQuery && hasSecondQuery) {
             url += '?' + first.query + '&' + second.query;
         } else if (hasFirstQuery && !hasSecondQuery) {
@@ -99,8 +97,8 @@ define([
             url += '?' + second.query;
         }
 
-        var hasSecondFragment = definedNotNull(second.fragment);
-        if (definedNotNull(first.fragment) && !hasSecondFragment) {
+        var hasSecondFragment = defined(second.fragment);
+        if (defined(first.fragment) && !hasSecondFragment) {
             url += '#' + first.fragment;
         } else if (hasSecondFragment) {
             url += '#' + second.fragment;

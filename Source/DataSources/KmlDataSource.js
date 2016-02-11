@@ -9,7 +9,6 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -64,7 +63,6 @@ define([
         createGuid,
         defaultValue,
         defined,
-        definedNotNull,
         defineProperties,
         DeveloperError,
         Ellipsoid,
@@ -290,7 +288,7 @@ define([
         }
 
         var digits = value.match(/[^\s,\n]+/g);
-        if (!definedNotNull(digits)) {
+        if (!defined(digits)) {
             return Cartesian3.fromDegrees(0, 0, 0);
         }
 
@@ -311,7 +309,7 @@ define([
         }
 
         var tuples = element.textContent.match(/[^\s\n]+/g);
-        if (!definedNotNull(tuples)) {
+        if (!defined(tuples)) {
             return undefined;
         }
 

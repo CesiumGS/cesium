@@ -1,11 +1,11 @@
 /*global define*/
 define([
         '../ThirdParty/Uri',
-        './definedNotNull',
+        './defined',
         './DeveloperError'
     ], function(
         Uri,
-        definedNotNull,
+        defined,
         DeveloperError) {
     'use strict';
 
@@ -26,7 +26,7 @@ define([
      */
     function getBaseUri(uri, includeQuery) {
         //>>includeStart('debug', pragmas.debug);
-        if (!definedNotNull(uri)) {
+        if (!defined(uri)) {
             throw new DeveloperError('uri is required.');
         }
         //>>includeEnd('debug');
@@ -42,10 +42,10 @@ define([
         }
 
         uri = new Uri(uri);
-        if (definedNotNull(uri.query)) {
+        if (defined(uri.query)) {
             basePath += '?' + uri.query;
         }
-        if (definedNotNull(uri.fragment)){
+        if (defined(uri.fragment)){
             basePath += '#' + uri.fragment;
         }
 
