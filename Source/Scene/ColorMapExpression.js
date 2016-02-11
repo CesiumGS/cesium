@@ -4,13 +4,15 @@ define([
        '../Core/Color',
        '../Core/defaultValue',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       '../Core/DeveloperError',
     ], function(
         clone,
         Color,
         defaultValue,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     // TODO: best name/directory for this?
@@ -83,13 +85,22 @@ define([
     });
 
     function setRuntime(expression) {
-        // PERFORMANCE_IDEA: this will be in dictionary mode, can we do something faster?
-        var runtimeMap = {};
         var map = expression._map;
+
+        var runtimeMap = [];
         for (var name in map) {
             if (map.hasOwnProperty(name)) {
-                var color = map[name];
-                runtimeMap[name] = Color.fromCssColorString(color);
+                var color = Color.fromCssColorString(map[name]);
+                //>>includeStart('debug', pragmas.debug);
+                if (color === undefined) {
+                    throw new DeveloperError('color must be defined');
+                }
+                //>>includeEnd('debug');
+
+                runtimeMap.push({
+                    color : color,
+                    pattern : new RegExp(name)
+                });
             }
         }
 
@@ -107,12 +118,18 @@ define([
      * DOC_TBA
      */
     ColorMapExpression.prototype.evaluate = function(feature) {
-        var value = feature.getProperty(this._propertyName);
+        var name = feature.getProperty(this._propertyName);
 
         var defaultColor = this._runtimeDefault;
         var runtimeMap = this._runtimeMap;
         if (defined(runtimeMap)) {
-            return defaultValue(runtimeMap[value], defaultColor);
+            for (var entry in runtimeMap) {
+                if (runtimeMap.hasOwnProperty(entry)) {
+                    if (runtimeMap[entry].pattern.test(name)) {
+                        return runtimeMap[entry].color;
+                    }
+                }
+            }
         }
 
         return defaultColor;
