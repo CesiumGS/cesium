@@ -54,10 +54,6 @@ define([
     var computeBoundingRectangleQuaternion = new Quaternion();
     var computeBoundingRectangleMatrix3 = new Matrix3();
 
-    function zeroToOne(n){
-        return Math.min(Math.max(n, 0), 1);
-    }
-
     function computeBoundingRectangle(tangentPlane, positions, angle, result) {
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
         var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
@@ -155,8 +151,8 @@ define([
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
 
-                    var stx = zeroToOne(st.x / boundingRectangle.width);
-                    var sty = zeroToOne(st.y / boundingRectangle.height);
+                    var stx = CesiumMath.clamp(st.x / boundingRectangle.width, 0, 1);
+                    var sty = CesiumMath.clamp(st.y / boundingRectangle.height, 0, 1);
                     if (bottom) {
                         textureCoordinates[textureCoordIndex + bottomOffset2] = stx;
                         textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = sty;
@@ -670,7 +666,7 @@ define([
         var topAndBottom;
         var outerPositions;
 
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy);
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
         var i;
@@ -679,9 +675,13 @@ define([
             return undefined;
         }
 
-        outerPositions = polygons[0].slice();
-        for (i = 0; i < outerPositions.length; i++) {
-            outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
+        if (perPositionHeight) {
+            outerPositions = polygons[0].slice();
+            for (i = 0; i < outerPositions.length; i++) {
+                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
+            }
+        } else {
+            outerPositions = polygons[0];
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
