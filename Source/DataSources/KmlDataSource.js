@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -11,6 +12,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -18,6 +20,7 @@ define([
         '../Core/getExtensionFromUri',
         '../Core/getFilenameFromUri',
         '../Core/Iso8601',
+        '../Core/joinUrls',
         '../Core/JulianDate',
         '../Core/loadBlob',
         '../Core/loadXML',
@@ -54,6 +57,7 @@ define([
         './TimeIntervalCollectionProperty',
         './WallGraphics'
     ], function(
+        AssociativeArray,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -65,6 +69,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -72,6 +77,7 @@ define([
         getExtensionFromUri,
         getFilenameFromUri,
         Iso8601,
+        joinUrls,
         JulianDate,
         loadBlob,
         loadXML,
@@ -614,9 +620,9 @@ define([
             var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
             var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
-            var queryString = makeQueryString(viewFormat, httpQuery);
+            var queryString = makeQueryString(viewFormat, httpQuery, true);
 
-            var icon = appendQueryString(href, queryString);
+            var icon = joinUrls(href, queryString);
             return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, icon, viewBoundScale);
         }
 
@@ -1733,34 +1739,27 @@ define([
         return result;
     }
 
-    function makeQueryString() {
-        var result = '';
-        for(var i=0;i<arguments.length;++i) {
-            var arg = arguments[i];
-            if (defined(arg) && arg.length > 0) {
-                var argFirst = arg.charAt(0);
-                if (argFirst === '?' || argFirst === '&') {
-                    arg.splice(0, 1);
+    function makeQueryString(string1, string2, addQuestionMark) {
+        var result = (addQuestionMark) ? '?' : '';
+        function addToResult(s) {
+            if (defined(s) && s.length > 0) {
+                var sFirst = s.charAt(0);
+                if (sFirst === '?' || sFirst === '&') {
+                    s.splice(0, 1);
                 }
 
                 var last = result.slice(-1);
                 if (result.length > 0 && last !== '?' && last !== '&') {
                     result += '&';
                 }
-                result += arguments[i];
+                result += s;
             }
         }
 
+        addToResult(string1);
+        addToResult(string2);
+
         return result;
-    }
-
-    function appendQueryString(url, queryString) {
-        if (defined(queryString) && queryString.length > 0) {
-            var c = (url.indexOf('?') === -1) ? '?' : '&';
-            return url + c + queryString;
-        }
-
-        return url;
     }
 
     function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
@@ -1903,10 +1902,10 @@ define([
                 var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
                 var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                 var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                var queryString = makeQueryString(viewFormat, httpQuery);
+                var queryString = makeQueryString(viewFormat, httpQuery, false);
 
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, appendQueryString(href, queryString), viewBoundScale);
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString), viewBoundScale);
 
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
                     var entities = dataSource._entityCollection;
@@ -2169,9 +2168,9 @@ define([
      * @alias KmlDataSource
      * @constructor
      *
-     * @param {DefaultProxy} [proxy] A proxy to be used for loading external data.
-     * @param {Camera} [camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
-     * @param {Canvas} [canvas] The canvas that is used for sending viewer properties to network links.
+     * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+     * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
+     * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -2180,9 +2179,28 @@ define([
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');
-     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'));
+     * viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/facilities.kmz'),
+     *      {
+     *          camera: viewer.scene.camera,
+     *          canvas: viewer.scene.canvas
+     *      });
      */
-    function KmlDataSource(proxy, camera, canvas) {
+    function KmlDataSource(options) {
+        var showWarning = false;
+        if (defined(options.getURL)) {
+            showWarning = true;
+            var proxy = options;
+            options = {
+                proxy: proxy
+            };
+        } else if (!defined(options.camera) || !defined(options.canvas)) {
+            showWarning = true;
+        }
+
+        if (showWarning) {
+            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.21.');
+        }
+
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
@@ -2191,10 +2209,13 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
         this._isLoading = false;
-        this._proxy = proxy;
+        this._proxy = options.proxy;
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = [];
+
+        var camera = options.camera;
+        var canvas = options.canvas;
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2211,16 +2232,16 @@ define([
      *
      * @param {String|Document|Blob} data A url, parsed KML document, or Blob containing binary KMZ data or a parsed KML document.
      * @param {Object} [options] An object with the following properties:
+     * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
+     * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
-     * @param {Camera} [options.camera] The camera that is used for viewRefreshModes and sending camera properties to network links.
-     * @param {Canvas} [options.canvas] The canvas that is used for sending viewer properties to network links.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
     KmlDataSource.load = function(data, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var dataSource = new KmlDataSource(options.proxy, options.camera, options.canvas);
+        var dataSource = new KmlDataSource(options);
         return dataSource.load(data, options);
     };
 
@@ -2445,19 +2466,21 @@ define([
             }
 
             // Remove old entities
+            entityCollection.suspendEvents();
             var entitiesCopy = entityCollection.values.slice();
             for (var i=0;i<entitiesCopy.length;++i) {
-                if (entitiesCopy[i].parent === networkLinkEntity) {
-                    entitiesCopy[i].parent = undefined;
-                    removeChildren(entitiesCopy[i]);
+                var entityToRemove = entitiesCopy[i];
+                if (entityToRemove.parent === networkLinkEntity) {
+                    entityToRemove.parent = undefined;
+                    removeChildren(entityToRemove);
                 }
             }
 
             // Add new entities
-            entityCollection.suspendEvents();
             for (i = 0; i < newEntities.length; i++) {
-                if (!defined(newEntities[i].parent)) {
-                    newEntities[i].parent = networkLinkEntity;
+                var newEntity = newEntities[i];
+                if (!defined(newEntity.parent)) {
+                    newEntity.parent = networkLinkEntity;
                 }
                 entityCollection.add(newEntities[i]);
             }
@@ -2492,6 +2515,8 @@ define([
         };
     }
 
+    var entitiesToIgnore = new AssociativeArray();
+
     /**
      * Updates any NetworkLink that require updating
      * @function
@@ -2508,13 +2533,13 @@ define([
         var now = JulianDate.now();
         var that = this;
 
-        var entitiesToIgnore = [];
+        entitiesToIgnore.removeAll();
         function recurseIgnoreEntities(entity) {
             var children = entity._children;
             var count = children.length;
             for (var i=0;i<count;++i) {
                 var child = children[i];
-                entitiesToIgnore.push(child);
+                entitiesToIgnore.set(child.id, child);
                 recurseIgnoreEntities(child);
             }
         }
@@ -2539,7 +2564,7 @@ define([
         var changed = false;
         networkLinks.forEach(function(networkLink) {
             var entity = networkLink.entity;
-            if (entitiesToIgnore.indexOf(entity) !== -1) {
+            if (entitiesToIgnore.contains(entity.id)) {
                 return;
             }
 
@@ -2570,7 +2595,7 @@ define([
                     recurseIgnoreEntities(entity);
                     networkLink.updating = true;
                     var newEntityCollection = new EntityCollection();
-                    var href = appendQueryString(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString));
+                    var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString, true));
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href)
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks));
