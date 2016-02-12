@@ -8,6 +8,7 @@ define([
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
+       './ColorPropertyExpression',
        './ConstantColorExpression',
        './LiteralBooleanExpression'
     ], function(
@@ -19,6 +20,7 @@ define([
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
+        ColorPropertyExpression,
         ConstantColorExpression,
         LiteralBooleanExpression) {
     'use strict';
@@ -53,7 +55,11 @@ define([
 
         var color;
         if (typeof(colorExpression) === 'string') {
-            color = new ConstantColorExpression(styleEngine, colorExpression);
+            if (defined(getPropertyName(colorExpression))) {
+                color = new ColorPropertyExpression(styleEngine, colorExpression);
+            } else {
+                color = new ConstantColorExpression(styleEngine, colorExpression);
+            }
         } else if (defined(colorExpression.map)) {
             color = new ColorMapExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.intervals)) {
