@@ -1672,9 +1672,6 @@ define([
                 }
             }
         }
-
-        // Switch back to the scene's camera
-        uniformState.updateCamera(cameraScene);
     }
 
     function executeViewportCommands(scene, passState) {
@@ -1682,8 +1679,11 @@ define([
 
         var viewport = passState.viewport;
 
+        var uniformState = context.uniformState;
         var frameState = scene._frameState;
         var camera = frameState.camera;
+
+        uniformState.updateCamera(camera);
 
         if (scene._useWebVR) {
             if (frameState.mode !== SceneMode.SCENE2D) {
