@@ -1459,10 +1459,10 @@ define([
          *
          * @private
          *
-         * @alias czm_shadowMapTexture
+         * @alias czm_sunShadowMapTexture
          * @glslUniform
          */
-        czm_shadowMapTexture : new AutomaticUniform({
+        czm_sunShadowMapTexture : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
             getValue : function(uniformState) {
@@ -1475,10 +1475,10 @@ define([
          *
          * @private
          *
-         * @alias czm_shadowMapMatrix
+         * @alias czm_sunShadowMapMatrix
          * @glslUniform
          */
-        czm_shadowMapMatrix : new AutomaticUniform({
+        czm_sunShadowMapMatrix : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {

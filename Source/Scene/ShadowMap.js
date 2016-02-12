@@ -219,7 +219,7 @@ define([
             'void main() \n' +
             '{ \n' +
             '    czm_shadow_main(); \n' +
-            '    czm_shadowMapCoordinate = (czm_shadowMapMatrix * gl_Position).xyz; \n' +
+            '    czm_shadowMapCoordinate = (czm_sunShadowMapMatrix * gl_Position).xyz; \n' +
             '} \n';
         return vs;
     };
@@ -232,7 +232,7 @@ define([
             '{ \n' +
             '    czm_shadow_main(); \n' +
             '    float depth = czm_shadowMapCoordinate.z; \n' +
-            '    float shadowDepth = texture2D(czm_shadowMapTexture, czm_shadowMapCoordinate.xy).r; \n' +
+            '    float shadowDepth = texture2D(czm_sunShadowMapTexture, czm_shadowMapCoordinate.xy).r; \n' +
             '    // TODO : remove if \n' +
             '    if (depth - 0.005 > shadowDepth) { \n' +
             '        gl_FragColor.rgb *= 0.2; \n' +
@@ -263,7 +263,7 @@ define([
                 'varying vec2 v_textureCoordinates; \n' +
                 'void main() \n' +
                 '{ \n' +
-                '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' +
+                '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' +
                 '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                 '} \n';
 

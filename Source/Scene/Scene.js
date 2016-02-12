@@ -539,7 +539,7 @@ define([
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.shadowMap = new ShadowMap(context, new Camera(this));
+        this.sunShadowMap = new ShadowMap(context, new Camera(this));
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1083,7 +1083,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.shadowsEnabled = scene.shadowMap.enabled;
+        frameState.shadowsEnabled = scene.sunShadowMap.enabled;
 
         clearPasses(frameState.passes);
     }
@@ -1644,10 +1644,9 @@ define([
     function executeShadowMapCommands(scene) {
         var context = scene.context;
         var uniformState = context.uniformState;
-        var shadowMap = scene.shadowMap;
+        var shadowMap = scene.sunShadowMap;
         var renderState = shadowMap.renderState;
         var passState = shadowMap.passState;
-        var cameraScene = scene.camera;
 
         // Clear shadow depth
         shadowMap.clearCommand.execute(context);
@@ -1955,7 +1954,7 @@ define([
 
         scene.fog.update(frameState);
 
-        var shadowMap = scene.shadowMap;
+        var shadowMap = scene.sunShadowMap;
         if (shadowMap.enabled) {
             shadowMap.update(frameState);
         }
