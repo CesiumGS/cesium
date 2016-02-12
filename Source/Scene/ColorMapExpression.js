@@ -126,20 +126,21 @@ define([
      */
     ColorMapExpression.prototype.evaluate = function(feature) {
         var value = feature.getProperty(this._propertyName);
+        var key;
 
         if (defined(this._pattern)) {
             var match = this._pattern.exec(value);
             if (defined(match)) {
-                value = match[1];
-            } else {
-                value = undefined;
+                key = match[1];
             }
+        } else {
+            key = value;
         }
 
         var defaultColor = this._runtimeDefault;
         var runtimeMap = this._runtimeMap;
         if (defined(runtimeMap)) {
-            return defaultValue(runtimeMap[value], defaultColor);
+            return defaultValue(runtimeMap[key], defaultColor);
         }
 
         return defaultColor;
