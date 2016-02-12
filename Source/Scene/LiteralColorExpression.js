@@ -42,12 +42,6 @@ define([
                 return this._color;
             },
             set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('color must be a valid CSS string');
-                }
-                //>>includeEnd('debug');
-
                 if (!Color.equals(this._color, value)) {
                     this._color = Color.clone(value, this._color);
                     this._styleEngine.makeDirty();

@@ -14,31 +14,37 @@ defineSuite([
     };
 
     it('constructs with hex', function() {
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "#ffffff");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), '#ffffff');
         expect(expression.color).toEqual(Color.WHITE);
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
     it('constructs with color string', function() {
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "white");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), 'white');
         expect(expression.color).toEqual(Color.WHITE);
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
     it('constructs with rgb', function() {
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "rgb(255, 255, 255)");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), 'rgb(255, 255, 255)');
         expect(expression.color).toEqual(Color.WHITE);
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
     it('constructs with hsl', function() {
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "hsl(0, 0%, 100%)");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), 'hsl(0, 0%, 100%)');
         expect(expression.color).toEqual(Color.WHITE);
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
+    it('throws with invalid css string', function() {
+        expect(function() {
+           return new LiteralColorExpression(new MockStyleEngine(), 'not a color');
+        }).toThrowDeveloperError();
+    });
+
     it('sets color', function() {
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "#ffffff");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), '#ffffff');
         expression.color = Color.BLACK;
         expect(expression.color).toEqual(Color.BLACK);
         expect(expression.evaluate(undefined)).toEqual(Color.BLACK);
@@ -47,7 +53,7 @@ defineSuite([
     it('marks style engine dirty', function() {
         spyOn(MockStyleEngine.prototype, 'makeDirty');
 
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "#ffffff");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), '#ffffff');
         expression.color = Color.BLACK;
 
         expect(MockStyleEngine.prototype.makeDirty).toHaveBeenCalled();
@@ -56,7 +62,7 @@ defineSuite([
     it('does not marks style engine dirty', function() {
         spyOn(MockStyleEngine.prototype, 'makeDirty');
 
-        var expression = new LiteralColorExpression(new MockStyleEngine(), "#ffffff");
+        var expression = new LiteralColorExpression(new MockStyleEngine(), '#ffffff');
         expression.color = Color.WHITE;
 
         expect(MockStyleEngine.prototype.makeDirty).not.toHaveBeenCalled();
