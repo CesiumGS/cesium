@@ -74,10 +74,12 @@ define([
                 return this._default;
             },
             set : function(value) {
-                this._default = value.slice(0);
-                this._styleEngine.makeDirty();
+                if (this._default !== value) {
+                    this._default = value.slice(0);
+                    this._styleEngine.makeDirty();
 
-                setRuntime(this);
+                    setRuntime(this);
+                }
             }
         }
     });
