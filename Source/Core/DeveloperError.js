@@ -4,6 +4,7 @@ define([
     ], function(
         defined) {
     'use strict';
+    /*global console*/
 
     /**
      * Constructs an exception object that is thrown due to a developer error, e.g., invalid argument,
@@ -40,8 +41,6 @@ define([
         //Browsers such as IE don't have a stack property until you actually throw the error.
         var stack;
         try {
-            /*global console*/
-            console.error(toString(this));
             throw new Error();
         } catch (e) {
             stack = e.stack;
@@ -53,6 +52,8 @@ define([
          * @readonly
          */
         this.stack = stack;
+
+        console.error(toString(this));
     }
 
     DeveloperError.prototype.toString = function() {
