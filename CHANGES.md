@@ -20,10 +20,11 @@ TODO: this is not finished yet:
 * Breaking changes
    * 
 * Deprecated
-   *   
+   * Deprecated `definedNotNull`. It will be removed in 1.20. Use `defined` instead, which now checks for `null` as well as `undefined`.
 * Fixed bug for causing `navigator is not defined` reference error in node
 * Added `Camera.flyHome` function for resetting the camera to the home view
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
+* Fixed texture coordinates for polygon with position heights
 
 ### 1.18 - 2016-02-01
 * Breaking changes
