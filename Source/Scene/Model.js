@@ -559,14 +559,13 @@ define([
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
 
-        // TODO : make a material property?
         /**
-         * @private
+         * DOC_TBA
          */
         this.receiveShadows = true;
 
         /**
-         * @private
+         * @DOC_TBA
          */
         this.castShadows = true;
     }

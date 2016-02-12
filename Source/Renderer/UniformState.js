@@ -149,9 +149,7 @@ define([
 
         this._fogDensity = undefined;
 
-        // TODO : expose these differently
-        this.shadowMapTexture = undefined;
-        this.shadowMapMatrix = undefined;
+        this.shadowMap = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -897,8 +895,9 @@ define([
      * are set to the right value.
      *
      * @param {FrameState} frameState The frameState to synchronize with.
+     * @param {ShadowMap} [shadowMap] The shadow map.
      */
-    UniformState.prototype.update = function(frameState) {
+    UniformState.prototype.update = function(frameState, shadowMap) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
@@ -921,6 +920,8 @@ define([
         setSunAndMoonDirections(this, frameState);
 
         this._fogDensity = frameState.fog.density;
+
+        this.shadowMap = shadowMap;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);

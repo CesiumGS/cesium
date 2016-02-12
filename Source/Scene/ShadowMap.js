@@ -6,6 +6,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/GeometryInstance',
         '../Core/Matrix4',
@@ -32,6 +33,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
+        defineProperties,
         destroyObject,
         GeometryInstance,
         Matrix4,
@@ -59,7 +61,7 @@ define([
     /**
      * @private
      */
-    function ShadowMap(scene) {
+    function ShadowMap(context, camera) {
         this.enabled = true;
 
         this.debugShow = false;
@@ -70,13 +72,14 @@ define([
         this._debugCamera = undefined;
         this._debugShadowViewCommand = undefined;
 
+        this._shadowMapMatrix = new Matrix4();
         this._depthStencilTexture = undefined;
         this._framebuffer = undefined;
         this._size = 1024; // Width and height of the shadow map in pixels
 
         this.renderState = RenderState.fromCache({
             cull : {
-                enabled : true,
+                enabled : true, // TODO : need to handle objects that don't use back face culling, like walls
                 face : CullFace.BACK
             },
             depthTest : {
@@ -92,7 +95,14 @@ define([
             viewport : new BoundingRectangle(0, 0, this._size, this._size)
         });
 
-        this.passState = new PassState(scene.context);
+        this.clearCommand = new ClearCommand({
+            depth : 1.0,
+            renderState : this.renderState,
+            framebuffer : undefined, // Set later
+            owner : this
+        });
+
+        this.passState = new PassState(context);
 
         // TODO : determine frustum based on scene
         var frustum = new OrthographicFrustum();
@@ -105,20 +115,40 @@ define([
         this._frustum = frustum;
 
         // TODO : position camera based on sun direction
-        var camera = new Camera(scene);
         camera.frustum = frustum;
         var centerLongitude = -1.31968;
         var centerLatitude = 0.698874;
         camera.lookAt(Cartesian3.fromRadians(centerLongitude, centerLatitude), new Cartesian3(0.0, 0.0, 75.0));
         this.camera = camera;
-
-        this.clearCommand = new ClearCommand({
-            depth : 1.0,
-            renderState : this.renderState,
-            framebuffer : undefined, // Set later
-            owner : this
-        });
     }
+
+    defineProperties(ShadowMap.prototype, {
+        /**
+         * The shadow map texture used in shadow receive programs.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Texture}
+         * @readonly
+         */
+        shadowMapTexture : {
+            get : function() {
+                return this._depthStencilTexture;
+            }
+        },
+        /**
+         * The shadow map matrix used in shadow receive programs.
+         * It converts gl_Position to shadow map texture space.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Matrix4}
+         * @readonly
+         */
+        shadowMapMatrix : {
+            get : function() {
+                return this._shadowMapMatrix;
+            }
+        }
+    });
 
     function destroyTextures(shadowMap) {
         shadowMap._depthStencilTexture = shadowMap._depthStencilTexture && !shadowMap._depthStencilTexture.isDestroyed() && shadowMap._depthStencilTexture.destroy();
@@ -140,11 +170,6 @@ define([
     }
 
     function createFramebuffers(shadowMap, context) {
-        destroyTextures(shadowMap);
-        destroyFramebuffers(shadowMap);
-
-        createTextures(shadowMap, context);
-
         var framebuffer = new Framebuffer({
             context : context,
             depthStencilTexture : shadowMap._depthStencilTexture,
@@ -160,6 +185,9 @@ define([
         var depthStencilTexture = shadowMap._depthStencilTexture;
         var textureChanged = !defined(depthStencilTexture) || (depthStencilTexture.width !== shadowMap._size);
         if (!defined(shadowMap.framebuffer) || textureChanged) {
+            destroyTextures(shadowMap);
+            destroyFramebuffers(shadowMap);
+            createTextures(shadowMap, context);
             createFramebuffers(shadowMap, context);
         }
     }
@@ -168,6 +196,7 @@ define([
         // TODO : unused right now
         // TODO : vertex shader won't be optimized
         // TODO : handle mismatched varyings
+        // TODO : handle fragment shaders that discard or write alpha of zero
         var vs = shaderProgram.vertexShaderText;
         var fs =
             'void main()\n' +
@@ -183,6 +212,7 @@ define([
     };
 
     ShadowMap.createReceiveShadowsVertexShader = function(vs) {
+        //TODO: will need to adapt this for GPU RTE, e.g., when there is low and high position attributes.
         vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
         vs +=
             'varying vec3 czm_shadowMapCoordinate; \n' +
@@ -234,7 +264,7 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' +
-                '    gl_FragColor = vec4(shadow, shadow, shadow, 1.0); \n' +
+                '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                 '} \n';
 
             // Set viewport now to avoid using a cached render state
@@ -348,14 +378,8 @@ define([
 
     // Converts from NDC space to texture space
     var scaleBiasMatrix = new Matrix4(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
-    var scratchMatrix = new Matrix4();
 
     ShadowMap.prototype.update = function(frameState) {
-        var enabled = frameState.shadowsEnabled = this.enabled;
-        if (!enabled) {
-            return;
-        }
-
         var context = frameState.context;
         var uniformState = context.uniformState;
 
@@ -367,13 +391,9 @@ define([
         // TODO : only compute matrix when dirty
         var viewMatrix = this.camera.viewMatrix;
         var projectionMatrix = this._frustum.projectionMatrix;
-        var shadowMapViewProjection = Matrix4.multiplyTransformation(projectionMatrix, viewMatrix, scratchMatrix);
-        Matrix4.multiplyTransformation(scaleBiasMatrix, shadowMapViewProjection, shadowMapViewProjection);
-        Matrix4.multiply(shadowMapViewProjection, uniformState.inverseViewProjection, shadowMapViewProjection);
-
-        // Update uniforms for shadow receiving
-        uniformState.shadowMapTexture = this._depthStencilTexture;
-        uniformState.shadowMapMatrix = shadowMapViewProjection;
+        var shadowMapMatrix = Matrix4.multiplyTransformation(projectionMatrix, viewMatrix, this._shadowMapMatrix);
+        Matrix4.multiplyTransformation(scaleBiasMatrix, shadowMapMatrix, shadowMapMatrix);
+        Matrix4.multiply(shadowMapMatrix, uniformState.inverseViewProjection, shadowMapMatrix);
     };
 
     ShadowMap.prototype.isDestroyed = function() {

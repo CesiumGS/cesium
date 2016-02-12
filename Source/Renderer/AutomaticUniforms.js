@@ -1466,7 +1466,7 @@ define([
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
             getValue : function(uniformState) {
-                return uniformState.shadowMapTexture;
+                return uniformState.shadowMap.shadowMapTexture;
             }
         }),
 
@@ -1482,7 +1482,7 @@ define([
             size : 1,
             datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
-                return uniformState.shadowMapMatrix;
+                return uniformState.shadowMap.shadowMapMatrix;
             }
         })
     };

@@ -539,7 +539,7 @@ define([
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.shadowMap = new ShadowMap(this);
+        this.shadowMap = new ShadowMap(context, new Camera(this));
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1083,6 +1083,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.shadowsEnabled = scene.shadowMap.enabled;
 
         clearPasses(frameState.passes);
     }
@@ -1641,10 +1642,6 @@ define([
     }
 
     function executeShadowMapCommands(scene) {
-        if (!scene.shadowMap.enabled) {
-            return;
-        }
-
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
@@ -1958,9 +1955,12 @@ define([
 
         scene.fog.update(frameState);
 
-        scene.shadowMap.update(frameState);
+        var shadowMap = scene.shadowMap;
+        if (shadowMap.enabled) {
+            shadowMap.update(frameState);
+        }
 
-        us.update(frameState);
+        us.update(frameState, shadowMap);
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
@@ -1981,7 +1981,12 @@ define([
         createPotentiallyVisibleSet(scene);
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeComputeCommands(scene);
-        executeShadowMapCommands(scene);
+
+        if (shadowMap.enabled) {
+            // TODO : collect shadow map commands here
+            executeShadowMapCommands(scene);
+        }
+
         executeViewportCommands(scene, passState);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
