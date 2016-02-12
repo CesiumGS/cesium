@@ -667,6 +667,8 @@ define([
             }
         }
 
+        // TODO: Remove or make an option
+        /*
         if (!controller._aggregator.anyButtonDown &&
                 (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
                 (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
@@ -676,6 +678,7 @@ define([
                 controller._tween = tweens.add(tween);
             }
         }
+        */
 
         tweens.update();
     }

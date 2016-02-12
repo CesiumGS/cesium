@@ -1236,6 +1236,7 @@ define([
     };
 
     function clampMove2D(camera, position) {
+        /*
         var maxX = camera._maxCoord.x * camera.maximumTranslateFactor;
         if (position.x > maxX) {
             position.x = maxX;
@@ -1243,8 +1244,18 @@ define([
         if (position.x < -maxX) {
             position.x = -maxX;
         }
+        */
 
-        var maxY = camera._maxCoord.y * camera.maximumTranslateFactor;
+        var maxX = camera._maxCoord.x;
+        if (position.x > maxX) {
+            position.x = position.x - maxX * 2.0;
+        }
+        if (position.x < -maxX) {
+            position.x = position.x + maxX * 2.0;
+        }
+
+        //var maxY = camera._maxCoord.y * camera.maximumTranslateFactor;
+        var maxY = camera._maxCoord.y;
         if (position.y > maxY) {
             position.y = maxY;
         }
@@ -1606,7 +1617,10 @@ define([
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
 
-        var maxRight = camera._maxCoord.x * camera.maximumZoomFactor;
+        // TODO: Remove or make an option. Just set to 1.0?
+
+        //var maxRight = camera._maxCoord.x * camera.maximumZoomFactor;
+        var maxRight = camera._maxCoord.x;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;

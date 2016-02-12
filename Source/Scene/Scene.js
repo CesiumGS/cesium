@@ -6,6 +6,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -28,6 +29,7 @@ define([
         '../Core/mergeSort',
         '../Core/Occluder',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
         '../Renderer/Context',
@@ -68,6 +70,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -90,6 +93,7 @@ define([
         mergeSort,
         Occluder,
         ShowGeometryInstanceAttribute,
+        Transforms,
         ClearCommand,
         ComputeEngine,
         Context,
@@ -1927,11 +1931,59 @@ define([
         viewport.height = context.drawingBufferHeight;
 
         updateEnvironment(scene);
-        updatePrimitives(scene);
-        createPotentiallyVisibleSet(scene);
-        updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-        executeComputeCommands(scene);
-        executeViewportCommands(scene, passState);
+
+        if (scene.mode !== SceneMode.SCENE2D) {
+            updatePrimitives(scene);
+            createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+            executeComputeCommands(scene);
+            executeViewportCommands(scene, passState);
+        } else {
+            /*
+            var projection = scene.mapProjection;
+            var maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+
+            var savedCamera = camera;
+            var frustum = savedCamera.frustum;
+
+            var farthestWest = ((savedCamera.position.x - frustum.left) % maxCoord.x) - maxCoord.x;
+            //if (farthestWest < 0.0) {
+                //var leftCamera = Camera.clone(savedCamera, new Camera(scene));
+                //leftCamera.frustum = frustum.clone();
+
+                //leftCamera.position.x = maxCoord.x + farthestWest * 0.5;
+                //leftCamera.frustum.left = farthestWest * 0.5;
+                //leftCamera.frustum.right = -leftCamera.frustum.left;
+
+                //scene._camera = leftCamera;
+                //frameState.camera = leftCamera;
+
+                var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
+                var projectionMatrix = camera.frustum.projectionMatrix;
+
+                //var x = -maxCoord.x * Math.floor(Math.abs(savedCamera.position.x) / maxCoord.x) - maxCoord.x;
+                //var x = -maxCoord.x * Math.floor((savedCamera.position.x + maxCoord.x) / (2.0 * maxCoord.x)) - maxCoord.x;
+                //var x = -2.0 * maxCoord.x * (Math.floor(savedCamera.position.x / (2.0 * maxCoord.x)) + 1.0);
+                //x = x - savedCamera.position.x;
+
+                var x = ((savedCamera.position.x + maxCoord.x) % (2.0 * maxCoord.x)) - maxCoord.x;
+                x = farthestWest - x;
+
+                var eyePoint = new Cartesian3(x, 0.0, -savedCamera.position.z);
+                var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
+
+            console.log(windowCoordinates.x);
+            //}
+            */
+
+            updatePrimitives(scene);
+            createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+            executeComputeCommands(scene);
+            executeViewportCommands(scene, passState);
+        }
+
+
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
