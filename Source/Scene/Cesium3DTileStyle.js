@@ -10,6 +10,7 @@ define([
        './ColorMapExpression',
        './ColorPropertyExpression',
        './ConstantColorExpression',
+       './getPropertyName',
        './LiteralBooleanExpression'
     ], function(
         defaultValue,
@@ -22,6 +23,7 @@ define([
         ColorMapExpression,
         ColorPropertyExpression,
         ConstantColorExpression,
+        getPropertyName,
         LiteralBooleanExpression) {
     'use strict';
 

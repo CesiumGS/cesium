@@ -17,12 +17,12 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ColorPropertyExpression(styleEngine, property) {
+    function ColorExpression(styleEngine, property) {
         this._styleEngine = styleEngine;
         this._propertyName = property;
     }
 
-    defineProperties(ColorPropertyExpression.prototype, {
+    defineProperties(ColorExpression.prototype, {
         /**
          * DOC_TBA
          */
@@ -42,15 +42,10 @@ define([
     /**
      * DOC_TBA
      */
-    ColorPropertyExpression.prototype.evaluate = function(feature) {
-        var name = feature.getProperty(this._propertyName);
-        if (typeof(name) === 'string' && defined(name)) {
-            var color = Color.fromCssColorString(name);
-            if (defined(color)) {
-                return color;
-            }
-        }
+    ColorExpression.prototype.evaluate = function(feature) {
+        var color = feature.getProperty(this._propertyName);
+        return Color.fromCssColorString(color);
     };
 
-    return ColorPropertyExpression;
+    return ColorExpression;
 });
