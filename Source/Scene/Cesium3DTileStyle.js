@@ -8,8 +8,10 @@ define([
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
-       './LiteralColorExpression',
-       './LiteralBooleanExpression'
+       './ColorExpression',
+       './getPropertyName',
+       './LiteralBooleanExpression',
+       './LiteralColorExpression'
     ], function(
         defaultValue,
         defined,
@@ -19,8 +21,10 @@ define([
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
-        LiteralColorExpression,
-        LiteralBooleanExpression) {
+        ColorExpression,
+        getPropertyName,
+        LiteralBooleanExpression,
+        LiteralColorExpression) {
     'use strict';
 
     // TODO: best name/directory for this?  For example, a user may want to evaluate a
@@ -53,7 +57,11 @@ define([
 
         var color;
         if (typeof(colorExpression) === 'string') {
-            color = new LiteralColorExpression(styleEngine, colorExpression);
+            if (defined(getPropertyName(colorExpression))) {
+                color = new ColorExpression(styleEngine, colorExpression);
+            } else {
+                color = new LiteralColorExpression(styleEngine, colorExpression);
+            }
         } else if (defined(colorExpression.map)) {
             color = new ColorMapExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.intervals)) {
