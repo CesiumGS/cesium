@@ -24,6 +24,7 @@ define([
     function ColorMapExpression(styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
         this._propertyName = jsonExpression.propertyName;
+        this._pattern = new RegExp(jsonExpression.pattern);
         this._map = clone(jsonExpression.map, true);
         this._default = jsonExpression.default.slice(0);
 
@@ -44,6 +45,23 @@ define([
             set : function(value) {
                 if (this._propertyName !== value) {
                     this._propertyName = value;
+                    this._styleEngine.makeDirty();
+
+                    setRuntime(this);
+                }
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        pattern : {
+            get : function() {
+                return this._pattern;
+            },
+            set : function(value) {
+                if (this._pattern !== value) {
+                    this._pattern = value;
                     this._styleEngine.makeDirty();
 
                     setRuntime(this);
@@ -108,11 +126,21 @@ define([
      */
     ColorMapExpression.prototype.evaluate = function(feature) {
         var value = feature.getProperty(this._propertyName);
+        var key;
+
+        if (defined(this._pattern)) {
+            var match = this._pattern.exec(value);
+            if (defined(match)) {
+                key = match[1];
+            }
+        } else {
+            key = value;
+        }
 
         var defaultColor = this._runtimeDefault;
         var runtimeMap = this._runtimeMap;
         if (defined(runtimeMap)) {
-            return defaultValue(runtimeMap[value], defaultColor);
+            return defaultValue(runtimeMap[key], defaultColor);
         }
 
         return defaultColor;
