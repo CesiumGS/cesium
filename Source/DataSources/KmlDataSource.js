@@ -1915,8 +1915,8 @@ define([
                     for (var i = 0; i < newEntities.length; i++) {
                         if (!defined(newEntities[i].parent)) {
                             newEntities[i].parent = networkEntity;
-                            entities.add(newEntities[i]);
                         }
+                        entities.add(newEntities[i]);
                     }
                     entities.resumeEvents();
 
@@ -2435,12 +2435,21 @@ define([
             var entityCollection = dataSource._entityCollection;
             var newEntities = newEntityCollection.values;
 
+            function removeChildren(entity) {
+                entityCollection.remove(entity);
+                var children = entity._children;
+                var count = children.length;
+                for(var i=0;i<count;++i) {
+                    removeChildren(children[i]);
+                }
+            }
+
             // Remove old entities
             var entitiesCopy = entityCollection.values.slice();
             for (var i=0;i<entitiesCopy.length;++i) {
                 if (entitiesCopy[i].parent === networkLinkEntity) {
                     entitiesCopy[i].parent = undefined;
-                    entityCollection.remove(entitiesCopy[i]);
+                    removeChildren(entitiesCopy[i]);
                 }
             }
 
@@ -2449,8 +2458,8 @@ define([
             for (i = 0; i < newEntities.length; i++) {
                 if (!defined(newEntities[i].parent)) {
                     newEntities[i].parent = networkLinkEntity;
-                    entityCollection.add(newEntities[i]);
                 }
+                entityCollection.add(newEntities[i]);
             }
             entityCollection.resumeEvents();
 

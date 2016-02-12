@@ -2867,7 +2867,7 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Link>\
-              <href>./Data/KML/simple.kml</href>\
+              <href>./Data/KML/refresh.kml</href>\
               <refreshMode>onInterval</refreshMode>\
               <refreshInterval>1</refreshInterval>\
             </Link>\
@@ -2875,10 +2875,13 @@ defineSuite([
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(2);
-            expect(entities[0].id).toEqual('link');
-            var e1 = entities[1];
-            expect(e1.parent).toBe(entities[0]);
+            expect(entities.length).toEqual(3);
+            var link1 = entities[0];
+            var folder1 = entities[1];
+            var placemark1 = entities[2];
+            expect(link1.id).toEqual('link');
+            expect(folder1.parent).toBe(link1);
+            expect(placemark1.parent).toBe(folder1);
 
             var spy = jasmine.createSpy('refreshEvent');
             dataSource.refreshEvent.addEventListener(spy);
@@ -2887,13 +2890,18 @@ defineSuite([
                 dataSource.update(0);
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/simple.kml');
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml');
 
-                expect(entities.length).toEqual(2);
-                expect(entities[0].id).toEqual('link');
-                var e2 = entities[1];
-                expect(e2.parent).toBe(entities[0]);
-                expect(e2).not.toEqual(e1);
+                expect(entities.length).toEqual(3);
+                var link2 = entities[0];
+                var folder2 = entities[1];
+                var placemark2 = entities[2];
+                expect(link2.id).toEqual('link');
+                expect(folder2.parent).toBe(link2);
+                expect(placemark2.parent).toBe(folder2);
+                expect(link2).toEqual(link2);
+                expect(folder2).not.toEqual(folder1);
+                expect(placemark2).not.toEqual(placemark1);
             });
         });
     });
@@ -2902,17 +2910,20 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Link>\
-              <href>./Data/KML/expires.kml</href>\
+              <href>./Data/KML/refresh.kml</href>\
               <refreshMode>onExpire</refreshMode>\
             </Link>\
           </NetworkLink>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(2);
-            expect(entities[0].id).toEqual('link');
-            var e1 = entities[1];
-            expect(e1.parent).toBe(entities[0]);
+            expect(entities.length).toEqual(3);
+            var link1 = entities[0];
+            var folder1 = entities[1];
+            var placemark1 = entities[2];
+            expect(link1.id).toEqual('link');
+            expect(folder1.parent).toBe(link1);
+            expect(placemark1.parent).toBe(folder1);
 
             var spy = jasmine.createSpy('refreshEvent');
             dataSource.refreshEvent.addEventListener(spy);
@@ -2921,13 +2932,18 @@ defineSuite([
             return pollToPromise(function() {
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/expires.kml');
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml');
 
-                expect(entities.length).toEqual(2);
-                expect(entities[0].id).toEqual('link');
-                var e2 = entities[1];
-                expect(e2.parent).toBe(entities[0]);
-                expect(e2).not.toEqual(e1);
+                expect(entities.length).toEqual(3);
+                var link2 = entities[0];
+                var folder2 = entities[1];
+                var placemark2 = entities[2];
+                expect(link2.id).toEqual('link');
+                expect(folder2.parent).toBe(link2);
+                expect(placemark2.parent).toBe(folder2);
+                expect(link2).toEqual(link2);
+                expect(folder2).not.toEqual(folder1);
+                expect(placemark2).not.toEqual(placemark1);
             });
         });
     });
@@ -2936,7 +2952,7 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Link>\
-              <href>./Data/KML/simple.kml</href>\
+              <href>./Data/KML/refresh.kml</href>\
               <viewRefreshMode>onStop</viewRefreshMode>\
             </Link>\
           </NetworkLink>';
@@ -2958,10 +2974,13 @@ defineSuite([
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
-            expect(entities.length).toEqual(2);
-            expect(entities[0].id).toEqual('link');
-            var e1 = entities[1];
-            expect(e1.parent).toBe(entities[0]);
+            expect(entities.length).toEqual(3);
+            var link1 = entities[0];
+            var folder1 = entities[1];
+            var placemark1 = entities[2];
+            expect(link1.id).toEqual('link');
+            expect(folder1.parent).toBe(link1);
+            expect(placemark1.parent).toBe(folder1);
 
             var spy = jasmine.createSpy('refreshEvent');
             dataSource.refreshEvent.addEventListener(spy);
@@ -2973,13 +2992,18 @@ defineSuite([
             return pollToPromise(function() {
                 return (spy.calls.count() > 0);
             }).then(function() {
-                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/simple.kml');
+                expect(spy).toHaveBeenCalledWith(dataSource, './Data/KML/refresh.kml');
 
-                expect(entities.length).toEqual(2);
-                expect(entities[0].id).toEqual('link');
-                var e2 = entities[1];
-                expect(e2.parent).toBe(entities[0]);
-                expect(e2).not.toEqual(e1);
+                expect(entities.length).toEqual(3);
+                var link2 = entities[0];
+                var folder2 = entities[1];
+                var placemark2 = entities[2];
+                expect(link2.id).toEqual('link');
+                expect(folder2.parent).toBe(link2);
+                expect(placemark2.parent).toBe(folder2);
+                expect(link2).toEqual(link2);
+                expect(folder2).not.toEqual(folder1);
+                expect(placemark2).not.toEqual(placemark1);
             });
         });
     });

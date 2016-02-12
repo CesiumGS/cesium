@@ -4,6 +4,7 @@
         <expires>2016-01-01T00:00:00Z</expires>
     </NetworkLinkControl>
     <Document>   
+        <Folder>
 	<Placemark>
 	    <Style>
 		<IconStyle>
@@ -16,6 +17,7 @@
 	    <Point>
 	        <coordinates>1,2,3</coordinates>
 	    </Point>
-	</Placemark>
+        </Placemark>
+        </Folder>
     </Document>
 </kml>
