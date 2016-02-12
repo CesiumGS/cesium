@@ -1939,50 +1939,52 @@ define([
             executeComputeCommands(scene);
             executeViewportCommands(scene, passState);
         } else {
-            /*
             var projection = scene.mapProjection;
             var maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
 
             var savedCamera = camera;
-            var frustum = savedCamera.frustum;
+            var frustum = savedCamera.frustum.clone();
 
-            var farthestWest = ((savedCamera.position.x - frustum.left) % maxCoord.x) - maxCoord.x;
-            //if (farthestWest < 0.0) {
-                //var leftCamera = Camera.clone(savedCamera, new Camera(scene));
-                //leftCamera.frustum = frustum.clone();
+            var x = camera.position.x;
 
-                //leftCamera.position.x = maxCoord.x + farthestWest * 0.5;
-                //leftCamera.frustum.left = farthestWest * 0.5;
-                //leftCamera.frustum.right = -leftCamera.frustum.left;
-
-                //scene._camera = leftCamera;
-                //frameState.camera = leftCamera;
-
+            if (x >= 0.0) {
                 var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
                 var projectionMatrix = camera.frustum.projectionMatrix;
 
-                //var x = -maxCoord.x * Math.floor(Math.abs(savedCamera.position.x) / maxCoord.x) - maxCoord.x;
-                //var x = -maxCoord.x * Math.floor((savedCamera.position.x + maxCoord.x) / (2.0 * maxCoord.x)) - maxCoord.x;
-                //var x = -2.0 * maxCoord.x * (Math.floor(savedCamera.position.x / (2.0 * maxCoord.x)) + 1.0);
-                //x = x - savedCamera.position.x;
-
-                var x = ((savedCamera.position.x + maxCoord.x) % (2.0 * maxCoord.x)) - maxCoord.x;
-                x = farthestWest - x;
-
-                var eyePoint = new Cartesian3(x, 0.0, -savedCamera.position.z);
+                var eyePoint = new Cartesian3(maxCoord.x - x, 0.0, -camera.position.z);
                 var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
-            console.log(windowCoordinates.x);
-            //}
-            */
+                viewport.x = 0;
+                viewport.y = 0;
+                viewport.width = windowCoordinates.x;
+                viewport.height = context.drawingBufferHeight;
 
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-            executeComputeCommands(scene);
-            executeViewportCommands(scene, passState);
+                camera.frustum.right = maxCoord.x - x;
+
+                updatePrimitives(scene);
+                createPotentiallyVisibleSet(scene);
+                updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+                executeComputeCommands(scene);
+                executeCommands(scene, passState);
+
+                viewport.x = windowCoordinates.x;
+
+                camera.position.x = -camera.position.x;
+
+                var right = camera.frustum.right;
+                camera.frustum.right = -camera.frustum.left;
+                camera.frustum.left = -right;
+
+                frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+
+                updatePrimitives(scene);
+                createPotentiallyVisibleSet(scene);
+                executeCommands(scene, passState);
+
+                camera.position.x = x;
+                camera.frustum = frustum.clone();
+            }
         }
-
 
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
