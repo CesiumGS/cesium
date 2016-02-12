@@ -3327,4 +3327,20 @@ defineSuite([
             expect(consoleMessages[0]).toEqual('KML - Unsupported feature: Tour');
         });
     });
+
+    it('NetworkLink: onExpire without an expires shows warning', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
+            expect(consoleMessages.length).toEqual(1);
+            expect(consoleMessages[0]).toEqual('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
 });

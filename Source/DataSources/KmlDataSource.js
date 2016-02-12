@@ -1953,21 +1953,24 @@ define([
                             networkLinkInfo.refreshMode = RefreshMode.INTERVAL;
                             networkLinkInfo.time = refreshInterval;
                         } else if (refreshMode === 'onExpire') {
+                            var expires;
                             if (hasNetworkLinkControl) {
-                                var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
-                                if (defined(expires)) {
-                                    try {
-                                        var date = JulianDate.fromIso8601(expires);
-                                        var diff = JulianDate.secondsDifference(date, now);
-                                        if (diff > 0 && diff < minRefreshPeriod) {
-                                            JulianDate.addSeconds(now, minRefreshPeriod, date);
-                                        }
-                                        networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
-                                        networkLinkInfo.time = date;
-                                    } catch (e) {
-                                        // Invalid date/time - Ignore it
+                                expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
+                            }
+                            if (defined(expires)) {
+                                try {
+                                    var date = JulianDate.fromIso8601(expires);
+                                    var diff = JulianDate.secondsDifference(date, now);
+                                    if (diff > 0 && diff < minRefreshPeriod) {
+                                        JulianDate.addSeconds(now, minRefreshPeriod, date);
                                     }
+                                    networkLinkInfo.refreshMode = RefreshMode.EXPIRE;
+                                    networkLinkInfo.time = date;
+                                } catch (e) {
+                                    console.log('KML - NetworkLinkControl expires is not a valid date');
                                 }
+                            } else {
+                                console.log('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                             }
                         } else {
                             if (dataSource._camera) { // Only allow onStop refreshes if we have a camera
@@ -2406,23 +2409,24 @@ define([
                     networkLink.time = Math.max(minRefreshPeriod, networkLink.time);
                 }
             } else if (refreshMode === RefreshMode.EXPIRE) {
+                var expires;
                 if (defined(networkLinkControl)) {
-                    var expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
-                    if (defined(expires)) {
-                        try {
-                            var date = JulianDate.fromIso8601(expires);
-                            var diff = JulianDate.secondsDifference(date, now);
-                            if (diff > 0 && diff < minRefreshPeriod) {
-                                JulianDate.addSeconds(now, minRefreshPeriod, date);
-                            }
-                            networkLink.time = date;
-                        } catch (e) {
-                            remove = true;
+                    expires = queryStringValue(networkLinkControl, 'expires', namespaces.kml);
+                }
+                if (defined(expires)) {
+                    try {
+                        var date = JulianDate.fromIso8601(expires);
+                        var diff = JulianDate.secondsDifference(date, now);
+                        if (diff > 0 && diff < minRefreshPeriod) {
+                            JulianDate.addSeconds(now, minRefreshPeriod, date);
                         }
-                    } else {
+                        networkLink.time = date;
+                    } catch (e) {
+                        console.log('KML - NetworkLinkControl expires is not a valid date');
                         remove = true;
                     }
                 } else {
+                    console.log('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
                     remove = true;
                 }
             }
