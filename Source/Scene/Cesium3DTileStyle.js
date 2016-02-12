@@ -19,7 +19,7 @@ define([
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
-        ConstantColorExpression,
+        LiteralColorExpression,
         LiteralBooleanExpression) {
     'use strict';
 
@@ -53,7 +53,7 @@ define([
 
         var color;
         if (typeof(colorExpression) === 'string') {
-            color = new ConstantColorExpression(styleEngine, colorExpression);
+            color = new LiteralColorExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.map)) {
             color = new ColorMapExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.intervals)) {

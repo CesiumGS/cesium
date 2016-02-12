@@ -81,7 +81,7 @@ define([
 
             //>>includeStart('debug', pragmas.debug);
             if (!defined(c)) {
-                throw new DeveloperError('color must be defined');
+                throw new DeveloperError('color must be a valid CSS string');
             }
             //>>includeEnd('debug');
 

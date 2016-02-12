@@ -25,8 +25,8 @@ define([
         var color = Color.fromCssColorString(literal);
 
         //>>includeStart('debug', pragmas.debug);
-        if (color === undefined) {
-            throw new DeveloperError('color must be defined');
+        if (!defined(color)) {
+            throw new DeveloperError('color must be a valid CSS string');
         }
         //>>includeEnd('debug');
 
@@ -44,7 +44,7 @@ define([
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(value)) {
-                    throw new DeveloperError('color is required.');
+                    throw new DeveloperError('color must be a valid CSS string');
                 }
                 //>>includeEnd('debug');
 
