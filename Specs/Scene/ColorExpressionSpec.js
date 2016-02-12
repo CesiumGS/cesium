@@ -46,7 +46,7 @@ defineSuite([
         expect(MockStyleEngine.prototype.makeDirty).toHaveBeenCalled();
     });
 
-    it('does not marks style engine dirty', function() {
+    it('does not mark style engine dirty', function() {
         spyOn(MockStyleEngine.prototype, 'makeDirty');
 
         var expression = new ColorExpression(new MockStyleEngine(), 'colorProperty');
