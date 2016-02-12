@@ -10,6 +10,13 @@ Change Log
 * Added `Camera.flyHome` function for resetting the camera to the home view
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 * Fixed texture coordinates for polygon with position heights
+* Improved KML support
+    * Added support for `NetworkLink` refresh modes `onInterval`, `onExpire` and `onStop`. Includes support for `viewboundScale`, `viewFormat`, `httpQuery`.
+    * Added partial support for `NetworkLinkControl` including `minRefreshPeriod`, `cookie` and `expires`.
+    * Added support for local `StyleMap`. The `highlight` style is still ignored.
+    * Added support for `root://` URLs.
+    * Added more warnings for unsupported features.
+* Added owner property to `CompositeEntityCollection`.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
