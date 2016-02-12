@@ -1640,84 +1640,22 @@ define([
         STOP : 2
     };
 
-    var scratchCartesian2_1 = new Cartesian2();
-    var scratchCartesian3_1 = new Cartesian3();
-    var scratchCartesian3_2 = new Cartesian3();
-    var scratchCartesian3_3 = new Cartesian3();
-    var scratchCartesian3_4 = new Cartesian3();
     var scratchCartographic = new Cartographic();
-    var horizonPoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-
-    function computeHorizonQuad(camera) {
-        var ellipsoid = Ellipsoid.WGS84;
-        var radii = ellipsoid.radii;
-        var p = camera.positionWC;
-
-        // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = Cartesian3.multiplyComponents(ellipsoid.oneOverRadii, p, scratchCartesian3_1);
-
-        var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
-
-        // Determine the east and north directions at q.
-        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3_3), scratchCartesian3_3);
-        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
-
-        // Determine the radius of the 'limb' of the ellipsoid.
-        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
-
-        // Compute the center and offsets.
-        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian3_1);
-        var scalar = wMagnitude / qMagnitude;
-        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian3_2);
-        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3_3);
-
-        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = Cartesian3.add(center, northOffset, horizonPoints[0]);
-        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
-        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
-
-        var lowerLeft = Cartesian3.subtract(center, northOffset, horizonPoints[1]);
-        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
-        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
-
-        var upperRight = Cartesian3.add(center, northOffset, horizonPoints[2]);
-        Cartesian3.add(upperRight, eastOffset, upperRight);
-        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
-
-        var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[3]);
-        Cartesian3.add(lowerRight, eastOffset, lowerRight);
-        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
-
-        return horizonPoints;
-    }
-
-
-    function computeViewRectangle(camera, canvas) {
-        if (!defined(camera) || !defined(canvas)) {
+    function computeViewRectangle(camera) {
+        if (!defined(camera)) {
             return Rectangle.MAX_VALUE;
         }
 
-        var wgs84 = Ellipsoid.WGS84;
-
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        computeHorizonQuad(camera);
+        var region = camera.computeViewRegion();
+        if (!defined(region)) {
+            return Rectangle.MAX_VALUE;
+        }
 
         var result;
-        var count = 0;
-        function addToResult(x, y, index) {
-            scratchCartesian2_1.x = x;
-            scratchCartesian2_1.y = y;
-            var r = camera.pickEllipsoid(scratchCartesian2_1, wgs84, new Cartesian3());
-            if (defined(r)) {
-                wgs84.cartesianToCartographic(r, scratchCartographic);
-                ++count;
-            } else {
-                wgs84.cartesianToCartographic(horizonPoints[index], scratchCartographic);
-            }
-
+        var ellipsoid = Ellipsoid.WGS84;
+        var count = region.length;
+        for(var i=0;i<count;++i) {
+            ellipsoid.cartesianToCartographic(region[i], scratchCartographic);
             if (!defined(result)) {
                 result = new Rectangle(scratchCartographic.longitude, scratchCartographic.latitude,
                     scratchCartographic.longitude, scratchCartographic.latitude);
@@ -1726,16 +1664,6 @@ define([
             }
         }
 
-        addToResult(0, 0, 0);
-        addToResult(0, height, 1);
-        addToResult(width, 0, 2);
-        addToResult(width, height, 3);
-
-        if (count === 0 || count === 1) {
-            // If we have space non-globe in 3 or 4 corners then retrn the whole globe
-            return Rectangle.MAX_VALUE;
-        }
-        
         return result;
     }
 
@@ -1762,6 +1690,8 @@ define([
         return result;
     }
 
+    var scratchCartesian2 = new Cartesian2();
+    var scratchCartesian3 = new Cartesian3();
     function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
         function fixLatitude(value) {
             if (value < -CesiumMath.PI_OVER_TWO) {
@@ -1787,11 +1717,11 @@ define([
             var centerCartesian;
             var centerCartographic;
 
-            bbox = defaultValue(bbox, computeViewRectangle(camera, canvas));
+            bbox = defaultValue(bbox, computeViewRectangle(camera));
             if (defined(canvas)) {
-                scratchCartesian2_1.x = canvas.clientWidth * 0.5;
-                scratchCartesian2_1.y = canvas.clientHeight * 0.5;
-                centerCartesian = camera.pickEllipsoid(scratchCartesian2_1, wgs84, scratchCartesian3_1);
+                scratchCartesian2.x = canvas.clientWidth * 0.5;
+                scratchCartesian2.y = canvas.clientHeight * 0.5;
+                centerCartesian = camera.pickEllipsoid(scratchCartesian2, wgs84, scratchCartesian3);
             }
 
             if (defined(centerCartesian)) {
@@ -2223,7 +2153,7 @@ define([
             position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
             direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
             up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-            bbox : computeViewRectangle(camera, canvas)
+            bbox : computeViewRectangle(camera)
         };
     }
 
@@ -2556,7 +2486,7 @@ define([
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
             lastCameraView.direction = Cartesian3.clone(camera.directionWC);
             lastCameraView.up = Cartesian3.clone(camera.upWC);
-            lastCameraView.bbox = computeViewRectangle(camera, this._canvas);
+            lastCameraView.bbox = computeViewRectangle(camera);
             cameraViewUpdate = true;
         }
 
