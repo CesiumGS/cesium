@@ -16,7 +16,7 @@ Change Log
     * Added support for local `StyleMap`. The `highlight` style is still ignored.
     * Added support for `root://` URLs.
     * Added more warnings for unsupported features.
-* Added owner property to `CompositeEntityCollection`.
+* Added `owner` property to `CompositeEntityCollection`.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
