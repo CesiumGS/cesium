@@ -19,7 +19,7 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ConstantColorExpression(styleEngine, literal) {
+    function LiteralColorExpression(styleEngine, literal) {
         this._styleEngine = styleEngine;
 
         var color = Color.fromCssColorString(literal);
@@ -33,7 +33,7 @@ define([
         this._color = color;
     }
 
-    defineProperties(ConstantColorExpression.prototype, {
+    defineProperties(LiteralColorExpression.prototype, {
         /**
          * DOC_TBA
          */
@@ -59,9 +59,9 @@ define([
     /**
      * DOC_TBA
      */
-    ConstantColorExpression.prototype.evaluate = function(feature) {
+    LiteralColorExpression.prototype.evaluate = function(feature) {
         return this._color;
     };
 
-    return ConstantColorExpression;
+    return LiteralColorExpression;
 });

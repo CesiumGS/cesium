@@ -8,7 +8,7 @@ define([
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
-       './ConstantColorExpression',
+       './LiteralColorExpression',
        './LiteralBooleanExpression'
     ], function(
         defaultValue,
