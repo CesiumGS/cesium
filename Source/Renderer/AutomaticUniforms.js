@@ -1452,6 +1452,38 @@ define([
             getValue : function(uniformState) {
                 return uniformState.fogDensity;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map depth texture.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapTexture
+         * @glslUniform
+         */
+        czm_sunShadowMapTexture : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapTexture;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map matrix.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapMatrix
+         * @glslUniform
+         */
+        czm_sunShadowMapMatrix : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_MAT4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapMatrix;
+            }
         })
     };
 

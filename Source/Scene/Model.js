@@ -53,7 +53,8 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMap'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -108,7 +109,8 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode) {
+        SceneMode,
+        ShadowMap) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -556,6 +558,16 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
+
+        /**
+         * DOC_TBA
+         */
+        this.receiveShadows = true;
+
+        /**
+         * @DOC_TBA
+         */
+        this.castShadows = true;
     }
 
     defineProperties(Model.prototype, {
@@ -1461,7 +1473,8 @@ define([
         return shader;
     }
 
-    function createProgram(id, model, context) {
+    function createProgram(id, model, frameState) {
+        var context = frameState.context;
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[id];
@@ -1472,6 +1485,12 @@ define([
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        // TODO : handle updating these properties at runtime
+        if (frameState.shadowsEnabled && model.receiveShadows) {
+            drawVS = ShadowMap.createReceiveShadowsVertexShader(drawVS);
+            drawFS = ShadowMap.createReceiveShadowsFragmentShader(drawFS);
+        }
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1509,7 +1528,7 @@ define([
         }
     }
 
-    function createPrograms(model, context) {
+    function createPrograms(model, frameState) {
         var loadResources = model._loadResources;
         var id;
 
@@ -1527,13 +1546,13 @@ define([
             // Create one program per frame
             if (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+                createProgram(id, model, frameState);
             }
         } else {
             // Create all loaded programs this frame
             while (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+                createProgram(id, model, frameState);
             }
         }
     }
@@ -2733,7 +2752,7 @@ define([
             }
         } else {
             createBuffers(model, context); // using glTF bufferViews
-            createPrograms(model, context);
+            createPrograms(model, frameState);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
             createTextures(model, context);

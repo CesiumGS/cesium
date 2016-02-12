@@ -162,6 +162,12 @@ define([
         * @type {Number}
         */
         this.terrainExaggeration = 1.0;
+
+        /**
+        * Whether shadow mapping is enabled or not.
+        * @type {Boolean}
+        */
+        this.shadowsEnabled = false;
     }
 
     /**

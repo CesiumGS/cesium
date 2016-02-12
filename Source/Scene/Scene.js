@@ -59,6 +59,7 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
+        './ShadowMap',
         './SunPostProcess',
         './TweenCollection'
     ], function(
@@ -121,6 +122,7 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
+        ShadowMap,
         SunPostProcess,
         TweenCollection) {
     'use strict';
@@ -532,6 +534,12 @@ define([
          * @type {Fog}
          */
         this.fog = new Fog();
+
+        /**
+         * Render shadows in the scene.
+         * @type {ShadowMap}
+         */
+        this.sunShadowMap = new ShadowMap(context, new Camera(this));
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1075,6 +1083,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
+        frameState.shadowsEnabled = scene.sunShadowMap.enabled;
 
         clearPasses(frameState.passes);
     }
@@ -1632,13 +1641,48 @@ define([
         }
     }
 
+    function executeShadowMapCommands(scene) {
+        var context = scene.context;
+        var uniformState = context.uniformState;
+        var shadowMap = scene.sunShadowMap;
+        var renderState = shadowMap.renderState;
+        var passState = shadowMap.passState;
+
+        // Clear shadow depth
+        shadowMap.clearCommand.execute(context);
+
+        // Render from the shadow's camera
+        uniformState.updateCamera(shadowMap.camera);
+
+        var shadowMapCommands = scene._frustumCommandsList[0]; // TODO : temporary solution
+        if (defined(shadowMapCommands)) {
+            // TODO : Execute only opaque and translucent commands for now.
+            var startPass = Pass.OPAQUE;
+            var endPass = Pass.TRANSLUCENT;
+            for (var pass = startPass; pass < endPass; ++pass) {
+                var commands = shadowMapCommands.commands[pass];
+                var length = shadowMapCommands.indices[pass];
+                for (var i = 0; i < length; ++i) {
+                    var command = commands[i];
+                    // TODO : Use the shader as-is for now since color mask is false. Later will need a specific shadow cast shader.
+                    //var shaderProgram = shadowMap.createShadowCastProgram(command.shaderProgram);
+                    //executeCommand(command, scene, context, passState, renderState, shaderProgram);
+                    executeCommand(command, scene, context, passState, renderState);
+                }
+            }
+        }
+    }
+
     function executeViewportCommands(scene, passState) {
         var context = scene._context;
 
         var viewport = passState.viewport;
 
+        var uniformState = context.uniformState;
         var frameState = scene._frameState;
         var camera = frameState.camera;
+
+        uniformState.updateCamera(camera);
 
         if (scene._useWebVR) {
             if (frameState.mode !== SceneMode.SCENE2D) {
@@ -1910,7 +1954,12 @@ define([
 
         scene.fog.update(frameState);
 
-        us.update(frameState);
+        var shadowMap = scene.sunShadowMap;
+        if (shadowMap.enabled) {
+            shadowMap.update(frameState);
+        }
+
+        us.update(frameState, shadowMap);
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
@@ -1931,6 +1980,12 @@ define([
         createPotentiallyVisibleSet(scene);
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeComputeCommands(scene);
+
+        if (shadowMap.enabled) {
+            // TODO : collect shadow map commands here
+            executeShadowMapCommands(scene);
+        }
+
         executeViewportCommands(scene, passState);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);

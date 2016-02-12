@@ -148,6 +148,8 @@ define([
         this._resolutionScale = 1.0;
 
         this._fogDensity = undefined;
+
+        this.shadowMap = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -846,6 +848,23 @@ define([
     }
 
     /**
+     * Synchronizes the frustum's state with the camera state.  This is called
+     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+     * are set to the right value.
+     *
+     * @param {Object} camera The camera to synchronize with.
+     */
+    UniformState.prototype.updateCamera = function(camera) {
+        setView(this, camera.viewMatrix);
+        setInverseView(this, camera.inverseViewMatrix);
+        setCamera(this, camera);
+
+        this._entireFrustum.x = camera.frustum.near;
+        this._entireFrustum.y = camera.frustum.far;
+        this.updateFrustum(camera.frustum);
+    };
+
+    /**
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
@@ -876,8 +895,9 @@ define([
      * are set to the right value.
      *
      * @param {FrameState} frameState The frameState to synchronize with.
+     * @param {ShadowMap} [shadowMap] The shadow map.
      */
-    UniformState.prototype.update = function(frameState) {
+    UniformState.prototype.update = function(frameState, shadowMap) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
@@ -885,10 +905,7 @@ define([
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
-
-        setView(this, camera.viewMatrix);
-        setInverseView(this, camera.inverseViewMatrix);
-        setCamera(this, camera);
+        this.updateCamera(camera);
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
@@ -902,11 +919,9 @@ define([
 
         setSunAndMoonDirections(this, frameState);
 
-        this._entireFrustum.x = camera.frustum.near;
-        this._entireFrustum.y = camera.frustum.far;
-        this.updateFrustum(camera.frustum);
-
         this._fogDensity = frameState.fog.density;
+
+        this.shadowMap = shadowMap;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
