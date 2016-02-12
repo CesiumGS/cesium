@@ -1634,9 +1634,59 @@ define([
         STOP : 2
     };
 
-    var scrathCartesian2 = new Cartesian2();
-    var scrathCartesian3 = new Cartesian3();
-    var scratchCartograhic = new Cartographic();
+    var scratchCartesian2_1 = new Cartesian2();
+    var scratchCartesian3_1 = new Cartesian3();
+    var scratchCartesian3_2 = new Cartesian3();
+    var scratchCartesian3_3 = new Cartesian3();
+    var scratchCartesian3_4 = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var horizonPoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+
+    function computeHorizonQuad(camera) {
+        var ellipsoid = Ellipsoid.WGS84;
+        var radii = ellipsoid.radii;
+        var p = camera.positionWC;
+
+        // Find the corresponding position in the scaled space of the ellipsoid.
+        var q = Cartesian3.multiplyComponents(ellipsoid.oneOverRadii, p, scratchCartesian3_1);
+
+        var qMagnitude = Cartesian3.magnitude(q);
+        var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
+
+        // Determine the east and north directions at q.
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3_3), scratchCartesian3_3);
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+
+        // Determine the radius of the 'limb' of the ellipsoid.
+        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
+
+        // Compute the center and offsets.
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian3_1);
+        var scalar = wMagnitude / qMagnitude;
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian3_2);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3_3);
+
+        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
+        var upperLeft = Cartesian3.add(center, northOffset, horizonPoints[0]);
+        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
+        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+
+        var lowerLeft = Cartesian3.subtract(center, northOffset, horizonPoints[1]);
+        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
+        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+
+        var upperRight = Cartesian3.add(center, northOffset, horizonPoints[2]);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+
+        var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[3]);
+        Cartesian3.add(lowerRight, eastOffset, lowerRight);
+        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+
+        return horizonPoints;
+    }
+
+
     function computeViewRectangle(camera, canvas) {
         if (!defined(camera) || !defined(canvas)) {
             return Rectangle.MAX_VALUE;
@@ -1647,35 +1697,39 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
+        computeHorizonQuad(camera);
+
         var result;
         var count = 0;
-        function addToResult(x, y) {
-            scrathCartesian2.x = x;
-            scrathCartesian2.y = y;
-            var r = camera.pickEllipsoid(scrathCartesian2, wgs84, scrathCartesian3);
+        function addToResult(x, y, index) {
+            scratchCartesian2_1.x = x;
+            scratchCartesian2_1.y = y;
+            var r = camera.pickEllipsoid(scratchCartesian2_1, wgs84, new Cartesian3());
             if (defined(r)) {
-                wgs84.cartesianToCartographic(r, scratchCartograhic);
-                if (!defined(result)) {
-                    result = new Rectangle(scratchCartograhic.longitude, scratchCartograhic.latitude,
-                        scratchCartograhic.longitude, scratchCartograhic.latitude);
-                } else {
-                    Rectangle.expand(result, scratchCartograhic, result);
-                }
+                wgs84.cartesianToCartographic(r, scratchCartographic);
                 ++count;
+            } else {
+                wgs84.cartesianToCartographic(horizonPoints[index], scratchCartographic);
+            }
+
+            if (!defined(result)) {
+                result = new Rectangle(scratchCartographic.longitude, scratchCartographic.latitude,
+                    scratchCartographic.longitude, scratchCartographic.latitude);
+            } else {
+                Rectangle.expand(result, scratchCartographic, result);
             }
         }
 
-        addToResult(0, 0);
-        addToResult(0, height);
-        addToResult(width, 0);
-        addToResult(width, height);
+        addToResult(0, 0, 0);
+        addToResult(0, height, 1);
+        addToResult(width, 0, 2);
+        addToResult(width, height, 3);
 
-        // If we are looking at space at all, then just return the whole globe.
-        // This could be better but this is should be fine for now.
-        if (count !== 4) {
+        if (count === 0 || count === 1) {
+            // If we have space non-globe in 3 or 4 corners then retrn the whole globe
             return Rectangle.MAX_VALUE;
         }
-
+        
         return result;
     }
 
@@ -1736,15 +1790,15 @@ define([
 
             bbox = defaultValue(bbox, computeViewRectangle(camera, canvas));
             if (defined(canvas)) {
-                scrathCartesian2.x = canvas.clientWidth * 0.5;
-                scrathCartesian2.y = canvas.clientHeight * 0.5;
-                centerCartesian = camera.pickEllipsoid(scrathCartesian2, wgs84, scrathCartesian3);
+                scratchCartesian2_1.x = canvas.clientWidth * 0.5;
+                scratchCartesian2_1.y = canvas.clientHeight * 0.5;
+                centerCartesian = camera.pickEllipsoid(scratchCartesian2_1, wgs84, scratchCartesian3_1);
             }
 
             if (defined(centerCartesian)) {
-                centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartograhic);
+                centerCartographic = wgs84.cartesianToCartographic(centerCartesian, scratchCartographic);
             } else {
-                centerCartographic = Rectangle.center(bbox, scratchCartograhic);
+                centerCartographic = Rectangle.center(bbox, scratchCartographic);
                 centerCartesian = wgs84.cartographicToCartesian(centerCartographic);
             }
 
@@ -1775,10 +1829,10 @@ define([
             queryString = queryString.replace('[lookatTerrainLat]', lat);
             queryString = queryString.replace('[lookatTerrainAlt]', centerCartographic.height.toString());
 
-            wgs84.cartesianToCartographic(camera.positionWC, scratchCartograhic);
-            queryString = queryString.replace('[cameraLon]', CesiumMath.toDegrees(scratchCartograhic.longitude).toString());
-            queryString = queryString.replace('[cameraLat]', CesiumMath.toDegrees(scratchCartograhic.latitude).toString());
-            queryString = queryString.replace('[cameraAlt]', CesiumMath.toDegrees(scratchCartograhic.height).toString());
+            wgs84.cartesianToCartographic(camera.positionWC, scratchCartographic);
+            queryString = queryString.replace('[cameraLon]', CesiumMath.toDegrees(scratchCartographic.longitude).toString());
+            queryString = queryString.replace('[cameraLat]', CesiumMath.toDegrees(scratchCartographic.latitude).toString());
+            queryString = queryString.replace('[cameraAlt]', CesiumMath.toDegrees(scratchCartographic.height).toString());
 
             var frustum = camera.frustum;
             var aspectRatio = frustum.aspectRatio;
