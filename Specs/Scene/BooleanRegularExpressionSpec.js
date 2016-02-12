@@ -11,9 +11,10 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
-    function Feature() {
+    function MockFeature() {
     }
-    Feature.prototype.getProperty = function() {
+
+    MockFeature.prototype.getProperty = function() {
         return 'hello';
     };
 
@@ -41,7 +42,7 @@ defineSuite([
     });
 
     it('evaluates', function() {
-        var feature = new Feature();
+        var feature = new MockFeature();
         var expression = new BooleanRegularExpression(new MockStyleEngine(), jsonExp);
         expect(expression.evaluate(feature)).toEqual(true);
 
