@@ -8,7 +8,7 @@ define([
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
-       './ColorPropertyExpression',
+       './ColorExpression',
        './ConstantColorExpression',
        './getPropertyName',
        './LiteralBooleanExpression'
@@ -21,7 +21,7 @@ define([
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
-        ColorPropertyExpression,
+        ColorExpression,
         ConstantColorExpression,
         getPropertyName,
         LiteralBooleanExpression) {
@@ -58,7 +58,7 @@ define([
         var color;
         if (typeof(colorExpression) === 'string') {
             if (defined(getPropertyName(colorExpression))) {
-                color = new ColorPropertyExpression(styleEngine, colorExpression);
+                color = new ColorExpression(styleEngine, colorExpression);
             } else {
                 color = new ConstantColorExpression(styleEngine, colorExpression);
             }
