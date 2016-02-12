@@ -769,7 +769,9 @@ define([
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.normalize(camera.right, camera.right);
 
-                camera.frustum = camera3D.frustum.clone();
+                if (defined(camera3D.frustum)) {
+                    camera.frustum = camera3D.frustum.clone();
+                }
             }
 
             var wasMorphing = defined(transitioner._completeMorph);
