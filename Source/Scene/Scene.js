@@ -1945,14 +1945,16 @@ define([
             var savedCamera = camera;
             var frustum = savedCamera.frustum.clone();
 
+            var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
+            var projectionMatrix = camera.frustum.projectionMatrix;
+
             var x = camera.position.x;
+            var eyePoint;
+            var windowCoordinates;
 
             if (x >= 0.0) {
-                var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
-                var projectionMatrix = camera.frustum.projectionMatrix;
-
-                var eyePoint = new Cartesian3(maxCoord.x - x, 0.0, -camera.position.z);
-                var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
+                eyePoint = new Cartesian3(maxCoord.x - x, 0.0, -camera.position.z);
+                windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
                 viewport.x = 0;
                 viewport.y = 0;
@@ -1978,6 +1980,39 @@ define([
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
                 updatePrimitives(scene);
+                createPotentiallyVisibleSet(scene);
+                executeCommands(scene, passState);
+
+                camera.position.x = x;
+                camera.frustum = frustum.clone();
+            } else {
+                eyePoint = new Cartesian3(-maxCoord.x - x, 0.0, -camera.position.z);
+                windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
+
+                viewport.x = windowCoordinates.x;
+                viewport.y = 0;
+                viewport.width = context.drawingBufferWidth - windowCoordinates.x;
+                viewport.height = context.drawingBufferHeight;
+
+                camera.frustum.left = -maxCoord.x - x;
+
+                updatePrimitives(scene);
+                createPotentiallyVisibleSet(scene);
+                updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+                executeComputeCommands(scene);
+                executeCommands(scene, passState);
+
+                viewport.x = viewport.x - viewport.width;
+
+                camera.position.x = -camera.position.x;
+
+                var left = camera.frustum.left;
+                camera.frustum.left = -camera.frustum.right;
+                camera.frustum.right = -left;
+
+                frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+
+                //updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
 
