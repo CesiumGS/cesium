@@ -2738,9 +2738,7 @@ define([
     var scratchCartesian3_4 = new Cartesian3();
     var horizonPoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
-    function computeHorizonQuad(camera) {
-        var projection = camera._projection;
-        var ellipsoid = projection.ellipsoid;
+    function computeHorizonQuad(camera, ellipsoid) {
         var radii = ellipsoid.radii;
         var p = camera.positionWC;
 
@@ -2784,9 +2782,16 @@ define([
     }
 
     var scratchPickCartesian2 = new Cartesian2();
-    Camera.prototype.computeViewRegion = function() {
-        var projection = this._projection;
-        var ellipsoid = projection.ellipsoid;
+
+    /**
+     * Computes the approximate visible bounds of the ellipsoid. This function behaves better the closer the camera is to the ellipsoid.
+     *
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+     *
+     * @returns {Cartesian3[]} The bounds of the visible region on the ellipsoid.
+     */
+    Camera.prototype.computeViewRegion = function(ellipsoid) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var canvas = this._scene.canvas;
         var width = canvas.clientWidth;
@@ -2805,7 +2810,7 @@ define([
                 ++count;
             } else {
                 if (!defined(computedHorizonQuad)) {
-                    computedHorizonQuad = computeHorizonQuad(that);
+                    computedHorizonQuad = computeHorizonQuad(that, ellipsoid);
                 }
                 result.push(Cartesian3.clone(computedHorizonQuad[index]));
             }
@@ -2827,7 +2832,7 @@ define([
         }
 
         return result;
-    }
+    };
 
     /**
      * @private

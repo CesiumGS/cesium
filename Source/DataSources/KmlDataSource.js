@@ -622,7 +622,7 @@ define([
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
             var queryString = makeQueryString(viewFormat, httpQuery, true);
 
-            var icon = joinUrls(href, queryString);
+            var icon = joinUrls(href, queryString, false);
             return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, icon, viewBoundScale);
         }
 
@@ -1508,7 +1508,8 @@ define([
             var length = childNodes.length;
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
-                if (child.localName === featureName) {
+                if (child.localName === featureName &&
+                    ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
                     processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
                 }
             }
@@ -1668,7 +1669,7 @@ define([
     }
 
     function makeQueryString(string1, string2, addQuestionMark) {
-        var result = (addQuestionMark) ? '?' : '';
+        var result = '';
         function addToResult(s) {
             if (defined(s) && s.length > 0) {
                 var sFirst = s.charAt(0);
@@ -1684,8 +1685,11 @@ define([
             }
         }
 
-        addToResult(string1);
-        addToResult(string2);
+        if ((defined(string1) && string1.length > 0) || (defined(string2) && string2.length > 0)) {
+            result = (addQuestionMark) ? '?' : '';
+            addToResult(string1);
+            addToResult(string2);
+        }
 
         return result;
     }
@@ -1835,7 +1839,7 @@ define([
                 var queryString = makeQueryString(viewFormat, httpQuery, false);
 
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString), viewBoundScale);
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString, false), viewBoundScale);
 
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
                     var entities = dataSource._entityCollection;
@@ -1858,6 +1862,7 @@ define([
 
                         var now = JulianDate.now();
                         var networkLinkInfo = {
+                            id : createGuid(),
                             href : href,
                             cookie : '',
                             queryString : queryString,
@@ -1911,7 +1916,7 @@ define([
                         }
 
                         if (defined(networkLinkInfo.refreshMode)) {
-                            dataSource._networkLinks.push(networkLinkInfo);
+                            dataSource._networkLinks.set(networkLinkInfo.id, networkLinkInfo);
                         }
                     } else if (viewRefreshMode === 'onRegion'){
                         console.log('KML - Unsupported viewRefreshMode: onRegion');
@@ -2117,6 +2122,7 @@ define([
      */
     function KmlDataSource(options) {
         var showWarning = false;
+        options = defaultValue(options, {});
         if (defined(options.getURL)) {
             showWarning = true;
             var proxy = options;
@@ -2142,7 +2148,7 @@ define([
         this._proxy = options.proxy;
         this._pinBuilder = new PinBuilder();
         this._promises = [];
-        this._networkLinks = [];
+        this._networkLinks = new AssociativeArray();
 
         var camera = options.camera;
         var canvas = options.canvas;
@@ -2337,6 +2343,11 @@ define([
 
     function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks) {
         return function(rootElement) {
+            if (!networkLinks.contains(networkLink.id)) {
+                // Got into the odd case where a parent network link was updated while a child
+                //  network link update was in flight, so just throw it away.
+                return;
+            }
             var remove = false;
             var networkLinkControl = queryFirstNode(rootElement, 'NetworkLinkControl', namespaces.kml);
             var hasNetworkLinkControl = defined(networkLinkControl);
@@ -2346,7 +2357,7 @@ define([
                 if (defined(queryFirstNode(networkLinkControl, 'Update', namespaces.kml))) {
                     console.log('KML - NetworkLinkControl updates aren\'t supported.');
                     networkLink.updating = false;
-                    networkLinks.splice(networkLinks.indexOf(networkLink), 1);
+                    networkLinks.remove(networkLink.id);
                     return;
                 }
                 networkLink.cookie = defaultValue(queryStringValue(networkLinkControl, 'cookie', namespaces.kml), '');
@@ -2405,20 +2416,22 @@ define([
                     removeChildren(entityToRemove);
                 }
             }
+            entityCollection.resumeEvents();
 
             // Add new entities
+            entityCollection.suspendEvents();
             for (i = 0; i < newEntities.length; i++) {
                 var newEntity = newEntities[i];
                 if (!defined(newEntity.parent)) {
                     newEntity.parent = networkLinkEntity;
                 }
-                entityCollection.add(newEntities[i]);
+                entityCollection.add(newEntity);
             }
             entityCollection.resumeEvents();
 
             // No refresh information remove it, otherwise update lastUpdate time
             if (remove) {
-                networkLinks.splice(networkLinks.indexOf(networkLink), 1);
+                networkLinks.remove(networkLink.id);
             } else {
                 networkLink.lastUpdated = now;
             }
@@ -2490,9 +2503,9 @@ define([
             cameraViewUpdate = true;
         }
 
-        var newNetworkLinks = [];
+        var newNetworkLinks = new AssociativeArray();
         var changed = false;
-        networkLinks.forEach(function(networkLink) {
+        networkLinks.values.forEach(function(networkLink) {
             var entity = networkLink.entity;
             if (entitiesToIgnore.contains(entity.id)) {
                 return;
@@ -2525,14 +2538,14 @@ define([
                     recurseIgnoreEntities(entity);
                     networkLink.updating = true;
                     var newEntityCollection = new EntityCollection();
-                    var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString, true));
+                    var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString, true), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href)
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks));
                     changed = true;
                 }
             }
-            newNetworkLinks.push(networkLink);
+            newNetworkLinks.set(networkLink.id, networkLink);
         });
 
         if (changed) {

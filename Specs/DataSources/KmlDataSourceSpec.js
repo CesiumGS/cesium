@@ -2968,6 +2968,10 @@ defineSuite([
                 frustum : {
                     aspectRatio : 1.0,
                     fov : CesiumMath.PI_OVER_FOUR
+                },
+                computeViewRegion : function() {
+                    var cartesian = new Cartesian3();
+                    return [cartesian, cartesian, cartesian, cartesian];
                 }
             }
         };
