@@ -1,7 +1,7 @@
 /*global define*/
 define([
        '../Core/defineProperties',
-        '../ThirdParty/jsep',
+       '../ThirdParty/jsep',
     ], function(
         defineProperties,
         jsep) {
