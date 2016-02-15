@@ -45,8 +45,6 @@ define([
                 if (this._propertyName !== value) {
                     this._propertyName = value;
                     this._styleEngine.makeDirty();
-
-                    setRuntime(this);
                 }
             }
         },
@@ -59,10 +57,8 @@ define([
                 return this._runtimeMap;
             },
             set : function(value) {
-                this._map = clone(value, true);
+                this._runtimeMap = clone(value, true);
                 this._styleEngine.makeDirty();
-
-                setRuntime(this);
             }
         },
 
@@ -74,11 +70,9 @@ define([
                 return this._runtimeDefault;
             },
             set : function(value) {
-                if (this._default !== value) {
-                    this._default = value;
+                if (!this._runtimeDefault.equals(value)) {
+                    this._runtimeDefault = value;
                     this._styleEngine.makeDirty();
-
-                    setRuntime(this);
                 }
             }
         }

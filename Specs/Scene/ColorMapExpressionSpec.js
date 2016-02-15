@@ -45,8 +45,8 @@ defineSuite([
     it('sets map', function() {
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
         expression.map = {
-            '3' : 'purple',
-            '4' : 'orange'
+            '3' : Color.PURPLE,
+            '4' : Color.ORANGE
         };
         expect(expression.map).toEqual({
             '3' : Color.PURPLE,
@@ -56,7 +56,7 @@ defineSuite([
 
     it('sets default', function() {
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
-        expression.default = 'purple';
+        expression.default = Color.PURPLE;
         expect(expression.default).toEqual(Color.PURPLE);
     });
 
@@ -85,8 +85,8 @@ defineSuite([
 
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
         expression.map = {
-            '3' : 'purple',
-            '4' : 'orange'
+            '3' : Color.PURPLE,
+            '4' : Color.ORANGE
         };
 
         expect(MockStyleEngine.prototype.makeDirty).toHaveBeenCalled();
@@ -96,7 +96,7 @@ defineSuite([
         spyOn(MockStyleEngine.prototype, 'makeDirty');
 
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
-        expression.default = 'orange';
+        expression.default = Color.ORANGE;
 
         expect(MockStyleEngine.prototype.makeDirty).toHaveBeenCalled();
     });
@@ -114,7 +114,7 @@ defineSuite([
         spyOn(MockStyleEngine.prototype, 'makeDirty');
 
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
-        expression.default = 'green';
+        expression.default = Color.GREEN;
 
         expect(MockStyleEngine.prototype.makeDirty).not.toHaveBeenCalled();
     });
