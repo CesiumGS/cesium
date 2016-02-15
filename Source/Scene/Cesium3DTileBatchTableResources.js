@@ -393,11 +393,6 @@ debugger;
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change vertex shader source; the tile was not batched
-            return undefined;
-        }
-
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
@@ -432,11 +427,6 @@ debugger;
     };
 
     Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change fragment shader source; the tile was not batched
-            return undefined;
-        }
-
         return function(source) {
             //TODO: generate entire shader at runtime?
             //var diffuse = 'diffuse = u_diffuse;';
@@ -497,11 +487,6 @@ debugger;
     };
 
     Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change the uniform map; the tile was not batched
-            return undefined;
-        }
-
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
@@ -522,11 +507,6 @@ debugger;
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change vertex shader source; the tile was not batched
-            return undefined;
-        }
-
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
@@ -561,11 +541,6 @@ debugger;
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change fragment shader source; the tile was not batched
-            return undefined;
-        }
-
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
@@ -608,11 +583,6 @@ debugger;
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
-        if (this.featuresLength === 0) {
-            // Do not change the uniform map; the tile was not batched
-            return undefined;
-        }
-
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
