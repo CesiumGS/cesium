@@ -1641,51 +1641,25 @@ define([
         STOP : 2
     };
 
-    var scratchCartographic = new Cartographic();
-    function computeViewRectangle(camera) {
-        if (!defined(camera)) {
-            return Rectangle.MAX_VALUE;
+
+    function cleanupString(s) {
+        if (!defined(s) || s.length === 0) {
+            return '';
         }
 
-        var region = camera.computeViewRegion();
-        if (!defined(region)) {
-            return Rectangle.MAX_VALUE;
+        var sFirst = s[0];
+        if (sFirst === '&') {
+            s.splice(0, 1);
         }
 
-        var result;
-        var ellipsoid = Ellipsoid.WGS84;
-        var count = region.length;
-        for(var i=0;i<count;++i) {
-            ellipsoid.cartesianToCartographic(region[i], scratchCartographic);
-            if (!defined(result)) {
-                result = new Rectangle(scratchCartographic.longitude, scratchCartographic.latitude,
-                    scratchCartographic.longitude, scratchCartographic.latitude);
-            } else {
-                Rectangle.expand(result, scratchCartographic, result);
-            }
+        if(sFirst !== '?') {
+            s = '?' + s;
         }
 
-        return result;
+        return s;
     }
 
     function makeQueryString(string1, string2, addQuestionMark) {
-        function cleanupString(s) {
-            if (!defined(s) || s.length === 0) {
-                return '';
-            }
-
-            var sFirst = s.charAt(0);
-            if (sFirst === '&') {
-                s.splice(0, 1);
-            }
-
-            if(sFirst !== '?') {
-                s = '?' + s;
-            }
-
-            return s;
-        }
-
         var result = '';
         if ((defined(string1) && string1.length > 0) || (defined(string2) && string2.length > 0)) {
             result = (addQuestionMark) ? '?' : '';
@@ -1695,6 +1669,7 @@ define([
         return result;
     }
 
+    var scratchCartographic = new Cartographic();
     var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
     function processNetworkLinkQueryString(camera, canvas, queryString, viewBoundScale, bbox) {
@@ -1722,7 +1697,7 @@ define([
             var centerCartesian;
             var centerCartographic;
 
-            bbox = defaultValue(bbox, computeViewRectangle(camera));
+            bbox = defaultValue(bbox, camera.computeViewRectangle());
             if (defined(canvas)) {
                 scratchCartesian2.x = canvas.clientWidth * 0.5;
                 scratchCartesian2.y = canvas.clientHeight * 0.5;
@@ -1924,6 +1899,8 @@ define([
                     }
                 });
 
+                // _promises is only defined during the initial load to make sure we wait for all
+                //  NetworkLinks to finish loading.
                 if (defined(dataSource._promises)) {
                     dataSource._promises.push(promise);
                 }
@@ -2160,7 +2137,7 @@ define([
             position : defined(camera) ? Cartesian3.clone(camera.positionWC) : undefined,
             direction : defined(camera) ? Cartesian3.clone(camera.directionWC) : undefined,
             up : defined(camera) ? Cartesian3.clone(camera.upWC) : undefined,
-            bbox : computeViewRectangle(camera)
+            bbox : defined(camera) ? camera.computeViewRectangle() : Rectangle.clone(Rectangle.MAX_VALUE)
         };
     }
 
@@ -2500,7 +2477,7 @@ define([
             lastCameraView.position = Cartesian3.clone(camera.positionWC);
             lastCameraView.direction = Cartesian3.clone(camera.directionWC);
             lastCameraView.up = Cartesian3.clone(camera.upWC);
-            lastCameraView.bbox = computeViewRectangle(camera);
+            lastCameraView.bbox = camera.computeViewRectangle();
             cameraViewUpdate = true;
         }
 

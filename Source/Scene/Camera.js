@@ -2770,13 +2770,13 @@ define([
         Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
         Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
 
-        var upperRight = Cartesian3.add(center, northOffset, horizonPoints[2]);
-        Cartesian3.add(upperRight, eastOffset, upperRight);
-        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
-
-        var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[3]);
+        var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[2]);
         Cartesian3.add(lowerRight, eastOffset, lowerRight);
         Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+
+        var upperRight = Cartesian3.add(center, northOffset, horizonPoints[3]);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
 
         return horizonPoints;
     }
@@ -2784,14 +2784,13 @@ define([
     var scratchPickCartesian2 = new Cartesian2();
 
     /**
-     * Computes the approximate visible bounds of the ellipsoid. This function behaves better the closer the camera is to the ellipsoid.
-     * It also won't behave correctly when looking down at the poles.
+     * Computes the approximate visible rectangle on the ellipsoid.
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
      *
-     * @returns {Cartesian3[]} The bounds of the visible region on the ellipsoid.
+     * @returns {Rectangle} The visible rectangle.
      */
-    Camera.prototype.computeViewRegion = function(ellipsoid) {
+    Camera.prototype.computeViewRectangle = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var canvas = this._scene.canvas;
@@ -2800,36 +2799,81 @@ define([
 
         var that = this;
         var computedHorizonQuad;
-        var result = [];
-        var count = 0;
+        var cartographics = [];
+        var successfulPickCount = 0;
         function addToResult(x, y, index) {
             scratchPickCartesian2.x = x;
             scratchPickCartesian2.y = y;
             var r = that.pickEllipsoid(scratchPickCartesian2, ellipsoid, new Cartesian3());
             if (defined(r)) {
-                result.push(r);
-                ++count;
+                cartographics.push(ellipsoid.cartesianToCartographic(r));
+                ++successfulPickCount;
             } else {
                 if (!defined(computedHorizonQuad)) {
                     computedHorizonQuad = computeHorizonQuad(that, ellipsoid);
                 }
-                result.push(Cartesian3.clone(computedHorizonQuad[index]));
+                cartographics.push(ellipsoid.cartesianToCartographic(computedHorizonQuad[index]));
             }
         }
 
         addToResult(0, 0, 0);
         addToResult(0, height, 1);
-        addToResult(width, 0, 2);
-        addToResult(width, height, 3);
+        addToResult(width, height, 2);
+        addToResult(width, 0, 3);
 
-        if (count === 0 || count === 1) {
+        if (successfulPickCount === 0 || successfulPickCount === 1) {
             // If we have space non-globe in 3 or 4 corners then return the whole globe
-            result = [
-                ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, CesiumMath.PI_OVER_TWO)),
-                ellipsoid.cartographicToCartesian(new Cartographic(CesiumMath.PI, -CesiumMath.PI_OVER_TWO)),
-                ellipsoid.cartographicToCartesian(new Cartographic(-CesiumMath.PI, CesiumMath.PI_OVER_TWO)),
-                ellipsoid.cartographicToCartesian(new Cartographic(-CesiumMath.PI, -CesiumMath.PI_OVER_TWO))
-            ];
+            return Rectangle.MAX_VALUE;
+        }
+
+        var i;
+        var point;
+        var north = (cartographics[0].latitude >= 0.0);
+        var cartographicsCount = cartographics.length;
+
+        // If we are in the south pole reverse the points
+        if (!north) {
+            cartographics.reverse();
+        }
+
+        // Detect if we go over the poles
+        var distance = 0;
+        var lastLon = cartographics[cartographicsCount-1].longitude;
+        for (i=0;i<cartographicsCount;++i) {
+            point = cartographics[i];
+            //if ((north && point.latitude < 0.0) || (!north && point.latitude))
+            var lon = point.longitude;
+            var diff = Math.abs(lon - lastLon);
+            if (diff > CesiumMath.PI) {
+                // Crossed the dateline
+                distance += CesiumMath.TWO_PI - diff;
+            } else {
+                distance += diff;
+            }
+
+            lastLon = lon;
+        }
+
+        var result;
+        for(i=0;i<cartographicsCount;++i) {
+            point = cartographics[i];
+            if (!defined(result)) {
+                result = new Rectangle(point.longitude, point.latitude,
+                    point.longitude, point.latitude);
+            } else {
+                Rectangle.expand(result, point, result);
+            }
+        }
+
+        // We are over one of the poles so adjust the rectangle accordingly
+        if (CesiumMath.equalsEpsilon(Math.abs(distance), CesiumMath.TWO_PI, CesiumMath.EPSILON9)) {
+            result.west = -CesiumMath.PI;
+            result.east = CesiumMath.PI;
+            if (north) {
+                result.north = CesiumMath.PI_OVER_TWO;
+            } else {
+                result.south = -CesiumMath.PI_OVER_TWO;
+            }
         }
 
         return result;
