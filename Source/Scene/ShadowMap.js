@@ -16,10 +16,16 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
+        '../Renderer/RenderbufferFormat',
         '../Renderer/RenderState',
+        '../Renderer/Sampler',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
+        '../Renderer/TextureMagnificationFilter',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         './Camera',
         './CullFace',
         './OrthographicFrustum',
@@ -43,10 +49,16 @@ define([
         Framebuffer,
         PassState,
         PixelDatatype,
+        Renderbuffer,
+        RenderbufferFormat,
         RenderState,
+        Sampler,
         ShaderProgram,
         ShaderSource,
         Texture,
+        TextureMagnificationFilter,
+        TextureMinificationFilter,
+        TextureWrap,
         Camera,
         CullFace,
         OrthographicFrustum,
@@ -56,8 +68,6 @@ define([
     "use strict";
 
     // TODO : doc
-    // TODO : handle if depth texture extension is not supported
-
     /**
      * @private
      */
@@ -73,9 +83,12 @@ define([
         this._debugShadowViewCommand = undefined;
 
         this._shadowMapMatrix = new Matrix4();
-        this._depthStencilTexture = undefined;
+        this._shadowMapTexture = undefined;
         this._framebuffer = undefined;
         this._size = 1024; // Width and height of the shadow map in pixels
+
+        // Only enable the color mask if the depth texture extension is not supported
+        var colorMask = !context.depthTexture;
 
         this.renderState = RenderState.fromCache({
             cull : {
@@ -86,10 +99,10 @@ define([
                 enabled : true
             },
             colorMask : {
-                red : false,
-                green : false,
-                blue : false,
-                alpha : false
+                red : colorMask,
+                green : colorMask,
+                blue : colorMask,
+                alpha : colorMask
             },
             depthMask : true,
             viewport : new BoundingRectangle(0, 0, this._size, this._size)
@@ -97,6 +110,7 @@ define([
 
         this.clearCommand = new ClearCommand({
             depth : 1.0,
+            color : new Color(),
             renderState : this.renderState,
             framebuffer : undefined, // Set later
             owner : this
@@ -132,7 +146,7 @@ define([
          */
         shadowMapTexture : {
             get : function() {
-                return this._depthStencilTexture;
+                return this._shadowMapTexture;
             }
         },
         /**
@@ -150,69 +164,102 @@ define([
         }
     });
 
-    function destroyTextures(shadowMap) {
-        shadowMap._depthStencilTexture = shadowMap._depthStencilTexture && !shadowMap._depthStencilTexture.isDestroyed() && shadowMap._depthStencilTexture.destroy();
+    function destroyFramebuffer(shadowMap) {
+        shadowMap._framebuffer = shadowMap._framebuffer && !shadowMap._framebuffer.isDestroyed() && shadowMap._framebuffer.destroy();
     }
 
-    function destroyFramebuffers(shadowMap) {
-        shadowMap.framebuffer = shadowMap.framebuffer && !shadowMap.framebuffer.isDestroyed() && shadowMap.framebuffer.destroy();
+    function createSampler() {
+        return new Sampler({
+            wrapS : TextureWrap.CLAMP_TO_EDGE,
+            wrapT : TextureWrap.CLAMP_TO_EDGE,
+            minificationFilter : TextureMinificationFilter.NEAREST,
+            magnificationFilter : TextureMagnificationFilter.NEAREST
+        });
     }
 
-    function createTextures(shadowMap, context) {
-        // TODO : Use nearest filtering for testing, not default linear.
-        shadowMap._depthStencilTexture = new Texture({
+    function createFramebufferColor(shadowMap, context) {
+        var depthRenderbuffer = new Renderbuffer({
+            context : context,
+            width : shadowMap._size,
+            height : shadowMap._size,
+            format : RenderbufferFormat.DEPTH_COMPONENT16
+        });
+
+        var colorTexture = new Texture({
+            context : context,
+            width : shadowMap._size,
+            height : shadowMap._size,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : createSampler()
+        });
+
+        var framebuffer = new Framebuffer({
+            context : context,
+            depthRenderbuffer : depthRenderbuffer,
+            colorTextures : [colorTexture]
+        });
+
+        shadowMap._shadowMapTexture = colorTexture;
+        return framebuffer;
+    }
+
+    function createFramebufferDepth(shadowMap, context) {
+        var depthStencilTexture = new Texture({
             context : context,
             width : shadowMap._size,
             height : shadowMap._size,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
-            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+            pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
+            sampler : createSampler()
         });
-    }
 
-    function createFramebuffers(shadowMap, context) {
         var framebuffer = new Framebuffer({
             context : context,
-            depthStencilTexture : shadowMap._depthStencilTexture,
-            destroyAttachments : false
+            depthStencilTexture : depthStencilTexture
         });
 
+        shadowMap._shadowMapTexture = depthStencilTexture;
+        return framebuffer;
+    }
+
+    function createFramebuffer(shadowMap, context) {
+        var createFunction = (context.depthTexture) ? createFramebufferDepth : createFramebufferColor;
+        var framebuffer = createFunction(shadowMap, context);
         shadowMap._framebuffer = framebuffer;
         shadowMap.passState.framebuffer = framebuffer;
         shadowMap.clearCommand.framebuffer = framebuffer;
     }
 
-    function updateFramebuffers(shadowMap, context) {
-        var depthStencilTexture = shadowMap._depthStencilTexture;
-        var textureChanged = !defined(depthStencilTexture) || (depthStencilTexture.width !== shadowMap._size);
-        if (!defined(shadowMap.framebuffer) || textureChanged) {
-            destroyTextures(shadowMap);
-            destroyFramebuffers(shadowMap);
-            createTextures(shadowMap, context);
-            createFramebuffers(shadowMap, context);
+    function updateFramebuffer(shadowMap, context) {
+        if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._size)) {
+            destroyFramebuffer(shadowMap);
+            createFramebuffer(shadowMap, context);
         }
     }
 
-    ShadowMap.createShadowCastProgram = function(shaderProgram) {
-        // TODO : unused right now
-        // TODO : vertex shader won't be optimized
-        // TODO : handle mismatched varyings
-        // TODO : handle fragment shaders that discard or write alpha of zero
-        var vs = shaderProgram.vertexShaderText;
-        var fs =
-            'void main()\n' +
-            '{\n' +
-            '    gl_FragColor = vec4(0.0);\n' +
-            '}\n';
+    ShadowMap.createShadowCastVertexShader = function(vs) {
+        // TODO : vertex shader could be optimized by removing all varyings
+        return vs;
+    };
 
-        return ShaderProgram.fromCache({
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : shaderProgram._attributeLocations
-        });
+    ShadowMap.createShadowCastFragmentShader = function(fs, context) {
+        // TODO : optimize for different cases - opaque geometry shader can be very simple and fast, unlike below
+        fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
+        fs +=
+            'void main() \n' +
+            '{ \n' +
+            '    czm_shadow_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '       discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = ' + (context.depthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
+            '}';
+        return fs;
     };
 
     ShadowMap.createReceiveShadowsVertexShader = function(vs) {
-        //TODO: will need to adapt this for GPU RTE, e.g., when there is low and high position attributes.
+        // TODO: will need to adapt this for GPU RTE, e.g., when there is low and high position attributes.
         vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
         vs +=
             'varying vec3 czm_shadowMapCoordinate; \n' +
@@ -224,7 +271,7 @@ define([
         return vs;
     };
 
-    ShadowMap.createReceiveShadowsFragmentShader = function(fs) {
+    ShadowMap.createReceiveShadowsFragmentShader = function(fs, context) {
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
             'varying vec3 czm_shadowMapCoordinate; \n' +
@@ -232,7 +279,11 @@ define([
             '{ \n' +
             '    czm_shadow_main(); \n' +
             '    float depth = czm_shadowMapCoordinate.z; \n' +
-            '    float shadowDepth = texture2D(czm_sunShadowMapTexture, czm_shadowMapCoordinate.xy).r; \n' +
+
+            (context.depthTexture ?
+            '    float shadowDepth = texture2D(czm_sunShadowMapTexture, czm_shadowMapCoordinate.xy).r; \n' :
+            '    float shadowDepth = czm_unpackDepth(texture2D(czm_sunShadowMapTexture, czm_shadowMapCoordinate.xy)); \n') +
+
             '    // TODO : remove if \n' +
             '    if (depth - 0.005 > shadowDepth) { \n' +
             '        gl_FragColor.rgb *= 0.2; \n' +
@@ -249,6 +300,7 @@ define([
 
     function updateDebugShadowViewCommand(shadows, frameState) {
         // Draws the shadow map on the bottom-right corner of the screen
+        var context = frameState.context;
         var screenWidth = frameState.context.drawingBufferWidth;
         var screenHeight = frameState.context.drawingBufferHeight;
         var size = Math.min(screenWidth, screenHeight) * 0.3;
@@ -263,7 +315,11 @@ define([
                 'varying vec2 v_textureCoordinates; \n' +
                 'void main() \n' +
                 '{ \n' +
-                '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' +
+
+                (context.depthTexture ?
+                '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' :
+                '    float shadow = czm_unpackDepth(texture2D(czm_sunShadowMapTexture, v_textureCoordinates)); \n') +
+
                 '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                 '} \n';
 
@@ -272,7 +328,7 @@ define([
                 viewport : new BoundingRectangle(x, y, width, height)
             });
 
-            var drawCommand = frameState.context.createViewportQuadCommand(fs);
+            var drawCommand = context.createViewportQuadCommand(fs);
             drawCommand.renderState = renderState;
             drawCommand.pass = Pass.OVERLAY;
             shadows._debugShadowViewCommand = drawCommand;
@@ -385,7 +441,7 @@ define([
 
         applyDebugSettings(this, frameState);
 
-        updateFramebuffers(this, context);
+        updateFramebuffer(this, context);
 
         // Calculate shadow map matrix. It converts gl_Position to shadow map texture space.
         // TODO : only compute matrix when dirty
@@ -401,8 +457,7 @@ define([
     };
 
     ShadowMap.prototype.destroy = function() {
-        destroyTextures(this);
-        destroyFramebuffers(this);
+        destroyFramebuffer(this);
 
         this._debugLightFrustum = this._debugLightFrustum && this._debugLightFrustum.destroy();
         this._debugLight = this._debugLight && this._debugLight.destroy();

@@ -1664,10 +1664,7 @@ define([
                 var length = shadowMapCommands.indices[pass];
                 for (var i = 0; i < length; ++i) {
                     var command = commands[i];
-                    // TODO : Use the shader as-is for now since color mask is false. Later will need a specific shadow cast shader.
-                    //var shaderProgram = shadowMap.createShadowCastProgram(command.shaderProgram);
-                    //executeCommand(command, scene, context, passState, renderState, shaderProgram);
-                    executeCommand(command, scene, context, passState, renderState);
+                    executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
                 }
             }
         }
