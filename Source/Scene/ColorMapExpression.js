@@ -24,7 +24,7 @@ define([
         this._propertyName = jsonExpression.propertyName;
         this._pattern = new RegExp(jsonExpression.pattern);
         this._map = clone(jsonExpression.map, true);
-        this._default = jsonExpression.default.slice(0);
+        this._default = jsonExpression.default;
 
         this._runtimeMap = undefined;
         this._runtimeDefault = new Color();
@@ -44,8 +44,6 @@ define([
                 if (this._propertyName !== value) {
                     this._propertyName = value;
                     this._styleEngine.makeDirty();
-
-                    setRuntime(this);
                 }
             }
         },
@@ -72,13 +70,11 @@ define([
          */
         map : {
             get : function() {
-                return this._map;
+                return this._runtimeMap;
             },
             set : function(value) {
-                this._map = clone(value, true);
+                this._runtimeMap = clone(value, true);
                 this._styleEngine.makeDirty();
-
-                setRuntime(this);
             }
         },
 
@@ -87,13 +83,13 @@ define([
          */
         default : {
             get : function() {
-                return this._default;
+                return this._runtimeDefault;
             },
             set : function(value) {
-                this._default = value.slice(0);
-                this._styleEngine.makeDirty();
-
-                setRuntime(this);
+                if (!this._runtimeDefault.equals(value)) {
+                    this._runtimeDefault = value;
+                    this._styleEngine.makeDirty();
+                }
             }
         }
     });
