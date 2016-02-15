@@ -1949,13 +1949,16 @@ define([
             var projectionMatrix = camera.frustum.projectionMatrix;
 
             var x = camera.position.x;
-            var eyePoint;
-            var windowCoordinates;
+            var eyePoint = new Cartesian3(Math.sign(x) * maxCoord.x - x, 0.0, -camera.position.z);
+            var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
-            if (x >= 0.0) {
-                eyePoint = new Cartesian3(maxCoord.x - x, 0.0, -camera.position.z);
-                windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
-
+            if (windowCoordinates.x <= 0.0 || windowCoordinates.x > context.drawingBufferWidth) {
+                updatePrimitives(scene);
+                createPotentiallyVisibleSet(scene);
+                updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
+                executeComputeCommands(scene);
+                executeViewportCommands(scene, passState);
+            } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
                 viewport.x = 0;
                 viewport.y = 0;
                 viewport.width = windowCoordinates.x;
@@ -1969,6 +1972,7 @@ define([
                 executeComputeCommands(scene);
                 executeCommands(scene, passState);
 
+                /*
                 viewport.x = windowCoordinates.x;
 
                 camera.position.x = -camera.position.x;
@@ -1982,13 +1986,11 @@ define([
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
+                 */
 
                 camera.position.x = x;
                 camera.frustum = frustum.clone();
             } else {
-                eyePoint = new Cartesian3(-maxCoord.x - x, 0.0, -camera.position.z);
-                windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
-
                 viewport.x = windowCoordinates.x;
                 viewport.y = 0;
                 viewport.width = context.drawingBufferWidth - windowCoordinates.x;
@@ -2002,6 +2004,7 @@ define([
                 executeComputeCommands(scene);
                 executeCommands(scene, passState);
 
+                /*
                 viewport.x = viewport.x - viewport.width;
 
                 camera.position.x = -camera.position.x;
@@ -2015,6 +2018,7 @@ define([
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
+                 */
 
                 camera.position.x = x;
                 camera.frustum = frustum.clone();
