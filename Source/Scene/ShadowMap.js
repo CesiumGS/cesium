@@ -165,7 +165,7 @@ define([
     });
 
     function destroyFramebuffer(shadowMap) {
-        shadowMap.framebuffer = shadowMap.framebuffer && !shadowMap.framebuffer.isDestroyed() && shadowMap.framebuffer.destroy();
+        shadowMap._framebuffer = shadowMap._framebuffer && !shadowMap._framebuffer.isDestroyed() && shadowMap._framebuffer.destroy();
     }
 
     function createSampler() {
@@ -232,7 +232,7 @@ define([
     }
 
     function updateFramebuffer(shadowMap, context) {
-        if (!defined(shadowMap.framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._size)) {
+        if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._size)) {
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
         }
