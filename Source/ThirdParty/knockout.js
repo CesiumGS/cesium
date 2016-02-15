@@ -4,16 +4,18 @@ define([
         './knockout-es5',
         '../Widgets/SvgPathBindingHandler'
     ], function(
-        knockout,
-        knockout_es5,
+        ko,
+        ko_es5,
         SvgPathBindingHandler) {
     "use strict";
-
+    if (window.knockout){
+        return window.knockout
+    }
     // install the Knockout-ES5 plugin
-    knockout_es5.attachToKo(knockout);
+    ko_es5.attachToKo(ko);
 
     // Register all Cesium binding handlers
-    SvgPathBindingHandler.register(knockout);
-
-    return knockout;
+    SvgPathBindingHandler.register(ko);
+    window.knockout = ko;
+    return window.knockout;
 });

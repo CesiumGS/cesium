@@ -101,6 +101,10 @@ gulp.task('buildApps', ['combine', 'minifyRelease'], function() {
     return buildCesiumViewer();
 });
 
+gulp.task('buildZinc', ['build'], function() {
+    return buildZinc();
+});
+
 gulp.task('clean', function(done) {
     async.forEach(filesToClean, rimraf, done);
 });
@@ -840,6 +844,94 @@ function buildCesiumViewer() {
         );
 
         return streamToPromise(stream.pipe(gulp.dest(cesiumViewerOutputDirectory)));
+    });
+
+    return promise;
+}
+
+function buildZinc() {
+    var zincOutputDirectory = 'Build/Apps/Zinc';
+    var zincStartup = path.join(zincOutputDirectory, 'Startup.js');
+    var zincCss = path.join(zincOutputDirectory, 'Content/main.css');
+    mkdirp.sync(zincOutputDirectory);
+
+    var promise = Promise.join(
+        requirejsOptimize({
+            wrap : true,
+            useStrict : true,
+            optimizeCss : 'standard',
+            pragmas : {
+                debug : false
+            },
+            optimize : 'uglify2',
+            mainConfigFile : 'zinc.frontend/Startup.js',
+            name : 'Startup',
+            out : zincStartup
+        }),
+        requirejsOptimize({
+            wrap : true,
+            useStrict : true,
+            optimizeCss : 'standard',
+            pragmas : {
+                debug : false
+            },
+            cssIn : 'zinc.frontend/Content/main.css',
+            out : zincCss
+        })
+    );
+
+    promise = promise.then(function() {
+        var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
+
+        var stream = eventStream.merge(
+            gulp.src(zincStartup)
+                .pipe(gulpInsert.prepend(copyrightHeader))
+                .pipe(gulpReplace('../Source', '.'))
+                .pipe(gulpReplace('../ThirdParty/requirejs-2.1.20', '.')),
+
+            gulp.src(zincCss)
+                .pipe(gulpReplace('../../Source/', ''))
+                .pipe(gulpReplace('../Cesium/', '')),
+
+            gulp.src(['zinc.frontend/start.html'])
+                .pipe(gulpReplace('../ThirdParty/requirejs-2.1.20', '.')),
+
+            gulp.src(['zinc.frontend/**',
+                '!zinc.frontend/start.html',
+                '!zinc.frontend/**/*.js',
+                '!zinc.frontend/**/*.css',
+                '!zinc.frontend/js',
+                '!zinc.frontend/libs',
+                'zinc.frontend/Content/images/**',
+                'zinc.frontend/Content/models/**',
+                '!zinc.frontend/**/*.scss',
+                '!zinc.frontend/**/*.map',
+                '!zinc.frontend/**/*.coffee',
+                '!zinc.frontend/*.coffee'
+            ]),
+
+            gulp.src(['ThirdParty/requirejs-2.1.20/require.min.js'])
+                .pipe(gulpRename('require.js')),
+
+            gulp.src(['Build/Cesium/Assets/**',
+                    'Build/Cesium/Workers/**',
+                    'Build/Cesium/ThirdParty/Workers/**',
+                    'Build/Cesium/Widgets/**',
+                    '!Build/Cesium/Widgets/**/*.css'],
+                {
+                    base : 'Build/Cesium',
+                    nodir : true
+                }),
+
+            gulp.src(['Build/Cesium/Widgets/InfoBox/InfoBoxDescription.css'], {
+                base : 'Build/Cesium'
+            }),
+            gulp.src(['Build/Cesium/Widgets/widgets.css'], {
+                base : 'Build/Cesium'
+            })
+        );
+
+        return streamToPromise(stream.pipe(gulp.dest(zincOutputDirectory)));
     });
 
     return promise;
