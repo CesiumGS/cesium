@@ -2,8 +2,6 @@
 define(function() {
     'use strict';
 
-    // TODO: best name/directory for this?
-
     /**
      * @private
      */

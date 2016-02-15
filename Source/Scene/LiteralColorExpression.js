@@ -11,8 +11,6 @@ define([
         DeveloperError) {
     'use strict';
 
-    // TODO: best name/directory for this?
-
     /**
      * DOC_TBA
      * <p>

@@ -5,7 +5,6 @@ define([
         defineProperties) {
     "use strict";
 
-    // TODO: best name/directory for this?
     // TODO: replace with a real parser/AST
 
     /**

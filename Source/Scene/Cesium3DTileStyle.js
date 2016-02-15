@@ -27,10 +27,6 @@ define([
         LiteralColorExpression) {
     'use strict';
 
-    // TODO: best name/directory for this?  For example, a user may want to evaluate a
-    // style/expression on mouse over, CZML may want to use this to evaluate expressions,
-    // a UI might want to use it, etc.
-
     var DEFAULT_JSON_COLOR_EXPRESSION = "#ffffff";
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 

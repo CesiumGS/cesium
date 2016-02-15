@@ -7,8 +7,6 @@ define([
         jsep) {
     "use strict";
 
-    // TODO: best name/directory for this?
-
     /**
      * DOC_TBA
      */
