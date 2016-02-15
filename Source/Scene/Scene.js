@@ -2012,7 +2012,7 @@ define([
 
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
-                //updatePrimitives(scene);
+                updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
 
