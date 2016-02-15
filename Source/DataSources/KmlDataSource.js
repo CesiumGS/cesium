@@ -1669,26 +1669,27 @@ define([
     }
 
     function makeQueryString(string1, string2, addQuestionMark) {
-        var result = '';
-        function addToResult(s) {
-            if (defined(s) && s.length > 0) {
-                var sFirst = s.charAt(0);
-                if (sFirst === '?' || sFirst === '&') {
-                    s.splice(0, 1);
-                }
-
-                var last = result.slice(-1);
-                if (result.length > 0 && last !== '?' && last !== '&') {
-                    result += '&';
-                }
-                result += s;
+        function cleanupString(s) {
+            if (!defined(s) || s.length === 0) {
+                return '';
             }
+
+            var sFirst = s.charAt(0);
+            if (sFirst === '&') {
+                s.splice(0, 1);
+            }
+
+            if(sFirst !== '?') {
+                s = '?' + s;
+            }
+
+            return s;
         }
 
+        var result = '';
         if ((defined(string1) && string1.length > 0) || (defined(string2) && string2.length > 0)) {
             result = (addQuestionMark) ? '?' : '';
-            addToResult(string1);
-            addToResult(string2);
+            result += joinUrls(cleanupString(string1), cleanupString(string2));
         }
 
         return result;
