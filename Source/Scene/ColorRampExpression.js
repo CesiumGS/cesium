@@ -74,7 +74,15 @@ define([
         var runtimeColors = new Array(length);
 
         for (var i = 0; i < length; ++i) {
-            runtimeColors[i] = Color.fromCssColorString(colors[i]);
+            var c = Color.fromCssColorString(colors[i]);
+
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(c)) {
+                throw new DeveloperError('color must be a valid CSS string');
+            }
+            //>>includeEnd('debug');
+
+            runtimeColors[i] = c;
         }
 
         expression._runtimeColors = runtimeColors;

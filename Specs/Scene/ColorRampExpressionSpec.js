@@ -53,6 +53,26 @@ defineSuite([
         expect(expression.colors).toEqual([Color.PURPLE, Color.ORANGE, Color.GREEN]);
     });
 
+    it('throws error on invalid color', function() {
+        var invalidExp = {
+            'expression' : {
+                'leftOperand' : '${Height}',
+                'operator' : '+',
+                'rightOperand' : 0
+            },
+            'colors' : [
+                'invalidRed'
+            ],
+            'intervals': [
+                5
+            ]
+        };
+
+        expect(function() {
+            return new ColorRampExpression(new MockStyleEngine(), invalidExp);
+        }).toThrowDeveloperError();
+    });
+
     it('sets intervals', function() {
         var expression = new ColorRampExpression(new MockStyleEngine(), jsonExp);
         expression.intervals = [1, 2, 3];
