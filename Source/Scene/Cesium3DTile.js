@@ -389,7 +389,7 @@ define([
          * @readonly
          */
         contentUnloaded : {
-            get : function () {
+            get : function() {
                 return this._content.state === Cesium3DTileContentState.UNLOADED;
             }
         }

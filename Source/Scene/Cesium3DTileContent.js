@@ -63,6 +63,26 @@ define([
          * @private
          */
         this.readyPromise = undefined;
+
+        /**
+         * Gets the batch table texture for this tile.
+         *
+         * @type {Cesium3DTileBatchTableResources}
+         * @readonly
+         *
+         * @private
+         */
+        this.batchTableResources = undefined;
+
+        /**
+         * Gets or sets if any feature's property changed.  Used to
+         * optimized applying a style when a feature's property changed.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.featurePropertiesDirty = false;
     }
 
     defineProperties(Cesium3DTileContent.prototype, {

@@ -105,7 +105,7 @@ define([
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
-        this._newlySelectedTiles = [];
+        this._selectedTilesToStyle = [];
 
         /**
          * Determines if the tileset will be shown.
@@ -607,9 +607,15 @@ define([
             tileset._selectedTiles.push(tile);
             tile.selected = true;
 
-            if (tile.lastFrameNumber !== frameState.frameNumber - 1) {
+            var tileContent = tile.content;
+            if (tileContent.featurePropertiesDirty) {
+                // A feature's property in this tile changed, the tile needs to be re-styled.
+                tileContent.featurePropertiesDirty = false;
+                tile.lastStyleTime = 0; // Force applying the style to this tile
+                tileset._selectedTilesToStyle.push(tile);
+            }  else if ((tile.lastFrameNumber !== frameState.frameNumber - 1)) {
                 // Tile is newly visible; it is visible this frame, but was not visible last frame.
-                tileset._newlySelectedTiles.push(tile);
+                tileset._selectedTilesToStyle.push(tile);
             }
             tile.lastFrameNumber = frameState.frameNumber;
         }
@@ -627,7 +633,7 @@ define([
         var cullingVolume = frameState.cullingVolume;
 
         tileset._selectedTiles.length = 0;
-        tileset._newlySelectedTiles.length = 0;
+        tileset._selectedTilesToStyle.length = 0;
 
         scratchRefiningTiles.length = 0;
 

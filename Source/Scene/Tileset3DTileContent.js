@@ -29,19 +29,13 @@ define([
         this._url = url;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.contentReadyToProcessPromise = when.defer();
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.readyPromise = when.defer();
+        this.batchTableResources = undefined;
+        this.featurePropertiesDirty = false;
     }
 
     defineProperties(Tileset3DTileContent.prototype, {

@@ -54,22 +54,18 @@ define([
             this._styleDirty = false;
         }
 
-        var applyToAllVisibleTiles = false;
-
-        // Should the style be reapplied to all visible tiles?
-        if (styleDirty || ((defined(this._style) && this._style.timeDynamic))) {
+        if (styleDirty) {
+            // Increase "time", so the style is applied to all visible tiles
             ++this._lastStyleTime;
-            applyToAllVisibleTiles = true;
         }
 
         var lastStyleTime = this._lastStyleTime;
         var stats = this.statistics;
 
-        // If a new style was assigned or the style is time-dynamic, loop through all the visible
-        // tiles; otherwise, loop through only the tiles that are newly visible, i.e., they are
-        // visible this frame, but were not visible last frame.  In many cases, the newly selected
-        // tiles list will be short or empty.
-        var tiles = applyToAllVisibleTiles ? tileset._selectedTiles : tileset._newlySelectedTiles;
+        // If a new style was assigned, loop through all the visible tiles; otherwise, loop through
+        // only the tiles that are newly visible, i.e., they are visible this frame, but were not
+        // visible last frame.  In many cases, the newly selected tiles list will be short or empty.
+        var tiles = styleDirty ? tileset._selectedTiles : tileset._selectedTilesToStyle;
         // PERFORMANCE_IDEA: does mouse-over picking basically trash this?  We need to style on
         // pick, for example, because a feature's show may be false.
 
@@ -82,7 +78,7 @@ define([
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
                 if (tile.lastStyleTime !== lastStyleTime) {
                     tile.lastStyleTime = lastStyleTime;
-                    styleCompositeContent(tile.content, this);
+                    styleCompositeContent(this, tile.content);
 
                     ++stats.numberOfTilesStyled;
                 }
@@ -90,21 +86,21 @@ define([
         }
     };
 
-    function styleCompositeContent(content, styleEngine) {
+    function styleCompositeContent(styleEngine, content) {
         var innerContents = content.innerContents;
         if (defined(innerContents)) {
             var length = innerContents.length;
             for (var i = 0; i < length; ++i) {
                 // Recurse for composites of composites
-                styleCompositeContent(innerContents[i], styleEngine);
+                styleCompositeContent(styleEngine, innerContents[i]);
             }
         } else {
             // Not a composite tile
-            styleContent(content, styleEngine);
+            styleContent(styleEngine, content);
         }
     }
 
-    function styleContent(content, styleEngine) {
+    function styleContent(styleEngine, content) {
         var length = content.featuresLength;
         var style = styleEngine._style;
 

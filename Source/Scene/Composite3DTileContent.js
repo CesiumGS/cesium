@@ -45,22 +45,39 @@ define([
         this._factory = factory;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.contentReadyToProcessPromise = when.defer();
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.readyPromise = when.defer();
+        this.batchTableResources = undefined;
     }
 
     defineProperties(Composite3DTileContent.prototype, {
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        featurePropertiesDirty : {
+            get : function() {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    if (contents[i].featurePropertiesDirty) {
+                        return true;
+                    }
+                }
+
+                return false;
+            },
+            set : function(value) {
+                var contents = this._contents;
+                var length = contents.length;
+                for (var i = 0; i < length; ++i) {
+                    contents[i].featurePropertiesDirty = value;
+                }
+            }
+        },
+
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
@@ -198,9 +215,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        var length = this._contents.length;
+        var contents = this._contents;
+        var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contents[i].applyDebugSettings(enabled, color);
+            contents[i].applyDebugSettings(enabled, color);
         }
     };
 
@@ -208,9 +226,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.update = function(tileset, context, frameState, commandList) {
-        var length = this._contents.length;
+        var contents = this._contents;
+        var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contents[i].update(tileset, context, frameState, commandList);
+            contents[i].update(tileset, context, frameState, commandList);
         }
     };
 
@@ -225,9 +244,10 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Composite3DTileContent.prototype.destroy = function() {
-        var length = this._contents.length;
+        var contents = this._contents;
+        var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            this._contents[i].destroy();
+            contents[i].destroy();
         }
         return destroyObject(this);
     };

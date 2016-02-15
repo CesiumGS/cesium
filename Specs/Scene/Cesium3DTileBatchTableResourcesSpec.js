@@ -393,7 +393,7 @@ defineSuite([
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content._batchTableResources;
+            var resources = content.batchTableResources;
             expect(resources.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(resources.isDestroyed()).toEqual(true);

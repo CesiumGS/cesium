@@ -60,19 +60,13 @@ define([
         this._tile = tile;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.contentReadyToProcessPromise = when.defer();
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.readyPromise = when.defer();
+        this.batchTableResources = undefined;
+        this.featurePropertiesDirty = false;
 
         // If the tile's bounding volume is not a BoundingSphere, convert to a BoundingSphere
         var boundingVolume = tile.contentBoundingVolume.boundingVolume;

@@ -50,11 +50,6 @@ define([
 
         var styleEngine = tileset.styleEngine;
 
-        /**
-         * DOC_TBA
-         */
-        this.timeDynamic = false;
-
         var color;
         if (typeof(colorExpression) === 'string') {
             if (defined(getPropertyName(colorExpression))) {
