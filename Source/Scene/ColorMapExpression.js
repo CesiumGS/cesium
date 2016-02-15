@@ -25,7 +25,7 @@ define([
         this._styleEngine = styleEngine;
         this._propertyName = jsonExpression.propertyName;
         this._map = clone(jsonExpression.map, true);
-        this._default = jsonExpression.default.slice(0);
+        this._default = jsonExpression.default;
 
         this._runtimeMap = undefined;
         this._runtimeDefault = new Color();
@@ -56,7 +56,7 @@ define([
          */
         map : {
             get : function() {
-                return this._map;
+                return this._runtimeMap;
             },
             set : function(value) {
                 this._map = clone(value, true);
@@ -71,11 +71,11 @@ define([
          */
         default : {
             get : function() {
-                return this._default;
+                return this._runtimeDefault;
             },
             set : function(value) {
                 if (this._default !== value) {
-                    this._default = value.slice(0);
+                    this._default = value;
                     this._styleEngine.makeDirty();
 
                     setRuntime(this);
