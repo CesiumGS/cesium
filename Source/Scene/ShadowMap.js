@@ -68,8 +68,6 @@ define([
     "use strict";
 
     // TODO : doc
-    // TODO : handle if depth texture extension is not supported
-
     /**
      * @private
      */
