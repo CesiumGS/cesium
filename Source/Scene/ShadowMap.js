@@ -180,7 +180,6 @@ define([
     }
 
     function createFramebufferColor(shadowMap, context) {
-        // TODO : Use nearest filtering for testing, not default linear.
         var depthRenderbuffer = new Renderbuffer({
             context : context,
             width : shadowMap._size,
