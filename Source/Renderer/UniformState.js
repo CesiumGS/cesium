@@ -228,8 +228,6 @@ define([
                 this._inverseTransposeModelDirty = true;
                 this._modelViewDirty = true;
                 this._inverseModelViewDirty = true;
-                this._viewProjectionDirty = true;
-                this._inverseViewProjectionDirty = true;
                 this._modelViewRelativeToEyeDirty = true;
                 this._inverseModelViewDirty = true;
                 this._modelViewProjectionDirty = true;
@@ -783,6 +781,7 @@ define([
         uniformState._inverseModelViewDirty = true;
         uniformState._inverseModelView3DDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
         uniformState._modelViewInfiniteProjectionDirty = true;
@@ -803,6 +802,7 @@ define([
         uniformState._inverseProjectionDirty = true;
         uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
     }
