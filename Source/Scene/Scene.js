@@ -1558,6 +1558,11 @@ define([
             }
 
             us.updateFrustum(frustum);
+
+            if (scene.sunShadowMap.enabled) {
+                scene.sunShadowMap.updateShadowMapMatrix(us);
+            }
+
             clearDepth.execute(context, passState);
 
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -1604,6 +1609,10 @@ define([
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
+
+                if (scene.sunShadowMap.enabled) {
+                    scene.sunShadowMap.updateShadowMapMatrix(us);
+                }
             }
 
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
@@ -1952,11 +1961,11 @@ define([
         scene.fog.update(frameState);
 
         var shadowMap = scene.sunShadowMap;
+        us.update(frameState, shadowMap);
+
         if (shadowMap.enabled) {
             shadowMap.update(frameState);
         }
-
-        us.update(frameState, shadowMap);
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
