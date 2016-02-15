@@ -13,6 +13,11 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
+    it('evaluates literal null', function() {
+        var expression = new Expression(new MockStyleEngine(), 'null');
+        expect(expression.evaluate(undefined)).toEqual(null);
+    });
+
     it('evaluates literal boolean', function() {
         var expression = new Expression(new MockStyleEngine(), 'true');
         expect(expression.evaluate(undefined)).toEqual(true);
