@@ -13,12 +13,12 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
-    function MockFeature(key) {
-        this._key = key;
+    function MockFeature(value) {
+        this._value = value;
     }
 
     MockFeature.prototype.getProperty = function() {
-        return this._key;
+        return this._value;
     };
 
     var jsonExp = {
@@ -33,7 +33,7 @@ defineSuite([
     it('constructs', function() {
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
         expect(expression.propertyName).toEqual('id');
-        expect(expression.default).toEqual('green');
+        expect(expression.default).toEqual(Color.GREEN);
     });
 
     it('sets propertyName', function() {
@@ -49,15 +49,15 @@ defineSuite([
             '4' : 'orange'
         };
         expect(expression.map).toEqual({
-            '3' : 'purple',
-            '4' : 'orange'
+            '3' : Color.PURPLE,
+            '4' : Color.ORANGE
         });
     });
 
     it('sets default', function() {
         var expression = new ColorMapExpression(new MockStyleEngine(), jsonExp);
         expression.default = 'purple';
-        expect(expression.default).toEqual('purple');
+        expect(expression.default).toEqual(Color.PURPLE);
     });
 
     it('evaluates map', function() {
