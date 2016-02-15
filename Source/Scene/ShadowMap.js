@@ -436,15 +436,12 @@ define([
     var scaleBiasMatrix = new Matrix4(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0);
 
     ShadowMap.prototype.update = function(frameState) {
-        var context = frameState.context;
-        var uniformState = context.uniformState;
-
         applyDebugSettings(this, frameState);
+        updateFramebuffer(this, frameState.context);
+    };
 
-        updateFramebuffer(this, context);
-
+    ShadowMap.prototype.updateShadowMapMatrix = function(uniformState) {
         // Calculate shadow map matrix. It converts gl_Position to shadow map texture space.
-        // TODO : only compute matrix when dirty
         var viewMatrix = this.camera.viewMatrix;
         var projectionMatrix = this._frustum.projectionMatrix;
         var shadowMapMatrix = Matrix4.multiplyTransformation(projectionMatrix, viewMatrix, this._shadowMapMatrix);
