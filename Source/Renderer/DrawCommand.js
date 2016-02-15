@@ -98,7 +98,7 @@ define([
          * The number of instances to draw.
          *
          * @type {Number}
-         * @default 1
+         * @default 0
          */
         this.instanceCount = defaultValue(options.instanceCount, 0);
 
@@ -109,6 +109,14 @@ define([
          * @default undefined
          */
         this.shaderProgram = options.shaderProgram;
+
+        /**
+         * The shadow cast program to apply.
+         *
+         * @type {ShaderProgram}
+         * @default undefined
+         */
+        this.shadowCastProgram = options.shadowCastProgram;
 
         /**
          * An object with functions whose names match the uniforms in the shader program

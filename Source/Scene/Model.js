@@ -544,6 +544,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
+            shadowCastPrograms : {},
             textures : {},
 
             samplers : {},
@@ -559,6 +560,7 @@ define([
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
 
+        // TODO : handle updating these properties at runtime
         /**
          * DOC_TBA
          */
@@ -1483,15 +1485,6 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
-
-        // TODO : handle updating these properties at runtime
-        if (frameState.shadowsEnabled && model.receiveShadows) {
-            drawVS = ShadowMap.createReceiveShadowsVertexShader(drawVS);
-            drawFS = ShadowMap.createReceiveShadowsFragmentShader(drawFS);
-        }
-
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
         var precreatedAttributes = model._precreatedAttributes;
@@ -1501,6 +1494,27 @@ define([
                     attributeLocations[attrName] = attributesLength++;
                 }
             }
+        }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        // Create shadow cast program
+        if (frameState.shadowsEnabled && model.castShadows) {
+            var shadowCastVS = ShadowMap.createShadowCastVertexShader(drawVS);
+            var shadowCastFS = ShadowMap.createShadowCastFragmentShader(drawFS, context);
+            model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shadowCastVS,
+                fragmentShaderSource : shadowCastFS,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        // Modify draw program to receive shadows
+        if (frameState.shadowsEnabled && model.receiveShadows) {
+            drawVS = ShadowMap.createReceiveShadowsVertexShader(drawVS);
+            drawFS = ShadowMap.createReceiveShadowsFragmentShader(drawFS, context);
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
@@ -2512,6 +2526,7 @@ define([
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
+        var rendererShadowCastPrograms = resources.shadowCastPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
@@ -2596,6 +2611,7 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
+                    shadowCastProgram : rendererShadowCastPrograms[technique.program],
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -3078,6 +3094,7 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
+        destroy(resources.shadowCastPrograms);
         destroy(resources.textures);
     }
 
