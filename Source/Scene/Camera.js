@@ -2785,6 +2785,7 @@ define([
 
     /**
      * Computes the approximate visible bounds of the ellipsoid. This function behaves better the closer the camera is to the ellipsoid.
+     * It also won't behave correctly when looking down at the poles.
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
      *

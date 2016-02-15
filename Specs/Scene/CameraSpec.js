@@ -2347,7 +2347,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    xit('computeViewRegion when zoomed in', function() {
+    it('computeViewRegion when zoomed in', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -2355,14 +2355,14 @@ defineSuite([
 
         camera.position = position;
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());;
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var correctResult = [
-            new Cartesian3(6364110.608092477, -367130.9115926362, 208922.19526286973),
-            new Cartesian3(6366433.13523943, -365789.9999191425, -123513.50646620395),
-            new Cartesian3(6374354.510456278, 75484.45897230899, 205556.54929182457),
-            new Cartesian3(6376527.290226052, 75222.31194475354, -121545.65658869785)
+            new Cartesian3(6361425.321679503, -368681.26242601796, 276510.9468195135),
+            new Cartesian3(6361425.321679503, -368681.26242601796, -276510.9468195135),
+            new Cartesian3(6361425.321679503, 368681.26242601796, 276510.9468195135),
+            new Cartesian3(6361425.321679503, 368681.26242601796, -276510.9468195135)
         ];
 
         var bounds = camera.computeViewRegion();
@@ -2377,9 +2377,8 @@ defineSuite([
 
         camera.position = position;
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());;
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
-
 
         var correctResult = Ellipsoid.WGS84.cartographicArrayToCartesianArray([
               new Cartographic(CesiumMath.PI, CesiumMath.PI_OVER_TWO),
