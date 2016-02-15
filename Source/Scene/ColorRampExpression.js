@@ -35,6 +35,7 @@ define([
         this._intervals = clone(jsonExpression.intervals, true);
 
         this._runtimeIntervals = undefined;
+        setRuntimeColors(this);
     }
 
     defineProperties(ColorRampExpression.prototype, {
@@ -43,10 +44,10 @@ define([
          */
         colors : {
             get : function() {
-                return this._colors;
+                return this._runtimeColors;
             },
             set : function(value) {
-                this._colors = clone(value, true);
+                this._runtimeColors = clone(value, true);
                 this._styleEngine.makeDirty();
                 this._runtimeIntervals = undefined; // Lazily computed in evaluate
             }
@@ -67,26 +68,28 @@ define([
         }
     });
 
-    function computeRuntimeIntervals(expression) {
+    function setRuntimeColors(expression) {
         var colors = expression._colors;
+        var length = colors.length;
+        var runtimeColors = new Array(length);
+
+        for (var i = 0; i < length; ++i) {
+            runtimeColors[i] = Color.fromCssColorString(colors[i]);
+        }
+
+        expression._runtimeColors = runtimeColors;
+    }
+
+    function computeRuntimeIntervals(expression) {
         var intervals = expression._intervals;
         var length = intervals.length;
 
         var runtimeIntervals = new Array(length);
         for (var i = 0; i < length; ++i) {
-            var color = colors[i];
-            var c = Color.fromCssColorString(color);
-
-            //>>includeStart('debug', pragmas.debug);
-            if (!defined(c)) {
-                throw new DeveloperError('color must be a valid CSS string');
-            }
-            //>>includeEnd('debug');
-
             runtimeIntervals[i] = {
 // TODO: what about intervals[0] and inclusive/exclusive flag?
                 maximum : (i !== length - 1) ? intervals[i + 1] : Number.POSITIVE_INFINITY,
-                color : c
+                color : expression._runtimeColors[i]
             };
         }
 
