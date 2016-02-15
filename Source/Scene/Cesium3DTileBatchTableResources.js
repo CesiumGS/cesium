@@ -37,6 +37,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+// * TODO: modify shaders to use alpha
+// * TODO: modify/create commands
+
     /**
      * @private
      */
@@ -48,12 +51,18 @@ define([
          */
         this.featuresLength = featuresLength;
 
+        this._translucentFeaturesLength = 0; // Number of features in the tile that are translucent
+
         /**
          * @private
          */
         this.batchTable = undefined;
 
-        this._batchValues = undefined;  // Per-feature show/color
+        // PERFORMANCE_IDEA: These parallel arrays probably generate cache misses in get/set color/show
+        // and use A LOT of memory.  How can we use less memory?
+        this._showAlphaProperties = undefined; // [Show (0 or 255), Alpha (0 to 255)] property for each feature
+        this._batchValues = undefined;  // Per-feature RGBA (A is based on the color's alpha and feature's show property)
+
         this._batchValuesDirty = false;
         this._batchTexture = undefined;
         this._defaultTexture = undefined;
@@ -92,7 +101,7 @@ define([
 
     function getBatchValues(batchTableResources) {
         if (!defined(batchTableResources._batchValues)) {
-            // Default batch texture to RGBA = 255: white highlight (RGB) and show = true (A).
+            // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
             var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
             for (var i = 0; i < byteLength; ++i) {
@@ -105,29 +114,49 @@ define([
         return batchTableResources._batchValues;
     }
 
-    Cesium3DTileBatchTableResources.prototype.setShow = function(batchId, value) {
+    function getShowAlphaProperties(batchTableResources) {
+        if (!defined(batchTableResources._showAlphaProperties)) {
+            var byteLength = 2 * batchTableResources.featuresLength;
+            var bytes = new Uint8Array(byteLength);
+            for (var i = 0; i < byteLength; ++i) {
+                bytes[i] = 255; // [Show = true, Alpha = 255]
+            }
+
+            batchTableResources._showAlphaProperties = bytes;
+        }
+        return batchTableResources._showAlphaProperties;
+    }
+
+    Cesium3DTileBatchTableResources.prototype.setShow = function(batchId, show) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
+        if (!defined(show)) {
+            throw new DeveloperError('show is required.');
         }
         //>>includeEnd('debug');
 
-        if (value && !defined(this._batchValues)) {
+        if (show && !defined(this._showAlphaProperties)) {
             // Avoid allocating since the default is show = true
             return;
         }
 
-        var batchValues = getBatchValues(this);
-        var offset = (batchId * 4) + 3; // Store show/hide in alpha
-        var newValue = value ? 255 : 0;
+        var showAlphaProperties = getShowAlphaProperties(this);
+        var propertyOffset = batchId * 2;
 
-        if (batchValues[offset] !== newValue) {
-            batchValues[offset] = newValue;
+        var newShow = show ? 255 : 0;
+        if (showAlphaProperties[propertyOffset] !== newShow) {
+            showAlphaProperties[propertyOffset] = newShow;
+
+            var batchValues = getBatchValues(this);
+
+            // Compute alpha used in the shader based on show and color.alpha properties
+            var offset = (batchId * 4) + 3;
+            batchValues[offset] = show ? showAlphaProperties[propertyOffset + 1] : 0;
+
             this._batchValuesDirty = true;
         }
     };
@@ -140,58 +169,87 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(this._batchValues)) {
+        if (!defined(this._showAlphaProperties)) {
+            // Avoid allocating since the default is show = true
             return true;
         }
 
-        var offset = (batchId * 4) + 3; // Store show/hide in alpha
-        return this._batchValues[offset] === 255;
+        var offset = batchId * 2;
+        return (this._showAlphaProperties[offset] === 255);
     };
 
     var scratchColor = new Array(4);
 
-    Cesium3DTileBatchTableResources.prototype.setColor = function(batchId, value) {
+    Cesium3DTileBatchTableResources.prototype.setColor = function(batchId, color) {
         var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId > featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + featuresLength - + ').');
         }
 
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
         }
         //>>includeEnd('debug');
 
-        if (Color.equals(value, Color.WHITE) && !defined(this._batchValues)) {
+        if (Color.equals(color, Color.WHITE) && !defined(this._batchValues)) {
             // Avoid allocating since the default is white
             return;
         }
 
+        var newColor = color.toBytes(scratchColor);
+        var newAlpha = newColor[3];
+
         var batchValues = getBatchValues(this);
         var offset = batchId * 4;
-        var newValue = value.toBytes(scratchColor);
 
-        if ((batchValues[offset] !== newValue[0]) ||
-            (batchValues[offset + 1] !== newValue[1]) ||
-            (batchValues[offset + 2] !== newValue[2])) {
-            batchValues[offset] = newValue[0];
-            batchValues[offset + 1] = newValue[1];
-            batchValues[offset + 2] = newValue[2];
+        var showAlphaProperties = getShowAlphaProperties(this);
+        var propertyOffset = batchId * 2;
+
+        if ((batchValues[offset] !== newColor[0]) ||
+            (batchValues[offset + 1] !== newColor[1]) ||
+            (batchValues[offset + 2] !== newColor[2]) ||
+            (showAlphaProperties[propertyOffset + 1] !== newAlpha)) {
+
+            batchValues[offset] = newColor[0];
+            batchValues[offset + 1] = newColor[1];
+            batchValues[offset + 2] = newColor[2];
+
+            var wasTranslucent = (showAlphaProperties[propertyOffset + 1] !== 255);
+
+            // Compute alpha used in the shader based on show and color.alpha properties
+            var show = showAlphaProperties[propertyOffset] !== 0;
+            batchValues[offset + 3] = show ? newAlpha : 0;
+            showAlphaProperties[propertyOffset + 1] = newAlpha;
+
+            // Track number of translucent features so we know if this tile needs
+            // opaque commands, translucent commands, or both for rendering.
+            var isTranslucent = (newAlpha !== 255);
+            if (isTranslucent && !wasTranslucent) {
+// TODO
+debugger;
+                ++this._translucentFeaturesLength;
+            } else if (!isTranslucent && wasTranslucent) {
+// TODO
+debugger;
+                --this._translucentFeaturesLength;
+            }
+
             this._batchValuesDirty = true;
         }
     };
 
-    Cesium3DTileBatchTableResources.prototype.setAllColor = function(value) {
+    Cesium3DTileBatchTableResources.prototype.setAllColor = function(color) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
         }
         //>>includeEnd('debug');
 
         var featuresLength = this.featuresLength;
         for (var i = 0; i < featuresLength; ++i) {
             // PERFORMANCE_IDEA: duplicate part of setColor here to factor things out of the loop
-            this.setColor(i, value);
+            this.setColor(i, color);
         }
     };
 
@@ -213,7 +271,15 @@ define([
 
         var batchValues = this._batchValues;
         var offset = batchId * 4;
-        return Color.fromBytes(batchValues[offset], batchValues[offset + 1], batchValues[offset + 2], 255, result);
+
+        var showAlphaProperties = this._showAlphaProperties;
+        var propertyOffset = batchId * 2;
+
+        return Color.fromBytes(batchValues[offset],
+            batchValues[offset + 1],
+            batchValues[offset + 2],
+            showAlphaProperties[propertyOffset + 1],
+            result);
     };
 
     Cesium3DTileBatchTableResources.prototype.hasProperty = function(name) {
@@ -347,8 +413,8 @@ define([
                     '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    float show = featureProperties.a; \n' +
-                    '    gl_Position *= show; \n' +                        // Per batched feature show/hide
+                    '    float show = ceil(featureProperties.a); \n' +      // 0 - false, 1 - true
+                    '    gl_Position *= show; \n' +                         // Per batched feature show/hide
                     '    tile_featureColor = featureProperties.rgb; \n' +   // Pass batched feature color to fragment shader
                     '}';
             } else {
@@ -476,7 +542,7 @@ define([
                     '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    float show = featureProperties.a; \n' +
+                    '    float show = ceil(featureProperties.a); \n' +    // 0 - false, 1 - true
                     '    gl_Position *= show; \n' +                       // Per batched feature show/hide
                     '    tile_featureSt = st; \n' +
                     '}';
