@@ -69,7 +69,7 @@ define([
 
         if (featuresLength > 0) {
             // PERFORMANCE_IDEA: this can waste memory in the last row in the uncommon case
-            // when more than one row is needed (e.g., > 16K models in one tile)
+            // when more than one row is needed (e.g., > 16K features in one tile)
             var width = Math.min(featuresLength, ContextLimits.maximumTextureSize);
             var height = Math.ceil(featuresLength / ContextLimits.maximumTextureSize);
             var stepX = 1.0 / width;
@@ -141,7 +141,6 @@ define([
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
-            // Batched models default to true
             return true;
         }
 
@@ -204,12 +203,11 @@ define([
         }
 
         if (!defined(result)) {
-            throw new DeveloperError('color is required.');
+            throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
 
         if (!defined(this._batchValues)) {
-            // Batched models default to WHITE
             return Color.clone(Color.WHITE, result);
         }
 
@@ -302,25 +300,25 @@ define([
     function getGlslComputeSt(batchTableResources) {
         // GLSL batchId is zero-based: [0, featuresLength - 1]
         if (batchTableResources._textureDimensions.y === 1) {
-            return 'uniform vec4 tileset_textureStep; \n' +
+            return 'uniform vec4 tile_textureStep; \n' +
                 'vec2 computeSt(float batchId) \n' +
                 '{ \n' +
-                '    float stepX = tileset_textureStep.x; \n' +
-                '    float centerX = tileset_textureStep.y; \n' +
+                '    float stepX = tile_textureStep.x; \n' +
+                '    float centerX = tile_textureStep.y; \n' +
                 '    return vec2(centerX + (batchId * stepX), 0.5); \n' +
                 '} \n';
         }
 
-        return 'uniform vec4 tileset_textureStep; \n' +
-            'uniform vec2 tileset_textureDimensions; \n' +
+        return 'uniform vec4 tile_textureStep; \n' +
+            'uniform vec2 tile_textureDimensions; \n' +
             'vec2 computeSt(float batchId) \n' +
             '{ \n' +
-            '    float stepX = tileset_textureStep.x; \n' +
-            '    float centerX = tileset_textureStep.y; \n' +
-            '    float stepY = tileset_textureStep.z; \n' +
-            '    float centerY = tileset_textureStep.w; \n' +
-            '    float xId = mod(batchId, tileset_textureDimensions.x); \n' +
-            '    float yId = floor(batchId / tileset_textureDimensions.x); \n' +
+            '    float stepX = tile_textureStep.x; \n' +
+            '    float centerX = tile_textureStep.y; \n' +
+            '    float stepY = tile_textureStep.z; \n' +
+            '    float centerY = tile_textureStep.w; \n' +
+            '    float xId = mod(batchId, tile_textureDimensions.x); \n' +
+            '    float yId = floor(batchId / tile_textureDimensions.x); \n' +
             '    return vec2(centerX + (xId * stepX), 1.0 - (centerY + (yId * stepY))); \n' +
             '} \n';
     }
@@ -330,36 +328,36 @@ define([
      */
     Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change vertex shader source; the model was not batched
+            // Do not change vertex shader source; the tile was not batched
             return undefined;
         }
 
         var that = this;
         return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, perform per model (e.g., building) show/hide in the vertex shader
+                // When VTF is supported, perform per-feature show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D tileset_batchTexture; \n' +
-                    'varying vec3 tileset_modelColor; \n' +
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec3 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
+                    '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
-                    '    vec4 modelProperties = texture2D(tileset_batchTexture, st); \n' +
-                    '    float show = modelProperties.a; \n' +
-                    '    gl_Position *= show; \n' +                        // Per batched model show/hide
-                    '    tileset_modelColor = modelProperties.rgb; \n' +   // Pass batched model color to fragment shader
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
+                    '    float show = featureProperties.a; \n' +
+                    '    gl_Position *= show; \n' +                        // Per batched feature show/hide
+                    '    tile_featureColor = featureProperties.rgb; \n' +   // Pass batched feature color to fragment shader
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tileset_modelSt; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
-                    '    tileset_modelSt = computeSt(a_batchId); \n' +
+                    '    tile_main(); \n' +
+                    '    tile_featureSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
@@ -369,7 +367,7 @@ define([
 
     Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change fragment shader source; the model was not batched
+            // Do not change fragment shader source; the tile was not batched
             return undefined;
         }
 
@@ -378,53 +376,53 @@ define([
             //var diffuse = 'diffuse = u_diffuse;';
             //var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
             //if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-            //    source = 'varying vec3 tileset_modelColor; \n' + source;
-            //    source = source.replace(diffuse, 'diffuse.rgb = tileset_modelColor;');
-            //    source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tileset_modelColor;');
+            //    source = 'varying vec3 tile_featureColor; \n' + source;
+            //    source = source.replace(diffuse, 'diffuse.rgb = tile_featureColor;');
+            //    source = source.replace(diffuseTexture, 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * tile_featureColor;');
             //} else {
             //    source =
-            //        'uniform sampler2D tileset_batchTexture; \n' +
-            //        'varying vec2 tileset_modelSt; \n' +
+            //        'uniform sampler2D tile_batchTexture; \n' +
+            //        'varying vec2 tile_featureSt; \n' +
             //        source;
             //
             //    var readColor =
-            //        'vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
-            //        'if (modelProperties.a == 0.0) { \n' +
+            //        'vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+            //        'if (featureProperties.a == 0.0) { \n' +
             //        '    discard; \n' +
             //        '}';
             //
-            //    source = source.replace(diffuse, readColor + 'diffuse.rgb = modelProperties.rgb;');
-            //    source = source.replace(diffuseTexture, readColor + 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * modelProperties.rgb;');
+            //    source = source.replace(diffuse, readColor + 'diffuse.rgb = featureProperties.rgb;');
+            //    source = source.replace(diffuseTexture, readColor + 'diffuse.rgb = texture2D(u_diffuse, v_texcoord0).rgb * featureProperties.rgb;');
             //}
             //
             //return source;
 
             // TODO: support both "replace" and "highlight" color?  Highlight is below, replace is commented out above
-            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per patched model (e.g., building) show/hide already
+                // When VTF is supported, per batched feature show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'varying vec3 tileset_modelColor; \n' +
+                    'varying vec3 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
-                    '    gl_FragColor.rgb *= tileset_modelColor; \n' +
+                    '    tile_main(); \n' +
+                    '    gl_FragColor.rgb *= tile_featureColor; \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D tileset_batchTexture; \n' +
-                    'varying vec2 tileset_modelSt; \n' +
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
-                    '    if (modelProperties.a == 0.0) { \n' +
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                    '    if (featureProperties.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gltf_main(); \n' +
-                    '    gl_FragColor.rgb *= modelProperties.rgb; \n' +
+                    '    tile_main(); \n' +
+                    '    gl_FragColor.rgb *= featureProperties.rgb; \n' +
                     '}';
             }
 
@@ -434,21 +432,21 @@ define([
 
     Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change the uniform map; the model was not batched
+            // Do not change the uniform map; the tile was not batched
             return undefined;
         }
 
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
-                tileset_batchTexture : function() {
+                tile_batchTexture : function() {
                     // PERFORMANCE_IDEA: we could also use a custom shader that avoids the texture read.
                     return defaultValue(that._batchTexture, that._defaultTexture);
                 },
-                tileset_textureDimensions : function() {
+                tile_textureDimensions : function() {
                     return that._textureDimensions;
                 },
-                tileset_textureStep : function() {
+                tile_textureStep : function() {
                     return that._textureStep;
                 }
             };
@@ -459,36 +457,36 @@ define([
 
     Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change vertex shader source; the model was not batched
+            // Do not change vertex shader source; the tile was not batched
             return undefined;
         }
 
         var that = this;
         return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, perform per patched model (e.g., building) show/hide in the vertex shader
+                // When VTF is supported, perform per batched feature show/hide in the vertex shader
                 newMain =
-                    'uniform sampler2D tileset_batchTexture; \n' +
-                    'varying vec2 tileset_modelSt; \n' +
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
+                    '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
-                    '    vec4 modelProperties = texture2D(tileset_batchTexture, st); \n' +
-                    '    float show = modelProperties.a; \n' +
-                    '    gl_Position *= show; \n' +                       // Per batched model show/hide
-                    '    tileset_modelSt = st; \n' +
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
+                    '    float show = featureProperties.a; \n' +
+                    '    gl_Position *= show; \n' +                       // Per batched feature show/hide
+                    '    tile_featureSt = st; \n' +
                     '}';
             } else {
                 newMain =
-                    'varying vec2 tileset_modelSt; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
-                    '    tileset_modelSt = computeSt(a_batchId); \n' +
+                    '    tile_main(); \n' +
+                    '    tile_featureSt = computeSt(a_batchId); \n' +
                     '}';
             }
 
@@ -498,44 +496,44 @@ define([
 
     Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change fragment shader source; the model was not batched
+            // Do not change fragment shader source; the tile was not batched
             return undefined;
         }
 
         return function(source) {
-            var renamedSource = ShaderSource.replaceMain(source, 'gltf_main');
+            var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per patched model (e.g., building) show/hide already
+                // When VTF is supported, per batched feature show/hide already
                 // happened in the fragment shader
                 newMain =
-                    'uniform sampler2D tileset_pickTexture; \n' +
-                    'varying vec2 tileset_modelSt; \n' +
+                    'uniform sampler2D tile_pickTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    gltf_main(); \n' +
+                    '    tile_main(); \n' +
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = texture2D(tileset_pickTexture, tileset_modelSt); \n' +
+                    '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
                     '}';
             } else {
                 newMain =
-                    'uniform sampler2D tileset_pickTexture; \n' +
-                    'uniform sampler2D tileset_batchTexture; \n' +
-                    'varying vec2 tileset_modelSt; \n' +
+                    'uniform sampler2D tile_pickTexture; \n' +
+                    'uniform sampler2D tile_batchTexture; \n' +
+                    'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
-                    '    vec4 modelProperties = texture2D(tileset_batchTexture, tileset_modelSt); \n' +
-                    '    if (modelProperties.a == 0.0) { \n' +
-                    '        discard; \n' +                       // Per batched model show/hide
+                    '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
+                    '    if (featureProperties.a == 0.0) { \n' +
+                    '        discard; \n' +                       // Per batched feature show/hide
                     '    } \n' +
-                    '    gltf_main(); \n' +
+                    '    tile_main(); \n' +
                     '    if (gl_FragColor.a == 0.0) { \n' +
                     '        discard; \n' +
                     '    } \n' +
-                    '    gl_FragColor = texture2D(tileset_pickTexture, tileset_modelSt); \n' +
+                    '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
                     '}';
             }
 
@@ -545,23 +543,23 @@ define([
 
     Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
         if (this.featuresLength === 0) {
-            // Do not change the uniform map; the model was not batched
+            // Do not change the uniform map; the tile was not batched
             return undefined;
         }
 
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
-                tileset_batchTexture : function() {
+                tile_batchTexture : function() {
                     return defaultValue(that._batchTexture, that._defaultTexture);
                 },
-                tileset_textureDimensions : function() {
+                tile_textureDimensions : function() {
                     return that._textureDimensions;
                 },
-                tileset_textureStep : function() {
+                tile_textureStep : function() {
                     return that._textureStep;
                 },
-                tileset_pickTexture : function() {
+                tile_pickTexture : function() {
                     return that._pickTexture;
                 }
             };
@@ -622,7 +620,7 @@ define([
         var dimensions = batchTableResources._textureDimensions;
         // PERFORMANCE_IDEA: Instead of rewriting the entire texture, use fine-grained
         // texture updates when less than, for example, 10%, of the values changed.  Or
-        // even just optimize the common case when one model show/color changed.
+        // even just optimize the common case when one feature show/color changed.
         batchTableResources._batchTexture.copyFrom({
             width : dimensions.x,
             height : dimensions.y,
