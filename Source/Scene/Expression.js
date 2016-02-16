@@ -20,44 +20,44 @@ define([
         this._styleEngine = styleEngine;
 
         var ast = jsep(expression);
-        this._runtimeAst = undefined;
-
         console.log(ast);
-        this._runtimeAst = createRuntimeAst(ast);
+
+        this._runtimeAst = createRuntimeAst(this, ast);
         console.log(this._runtimeAst);
     }
 
     defineProperties(Expression.prototype, {
     });
 
-    function Node(type, value) {
+    function Node(type, value, evaluate) {
         this._type = type;
         this._value = value;
+        this.evaluate = evaluate;
     }
 
-    function createRuntimeAst(ast) {
+    function createRuntimeAst(expression, ast) {
         var node;
 
         if (ast.type === 'Literal') {
-            node = new Node(ExpressionType.LITERAL, ast.value);
+            node = new Node(ExpressionType.LITERAL, ast.value, expression._evaluateLiteral);
         } else if (ast.type === 'CallExpression') {
             var call = ast.callee.name;
             var args = ast.arguments;
             var val;
             if (call === 'color') {
-                 val = Color.fromCssColorString(args[0].value);
+                val = Color.fromCssColorString(args[0].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val);
+                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
                 }
             } else if (call === 'rgb') {
                 val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val);
+                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
                 }
             } else if (call === 'hsl') {
                 val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val);
+                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
                 }
             }
         }
@@ -66,13 +66,11 @@ define([
     }
 
     Expression.prototype.evaluate = function(feature) {
-        var runtimeAst = this._runtimeAst;
+        return this._runtimeAst.evaluate(feature);
+    };
 
-        if (runtimeAst._type === ExpressionType.LITERAL) {
-            return runtimeAst._value;
-        }
-
-        return undefined;
+    Expression.prototype._evaluateLiteral = function(feature) {
+        return this._value;
     };
 
     return Expression;
