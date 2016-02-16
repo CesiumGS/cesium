@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -13,6 +14,7 @@ define([
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
         '../Core/HeadingPitchRange',
+        '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -25,6 +27,7 @@ define([
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -38,6 +41,7 @@ define([
         EllipsoidGeodesic,
         Event,
         HeadingPitchRange,
+        Intersect,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -2788,10 +2792,17 @@ define([
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
      *
-     * @returns {Rectangle} The visible rectangle.
+     * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
      */
     Camera.prototype.computeViewRectangle = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var cullingVolume = this.frustum.computeCullingVolume(this.positionWC, this.directionWC, this.upWC);
+        var boundingSphere = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
+        var visibility = cullingVolume.computeVisibility(boundingSphere);
+        if (visibility === Intersect.OUTSIDE) {
+            return undefined;
+        }
 
         var canvas = this._scene.canvas;
         var width = canvas.clientWidth;

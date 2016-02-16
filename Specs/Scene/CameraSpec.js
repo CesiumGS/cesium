@@ -2391,4 +2391,19 @@ defineSuite([
         var rect = camera.computeViewRectangle();
         expect(rect).toEqual(Rectangle.MAX_VALUE);
     });
+
+    it('computeViewRegion when globe isn\'t visible', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.clone(Cartesian3.UNIT_X);
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.clone(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).not.toBeDefined();
+    });
 });

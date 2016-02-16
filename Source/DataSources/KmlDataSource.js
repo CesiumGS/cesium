@@ -620,10 +620,10 @@ define([
             var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
             var viewFormat = defaultValue(queryStringValue(iconNode, 'viewFormat', namespaces.kml), defaultViewFormat);
             var httpQuery = queryStringValue(iconNode, 'httpQuery', namespaces.kml);
-            var queryString = makeQueryString(viewFormat, httpQuery, true);
+            var queryString = makeQueryString(viewFormat, httpQuery);
 
             var icon = joinUrls(href, queryString, false);
-            return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, icon, viewBoundScale);
+            return processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, icon, viewBoundScale, dataSource._lastCameraView.bbox);
         }
 
         return href;
@@ -1659,16 +1659,16 @@ define([
         return s;
     }
 
-    function makeQueryString(string1, string2, addQuestionMark) {
+    function makeQueryString(string1, string2) {
         var result = '';
         if ((defined(string1) && string1.length > 0) || (defined(string2) && string2.length > 0)) {
-            result = (addQuestionMark) ? '?' : '';
-            result += joinUrls(cleanupString(string1), cleanupString(string2));
+            result += joinUrls(cleanupString(string1), cleanupString(string2), false);
         }
 
         return result;
     }
 
+    var zeroRectangle = new Rectangle();
     var scratchCartographic = new Cartographic();
     var scratchCartesian2 = new Cartesian2();
     var scratchCartesian3 = new Cartesian3();
@@ -1697,7 +1697,7 @@ define([
             var centerCartesian;
             var centerCartographic;
 
-            bbox = defaultValue(bbox, camera.computeViewRectangle());
+            bbox = defaultValue(bbox, zeroRectangle);
             if (defined(canvas)) {
                 scratchCartesian2.x = canvas.clientWidth * 0.5;
                 scratchCartesian2.y = canvas.clientHeight * 0.5;
@@ -1812,10 +1812,11 @@ define([
                 var defaultViewFormat = (viewRefreshMode === 'onStop') ? 'BBOX=[bboxWest],[bboxSouth],[bboxEast],[bboxNorth]' : '';
                 var viewFormat = defaultValue(queryStringValue(link, 'viewFormat', namespaces.kml), defaultViewFormat);
                 var httpQuery = queryStringValue(link, 'httpQuery', namespaces.kml);
-                var queryString = makeQueryString(viewFormat, httpQuery, false);
+                var queryString = makeQueryString(viewFormat, httpQuery);
 
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString, false), viewBoundScale);
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString, false),
+                                                            viewBoundScale, dataSource._lastCameraView.bbox);
 
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
                     var entities = dataSource._entityCollection;
@@ -2333,7 +2334,7 @@ define([
         });
     };
 
-    function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks) {
+    function getNetworkLinkUpdateCallback(dataSource, networkLink, newEntityCollection, networkLinks, processedHref) {
         return function(rootElement) {
             if (!networkLinks.contains(networkLink.id)) {
                 // Got into the odd case where a parent network link was updated while a child
@@ -2446,7 +2447,7 @@ define([
 
             networkLink.updating = false;
             networkLink.needsUpdate = false;
-            dataSource._refresh.raiseEvent(dataSource, networkLink.href);
+            dataSource._refresh.raiseEvent(dataSource, processedHref);
         };
     }
 
@@ -2530,10 +2531,10 @@ define([
                     recurseIgnoreEntities(entity);
                     networkLink.updating = true;
                     var newEntityCollection = new EntityCollection();
-                    var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString, true), false);
+                    var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href)
-                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks))
+                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
                         .otherwise(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
                             console.log(msg);
