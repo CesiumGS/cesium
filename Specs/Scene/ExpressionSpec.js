@@ -52,4 +52,20 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
+
+    it('evaluates unary not', function() {
+        var expression = new Expression(new MockStyleEngine(), '!true');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '!!true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates unary negative', function() {
+        var expression = new Expression(new MockStyleEngine(), '-5');
+        expect(expression.evaluate(undefined)).toEqual(-5);
+
+        expression = new Expression(new MockStyleEngine(), '-(-5)');
+        expect(expression.evaluate(undefined)).toEqual(5);
+    });
 });

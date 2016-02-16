@@ -31,8 +31,10 @@ define([
         return this._runtimeAst.evaluate(feature);
     };
 
-    function Node(value) {
+    function Node(value, left, right) {
         this._value = value;
+        this._left = left;
+        this._right = right;
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
@@ -63,17 +65,41 @@ define([
                     node = new Node(val);
                 }
             }
+        } else if (ast.type === 'UnaryExpression') {
+            var op = ast.operator;
+            var child = createRuntimeAst(expression, ast.argument);
+            if (op === '!') {
+                node = new Node(op, child);
+            } else if (op === '-') {
+                node = new Node(op, child);
+            }
         }
 
         return node;
     }
 
     function setEvaluateFunction(node) {
-        node.evaluate = node._evaluateLiteral;
+        if (defined(node._left)) {
+            if (node._value === '!') {
+                node.evaluate = node._evaluateNot;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateNegative;
+            }
+        } else {
+            node.evaluate = node._evaluateLiteral;
+        }
     }
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateNot = function(feature) {
+        return !(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateNegative = function(feature) {
+        return -(this._left.evaluate(feature));
     };
 
     return Expression;
