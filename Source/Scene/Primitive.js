@@ -278,7 +278,6 @@ define([
          * @private
          */
         this.rtcCenter = options.rtcCenter;
-        this._modifiedModelView = new Matrix4();
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
@@ -1158,7 +1157,10 @@ define([
         validateShaderMatching(primitive._sp, attributeLocations);
     }
 
-    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
         var appearanceUniformMap = {};
@@ -1180,7 +1182,11 @@ define([
 
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {
-                return primitive._modifiedModelView;
+                var viewMatrix = frameState.context.uniformState.view;
+                Matrix4.multiply(viewMatrix, primitive._modelMatrix, modifiedModelViewScratch);
+                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive.rtcCenter, rtcScratch);
+                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
             };
         }
 
@@ -1296,8 +1302,6 @@ define([
         }
     }
 
-    var rtcScratch = new Cartesian3();
-
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
@@ -1321,13 +1325,6 @@ define([
                     }
                 }
             }
-        }
-
-        if (defined(primitive.rtcCenter)) {
-            var viewMatrix = frameState.camera.viewMatrix;
-            Matrix4.multiply(viewMatrix, primitive._modelMatrix, primitive._modifiedModelView);
-            Matrix4.multiplyByPoint(primitive._modifiedModelView, primitive.rtcCenter, rtcScratch);
-            Matrix4.setTranslation(primitive._modifiedModelView, rtcScratch, primitive._modifiedModelView);
         }
 
         var boundingSpheres;
@@ -1467,7 +1464,7 @@ define([
 
         if (createRS || createSP) {
             var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
-            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands);
+            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
         }
 
         updatePerInstanceAttributes(this);

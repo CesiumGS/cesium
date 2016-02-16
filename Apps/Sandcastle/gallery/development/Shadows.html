@@ -31,6 +31,7 @@ function startup(Cesium) {
 var globeVisible = false;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true,
     infoBox : false,
     selectionIndicator : false,
     globe : globeVisible ? undefined : false,
@@ -41,6 +42,7 @@ var scene = viewer.scene;
 var camera = scene.camera;
 var shadowMap = scene.sunShadowMap;
 shadowMap.debugShow = true;
+shadowMap.enabled = true;
 
 var centerLongitude = -1.31968;
 var centerLatitude = 0.698874;
@@ -67,14 +69,55 @@ function createModel(url) {
     });
 }
 
-function createBox() {
+function createBoxRTC() {
     var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 60);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var boxGeometry = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
+    }));
+
+    console.log(boxGeometry);
+
+    var positions = boxGeometry.attributes.position.values;
+    var newPositions = new Float32Array(positions.length);
+    for (var i = 0; i < positions.length; ++i) {
+        newPositions[i] = positions[i];
+    }
+    boxGeometry.attributes.position.values = newPositions;
+    boxGeometry.attributes.position.componentDatatype = Cesium.ComponentDatatype.FLOAT;
+
+    Cesium.BoundingSphere.transform(boxGeometry.boundingSphere, modelMatrix, boxGeometry.boundingSphere);
+
+    var boxGeometryInstance = new Cesium.GeometryInstance({
+        geometry : boxGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    });
+
+    var box = new Cesium.Primitive({
+        geometryInstances : boxGeometryInstance,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        }),
+        asynchronous : false,
+        rtcCenter : boxGeometry.boundingSphere.center
+    });
+
+    scene.primitives.add(box);
+}
+
+function createBox() {
+    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 65);
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
     var box = new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : Cesium.BoxGeometry.fromDimensions({
-                dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0),
+                dimensions : new Cesium.Cartesian3(0.5, 0.5, 0.5),
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             modelMatrix : modelMatrix,
@@ -99,7 +142,7 @@ function createSphere() {
     var sphere = new Cesium.Primitive({
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.SphereGeometry({
-                radius : 3.0,
+                radius : 2.0,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             modelMatrix : modelMatrix,
@@ -120,6 +163,7 @@ function createSphere() {
 //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
 createModel('../../SampleData/models/shadow_tester.gltf');
 createBox();
+createBoxRTC();
 createSphere();
 
 function setCascades(cascades) {
