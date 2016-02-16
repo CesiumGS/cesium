@@ -3,14 +3,12 @@ define([
        '../Core/Color',
        '../Core/defined',
        '../Core/defineProperties',
-       '../ThirdParty/jsep',
-       './ExpressionType'
+       '../ThirdParty/jsep'
     ], function(
         Color,
         defined,
         defineProperties,
-        jsep,
-        ExpressionType) {
+        jsep) {
     "use strict";
 
     /**
@@ -29,17 +27,22 @@ define([
     defineProperties(Expression.prototype, {
     });
 
-    function Node(type, value, evaluate) {
-        this._type = type;
+    Expression.prototype.evaluate = function(feature) {
+        return this._runtimeAst.evaluate(feature);
+    };
+
+    function Node(value) {
         this._value = value;
-        this.evaluate = evaluate;
+        this.evaluate = undefined;
+
+        setEvaluateFunction(this);
     }
 
     function createRuntimeAst(expression, ast) {
         var node;
 
         if (ast.type === 'Literal') {
-            node = new Node(ExpressionType.LITERAL, ast.value, expression._evaluateLiteral);
+            node = new Node(ast.value);
         } else if (ast.type === 'CallExpression') {
             var call = ast.callee.name;
             var args = ast.arguments;
@@ -47,17 +50,17 @@ define([
             if (call === 'color') {
                 val = Color.fromCssColorString(args[0].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
+                    node = new Node(val);
                 }
             } else if (call === 'rgb') {
                 val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
+                    node = new Node(val);
                 }
             } else if (call === 'hsl') {
                 val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
                 if (defined(val)) {
-                    node = new Node(ExpressionType.LITERAL, val, expression._evaluateLiteral);
+                    node = new Node(val);
                 }
             }
         }
@@ -65,11 +68,11 @@ define([
         return node;
     }
 
-    Expression.prototype.evaluate = function(feature) {
-        return this._runtimeAst.evaluate(feature);
-    };
+    function setEvaluateFunction(node) {
+        node.evaluate = node._evaluateLiteral;
+    }
 
-    Expression.prototype._evaluateLiteral = function(feature) {
+    Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
     };
 

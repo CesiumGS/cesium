@@ -8,12 +8,12 @@ define([
     /**
      * @private
      */
-    var ExpressionType = {
+    var AstNodeType = {
         LITERAL : 0,
         UNARY : 1,
         BINARY : 2,
         TERNARY : 3
     };
 
-    return freezeObject(ExpressionType);
+    return freezeObject(AstNodeType);
 });
