@@ -29,7 +29,6 @@ define([
     };
 
     ShadowMapShader.createReceiveShadowsVertexShader = function(vs) {
-        // TODO: will need to adapt this for GPU RTE, e.g., when there is low and high position attributes.
         vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
         vs +=
             'varying vec3 czm_shadowMapCoordinate; \n' +
