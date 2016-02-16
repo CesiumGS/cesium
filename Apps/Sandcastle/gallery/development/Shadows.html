@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 
 var globeVisible = false;
@@ -67,8 +67,60 @@ function createModel(url) {
     });
 }
 
+function createBox() {
+    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 60);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var box = new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : Cesium.BoxGeometry.fromDimensions({
+                dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0),
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        }),
+        asynchronous : false
+    });
+
+    scene.primitives.add(box);
+}
+
+function createSphere() {
+    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 55);
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var sphere = new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.SphereGeometry({
+                radius : 3.0,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : true,
+            closed : true
+        }),
+        asynchronous : false
+    });
+
+    scene.primitives.add(sphere);
+}
+
 //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
 createModel('../../SampleData/models/shadow_tester.gltf');
+createBox();
+createSphere();
 
 function setCascades(cascades) {
     return function() {
@@ -94,7 +146,6 @@ Sandcastle.addToolbarButton('Debug on/off', function() {
 Sandcastle.addToolbarButton('Freeze on/off', function() {
     shadowMap.debugFreezeFrame = !shadowMap.debugFreezeFrame;
 });
-
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
