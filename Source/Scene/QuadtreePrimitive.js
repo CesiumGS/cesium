@@ -266,6 +266,20 @@ define([
         }
 
         this._tileProvider.initialize(frameState);
+
+        var debug = this._debug;
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        debug.maxDepth = 0;
+        debug.tilesVisited = 0;
+        debug.tilesCulled = 0;
+        debug.tilesRendered = 0;
+        debug.tilesWaitingForChildren = 0;
+
+        this._tileLoadQueue.length = 0;
+        this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
     QuadtreePrimitive.prototype.update = function(frameState) {
@@ -276,7 +290,6 @@ define([
 
             selectTilesForRendering(this, frameState);
             createRenderCommandsForSelectedTiles(this, frameState);
-            processTileLoadQueue(this, frameState);
 
             this._tileProvider.endUpdate(frameState);
         }
@@ -290,6 +303,31 @@ define([
         var passes = frameState.passes;
         if (!passes.render) {
             return;
+        }
+
+        processTileLoadQueue(this, frameState);
+        updateHeights(this, frameState);
+
+        var debug = this._debug;
+        if (debug.suspendLodUpdate) {
+            return;
+        }
+
+        if (debug.enableDebugOutput) {
+            if (debug.tilesVisited !== debug.lastTilesVisited ||
+                debug.tilesRendered !== debug.lastTilesRendered ||
+                debug.tilesCulled !== debug.lastTilesCulled ||
+                debug.maxDepth !== debug.lastMaxDepth ||
+                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
+
+                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
+
+                debug.lastTilesVisited = debug.tilesVisited;
+                debug.lastTilesRendered = debug.tilesRendered;
+                debug.lastTilesCulled = debug.tilesCulled;
+                debug.lastMaxDepth = debug.maxDepth;
+                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
+            }
         }
     };
 
@@ -335,7 +373,6 @@ define([
 
     function selectTilesForRendering(primitive, frameState) {
         var debug = primitive._debug;
-
         if (debug.suspendLodUpdate) {
             return;
         }
@@ -349,15 +386,6 @@ define([
 
         var traversalQueue = primitive._tileTraversalQueue;
         traversalQueue.clear();
-
-        debug.maxDepth = 0;
-        debug.tilesVisited = 0;
-        debug.tilesCulled = 0;
-        debug.tilesRendered = 0;
-        debug.tilesWaitingForChildren = 0;
-
-        primitive._tileLoadQueue.length = 0;
-        primitive._tileReplacementQueue.markStartOfRenderFrame();
 
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
@@ -448,23 +476,6 @@ define([
         }
 
         raiseTileLoadProgressEvent(primitive);
-
-        if (debug.enableDebugOutput) {
-            if (debug.tilesVisited !== debug.lastTilesVisited ||
-                debug.tilesRendered !== debug.lastTilesRendered ||
-                debug.tilesCulled !== debug.lastTilesCulled ||
-                debug.maxDepth !== debug.lastMaxDepth ||
-                debug.tilesWaitingForChildren !== debug.lastTilesWaitingForChildren) {
-
-                console.log('Visited ' + debug.tilesVisited + ', Rendered: ' + debug.tilesRendered + ', Culled: ' + debug.tilesCulled + ', Max Depth: ' + debug.maxDepth + ', Waiting for children: ' + debug.tilesWaitingForChildren);
-
-                debug.lastTilesVisited = debug.tilesVisited;
-                debug.lastTilesRendered = debug.tilesRendered;
-                debug.lastTilesCulled = debug.tilesCulled;
-                debug.lastMaxDepth = debug.maxDepth;
-                debug.lastTilesWaitingForChildren = debug.tilesWaitingForChildren;
-            }
-        }
     }
 
     /**
@@ -684,8 +695,6 @@ define([
             }
             tile._frameRendered = frameState.frameNumber;
         }
-
-        updateHeights(primitive, frameState);
     }
 
     return QuadtreePrimitive;

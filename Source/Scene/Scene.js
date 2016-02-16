@@ -2042,7 +2042,11 @@ define([
         frameState.creditDisplay.endFrame();
 
         if (defined(scene.globe)) {
+            // TODO: temporary workaround. processTileLoadQueue in QuadtreePrimitive adds compute commands.
+            scene._computeCommandList.length = 0;
             scene.globe.finalize(frameState);
+            createPotentiallyVisibleSet(scene);
+            executeComputeCommands(scene);
         }
 
         if (scene.debugShowFramesPerSecond) {
