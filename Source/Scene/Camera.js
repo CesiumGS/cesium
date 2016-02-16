@@ -2828,20 +2828,13 @@ define([
 
         var i;
         var point;
-        var north = (cartographics[0].latitude >= 0.0);
         var cartographicsCount = cartographics.length;
-
-        // If we are in the south pole reverse the points
-        if (!north) {
-            cartographics.reverse();
-        }
 
         // Detect if we go over the poles
         var distance = 0;
         var lastLon = cartographics[cartographicsCount-1].longitude;
         for (i=0;i<cartographicsCount;++i) {
             point = cartographics[i];
-            //if ((north && point.latitude < 0.0) || (!north && point.latitude))
             var lon = point.longitude;
             var diff = Math.abs(lon - lastLon);
             if (diff > CesiumMath.PI) {
@@ -2869,7 +2862,7 @@ define([
         if (CesiumMath.equalsEpsilon(Math.abs(distance), CesiumMath.TWO_PI, CesiumMath.EPSILON9)) {
             result.west = -CesiumMath.PI;
             result.east = CesiumMath.PI;
-            if (north) {
+            if (cartographics[0].latitude >= 0.0) {
                 result.north = CesiumMath.PI_OVER_TWO;
             } else {
                 result.south = -CesiumMath.PI_OVER_TWO;

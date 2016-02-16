@@ -3222,7 +3222,7 @@ defineSuite([
             </coordinates>\
             </LineString>\
             </Placemark>\
-          <Document>';
+          </Document>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml")).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
@@ -3266,7 +3266,6 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <LineString>\
-                <gx:drawOrder>1</gx:drawOrder>\
                 <coordinates>1,2,3 \
                          4,5,6 \
                 </coordinates>\
@@ -3288,7 +3287,6 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <LineString>\
-                <gx:drawOrder>1</gx:drawOrder>\
                 <coordinates>1,2,3 \
                          4,5,6 \
                 </coordinates>\
@@ -3309,7 +3307,6 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <LineString>\
-                <gx:drawOrder>1</gx:drawOrder>\
                 <coordinates>1,2,3 \
                          4,5,6 \
                 </coordinates>\
