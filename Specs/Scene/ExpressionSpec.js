@@ -68,4 +68,69 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '-(-5)');
         expect(expression.evaluate(undefined)).toEqual(5);
     });
+
+    it('evaluates binary addition', function() {
+        var expression = new Expression(new MockStyleEngine(), '1 + 2');
+        expect(expression.evaluate(undefined)).toEqual(3);
+
+        expression = new Expression(new MockStyleEngine(), '1 + 2 + 3 + 4');
+        expect(expression.evaluate(undefined)).toEqual(10);
+    });
+
+    it('evaluates binary subtraction', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 - 1');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), '4 - 3 - 2 - 1');
+        expect(expression.evaluate(undefined)).toEqual(-2);
+    });
+
+    it('evaluates binary multiplication', function() {
+        var expression = new Expression(new MockStyleEngine(), '1 * 2');
+        expect(expression.evaluate(undefined)).toEqual(2);
+
+        expression = new Expression(new MockStyleEngine(), '1 * 2 * 3 * 4');
+        expect(expression.evaluate(undefined)).toEqual(24);
+    });
+
+    it('evaluates binary division', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 / 1');
+        expect(expression.evaluate(undefined)).toEqual(2);
+
+        expression = new Expression(new MockStyleEngine(), '1/2');
+        expect(expression.evaluate(undefined)).toEqual(0.5);
+
+        expression = new Expression(new MockStyleEngine(), '24 / -4 / 2');
+        expect(expression.evaluate(undefined)).toEqual(-3);
+    });
+
+    it('evaluates binary modulus', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 % 1');
+        expect(expression.evaluate(undefined)).toEqual(0);
+
+        expression = new Expression(new MockStyleEngine(), '6 % 4 % 3');
+        expect(expression.evaluate(undefined)).toEqual(2);
+    });
+
+    it('evaluates binary equals', function() {
+        var expression = new Expression(new MockStyleEngine(), '\'hello\' === \'hello\'');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '1 === 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'false === true === false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates binary not equals', function() {
+        var expression = new Expression(new MockStyleEngine(), '\'hello\' !== \'hello\'');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '1 !== 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'false !== true !== false');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
 });
