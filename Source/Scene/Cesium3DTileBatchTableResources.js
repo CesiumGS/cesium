@@ -37,7 +37,6 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
-// * TODO: modify shaders to use alpha
 // * TODO: modify/create commands
 
     /**
@@ -226,12 +225,8 @@ define([
             // opaque commands, translucent commands, or both for rendering.
             var isTranslucent = (newAlpha !== 255);
             if (isTranslucent && !wasTranslucent) {
-// TODO
-debugger;
                 ++this._translucentFeaturesLength;
             } else if (!isTranslucent && wasTranslucent) {
-// TODO
-debugger;
                 --this._translucentFeaturesLength;
             }
 
@@ -402,15 +397,15 @@ debugger;
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
-                    'varying vec3 tile_featureColor; \n' +
+                    'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    float show = ceil(featureProperties.a); \n' +      // 0 - false, 1 - true
-                    '    gl_Position *= show; \n' +                         // Per batched feature show/hide
-                    '    tile_featureColor = featureProperties.rgb; \n' +   // Pass batched feature color to fragment shader
+                    '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
+                    '    gl_Position *= show; \n' +                         // Per-feature show/hide
+                    '    tile_featureColor = featureProperties; \n' +
                     '}';
             } else {
                 newMain =
@@ -458,14 +453,13 @@ debugger;
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per batched feature show/hide already
-                // happened in the fragment shader
+                // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 newMain =
-                    'varying vec3 tile_featureColor; \n' +
+                    'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    gl_FragColor.rgb *= tile_featureColor; \n' +
+                    '    gl_FragColor *= tile_featureColor; \n' +
                     '}';
             } else {
                 newMain =
@@ -474,11 +468,11 @@ debugger;
                     'void main() \n' +
                     '{ \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-                    '    if (featureProperties.a == 0.0) { \n' +
+                    '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
                     '    } \n' +
                     '    tile_main(); \n' +
-                    '    gl_FragColor.rgb *= featureProperties.rgb; \n' +
+                    '    gl_FragColor *= featureProperties; \n' +
                     '}';
             }
 
@@ -513,7 +507,7 @@ debugger;
             var newMain;
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, perform per batched feature show/hide in the vertex shader
+                // When VTF is supported, perform per-feature show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
                     'varying vec2 tile_featureSt; \n' +
@@ -522,8 +516,8 @@ debugger;
                     '    tile_main(); \n' +
                     '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
-                    '    float show = ceil(featureProperties.a); \n' +    // 0 - false, 1 - true
-                    '    gl_Position *= show; \n' +                       // Per batched feature show/hide
+                    '    float show = ceil(featureProperties.a); \n' +    // 0 - false, non-zero - true
+                    '    gl_Position *= show; \n' +                       // Per-feature show/hide
                     '    tile_featureSt = st; \n' +
                     '}';
             } else {
@@ -545,16 +539,18 @@ debugger;
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
+            // Pick shaders do not need to take into account per-feature color/alpha.
+            // (except when alpha is zero, which is treated as if show is false, so
+            //  it does not write depth in the color or pick pass).
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
-                // When VTF is supported, per batched feature show/hide already
-                // happened in the fragment shader
+                // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 newMain =
                     'uniform sampler2D tile_pickTexture; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
                     '    tile_main(); \n' +
-                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' + // per-feature show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
                     '    } \n' +
                     '    gl_FragColor = texture2D(tile_pickTexture, tile_featureSt); \n' +
@@ -567,8 +563,8 @@ debugger;
                     'void main() \n' +
                     '{ \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
-                    '    if (featureProperties.a == 0.0) { \n' +
-                    '        discard; \n' +                       // Per batched feature show/hide
+                    '    if (featureProperties.a == 0.0) { \n' +  // per-feature show: alpha == 0 - false, non-zeo - true
+                    '        discard; \n' +
                     '    } \n' +
                     '    tile_main(); \n' +
                     '    if (gl_FragColor.a == 0.0) { \n' +
