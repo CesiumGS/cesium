@@ -1941,6 +1941,10 @@ define([
         viewport.width = context.drawingBufferWidth;
         viewport.height = context.drawingBufferHeight;
 
+        if (defined(scene.globe)) {
+            scene.globe.initialize(frameState);
+        }
+
         updateEnvironment(scene);
 
         if (scene.mode !== SceneMode.SCENE2D) {
@@ -1983,7 +1987,6 @@ define([
                 executeComputeCommands(scene);
                 executeCommands(scene, passState);
 
-                /*
                 viewport.x = windowCoordinates.x;
 
                 camera.position.x = -camera.position.x;
@@ -1997,7 +2000,6 @@ define([
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
-                 */
 
                 camera.position.x = x;
                 camera.frustum = frustum.clone();
@@ -2015,7 +2017,6 @@ define([
                 executeComputeCommands(scene);
                 executeCommands(scene, passState);
 
-                /*
                 viewport.x = viewport.x - viewport.width;
 
                 camera.position.x = -camera.position.x;
@@ -2029,7 +2030,6 @@ define([
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 executeCommands(scene, passState);
-                 */
 
                 camera.position.x = x;
                 camera.frustum = frustum.clone();
@@ -2040,6 +2040,10 @@ define([
         executeOverlayCommands(scene, passState);
 
         frameState.creditDisplay.endFrame();
+
+        if (defined(scene.globe)) {
+            scene.globe.finalize(frameState);
+        }
 
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {

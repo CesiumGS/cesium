@@ -259,14 +259,10 @@ define([
         return object.removeFunc;
     };
 
-    /**
-     * Updates the primitive.
-     *
-     * @param {Context} context The rendering context to use.
-     * @param {FrameState} frameState The state of the current frame.
-     * @param {DrawCommand[]} commandList The list of draw commands.  The primitive will usually add
-     *        commands to this array during the update call.
-     */
+    QuadtreePrimitive.prototype.initialize = function(frameState) {
+
+    };
+
     QuadtreePrimitive.prototype.update = function(frameState) {
         var passes = frameState.passes;
 
@@ -283,6 +279,10 @@ define([
         if (passes.pick && this._tilesToRender.length > 0) {
             this._tileProvider.updateForPick(frameState);
         }
+    };
+
+    QuadtreePrimitive.prototype.finalize = function(frameState) {
+
     };
 
     /**

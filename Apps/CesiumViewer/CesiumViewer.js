@@ -58,10 +58,10 @@ define([
     var viewer;
     try {
         viewer = new Viewer('cesiumContainer', {
+            //sceneMode : SceneMode.SCENE2D,
             imageryProvider : imageryProvider,
             baseLayerPicker : !defined(imageryProvider),
-            //scene3DOnly : endUserOptions.scene3DOnly,
-            sceneMode : SceneMode.SCENE2D
+            //scene3DOnly : endUserOptions.scene3DOnly
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';

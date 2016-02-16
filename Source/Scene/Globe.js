@@ -398,10 +398,7 @@ define([
         return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
     };
 
-    /**
-     * @private
-     */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.initialize = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -465,11 +462,50 @@ define([
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
 
+            surface.initialize(frameState);
+        }
+    };
+
+    Globe.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var context = frameState.context;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        if (width === 0 || height === 0) {
+            return;
+        }
+
+        var surface = this._surface;
+        var pass = frameState.passes;
+
+        if (pass.render) {
             surface.update(frameState);
         }
 
         if (pass.pick) {
             surface.update(frameState);
+        }
+    };
+
+    Globe.prototype.finalize = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var context = frameState.context;
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        if (width === 0 || height === 0) {
+            return;
+        }
+
+        if (frameState.passes.render) {
+            this._surface.finalize(frameState);
         }
     };
 
