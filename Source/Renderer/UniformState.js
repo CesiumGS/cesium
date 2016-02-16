@@ -138,6 +138,7 @@ define([
         this._sunDirectionEC = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
 
+        this._pass = undefined;
         this._mode = undefined;
         this._mapProjection = undefined;
         this._cameraDirection = new Cartesian3();
@@ -766,6 +767,16 @@ define([
             get : function() {
                 return this._fogDensity;
             }
+        },
+
+        /**
+         * @memberof UniformState.prototype
+         * @type {Pass}
+         */
+        pass : {
+            get : function() {
+                return this._pass;
+            }
         }
     });
 
@@ -868,6 +879,10 @@ define([
         this._frustumPlanes.y = frustum.bottom;
         this._frustumPlanes.z = frustum.left;
         this._frustumPlanes.w = frustum.right;
+    };
+
+    UniformState.prototype.updatePass = function(pass) {
+        this._pass = pass;
     };
 
     /**
