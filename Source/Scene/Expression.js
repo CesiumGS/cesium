@@ -3,17 +3,15 @@ define([
        '../Core/Color',
        '../Core/defined',
        '../Core/defineProperties',
-       '../ThirdParty/jsep'
+       '../ThirdParty/jsep',
+       './ExpressionType'
     ], function(
         Color,
         defined,
         defineProperties,
-        jsep) {
+        jsep,
+        ExpressionType) {
     "use strict";
-
-    var LITERAL = 0;
-    var UNARY = 1;
-    var BINARY = 2;
 
     /**
      * DOC_TBA
@@ -41,7 +39,7 @@ define([
         var node;
 
         if (ast.type === 'Literal') {
-            node = new Node(LITERAL, ast.value);
+            node = new Node(ExpressionType.LITERAL, ast.value);
         } else if (ast.type === 'CallExpression') {
             var call = ast.callee.name;
             var args = ast.arguments;
@@ -49,12 +47,17 @@ define([
             if (call === 'color') {
                  val = Color.fromCssColorString(args[0].value);
                 if (defined(val)) {
-                    node = new Node(LITERAL, val);
+                    node = new Node(ExpressionType.LITERAL, val);
                 }
             } else if (call === 'rgb') {
                 val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
                 if (defined(val)) {
-                    node = new Node(LITERAL, val);
+                    node = new Node(ExpressionType.LITERAL, val);
+                }
+            } else if (call === 'hsl') {
+                val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
+                if (defined(val)) {
+                    node = new Node(ExpressionType.LITERAL, val);
                 }
             }
         }
@@ -65,7 +68,7 @@ define([
     Expression.prototype.evaluate = function(feature) {
         var runtimeAst = this._runtimeAst;
 
-        if (runtimeAst._type === LITERAL) {
+        if (runtimeAst._type === ExpressionType.LITERAL) {
             return runtimeAst._value;
         }
 

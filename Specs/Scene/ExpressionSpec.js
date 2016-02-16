@@ -48,5 +48,8 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 255)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
+        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 });
