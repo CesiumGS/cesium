@@ -2520,7 +2520,12 @@ define([
                     var href = joinUrls(networkLink.href, makeQueryString(networkLink.cookie, networkLink.queryString, true), false);
                     href = processNetworkLinkQueryString(that._camera, that._canvas, href, networkLink.viewBoundScale, lastCameraView.bbox);
                     load(that, newEntityCollection, href)
-                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks));
+                        .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks))
+                        .otherwise(function(error) {
+                            var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
+                            console.log(msg);
+                            that._error.raiseEvent(that, msg);
+                        });
                     changed = true;
                 }
             }
