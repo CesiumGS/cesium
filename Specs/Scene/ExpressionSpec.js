@@ -13,12 +13,12 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
-    xit('evaluates literal null', function() {
+    it('evaluates literal null', function() {
         var expression = new Expression(new MockStyleEngine(), 'null');
         expect(expression.evaluate(undefined)).toEqual(null);
     });
 
-    xit('evaluates literal boolean', function() {
+    it('evaluates literal boolean', function() {
         var expression = new Expression(new MockStyleEngine(), 'true');
         expect(expression.evaluate(undefined)).toEqual(true);
 
@@ -26,7 +26,7 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
-    xit('evaluates literal number', function() {
+    it('evaluates literal number', function() {
         var expression = new Expression(new MockStyleEngine(), '1');
         expect(expression.evaluate(undefined)).toEqual(1);
 
@@ -34,12 +34,12 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(0);
     });
 
-    xit('evaluates literal string', function() {
+    it('evaluates literal string', function() {
         var expression = new Expression(new MockStyleEngine(), '\'hello\'');
         expect(expression.evaluate(undefined)).toEqual('hello');
     });
 
-    xit('evaluates literal color', function() {
+    it('evaluates literal color', function() {
         var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 

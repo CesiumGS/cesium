@@ -17,10 +17,6 @@ define([
     function Expression(styleEngine, expression) {
         this._styleEngine = styleEngine;
 
-        // remove any operators we do not support
-        jsep.removeUnaryOp("~");
-        jsep.removeUnaryOp("+");
-
         var ast = jsep(expression);
         console.log(ast);
 
@@ -83,7 +79,15 @@ define([
     }
 
     function setEvaluateFunction(node) {
-        node.evaluate = node._evaluateLiteral;
+        if (defined(node._left)) {
+            if (node._value === '!') {
+                node.evaluate = node._evaluateNot;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateNegative;
+            }
+        } else {
+            node.evaluate = node._evaluateLiteral;
+        }
     }
 
     Node.prototype._evaluateLiteral = function(feature) {
