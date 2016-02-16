@@ -1932,7 +1932,6 @@ define([
     function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {
         var deferred = when.defer();
 
-        dataSource._promises = [];
         entityCollection.removeAll();
 
         var documentElement = kml.documentElement;
@@ -1941,9 +1940,10 @@ define([
         if (!defined(name) && defined(sourceUri)) {
             name = getFilenameFromUri(sourceUri);
         }
-        if (dataSource._name !== name) {
+
+        // Only set the name from the root document
+        if (!defined(dataSource._name)) {
             dataSource._name = name;
-            dataSource._changed.raiseEvent(dataSource);
         }
 
         var styleCollection = new EntityCollection(dataSource);
@@ -2263,6 +2263,10 @@ define([
 
         DataSource.setLoading(this, true);
 
+        var oldName = this._name;
+        this._name = undefined;
+        this._promises = [];
+
         var that = this;
         return load(this, this._entityCollection, data, options).then(function() {
             return when.all(that._promises, function() {
@@ -2300,8 +2304,17 @@ define([
                     clock.multiplier = Math.round(Math.min(Math.max(JulianDate.secondsDifference(stop, start) / 60, 1), 3.15569e7));
                 }
 
+                var changed = false;
                 if (clock !== that._clock) {
                     that._clock = clock;
+                    changed = true;
+                }
+
+                if (oldName !== that._name) {
+                    changed = true;
+                }
+
+                if (changed) {
                     that._changed.raiseEvent(that);
                 }
 
