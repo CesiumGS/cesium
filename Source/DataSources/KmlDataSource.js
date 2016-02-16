@@ -1822,10 +1822,11 @@ define([
                     var newEntities = networkLinkCollection.values;
                     entities.suspendEvents();
                     for (var i = 0; i < newEntities.length; i++) {
-                        if (!defined(newEntities[i].parent)) {
-                            newEntities[i].parent = networkEntity;
+                        var newEntity = newEntities[i];
+                        if (!defined(newEntity.parent)) {
+                            newEntity.parent = networkEntity;
                         }
-                        entities.add(newEntities[i]);
+                        entities.add(newEntity);
                     }
                     entities.resumeEvents();
 
