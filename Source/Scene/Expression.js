@@ -11,29 +11,50 @@ define([
         jsep) {
     "use strict";
 
+    var LITERAL = 0;
+    var UNARY = 1;
+    var BINARY = 2;
+
     /**
      * DOC_TBA
      */
     function Expression(styleEngine, expression) {
         this._styleEngine = styleEngine;
 
-        this._ast = jsep(expression);
-        this._runtimeAST = undefined;
+        var ast = jsep(expression);
+        this._runtimeAst = undefined;
 
-        console.log(this._ast);
-        this._runtimeAST = createRuntimeAst(this._ast);
-        console.log(this._runtimeAST);
+        console.log(ast);
+        this._runtimeAst = createRuntimeAst(ast);
+        console.log(this._runtimeAst);
+    }
+
+    defineProperties(Expression.prototype, {
+    });
+
+    function Node(type, value) {
+        this._type = type;
+        this._value = value;
     }
 
     function createRuntimeAst(ast) {
-        var node = ast;
-        if (ast.type === 'Literal') {
+        var node;
 
-            //check if the string is a color, if so turn it into a cesium color
-            if (typeof(ast.value) === 'string') {
-                var c = Color.fromCssColorString(ast.value);
-                if (defined(c)) {
-                    node.value = c;
+        if (ast.type === 'Literal') {
+            node = new Node(LITERAL, ast.value);
+        } else if (ast.type === 'CallExpression') {
+            var call = ast.callee.name;
+            var args = ast.arguments;
+            var val;
+            if (call === 'color') {
+                 val = Color.fromCssColorString(args[0].value);
+                if (defined(val)) {
+                    node = new Node(LITERAL, val);
+                }
+            } else if (call === 'rgb') {
+                val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
+                if (defined(val)) {
+                    node = new Node(LITERAL, val);
                 }
             }
         }
@@ -41,13 +62,11 @@ define([
         return node;
     }
 
-    defineProperties(Expression.prototype, {
-    });
-
     Expression.prototype.evaluate = function(feature) {
+        var runtimeAst = this._runtimeAst;
 
-        if (this._runtimeAST.type === 'Literal') {
-            return this._runtimeAST.value;
+        if (runtimeAst._type === LITERAL) {
+            return runtimeAst._value;
         }
 
         return undefined;

@@ -40,10 +40,13 @@ defineSuite([
     });
 
     it('evaluates literal color', function() {
-        var expression = new Expression(new MockStyleEngine(), '\'#ffffff\'');
+        var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), '\'white\'');
+        expression = new Expression(new MockStyleEngine(), 'color(\'white\')');
+        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 255)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 });
