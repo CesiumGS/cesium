@@ -72,7 +72,7 @@ define([
      * @private
      */
     function ShadowMap(context, camera) {
-        this.enabled = true;
+        this.enabled = false;
 
         this.debugShow = false;
         this.debugFreezeFrame = false;
