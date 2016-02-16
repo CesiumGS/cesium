@@ -33,7 +33,8 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMapShader'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -68,7 +69,8 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ShadowMapShader) {
     'use strict';
 
     /**
@@ -108,7 +110,8 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     *
+     * @param {Boolean} [options.castShadows=true] Determines whether this primitive will cast shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether this primitive will receive shadows when shadow mapping is enabled.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -283,6 +286,28 @@ define([
         }
         //>>includeEnd('debug');
 
+        /**
+         * Determines whether this primitive will cast shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.castShadows = defaultValue(options.castShadows, true);
+        this._castShadows = this.castShadows;
+
+        /**
+         * Determines whether this primitive will receive shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.receiveShadows = defaultValue(options.receiveShadows, true);
+        this._receiveShadows = this.receiveShadows;
+
+        this._shadowsEnabled = true;
+
         this._translucent = undefined;
 
         this._state = PrimitiveState.READY;
@@ -314,6 +339,8 @@ define([
         this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
+
+        this._shadowCastSP = undefined;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -1077,31 +1104,32 @@ define([
     function createShaderProgram(primitive, frameState, appearance) {
         var context = frameState.context;
 
+        var attributeLocations = primitive._attributeLocations;
+
         var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
-        var attributeLocations = primitive._attributeLocations;
-        primitive._sp = ShaderProgram.replaceCache({
-            context : context,
-            shaderProgram : primitive._sp,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-        validateShaderMatching(primitive._sp, attributeLocations);
-
-        if (primitive.allowPicking) {
-            var pickFS = new ShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'varying'
+        // Create shadow cast program
+        if (!defined(primitive._shadowCastSP) && frameState.shadowsEnabled && primitive.castShadows) {
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, context);
+            primitive._shadowCastSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shadowCastVS,
+                fragmentShaderSource : shadowCastFS,
+                attributeLocations : attributeLocations
             });
+        }
+
+        // Create pick program
+        if (primitive.allowPicking) {
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._pickSP,
                 vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
-                fragmentShaderSource : pickFS,
+                fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
                 attributeLocations : attributeLocations
             });
         } else {
@@ -1112,8 +1140,22 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-
         validateShaderMatching(primitive._pickSP, attributeLocations);
+
+        // Modify program to receive shadows
+        if (frameState.shadowsEnabled && primitive.receiveShadows) {
+            vs = ShadowMapShader.createReceiveShadowsVertexShader(vs);
+            fs = ShadowMapShader.createReceiveShadowsFragmentShader(fs, frameState.context);
+        }
+
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+        validateShaderMatching(primitive._sp, attributeLocations);
     }
 
     function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
@@ -1164,6 +1206,7 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
+                colorCommand.shadowCastProgram = primitive._shadowCastSP;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1180,6 +1223,7 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
+            colorCommand.shadowCastProgram = primitive._shadowCastSP;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
@@ -1387,6 +1431,15 @@ define([
         } else if (this._material !== material ) {
             this._material = material;
             createSP = true;
+        }
+
+        if ((this._shadowsEnabled !== frameState.shadowsEnabled) ||
+            (this._castShadows !== this.castShadows) ||
+            (this._receiveShadows !== this.receiveShadows)) {
+                this._shadowsEnabled = frameState.shadowsEnabled;
+                this._castShadows = this.castShadows;
+                this._receiveShadows = this.receiveShadows;
+                createSP = true;
         }
 
         var translucent = this._appearance.isTranslucent();
