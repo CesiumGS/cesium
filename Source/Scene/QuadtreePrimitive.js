@@ -260,7 +260,12 @@ define([
     };
 
     QuadtreePrimitive.prototype.initialize = function(frameState) {
+        var passes = frameState.passes;
+        if (!passes.render) {
+            return;
+        }
 
+        this._tileProvider.initialize(frameState);
     };
 
     QuadtreePrimitive.prototype.update = function(frameState) {
@@ -270,8 +275,8 @@ define([
             this._tileProvider.beginUpdate(frameState);
 
             selectTilesForRendering(this, frameState);
-            processTileLoadQueue(this, frameState);
             createRenderCommandsForSelectedTiles(this, frameState);
+            processTileLoadQueue(this, frameState);
 
             this._tileProvider.endUpdate(frameState);
         }
@@ -282,7 +287,10 @@ define([
     };
 
     QuadtreePrimitive.prototype.finalize = function(frameState) {
-
+        var passes = frameState.passes;
+        if (!passes.render) {
+            return;
+        }
     };
 
     /**
