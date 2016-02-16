@@ -42,13 +42,13 @@ define([
 
     function createRuntimeAst(expression, ast) {
         var node;
+        var op, val;
 
         if (ast.type === 'Literal') {
             node = new Node(ast.value);
         } else if (ast.type === 'CallExpression') {
             var call = ast.callee.name;
             var args = ast.arguments;
-            var val;
             if (call === 'color') {
                 val = Color.fromCssColorString(args[0].value);
                 if (defined(val)) {
@@ -66,12 +66,19 @@ define([
                 }
             }
         } else if (ast.type === 'UnaryExpression') {
-            var op = ast.operator;
+            op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
-            if (op === '!') {
+            if (op === '!' || op === '-') {
                 node = new Node(op, child);
-            } else if (op === '-') {
-                node = new Node(op, child);
+            }
+        } else if (ast.type === 'BinaryExpression') {
+            op = ast.operator;
+            var left = createRuntimeAst(expression, ast.left);
+            var right = createRuntimeAst(expression, ast.right);
+            if (op === '+' || op === '-' || op === '*' ||
+                op === '/' || op === '%' || op === '===' ||
+                op === '!==') {
+                node = new Node(op, left, right);
             }
         }
 
@@ -79,7 +86,23 @@ define([
     }
 
     function setEvaluateFunction(node) {
-        if (defined(node._left)) {
+        if (defined(node._right)){
+            if (node._value === '+') {
+                node.evaluate = node._evaluatePlus;
+            } else if (node._value === '-') {
+                node.evaluate = node._evaluateMinus;
+            } else if (node._value === '*') {
+                node.evaluate = node._evaluateTimes;
+            } else if (node._value === '/') {
+                node.evaluate = node._evaluateDivide;
+            } else if (node._value === '%') {
+                node.evaluate = node._evaluateMod;
+            } else if (node._value === '===') {
+                node.evaluate = node._evaluateEquals;
+            } else if (node._value === '!==') {
+                node.evaluate = node._evaluateNotEquals;
+            }
+        } else if (defined(node._left)) {
             if (node._value === '!') {
                 node.evaluate = node._evaluateNot;
             } else if (node._value === '-') {
@@ -100,6 +123,34 @@ define([
 
     Node.prototype._evaluateNegative = function(feature) {
         return -(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluatePlus = function(feature) {
+        return this._left.evaluate(feature) + this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateMinus = function(feature) {
+        return this._left.evaluate(feature) - this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateTimes = function(feature) {
+        return this._left.evaluate(feature) * this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateDivide = function(feature) {
+        return this._left.evaluate(feature) / this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateMod = function(feature) {
+        return this._left.evaluate(feature) % this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateEquals = function(feature) {
+        return this._left.evaluate(feature) === this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateNotEquals = function(feature) {
+        return this._left.evaluate(feature) !== this._right.evaluate(feature);
     };
 
     return Expression;
