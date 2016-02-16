@@ -54,7 +54,7 @@ define([
         './ModelNode',
         './Pass',
         './SceneMode',
-        './ShadowMap'
+        './ShadowMapShader'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -110,7 +110,7 @@ define([
         ModelNode,
         Pass,
         SceneMode,
-        ShadowMap) {
+        ShadowMapShader) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -1501,8 +1501,8 @@ define([
 
         // Create shadow cast program
         if (frameState.shadowsEnabled && model.castShadows) {
-            var shadowCastVS = ShadowMap.createShadowCastVertexShader(drawVS);
-            var shadowCastFS = ShadowMap.createShadowCastFragmentShader(drawFS, context);
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, context);
             model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,
@@ -1513,8 +1513,8 @@ define([
 
         // Modify draw program to receive shadows
         if (frameState.shadowsEnabled && model.receiveShadows) {
-            drawVS = ShadowMap.createReceiveShadowsVertexShader(drawVS);
-            drawFS = ShadowMap.createReceiveShadowsFragmentShader(drawFS, context);
+            drawVS = ShadowMapShader.createReceiveShadowsVertexShader(drawVS);
+            drawFS = ShadowMapShader.createReceiveShadowsFragmentShader(drawFS, context);
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
