@@ -42,7 +42,8 @@ define([
 
     function createRuntimeAst(expression, ast) {
         var node;
-        var op, val;
+        var op;
+        var val;
 
         if (ast.type === 'Literal') {
             node = new Node(ast.value);
@@ -86,7 +87,7 @@ define([
     }
 
     function setEvaluateFunction(node) {
-        if (defined(node._right)){
+        if (defined(node._right)) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
             } else if (node._value === '-') {
