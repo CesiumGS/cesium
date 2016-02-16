@@ -3,9 +3,10 @@ Change Log
 
 ### 1.19 - 2016-03-01
 * Breaking changes
-   * 
+   * Functionality changed in `PolygonGeometry` that changes the `Cartesian3` values of `options.positions` so that they are on the ellipsoid surface.  This will only effect you if your polygons are drawn synchronously with `options.perPositionHeight = false`, your positions have a non-zero height, and you are using the same positions for multiple entities.  In this case, make a copy of the `Cartesian3` values used for the polygon positions.
 * Deprecated
    * Deprecated `definedNotNull`. It will be removed in 1.20. Use `defined` instead, which now checks for `null` as well as `undefined`.
+* `Viewer.zoomTo` and `Viewer.flyTo` now accept an `ImageryLayer` instance as a valid parameter and will zoom to the extent of the imagery.
 * Fixed bug for causing `navigator is not defined` reference error in node
 * Added `Camera.flyHome` function for resetting the camera to the home view
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)

@@ -155,4 +155,9 @@ defineSuite([
         var result = joinUrls(absolutePath, absolutePath + fragment);
         expect(result).toEqual(expectedAbsolutePath + fragment);
     });
+
+    it('works with trailing slash for first url', function() {
+        var result = joinUrls('http://www.xyz.com/', 'MODULE');
+        expect(result).toEqual('http://www.xyz.com/MODULE');
+    });
 });
