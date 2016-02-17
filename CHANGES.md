@@ -20,13 +20,22 @@ TODO: this is not finished yet:
    * Functionality changed in `PolygonGeometry` that changes the `Cartesian3` values of `options.positions` so that they are on the ellipsoid surface.  This will only effect you if your polygons are drawn synchronously with `options.perPositionHeight = false`, your positions have a non-zero height, and you are using the same positions for multiple entities.  In this case, make a copy of the `Cartesian3` values used for the polygon positions.
 * Deprecated
    * Deprecated `definedNotNull`. It will be removed in 1.20. Use `defined` instead, which now checks for `null` as well as `undefined`.
+   * Deprecated KmlDataSource taking a proxy object. It will throw an exception in 1.21. It now should take a options object with camera and canvas as required parameters.
 * `Viewer.zoomTo` and `Viewer.flyTo` now accept an `ImageryLayer` instance as a valid parameter and will zoom to the extent of the imagery.
 * Fixed bug for causing `navigator is not defined` reference error in node
 * Added `Camera.flyHome` function for resetting the camera to the home view
 * Added `show` property to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource`, `CustomDataSource`, and `EntityCollection` for easily toggling display of entire data sources.
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 * Fixed texture coordinates for polygon with position heights
+* Improved KML support
+    * Added support for `NetworkLink` refresh modes `onInterval`, `onExpire` and `onStop`. Includes support for `viewboundScale`, `viewFormat`, `httpQuery`.
+    * Added partial support for `NetworkLinkControl` including `minRefreshPeriod`, `cookie` and `expires`.
+    * Added support for local `StyleMap`. The `highlight` style is still ignored.
+    * Added support for `root://` URLs.
+    * Added more warnings for unsupported features.
+* Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
+* Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
