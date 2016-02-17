@@ -23,7 +23,9 @@ define([
         try {
             ast = jsep(expression);
         } catch (e) {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
+            //>>includeEnd('debug');
         }
         console.log(ast);
 
@@ -85,7 +87,9 @@ define([
                     node = new Node(val);
                 }
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+                //>>includeEnd('debug');
             }
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
@@ -93,7 +97,9 @@ define([
             if (op === '!' || op === '-') {
                 node = new Node(op, child);
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                //>>includeEnd('debug');
             }
         } else if (ast.type === 'BinaryExpression') {
             op = ast.operator;
@@ -104,13 +110,19 @@ define([
                 op === '!==') {
                 node = new Node(op, left, right);
             } else {
+                //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                //>>includeEnd('debug');
             }
         } else if (ast.type === 'CompoundExpression') {
             // empty expression or multiple expressions
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Error: Provide exactly one expression');
+            //>>includeEnd('debug');
         }  else {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError('Error: Cannot parse expression');
+            //>>includeEnd('debug');
         }
 
         return node;
