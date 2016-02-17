@@ -66,7 +66,9 @@ define([
                     node = new Node(val);
                 }
             } else if (call === 'rgba') {
-                val = Color.fromBytes(args[0].value, args[1].value, args[2].value, args[3].value);
+                // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
+                var a = args[3].value * 255;
+                val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
                 if (defined(val)) {
                     node = new Node(val);
                 }

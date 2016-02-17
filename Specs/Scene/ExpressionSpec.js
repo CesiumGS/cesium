@@ -52,11 +52,11 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(0, 0, 0, 0)');
-        expect(expression.evaluate(undefined)).toEqual(Color.TRANSPARENT);
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 0.5)');
+        expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
-        expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 0, 0)');
-        expect(expression.evaluate(undefined)).toEqual(Color.TRANSPARENT);
+        expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
+        expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
     });
 
     it('evaluates unary not', function() {
@@ -141,28 +141,28 @@ defineSuite([
     });
 
     it('evaluates color operations', function() {
-        var expression = new Expression(new MockStyleEngine(), 'rgba(255, 0, 0, 200) + rgba(0, 0, 255, 55)');
+        var expression = new Expression(new MockStyleEngine(), 'rgba(255, 0, 0, 0.5) + rgba(0, 0, 255, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(Color.MAGENTA);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(0, 255, 255, 255) - rgba(0, 255, 0, 0)');
+        expression = new Expression(new MockStyleEngine(), 'rgba(0, 255, 255, 1.0) - rgba(0, 255, 0, 0)');
         expect(expression.evaluate(undefined)).toEqual(Color.BLUE);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 255) * rgba(255, 0, 0, 255)');
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 1.0) * rgba(255, 0, 0, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(Color.RED);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 0, 255) * 1');
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 0, 1.0) * 1.0');
         expect(expression.evaluate(undefined)).toEqual(Color.YELLOW);
 
-        expression = new Expression(new MockStyleEngine(), '1 * rgba(255, 255, 0, 255)');
+        expression = new Expression(new MockStyleEngine(), '1 * rgba(255, 255, 0, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(Color.YELLOW);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 255) / rgba(255, 255, 255, 255)');
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 1.0) / rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 255) / 2');
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 1.0) / 2');
         expect(expression.evaluate(undefined)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 255) % rgba(255, 255, 255, 255)');
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(new Color(0, 0, 0, 0));
 
         expression = new Expression(new MockStyleEngine(), 'color(\'green\') === color(\'green\')');
