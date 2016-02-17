@@ -259,6 +259,9 @@ define([
         return object.removeFunc;
     };
 
+    /**
+     * @private
+     */
     QuadtreePrimitive.prototype.initialize = function(frameState) {
         var passes = frameState.passes;
         if (!passes.render) {
@@ -284,6 +287,9 @@ define([
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
+    /**
+     * @private
+     */
     QuadtreePrimitive.prototype.update = function(frameState) {
         var passes = frameState.passes;
 
@@ -301,6 +307,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     QuadtreePrimitive.prototype.finalize = function(frameState) {
         var passes = frameState.passes;
         if (!passes.render) {
@@ -365,7 +374,7 @@ define([
      *
      * @example
      * primitive = primitive && primitive.destroy();
-     * 
+     *
      * @see QuadtreePrimitive#isDestroyed
      */
     QuadtreePrimitive.prototype.destroy = function() {
@@ -654,9 +663,9 @@ define([
 
                     var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
                     if ((defined(tileDataAvailable) && !tileDataAvailable) ||
-                           (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
-                                   !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
-                            data.removeFunc();
+                        (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
+                         !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
+                        data.removeFunc();
                     }
                 }
 

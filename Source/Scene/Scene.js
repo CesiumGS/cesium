@@ -2039,6 +2039,10 @@ define([
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
+        if (defined(scene.globe)) {
+            scene.globe.finalize(frameState);
+        }
+
         frameState.creditDisplay.endFrame();
 
         if (defined(scene.globe)) {
@@ -2217,10 +2221,10 @@ define([
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
+
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
         updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-
         executeCommands(this, passState);
         resolveFramebuffers(this, passState);
 

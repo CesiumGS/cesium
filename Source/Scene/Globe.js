@@ -398,6 +398,9 @@ define([
         return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
     };
 
+    /**
+     * @private
+     */
     Globe.prototype.initialize = function(frameState) {
         if (!this.show) {
             return;
@@ -466,6 +469,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     Globe.prototype.update = function(frameState) {
         if (!this.show) {
             return;
@@ -491,6 +497,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     Globe.prototype.finalize = function(frameState) {
         if (!this.show) {
             return;
@@ -538,7 +547,7 @@ define([
      *
      * @example
      * globe = globe && globe.destroy();
-     * 
+     *
      * @see Globe#isDestroyed
      */
     Globe.prototype.destroy = function() {

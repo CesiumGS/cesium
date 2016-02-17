@@ -282,6 +282,10 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+    /**
+     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * @param {FrameState} frameState The frame state.
+     */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
         this._imageryLayers._update();
 
@@ -566,7 +570,7 @@ define([
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
