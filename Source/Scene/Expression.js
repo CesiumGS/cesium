@@ -65,6 +65,16 @@ define([
                 if (defined(val)) {
                     node = new Node(val);
                 }
+            } else if (call === 'rgba') {
+                val = Color.fromBytes(args[0].value, args[1].value, args[2].value, args[3].value);
+                if (defined(val)) {
+                    node = new Node(val);
+                }
+            } else if (call === 'hsla') {
+                val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
+                if (defined(val)) {
+                    node = new Node(val);
+                }
             }
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
@@ -127,31 +137,72 @@ define([
     };
 
     Node.prototype._evaluatePlus = function(feature) {
-        return this._left.evaluate(feature) + this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.add(left, right, new Color());
+        }
+        return left + right;
     };
 
     Node.prototype._evaluateMinus = function(feature) {
-        return this._left.evaluate(feature) - this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.subtract(left, right, new Color());
+        }
+        return left - right;
     };
 
     Node.prototype._evaluateTimes = function(feature) {
-        return this._left.evaluate(feature) * this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.multiply(left, right, new Color());
+        } else if (right instanceof Color && typeof(left) === 'number') {
+            return Color.multiplyByScalar(right, left, new Color());
+        } else if (left instanceof Color && typeof(right) === 'number') {
+            return Color.multiplyByScalar(left, right, new Color());
+        }
+        return left * right;
     };
 
     Node.prototype._evaluateDivide = function(feature) {
-        return this._left.evaluate(feature) / this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.divide(left, right, new Color());
+        } else if (left instanceof Color && typeof(right) === 'number') {
+            return Color.divideByScalar(left, right, new Color());
+        }
+        return left / right;
     };
 
     Node.prototype._evaluateMod = function(feature) {
-        return this._left.evaluate(feature) % this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.mod(left, right, new Color());
+        }
+        return left % right;
     };
 
     Node.prototype._evaluateEquals = function(feature) {
-        return this._left.evaluate(feature) === this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return Color.equals(left, right);
+        }
+        return left === right;
     };
 
     Node.prototype._evaluateNotEquals = function(feature) {
-        return this._left.evaluate(feature) !== this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        if (right instanceof Color && left instanceof Color) {
+            return !Color.equals(left, right);
+        }
+        return left !== right;
     };
 
     return Expression;
