@@ -36,6 +36,20 @@ define([
             });
         };
 
+        var originalDescribe = window.describe;
+
+        window.describe = function (name, suite, categories) {
+            // exclude this spec if we're filtering by category and it's not the selected category
+            // otherwise if we have an excluded category, exclude this test if the category of this spec matches
+            if (includedCategory && categories !== includedCategory) {
+                return;
+            } else if (excludedCategory && categories === excludedCategory) {
+                return;
+            }
+
+            originalDescribe(name, suite, categories);
+        };
+
         // Override beforeEach(), afterEach(), beforeAll(), afterAll(), and it() to automatically
         // call done() when a returned promise resolves.
         var originalIt = window.it;
