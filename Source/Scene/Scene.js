@@ -1666,14 +1666,16 @@ define([
         var shadowMapCommands = scene._frustumCommandsList[0]; // TODO : temporary solution
         if (defined(shadowMapCommands)) {
             // TODO : Execute only opaque and translucent commands for now.
-            var startPass = Pass.OPAQUE;
+            var startPass = Pass.GLOBE;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass <= endPass; ++pass) {
                 var commands = shadowMapCommands.commands[pass];
                 var length = shadowMapCommands.indices[pass];
                 for (var i = 0; i < length; ++i) {
                     var command = commands[i];
-                    executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
+                    if (defined(command.shadowCastProgram)) {
+                        executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
+                    }
                 }
             }
         }

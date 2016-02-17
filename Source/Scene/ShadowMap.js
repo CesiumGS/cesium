@@ -118,21 +118,39 @@ define([
 
         this.passState = new PassState(context);
 
+        //// Exton values
+        //var centerLongitude = -1.31968;
+        //var centerLatitude = 0.698874;
+        //var height = 130.0;
+        //var offset = 20.0;
+        //var frustumSize = 15;
+        //var frustumNear = 1.0;
+        //var frustumFar = 100.0;
+        //var tilt = 0.0;
+
+        // Everest values
+        var centerLongitude = 1.517132688;
+        var centerLatitude = 0.4884844964;
+        var height = 8812.0;
+        var offset = 50.0;
+        var frustumSize = 55.0;
+        var frustumNear = 1.0;
+        var frustumFar = 400.0;
+        var tilt = 30.0;
+
         // TODO : determine frustum based on scene
         var frustum = new OrthographicFrustum();
-        frustum.left = -15.0;
-        frustum.right = 15.0;
-        frustum.bottom = -15.0;
-        frustum.top = 15.0;
-        frustum.near = 1.0;
-        frustum.far = 100.0;
+        frustum.left = -frustumSize;
+        frustum.right = frustumSize;
+        frustum.bottom = -frustumSize;
+        frustum.top = frustumSize;
+        frustum.near = frustumNear;
+        frustum.far = frustumFar;
         this._frustum = frustum;
 
         // TODO : position camera based on sun direction
         camera.frustum = frustum;
-        var centerLongitude = -1.31968;
-        var centerLatitude = 0.698874;
-        camera.lookAt(Cartesian3.fromRadians(centerLongitude, centerLatitude), new Cartesian3(0.0, 0.0, 75.0));
+        camera.lookAt(Cartesian3.fromRadians(centerLongitude, centerLatitude, height), new Cartesian3(tilt, tilt, offset));
         this.camera = camera;
     }
 
