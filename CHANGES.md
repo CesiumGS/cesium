@@ -21,6 +21,7 @@ Change Log
     * Added more warnings for unsupported features.
 * Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
+* Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
