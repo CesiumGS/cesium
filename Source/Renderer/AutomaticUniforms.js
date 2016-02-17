@@ -1396,6 +1396,30 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the current rendering pass.
+         *
+         * @alias czm_pass
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_pass;
+         *
+         * // Example
+         * if ((czm_pass == czm_passTranslucent) && isOpaque())
+         * {
+         *     gl_Position *= 0.0; // Cull opaque geometry in the translucent pass
+         * }
+         */
+        czm_pass : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.pass;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *

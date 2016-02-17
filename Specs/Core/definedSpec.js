@@ -5,14 +5,15 @@ defineSuite([
         defined) {
     'use strict';
 
-    var obj = 42;
-    var obj2;
-
-    it('works for defined object', function() {
-        expect(defined(obj)).toEqual(true);
+    it('works for defined value', function() {
+        expect(defined(0)).toEqual(true);
     });
 
-    it('works for undefined object', function() {
-        expect(defined(obj2)).toEqual(false);
+    it('works for null value', function() {
+        expect(defined(null)).toEqual(false);
+    });
+
+    it('works for undefined value', function() {
+        expect(defined(undefined)).toEqual(false);
     });
 });

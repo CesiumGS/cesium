@@ -234,7 +234,6 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
 /*global define*/
