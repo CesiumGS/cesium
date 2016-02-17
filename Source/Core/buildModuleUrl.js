@@ -4,12 +4,14 @@ define([
         './defined',
         './DeveloperError',
         './getAbsoluteUri',
+        './joinUrls',
         'require'
     ], function(
         Uri,
         defined,
         DeveloperError,
         getAbsoluteUri,
+        joinUrls,
         require) {
     'use strict';
     /*global CESIUM_BASE_URL*/
@@ -55,7 +57,7 @@ define([
     }
 
     function buildModuleUrlFromBaseUrl(moduleID) {
-        return new Uri(moduleID).resolve(getCesiumBaseUrl()).toString();
+        return joinUrls(getCesiumBaseUrl(), moduleID);
     }
 
     var implementation;

@@ -2347,4 +2347,63 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('computeViewRegion when zoomed in', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.clone(Cartesian3.UNIT_X);
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).toEqual(correctResult);
+    });
+
+    it('computeViewRegion when zoomed in to pole', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.clone(Cartesian3.UNIT_Z);
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+        camera.position = position;
+
+        var correctResult = new Rectangle(-CesiumMath.PI, 1.4961779388065022, CesiumMath.PI, CesiumMath.PI_OVER_TWO);
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).toEqual(correctResult);
+    });
+
+    it('computeViewRegion when zoomed out', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.clone(Cartesian3.UNIT_X);
+        Cartesian3.multiplyByScalar(position, 25000000, position);
+
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).toEqual(Rectangle.MAX_VALUE);
+    });
+
+    it('computeViewRegion when globe isn\'t visible', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.clone(Cartesian3.UNIT_X);
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.clone(Cartesian3.UNIT_X);
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).not.toBeDefined();
+    });
 });

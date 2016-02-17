@@ -1676,6 +1676,19 @@ define([
             get : function() {
                 return this._loading;
             }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CzmlDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
+            }
         }
     });
 
