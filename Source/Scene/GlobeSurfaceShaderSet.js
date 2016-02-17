@@ -228,7 +228,6 @@ define([
 
         if (!defined(pickShader)) {
             var vs = this.baseVertexShaderSource.clone();
-
             vs.defines.push(quantizationDefine);
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
