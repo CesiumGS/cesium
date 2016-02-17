@@ -3,11 +3,13 @@ define([
        '../Core/Color',
        '../Core/defined',
        '../Core/defineProperties',
+       '../Core/DeveloperError',
        '../ThirdParty/jsep'
     ], function(
         Color,
         defined,
         defineProperties,
+        DeveloperError,
         jsep) {
     "use strict";
 
@@ -17,7 +19,12 @@ define([
     function Expression(styleEngine, expression) {
         this._styleEngine = styleEngine;
 
-        var ast = jsep(expression);
+        var ast;
+        try {
+            ast = jsep(expression);
+        } catch (e) {
+            throw new DeveloperError(e);
+        }
         console.log(ast);
 
         this._runtimeAst = createRuntimeAst(this, ast);
@@ -77,12 +84,16 @@ define([
                 if (defined(val)) {
                     node = new Node(val);
                 }
+            } else {
+                throw new DeveloperError('Error: Unexpected function call "' + call + '"');
             }
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
             if (op === '!' || op === '-') {
                 node = new Node(op, child);
+            } else {
+                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
             }
         } else if (ast.type === 'BinaryExpression') {
             op = ast.operator;
@@ -92,7 +103,14 @@ define([
                 op === '/' || op === '%' || op === '===' ||
                 op === '!==') {
                 node = new Node(op, left, right);
+            } else {
+                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
             }
+        } else if (ast.type === 'CompoundExpression') {
+            // empty expression or multiple expressions
+            throw new DeveloperError('Error: Provide exactly one expression');
+        }  else {
+            throw new DeveloperError('Error: Cannot parse expression');
         }
 
         return node;

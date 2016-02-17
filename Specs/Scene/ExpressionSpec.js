@@ -13,6 +13,86 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
+    it('throws on invalid expressions', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), false);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 3');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws on unknown characters', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '#');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws on unmatched parenthesis', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '((true)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '(true))');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws on unknown identifiers', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'flse');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws on unknown function calls', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'unknown()');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with unsupported operators', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '~1');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '+1');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 | 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 & 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 == 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 != 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 << 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 >> 3');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2 >>> 3');
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates literal null', function() {
         var expression = new Expression(new MockStyleEngine(), 'null');
         expect(expression.evaluate(undefined)).toEqual(null);
