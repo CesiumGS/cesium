@@ -52,11 +52,11 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 255)');
-        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+        expression = new Expression(new MockStyleEngine(), 'rgba(0, 0, 0, 0)');
+        expect(expression.evaluate(undefined)).toEqual(Color.TRANSPARENT);
 
-        expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1.0, 1.0)');
-        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+        expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 0, 0)');
+        expect(expression.evaluate(undefined)).toEqual(Color.TRANSPARENT);
     });
 
     it('evaluates unary not', function() {
