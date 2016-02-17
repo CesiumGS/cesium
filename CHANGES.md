@@ -44,6 +44,9 @@ Change Log
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
 * Added helper functions: `getExtensionFromUri`, `getAbsoluteUri`, and `Math.logBase`.
 * Added `Rectangle.union` and `Rectangle.expand`.
+* Improved `joinURLs` so that two qualified URLs can be joined
+* Tweaked `CesiumTerrainProvider` so that the tile URL templates can be overridden from the options property `tiles`.
+
 
 ### 1.17 - 2016-01-04
 

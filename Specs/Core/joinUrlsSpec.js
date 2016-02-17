@@ -108,7 +108,7 @@ defineSuite([
 
     it('appends qualfied url with path correctly to qualified url with path', function() {
         var result = joinUrls(qualifiedUrlWithPath, qualifiedUrlWithPath);
-        expect(result).toEqual(qualifiedUrlWithPath);
+        expect(result).toEqual(qualifiedUrlWithPath + absolutePath);
     });
 
     it('appends absolute path correctly to qualified url with query string', function() {

@@ -66,6 +66,7 @@ define([
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Array} [options.tiles] An array of tile URL templates used to override those found in the layer.json file.
      *
      *
      * @example
@@ -75,7 +76,7 @@ define([
      *     url : '//assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
-     * 
+     *
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
      * var imageryProvider = new Cesium.createTileMapServiceImageryProvider({
@@ -91,7 +92,7 @@ define([
      *
      * // The globe must enable lighting to make use of the terrain's vertex normals
      * viewer.scene.globe.enableLighting = true;
-     * 
+     *
      * @see TerrainProvider
      */
     function CesiumTerrainProvider(options) {
@@ -190,7 +191,9 @@ define([
                 return;
             }
 
-            that._tileUrlTemplates = data.tiles;
+            // Allow overriding of tile url templates from the options
+            that._tileUrlTemplates = defaultValue(options.tiles, data.tiles);
+
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
                 var template = new Uri(that._tileUrlTemplates[i]);
                 var baseUri = new Uri(that._url);
@@ -198,7 +201,7 @@ define([
                     baseUri.authority = template.authority;
                     baseUri.scheme = template.scheme;
                 }
-                that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
+                that._tileUrlTemplates[i] = joinUrls(baseUri, template).replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
