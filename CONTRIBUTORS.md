@@ -83,5 +83,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Dmitriy Pushkov](https://github.com/ezze)
 * [Max Limper](https://github.com/mlimper)
 * [Sanuj Sharma](https://github.com/sanuj)
+* [Allen Korenevsky](https://github.com/theplatapi)
 
 Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
