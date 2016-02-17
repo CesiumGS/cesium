@@ -220,6 +220,72 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(true);
     });
 
+    it('evaluates binary less than', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 < 3');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '2 < 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '3 < 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates binary less than or equals', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 <= 3');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '2 <= 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '3 <= 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates binary greater than', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 > 3');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '2 > 2');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '3 > 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates binary greater than or equals', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 >= 3');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '2 >= 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '3 >= 2');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates logical and', function() {
+        var expression = new Expression(new MockStyleEngine(), 'false && false');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'false && true');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'true && true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates logical or', function() {
+        var expression = new Expression(new MockStyleEngine(), 'false || false');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'false || true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'true || true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
     it('evaluates color operations', function() {
         var expression = new Expression(new MockStyleEngine(), 'rgba(255, 0, 0, 0.5) + rgba(0, 0, 255, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(Color.MAGENTA);

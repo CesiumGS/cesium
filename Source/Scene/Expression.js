@@ -53,6 +53,8 @@ define([
         var node;
         var op;
         var val;
+        var left;
+        var right;
 
         if (ast.type === 'Literal') {
             node = new Node(ast.value);
@@ -103,11 +105,23 @@ define([
             }
         } else if (ast.type === 'BinaryExpression') {
             op = ast.operator;
-            var left = createRuntimeAst(expression, ast.left);
-            var right = createRuntimeAst(expression, ast.right);
+            left = createRuntimeAst(expression, ast.left);
+            right = createRuntimeAst(expression, ast.right);
             if (op === '+' || op === '-' || op === '*' ||
                 op === '/' || op === '%' || op === '===' ||
-                op === '!==') {
+                op === '!==' || op === '>' || op === '>=' ||
+                op === '<' || op === '<=') {
+                node = new Node(op, left, right);
+            } else {
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                //>>includeEnd('debug');
+            }
+        } else if (ast.type === 'LogicalExpression') {
+            op = ast.operator;
+            left = createRuntimeAst(expression, ast.left);
+            right = createRuntimeAst(expression, ast.right);
+            if (op === '&&' || op === '||') {
                 node = new Node(op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -144,6 +158,18 @@ define([
                 node.evaluate = node._evaluateEquals;
             } else if (node._value === '!==') {
                 node.evaluate = node._evaluateNotEquals;
+            } else if (node._value === '<') {
+                node.evaluate = node._evaluateLessThan;
+            } else if (node._value === '<=') {
+                node.evaluate = node._evaluateLessThanOrEquals;
+            } else if (node._value === '>') {
+                node.evaluate = node._evaluateGreaterThan;
+            } else if (node._value === '>=') {
+                node.evaluate = node._evaluateGreaterThanOrEquals;
+            } else if (node._value === '&&') {
+                node.evaluate = node._evaluateAnd;
+            } else if (node._value === '||') {
+                node.evaluate = node._evaluateOr;
             }
         } else if (defined(node._left)) {
             if (node._value === '!') {
@@ -166,6 +192,30 @@ define([
 
     Node.prototype._evaluateNegative = function(feature) {
         return -(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateLessThan = function(feature) {
+        return this._left.evaluate(feature) < this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateLessThanOrEquals = function(feature) {
+        return this._left.evaluate(feature) <= this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateGreaterThan = function(feature) {
+        return this._left.evaluate(feature) > this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
+        return this._left.evaluate(feature) >= this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateOr = function(feature) {
+        return this._left.evaluate(feature) || this._right.evaluate(feature);
+    };
+
+    Node.prototype._evaluateAnd = function(feature) {
+        return this._left.evaluate(feature) && this._right.evaluate(feature);
     };
 
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
