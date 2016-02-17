@@ -11,6 +11,8 @@ Change Log
 * Added `Camera.flyHome` function for resetting the camera to the home view
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 * Fixed texture coordinates for polygon with position heights
+* `Camera.flyTo` now honors max and min zoom settings in `ScreenSpaceCameraController`
+
 
 ### 1.18 - 2016-02-01
 * Breaking changes
