@@ -60,6 +60,24 @@ defineSuite([
         expect(entity.entityCollection).toBe(entityCollection);
     });
 
+    it('Entity.isShowing changes when collection show changes.', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+
+        expect(entity.isShowing).toBe(true);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entityCollection.show = false;
+
+        expect(listener.calls.count()).toBe(1);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
+        expect(entity.isShowing).toBe(false);
+    });
+
     it('add with template', function() {
         var entityCollection = new EntityCollection();
 
