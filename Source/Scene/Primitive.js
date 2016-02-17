@@ -33,7 +33,8 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMapShader'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -68,7 +69,8 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ShadowMapShader) {
     'use strict';
 
     /**
@@ -108,7 +110,8 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     *
+     * @param {Boolean} [options.castShadows=true] Determines whether this primitive will cast shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether this primitive will receive shadows when shadow mapping is enabled.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -275,13 +278,34 @@ define([
          * @private
          */
         this.rtcCenter = options.rtcCenter;
-        this._modifiedModelView = new Matrix4();
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
+
+        /**
+         * Determines whether this primitive will cast shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.castShadows = defaultValue(options.castShadows, true);
+        this._castShadows = this.castShadows;
+
+        /**
+         * Determines whether this primitive will receive shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.receiveShadows = defaultValue(options.receiveShadows, true);
+        this._receiveShadows = this.receiveShadows;
+
+        this._sceneShadowsEnabled = true;
 
         this._translucent = undefined;
 
@@ -314,6 +338,8 @@ define([
         this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
+
+        this._shadowCastSP = undefined;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -1077,31 +1103,32 @@ define([
     function createShaderProgram(primitive, frameState, appearance) {
         var context = frameState.context;
 
+        var attributeLocations = primitive._attributeLocations;
+
         var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
-        var attributeLocations = primitive._attributeLocations;
-        primitive._sp = ShaderProgram.replaceCache({
-            context : context,
-            shaderProgram : primitive._sp,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-        validateShaderMatching(primitive._sp, attributeLocations);
-
-        if (primitive.allowPicking) {
-            var pickFS = new ShaderSource({
-                sources : [fs],
-                pickColorQualifier : 'varying'
+        // Create shadow cast program
+        if (!defined(primitive._shadowCastSP) && frameState.shadowsEnabled && primitive.castShadows) {
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, context);
+            primitive._shadowCastSP = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shadowCastVS,
+                fragmentShaderSource : shadowCastFS,
+                attributeLocations : attributeLocations
             });
+        }
+
+        // Create pick program
+        if (primitive.allowPicking) {
             primitive._pickSP = ShaderProgram.replaceCache({
                 context : context,
                 shaderProgram : primitive._pickSP,
                 vertexShaderSource : ShaderSource.createPickVertexShaderSource(vs),
-                fragmentShaderSource : pickFS,
+                fragmentShaderSource : ShaderSource.createPickFragmentShaderSource(fs, 'varying'),
                 attributeLocations : attributeLocations
             });
         } else {
@@ -1112,11 +1139,28 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-
         validateShaderMatching(primitive._pickSP, attributeLocations);
+
+        // Modify program to receive shadows
+        if (frameState.shadowsEnabled && primitive.receiveShadows) {
+            vs = ShadowMapShader.createReceiveShadowsVertexShader(vs);
+            fs = ShadowMapShader.createReceiveShadowsFragmentShader(fs, frameState.context);
+        }
+
+        primitive._sp = ShaderProgram.replaceCache({
+            context : context,
+            shaderProgram : primitive._sp,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+        validateShaderMatching(primitive._sp, attributeLocations);
     }
 
-    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function createCommands(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
         // Create uniform map by combining uniforms from the appearance and material if either have uniforms.
         var materialUniformMap = defined(material) ? material._uniforms : undefined;
         var appearanceUniformMap = {};
@@ -1138,7 +1182,11 @@ define([
 
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {
-                return primitive._modifiedModelView;
+                var viewMatrix = frameState.context.uniformState.view;
+                Matrix4.multiply(viewMatrix, primitive._modelMatrix, modifiedModelViewScratch);
+                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive.rtcCenter, rtcScratch);
+                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
             };
         }
 
@@ -1164,6 +1212,7 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
+                colorCommand.shadowCastProgram = primitive._shadowCastSP;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1180,6 +1229,7 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
+            colorCommand.shadowCastProgram = primitive._shadowCastSP;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
@@ -1252,8 +1302,6 @@ define([
         }
     }
 
-    var rtcScratch = new Cartesian3();
-
     function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         //>>includeStart('debug', pragmas.debug);
         if (frameState.mode !== SceneMode.SCENE3D && !Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
@@ -1277,13 +1325,6 @@ define([
                     }
                 }
             }
-        }
-
-        if (defined(primitive.rtcCenter)) {
-            var viewMatrix = frameState.camera.viewMatrix;
-            Matrix4.multiply(viewMatrix, primitive._modelMatrix, primitive._modifiedModelView);
-            Matrix4.multiplyByPoint(primitive._modifiedModelView, primitive.rtcCenter, rtcScratch);
-            Matrix4.setTranslation(primitive._modifiedModelView, rtcScratch, primitive._modifiedModelView);
         }
 
         var boundingSpheres;
@@ -1389,6 +1430,15 @@ define([
             createSP = true;
         }
 
+        if ((this._sceneShadowsEnabled !== frameState.shadowsEnabled) ||
+            (this._castShadows !== this.castShadows) ||
+            (this._receiveShadows !== this.receiveShadows)) {
+                this._sceneShadowsEnabled = frameState.shadowsEnabled;
+                this._castShadows = this.castShadows;
+                this._receiveShadows = this.receiveShadows;
+                createSP = true;
+        }
+
         var translucent = this._appearance.isTranslucent();
         if (this._translucent !== translucent) {
             this._translucent = translucent;
@@ -1414,7 +1464,7 @@ define([
 
         if (createRS || createSP) {
             var commandFunc = defaultValue(this._createCommandsFunction, createCommands);
-            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands);
+            commandFunc(this, appearance, material, translucent, twoPasses, this._colorCommands, this._pickCommands, frameState);
         }
 
         updatePerInstanceAttributes(this);

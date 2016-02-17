@@ -1668,7 +1668,7 @@ define([
             // TODO : Execute only opaque and translucent commands for now.
             var startPass = Pass.OPAQUE;
             var endPass = Pass.TRANSLUCENT;
-            for (var pass = startPass; pass < endPass; ++pass) {
+            for (var pass = startPass; pass <= endPass; ++pass) {
                 var commands = shadowMapCommands.commands[pass];
                 var length = shadowMapCommands.indices[pass];
                 for (var i = 0; i < length; ++i) {
