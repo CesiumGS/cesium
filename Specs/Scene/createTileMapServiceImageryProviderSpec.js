@@ -397,8 +397,8 @@ defineSuite([
                 "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
                 "  <Abstract/>" +
                 "  <SRS>EPSG:900913</SRS>" +
-                "  <BoundingBox minx='-88.0' miny='-185.0' maxx='88.0' maxy='185.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+                "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
+                "  <Origin y='-88.0' x='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
@@ -624,7 +624,8 @@ defineSuite([
         };
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {
@@ -664,7 +665,8 @@ defineSuite([
         };
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {

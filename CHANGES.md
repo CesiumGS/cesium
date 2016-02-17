@@ -10,6 +10,7 @@ Change Log
 * `Viewer.zoomTo` and `Viewer.flyTo` now accept an `ImageryLayer` instance as a valid parameter and will zoom to the extent of the imagery.
 * Fixed bug for causing `navigator is not defined` reference error in node
 * Added `Camera.flyHome` function for resetting the camera to the home view
+* Added `show` property to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource`, `CustomDataSource`, and `EntityCollection` for easily toggling display of entire data sources.
 * Fix an issue when changing a billboard's position property multiple times per frame. [#3511](https://github.com/AnalyticalGraphicsInc/cesium/pull/3511)
 * Fixed texture coordinates for polygon with position heights
 * Improved KML support
@@ -19,6 +20,7 @@ Change Log
     * Added support for `root://` URLs.
     * Added more warnings for unsupported features.
 * Added `owner` property to `CompositeEntityCollection`.
+* Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
@@ -52,6 +54,7 @@ Change Log
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
 * Added helper functions: `getExtensionFromUri`, `getAbsoluteUri`, and `Math.logBase`.
 * Added `Rectangle.union` and `Rectangle.expand`.
+* TMS support now works with newer versions of gdal2tiles.py generated layers. `createTileMapServiceImageryProvider`.  Tilesets generated with older gdal2tiles.py versions may need to have the `flipXY : true` option set to load correctly.
 
 ### 1.17 - 2016-01-04
 
