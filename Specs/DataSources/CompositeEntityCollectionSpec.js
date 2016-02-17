@@ -43,6 +43,13 @@ defineSuite([
         expect(composite.values.length).toEqual(0);
     });
 
+    it('constructor with owner', function() {
+        var composite = new CompositeEntityCollection();
+        var child = new CompositeEntityCollection(undefined, composite);
+
+        expect(child.owner).toEqual(composite);
+    });
+
     it('addCollection/removeCollection works', function() {
         var entityCollection = new EntityCollection();
         entityCollection.add(new Entity());
