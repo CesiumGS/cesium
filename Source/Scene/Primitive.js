@@ -305,7 +305,7 @@ define([
         this.receiveShadows = defaultValue(options.receiveShadows, true);
         this._receiveShadows = this.receiveShadows;
 
-        this._shadowsEnabled = true;
+        this._sceneShadowsEnabled = true;
 
         this._translucent = undefined;
 
@@ -1430,10 +1430,10 @@ define([
             createSP = true;
         }
 
-        if ((this._shadowsEnabled !== frameState.shadowsEnabled) ||
+        if ((this._sceneShadowsEnabled !== frameState.shadowsEnabled) ||
             (this._castShadows !== this.castShadows) ||
             (this._receiveShadows !== this.receiveShadows)) {
-                this._shadowsEnabled = frameState.shadowsEnabled;
+                this._sceneShadowsEnabled = frameState.shadowsEnabled;
                 this._castShadows = this.castShadows;
                 this._receiveShadows = this.receiveShadows;
                 createSP = true;
