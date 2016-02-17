@@ -1633,6 +1633,7 @@ define([
 
         this._sp = this._sp && this._sp.destroy();
         this._pickSP = this._pickSP && this._pickSP.destroy();
+        this._shadowCastSP = this._shadowCastSP && this._shadowCastSP.destroy();
 
         var va = this._va;
         length = va.length;
