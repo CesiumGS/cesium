@@ -168,7 +168,7 @@ define([
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
@@ -181,6 +181,10 @@ define([
         var positionSize = indicesSize - slicePartitions + 2;
         var positions = new Float64Array(positionSize * 3);
         var indices = IndexDatatype.createTypedArray(positionSize, indicesSize * 2);
+
+        if ((radii.x === 0) || (radii.y === 0) || (radii.z === 0)) {
+            return undefined;
+        }
 
         var i;
         var j;

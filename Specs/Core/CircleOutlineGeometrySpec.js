@@ -86,6 +86,17 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 8 * 2);
     });
 
+    it('undefined is returned if radius is equal to zero', function () {
+        var circleOutline = new CircleOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : 0.0
+        });
+
+        var geometry = CircleOutlineGeometry.createGeometry(circleOutline);
+
+        expect(geometry).toBe(undefined);
+    });
+
     var center = new Cartesian3(8, 9, 10);
     var ellipsoid = new Ellipsoid(11, 12, 13);
     var packableInstance = new CircleOutlineGeometry({

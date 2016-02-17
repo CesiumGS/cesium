@@ -163,6 +163,18 @@ defineSuite([
         expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
     });
 
+    it('undefined is returned if the minor axis is equal to zero', function() {
+        var ellipse = new EllipseGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 300000.0,
+            semiMinorAxis : 0.0
+        });
+
+        var geometry = EllipseGeometry.createGeometry(ellipse);
+
+        expect(geometry).toBe(undefined);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new EllipseGeometry({

@@ -258,7 +258,7 @@ define([
      * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._minimum;
@@ -268,6 +268,10 @@ define([
         var attributes = new GeometryAttributes();
         var indices;
         var positions;
+
+        if ((max.x <= 0) || (max.y <= 0) || (max.z <= 0)) {
+            return undefined;
+        }
 
         if (vertexFormat.position &&
                 (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {

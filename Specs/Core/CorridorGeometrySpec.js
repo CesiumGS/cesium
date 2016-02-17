@@ -214,6 +214,18 @@ defineSuite([
         expect(m.indices.length).toEqual(3 * 2);
     });
 
+    it('undefined is returned if there are less than two positions', function() {
+         var corridor = new CorridorGeometry({
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([-72.0, 35.0]),
+             width : 100000
+         });
+
+        var geometry = CorridorGeometry.createGeometry(corridor);
+
+        expect(geometry).toBe(undefined);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0

@@ -59,16 +59,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws if top and bottom radius are 0', function() {
-        expect(function() {
-            return new CylinderGeometry({
-                length: 1,
-                topRadius: 0,
-                bottomRadius: 0
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('constructor throws if slices is less than 3', function() {
         expect(function() {
             return new CylinderGeometry({
@@ -134,6 +124,26 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
         expect(m.indices.length).toEqual(8 * 3);
+    });
+
+    it('undefined is returned if the length is less than or equal to zero or if ' +
+       'both radii equal zero', function() {
+        var cylinder0 = new CylinderGeometry({
+            length: 0,
+            topRadius: 80000,
+            bottomRadius: 200000
+        });
+        var cylinder1 = new CylinderGeometry({
+            length: 200000,
+            topRadius: 0,
+            bottomRadius: 0
+        });
+
+        var geometry0 = CylinderGeometry.createGeometry(cylinder0);
+        var geometry1 = CylinderGeometry.createGeometry(cylinder1);
+
+        expect(geometry0).toBe(undefined);
+        expect(geometry1).toBe(undefined);
     });
 
     var cylinder = new CylinderGeometry({

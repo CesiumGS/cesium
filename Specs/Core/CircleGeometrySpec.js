@@ -135,6 +135,17 @@ defineSuite([
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
     });
 
+    it('undefined is returned if radius is equal to zero', function () {
+        var circle = new CircleGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : 0.0
+        });
+
+        var geometry = CircleGeometry.createGeometry(circle);
+
+        expect(geometry).toBe(undefined);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new CircleGeometry({

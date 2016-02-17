@@ -466,6 +466,10 @@ define([
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
 
+        if (polygonHierarchy.positions < 3) {
+            return undefined;
+        }
+
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];

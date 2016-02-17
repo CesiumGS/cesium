@@ -45,6 +45,26 @@ defineSuite([
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
+    it('undefined is returned if the x, y, or z radii are equal to 0', function() {
+        var ellipsoidOutline0 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(0.0, 500000.0, 500000.0)
+        });
+        var ellipsoidOutline1 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, 0.0, 500000.0)
+        });
+        var ellipsoidOutline2 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, 500000.0, 0.0)
+        });
+
+        var geometry0 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline0);
+        var geometry1 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline1);
+        var geometry2 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline2);
+
+        expect(geometry0).toBe(undefined);
+        expect(geometry1).toBe(undefined);
+        expect(geometry2).toBe(undefined);
+    });
+
     var ellipsoidgeometry = new EllipsoidOutlineGeometry({
         radii : new Cartesian3(1.0, 2.0, 3.0),
         slicePartitions: 3,

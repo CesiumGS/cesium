@@ -665,8 +665,8 @@ define([
         if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
-        if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
-            throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
+        if (semiMajorAxis < 0.0 || semiMinorAxis < 0.0) {
+            throw new DeveloperError('Semi-major and semi-minor axes must be not be negative.');
         }
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
@@ -815,10 +815,15 @@ define([
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipseGeometry.createGeometry = function(ellipseGeometry) {
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
+
+        if (ellipseGeometry._semiMinorAxis === 0) {
+            return undefined;
+        }
+
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,

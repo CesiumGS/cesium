@@ -41,15 +41,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 positions', function() {
-        expect(function() {
-            return WallGeometry.createGeometry(new WallGeometry({
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : ([Cartesian3.fromDegrees(49.0, 18.0, 1000.0)])
-            }));
-        }).toThrowDeveloperError();
-    });
-
     it('createGeometry returnes undefined with less than 2 unique positions', function() {
         var geometry = WallGeometry.createGeometry(new WallGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
@@ -269,6 +260,20 @@ defineSuite([
 
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
+    });
+
+    it('undefined is returned if there are less than two positions', function() {
+        var wall = WallGeometry.fromConstantHeights({
+            positions : Cartesian3.fromDegreesArray([
+                19.0, 47.0
+            ]),
+            minimumHeight : 20000.0,
+            maximumHeight : 10000.0
+        });
+
+        var geometry = WallGeometry.createGeometry(wall);
+
+        expect(geometry).toBe(undefined);
     });
 
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];

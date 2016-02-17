@@ -206,11 +206,15 @@ define([
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxOutlineGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._min;
         var max = boxGeometry._max;
+
+        if ((max.x <= 0) || (max.y <= 0) || (max.z <= 0)) {
+            return undefined;
+        }
 
         var attributes = new GeometryAttributes();
         var indices = new Uint16Array(12 * 2);

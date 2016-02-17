@@ -112,6 +112,18 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 8 * 2);
     });
 
+    it('undefined is returned if the minor axis is equal to zero', function() {
+        var ellipseOutline = new EllipseOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 300000.0,
+            semiMinorAxis : 0.0
+        });
+
+        var geometry = EllipseOutlineGeometry.createGeometry(ellipseOutline);
+
+        expect(geometry).toBe(undefined);
+    });
+
     var center = new Cartesian3(8, 9, 10);
     var ellipsoid = new Ellipsoid(11, 12, 13);
     var packableInstance = new EllipseOutlineGeometry({

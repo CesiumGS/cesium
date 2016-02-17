@@ -681,6 +681,10 @@ define([
         var polygons = results.polygons;
         var i;
 
+        if (polygonHierarchy.positions < 3) {
+            return undefined;
+        }
+
         if (polygons.length === 0) {
             return undefined;
         }

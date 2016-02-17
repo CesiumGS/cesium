@@ -57,8 +57,8 @@ define([
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
+        if (radius < 0.0) {
+            throw new DeveloperError('radius must not be negative.');
         }
         //>>includeEnd('debug');
 
