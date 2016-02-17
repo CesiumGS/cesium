@@ -22,7 +22,9 @@ define([
     function ColorMapExpression(styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
         this._propertyName = jsonExpression.propertyName;
-        this._pattern = new RegExp(jsonExpression.pattern);
+        if (defined(jsonExpression.pattern)) {
+            this._pattern = new RegExp(jsonExpression.pattern);
+        }
         this._map = clone(jsonExpression.map, true);
         this._default = jsonExpression.default;
 
