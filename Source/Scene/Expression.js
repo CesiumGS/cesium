@@ -136,6 +136,8 @@ define([
         return -(this._left.evaluate(feature));
     };
 
+    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
+    // that we can assign if we know the types before runtime
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
