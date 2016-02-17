@@ -193,6 +193,8 @@ var current = {
     originalColor : new Cesium.Color()
 };
 
+var HIGHLIGHT_COLOR = new Cesium.Color(1.0, 1.0, 0.0, 0.4);
+
 // Highlight building on mouse over
 handler.setInputAction(function(movement) {
     if (flags.leftDown || flags.middleDown || flags.rightDown) {
@@ -218,7 +220,7 @@ handler.setInputAction(function(movement) {
         Cesium.Color.clone(pickedBuilding.color, current.originalColor);
 
         // Highlight newly selected building
-        pickedBuilding.color = Cesium.Color.clone(Cesium.Color.YELLOW, pickedBuilding.color);
+        pickedBuilding.color = Cesium.Color.clone(HIGHLIGHT_COLOR, pickedBuilding.color);
     }
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
