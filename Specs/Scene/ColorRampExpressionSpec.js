@@ -43,14 +43,34 @@ defineSuite([
         var mockStyleEngine = new MockStyleEngine();
         var expression = new ColorRampExpression(mockStyleEngine, jsonExp);
         expect(expression.expression).toEqual(new NumberExpression(mockStyleEngine, jsonExp.expression));
-        expect(expression.colors).toEqual(['red', 'blue']);
+        expect(expression.colors).toEqual([Color.RED, Color.BLUE]);
         expect(expression.intervals).toEqual([5,10]);
     });
 
     it('sets colors', function() {
         var expression = new ColorRampExpression(new MockStyleEngine(), jsonExp);
-        expression.colors = ['purple', 'orange', 'green'];
-        expect(expression.colors).toEqual(['purple', 'orange', 'green']);
+        expression.colors = [Color.PURPLE, Color.ORANGE, Color.GREEN];
+        expect(expression.colors).toEqual([Color.PURPLE, Color.ORANGE, Color.GREEN]);
+    });
+
+    it('throws error on invalid color', function() {
+        var invalidExp = {
+            'expression' : {
+                'leftOperand' : '${Height}',
+                'operator' : '+',
+                'rightOperand' : 0
+            },
+            'colors' : [
+                'invalidRed'
+            ],
+            'intervals': [
+                5
+            ]
+        };
+
+        expect(function() {
+            return new ColorRampExpression(new MockStyleEngine(), invalidExp);
+        }).toThrowDeveloperError();
     });
 
     it('sets intervals', function() {
