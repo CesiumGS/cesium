@@ -127,7 +127,7 @@ defineSuite([
         expect(dataSource.isLoading).toBe(false);
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
-        expect(dataSource.loadingEvent).toBeInstanceOf(Event);;
+        expect(dataSource.loadingEvent).toBeInstanceOf(Event);
     });
 
     it('load throws with undefined KML', function() {
@@ -3041,7 +3041,7 @@ defineSuite([
                 }
             },
             canvas : options.canvas
-        }
+        };
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), ourOptions).then(function(dataSource) {
             var entities = dataSource.entities.values;
