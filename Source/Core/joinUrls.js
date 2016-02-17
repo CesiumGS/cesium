@@ -69,7 +69,7 @@ define([
         if (defined(baseUri.authority)) {
             url += '//' + baseUri.authority;
 
-            if (baseUri.path !== '') {
+            if (baseUri.path !== '' && baseUri.path !== '/') {
                 url = url.replace(/\/?$/, '/');
                 baseUri.path = baseUri.path.replace(/^\/?/g, '');
             }
