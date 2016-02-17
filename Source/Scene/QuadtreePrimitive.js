@@ -278,6 +278,8 @@ define([
         debug.tilesRendered = 0;
         debug.tilesWaitingForChildren = 0;
 
+        processTileLoadQueue(this, frameState);
+
         this._tileLoadQueue.length = 0;
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
@@ -305,7 +307,6 @@ define([
             return;
         }
 
-        processTileLoadQueue(this, frameState);
         updateHeights(this, frameState);
 
         var debug = this._debug;
