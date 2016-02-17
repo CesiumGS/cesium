@@ -44,6 +44,7 @@ Change Log
 * Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
 * Added helper functions: `getExtensionFromUri`, `getAbsoluteUri`, and `Math.logBase`.
 * Added `Rectangle.union` and `Rectangle.expand`.
+* TMS support now works with newer versions of gdal2tiles.py generated layers. `createTileMapServiceImageryProvider`.  Tilesets generated with older gdal2tiles.py versions may need to have the `flipXY : true` option set to load correctly.
 
 ### 1.17 - 2016-01-04
 
