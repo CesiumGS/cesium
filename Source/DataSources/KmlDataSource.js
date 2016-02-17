@@ -2017,7 +2017,7 @@ define([
 
         var promise = data;
         if (typeof data === 'string') {
-            promise = RequestScheduler.request(proxyUrl(data, this._proxy), loadBlob);
+            promise = RequestScheduler.request(proxyUrl(data, dataSource._proxy), loadBlob);
             sourceUri = defaultValue(sourceUri, data);
         }
 
