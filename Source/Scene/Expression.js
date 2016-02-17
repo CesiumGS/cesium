@@ -211,11 +211,19 @@ define([
     };
 
     Node.prototype._evaluateOr = function(feature) {
-        return this._left.evaluate(feature) || this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        if (left) {
+            return true;
+        }
+        return left || this._right.evaluate(feature);
     };
 
     Node.prototype._evaluateAnd = function(feature) {
-        return this._left.evaluate(feature) && this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        if (!left) {
+            return false;
+        }
+        return left && this._right.evaluate(feature);
     };
 
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
