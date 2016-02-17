@@ -243,11 +243,18 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
+        var oldAddCommand = frameState.addCommand;
+        if (frameState.passes.render) {
+            frameState.addCommand = this.batchTableResources.getAddCommand();
+        }
+
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this.batchTableResources.update(tileset, frameState);
         this._model.update(frameState);
+
+        frameState.addCommand = oldAddCommand;
    };
 
     /**
