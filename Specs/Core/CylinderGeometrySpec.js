@@ -15,27 +15,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws with length less than 0', function() {
-        expect(function() {
-            return new CylinderGeometry({
-                length: -1
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('constructor throws with no topRadius', function() {
         expect(function() {
             return new CylinderGeometry({
                 length: 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws with topRadius less than 0', function() {
-        expect(function() {
-            return new CylinderGeometry({
-                length: 1,
-                topRadius: -1
             });
         }).toThrowDeveloperError();
     });
@@ -45,16 +28,6 @@ defineSuite([
             return new CylinderGeometry({
                 length: 1,
                 topRadius: 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws with bottomRadius less than 0', function() {
-        expect(function() {
-            return new CylinderGeometry({
-                length: 1,
-                topRadius: 1,
-                bottomRadius: -1
             });
         }).toThrowDeveloperError();
     });
@@ -127,7 +100,7 @@ defineSuite([
     });
 
     it('undefined is returned if the length is less than or equal to zero or if ' +
-       'both radii equal zero', function() {
+       'both radii are less than or equal to zero', function() {
         var cylinder0 = new CylinderGeometry({
             length: 0,
             topRadius: 80000,
@@ -138,12 +111,26 @@ defineSuite([
             topRadius: 0,
             bottomRadius: 0
         });
+        var cylinder2 = new CylinderGeometry({
+            length: 200000,
+            topRadius: -10,
+            bottomRadius: -10
+        });
+        var cylinder3 = new CylinderGeometry({
+            length: -200000,
+            topRadius: 100,
+            bottomRadius: 100
+        });
 
         var geometry0 = CylinderGeometry.createGeometry(cylinder0);
         var geometry1 = CylinderGeometry.createGeometry(cylinder1);
+        var geometry2 = CylinderGeometry.createGeometry(cylinder2);
+        var geometry3 = CylinderGeometry.createGeometry(cylinder3);
 
         expect(geometry0).toBe(undefined);
         expect(geometry1).toBe(undefined);
+        expect(geometry2).toBe(undefined);
+        expect(geometry3).toBe(undefined);
     });
 
     var cylinder = new CylinderGeometry({

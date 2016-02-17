@@ -183,6 +183,11 @@ define([
      */
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return undefined;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
 
@@ -205,10 +210,6 @@ define([
 
         var cosTheta = new Array(slicePartitions);
         var sinTheta = new Array(slicePartitions);
-
-        if ((radii.x === 0) || (radii.y === 0) || (radii.z === 0)) {
-            return undefined;
-        }
 
         var i;
         var j;

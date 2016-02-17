@@ -681,10 +681,6 @@ define([
         var polygons = results.polygons;
         var i;
 
-        if (polygonHierarchy.positions < 3) {
-            return undefined;
-        }
-
         if (polygons.length === 0) {
             return undefined;
         }
@@ -692,6 +688,10 @@ define([
         outerPositions = polygons[0].slice();
         for (i = 0; i < outerPositions.length; i++) {
             outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
+        }
+
+        if (outerPositions.length < 3) {
+            return undefined;
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);

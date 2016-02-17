@@ -99,30 +99,16 @@ defineSuite([
         expect(m._maximum).toEqual(max);
     });
 
-    it('undefined is returned if any side are of length zero', function() {
-        var box0 = new BoxGeometry({
+    it('undefined is returned if min and max are equal', function() {
+        var box = new BoxGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            maximum : new Cartesian3(0.0, 250000.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        });
-        var box1 = new BoxGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            maximum : new Cartesian3(250000.0, 0.0, 250000.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        });
-        var box2 = new BoxGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            maximum : new Cartesian3(250000.0, 250000.0, 0.0),
-            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(250000.0, 250000.0, 250000.0)
         });
 
-        var geometry0 = BoxGeometry.createGeometry(box0);
-        var geometry1 = BoxGeometry.createGeometry(box1);
-        var geometry2 = BoxGeometry.createGeometry(box2);
+        var geometry = BoxGeometry.createGeometry(box);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
+        expect(geometry).toBe(undefined);
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({

@@ -212,7 +212,7 @@ define([
         var min = boxGeometry._min;
         var max = boxGeometry._max;
 
-        if ((max.x <= 0) || (max.y <= 0) || (max.z <= 0)) {
+        if ((min.x === max.x) && (min.y === max.y) && (min.z === max.z)) {
             return undefined;
         }
 

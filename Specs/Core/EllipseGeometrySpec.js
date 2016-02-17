@@ -42,16 +42,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with a negative axis', function() {
-        expect(function() {
-            return new EllipseGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                semiMajorAxis : 1.0,
-                semiMinorAxis : -1.0
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('throws with a negative granularity', function() {
         expect(function() {
             return new EllipseGeometry({
@@ -163,16 +153,37 @@ defineSuite([
         expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
     });
 
-    it('undefined is returned if the minor axis is equal to zero', function() {
-        var ellipse = new EllipseGeometry({
+    it('undefined is returned if the minor axis is equal to or less than zero', function() {
+        var ellipse0 = new EllipseGeometry({
             center : Cartesian3.fromDegrees(-75.59777, 40.03883),
             semiMajorAxis : 300000.0,
             semiMinorAxis : 0.0
         });
+        var ellipse1 = new EllipseGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 0.0,
+            semiMinorAxis : -1.0
+        });
+        var ellipse2 = new EllipseGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 300000.0,
+            semiMinorAxis : -10.0
+        });
+        var ellipse3 = new EllipseGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : -1.0,
+            semiMinorAxis : -2.0
+        });
 
-        var geometry = EllipseGeometry.createGeometry(ellipse);
+        var geometry0 = EllipseGeometry.createGeometry(ellipse0);
+        var geometry1 = EllipseGeometry.createGeometry(ellipse1);
+        var geometry2 = EllipseGeometry.createGeometry(ellipse2);
+        var geometry3 = EllipseGeometry.createGeometry(ellipse3);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry0).toBe(undefined);
+        expect(geometry1).toBe(undefined);
+        expect(geometry2).toBe(undefined);
+        expect(geometry3).toBe(undefined);
     });
 
     var center = Cartesian3.fromDegrees(0,0);

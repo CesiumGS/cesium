@@ -81,7 +81,7 @@ defineSuite([
         }
     });
 
-    it('undefined is returned if the x, y, or z radii are equal to 0', function() {
+    it('undefined is returned if the x, y, or z radii are equal or less than zero', function() {
         var ellipsoid0 = new EllipsoidGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             radii : new Cartesian3(0.0, 500000.0, 500000.0)
@@ -94,14 +94,32 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             radii : new Cartesian3(1000000.0, 500000.0, 0.0)
         });
+        var ellipsoid3 = new EllipsoidGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            radii : new Cartesian3(-10.0, 500000.0, 500000.0)
+        });
+        var ellipsoid4 = new EllipsoidGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            radii : new Cartesian3(1000000.0, -10.0, 500000.0)
+        });
+        var ellipsoid5 = new EllipsoidGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            radii : new Cartesian3(1000000.0, 500000.0, -10.0)
+        });
 
         var geometry0 = EllipsoidGeometry.createGeometry(ellipsoid0);
         var geometry1 = EllipsoidGeometry.createGeometry(ellipsoid1);
         var geometry2 = EllipsoidGeometry.createGeometry(ellipsoid2);
+        var geometry3 = EllipsoidGeometry.createGeometry(ellipsoid3);
+        var geometry4 = EllipsoidGeometry.createGeometry(ellipsoid4);
+        var geometry5 = EllipsoidGeometry.createGeometry(ellipsoid5);
 
         expect(geometry0).toBe(undefined);
         expect(geometry1).toBe(undefined);
         expect(geometry2).toBe(undefined);
+        expect(geometry3).toBe(undefined);
+        expect(geometry4).toBe(undefined);
+        expect(geometry5).toBe(undefined);
     });
 
     var ellipsoidgeometry = new EllipsoidGeometry({

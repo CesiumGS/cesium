@@ -71,14 +71,14 @@ define([
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length) || length < 0) {
-            throw new DeveloperError('options.length must not be negative.');
+        if (!defined(length)) {
+            throw new DeveloperError('options.length must be defined.');
         }
-        if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0.');
+        if (!defined(topRadius)) {
+            throw new DeveloperError('options.topRadius must be defined.');
         }
-        if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0.');
+        if (!defined(bottomRadius)) {
+            throw new DeveloperError('options.bottomRadius must must be defined.');
         }
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
@@ -187,7 +187,7 @@ define([
         var slices = cylinderGeometry._slices;
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
 
-        if ((length <= 0) || ((topRadius === 0) && (bottomRadius === 0))) {
+        if ((length <= 0) || ((topRadius <= 0) && (bottomRadius <= 0))) {
             return undefined;
         }
 
