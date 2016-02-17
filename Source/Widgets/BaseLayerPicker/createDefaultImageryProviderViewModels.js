@@ -17,7 +17,7 @@ define([
         createTileMapServiceImageryProvider,
         MapboxImageryProvider,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -200,7 +200,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
                 return createTileMapServiceImageryProvider({
                     url : '//cesiumjs.org/blackmarble',
-                    maximumLevel : 8,
+                    flipXY : true,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
                 });
             }

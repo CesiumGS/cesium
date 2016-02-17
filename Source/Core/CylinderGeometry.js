@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var radiusScratch = new Cartesian2();
     var normalScratch = new Cartesian3();

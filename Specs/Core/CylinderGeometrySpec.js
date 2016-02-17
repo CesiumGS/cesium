@@ -7,7 +7,7 @@ defineSuite([
         CylinderGeometry,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws with no length', function() {
         expect(function() {

@@ -9,7 +9,7 @@ defineSuite([
         FeatureDetection,
         createScene,
         DomEventSimulator) {
-    "use strict";
+    'use strict';
 
     var scene;
 

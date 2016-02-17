@@ -3,7 +3,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The state of a {@link QuadtreeTile} in the tile load pipeline.

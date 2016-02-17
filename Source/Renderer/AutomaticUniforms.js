@@ -7,7 +7,7 @@ define([
         Cartesian3,
         Matrix4,
         WebGLConstants) {
-    "use strict";
+    'use strict';
     /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
@@ -1392,6 +1392,30 @@ define([
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.mode;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the current rendering pass.
+         *
+         * @alias czm_pass
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_pass;
+         *
+         * // Example
+         * if ((czm_pass == czm_passTranslucent) && isOpaque())
+         * {
+         *     gl_Position *= 0.0; // Cull opaque geometry in the translucent pass
+         * }
+         */
+        czm_pass : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.pass;
             }
         }),
 

@@ -11,7 +11,7 @@ define([
         destroyObject,
         ShaderProgram,
         ShaderSource) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

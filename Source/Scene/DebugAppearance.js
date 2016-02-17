@@ -11,7 +11,7 @@ define([
         defineProperties,
         DeveloperError,
         Appearance) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a vertex attribute by displaying it as a color for debugging.

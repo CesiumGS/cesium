@@ -13,7 +13,7 @@ define([
         DeveloperError,
         freezeObject,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * An interval defined by a start and a stop time; optionally including those times as part of the interval.
@@ -36,7 +36,7 @@ define([
      *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
      *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
      *     isStartTimeIncluded : true,
-     *     iSStopTimeIncluded : false,
+     *     isStopTimeIncluded : false,
      *     data : Cesium.Cartesian3.fromDegrees(39.921037, -75.170082)
      * });
      *

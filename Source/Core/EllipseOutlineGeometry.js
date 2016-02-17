@@ -29,7 +29,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian1 = new Cartesian3();
     var boundingSphereCenter = new Cartesian3();

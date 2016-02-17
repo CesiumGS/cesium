@@ -21,7 +21,7 @@ define([
         Matrix3,
         Matrix4,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

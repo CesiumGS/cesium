@@ -11,7 +11,7 @@ defineSuite([
         CesiumMath,
         Rectangle,
         WebMercatorTilingScheme) {
-    "use strict";
+    'use strict';
 
     it('throws without a options', function() {
         expect(function() {

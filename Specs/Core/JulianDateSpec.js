@@ -9,7 +9,7 @@ defineSuite([
         CesiumMath,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {

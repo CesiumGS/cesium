@@ -3,7 +3,7 @@ define([
         '../Core/defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     /**
       * A mesh plus related metadata for a single tile of terrain.  Instances of this type are

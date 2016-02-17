@@ -41,7 +41,7 @@ defineSuite([
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
+    'use strict';
 
     var time;
     var time2;

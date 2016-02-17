@@ -13,7 +13,7 @@ define([
         FeatureDetection,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     function hue2rgb(m1, m2, h) {
         if (h < 0) {
@@ -712,6 +712,202 @@ define([
      */
     Color.prototype.withAlpha = function(alpha, result) {
         return Color.fromAlpha(this, alpha, result);
+    };
+
+    /**
+     * Computes the componentwise sum of two Colors.
+     *
+     * @param {Color} left The first Color.
+     * @param {Color} right The second Color.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.add = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = left.red + right.red;
+        result.green = left.green + right.green;
+        result.blue = left.blue + right.blue;
+        result.alpha = left.alpha + right.alpha;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise difference of two Colors.
+     *
+     * @param {Color} left The first Color.
+     * @param {Color} right The second Color.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.subtract = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = left.red - right.red;
+        result.green = left.green - right.green;
+        result.blue = left.blue - right.blue;
+        result.alpha = left.alpha - right.alpha;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise product of two Colors.
+     *
+     * @param {Color} left The first Color.
+     * @param {Color} right The second Color.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.multiply = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = left.red * right.red;
+        result.green = left.green * right.green;
+        result.blue = left.blue * right.blue;
+        result.alpha = left.alpha * right.alpha;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise quotient of two Colors.
+     *
+     * @param {Color} left The first Color.
+     * @param {Color} right The second Color.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.divide = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = left.red / right.red;
+        result.green = left.green / right.green;
+        result.blue = left.blue / right.blue;
+        result.alpha = left.alpha / right.alpha;
+        return result;
+    };
+
+    /**
+     * Computes the componentwise modulus of two Colors.
+     *
+     * @param {Color} left The first Color.
+     * @param {Color} right The second Color.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.mod = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('left is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = left.red % right.red;
+        result.green = left.green % right.green;
+        result.blue = left.blue % right.blue;
+        result.alpha = left.alpha % right.alpha;
+        return result;
+    };
+
+    /**
+     * Multiplies the provided Color componentwise by the provided scalar.
+     *
+     * @param {Color} color The Color to be scaled.
+     * @param {Number} scalar The scalar to multiply with.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.multiplyByScalar = function(color, scalar, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = color.red * scalar;
+        result.green = color.green * scalar;
+        result.blue = color.blue * scalar;
+        result.alpha = color.alpha * scalar;
+        return result;
+    };
+
+    /**
+     * Divides the provided Color componentwise by the provided scalar.
+     *
+     * @param {Color} color The Color to be divided.
+     * @param {Number} scalar The scalar to divide with.
+     * @param {Color} result The object onto which to store the result.
+     * @returns {Color} The modified result parameter.
+     */
+    Color.divideByScalar = function(color, scalar, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('cartesian is required');
+        }
+        if (typeof scalar !== 'number') {
+            throw new DeveloperError('scalar is required and must be a number.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result.red = color.red / scalar;
+        result.green = color.green / scalar;
+        result.blue = color.blue / scalar;
+        result.alpha = color.alpha / scalar;
+        return result;
     };
 
     /**

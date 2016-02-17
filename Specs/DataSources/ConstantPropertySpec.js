@@ -7,7 +7,7 @@ defineSuite([
         ConstantProperty,
         Cartesian3,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

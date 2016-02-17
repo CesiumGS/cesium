@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Matrix4,
         BoundingSphereState) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

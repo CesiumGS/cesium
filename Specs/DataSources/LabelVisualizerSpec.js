@@ -35,7 +35,7 @@ defineSuite([
         VerticalOrigin,
         createGlobe,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var visualizer;

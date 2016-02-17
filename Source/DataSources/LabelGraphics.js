@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a two dimensional label located at the position of the containing {@link Entity}.

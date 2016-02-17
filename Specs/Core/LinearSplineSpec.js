@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         LinearSpline,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     var points;
     var times;

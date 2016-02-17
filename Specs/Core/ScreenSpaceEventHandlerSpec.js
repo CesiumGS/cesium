@@ -19,7 +19,7 @@ defineSuite([
         KeyboardEventModifier,
         ScreenSpaceEventType,
         DomEventSimulator) {
-    "use strict";
+    'use strict';
 
     var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var element;

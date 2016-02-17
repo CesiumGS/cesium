@@ -21,7 +21,7 @@ define([
         QuadraticRealPolynomial,
         QuarticRealPolynomial,
         Ray) {
-    "use strict";
+    'use strict';
 
     /**
      * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.

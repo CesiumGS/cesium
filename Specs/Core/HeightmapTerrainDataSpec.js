@@ -11,7 +11,7 @@ defineSuite([
         GeographicTilingScheme,
         TerrainData,
         when) {
-     "use strict";
+     'use strict';
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);

@@ -11,7 +11,7 @@ define([
         DeveloperError,
         GeometryType,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     /**
      * A geometry representation with attributes forming vertices and optional index data

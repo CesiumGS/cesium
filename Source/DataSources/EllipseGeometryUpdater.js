@@ -47,7 +47,7 @@ define([
         dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);

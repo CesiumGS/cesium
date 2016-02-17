@@ -19,7 +19,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a collection of points made up of positions and colors.

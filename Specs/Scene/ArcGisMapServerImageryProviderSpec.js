@@ -47,7 +47,7 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
