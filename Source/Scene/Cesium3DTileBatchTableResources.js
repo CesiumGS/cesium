@@ -396,6 +396,10 @@ define([
      * @private
      */
     Cesium3DTileBatchTableResources.prototype.getVertexShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
@@ -450,6 +454,10 @@ define([
     };
 
     Cesium3DTileBatchTableResources.prototype.getFragmentShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         return function(source) {
             //TODO: generate entire shader at runtime?
             //var diffuse = 'diffuse = u_diffuse;';
@@ -524,6 +532,10 @@ define([
     };
 
     Cesium3DTileBatchTableResources.prototype.getUniformMapCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
@@ -544,6 +556,10 @@ define([
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickVertexShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         var that = this;
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
@@ -578,6 +594,10 @@ define([
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickFragmentShaderCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         return function(source) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
@@ -622,6 +642,10 @@ define([
     };
 
     Cesium3DTileBatchTableResources.prototype.getPickUniformMapCallback = function() {
+        if (this.featuresLength === 0) {
+            return;
+        }
+
         var that = this;
         return function(uniformMap) {
             var batchUniformMap = {
