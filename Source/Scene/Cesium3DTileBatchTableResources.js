@@ -11,12 +11,17 @@ define([
         '../Core/DeveloperError',
         '../Core/PixelFormat',
         '../Renderer/ContextLimits',
+        '../Renderer/DrawCommand',
         '../Renderer/PixelDatatype',
         '../Renderer/Sampler',
         '../Renderer/ShaderSource',
+        '../Renderer/RenderState',
         '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter'
+        '../Renderer/TextureMinificationFilter',
+        './BlendingState',
+        './CullFace',
+        './Pass'
     ], function(
         Cartesian2,
         Cartesian4,
@@ -29,15 +34,18 @@ define([
         DeveloperError,
         PixelFormat,
         ContextLimits,
+        DrawCommand,
         PixelDatatype,
         Sampler,
         ShaderSource,
+        RenderState,
         Texture,
         TextureMagnificationFilter,
-        TextureMinificationFilter) {
+        TextureMinificationFilter,
+        BlendingState,
+        CullFace,
+        Pass) {
     'use strict';
-
-// * TODO: modify/create commands
 
     /**
      * @private
@@ -405,6 +413,26 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n' +                         // Per-feature show/hide
+// TODO: this will not work when the model itself has translucent parts: they will be culled below as "opaque";
+//       instead, we could cull at the end of the fragment shader when we know the real alpha, or could pass
+//       a uniform flag so this only culls during the style's translucent pass
+// TODO: Translucent should still write depth for picking?  For example, we want to grab highlighted building that became translucent
+// TODO: Same TODOs below in getFragmentShaderCallback
+                    '    bool isTranslucent = (featureProperties.a != 1.0); \n' +
+                    '    if (czm_pass == czm_passTranslucent) \n' +
+                    '    { \n' +
+                    '        if (!isTranslucent) \n' +         // Do not render opaque features in the translucent pass
+                    '        { \n' +
+                    '            gl_Position *= 0.0; \n' +
+                    '        } \n' +
+                    '    } \n' +
+                    '    else \n' +
+                    '    { \n' +
+                    '        if (isTranslucent) \n' +         // Do not render translucent features in the opaque pass
+                    '        { \n' +
+                    '            gl_Position *= 0.0; \n' +
+                    '        } \n' +
+                    '    } \n' +
                     '    tile_featureColor = featureProperties; \n' +
                     '}';
             } else {
@@ -470,6 +498,21 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
                     '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
+                    '    } \n' +
+                    '    bool isTranslucent = (featureProperties.a != 1.0); \n' +
+                    '    if (czm_pass == czm_passTranslucent) \n' +
+                    '    { \n' +
+                    '        if (!isTranslucent) \n' +         // Do not render opaque features in the translucent pass
+                    '        { \n' +
+                    '            discard; \n' +
+                    '        } \n' +
+                    '    } \n' +
+                    '    else \n' +
+                    '    { \n' +
+                    '        if (isTranslucent) \n' +         // Do not render translucent features in the opaque pass
+                    '        { \n' +
+                    '            discard; \n' +
+                    '        } \n' +
                     '    } \n' +
                     '    tile_main(); \n' +
                     '    gl_FragColor *= featureProperties; \n' +
@@ -601,6 +644,85 @@ define([
             return combine(batchUniformMap, uniformMap);
         };
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    var CommandsNeeded = {
+        ALL_OPAQUE : 0,
+        ALL_TRANSLUCENT : 1,
+        OPAQUE_AND_TRANSLUCENT : 2
+    };
+
+    Cesium3DTileBatchTableResources.prototype.getAddCommand = function() {
+        var commandsNeeded = getCommandsNeeded(this);
+
+// TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
+        return function(command) {
+            var commandList = this.commandList;
+
+            // If the styling applied to the tile is all opaque, use the original commands.
+            //
+            // If the styling is all translucent, use new (cached) derived commands with a
+            // translucent render state.
+            //
+            // If the styling causes both opaque and translucent features in this tile,
+            // then use both sets of commands.
+
+            if ((commandsNeeded === CommandsNeeded.ALL_OPAQUE) ||
+                (commandsNeeded === CommandsNeeded.OPAQUE_AND_TRANSLUCENT)) {
+                commandList.push(command);
+            }
+
+            if ((commandsNeeded === CommandsNeeded.ALL_TRANSLUCENT) ||
+                (commandsNeeded === CommandsNeeded.OPAQUE_AND_TRANSLUCENT)) {
+
+                var derivedCommands = command.derivedCommands.tileset;
+                if (!defined(derivedCommands)) {
+                    derivedCommands = {};
+                    command.derivedCommands.tileset = derivedCommands;
+
+// TODO: vector tiles, for example, will not always want two passes for translucency
+                    derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
+                    derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
+                }
+
+                commandList.push(derivedCommands.back);
+                commandList.push(derivedCommands.front);
+            }
+        };
+    };
+
+    function getCommandsNeeded(batchTableResources) {
+        var translucentFeaturesLength = batchTableResources._translucentFeaturesLength;
+
+        if (translucentFeaturesLength === 0) {
+            return CommandsNeeded.ALL_OPAQUE;
+        } else if (translucentFeaturesLength === batchTableResources.featuresLength) {
+            return CommandsNeeded.ALL_TRANSLUCENT;
+        }
+
+        return CommandsNeeded.OPAQUE_AND_TRANSLUCENT;
+    }
+
+    function deriveTranslucentCommand(command, cullFace) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+        derivedCommand.pass = Pass.TRANSLUCENT;
+        derivedCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
+        return derivedCommand;
+    }
+
+    function getTranslucentRenderState(renderState, cullFace) {
+        var rs = clone(renderState, true);
+        rs.cull.enabled = true;
+        rs.cull.face = cullFace;
+        rs.depthTest.enabled = true;
+        rs.depthMask = false;
+        rs.blending = BlendingState.ALPHA_BLEND;
+
+        return RenderState.fromCache(rs);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     function createTexture(batchTableResources, context, bytes) {
         var dimensions = batchTableResources._textureDimensions;
