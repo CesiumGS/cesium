@@ -11,6 +11,7 @@ define([
         '../../Core/Fullscreen',
         '../../Core/isArray',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
@@ -19,6 +20,7 @@ define([
         '../../DataSources/Entity',
         '../../DataSources/EntityView',
         '../../DataSources/Property',
+        '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
@@ -52,6 +54,7 @@ define([
         Fullscreen,
         isArray,
         Matrix4,
+        Rectangle,
         ScreenSpaceEventType,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -60,6 +63,7 @@ define([
         Entity,
         EntityView,
         Property,
+        ImageryLayer,
         SceneMode,
         knockout,
         when,
@@ -1580,7 +1584,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer>} target The entity, array of entities, entity collection, data source or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {HeadingPitchRange} [offset] The offset from the center of the entity in the local east-north-up reference frame.
      * @returns {Promise.<Boolean>} A Promise that resolves to true if the zoom was successful or false if the entity is not currently visualized in the scene or the zoom was cancelled.
      */
@@ -1603,7 +1607,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      * target will be the range. The heading will be determined from the offset. If the heading cannot be
      * determined from the offset, the heading will be north.</p>
      *
-     * @param {Entity|Entity[]|EntityCollection|DataSource|Promise.<Entity|Entity[]|EntityCollection|DataSource>} target The entity, array of entities, entity collection or data source to view. You can also pass a promise that resolves to one of the previously mentioned types.
+     * @param {Entity|Entity[]|EntityCollection|DataSource|ImageryLayer|Promise.<Entity|Entity[]|EntityCollection|DataSource|ImageryLayer>} target The entity, array of entities, entity collection, data source or imagery layer to view. You can also pass a promise that resolves to one of the previously mentioned types.
      * @param {Object} [options] Object with the following properties:
      * @param {Number} [options.duration=3.0] The duration of the flight in seconds.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
@@ -1638,6 +1642,17 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
+            //If the zoom target is a rectangular imagery in an ImageLayer
+            if (zoomTarget instanceof ImageryLayer) {
+                zoomTarget.getViewableRectangle().then(function(rectangle) {
+                    //Only perform the zoom if it wasn't cancelled before the promise was resolved
+                    if (that._zoomPromise === zoomPromise) {
+                        that._zoomTarget = rectangle;
+                    }
+                });
+                return;
+            }
+
             //If the zoom target is a data source, and it's in the middle of loading, wait for it to finish loading.
             if (zoomTarget.isLoading && defined(zoomTarget.loadingEvent)) {
                 var removeEvent = zoomTarget.loadingEvent.addEventListener(function() {
@@ -1648,21 +1663,22 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                         that._zoomTarget = zoomTarget.entities.values.slice(0);
                     }
                 });
+                return;
+            }
+
+            //zoomTarget is now an EntityCollection, this will retrieve the array
+            zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
+
+            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            if (defined(zoomTarget.entities)) {
+                zoomTarget = zoomTarget.entities.values;
+            }
+
+            if (isArray(zoomTarget)) {
+                that._zoomTarget = zoomTarget.slice(0);
             } else {
-                //zoomTarget is now an EntityCollection, this will retrieve the array
-                zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
-
-                //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
-                if (defined(zoomTarget.entities)) {
-                    zoomTarget = zoomTarget.entities.values;
-                }
-
-                if (isArray(zoomTarget)) {
-                    that._zoomTarget = zoomTarget.slice(0);
-                } else {
-                    //Single entity
-                    that._zoomTarget = [zoomTarget];
-                }
+                //Single entity
+                that._zoomTarget = [zoomTarget];
             }
         });
 
@@ -1697,7 +1713,35 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             return;
         }
 
+        var scene = viewer.scene;
+        var camera = scene.camera;
         var zoomPromise = viewer._zoomPromise;
+        var zoomOptions = defaultValue(viewer._zoomOptions, {});
+
+        //If zoomTarget was an ImageryLayer
+        if (entities instanceof Rectangle) {
+            var options = {
+                destination : entities,
+                duration : zoomOptions.duration,
+                maximumHeight : zoomOptions.maximumHeight,
+                complete : function() {
+                    zoomPromise.resolve(true);
+                },
+                cancel : function() {
+                    zoomPromise.resolve(false);
+                }
+            };
+
+            if (viewer._zoomIsFlight) {
+                camera.flyTo(options);
+            } else {
+                camera.setView(options);
+                zoomPromise.resolve(true);
+            }
+            clearZoom(viewer);
+            return;
+        }
+
         var boundingSpheres = [];
         for (var i = 0, len = entities.length; i < len; i++) {
             var state = viewer._dataSourceDisplay.getBoundingSphere(entities[i], false, boundingSphereScratch);
@@ -1717,9 +1761,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         //Stop tracking the current entity.
         viewer.trackedEntity = undefined;
 
-        //Set camera
-        var scene = viewer.scene;
-        var camera = scene.camera;
         var boundingSphere = BoundingSphere.fromBoundingSpheres(boundingSpheres);
         var controller = scene.screenSpaceCameraController;
         controller.minimumZoomDistance = Math.min(controller.minimumZoomDistance, boundingSphere.radius * 0.5);
@@ -1730,21 +1771,18 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             clearZoom(viewer);
             zoomPromise.resolve(true);
         } else {
-            var userOptions = defaultValue(viewer._zoomOptions, {});
-            var options = {
-                duration : userOptions.duration,
-                maximumHeight : userOptions.maximumHeight,
+            clearZoom(viewer);
+            camera.flyToBoundingSphere(boundingSphere, {
+                duration : zoomOptions.duration,
+                maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {
                     zoomPromise.resolve(true);
                 },
                 cancel : function() {
                     zoomPromise.resolve(false);
                 },
-                offset : userOptions.offset
-            };
-
-            clearZoom(viewer);
-            camera.flyToBoundingSphere(boundingSphere, options);
+                offset : zoomOptions.offset
+            });
         }
     }
 
