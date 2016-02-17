@@ -74,8 +74,8 @@ define([
      *      creationFunction : function() {
      *          return Cesium.createTileMapServiceImageryProvider({
      *              url : '//cesiumjs.org/blackmarble',
-     *              maximumLevel : 8,
-     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+     *              flipXY : true
      *          });
      *      }
      *  }));

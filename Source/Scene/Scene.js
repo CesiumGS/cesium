@@ -1481,6 +1481,7 @@ define([
         frustum.near = camera.frustum.near;
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
+        us.updatePass(Pass.ENVIRONMENT);
 
         var environmentState = scene._environmentState;
         var skyBoxCommand = environmentState.skyBoxCommand;
@@ -1555,6 +1556,7 @@ define([
             us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
+            us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
             var length = frustumCommands.indices[Pass.GLOBE];
             for (j = 0; j < length; ++j) {
@@ -1570,6 +1572,7 @@ define([
                 passState.framebuffer = fb;
             }
 
+            us.updatePass(Pass.GROUND);
             commands = frustumCommands.commands[Pass.GROUND];
             length = frustumCommands.indices[Pass.GROUND];
             for (j = 0; j < length; ++j) {
@@ -1588,6 +1591,7 @@ define([
             var startPass = Pass.GROUND + 1;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass < endPass; ++pass) {
+                us.updatePass(pass);
                 commands = frustumCommands.commands[pass];
                 length = frustumCommands.indices[pass];
                 for (j = 0; j < length; ++j) {
@@ -1601,6 +1605,7 @@ define([
                 us.updateFrustum(frustum);
             }
 
+            us.updatePass(Pass.TRANSLUCENT);
             commands = frustumCommands.commands[Pass.TRANSLUCENT];
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
@@ -1615,6 +1620,9 @@ define([
     }
 
     function executeComputeCommands(scene) {
+        var us = scene.context.uniformState;
+        us.updatePass(Pass.COMPUTE);
+
         var sunComputeCommand = scene._environmentState.sunComputeCommand;
         if (defined(sunComputeCommand)) {
             sunComputeCommand.execute(scene._computeEngine);
@@ -1628,6 +1636,9 @@ define([
     }
 
     function executeOverlayCommands(scene, passState) {
+        var us = scene.context.uniformState;
+        us.updatePass(Pass.OVERLAY);
+
         var context = scene.context;
         var commandList = scene._overlayCommandList;
         var length = commandList.length;

@@ -29,7 +29,6 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Scene} scene The scene.
      * @param {Element|String} [vrElement=document.body] The element or id to be placed into vr mode.
-     * @param {Scene} scene The scene.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      */
