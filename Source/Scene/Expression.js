@@ -59,6 +59,11 @@ define([
         while (i >= 0) {
             result += exp.substr(0, i);
             var j = exp.indexOf('}');
+            if (j < 0) {
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError('Error: unmatched {');
+                //>>includeEnd('debug');
+            }
             result += "czm_" + exp.substr(i+2, j-(i+2));
             exp = exp.substr(j+1);
             i = exp.indexOf('${');
