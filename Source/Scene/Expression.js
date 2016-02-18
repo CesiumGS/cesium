@@ -23,7 +23,7 @@ define([
 
         var ast;
         try {
-            ast = jsep(expression);
+            ast = jsep(replaceVariables(expression));
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
@@ -50,6 +50,21 @@ define([
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
+    }
+
+    function replaceVariables(expression) {
+        var exp = expression;
+        var result = "";
+        var i = exp.indexOf('${');
+        while (i >= 0) {
+            result += exp.substr(0, i);
+            var j = exp.indexOf('}');
+            result += "czm_" + exp.substr(i+2, j-(i+2));
+            exp = exp.substr(j+1);
+            i = exp.indexOf('${');
+        }
+        result += exp;
+        return result;
     }
 
     function parseLiteral(ast) {
@@ -111,6 +126,16 @@ define([
         //>>includeEnd('debug');
     }
 
+    function parseVariableName(ast) {
+        if (ast.name.substr(0, 4) === 'czm_') {
+            return new Node(ExpressionNodeType.VARIABLE, ast.name.substr(4));
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: ' + ast.name + ' is not defined');
+        //>>includeEnd('debug');
+    }
+
     function createRuntimeAst(expression, ast) {
         var node;
         var op;
@@ -121,6 +146,8 @@ define([
             node = parseLiteral(ast);
         } else if (ast.type === 'CallExpression') {
             node = parseCall(ast);
+        } else if (ast.type === 'Identifier') {
+            node = parseVariableName(ast);
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
@@ -204,6 +231,8 @@ define([
             } else if (node._value === '-') {
                 node.evaluate = node._evaluateNegative;
             }
+        } else if (node._type === ExpressionNodeType.VARIABLE) {
+            node.evaluate = node._evaluateVariable;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -224,6 +253,11 @@ define([
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateVariable = function(feature) {
+        // evaluates to undefined if the property name is not defined for that feature
+        return feature.getProperty(this._value);
     };
 
     Node.prototype._evaluateNot = function(feature) {

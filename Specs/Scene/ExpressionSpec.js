@@ -13,6 +13,33 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
+    function MockFeature() {
+        this._properties = {};
+    }
+
+    MockFeature.prototype.addProperty = function(name, value) {
+        this._properties[name] = value;
+    };
+
+    MockFeature.prototype.getProperty = function(name) {
+        return this._properties[name];
+    };
+
+    it('evaluates variable', function() {
+        var feature = new MockFeature();
+        feature.addProperty('height', 10);
+        feature.addProperty('width', 5);
+
+        var expression = new Expression(new MockStyleEngine(), '${height}');
+        expect(expression.evaluate(feature)).toEqual(10);
+
+        expression = new Expression(new MockStyleEngine(), '${height}/${width}');
+        expect(expression.evaluate(feature)).toEqual(2);
+
+        expression = new Expression(new MockStyleEngine(), '${depth}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+    });
+
     it('throws on invalid expressions', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), false);
