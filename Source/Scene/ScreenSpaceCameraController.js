@@ -496,11 +496,18 @@ define([
                 var endPosition = camera.position;
 
                 if (!Cartesian3.equals(worldPosition, endPosition)) {
+                    var savedX = camera.position.x;
+
                     var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
                     Cartesian3.normalize(direction, direction);
 
                     var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
                     camera.move(direction, d * 0.5);
+
+                    if ((camera.position.x < 0.0 && savedX > 0.0) || (camera.position.x > 0.0 && savedX < 0.0)) {
+                        pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                        object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+                    }
                 }
             } else if (mode === SceneMode.SCENE3D) {
                 var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
