@@ -28,7 +28,8 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var globeVisible = false;
+var globeVisible = true;
+var terrainEnabled = true;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true,
@@ -38,19 +39,57 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     skyAtmosphere : globeVisible ? undefined : false
 });
 
+var terrainProvider;
+if (terrainEnabled) {
+    terrainProvider = new Cesium.CesiumTerrainProvider({
+        url : '//assets.agi.com/stk-terrain/world',
+        requestWaterMask : true,
+        requestVertexNormals : true
+    });
+} else {
+    terrainProvider = new Cesium.EllipsoidTerrainProvider();
+}
+
+viewer.terrainProvider = terrainProvider;
+
+// Exton
+//var centerLongitude = -1.31968;
+//var centerLatitude = 0.698874;
+
+// Everest
+var centerLongitude = 1.517132688;
+var centerLatitude = 0.4884844964;
+
 var scene = viewer.scene;
 var camera = scene.camera;
 var shadowMap = scene.sunShadowMap;
 shadowMap.debugShow = true;
 shadowMap.enabled = true;
 
-var centerLongitude = -1.31968;
-var centerLatitude = 0.698874;
+var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
+var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+Cesium.when(promise, function(updatedPositions) {
+    var height = updatedPositions[0].height;
+    createScene(height);
+});
 
-camera.lookAt(Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 50), new Cesium.Cartesian3(0.0, 0.0, 30.0));
+function createScene(height) {
+    height += 50.0;
+    var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+    var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
+    var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
+    var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
-function createModel(url) {
-    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 50);
+    camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+
+    //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
+    createModel('../../SampleData/models/shadow_tester.gltf', center);
+    createBox(position3);
+    createBoxRTC(position2);
+    createSphere(position1);
+}
+
+function createModel(url, origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
     var model = scene.primitives.add(Cesium.Model.fromGltf({
@@ -69,8 +108,7 @@ function createModel(url) {
     });
 }
 
-function createBoxRTC() {
-    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 60);
+function createBoxRTC(origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
     var boxGeometry = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
@@ -104,14 +142,15 @@ function createBoxRTC() {
             closed : true
         }),
         asynchronous : false,
-        rtcCenter : boxGeometry.boundingSphere.center
+        rtcCenter : boxGeometry.boundingSphere.center,
+        castShadows : true,
+        receiveShadows : true
     });
 
     scene.primitives.add(box);
 }
 
-function createBox() {
-    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 65);
+function createBox(origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
     var box = new Cesium.Primitive({
@@ -129,14 +168,15 @@ function createBox() {
             translucent : false,
             closed : true
         }),
-        asynchronous : false
+        asynchronous : false,
+        castShadows : true,
+        receiveShadows : true
     });
 
     scene.primitives.add(box);
 }
 
-function createSphere() {
-    var origin = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, 55);
+function createSphere(origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
     var sphere = new Cesium.Primitive({
@@ -154,17 +194,13 @@ function createSphere() {
             translucent : true,
             closed : true
         }),
-        asynchronous : false
+        asynchronous : false,
+        castShadows : true,
+        receiveShadows : true
     });
 
     scene.primitives.add(sphere);
 }
-
-//createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
-createModel('../../SampleData/models/shadow_tester.gltf');
-createBox();
-createBoxRTC();
-createSphere();
 
 function setCascades(cascades) {
     return function() {

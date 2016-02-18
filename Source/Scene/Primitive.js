@@ -110,8 +110,8 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Boolean} [options.castShadows=true] Determines whether this primitive will cast shadows when shadow mapping is enabled.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether this primitive will receive shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.castShadows=false] Determines whether this primitive will cast shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.receiveShadows=false] Determines whether this primitive will receive shadows when shadow mapping is enabled.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -290,9 +290,9 @@ define([
          *
          * @type {Boolean}
          *
-         * @default true
+         * @default false
          */
-        this.castShadows = defaultValue(options.castShadows, true);
+        this.castShadows = defaultValue(options.castShadows, false);
         this._castShadows = this.castShadows;
 
         /**
@@ -300,9 +300,9 @@ define([
          *
          * @type {Boolean}
          *
-         * @default true
+         * @default false
          */
-        this.receiveShadows = defaultValue(options.receiveShadows, true);
+        this.receiveShadows = defaultValue(options.receiveShadows, false);
         this._receiveShadows = this.receiveShadows;
 
         this._sceneShadowsEnabled = true;
@@ -1633,6 +1633,7 @@ define([
 
         this._sp = this._sp && this._sp.destroy();
         this._pickSP = this._pickSP && this._pickSP.destroy();
+        this._shadowCastSP = this._shadowCastSP && this._shadowCastSP.destroy();
 
         var va = this._va;
         length = va.length;

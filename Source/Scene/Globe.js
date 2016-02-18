@@ -188,6 +188,22 @@ define([
          */
         this.depthTestAgainstTerrain = false;
 
+        /**
+         * Determines whether the globe will cast shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.castShadows = true;
+
+        /**
+         * Determines whether the globe will receive shadows when shadow mapping is enabled.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.receiveShadows = true;
+
         this._oceanNormalMap = undefined;
         this._zoomedOutOceanSpecularIntensity = 0.5;
     }
@@ -464,6 +480,8 @@ define([
             tileProvider.hasWaterMask = hasWaterMask;
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
+            tileProvider.castShadows = this.castShadows;
+            tileProvider.receiveShadows = this.receiveShadows;
 
             surface.update(frameState);
         }
