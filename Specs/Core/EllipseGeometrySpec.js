@@ -180,10 +180,10 @@ defineSuite([
         var geometry2 = EllipseGeometry.createGeometry(ellipse2);
         var geometry3 = EllipseGeometry.createGeometry(ellipse3);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
-        expect(geometry3).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
     });
 
     var center = Cartesian3.fromDegrees(0,0);

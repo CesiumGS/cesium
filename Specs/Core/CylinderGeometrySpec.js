@@ -127,10 +127,10 @@ defineSuite([
         var geometry2 = CylinderGeometry.createGeometry(cylinder2);
         var geometry3 = CylinderGeometry.createGeometry(cylinder3);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
-        expect(geometry3).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
     });
 
     var cylinder = new CylinderGeometry({

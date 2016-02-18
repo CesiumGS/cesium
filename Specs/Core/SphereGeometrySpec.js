@@ -92,7 +92,7 @@ defineSuite([
 
         var geometry = SphereGeometry.createGeometry(sphere);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry).toBeUndefined();
     });
 
     var sphere = new SphereGeometry({

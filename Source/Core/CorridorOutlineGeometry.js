@@ -464,12 +464,13 @@ define([
     CorridorOutlineGeometry.createGeometry = function(corridorOutlineGeometry) {
         var positions = corridorOutlineGeometry._positions;
         var height = corridorOutlineGeometry._height;
+        var width = corridorOutlineGeometry._width;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
 
-        if (cleanPositions.length < 2) {
+        if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
 
@@ -477,7 +478,7 @@ define([
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,
-            width : corridorOutlineGeometry._width,
+            width : width,
             cornerType : corridorOutlineGeometry._cornerType,
             granularity : corridorOutlineGeometry._granularity,
             saveAttributes : false

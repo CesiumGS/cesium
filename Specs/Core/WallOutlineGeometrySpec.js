@@ -169,7 +169,7 @@ defineSuite([
 
         var geometry = WallOutlineGeometry.createGeometry(wallOutline);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry).toBeUndefined();
     });
 
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];

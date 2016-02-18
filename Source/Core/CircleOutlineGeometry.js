@@ -64,7 +64,9 @@ define([
             granularity : options.granularity,
             numberOfVerticalLines : options.numberOfVerticalLines
         };
-        this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
+        if (radius > 0) {
+            this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
+        }
         this._workerName = 'createCircleOutlineGeometry';
     }
 

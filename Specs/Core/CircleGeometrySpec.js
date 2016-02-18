@@ -139,8 +139,8 @@ defineSuite([
         var geometry0 = CircleGeometry.createGeometry(circle0);
         var geometry1 = CircleGeometry.createGeometry(circle1);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
     });
 
     var center = Cartesian3.fromDegrees(0,0);

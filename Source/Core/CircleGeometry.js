@@ -70,7 +70,9 @@ define([
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation
         };
-        this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        if (radius > 0) {
+            this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        }
         this._workerName = 'createCircleGeometry';
     }
 

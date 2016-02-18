@@ -493,7 +493,7 @@ defineSuite([
 
         var geometry = PolygonGeometry.createGeometry(polygon);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry).toBeUndefined();
     });
 
     var positions = Cartesian3.fromDegreesArray([

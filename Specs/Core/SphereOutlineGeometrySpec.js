@@ -50,7 +50,7 @@ defineSuite([
 
         var geometry = SphereOutlineGeometry.createGeometry(sphereOutline);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry).toBeUndefined();
     });
 
     var sphere = new SphereOutlineGeometry({

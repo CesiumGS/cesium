@@ -90,8 +90,8 @@ defineSuite([
         var geometry0 = CircleOutlineGeometry.createGeometry(circleOutline0);
         var geometry1 = CircleOutlineGeometry.createGeometry(circleOutline1);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
     });
 
     var center = new Cartesian3(8, 9, 10);

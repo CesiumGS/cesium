@@ -108,7 +108,7 @@ defineSuite([
 
         var geometry = BoxGeometry.createGeometry(box);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry).toBeUndefined();
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({

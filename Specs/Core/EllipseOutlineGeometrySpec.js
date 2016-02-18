@@ -129,10 +129,10 @@ defineSuite([
         var geometry2 = EllipseOutlineGeometry.createGeometry(ellipseOutline2);
         var geometry3 = EllipseOutlineGeometry.createGeometry(ellipseOutline3);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
-        expect(geometry3).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
     });
 
     var center = new Cartesian3(8, 9, 10);
