@@ -120,14 +120,17 @@ defineSuite([
     });
 
     it('evaluates literal color', function() {
-        var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\')');
+        var expression = new Expression(new MockStyleEngine(), 'Color(\'#ffffff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'#fff\')');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'#fff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'white\')');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'white\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'Color(\'white\', 0.5)');
+        expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
         expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 255)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
@@ -140,6 +143,24 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+    });
+
+    it('color constructors throw with wrong number of arguments', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'rgb(255, 255)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'hsl(1, 1)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'rgba(255, 255, 255)');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'hsla(1, 1, 1)');
+        }).toThrowDeveloperError();
     });
 
     it('evaluates unary not', function() {
@@ -238,7 +259,7 @@ defineSuite([
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') < 10');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') < 10');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -259,7 +280,7 @@ defineSuite([
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') <= 10');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') <= 10');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -280,7 +301,7 @@ defineSuite([
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') > 10');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') > 10');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -301,7 +322,7 @@ defineSuite([
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') >= 10');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') >= 10');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -317,7 +338,7 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'true && true');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression(new MockStyleEngine(), '2 && color(\'red\')');
+        expression = new Expression(new MockStyleEngine(), '2 && Color(\'red\')');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -333,7 +354,7 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'true || true');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression(new MockStyleEngine(), '2 || color(\'red\')');
+        expression = new Expression(new MockStyleEngine(), '2 || Color(\'red\')');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -364,10 +385,10 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 1.0) % rgba(255, 255, 255, 1.0)');
         expect(expression.evaluate(undefined)).toEqual(new Color(0, 0, 0, 0));
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'green\') === color(\'green\')');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'green\') === Color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression(new MockStyleEngine(), 'color(\'green\') !== color(\'green\')');
+        expression = new Expression(new MockStyleEngine(), 'Color(\'green\') !== Color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 });
