@@ -321,7 +321,7 @@ define([
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
@@ -337,6 +337,11 @@ define([
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
+
+        if ((CesiumMath.equalsEpsilon(rectangle.north, rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangle.east, rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
         if (defined(extrudedHeight)) {
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);

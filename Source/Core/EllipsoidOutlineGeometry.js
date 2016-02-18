@@ -168,10 +168,15 @@ define([
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var stackPartitions = ellipsoidGeometry._stackPartitions;
         var slicePartitions = ellipsoidGeometry._slicePartitions;

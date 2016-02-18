@@ -799,13 +799,14 @@ define([
     CorridorGeometry.createGeometry = function(corridorGeometry) {
         var positions = corridorGeometry._positions;
         var height = corridorGeometry._height;
+        var width = corridorGeometry._width;
         var extrudedHeight = corridorGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
 
-        if (cleanPositions.length < 2) {
-            return undefined;
+        if ((cleanPositions.length < 2) || (width <= 0)) {
+            return;
         }
 
         var ellipsoid = corridorGeometry._ellipsoid;
@@ -813,7 +814,7 @@ define([
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,
-            width : corridorGeometry._width,
+            width : width,
             cornerType : corridorGeometry._cornerType,
             granularity : corridorGeometry._granularity,
             saveAttributes: true
