@@ -75,35 +75,58 @@ define([
         var val;
 
         // TODO: Check number of arguments for each function
-        // TODO: Throw error if returned color is not defined
+        // TODO: Throw error if returned Color is not defined
 
-        if (call === 'color') {
-           val = Color.fromCssColorString(args[0].value);
-           if (defined(val)) {
+        if (call === 'Color') {
+            val = Color.fromCssColorString(args[0].value);
+            if (defined(args[1])) {
+                val = Color.fromAlpha(val, args[1].value);
+            }
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'rgb') {
-           val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 3) {
+                throw new DeveloperError('Error: rgb requires three arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'hsl') {
-           val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 3) {
+                throw new DeveloperError('Error: hsl requires three arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'rgba') {
-           // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-           var a = args[3].value * 255;
-           val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 4) {
+                throw new DeveloperError('Error: rgba requires four arguments');
+            }
+            //>>includeEnd('debug');
+            // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
+            var a = args[3].value * 255;
+            val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'hsla') {
-           val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 4) {
+                throw new DeveloperError('Error: hlsa requires four arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         }
 
         //>>includeStart('debug', pragmas.debug);
