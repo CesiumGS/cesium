@@ -201,7 +201,7 @@ define([
         var slices = cylinderGeometry._slices;
 
         if ((length <= 0) || ((topRadius <= 0) && (bottomRadius <= 0))) {
-            return undefined;
+            return;
         }
 
         var twoSlices = slices + slices;

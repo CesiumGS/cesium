@@ -682,16 +682,12 @@ define([
         var i;
 
         if (polygons.length === 0) {
-            return undefined;
+            return;
         }
 
         outerPositions = polygons[0].slice();
         for (i = 0; i < outerPositions.length; i++) {
             outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
-        }
-
-        if (outerPositions.length < 3) {
-            return undefined;
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);

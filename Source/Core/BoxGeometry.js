@@ -269,8 +269,8 @@ define([
         var indices;
         var positions;
 
-        if ((min.x === max.x) && (min.y === max.y) && (min.z === max.z)) {
-            return undefined;
+        if (Cartesian3.equals(min, max)) {
+            return;
         }
 
         if (vertexFormat.position &&

@@ -27,15 +27,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with a negative radius', function() {
-        expect(function() {
-            return new CircleOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                radius : -1.0
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleOutlineGeometry({
@@ -86,15 +77,21 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 8 * 2);
     });
 
-    it('undefined is returned if radius is equal to zero', function () {
-        var circleOutline = new CircleOutlineGeometry({
+    it('undefined is returned if radius is equal to or less than zero', function () {
+        var circleOutline0 = new CircleOutlineGeometry({
             center : Cartesian3.fromDegrees(-75.59777, 40.03883),
             radius : 0.0
         });
+        var circleOutline1 = new CircleOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : -10.0
+        });
 
-        var geometry = CircleOutlineGeometry.createGeometry(circleOutline);
+        var geometry0 = CircleOutlineGeometry.createGeometry(circleOutline0);
+        var geometry1 = CircleOutlineGeometry.createGeometry(circleOutline1);
 
-        expect(geometry).toBe(undefined);
+        expect(geometry0).toBe(undefined);
+        expect(geometry1).toBe(undefined);
     });
 
     var center = new Cartesian3(8, 9, 10);

@@ -805,7 +805,7 @@ define([
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
 
         if (cleanPositions.length < 2) {
-            return undefined;
+            return;
         }
 
         var ellipsoid = corridorGeometry._ellipsoid;

@@ -185,7 +185,7 @@ define([
         var radii = ellipsoidGeometry._radii;
 
         if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
-            return undefined;
+            return;
         }
 
         var ellipsoid = Ellipsoid.fromCartesian3(radii);

@@ -334,12 +334,12 @@ define([
         var ellipsoid = wallGeometry._ellipsoid;
 
         if (wallPositions.length < 2) {
-            return undefined;
+            return;
         }
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
         if (!defined(pos)) {
-            return undefined;
+            return;
         }
 
         var bottomPositions = pos.bottomPositions;

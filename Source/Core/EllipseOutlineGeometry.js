@@ -323,12 +323,11 @@ define([
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipseOutlineGeometry.createGeometry = function(ellipseGeometry) {
-        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
-
         if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
-            return undefined;
+            return;
         }
 
+        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,

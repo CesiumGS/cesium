@@ -212,8 +212,8 @@ define([
         var min = boxGeometry._min;
         var max = boxGeometry._max;
 
-        if ((min.x === max.x) && (min.y === max.y) && (min.z === max.z)) {
-            return undefined;
+        if (Cartesian3.equals(min, max)) {
+            return;
         }
 
         var attributes = new GeometryAttributes();
