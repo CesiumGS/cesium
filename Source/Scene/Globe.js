@@ -401,16 +401,8 @@ define([
     /**
      * @private
      */
-    Globe.prototype.initialize = function(frameState) {
+    Globe.prototype.beginFrame = function(frameState) {
         if (!this.show) {
-            return;
-        }
-
-        var context = frameState.context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        if (width === 0 || height === 0) {
             return;
         }
 
@@ -465,7 +457,7 @@ define([
             tileProvider.oceanNormalMap = this._oceanNormalMap;
             tileProvider.enableLighting = this.enableLighting;
 
-            surface.initialize(frameState);
+            surface.beginFrame(frameState);
         }
     };
 
@@ -474,14 +466,6 @@ define([
      */
     Globe.prototype.update = function(frameState) {
         if (!this.show) {
-            return;
-        }
-
-        var context = frameState.context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        if (width === 0 || height === 0) {
             return;
         }
 
@@ -500,21 +484,13 @@ define([
     /**
      * @private
      */
-    Globe.prototype.finalize = function(frameState) {
+    Globe.prototype.endFrame = function(frameState) {
         if (!this.show) {
             return;
         }
 
-        var context = frameState.context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        if (width === 0 || height === 0) {
-            return;
-        }
-
         if (frameState.passes.render) {
-            this._surface.finalize(frameState);
+            this._surface.endFrame(frameState);
         }
     };
 

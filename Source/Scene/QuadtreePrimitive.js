@@ -262,7 +262,7 @@ define([
     /**
      * @private
      */
-    QuadtreePrimitive.prototype.initialize = function(frameState) {
+    QuadtreePrimitive.prototype.beginFrame = function(frameState) {
         var passes = frameState.passes;
         if (!passes.render) {
             return;
@@ -310,7 +310,7 @@ define([
     /**
      * @private
      */
-    QuadtreePrimitive.prototype.finalize = function(frameState) {
+    QuadtreePrimitive.prototype.endFrame = function(frameState) {
         var passes = frameState.passes;
         if (!passes.render) {
             return;
