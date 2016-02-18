@@ -13,27 +13,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor throws with length less than 0', function() {
-        expect(function() {
-            return new CylinderOutlineGeometry({
-                length: -1
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('constructor throws with no topRadius', function() {
         expect(function() {
             return new CylinderOutlineGeometry({
                 length: 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws with topRadius less than 0', function() {
-        expect(function() {
-            return new CylinderOutlineGeometry({
-                length: 1,
-                topRadius: -1
             });
         }).toThrowDeveloperError();
     });
@@ -43,26 +26,6 @@ defineSuite([
             return new CylinderOutlineGeometry({
                 length: 1,
                 topRadius: 1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws with bottomRadius less than 0', function() {
-        expect(function() {
-            return new CylinderOutlineGeometry({
-                length: 1,
-                topRadius: 1,
-                bottomRadius: -1
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('constructor throws if top and bottom radius are 0', function() {
-        expect(function() {
-            return new CylinderOutlineGeometry({
-                length: 1,
-                topRadius: 0,
-                bottomRadius: 0
             });
         }).toThrowDeveloperError();
     });
@@ -101,6 +64,40 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 2);
         expect(m.indices.length).toEqual(6 * 2);
+    });
+
+    it('undefined is returned if the length is less than or equal to zero or if ' +
+       'both radii are less than or equal to zero', function() {
+        var cylinderOutline0 = new CylinderOutlineGeometry({
+            length: 0,
+            topRadius: 80000,
+            bottomRadius: 200000
+        });
+        var cylinderOutline1 = new CylinderOutlineGeometry({
+            length: 200000,
+            topRadius: 0,
+            bottomRadius: 0
+        });
+        var cylinderOutline2 = new CylinderOutlineGeometry({
+            length: 200000,
+            topRadius: -10,
+            bottomRadius: -10
+        });
+        var cylinderOutline3 = new CylinderOutlineGeometry({
+            length: -200000,
+            topRadius: 100,
+            bottomRadius: 100
+        });
+
+        var geometry0 = CylinderOutlineGeometry.createGeometry(cylinderOutline0);
+        var geometry1 = CylinderOutlineGeometry.createGeometry(cylinderOutline1);
+        var geometry2 = CylinderOutlineGeometry.createGeometry(cylinderOutline2);
+        var geometry3 = CylinderOutlineGeometry.createGeometry(cylinderOutline3);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
     });
 
     var cylinder = new CylinderOutlineGeometry({
