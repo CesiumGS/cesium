@@ -229,6 +229,16 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '3 < 2');
         expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'true < false');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') < 10');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary less than or equals', function() {
@@ -240,6 +250,16 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '3 <= 2');
         expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'true <= false');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') <= 10');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary greater than', function() {
@@ -251,6 +271,16 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '3 > 2');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'true > false');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') > 10');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates binary greater than or equals', function() {
@@ -262,6 +292,16 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '3 >= 2');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'true >= false');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'blue\') >= 10');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates logical and', function() {
@@ -273,6 +313,11 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'true && true');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '2 && color(\'red\')');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates logical or', function() {
@@ -284,6 +329,11 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'true || true');
         expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '2 || color(\'red\')');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 
     it('evaluates color operations', function() {

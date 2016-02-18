@@ -182,6 +182,21 @@ define([
         }
     }
 
+    function checkRelationalTypes(left, right) {
+        var ltype = typeof(left);
+        var rtype = typeof(right);
+        if (ltype !== rtype) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Cannot convert between types');
+            //>>includeEnd('debug');
+        } else if (ltype === 'boolean' || rtype === 'boolean' ||
+                   left instanceof Color || right instanceof Color) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+            //>>includeEnd('debug');
+        }
+    }
+
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
     };
@@ -194,36 +209,78 @@ define([
         return -(this._left.evaluate(feature));
     };
 
+    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
+    // that we can assign if we know the types before runtime
     Node.prototype._evaluateLessThan = function(feature) {
-        return this._left.evaluate(feature) < this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        checkRelationalTypes(left, right);
+        return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(feature) {
-        return this._left.evaluate(feature) <= this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        checkRelationalTypes(left, right);
+        return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(feature) {
-        return this._left.evaluate(feature) > this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        checkRelationalTypes(left, right);
+        return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
-        return this._left.evaluate(feature) >= this._right.evaluate(feature);
+        var left = this._left.evaluate(feature);
+        var right = this._right.evaluate(feature);
+        checkRelationalTypes(left, right);
+        return left >= right;
     };
 
     Node.prototype._evaluateOr = function(feature) {
         var left = this._left.evaluate(feature);
+        if (typeof(left) !== 'boolean') {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+            //>>includeEnd('debug');
+        }
+
+        // short circuit the expression
         if (left) {
             return true;
         }
-        return left || this._right.evaluate(feature);
+
+        var right = this._right.evaluate(feature);
+        if (typeof(right) !== 'boolean') {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+            //>>includeEnd('debug');
+        }
+        return left || right;
     };
 
     Node.prototype._evaluateAnd = function(feature) {
         var left = this._left.evaluate(feature);
+        if (typeof(left) !== 'boolean') {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+            //>>includeEnd('debug');
+        }
+
+        // short circuit the expression
         if (!left) {
             return false;
         }
-        return left && this._right.evaluate(feature);
+
+        var right = this._right.evaluate(feature);
+        if (typeof(right) !== 'boolean') {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+            //>>includeEnd('debug');
+        }
+        return left && right;
     };
 
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
