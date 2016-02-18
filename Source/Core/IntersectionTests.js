@@ -343,6 +343,7 @@ define([
         //>>includeEnd('debug');
 
         var ray = scratchLineSegmentRay;
+        var origin = Cartesian3.clone(p0, ray.origin);
         var direction = Cartesian3.subtract(p1, p0, ray.direction);
 
         var maxT = Cartesian3.magnitude(direction);
