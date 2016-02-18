@@ -3,7 +3,7 @@ defineSuite([
         'Core/HeadingPitchRange'
     ], function(
         HeadingPitchRange) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var hpr = new HeadingPitchRange();

@@ -19,7 +19,7 @@ defineSuite([
         Matrix2,
         Rectangle,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);

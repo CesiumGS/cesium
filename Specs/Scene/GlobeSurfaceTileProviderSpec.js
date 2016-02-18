@@ -57,7 +57,7 @@ defineSuite([
         createFrameState,
         pollToPromise,
         render) {
-    "use strict";
+    'use strict';
 
     var context;
 
@@ -88,7 +88,9 @@ defineSuite([
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
+            globe.beginFrame(frameState);
             globe.update(frameState);
+            globe.endFrame(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }

@@ -15,7 +15,7 @@ defineSuite([
         ConstantProperty,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    "use strict";
+    'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

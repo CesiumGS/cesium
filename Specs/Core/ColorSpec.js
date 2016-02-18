@@ -9,7 +9,7 @@ defineSuite([
         Cartesian4,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();
@@ -471,6 +471,240 @@ defineSuite([
         expect(function() {
             Color.RED.darken(undefined, new Color());
         }).toThrowDeveloperError();
+    });
+
+    it('Can add', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.4);
+        var right = new Color(0.3, 0.3, 0.3, 0.3);
+        var result = Color.add(left, right, new Color());
+        expect(result.red).toEqual(0.4);
+        expect(result.green).toEqual(0.5);
+        expect(result.blue).toEqual(0.6);
+        expect(result.alpha).toEqual(0.7);
+    });
+
+    it('add throws with undefined parameters', function() {
+        expect(function() {
+            Color.add(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.add(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.add(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can add with a result parameter that is an input parameter', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.4);
+        var right = new Color(0.3, 0.3, 0.3, 0.3);
+        var result = Color.add(left, right, left);
+        expect(result.red).toEqual(0.4);
+        expect(result.green).toEqual(0.5);
+        expect(result.blue).toEqual(0.6);
+        expect(result.alpha).toEqual(0.7);
+    });
+
+    it('Can subtract', function() {
+        var left = new Color(1.0, 1.0, 1.0, 1.0);
+        var right = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.subtract(left, right, new Color());
+        expect(result.red).toEqual(0.9);
+        expect(result.green).toEqual(0.8);
+        expect(result.blue).toEqual(0.7);
+        expect(result.alpha).toEqual(0.6);
+    });
+
+    it('subtract throws with undefined parameters', function() {
+        expect(function() {
+            Color.subtract(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.subtract(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.subtract(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('subtract multiply with a result parameter that is an input parameter', function() {
+        var left = new Color(1.0, 1.0, 1.0, 1.0);
+        var right = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.subtract(left, right, left);
+        expect(result.red).toEqual(0.9);
+        expect(result.green).toEqual(0.8);
+        expect(result.blue).toEqual(0.7);
+        expect(result.alpha).toEqual(0.6);
+    });
+
+    it('Can multiply', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.4);
+        var right = new Color(0.2, 0.2, 0.2, 0.2);
+        var result = Color.multiply(left, right, new Color());
+        expect(result.red).toEqualEpsilon(0.02, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.04, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.06, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.08, CesiumMath.EPSILON15);
+    });
+
+    it('multiply throws with undefined parameters', function() {
+        expect(function() {
+            Color.multiply(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.multiply(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.multiply(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can multiply with a result parameter that is an input parameter', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.4);
+        var right = new Color(0.2, 0.2, 0.2, 0.2);
+        var result = Color.multiply(left, right, left);
+        expect(result.red).toEqualEpsilon(0.02, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.04, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.06, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.08, CesiumMath.EPSILON15);
+    });
+
+    it('Can divide', function() {
+        var left = new Color(0.1, 0.2, 0.1, 0.2);
+        var right = new Color(0.2, 0.2, 0.4, 0.4);
+        var result = Color.divide(left, right, new Color());
+        expect(result.red).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.25, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
+    });
+
+    it('divide throws with undefined parameters', function() {
+        expect(function() {
+            Color.divide(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.divide(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.divide(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can divide with a result parameter that is an input parameter', function() {
+        var left = new Color(0.1, 0.2, 0.1, 0.2);
+        var right = new Color(0.2, 0.2, 0.4, 0.4);
+        var result = Color.divide(left, right, left);
+        expect(result.red).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.25, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.5, CesiumMath.EPSILON15);
+    });
+
+    it('Can mod', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.2);
+        var right = new Color(0.2, 0.2, 0.2, 0.4);
+        var result = Color.mod(left, right, new Color());
+        expect(result.red).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.0, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
+    });
+
+    it('mod throws with undefined parameters', function() {
+        expect(function() {
+            Color.mod(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.mod(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.mod(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can mod with a result parameter that is an input parameter', function() {
+        var left = new Color(0.1, 0.2, 0.3, 0.2);
+        var right = new Color(0.2, 0.2, 0.2, 0.4);
+        var result = Color.mod(left, right, left);
+        expect(result.red).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.0, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
+    });
+
+    it('Can multiply by scalar', function() {
+        var color = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.multiplyByScalar(color, 2.0, new Color());
+        expect(result.red).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.4, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.6, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.8, CesiumMath.EPSILON15);
+    });
+
+    it('multiply by scalar throws with undefined parameters', function() {
+        expect(function() {
+            Color.multiplyByScalar(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.multiplyByScalar(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.multiplyByScalar(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can multiply by scalar with a result parameter that is an input parameter', function() {
+        var color = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.multiplyByScalar(color, 2.0, color);
+        expect(result.red).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.4, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.6, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.8, CesiumMath.EPSILON15);
+    });
+
+    it('Can divide by scalar', function() {
+        var color = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.divideByScalar(color, 2.0, new Color());
+        expect(result.red).toEqualEpsilon(0.05, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.15, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
+    });
+
+    it('divide by scalar throws with undefined parameters', function() {
+        expect(function() {
+            Color.divideByScalar(undefined, new Color(), new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.divideByScalar(new Color(), undefined, new Color());
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            Color.divideByScalar(new Color(), new Color(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('can divide by scalar with a result parameter that is an input parameter', function() {
+        var color = new Color(0.1, 0.2, 0.3, 0.4);
+        var result = Color.divideByScalar(color, 2.0, color);
+        expect(result.red).toEqualEpsilon(0.05, CesiumMath.EPSILON15);
+        expect(result.green).toEqualEpsilon(0.1, CesiumMath.EPSILON15);
+        expect(result.blue).toEqualEpsilon(0.15, CesiumMath.EPSILON15);
+        expect(result.alpha).toEqualEpsilon(0.2, CesiumMath.EPSILON15);
     });
 
     createPackableSpecs(Color, new Color(0.1, 0.2, 0.3, 0.4), [0.1, 0.2, 0.3, 0.4]);

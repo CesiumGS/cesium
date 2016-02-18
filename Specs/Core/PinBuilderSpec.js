@@ -11,7 +11,7 @@ defineSuite([
         Color,
         defined,
         when) {
-    "use strict";
+    'use strict';
 
     function getPinColor(canvas) {
         var context2D = canvas.getContext("2d");

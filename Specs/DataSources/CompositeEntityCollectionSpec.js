@@ -23,7 +23,7 @@ defineSuite([
         ConstantProperty,
         Entity,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -41,6 +41,13 @@ defineSuite([
         expect(composite.collectionChanged).toBeDefined();
         expect(composite.getCollectionsLength()).toEqual(0);
         expect(composite.values.length).toEqual(0);
+    });
+
+    it('constructor with owner', function() {
+        var composite = new CompositeEntityCollection();
+        var child = new CompositeEntityCollection(undefined, composite);
+
+        expect(child.owner).toEqual(composite);
     });
 
     it('addCollection/removeCollection works', function() {

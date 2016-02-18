@@ -43,7 +43,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
-    "use strict";
+    'use strict';
 
     var defaultResolution = 60.0;
     var defaultWidth = 1.0;

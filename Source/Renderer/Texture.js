@@ -33,7 +33,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         WebGLConstants) {
-    "use strict";
+    'use strict';
     
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

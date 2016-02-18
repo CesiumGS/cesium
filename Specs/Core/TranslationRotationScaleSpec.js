@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         Matrix4,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     it('sets correct values when constructed with no arguments', function() {
         var transformation = new TranslationRotationScale();

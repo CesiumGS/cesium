@@ -17,7 +17,7 @@ define([
         Scene,
         createCanvas,
         destroyCanvas) {
-    "use strict";
+    'use strict';
 
     function createScene(options) {
         options = defaultValue(options, {});

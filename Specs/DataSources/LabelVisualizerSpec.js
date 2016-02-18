@@ -33,7 +33,7 @@ defineSuite([
         LabelStyle,
         VerticalOrigin,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var visualizer;

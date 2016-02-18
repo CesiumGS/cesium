@@ -35,7 +35,7 @@ define([
         PolylinePipeline,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();

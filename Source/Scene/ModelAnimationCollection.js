@@ -23,7 +23,7 @@ define([
         ModelAnimation,
         ModelAnimationLoop,
         ModelAnimationState) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of active model animations.  Access this using {@link Model#activeAnimations}.

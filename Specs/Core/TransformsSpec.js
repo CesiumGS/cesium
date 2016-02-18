@@ -37,7 +37,7 @@ defineSuite([
         TimeConstants,
         TimeInterval,
         when) {
-    "use strict";
+    'use strict';
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);

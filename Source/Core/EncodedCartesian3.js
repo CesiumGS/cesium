@@ -7,7 +7,7 @@ define([
         Cartesian3,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A fixed-point encoding of a {@link Cartesian3} with 64-bit floating-point components, as two {@link Cartesian3}

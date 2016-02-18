@@ -9,7 +9,7 @@ defineSuite([
         AxisAlignedBoundingBox,
         Cartesian3,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws without maximum corner', function() {
         expect(function() {

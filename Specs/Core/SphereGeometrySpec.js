@@ -11,7 +11,7 @@ defineSuite([
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws with invalid stackPartitions', function() {
         expect(function() {

@@ -31,7 +31,7 @@ define([
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -202,7 +202,7 @@ define([
         return geometry;
     };
 
-    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy) {
+    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, ellipsoid) {
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];
@@ -223,8 +223,8 @@ define([
 
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
-
-            for (var i = 0; i < numChildren; i++) {
+            var i;
+            for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
                 hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
                 if (hole.positions.length < 3) {
@@ -242,6 +242,14 @@ define([
                 }
             }
 
+            if (!perPositionHeight) {
+                for (i = 0; i < outerRing.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+                for (i = 0; i < polygonHoles.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(polygonHoles[i], polygonHoles[i]);
+                }
+            }
             hierarchy.push({
                 outerRing : outerRing,
                 holes : polygonHoles

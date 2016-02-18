@@ -17,7 +17,7 @@ define([
         Event,
         getTimestamp,
         TimeConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * Monitors the frame rate (frames per second) in a {@link Scene} and raises an event if the frame rate is

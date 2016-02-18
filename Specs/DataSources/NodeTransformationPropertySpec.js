@@ -17,7 +17,7 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    "use strict";
+    'use strict';
 
     it('default constructor sets expected values', function() {
         var property = new NodeTransformationProperty();

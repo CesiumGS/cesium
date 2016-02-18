@@ -35,7 +35,7 @@ define([
         CompositeOITFS,
         BlendEquation,
         BlendFunction) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

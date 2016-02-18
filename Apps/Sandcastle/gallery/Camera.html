@@ -30,7 +30,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"><div id="viewChanged">View Changed</div></div><script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
@@ -166,11 +166,8 @@ function icrf(scene, time) {
 function viewInICRF() {
     Sandcastle.declare(viewInICRF);
 
-    var vm = viewer.homeButton.viewModel;
-    vm.duration = 0.0;
-    vm.command();
-    vm.duration = 3.0;
-
+    viewer.camera.flyHome(0);
+    
     clock.multiplier = 3 * 60 * 60;
     scene.preRender.addEventListener(icrf);
     scene.globe.enableLighting = true;
@@ -209,7 +206,7 @@ function flyInACity() {
                     },
                     easingFunction : Cesium.EasingFunction.LINEAR_NONE
                 });
-            }, 3000);
+            }, 1000);
         }
     });
 }

@@ -21,7 +21,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var diffScratch = new Cartesian3();
 

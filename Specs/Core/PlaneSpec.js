@@ -7,7 +7,7 @@ defineSuite([
         Plane,
         Cartesian3,
         Cartesian4) {
-    "use strict";
+    'use strict';
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;

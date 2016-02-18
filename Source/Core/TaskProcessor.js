@@ -23,7 +23,7 @@ define([
         isCrossOriginUrl,
         RuntimeError,
         require) {
-    "use strict";
+    'use strict';
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {

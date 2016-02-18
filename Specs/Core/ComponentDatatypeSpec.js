@@ -3,7 +3,7 @@ defineSuite([
         'Core/ComponentDatatype'
     ], function(
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     it('fromTypedArray works', function() {
         expect(ComponentDatatype.fromTypedArray(new Int8Array())).toBe(ComponentDatatype.BYTE);
