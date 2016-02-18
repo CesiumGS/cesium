@@ -303,7 +303,7 @@ defineSuite([
 
     it('normalize throws with zero vector', function() {
         expect(function() {
-            Cartesian2.normalize(Cartesian2.ZERO, new Cartesain2());
+            Cartesian2.normalize(Cartesian2.ZERO, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
