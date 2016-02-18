@@ -123,6 +123,9 @@ defineSuite([
         var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
+        expression = new Expression(new MockStyleEngine(), 'color(\'#fff\')');
+        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
         expression = new Expression(new MockStyleEngine(), 'color(\'white\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
