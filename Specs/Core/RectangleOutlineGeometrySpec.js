@@ -165,9 +165,9 @@ defineSuite([
         var geometry1 = RectangleOutlineGeometry.createGeometry(rectangleOutline1);
         var geometry2 = RectangleOutlineGeometry.createGeometry(rectangleOutline2);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
 
     var rectangle = new RectangleOutlineGeometry({

@@ -72,12 +72,12 @@ defineSuite([
         var geometry4 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline4);
         var geometry5 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline5);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
-        expect(geometry3).toBe(undefined);
-        expect(geometry4).toBe(undefined);
-        expect(geometry5).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
+        expect(geometry4).toBeUndefined();
+        expect(geometry5).toBeUndefined();
     });
 
     var ellipsoidgeometry = new EllipsoidOutlineGeometry({

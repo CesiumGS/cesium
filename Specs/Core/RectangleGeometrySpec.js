@@ -250,9 +250,9 @@ defineSuite([
         var geometry1 = RectangleGeometry.createGeometry(rectangle1);
         var geometry2 = RectangleGeometry.createGeometry(rectangle2);
 
-        expect(geometry0).toBe(undefined);
-        expect(geometry1).toBe(undefined);
-        expect(geometry2).toBe(undefined);
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
 
     var rectangle = new RectangleGeometry({
