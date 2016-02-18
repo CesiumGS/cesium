@@ -2045,10 +2045,6 @@ define([
 
         frameState.creditDisplay.endFrame();
 
-        if (defined(scene.globe)) {
-            scene.globe.finalize(frameState);
-        }
-
         if (scene.debugShowFramesPerSecond) {
             if (!defined(scene._performanceDisplay)) {
                 var performanceContainer = document.createElement('div');
