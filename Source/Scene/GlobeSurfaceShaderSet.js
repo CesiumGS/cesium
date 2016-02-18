@@ -192,7 +192,6 @@ define([
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
             if (receiveShadows) {
-                // TODO : should have a better way of modifying the GlobeVS and GlobeFS shaders...
                 vs.sources[1] = ShadowMapShader.createReceiveShadowsVertexShader(vs.sources[1]);
                 fs.sources[0] = ShadowMapShader.createReceiveShadowsFragmentShader(fs.sources[0], frameState.context);
             }
@@ -277,7 +276,6 @@ define([
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
-            // TODO : should have a better way of modifying the GlobeVS and GlobeFS shaders...
             vs.sources[1] = ShadowMapShader.createShadowCastVertexShader(vs.sources[1]);
             fs.sources[0] = ShadowMapShader.createShadowCastFragmentShader(fs.sources[0], frameState.context, true);
 
