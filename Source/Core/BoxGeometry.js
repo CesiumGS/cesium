@@ -258,12 +258,16 @@ define([
      * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._minimum;
         var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
+
+        if (Cartesian3.equals(min, max)) {
+            return;
+        }
 
         var attributes = new GeometryAttributes();
         var indices;

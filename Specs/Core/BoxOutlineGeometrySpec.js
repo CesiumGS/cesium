@@ -74,6 +74,17 @@ defineSuite([
         expect(m._max).toEqual(max);
     });
 
+    it('undefined is returned if min and max are equal', function() {
+        var box = new BoxOutlineGeometry({
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(250000.0, 250000.0, 250000.0)
+        });
+
+        var geometry = BoxOutlineGeometry.createGeometry(box);
+
+        expect(geometry).toBeUndefined();
+    });
+
     createPackableSpecs(BoxOutlineGeometry, new BoxOutlineGeometry({
         minimum : new Cartesian3(1.0, 2.0, 3.0),
         maximum : new Cartesian3(4.0, 5.0, 6.0)

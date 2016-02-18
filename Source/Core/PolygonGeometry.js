@@ -663,7 +663,7 @@ define([
         var polygons = results.polygons;
 
         if (polygons.length === 0) {
-            return undefined;
+            return;
         }
 
         outerPositions = polygons[0];

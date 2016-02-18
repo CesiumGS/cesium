@@ -179,10 +179,15 @@ define([
      * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var vertexFormat = ellipsoidGeometry._vertexFormat;
 

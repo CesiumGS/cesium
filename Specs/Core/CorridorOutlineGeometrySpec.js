@@ -131,6 +131,30 @@ defineSuite([
         expect(m.indices.length).toEqual(2 * 10);
     });
 
+    it('undefined is returned if there are less than two positions or the width is equal to ' +
+       'or less than zero', function() {
+        var corridorOutline0 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-72.0, 35.0]),
+            width : 100000
+        });
+        var corridorOutline1 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-67.655, 0.0, -67.655, 15.0, -67.655, 20.0]),
+            width : 0
+        });
+        var corridorOutline2 = new CorridorOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([-67.655, 0.0, -67.655, 15.0, -67.655, 20.0]),
+            width : -100
+        });
+
+        var geometry0 = CorridorOutlineGeometry.createGeometry(corridorOutline0);
+        var geometry1 = CorridorOutlineGeometry.createGeometry(corridorOutline1);
+        var geometry2 = CorridorOutlineGeometry.createGeometry(corridorOutline2);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+    });
+
     var positions = Cartesian3.fromDegreesArray([
          90.0, -30.0,
          90.0, -31.0

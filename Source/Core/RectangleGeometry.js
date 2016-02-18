@@ -715,11 +715,16 @@ define([
      * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
     RectangleGeometry.createGeometry = function(rectangleGeometry) {
+        if ((CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.north, rectangleGeometry._rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.east, rectangleGeometry._rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
+
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;

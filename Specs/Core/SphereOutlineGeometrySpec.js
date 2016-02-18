@@ -43,6 +43,16 @@ defineSuite([
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
+    it('undefined is returned if radius is equals to zero', function() {
+        var sphereOutline = new SphereOutlineGeometry({
+            radius : 0.0
+        });
+
+        var geometry = SphereOutlineGeometry.createGeometry(sphereOutline);
+
+        expect(geometry).toBeUndefined();
+    });
+
     var sphere = new SphereOutlineGeometry({
         radius : 1,
         stackPartitions : 3,

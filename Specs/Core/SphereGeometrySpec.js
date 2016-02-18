@@ -84,6 +84,17 @@ defineSuite([
         }
     });
 
+    it('undefined is returned if radius is equals to zero', function() {
+         var sphere = new SphereGeometry({
+             radius : 0.0,
+             vertexFormat : VertexFormat.POSITION_ONLY
+         });
+
+        var geometry = SphereGeometry.createGeometry(sphere);
+
+        expect(geometry).toBeUndefined();
+    });
+
     var sphere = new SphereGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         radius : 1,
