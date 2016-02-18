@@ -265,13 +265,13 @@ define([
         var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
 
-        var attributes = new GeometryAttributes();
-        var indices;
-        var positions;
-
         if (Cartesian3.equals(min, max)) {
             return;
         }
+
+        var attributes = new GeometryAttributes();
+        var indices;
+        var positions;
 
         if (vertexFormat.position &&
                 (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {

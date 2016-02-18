@@ -70,6 +70,7 @@ define([
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation
         };
+        this._ellipseGeometry = undefined;
         if (radius > 0) {
             this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         }

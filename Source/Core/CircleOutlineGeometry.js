@@ -64,6 +64,7 @@ define([
             granularity : options.granularity,
             numberOfVerticalLines : options.numberOfVerticalLines
         };
+        this._ellipseGeometry = undefined;
         if (radius > 0) {
             this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         }
