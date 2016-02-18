@@ -64,10 +64,7 @@ define([
             granularity : options.granularity,
             numberOfVerticalLines : options.numberOfVerticalLines
         };
-        this._ellipseGeometry = undefined;
-        if (radius > 0) {
-            this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
-        }
+        this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleOutlineGeometry';
     }
 
@@ -145,9 +142,6 @@ define([
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleOutlineGeometry.createGeometry = function(circleGeometry) {
-        if (!defined(circleGeometry._ellipseGeometry)) {
-            return;
-        }
         return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 

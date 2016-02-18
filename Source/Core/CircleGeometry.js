@@ -70,10 +70,7 @@ define([
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation
         };
-        this._ellipseGeometry = undefined;
-        if (radius > 0) {
-            this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
-        }
+        this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
     }
 
@@ -153,9 +150,6 @@ define([
      * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleGeometry.createGeometry = function(circleGeometry) {
-        if (!defined(circleGeometry._ellipseGeometry)) {
-            return;
-        }
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
