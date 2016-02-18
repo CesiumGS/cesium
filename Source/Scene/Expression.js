@@ -73,8 +73,7 @@ define([
         var call = ast.callee.name;
         var args = ast.arguments;
         var val;
-
-        // TODO: Check number of arguments for each function
+        
         // TODO: Throw error if returned Color is not defined
 
         if (call === 'Color') {
