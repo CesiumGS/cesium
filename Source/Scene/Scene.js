@@ -1967,7 +1967,7 @@ define([
             var eyePoint = new Cartesian3(Math.sign(x) * maxCoord.x - x, 0.0, -camera.position.z);
             var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
-            if (windowCoordinates.x <= 0.0 || windowCoordinates.x > context.drawingBufferWidth) {
+            if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
                 updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
@@ -1975,9 +1975,7 @@ define([
                 executeViewportCommands(scene, passState);
             } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
                 viewport.x = 0;
-                viewport.y = 0;
                 viewport.width = windowCoordinates.x;
-                viewport.height = context.drawingBufferHeight;
 
                 camera.frustum.right = maxCoord.x - x;
 
@@ -1989,11 +1987,8 @@ define([
 
                 viewport.x = windowCoordinates.x;
 
-                camera.position.x = -camera.position.x;
-
-                var right = camera.frustum.right;
-                camera.frustum.right = -camera.frustum.left;
-                camera.frustum.left = -right;
+                camera.frustum.left -= x;
+                camera.frustum.right -= x;
 
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
@@ -2005,9 +2000,7 @@ define([
                 camera.frustum = frustum.clone();
             } else {
                 viewport.x = windowCoordinates.x;
-                viewport.y = 0;
                 viewport.width = context.drawingBufferWidth - windowCoordinates.x;
-                viewport.height = context.drawingBufferHeight;
 
                 camera.frustum.left = -maxCoord.x - x;
 
@@ -2019,11 +2012,8 @@ define([
 
                 viewport.x = viewport.x - viewport.width;
 
-                camera.position.x = -camera.position.x;
-
-                var left = camera.frustum.left;
-                camera.frustum.left = -camera.frustum.right;
-                camera.frustum.right = -left;
+                camera.frustum.right -= x;
+                camera.frustum.left -= x;
 
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
