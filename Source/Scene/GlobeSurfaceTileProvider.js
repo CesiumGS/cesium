@@ -286,7 +286,7 @@ define([
      * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      *
-     * @param {FrameState} frameState the frame state.
+     * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
         this._imageryLayers._update();

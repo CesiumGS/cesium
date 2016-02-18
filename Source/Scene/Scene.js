@@ -1938,7 +1938,7 @@ define([
         viewport.height = context.drawingBufferHeight;
 
         if (defined(scene.globe)) {
-            scene.globe.initialize(frameState);
+            scene.globe.beginFrame(frameState);
         }
 
         updateEnvironment(scene);
@@ -1951,7 +1951,7 @@ define([
         executeOverlayCommands(scene, passState);
 
         if (defined(scene.globe)) {
-            scene.globe.finalize(frameState);
+            scene.globe.endFrame(frameState);
         }
 
         frameState.creditDisplay.endFrame();

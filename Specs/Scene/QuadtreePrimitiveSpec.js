@@ -91,14 +91,14 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         expect(tileProvider.initialize).toHaveBeenCalled();
         expect(tileProvider.beginUpdate).toHaveBeenCalled();
@@ -119,14 +119,14 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         expect(tileProvider.showTileThisFrame).toHaveBeenCalled();
     });
@@ -147,19 +147,19 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
         expect(calls).toBe(2);
 
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
         expect(calls).toBe(2);
     });
 
@@ -178,14 +178,14 @@ defineSuite([
         eventHelper.add(quadtree.tileLoadProgressEvent, progressEventSpy);
 
         // Initial update to get the zero-level tiles set up.
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load zero-level tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // There will now be two zero-level tiles in the load queue.
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
@@ -193,9 +193,9 @@ defineSuite([
         // Change one to loaded and update again
         quadtree._levelZeroTiles[0].state = QuadtreeTileLoadState.DONE;
         quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.LOADING;
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // Now there should only be one left in the update queue
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(1);
@@ -207,9 +207,9 @@ defineSuite([
         ];
         quadtree._levelZeroTiles[1].state = QuadtreeTileLoadState.DONE;
         quadtree._levelZeroTiles[1].renderable = true;
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // Now this should be back to 2.
         expect(progressEventSpy.calls.mostRecent().args[0]).toEqual(2);
@@ -232,23 +232,23 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // Don't load further tiles.
         tileProvider.loadTile.and.callFake(function(frameState, tile) {
             tile.state = QuadtreeTileLoadState.START;
         });
 
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         quadtree.forEachLoadedTile(function(tile) {
             expect(tile.state).not.toBe(QuadtreeTileLoadState.START);
@@ -280,14 +280,14 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         var addedCallback = false;
         quadtree.forEachLoadedTile(function(tile) {
@@ -297,9 +297,9 @@ defineSuite([
         expect(addedCallback).toEqual(true);
 
         removeFunc();
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         var removedCallback = true;
         quadtree.forEachLoadedTile(function(tile) {
@@ -345,22 +345,22 @@ defineSuite([
         });
 
         // determine what tiles to load
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         // load tiles
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         expect(position).toEqual(Cartesian3.ZERO);
 
         currentPosition = updatedPosition;
 
-        quadtree.initialize(frameState);
+        quadtree.beginFrame(frameState);
         quadtree.update(frameState);
-        quadtree.finalize(frameState);
+        quadtree.endFrame(frameState);
 
         expect(position).toEqual(updatedPosition);
     });

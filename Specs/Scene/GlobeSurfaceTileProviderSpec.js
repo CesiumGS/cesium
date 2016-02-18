@@ -88,9 +88,9 @@ defineSuite([
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
-            globe.initialize(frameState);
+            globe.beginFrame(frameState);
             globe.update(frameState);
-            globe.finalize(frameState);
+            globe.endFrame(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
