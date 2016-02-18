@@ -187,7 +187,7 @@ define([
         var slices = cylinderGeometry._slices;
         var numberOfVerticalLines = cylinderGeometry._numberOfVerticalLines;
 
-        if ((length <= 0) || ((topRadius <= 0) && (bottomRadius <= 0))) {
+        if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
             return;
         }
 

@@ -200,7 +200,7 @@ define([
         var vertexFormat = cylinderGeometry._vertexFormat;
         var slices = cylinderGeometry._slices;
 
-        if ((length <= 0) || ((topRadius <= 0) && (bottomRadius <= 0))) {
+        if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
             return;
         }
 

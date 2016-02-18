@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('undefined is returned if the length is less than or equal to zero or if ' +
-       'both radii are less than or equal to zero', function() {
+       'both radii are equal to zero or is either radii and less than zero', function() {
         var cylinderOutline0 = new CylinderOutlineGeometry({
             length: 0,
             topRadius: 80000,
@@ -81,23 +81,30 @@ defineSuite([
         var cylinderOutline2 = new CylinderOutlineGeometry({
             length: 200000,
             topRadius: -10,
-            bottomRadius: -10
+            bottomRadius: 4
         });
         var cylinderOutline3 = new CylinderOutlineGeometry({
             length: -200000,
             topRadius: 100,
             bottomRadius: 100
         });
+        var cylinderOutline4 = new CylinderOutlineGeometry({
+            length: 200000,
+            topRadius: 32,
+            bottomRadius: -100
+        });
 
         var geometry0 = CylinderOutlineGeometry.createGeometry(cylinderOutline0);
         var geometry1 = CylinderOutlineGeometry.createGeometry(cylinderOutline1);
         var geometry2 = CylinderOutlineGeometry.createGeometry(cylinderOutline2);
         var geometry3 = CylinderOutlineGeometry.createGeometry(cylinderOutline3);
+        var geometry4 = CylinderOutlineGeometry.createGeometry(cylinderOutline4);
 
         expect(geometry0).toBeUndefined();
         expect(geometry1).toBeUndefined();
         expect(geometry2).toBeUndefined();
         expect(geometry3).toBeUndefined();
+        expect(geometry4).toBeUndefined();
     });
 
     var cylinder = new CylinderOutlineGeometry({
