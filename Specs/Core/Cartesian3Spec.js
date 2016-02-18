@@ -344,6 +344,15 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize works with a zero vector parameter', function() {
+        var cartesian = new Cartesian3(0.0, 0.0, 0.0);
+        var expectedResult = new Cartesian3(0.0, 0.0, 0.0);
+        var result = new Cartesian3();
+        var returnedResult = Cartesian3.normalize(cartesian, result);
+        expect(result).toBe(returnedResult);
+        expect(result).toEqual(expectedResult);
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);
         var right = new Cartesian3(4.0, 5.0, 7.0);

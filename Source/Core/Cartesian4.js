@@ -392,6 +392,14 @@ define([
 
         var magnitude = Cartesian4.magnitude(cartesian);
 
+        if (magnitude === 0.0) {
+            result.x = 0.0;
+            result.y = 0.0;
+            result.z = 0.0;
+            result.w = 0.0;
+            return result;
+        }
+
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
         result.z = cartesian.z / magnitude;
