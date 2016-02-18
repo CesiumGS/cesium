@@ -29,6 +29,10 @@ defineSuite([
         var feature = new MockFeature();
         feature.addProperty('height', 10);
         feature.addProperty('width', 5);
+        feature.addProperty('string', 'hello');
+        feature.addProperty('boolean', true);
+        feature.addProperty('null', null);
+        feature.addProperty('undefined', undefined);
 
         var expression = new Expression(new MockStyleEngine(), '${height}');
         expect(expression.evaluate(feature)).toEqual(10);
@@ -36,8 +40,24 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '${height}/${width}');
         expect(expression.evaluate(feature)).toEqual(2);
 
-        expression = new Expression(new MockStyleEngine(), '${depth}');
+        expression = new Expression(new MockStyleEngine(), '${string}');
+        expect(expression.evaluate(feature)).toEqual('hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string}\'');
+        expect(expression.evaluate(feature)).toEqual('replace hello');
+
+        expression = new Expression(new MockStyleEngine(), '${boolean}');
+        expect(expression.evaluate(feature)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '${null}');
+        expect(expression.evaluate(feature)).toEqual(null);
+
+        expression = new Expression(new MockStyleEngine(), '${undefined}');
         expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '${height');
+        }).toThrowDeveloperError();
     });
 
     it('throws on invalid expressions', function() {
