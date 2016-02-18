@@ -31,6 +31,7 @@ defineSuite([
         feature.addProperty('width', 5);
         feature.addProperty('string', 'hello');
         feature.addProperty('boolean', true);
+        feature.addProperty('color', Color.RED);
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
 
@@ -48,6 +49,10 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${boolean}');
         expect(expression.evaluate(feature)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '${color}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
+
 
         expression = new Expression(new MockStyleEngine(), '${null}');
         expect(expression.evaluate(feature)).toEqual(null);
