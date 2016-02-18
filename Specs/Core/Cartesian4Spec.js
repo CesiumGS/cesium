@@ -437,6 +437,12 @@ defineSuite([
         expect(cartesian).toEqual(expectedResult);
     });
 
+    it('normalize throws with zero vector', function() {
+        expect(function() {
+            Cartesian4.normalize(Cartesian4.ZERO, new Cartesian4());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);

@@ -355,6 +355,13 @@ define([
 
         result.x = cartesian.x / magnitude;
         result.y = cartesian.y / magnitude;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (isNaN(result.x) || isNaN(result.y)) {
+            throw new DeveloperError('normalized result is not a number');
+        }
+        //>>includeEnd('debug');
+
         return result;
     };
 
