@@ -1987,8 +1987,9 @@ define([
 
                 viewport.x = windowCoordinates.x;
 
-                camera.frustum.left -= x;
-                camera.frustum.right -= x;
+                var width = camera.frustum.right - camera.frustum.left;
+                camera.frustum.left = -maxCoord.x - x;
+                camera.frustum.right = camera.frustum.left + width;
 
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
@@ -2012,8 +2013,9 @@ define([
 
                 viewport.x = viewport.x - viewport.width;
 
-                camera.frustum.right -= x;
-                camera.frustum.left -= x;
+                var width = camera.frustum.right - camera.frustum.left;
+                camera.frustum.right = maxCoord.x - x;
+                camera.frustum.left = camera.frustum.right - width;
 
                 frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
