@@ -24,6 +24,7 @@ Change Log
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
 * Fixed bug in IntersectionTests.lineSegmentSphere where the ray origin was not set.
 * Added the ability to create empty geometries. Instead of errors getting thrown on creation, undefined will be returned. No rendering will occur.
+* Improved DeveloperError to also display an error on the console, and Sandcastle to only show it once.
 
 ### 1.18 - 2016-02-01
 * Breaking changes

@@ -8,6 +8,10 @@
         return value !== undefined;
     }
 
+    function isDeveloperError(errorMsg) {
+        return errorMsg.indexOf('DeveloperError:') > -1;
+    }
+
     console.originalLog = console.log;
     console.log = function(d1) {
         console.originalLog.apply(console, arguments);
@@ -26,7 +30,7 @@
 
     console.originalError = console.error;
     console.error = function(d1) {
-        console.originalError.apply(console, arguments);
+        console.originalError.apply(console, arguments); //Prints to the browser console.
         if (!defined(d1)) {
             window.parent.postMessage({
                 'error' : 'undefined'
@@ -37,6 +41,11 @@
         // Look for d1.stack, "bucket.html:line:char"
         var lineNumber = -1;
         var errorMsg = d1.toString();
+        if (isDeveloperError(errorMsg)) {
+            //DeveloperErrors are displayed on the sandcastle console panel via window.onerror instead.
+            return;
+        }
+
         if (typeof d1.stack === 'string') {
             var stack = d1.stack;
             var pos = stack.indexOf(Sandcastle.bucket);
@@ -104,7 +113,10 @@
                 'url' : url
             }, '*');
         }
-        console.originalError.apply(console, [errorMsg]);
+        if (!isDeveloperError(errorMsg)) {
+            // Developer errors have already been logged to the console.
+            console.originalError.apply(console, [errorMsg]); //Prints to the browser console.
+        }
         return false;
     };
 
