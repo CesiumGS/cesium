@@ -446,57 +446,6 @@ defineSuite([
         expect(camera.frustum.bottom).toEqual(-camera.frustum.top);
     });
 
-    it('rotate counter-clockwise in 2D', function() {
-        setUp2D();
-        var position = Cartesian3.clone(camera.position);
-        var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
-        var endPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
-
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
-        updateController();
-        expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
-
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15);
-    });
-
-    it('rotate clockwise in 2D', function() {
-        setUp2D();
-        var position = Cartesian3.clone(camera.position);
-        var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
-        var endPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
-
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
-        updateController();
-        expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
-
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_X, CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Y, new Cartesian3()), CesiumMath.EPSILON15);
-    });
-
-    it('rotates counter-clockwise with mouse position at bottom of the screen', function() {
-        setUp2D();
-        var position = Cartesian3.clone(camera.position);
-        var startPosition = new Cartesian2(3 * canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
-        var endPosition = new Cartesian2(canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
-
-        moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
-        updateController();
-        expect(position.x).toEqual(camera.position.x);
-        expect(position.y).toEqual(camera.position.y);
-        expect(position.z).toEqual(camera.position.z);
-
-        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()), CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(Cartesian3.UNIT_Y, CesiumMath.EPSILON15);
-    });
-
     it('translate right in Columbus view', function() {
         setUpCV();
         var position = Cartesian3.clone(camera.position);
