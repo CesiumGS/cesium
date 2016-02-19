@@ -59,9 +59,10 @@ define([
     try {
         viewer = new Viewer('cesiumContainer', {
             //sceneMode : SceneMode.SCENE2D,
+            vrButton : true,
             imageryProvider : imageryProvider,
             baseLayerPicker : !defined(imageryProvider),
-            //scene3DOnly : endUserOptions.scene3DOnly
+            scene3DOnly : endUserOptions.scene3DOnly
         });
     } catch (exception) {
         loadingIndicator.style.display = 'none';
