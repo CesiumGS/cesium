@@ -655,39 +655,14 @@ define([
     }
 
     function update2D(controller) {
-        var tweens = controller._tweens;
-        if (controller._aggregator.anyButtonDown) {
-            tweens.removeAll();
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._scene.camera.transform)) {
+            reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        } else {
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
         }
-
-        var scene = controller._scene;
-        var camera = scene.camera;
-
-        if (!tweens.contains(controller._tween)) {
-            if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-                reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            } else {
-                reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-                reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
-            }
-        }
-
-        // TODO: Remove or make an option
-        /*
-        if (!controller._aggregator.anyButtonDown &&
-                (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
-                (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !tweens.contains(controller._tween)) {
-            var tween = camera.createCorrectPositionTween(controller.bounceAnimationTime);
-            if (defined(tween)) {
-                controller._tween = tweens.add(tween);
-            }
-        }
-        */
-
-        tweens.update();
     }
 
     var pickGlobeScratchRay = new Ray();
