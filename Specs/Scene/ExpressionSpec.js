@@ -13,6 +13,81 @@ defineSuite([
     MockStyleEngine.prototype.makeDirty = function() {
     };
 
+    function MockFeature() {
+        this._properties = {};
+    }
+
+    MockFeature.prototype.addProperty = function(name, value) {
+        this._properties[name] = value;
+    };
+
+    MockFeature.prototype.getProperty = function(name) {
+        return this._properties[name];
+    };
+
+    it('evaluates variable', function() {
+        var feature = new MockFeature();
+        feature.addProperty('height', 10);
+        feature.addProperty('width', 5);
+        feature.addProperty('string', 'hello');
+        feature.addProperty('boolean', true);
+        feature.addProperty('color', Color.RED);
+        feature.addProperty('null', null);
+        feature.addProperty('undefined', undefined);
+
+        var expression = new Expression(new MockStyleEngine(), '${height}');
+        expect(expression.evaluate(feature)).toEqual(10);
+
+        expression = new Expression(new MockStyleEngine(), '\'${height}\'');
+        expect(expression.evaluate(feature)).toEqual('10');
+
+        expression = new Expression(new MockStyleEngine(), '${height}/${width}');
+        expect(expression.evaluate(feature)).toEqual(2);
+
+        expression = new Expression(new MockStyleEngine(), '${string}');
+        expect(expression.evaluate(feature)).toEqual('hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string}\'');
+        expect(expression.evaluate(feature)).toEqual('replace hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string} multiple ${height}\'');
+        expect(expression.evaluate(feature)).toEqual('replace hello multiple 10');
+
+        expression = new Expression(new MockStyleEngine(), '"replace ${string}"');
+        expect(expression.evaluate(feature)).toEqual('replace hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string\'');
+        expect(expression.evaluate(feature)).toEqual('replace ${string');
+
+        expression = new Expression(new MockStyleEngine(), '${boolean}');
+        expect(expression.evaluate(feature)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '\'${boolean}\'');
+        expect(expression.evaluate(feature)).toEqual('true');
+
+        expression = new Expression(new MockStyleEngine(), '${color}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
+
+        expression = new Expression(new MockStyleEngine(), '\'${color}\'');
+        expect(expression.evaluate(feature)).toEqual(Color.RED.toString());
+
+        expression = new Expression(new MockStyleEngine(), '${null}');
+        expect(expression.evaluate(feature)).toEqual(null);
+
+        expression = new Expression(new MockStyleEngine(), '\'${null}\'');
+        expect(expression.evaluate(feature)).toEqual('');
+
+        expression = new Expression(new MockStyleEngine(), '${undefined}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '\'${undefined}\'');
+        expect(expression.evaluate(feature)).toEqual('');
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '${height');
+        }).toThrowDeveloperError();
+    });
+
     it('throws on invalid expressions', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), false);

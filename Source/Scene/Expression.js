@@ -15,6 +15,8 @@ define([
         ExpressionNodeType) {
     "use strict";
 
+    var variableRegex = /\${(.*?)}/g;
+
     /**
      * DOC_TBA
      */
@@ -23,7 +25,7 @@ define([
 
         var ast;
         try {
-            ast = jsep(expression);
+            ast = jsep(replaceVariables(expression));
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
@@ -52,6 +54,42 @@ define([
         setEvaluateFunction(this);
     }
 
+    function replaceVariables(expression) {
+        var exp = expression;
+        var result = "";
+        var i = exp.indexOf('${');
+        while (i >= 0) {
+            // check if string is inside quotes
+            var openSingleQuote = exp.indexOf('\'');
+            var openDoubleQuote = exp.indexOf('"');
+            var closeQuote;
+            if (openSingleQuote >= 0 && openSingleQuote < i) {
+                closeQuote = exp.indexOf('\'', openSingleQuote + 1);
+                result += exp.substr(0, closeQuote + 1);
+                exp = exp.substr(closeQuote + 1);
+                i = exp.indexOf('${');
+            } else if (openDoubleQuote >= 0 && openDoubleQuote < i) {
+                closeQuote = exp.indexOf('"', openDoubleQuote + 1);
+                result += exp.substr(0, closeQuote + 1);
+                exp = exp.substr(closeQuote + 1);
+                i = exp.indexOf('${');
+            } else {
+                result += exp.substr(0, i);
+                var j = exp.indexOf('}');
+                if (j < 0) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError('Error: unmatched {');
+                    //>>includeEnd('debug');
+                }
+                result += "czm_" + exp.substr(i + 2, j - (i + 2));
+                exp = exp.substr(j + 1);
+                i = exp.indexOf('${');
+            }
+        }
+        result += exp;
+        return result;
+    }
+
     function parseLiteral(ast) {
         var type = typeof(ast.value);
         if (ast.value === null) {
@@ -61,6 +99,9 @@ define([
         } else if (type === 'number') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, ast.value);
         } else if (type === 'string') {
+            if (ast.value.indexOf('${') >= 0) {
+                return new Node(ExpressionNodeType.VARIABLE_IN_STRING, ast.value);
+            }
             return new Node(ExpressionNodeType.LITERAL_STRING, ast.value);
         }
 
@@ -145,11 +186,13 @@ define([
         //>>includeEnd('debug');
     }
 
-    function parseKeywords(ast) {
+    function parseKeywordsAndVariables(expression, ast) {
         if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
+        } else if (ast.name.substr(0, 4) === 'czm_') {
+            return new Node(ExpressionNodeType.VARIABLE, ast.name.substr(4));
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -167,6 +210,8 @@ define([
             node = parseLiteral(ast);
         } else if (ast.type === 'CallExpression') {
             node = parseCall(expression, ast);
+        } else if (ast.type === 'Identifier') {
+            node = parseKeywordsAndVariables(expression, ast);
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
@@ -202,8 +247,6 @@ define([
                 throw new DeveloperError('Error: Unexpected operator "' + op + '"');
                 //>>includeEnd('debug');
             }
-        } else if (ast.type === 'Identifier') {
-            node = parseKeywords(ast);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -256,6 +299,10 @@ define([
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
             }
+        } else if (node._type === ExpressionNodeType.VARIABLE) {
+            node.evaluate = node._evaluateVariable;
+        } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
+            node.evaluate = node._evaluateVariableString;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -276,6 +323,27 @@ define([
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateVariableString = function(feature) {
+        var result = this._value;
+        var match = variableRegex.exec(result);
+        while (match !== null) {
+            var placeholder = match[0];
+            var variableName = match[1];
+            var property = feature.getProperty(variableName);
+            if (!defined(property)) {
+                property = '';
+            }
+            result = result.replace(placeholder, property);
+            match = variableRegex.exec(result);
+        }
+        return result;
+    };
+
+    Node.prototype._evaluateVariable = function(feature) {
+        // evaluates to undefined if the property name is not defined for that feature
+        return feature.getProperty(this._value);
     };
 
     Node.prototype._evaluateNot = function(feature) {
