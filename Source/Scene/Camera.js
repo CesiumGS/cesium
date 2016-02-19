@@ -2559,9 +2559,12 @@ define([
         // Make sure camera doesn't zoom outside set limits
         if (defined(sscc)) {
             destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-        }
 
-        destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            //Only change if we clamped the height
+            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            }
+        }
 
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;

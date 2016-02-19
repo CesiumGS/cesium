@@ -67,7 +67,10 @@ defineSuite([
         this.drawingBufferHeight = 768;
         this.mapProjection = defaultValue(projection, new GeographicProjection());
         this.tweens = new TweenCollection();
-        this.screenSpaceCameraController = {};
+        this.screenSpaceCameraController = {
+            minimumZoomDistance: 0,
+            maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
+        };
         this.camera = undefined;
         this.context = {
             drawingBufferWidth : 1024,
