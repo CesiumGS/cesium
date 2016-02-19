@@ -108,41 +108,75 @@ define([
         //>>includeEnd('debug');
     }
 
-    function parseCall(ast) {
+    function parseCall(expression, ast) {
         var call = ast.callee.name;
         var args = ast.arguments;
         var val;
+        
+        // TODO: Throw error if returned Color is not defined
 
-        // TODO: Check number of arguments for each function
-        // TODO: Throw error if returned color is not defined
-
-        if (call === 'color') {
-           val = Color.fromCssColorString(args[0].value);
-           if (defined(val)) {
+        if (call === 'Color') {
+            val = Color.fromCssColorString(args[0].value);
+            if (defined(args[1])) {
+                val = Color.fromAlpha(val, args[1].value);
+            }
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'rgb') {
-           val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 3) {
+                throw new DeveloperError('Error: rgb requires three arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'hsl') {
-           val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 3) {
+                throw new DeveloperError('Error: hsl requires three arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'rgba') {
-           // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-           var a = args[3].value * 255;
-           val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 4) {
+                throw new DeveloperError('Error: rgba requires four arguments');
+            }
+            //>>includeEnd('debug');
+            // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
+            var a = args[3].value * 255;
+            val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
         } else if (call === 'hsla') {
-           val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
-           if (defined(val)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (args.length !== 4) {
+                throw new DeveloperError('Error: hlsa requires four arguments');
+            }
+            //>>includeEnd('debug');
+            val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
+            if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-           }
+            }
+        } else if (call === 'isNaN') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isFinite') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -150,8 +184,12 @@ define([
         //>>includeEnd('debug');
     }
 
-    function parseVariableName(ast) {
-        if (ast.name.substr(0, 4) === 'czm_') {
+    function parseKeywordsAndVariables(expression, ast) {
+        if (ast.name === 'NaN') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
+        } else if (ast.name === 'Infinity') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
+        } else if (ast.name.substr(0, 4) === 'czm_') {
             return new Node(ExpressionNodeType.VARIABLE, ast.name.substr(4));
         }
 
@@ -169,9 +207,9 @@ define([
         if (ast.type === 'Literal') {
             node = parseLiteral(ast);
         } else if (ast.type === 'CallExpression') {
-            node = parseCall(ast);
+            node = parseCall(expression, ast);
         } else if (ast.type === 'Identifier') {
-            node = parseVariableName(ast);
+            node = parseKeywordsAndVariables(expression, ast);
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
@@ -254,6 +292,10 @@ define([
                 node.evaluate = node._evaluateNot;
             } else if (node._value === '-') {
                 node.evaluate = node._evaluateNegative;
+            } else if (node._value === 'isNaN') {
+                node.evaluate = node._evaluateNaN;
+            } else if (node._value === 'isFinite') {
+                node.evaluate = node._evaluateIsFinite;
             }
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
@@ -454,6 +496,14 @@ define([
             return !Color.equals(left, right);
         }
         return left !== right;
+    };
+
+    Node.prototype._evaluateNaN = function(feature) {
+        return isNaN(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateIsFinite = function(feature) {
+        return isFinite(this._left.evaluate(feature));
     };
 
     return Expression;
