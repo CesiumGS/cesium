@@ -50,6 +50,9 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '\'replace ${string}\'');
         expect(expression.evaluate(feature)).toEqual('replace hello');
 
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string} multiple ${height}\'');
+        expect(expression.evaluate(feature)).toEqual('replace hello multiple 10');
+
         expression = new Expression(new MockStyleEngine(), '"replace ${string}"');
         expect(expression.evaluate(feature)).toEqual('replace hello');
 

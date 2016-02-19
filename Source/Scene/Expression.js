@@ -98,7 +98,7 @@ define([
             return new Node(ExpressionNodeType.LITERAL_NUMBER, ast.value);
         } else if (type === 'string') {
             if (ast.value.indexOf('${') >= 0) {
-                return new Node(ExpressionNodeType.VARIABLE_STRING, ast.value);
+                return new Node(ExpressionNodeType.VARIABLE_IN_STRING, ast.value);
             }
             return new Node(ExpressionNodeType.LITERAL_STRING, ast.value);
         }
@@ -257,7 +257,7 @@ define([
             }
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
-        } else if (node._type === ExpressionNodeType.VARIABLE_STRING) {
+        } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
             node.evaluate = node._evaluateVariableString;
         } else {
             node.evaluate = node._evaluateLiteral;
@@ -282,25 +282,18 @@ define([
     };
 
     Node.prototype._evaluateVariableString = function(feature) {
-        var exp = this._value;
-        var result = "";
-        var i = exp.indexOf('${');
-        while (i >= 0) {
-            result += exp.substr(0, i);
-            var j = exp.indexOf('}');
-            if (j < 0) {
-                // unmatched braces
-                return this._value;
+        var val = this._value;
+        var re = /\${(.*?)}/;
+        var match = re.exec(val);
+        while (match !== null) {
+            var prop = feature.getProperty(match[1]);
+            if (!defined(prop)) {
+                prop = '';
             }
-            var property = feature.getProperty(exp.substr(i + 2, j - (i + 2)));
-            if (defined(property)) {
-                result += property;
-            }
-            exp = exp.substr(j + 1);
-            i = exp.indexOf('${');
+            val = val.replace('\${' + match[1] + '}', prop);
+            match = re.exec(val);
         }
-        result += exp;
-        return result;
+        return val;
     };
 
     Node.prototype._evaluateVariable = function(feature) {
