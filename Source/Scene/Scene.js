@@ -1714,24 +1714,34 @@ define([
         }
     }
 
+    var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
+    var scratch2DViewportMaxCoord = new Cartesian3();
+    var scratch2DViewportSavedPosition = new Cartesian3();
+    var scratch2DViewportTransform = new Matrix4();
+    var scratch2DViewportEyePoint = new Cartesian3();
+    var scratch2DViewportWindowCoords = new Cartesian3();
+
     function execute2DViewportCommands(scene, passState, backgroundColor, picking) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
         var viewport = passState.viewport;
 
+        var maxCartographic = scratch2DViewportCartographic;
+        var maxCoord = scratch2DViewportMaxCoord;
+
         var projection = scene.mapProjection;
-        var maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
+        projection.project(maxCartographic, maxCoord);
 
-        var savedCamera = camera;
-        var frustum = savedCamera.frustum.clone();
+        var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
+        var frustum = camera.frustum.clone();
 
-        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, new Matrix4());
+        var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, scratch2DViewportTransform);
         var projectionMatrix = camera.frustum.projectionMatrix;
 
-        var x = camera.position.x;
-        var eyePoint = new Cartesian3(Math.sign(x) * maxCoord.x - x, 0.0, -camera.position.z);
-        var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
+        var x = camera.positionWC.y;
+        var eyePoint = Cartesian3.fromElements(Math.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x, scratch2DViewportEyePoint);
+        var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint, scratch2DViewportWindowCoords);
 
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
@@ -1790,7 +1800,7 @@ define([
             executeCommands(scene, passState);
         }
 
-        camera.position.x = x;
+        Cartesian3.clone(position, camera.position);
         camera.frustum = frustum.clone();
 
         viewport.x = viewportX;
