@@ -26,7 +26,6 @@
 
     console.originalError = console.error;
     console.error = function(d1) {
-        console.originalError.apply(console, arguments);
         if (!defined(d1)) {
             window.parent.postMessage({
                 'error' : 'undefined'
@@ -71,6 +70,10 @@
                 'error' : errorMsg
             }, '*');
         }
+        if (errorMsg.indexOf('DeveloperError:') === -1) {
+            // Developer errors have already been logged to the console.
+            console.originalError.apply(console, arguments); //Prints to only the browser console.
+        }
     };
 
     window.onerror = function(errorMsg, url, lineNumber) {
@@ -104,7 +107,10 @@
                 'url' : url
             }, '*');
         }
-        console.originalError.apply(console, [errorMsg]);
+        if (errorMsg.indexOf('DeveloperError:') === -1) {
+            // Developer errors have already been logged to the console.
+            console.originalError.apply(console, [errorMsg]); //Prints to only the browser console.
+        }
         return false;
     };
 
