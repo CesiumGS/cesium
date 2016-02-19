@@ -203,7 +203,7 @@ define([
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'Identifier') {
-            node = new parseKeywords(ast);
+            node = parseKeywords(ast);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
