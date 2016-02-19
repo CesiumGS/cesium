@@ -282,18 +282,20 @@ define([
     };
 
     Node.prototype._evaluateVariableString = function(feature) {
-        var val = this._value;
-        var re = /\${(.*?)}/;
-        var match = re.exec(val);
+        var result = this._value;
+        var regex = /\${(.*?)}/g;
+        var match = regex.exec(result);
         while (match !== null) {
-            var prop = feature.getProperty(match[1]);
-            if (!defined(prop)) {
-                prop = '';
+            var placeholder = match[0];
+            var variableName = match[1];
+            var property = feature.getProperty(variableName);
+            if (!defined(property)) {
+                property = '';
             }
-            val = val.replace('\${' + match[1] + '}', prop);
-            match = re.exec(val);
+            result = result.replace(placeholder, property);
+            match = regex.exec(result);
         }
-        return val;
+        return result;
     };
 
     Node.prototype._evaluateVariable = function(feature) {

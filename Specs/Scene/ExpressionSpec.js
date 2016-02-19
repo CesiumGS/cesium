@@ -56,6 +56,9 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '"replace ${string}"');
         expect(expression.evaluate(feature)).toEqual('replace hello');
 
+        expression = new Expression(new MockStyleEngine(), '"do not replace \${string}"');
+        expect(expression.evaluate(feature)).toEqual('do not replace ${string}');
+
         expression = new Expression(new MockStyleEngine(), '\'replace ${string\'');
         expect(expression.evaluate(feature)).toEqual('replace ${string');
 
