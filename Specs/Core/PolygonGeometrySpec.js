@@ -287,24 +287,36 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p).toEqual(Cartesian3.fromDegreesArray([
-                                                       -124.0, 35.0,
-                                                       -124.0, 40.0,
-                                                       -110.0, 40.0,
-                                                       -110.0, 35.0
-                                                   ]));
-        expect(h1).toEqual(Cartesian3.fromDegreesArray([
-                                                        -122.0, 36.0,
-                                                        -112.0, 36.0,
-                                                        -112.0, 39.0,
-                                                        -122.0, 39.0
-                                                    ]));
-        expect(h2).toEqual(Cartesian3.fromDegreesArray([
-                                                        -120.0, 36.5,
-                                                        -120.0, 38.5,
-                                                        -114.0, 38.5,
-                                                        -114.0, 36.5
-                                                    ]));
+        var i;
+        var pExpected = Cartesian3.fromDegreesArray([
+                                              -124.0, 35.0,
+                                              -124.0, 40.0,
+                                              -110.0, 40.0,
+                                              -110.0, 35.0
+                                          ]);
+        for (i = 0; i < p.length; i++) {
+            expect(p[i]).toEqualEpsilon(pExpected[i], CesiumMath.EPSILON10);
+        }
+
+        var h1Expected = Cartesian3.fromDegreesArray([
+                                               -122.0, 36.0,
+                                               -112.0, 36.0,
+                                               -112.0, 39.0,
+                                               -122.0, 39.0
+                                           ]);
+        for (i = 0; i < h1.length; i++) {
+            expect(h1[i]).toEqualEpsilon(h1Expected[i], CesiumMath.EPSILON10);
+        }
+
+        var h2Expected = Cartesian3.fromDegreesArray([
+                                               -120.0, 36.5,
+                                               -120.0, 38.5,
+                                               -114.0, 38.5,
+                                               -114.0, 36.5
+                                           ]);
+        for (i = 0; i <h2.length; i++) {
+            expect(h2[i]).toEqualEpsilon(h2Expected[i], CesiumMath.EPSILON10);
+        }
     });
 
     it('computes correct bounding sphere at height 0', function() {
@@ -482,6 +494,19 @@ defineSuite([
 
         expect(p.attributes.position.values.length).toEqual(3 * 38 * 2);
         expect(p.indices.length).toEqual(3 * 22 * 2);
+    });
+
+    it('undefined is returned if there are less than 3 positions', function() {
+        var polygon = PolygonGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -72.0, 40.0,
+                -68.0, 40.0
+            ])
+        });
+
+        var geometry = PolygonGeometry.createGeometry(polygon);
+
+        expect(geometry).toBeUndefined();
     });
 
     var positions = Cartesian3.fromDegreesArray([

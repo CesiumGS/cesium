@@ -6,6 +6,7 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/Texture',
         'Scene/OrthographicFrustum',
+        'Scene/Pass',
         'Scene/SceneMode',
         'Specs/createCamera',
         'Specs/createContext',
@@ -17,6 +18,7 @@ defineSuite([
         Matrix4,
         Texture,
         OrthographicFrustum,
+        Pass,
         SceneMode,
         createCamera,
         createContext,
@@ -850,6 +852,83 @@ defineSuite([
             '    (czm_temeToPseudoFixed[0][1] != 0.0) && (czm_temeToPseudoFixed[1][1] != 0.0) && (czm_temeToPseudoFixed[2][1] == 0.0) && ' +
             '    (czm_temeToPseudoFixed[0][2] == 0.0) && (czm_temeToPseudoFixed[1][2] == 0.0) && (czm_temeToPseudoFixed[2][2] == 1.0) ' +
             '  ); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passEnvironment', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.ENVIRONMENT);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passEnvironment);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passCompute', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.COMPUTE);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passCompute);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passGlobe', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.GLOBE);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passGlobe);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passGround', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.GROUND);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passGround);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passOpaque', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.OPAQUE);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passOpaque);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passTranslucent', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.TRANSLUCENT);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passTranslucent);' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_pass and czm_passOverlay', function() {
+        var us = context.uniformState;
+        us.updatePass(Pass.OVERLAY);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_pass == czm_passOverlay);' +
             '}';
         context.verifyDrawForSpecs(fs);
     });
