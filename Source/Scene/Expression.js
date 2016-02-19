@@ -132,10 +132,28 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'isFinite') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+        //>>includeEnd('debug');
+    }
+
+    function parseKeywords(ast) {
+        if (ast.name === 'NaN') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
+        } else if (ast.name === 'Infinity') {
+            return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
+        }
+
+        //>>includeStart('debug', pragmas.debug);
+        throw new DeveloperError('Error: ' + ast.name + ' is not defined');
         //>>includeEnd('debug');
     }
 
@@ -184,6 +202,8 @@ define([
                 throw new DeveloperError('Error: Unexpected operator "' + op + '"');
                 //>>includeEnd('debug');
             }
+        } else if (ast.type === 'Identifier') {
+            node = new parseKeywords(ast);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -231,8 +251,10 @@ define([
                 node.evaluate = node._evaluateNot;
             } else if (node._value === '-') {
                 node.evaluate = node._evaluateNegative;
-            }  else if (node._value === '-') {
+            } else if (node._value === 'isNaN') {
                 node.evaluate = node._evaluateNaN;
+            } else if (node._value === 'isFinite') {
+                node.evaluate = node._evaluateIsFinite;
             }
         } else {
             node.evaluate = node._evaluateLiteral;
@@ -411,6 +433,10 @@ define([
 
     Node.prototype._evaluateNaN = function(feature) {
         return isNaN(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateIsFinite = function(feature) {
+        return isFinite(this._left.evaluate(feature));
     };
 
     return Expression;
