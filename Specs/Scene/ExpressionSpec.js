@@ -391,4 +391,18 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'Color(\'green\') !== Color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(false);
     });
+
+    it('evaluates isNaN function', function() {
+        var expression = new Expression(new MockStyleEngine(), 'isNaN()');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        //expression = new Expression(new MockStyleEngine(), 'isNaN(1)');
+        //expect(expression.evaluate(undefined)).toEqual(false);
+
+        //expression = new Expression(new MockStyleEngine(), 'isNaN(undefined)');
+        //expect(expression.evaluate(undefined)).toEqual(true);
+
+        //expression = new Expression(new MockStyleEngine(), 'isNaN(null)');
+        //expect(expression.evaluate(undefined)).toEqual(false);
+    });
 });

@@ -69,7 +69,7 @@ define([
         //>>includeEnd('debug');
     }
 
-    function parseCall(ast) {
+    function parseCall(expression, ast) {
         var call = ast.callee.name;
         var args = ast.arguments;
         var val;
@@ -126,6 +126,12 @@ define([
             if (defined(val)) {
                return new Node(ExpressionNodeType.LITERAL_COLOR, val);
             }
+        } else if (call === 'isNaN') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -142,7 +148,7 @@ define([
         if (ast.type === 'Literal') {
             node = parseLiteral(ast);
         } else if (ast.type === 'CallExpression') {
-            node = parseCall(ast);
+            node = parseCall(expression, ast);
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
@@ -225,6 +231,8 @@ define([
                 node.evaluate = node._evaluateNot;
             } else if (node._value === '-') {
                 node.evaluate = node._evaluateNegative;
+            }  else if (node._value === '-') {
+                node.evaluate = node._evaluateNaN;
             }
         } else {
             node.evaluate = node._evaluateLiteral;
@@ -399,6 +407,10 @@ define([
             return !Color.equals(left, right);
         }
         return left !== right;
+    };
+
+    Node.prototype._evaluateNaN = function(feature) {
+        return isNaN(this._left.evaluate(feature));
     };
 
     return Expression;
