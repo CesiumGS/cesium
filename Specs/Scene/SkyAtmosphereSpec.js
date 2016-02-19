@@ -105,6 +105,9 @@ defineSuite([
             far : 20000000.0
         }));
         frameState.mode = SceneMode.SCENE2D;
+        frameState.camera.frustum.left = -1;
+        frameState.camera.frustum.right = 1;
+
         us.update(frameState);
 
         var command = s.update(frameState);

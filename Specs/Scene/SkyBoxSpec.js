@@ -107,6 +107,8 @@ defineSuite([
             near : 1.0,
             far : 20000000.0
         }));
+        frameState.camera.frustum.left = -1;
+        frameState.camera.frustum.right = 1;
         frameState.mode = SceneMode.SCENE2D;
         us.update(frameState);
 

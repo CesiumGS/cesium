@@ -593,9 +593,11 @@ define([
         var position = ray.origin;
         var direction = ray.direction;
 
-        var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
-        if (Cartesian3.dot(direction, normal) >= 0.0) { // The location provided is the closest point in altitude
-            return position;
+        if (!Cartesian3.equals(position, Cartesian3.ZERO)) {
+            var normal = ellipsoid.geodeticSurfaceNormal(position, firstAxisScratch);
+            if (Cartesian3.dot(direction, normal) >= 0.0) { // The location provided is the closest point in altitude
+                return position;
+            }
         }
 
         var intersects = defined(this.rayEllipsoid(ray, ellipsoid));

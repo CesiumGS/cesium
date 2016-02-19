@@ -89,6 +89,9 @@ defineSuite([
             far : 1.0e10
         }));
         frameState.mode = SceneMode.SCENE2D;
+        frameState.camera.frustum.left = -1;
+        frameState.camera.frustum.right = 1;
+
         var us = context.uniformState;
         us.update(frameState);
         viewSun(frameState.camera, us);
