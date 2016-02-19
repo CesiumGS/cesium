@@ -2467,6 +2467,7 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
+    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2564,6 +2565,16 @@ define([
         var isRectangle = defined(destination.west);
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
+        }
+
+        if (mode === SceneMode.SCENE2D) {
+            var ellipsoid = this._scene.mapProjection.ellipsoid;
+            var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
+            var destCart = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
+            if (destCart.height > maxHeight) {
+                destCart.height = maxHeight;
+                destination = ellipsoid.cartographicToCartesian(destCart, scratchFlyToDestination);
+            }
         }
 
         newOptions.destination = destination;
