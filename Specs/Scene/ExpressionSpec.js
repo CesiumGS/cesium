@@ -38,6 +38,9 @@ defineSuite([
         var expression = new Expression(new MockStyleEngine(), '${height}');
         expect(expression.evaluate(feature)).toEqual(10);
 
+        expression = new Expression(new MockStyleEngine(), '\'${height}\'');
+        expect(expression.evaluate(feature)).toEqual('10');
+
         expression = new Expression(new MockStyleEngine(), '${height}/${width}');
         expect(expression.evaluate(feature)).toEqual(2);
 
@@ -47,18 +50,35 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '\'replace ${string}\'');
         expect(expression.evaluate(feature)).toEqual('replace hello');
 
+        expression = new Expression(new MockStyleEngine(), '"replace ${string}"');
+        expect(expression.evaluate(feature)).toEqual('replace hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'replace ${string\'');
+        expect(expression.evaluate(feature)).toEqual('replace ${string');
+
         expression = new Expression(new MockStyleEngine(), '${boolean}');
         expect(expression.evaluate(feature)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '\'${boolean}\'');
+        expect(expression.evaluate(feature)).toEqual('true');
 
         expression = new Expression(new MockStyleEngine(), '${color}');
         expect(expression.evaluate(feature)).toEqual(Color.RED);
 
+        expression = new Expression(new MockStyleEngine(), '\'${color}\'');
+        expect(expression.evaluate(feature)).toEqual(Color.RED.toString());
 
         expression = new Expression(new MockStyleEngine(), '${null}');
         expect(expression.evaluate(feature)).toEqual(null);
 
+        expression = new Expression(new MockStyleEngine(), '\'${null}\'');
+        expect(expression.evaluate(feature)).toEqual('');
+
         expression = new Expression(new MockStyleEngine(), '${undefined}');
         expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '\'${undefined}\'');
+        expect(expression.evaluate(feature)).toEqual('');
 
         expect(function() {
             return new Expression(new MockStyleEngine(), '${height');

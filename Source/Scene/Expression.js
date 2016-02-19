@@ -57,16 +57,32 @@ define([
         var result = "";
         var i = exp.indexOf('${');
         while (i >= 0) {
-            result += exp.substr(0, i);
-            var j = exp.indexOf('}');
-            if (j < 0) {
-                //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: unmatched {');
-                //>>includeEnd('debug');
+            // check if string is inside quotes
+            var openSingleQuote = exp.indexOf('\'');
+            var openDoubleQuote = exp.indexOf('"');
+            var closeQuote;
+            if (openSingleQuote >= 0 && openSingleQuote < i) {
+                closeQuote = exp.indexOf('\'', openSingleQuote + 1);
+                result += exp.substr(0, closeQuote + 1);
+                exp = exp.substr(closeQuote + 1);
+                i = exp.indexOf('${');
+            } else if (openDoubleQuote >= 0 && openDoubleQuote < i) {
+                closeQuote = exp.indexOf('"', openDoubleQuote + 1);
+                result += exp.substr(0, closeQuote + 1);
+                exp = exp.substr(closeQuote + 1);
+                i = exp.indexOf('${');
+            } else {
+                result += exp.substr(0, i);
+                var j = exp.indexOf('}');
+                if (j < 0) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError('Error: unmatched {');
+                    //>>includeEnd('debug');
+                }
+                result += "czm_" + exp.substr(i + 2, j - (i + 2));
+                exp = exp.substr(j + 1);
+                i = exp.indexOf('${');
             }
-            result += "czm_" + exp.substr(i+2, j-(i+2));
-            exp = exp.substr(j+1);
-            i = exp.indexOf('${');
         }
         result += exp;
         return result;
@@ -81,6 +97,9 @@ define([
         } else if (type === 'number') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, ast.value);
         } else if (type === 'string') {
+            if (ast.value.indexOf('${') >= 0) {
+                return new Node(ExpressionNodeType.VARIABLE_STRING, ast.value);
+            }
             return new Node(ExpressionNodeType.LITERAL_STRING, ast.value);
         }
 
@@ -238,6 +257,8 @@ define([
             }
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
+        } else if (node._type === ExpressionNodeType.VARIABLE_STRING) {
+            node.evaluate = node._evaluateVariableString;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -258,6 +279,28 @@ define([
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateVariableString = function(feature) {
+        var exp = this._value;
+        var result = "";
+        var i = exp.indexOf('${');
+        while (i >= 0) {
+            result += exp.substr(0, i);
+            var j = exp.indexOf('}');
+            if (j < 0) {
+                // unmatched braces
+                return this._value;
+            }
+            var property = feature.getProperty(exp.substr(i + 2, j - (i + 2)));
+            if (defined(property)) {
+                result += property;
+            }
+            exp = exp.substr(j + 1);
+            i = exp.indexOf('${');
+        }
+        result += exp;
+        return result;
     };
 
     Node.prototype._evaluateVariable = function(feature) {
