@@ -317,6 +317,7 @@ define([
         }
 
         updateHeights(this, frameState);
+        callAfterRenderFunctions(frameState);
 
         var debug = this._debug;
         if (debug.suspendLodUpdate) {
@@ -485,7 +486,9 @@ define([
             }
         }
 
-        raiseTileLoadProgressEvent(primitive);
+        frameState.afterRender.push(function () {
+            raiseTileLoadProgressEvent(primitive);
+        });
     }
 
     /**
@@ -705,6 +708,16 @@ define([
             }
             tile._frameRendered = frameState.frameNumber;
         }
+    }
+
+    function callAfterRenderFunctions(frameState) {
+        // Functions that are queued up in frame state should be executed here at the end
+        // of the frame.
+        var functions = frameState.afterRender;
+        for (var i = 0, length = functions.length; i < length; ++i) {
+            functions[i]();
+        }
+        functions.length = 0;
     }
 
     return QuadtreePrimitive;
