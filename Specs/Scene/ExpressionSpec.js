@@ -112,6 +112,12 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '0');
         expect(expression.evaluate(undefined)).toEqual(0);
+
+        expression = new Expression(new MockStyleEngine(), 'NaN');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), 'Infinity');
+        expect(expression.evaluate(undefined)).toEqual(Infinity);
     });
 
     it('evaluates literal string', function() {
@@ -389,6 +395,58 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression(new MockStyleEngine(), 'Color(\'green\') !== Color(\'green\')');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates isNaN function', function() {
+        var expression = new Expression(new MockStyleEngine(), 'isNaN()');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(NaN)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(1)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(Infinity)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(null)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(true)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN("hello")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isNaN(Color("white"))');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
+    it('evaluates isFinite function', function() {
+        var expression = new Expression(new MockStyleEngine(), 'isFinite()');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(NaN)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(1)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(Infinity)');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(null)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(true)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite("hello")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'isFinite(Color("white"))');
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 });
