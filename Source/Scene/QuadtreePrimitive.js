@@ -662,9 +662,10 @@ define([
                     }
 
                     var tileDataAvailable = terrainProvider.getTileDataAvailable(child.x, child.y, child.level);
+                    var parentTile = tile.parent;
                     if ((defined(tileDataAvailable) && !tileDataAvailable) ||
-                        (defined(parent) && defined(parent.data) && defined(parent.data.terrainData) &&
-                         !parent.data.terrainData.isChildAvailable(parent.x, parent.y, child.x, child.y))) {
+                        (defined(parentTile) && defined(parentTile.data) && defined(parentTile.data.terrainData) &&
+                         !parentTile.data.terrainData.isChildAvailable(parentTile.x, parentTile.y, child.x, child.y))) {
                         data.removeFunc();
                     }
                 }
