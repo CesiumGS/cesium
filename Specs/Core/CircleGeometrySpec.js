@@ -31,15 +31,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with a negative radius', function() {
-        expect(function() {
-            return new CircleGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                radius : -1.0
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleGeometry({
@@ -133,6 +124,23 @@ defineSuite([
 
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+    });
+
+    it('undefined is returned if radius is equal to or less than zero', function () {
+        var circle0 = new CircleGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : 0.0
+        });
+        var circle1 = new CircleGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : -10.0
+        });
+
+        var geometry0 = CircleGeometry.createGeometry(circle0);
+        var geometry1 = CircleGeometry.createGeometry(circle1);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
     });
 
     var center = Cartesian3.fromDegrees(0,0);
