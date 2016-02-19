@@ -15,6 +15,8 @@ define([
         ExpressionNodeType) {
     "use strict";
 
+    var variableRegex = /\${(.*?)}/g;
+
     /**
      * DOC_TBA
      */
@@ -325,8 +327,7 @@ define([
 
     Node.prototype._evaluateVariableString = function(feature) {
         var result = this._value;
-        var regex = /\${(.*?)}/g;
-        var match = regex.exec(result);
+        var match = variableRegex.exec(result);
         while (match !== null) {
             var placeholder = match[0];
             var variableName = match[1];
@@ -335,7 +336,7 @@ define([
                 property = '';
             }
             result = result.replace(placeholder, property);
-            match = regex.exec(result);
+            match = variableRegex.exec(result);
         }
         return result;
     };
