@@ -1493,9 +1493,11 @@ define([
             executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
         }
 
+        var useWebVR = scene._useWebVR && scene.mode === SceneMode.SCENE2D;
+
         if (environmentState.isSunVisible) {
             environmentState.sunDrawCommand.execute(context, passState);
-            if (scene.sunBloom && !scene._useWebVR) {
+            if (scene.sunBloom && !useWebVR) {
                 var framebuffer;
                 if (environmentState.useGlobeDepthFramebuffer) {
                     framebuffer = scene._globeDepth.framebuffer;
@@ -1647,7 +1649,7 @@ define([
         }
     }
 
-    function updateAndExecuteCommands(scene, passState) {
+    function updateAndExecuteCommands(scene, passState, backgroundColor, picking) {
         var context = scene._context;
 
         var viewport = passState.viewport;
@@ -1656,64 +1658,44 @@ define([
         var camera = frameState.camera;
         var mode = frameState.mode;
 
-        if (scene._useWebVR) {
-            if (mode !== SceneMode.SCENE2D) {
-                updatePrimitives(scene);
-                createPotentiallyVisibleSet(scene);
-                executeComputeCommands(scene);
+        if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+            updatePrimitives(scene);
+            createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            executeComputeCommands(scene);
 
-                // Based on Calculating Stereo pairs by Paul Bourke
-                // http://paulbourke.net/stereographics/stereorender/
+            // Based on Calculating Stereo pairs by Paul Bourke
+            // http://paulbourke.net/stereographics/stereorender/
 
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.width = context.drawingBufferWidth * 0.5;
-                viewport.height = context.drawingBufferHeight;
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth * 0.5;
+            viewport.height = context.drawingBufferHeight;
 
-                var savedCamera = Camera.clone(camera, scene._cameraVR);
+            var savedCamera = Camera.clone(camera, scene._cameraVR);
 
-                var near = camera.frustum.near;
-                var fo = near * 5.0;
-                var eyeSeparation = fo / 30.0;
-                var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+            var near = camera.frustum.near;
+            var fo = near * 5.0;
+            var eyeSeparation = fo / 30.0;
+            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
-                camera.frustum.aspectRatio = viewport.width / viewport.height;
+            camera.frustum.aspectRatio = viewport.width / viewport.height;
 
-                var offset = 0.5 * eyeSeparation * near / fo;
+            var offset = 0.5 * eyeSeparation * near / fo;
 
-                Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-                camera.frustum.xOffset = offset;
+            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = offset;
 
-                executeCommands(scene, passState);
+            executeCommands(scene, passState);
 
-                viewport.x = passState.viewport.width;
+            viewport.x = passState.viewport.width;
 
-                Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-                camera.frustum.xOffset = -offset;
+            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = -offset;
 
-                executeCommands(scene, passState);
+            executeCommands(scene, passState);
 
-                Camera.clone(savedCamera, camera);
-            } else {
-                viewport.x = 0;
-                viewport.y = 0;
-                viewport.width = context.drawingBufferWidth * 0.5;
-                viewport.height = context.drawingBufferHeight;
-
-                var savedTop = camera.frustum.top;
-
-                camera.frustum.top = camera.frustum.right * (viewport.height / viewport.width);
-                camera.frustum.bottom = -camera.frustum.top;
-
-                executeViewportCommands(scene, passState);
-
-                viewport.x = passState.viewport.width;
-
-                executeViewportCommands(scene, passState);
-
-                camera.frustum.top = savedTop;
-                camera.frustum.bottom = -savedTop;
-            }
+            Camera.clone(savedCamera, camera);
         } else {
             viewport.x = 0;
             viewport.y = 0;
@@ -1723,15 +1705,16 @@ define([
             if (mode !== SceneMode.SCENE2D) {
                 updatePrimitives(scene);
                 createPotentiallyVisibleSet(scene);
+                updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
                 executeComputeCommands(scene);
                 executeCommands(scene, passState);
             } else {
-                executeViewportCommands(scene, passState);
+                execute2DViewportCommands(scene, passState, backgroundColor, picking);
             }
         }
     }
 
-    function executeViewportCommands(scene, passState) {
+    function execute2DViewportCommands(scene, passState, backgroundColor, picking) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
@@ -1757,6 +1740,7 @@ define([
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
             updatePrimitives(scene);
             createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
             executeCommands(scene, passState);
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
@@ -1766,6 +1750,7 @@ define([
 
             updatePrimitives(scene);
             createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
             executeCommands(scene, passState);
 
@@ -1788,6 +1773,7 @@ define([
 
             updatePrimitives(scene);
             createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
             executeCommands(scene, passState);
 
@@ -1848,12 +1834,14 @@ define([
         var context = scene._context;
         var environmentState = scene._environmentState;
 
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
+
         // Preserve the reference to the original framebuffer.
         environmentState.originalFramebuffer = passState.framebuffer;
 
         // Manage sun bloom post-processing effect.
         if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
-            if (scene.sunBloom && !scene._useWebVR) {
+            if (scene.sunBloom && !useWebVR) {
                 scene._sunPostProcess = new SunPostProcess();
             } else if(defined(scene._sunPostProcess)){
                 scene._sunPostProcess = scene._sunPostProcess.destroy();
@@ -1903,7 +1891,7 @@ define([
             scene._fxaa.clear(context, passState, clearColor);
         }
 
-        if (environmentState.isSunVisible && scene.sunBloom && !scene._useWebVR) {
+        if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
         } else if (useGlobeDepthFramebuffer) {
             passState.framebuffer = scene._globeDepth.framebuffer;
@@ -2032,8 +2020,7 @@ define([
         }
 
         updateEnvironment(scene);
-        updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
-        updateAndExecuteCommands(scene, passState);
+        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
@@ -2216,10 +2203,7 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
-        updatePrimitives(this);
-        createPotentiallyVisibleSet(this);
-        updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-        executeCommands(this, passState);
+        updateAndExecuteCommands(this, passState, scratchColorZero, true);
         resolveFramebuffers(this, passState);
 
         var object = this._pickFramebuffer.end(scratchRectangle);
