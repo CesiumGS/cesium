@@ -2553,18 +2553,12 @@ define([
         }
 
         var sscc = this._scene.screenSpaceCameraController;
-        var ellipsoid = this._scene.globe.ellipsoid;
+        var ellipsoid = this._scene.mapProjection.ellipsoid;
         var destinationCartographic = Cartographic.fromCartesian(destination);
 
         // Make sure camera doesn't zoom outside set limits
-        if (defined(sscc.minimumZoomDistance) && defined(sscc.maximumZoomDistance)) {
+        if (defined(sscc)) {
             destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-        }
-        else if (defined(sscc.minimumZoomDistance)) {
-            destinationCartographic.height = Math.max(destinationCartographic.height, sscc.minimumZoomDistance);
-        }
-        else if (defined(sscc.maximumZoomDistance)) {
-            destinationCartographic.height = Math.min(destinationCartographic.height, sscc.maximumZoomDistance);
         }
 
         destination = ellipsoid.cartographicToCartesian(destinationCartographic);
