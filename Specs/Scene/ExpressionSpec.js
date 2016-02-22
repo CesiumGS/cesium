@@ -586,7 +586,6 @@ defineSuite([
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
 
-
         var expression = new Expression(new MockStyleEngine(), '${color["red"]}');
         expect(expression.evaluate(feature)).toEqual(1.0);
 
