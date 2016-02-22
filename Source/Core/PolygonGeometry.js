@@ -678,7 +678,7 @@ define([
         var i;
 
         if (polygons.length === 0) {
-            return undefined;
+            return;
         }
 
         if (perPositionHeight) {

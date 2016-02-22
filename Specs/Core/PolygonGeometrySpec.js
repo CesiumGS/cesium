@@ -496,6 +496,19 @@ defineSuite([
         expect(p.indices.length).toEqual(3 * 22 * 2);
     });
 
+    it('undefined is returned if there are less than 3 positions', function() {
+        var polygon = PolygonGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -72.0, 40.0,
+                -68.0, 40.0
+            ])
+        });
+
+        var geometry = PolygonGeometry.createGeometry(polygon);
+
+        expect(geometry).toBeUndefined();
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -124.0, 35.0,
         -110.0, 35.0,

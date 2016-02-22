@@ -36,6 +36,9 @@ TODO: this is not finished yet:
 * Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
+* Fixed bug in IntersectionTests.lineSegmentSphere where the ray origin was not set.
+* Added the ability to create empty geometries. Instead of errors getting thrown on creation, undefined will be returned. No rendering will occur.
+* Fixed issue that kept `GroundPrimitive` with an `EllipseGeometry` from having a `rotation`.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
