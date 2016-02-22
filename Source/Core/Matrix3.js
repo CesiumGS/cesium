@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './freezeObject',
         './Math'
@@ -10,6 +11,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         freezeObject,
         CesiumMath) {
@@ -1478,6 +1480,20 @@ define([
      * @constant
      */
     Matrix3.COLUMN2ROW2 = 8;
+
+    defineProperties(Matrix3.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix3.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix3.packedLength;
+            }
+        }
+    });
 
     /**
      * Duplicates the provided Matrix3 instance.

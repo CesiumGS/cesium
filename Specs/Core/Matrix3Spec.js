@@ -1126,4 +1126,17 @@ defineSuite([
             Matrix3.inverse(new Matrix3());
         }).toThrowDeveloperError();
     });
+
+    it('Matrix3 objects can be used as array like objects', function() {
+        var matrix = new Matrix3(
+                1, 4, 7,
+                2, 5, 8,
+                3, 6, 9);
+        expect(matrix.length).toEqual(9);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
+    });
 });
