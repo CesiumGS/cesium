@@ -50,21 +50,34 @@ if (terrainEnabled) {
     terrainProvider = new Cesium.EllipsoidTerrainProvider();
 }
 
-viewer.terrainProvider = terrainProvider;
+if (globeVisible) {
+    viewer.terrainProvider = terrainProvider;
+}
 
-// Exton
+//// Exton
 //var centerLongitude = -1.31968;
 //var centerLatitude = 0.698874;
+//var height = 130.0;
+//var offset = 20.0;
+//var frustumSize = 15;
+//var frustumNear = 1.0;
+//var frustumFar = 100.0;
+//var tilt = 0.0;
 
 // Everest
 var centerLongitude = 1.517132688;
 var centerLatitude = 0.4884844964;
+var offset = 50.0;
+var frustumSize = 55.0;
+var frustumNear = 1.0;
+var frustumFar = 400.0;
+var tilt = 30.0;
 
 var scene = viewer.scene;
 var camera = scene.camera;
 var shadowMap = scene.sunShadowMap;
 shadowMap.debugShow = true;
-shadowMap.enabled = true;
+shadowMap.enabled = false;
 
 var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
 var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
@@ -75,6 +88,20 @@ Cesium.when(promise, function(updatedPositions) {
 
 function createScene(height) {
     height += 50.0;
+
+    var frustum = new Cesium.OrthographicFrustum();
+    frustum.left = -frustumSize;
+    frustum.right = frustumSize;
+    frustum.bottom = -frustumSize;
+    frustum.top = frustumSize;
+    frustum.near = frustumNear;
+    frustum.far = frustumFar;
+
+    var lightCamera = new Cesium.Camera(scene);
+    lightCamera.frustum = frustum;
+    lightCamera.lookAt(Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height), new Cesium.Cartesian3(tilt, tilt, offset));
+    shadowMap.camera = lightCamera;
+
     var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
@@ -87,6 +114,7 @@ function createScene(height) {
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);
+    shadowMap.enabled = true;
 }
 
 function createModel(url, origin) {
@@ -115,8 +143,6 @@ function createBoxRTC(origin) {
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
     }));
-
-    console.log(boxGeometry);
 
     var positions = boxGeometry.attributes.position.values;
     var newPositions = new Float32Array(positions.length);
