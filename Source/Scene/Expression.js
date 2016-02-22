@@ -44,11 +44,12 @@ define([
         return this._runtimeAst.evaluate(feature);
     };
 
-    function Node(type, value, left, right) {
+    function Node(type, value, left, right, test) {
         this._type = type;
         this._value = value;
         this._left = left;
         this._right = right;
+        this._test = test;
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
@@ -215,7 +216,7 @@ define([
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
-            if (op === '!' || op === '-') {
+            if (op === '!' || op === '-' || op === '+') {
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -247,6 +248,11 @@ define([
                 throw new DeveloperError('Error: Unexpected operator "' + op + '"');
                 //>>includeEnd('debug');
             }
+        } else if (ast.type === 'ConditionalExpression') {
+            var test = createRuntimeAst(expression, ast.test);
+            left = createRuntimeAst(expression, ast.consequent);
+            right = createRuntimeAst(expression, ast.alternate);
+            node = new Node(ExpressionNodeType.CONDITIONAL, '?', left, right, test);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -261,7 +267,9 @@ define([
     }
 
     function setEvaluateFunction(node) {
-        if (node._type === ExpressionNodeType.BINARY) {
+        if (node._type === ExpressionNodeType.CONDITIONAL) {
+            node.evaluate = node._evaluateConditional;
+        } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
             } else if (node._value === '-') {
@@ -294,6 +302,8 @@ define([
                 node.evaluate = node._evaluateNot;
             } else if (node._value === '-') {
                 node.evaluate = node._evaluateNegative;
+            } else if (node._value === '+') {
+                node.evaluate = node._evaluatePositive;
             } else if (node._value === 'isNaN') {
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
@@ -306,19 +316,6 @@ define([
         } else {
             node.evaluate = node._evaluateLiteral;
         }
-    }
-
-    function checkRelationalTypes(ast) {
-        //>>includeStart('debug', pragmas.debug);
-        if (ast._left._type !== ast._right._type) {
-            throw new DeveloperError('Error: Cannot convert between types');
-        } else if (ast._left._type === ExpressionNodeType.LITERAL_BOOLEAN ||
-                   ast._right._type === ExpressionNodeType.LITERAL_BOOLEAN ||
-                   ast._left._type === ExpressionNodeType.LITERAL_COLOR ||
-                   ast._right._type === ExpressionNodeType.LITERAL_COLOR) {
-            throw new DeveloperError('Error: Operation is undefined');
-        }
-        //>>includeEnd('debug');
     }
 
     Node.prototype._evaluateLiteral = function(feature) {
@@ -354,31 +351,31 @@ define([
         return -(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluatePositive = function(feature) {
+        return +(this._left.evaluate(feature));
+    };
+
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
     // that we can assign if we know the types before runtime
     Node.prototype._evaluateLessThan = function(feature) {
-        checkRelationalTypes(this);
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         return left < right;
     };
 
     Node.prototype._evaluateLessThanOrEquals = function(feature) {
-        checkRelationalTypes(this);
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         return left <= right;
     };
 
     Node.prototype._evaluateGreaterThan = function(feature) {
-        checkRelationalTypes(this);
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         return left > right;
     };
 
     Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
-        checkRelationalTypes(this);
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
         return left >= right;
@@ -505,6 +502,13 @@ define([
 
     Node.prototype._evaluateIsFinite = function(feature) {
         return isFinite(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateConditional = function(feature) {
+        if (this._test.evaluate(feature)) {
+            return this._left.evaluate(feature);
+        }
+        return this._right.evaluate(feature);
     };
 
     return Expression;
