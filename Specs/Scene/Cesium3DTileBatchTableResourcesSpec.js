@@ -326,6 +326,14 @@ defineSuite([
             // check that the 2nd resource has an id of 2
             expect(content.getFeature(2).getProperty('id')).toEqual(2);
 
+            // Check that a property can be an array
+            expect(content.getFeature(2).getProperty('rooms')).toEqual(['room2_a', 'room2_b', 'room2_c']);
+
+            // Check that a property can be an object
+            expect(content.getFeature(2).getProperty('info')).toEqual({
+                name : 'building2',
+                year : 2
+            });
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
