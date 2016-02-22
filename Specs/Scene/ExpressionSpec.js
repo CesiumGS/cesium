@@ -346,14 +346,10 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression(new MockStyleEngine(), 'true < false');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') < 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary less than or equals', function() {
@@ -367,14 +363,10 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression(new MockStyleEngine(), 'true <= false');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
 
         expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') <= 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary greater than', function() {
@@ -388,14 +380,10 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression(new MockStyleEngine(), 'true > false');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') > 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates binary greater than or equals', function() {
@@ -409,14 +397,10 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression(new MockStyleEngine(), 'true >= false');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(true);
 
         expression = new Expression(new MockStyleEngine(), 'Color(\'blue\') >= 10');
-        expect(function() {
-            expression.evaluate(undefined);
-        }).toThrowDeveloperError();
+        expect(expression.evaluate(undefined)).toEqual(false);
     });
 
     it('evaluates logical and', function() {
@@ -541,5 +525,8 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'false ? "first" : "second"');
         expect(expression.evaluate(undefined)).toEqual('second');
+
+        expression = new Expression(new MockStyleEngine(), '(!(1 + 2 > 3)) ? (2 > 1 ? 1 + 1 : 0) : (2 > 1 ? -1 + -1 : 0)');
+        expect(expression.evaluate(undefined)).toEqual(2);
     });
 });

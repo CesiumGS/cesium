@@ -12,7 +12,7 @@ define([
         VARIABLE : 0,
         UNARY : 1,
         BINARY : 2,
-        TERNARY : 3,
+        CONDITIONAL : 3,
         LITERAL_NULL : 4,
         LITERAL_BOOLEAN : 5,
         LITERAL_NUMBER : 6,
