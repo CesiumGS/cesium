@@ -318,6 +318,28 @@ defineSuite([
         expect(resources.getProperty(1, 'height')).toEqual(2.0);
     });
 
+    it('setProperty with object value', function() {
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        resources.batchTable = {
+            info : [{name : 'building0', year : 2000}, {name : 'building1', year : 2001}]
+        };
+        resources.setProperty(0, 'info', {name : 'building0_new', year : 2002});
+
+        expect(resources.getProperty(0, 'info')).toEqual({name : 'building0_new', year : 2002});
+        expect(resources.getProperty(1, 'info')).toEqual({name : 'building1', year : 2001});
+    });
+
+    it('setProperty with array value', function() {
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        resources.batchTable = {
+            rooms : [['room1', 'room2'], ['room3', 'room4']]
+        };
+        resources.setProperty(0, 'rooms', ['room1_new', 'room2']);
+
+        expect(resources.getProperty(0, 'rooms')).toEqual(['room1_new', 'room2']);
+        expect(resources.getProperty(1, 'rooms')).toEqual(['room3', 'room4']);
+    });
+
     it('renders tileset with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
@@ -330,10 +352,8 @@ defineSuite([
             expect(content.getFeature(2).getProperty('rooms')).toEqual(['room2_a', 'room2_b', 'room2_c']);
 
             // Check that a property can be an object
-            expect(content.getFeature(2).getProperty('info')).toEqual({
-                name : 'building2',
-                year : 2
-            });
+            expect(content.getFeature(2).getProperty('info')).toEqual({name : 'building2', year : 2});
+
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
