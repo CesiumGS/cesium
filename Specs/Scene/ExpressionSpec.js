@@ -530,7 +530,7 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(2);
     });
 
-    it('evaluates member expression', function() {
+    it('evaluates member expression with dot', function() {
         var feature = new MockFeature();
         feature.addProperty('height', 10);
         feature.addProperty('width', 5);
@@ -565,13 +565,9 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature.color.red}');
         expect(expression.evaluate(feature)).toEqual(1.0);
-
-        expect(function() {
-            return new Expression(new MockStyleEngine(), 'color.red');
-        }).toThrowDeveloperError();
     });
 
-    it('evaluates computed member expression', function() {
+    it('evaluates member expression with brackets', function() {
         var feature = new MockFeature();
         feature.addProperty('height', 10);
         feature.addProperty('width', 5);
@@ -615,9 +611,25 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature["feature.color"]}');
         expect(expression.evaluate(feature)).toEqual(Color.GREEN);
+    });
+
+    it('member expressions throw without variable notation', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'color.red');
+        }).toThrowDeveloperError();
 
         expect(function() {
             return new Expression(new MockStyleEngine(), 'color["red"]');
+        }).toThrowDeveloperError();
+    });
+
+    it('member expression throws with variable property', function() {
+        var feature = new MockFeature();
+        feature.addProperty('color', Color.RED);
+        feature.addProperty('colorName', 'red');
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '${color[${colorName}]}');
         }).toThrowDeveloperError();
     });
 
