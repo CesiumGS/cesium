@@ -18,6 +18,14 @@
     "Height": {
       "minimum": 6,
       "maximum": 14
+    },
+    "info": {
+      "minimum": null,
+      "maximum": null
+    },
+    "rooms": {
+      "minimum": null,
+      "maximum": null
     }
   },
   "geometricError": 70,
