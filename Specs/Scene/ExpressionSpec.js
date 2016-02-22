@@ -136,10 +136,6 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression(new MockStyleEngine(), '+1');
-        }).toThrowDeveloperError();
-
-        expect(function() {
             return new Expression(new MockStyleEngine(), '2 | 3');
         }).toThrowDeveloperError();
 
@@ -258,6 +254,20 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '-(-5)');
         expect(expression.evaluate(undefined)).toEqual(5);
+    });
+
+    it('evaluates unary positive', function() {
+        var expression = new Expression(new MockStyleEngine(), '+5');
+        expect(expression.evaluate(undefined)).toEqual(5);
+
+        expression = new Expression(new MockStyleEngine(), '+"5"');
+        expect(expression.evaluate(undefined)).toEqual(5);
+
+        expression = new Expression(new MockStyleEngine(), '+true');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), '+null');
+        expect(expression.evaluate(undefined)).toEqual(0);
     });
 
     it('evaluates binary addition', function() {
@@ -523,5 +533,13 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'isFinite(Color("white"))');
         expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates ternary conditional', function() {
+        var expression = new Expression(new MockStyleEngine(), 'true ? "first" : "second"');
+        expect(expression.evaluate(undefined)).toEqual('first');
+
+        expression = new Expression(new MockStyleEngine(), 'false ? "first" : "second"');
+        expect(expression.evaluate(undefined)).toEqual('second');
     });
 });
