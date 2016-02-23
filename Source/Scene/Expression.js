@@ -406,7 +406,7 @@ define([
 
     Node.prototype._evaluateArray = function(feature) {
         var result = [];
-        for (var i=0; i<this._value.length; i++) {
+        for (var i = 0; i<this._value.length; i++) {
             result[i] = this._value[i].evaluate(feature);
         }
         return result;
