@@ -707,6 +707,9 @@ defineSuite([
     });
 
     it('evaluates regex matches operator', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
         var expression = new Expression(new MockStyleEngine(), '"abc" =~ RegExp("a")');
         expect(expression.evaluate(undefined)).toEqual(true);
 
@@ -718,6 +721,9 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '"bcd" =~ RegExp("a")');
         expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '${property} =~ RegExp("a")');
+        expect(expression.evaluate(feature)).toEqual(true);
     });
 
     it('throws if regex match operator does not have regex as argument', function() {

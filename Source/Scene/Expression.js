@@ -226,7 +226,7 @@ define([
             }
             val = args[0];
             //>>includeStart('debug', pragmas.debug);
-            if (val.type !== 'Literal' && typeof(val.value) !== 'string') {
+            if (val.type !== 'Literal') {
                 throw new DeveloperError('Error: RegExp constructor requires a string');
             }
             //>>includeEnd('debug');
