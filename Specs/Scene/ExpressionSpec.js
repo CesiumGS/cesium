@@ -710,26 +710,23 @@ defineSuite([
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
 
-        var expression = new Expression(new MockStyleEngine(), '"abc" =~ RegExp("a")');
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a").test("abc")');
         expect(expression.evaluate(undefined)).toEqual(true);
 
-        expression = new Expression(new MockStyleEngine(), 'RegExp("a") =~ "abc"');
-        expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression(new MockStyleEngine(), 'RegExp("a") =~ "bcd"');
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test("bcd")');
         expect(expression.evaluate(undefined)).toEqual(false);
 
-        expression = new Expression(new MockStyleEngine(), '"bcd" =~ RegExp("a")');
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test()');
         expect(expression.evaluate(undefined)).toEqual(false);
-
-        expression = new Expression(new MockStyleEngine(), '${property} =~ RegExp("a")');
-        expect(expression.evaluate(feature)).toEqual(true);
     });
 
-    it('throws if regex match operator does not have regex as argument', function() {
+    it('throws if test is not call with a RegExp', function() {
         expect(function() {
-            var expression = new Expression(new MockStyleEngine(), '"abc" =~ "abc"');
-            expression.evaluate(undefined);
+            return new Expression(new MockStyleEngine(), 'Color("blue").test()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '"blue".test()');
         }).toThrowDeveloperError();
     });
 

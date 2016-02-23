@@ -16,7 +16,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '=~', '&&', '||'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -134,10 +134,33 @@ define([
     }
 
     function parseCall(expression, ast) {
-        var call = ast.callee.name;
         var args = ast.arguments;
+        var call;
         var val;
-        
+
+        if (ast.callee.type === 'MemberExpression') {
+            call = ast.callee.property.name;
+            if (call === 'test') {
+                if (ast.callee.object.callee.name !== 'RegExp') {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError('Error: test is not a function');
+                    //>>includeEnd('debug');
+                }
+                if (args.length === 0) {
+                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                }
+                var left = createRuntimeAst(expression, ast.callee.object);
+                var right = createRuntimeAst(expression, args[0]);
+                return new Node(ExpressionNodeType.BINARY, call, left, right);
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+            //>>includeEnd('debug');
+        }
+
+        call = ast.callee.name;
+
         // TODO: Throw error if returned Color is not defined
 
         if (call === 'Color') {
@@ -370,7 +393,7 @@ define([
                 node.evaluate = node._evaluateAnd;
             } else if (node._value === '||') {
                 node.evaluate = node._evaluateOr;
-            } else if (node._value === '=~') {
+            } else if (node._value === 'test') {
                 node.evaluate = node._evaluateRegExpMatch;
             }
         } else if (node._type === ExpressionNodeType.UNARY) {
@@ -656,14 +679,7 @@ define([
     };
 
     Node.prototype._evaluateRegExpMatch = function(feature) {
-        if (this._left._type === ExpressionNodeType.LITERAL_REGEX) {
-            return this._left._value.test(this._right.evaluate(feature));
-        } else if (this._right._type === ExpressionNodeType.LITERAL_REGEX) {
-            return this._right._value.test(this._left.evaluate(feature));
-        }
-        //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Error: Operation is undefined');
-        //>>includeEnd('debug');
+        return this._left._value.test(this._right.evaluate(feature));
     };
 
     return Expression;
