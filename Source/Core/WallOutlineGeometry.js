@@ -274,7 +274,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallOutlineGeometry.createGeometry(wall);
-     * 
+     *
      * @see WallOutlineGeometry#createGeometry
      */
     WallOutlineGeometry.fromConstantHeights = function(options) {
@@ -332,10 +332,6 @@ define([
         var maximumHeights = wallGeometry._maximumHeights;
         var granularity = wallGeometry._granularity;
         var ellipsoid = wallGeometry._ellipsoid;
-
-        if (wallPositions.length < 2) {
-            return;
-        }
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, false);
         if (!defined(pos)) {
