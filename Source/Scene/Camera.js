@@ -2552,6 +2552,20 @@ define([
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
+        var sscc = this._scene.screenSpaceCameraController;
+        var ellipsoid = this._scene.mapProjection.ellipsoid;
+        var destinationCartographic = Cartographic.fromCartesian(destination);
+
+        // Make sure camera doesn't zoom outside set limits
+        if (defined(sscc)) {
+            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+
+            //Only change if we clamped the height
+            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            }
+        }
+
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
         newOptions.pitch = orientation.pitch;

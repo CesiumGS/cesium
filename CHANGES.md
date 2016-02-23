@@ -25,6 +25,7 @@ Change Log
 * Fixed bug in IntersectionTests.lineSegmentSphere where the ray origin was not set.
 * Added the ability to create empty geometries. Instead of errors getting thrown on creation, undefined will be returned. No rendering will occur.
 * Fixed issue that kept `GroundPrimitive` with an `EllipseGeometry` from having a `rotation`.
+* `Camera.flyTo` now honors max and min zoom settings in `ScreenSpaceCameraController`
 
 ### 1.18 - 2016-02-01
 * Breaking changes
