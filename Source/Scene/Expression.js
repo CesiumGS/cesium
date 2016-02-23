@@ -291,6 +291,12 @@ define([
             node = new Node(ExpressionNodeType.CONDITIONAL, '?', left, right, test);
         } else if (ast.type === 'MemberExpression') {
             node = parseMemberExpression(expression, ast);
+        } else if (ast.type === 'ArrayExpression') {
+            var val = [];
+            for (var i = 0; i < ast.elements.length; i++) {
+                val[i] = createRuntimeAst(expression, ast.elements[i]);
+            }
+            node = new Node(ExpressionNodeType.ARRAY, val);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -359,6 +365,8 @@ define([
             } else {
                 node.evaluate = node._evaluateMemberDot;
             }
+        } else if (node._type === ExpressionNodeType.ARRAY) {
+            node.evaluate = node._evaluateArray;
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
         } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
@@ -418,6 +426,14 @@ define([
             return undefined;
         }
         return property[this._right.evaluate(feature)];
+    };
+
+    Node.prototype._evaluateArray = function(feature) {
+        var result = [];
+        for (var i = 0; i<this._value.length; i++) {
+            result[i] = this._value[i].evaluate(feature);
+        }
+        return result;
     };
 
 
