@@ -2495,26 +2495,26 @@ define([
         }
 
         var sscc = this._scene.screenSpaceCameraController;
-        var ellipsoid = this._scene.mapProjection.ellipsoid;
-        var destinationCartographic = Cartographic.fromCartesian(destination);
 
-        // Make sure camera doesn't zoom outside set limits
-        if (defined(sscc)) {
-            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+        if (defined(sscc) || mode === SceneMode.SCENE2D) {
+            var ellipsoid = this._scene.mapProjection.ellipsoid;
+            var destinationCartographic = Cartographic.fromCartesian(destination);
+            var height = destinationCartographic.height;
+
+            // Make sure camera doesn't zoom outside set limits
+            if (defined(sscc)) {
+                destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+            }
+
+            // The max height in 2D might be lower than the max height for sscc.
+            if (mode === SceneMode.SCENE2D) {
+                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
+                destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+            }
 
             //Only change if we clamped the height
-            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
+            if (destinationCartographic.height !== height) {
                 destination = ellipsoid.cartographicToCartesian(destinationCartographic);
-            }
-        }
-
-        if (mode === SceneMode.SCENE2D) {
-            var ellipsoid = this._scene.mapProjection.ellipsoid;
-            var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-            var destCart = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
-            if (destCart.height > maxHeight) {
-                destCart.height = maxHeight;
-                destination = ellipsoid.cartographicToCartesian(destCart, scratchFlyToDestination);
             }
         }
 
