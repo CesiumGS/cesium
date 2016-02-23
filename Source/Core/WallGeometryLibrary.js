@@ -88,7 +88,7 @@ define([
             }
         }
 
-        if (hasAllZeroHeights) {
+        if (hasAllZeroHeights || index < 2) {
             return;
         }
 
@@ -118,7 +118,7 @@ define([
     WallGeometryLibrary.computePositions = function(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, duplicateCorners) {
         var o = removeDuplicates(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
-        if (!defined(o) || o.positions.length < 2) {
+        if (!defined(o)) {
             return;
         }
 
