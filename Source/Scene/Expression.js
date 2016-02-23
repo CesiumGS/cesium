@@ -187,18 +187,36 @@ define([
         //>>includeEnd('debug');
     }
 
-    function parseKeywordsAndVariables(expression, ast) {
+    function parseKeywordsAndVariables(ast) {
         if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
-        } else if (ast.name.substr(0, 4) === 'czm_') {
-            return new Node(ExpressionNodeType.VARIABLE, ast.name.substr(4));
+        } else if (isVariable(ast.name)) {
+            return new Node(ExpressionNodeType.VARIABLE, getPropertyName(ast.name));
         }
 
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Error: ' + ast.name + ' is not defined');
         //>>includeEnd('debug');
+    }
+
+    function parseMemberExpression(expression, ast) {
+        var obj = createRuntimeAst(expression, ast.object);
+        if (ast.computed) {
+            var val = createRuntimeAst(expression, ast.property);
+            return new Node(ExpressionNodeType.MEMBER, 'brackets', obj, val);
+        } else {
+            return new Node(ExpressionNodeType.MEMBER, 'dot', obj, ast.property.name);
+        }
+    }
+
+    function isVariable(name) {
+        return (name.substr(0, 4) === 'czm_');
+    }
+
+    function getPropertyName(variable) {
+        return variable.substr(4);
     }
 
     function createRuntimeAst(expression, ast) {
@@ -212,7 +230,7 @@ define([
         } else if (ast.type === 'CallExpression') {
             node = parseCall(expression, ast);
         } else if (ast.type === 'Identifier') {
-            node = parseKeywordsAndVariables(expression, ast);
+            node = parseKeywordsAndVariables(ast);
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
@@ -253,6 +271,8 @@ define([
             left = createRuntimeAst(expression, ast.consequent);
             right = createRuntimeAst(expression, ast.alternate);
             node = new Node(ExpressionNodeType.CONDITIONAL, '?', left, right, test);
+        } else if (ast.type === 'MemberExpression') {
+            node = parseMemberExpression(expression, ast);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -309,6 +329,12 @@ define([
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
             }
+        } else if (node._type === ExpressionNodeType.MEMBER) {
+            if (node._value === 'brackets') {
+                node.evaluate = node._evaluateMemberBrackets;
+            } else {
+                node.evaluate = node._evaluateMemberDot;
+            }
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
         } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
@@ -342,6 +368,34 @@ define([
         // evaluates to undefined if the property name is not defined for that feature
         return feature.getProperty(this._value);
     };
+
+    function checkFeature (ast) {
+        return (ast._value === 'feature');
+    }
+
+    // PERFORMANCE_IDEA: Determine if parent property needs to be computed before runtime
+    Node.prototype._evaluateMemberDot = function(feature) {
+        if(checkFeature(this._left)) {
+            return feature.getProperty(this._right);
+        }
+        var property = this._left.evaluate(feature);
+        if (!defined(property)) {
+            return undefined;
+        }
+        return property[this._right];
+    };
+
+    Node.prototype._evaluateMemberBrackets = function(feature) {
+        if(checkFeature(this._left)) {
+            return feature.getProperty(this._right.evaluate(feature));
+        }
+        var property = this._left.evaluate(feature);
+        if (!defined(property)) {
+            return undefined;
+        }
+        return property[this._right.evaluate(feature)];
+    };
+
 
     Node.prototype._evaluateNot = function(feature) {
         return !(this._left.evaluate(feature));

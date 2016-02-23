@@ -529,4 +529,122 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '(!(1 + 2 > 3)) ? (2 > 1 ? 1 + 1 : 0) : (2 > 1 ? -1 + -1 : 0)');
         expect(expression.evaluate(undefined)).toEqual(2);
     });
+
+    it('evaluates member expression with dot', function() {
+        var feature = new MockFeature();
+        feature.addProperty('height', 10);
+        feature.addProperty('width', 5);
+        feature.addProperty('string', 'hello');
+        feature.addProperty('boolean', true);
+        feature.addProperty('color', Color.RED);
+        feature.addProperty('color.red', 'something else');
+        feature.addProperty('feature.color', Color.GREEN);
+        feature.addProperty('feature', {
+            color : Color.BLUE
+        });
+        feature.addProperty('null', null);
+        feature.addProperty('undefined', undefined);
+
+        var expression = new Expression(new MockStyleEngine(), '${color.red}');
+        expect(expression.evaluate(feature)).toEqual(1.0);
+
+        expression = new Expression(new MockStyleEngine(), '${color.blue}');
+        expect(expression.evaluate(feature)).toEqual(0.0);
+
+        expression = new Expression(new MockStyleEngine(), '${height.blue}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '${undefined.blue}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '${feature.color}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
+
+        expression = new Expression(new MockStyleEngine(), '${feature.feature.color}');
+        expect(expression.evaluate(feature)).toEqual(Color.BLUE);
+
+        expression = new Expression(new MockStyleEngine(), '${feature.color.red}');
+        expect(expression.evaluate(feature)).toEqual(1.0);
+    });
+
+    it('evaluates member expression with brackets', function() {
+        var feature = new MockFeature();
+        feature.addProperty('height', 10);
+        feature.addProperty('width', 5);
+        feature.addProperty('string', 'hello');
+        feature.addProperty('boolean', true);
+        feature.addProperty('color', Color.RED);
+        feature.addProperty('color.red', 'something else');
+        feature.addProperty('feature.color', Color.GREEN);
+        feature.addProperty('feature', {
+            color : Color.BLUE
+        });
+        feature.addProperty('null', null);
+        feature.addProperty('undefined', undefined);
+
+        var expression = new Expression(new MockStyleEngine(), '${color["red"]}');
+        expect(expression.evaluate(feature)).toEqual(1.0);
+
+        expression = new Expression(new MockStyleEngine(), '${color["blue"]}');
+        expect(expression.evaluate(feature)).toEqual(0.0);
+
+        expression = new Expression(new MockStyleEngine(), '${height["blue"]}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '${undefined["blue"]}');
+        expect(expression.evaluate(feature)).toEqual(undefined);
+
+        expression = new Expression(new MockStyleEngine(), '${feature["color"]}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
+
+        expression = new Expression(new MockStyleEngine(), '${feature.color["red"]}');
+        expect(expression.evaluate(feature)).toEqual(1.0);
+
+        expression = new Expression(new MockStyleEngine(), '${feature["color"].red}');
+        expect(expression.evaluate(feature)).toEqual(1.0);
+
+        expression = new Expression(new MockStyleEngine(), '${feature["color.red"]}');
+        expect(expression.evaluate(feature)).toEqual('something else');
+
+        expression = new Expression(new MockStyleEngine(), '${feature.feature["color"]}');
+        expect(expression.evaluate(feature)).toEqual(Color.BLUE);
+
+        expression = new Expression(new MockStyleEngine(), '${feature["feature.color"]}');
+        expect(expression.evaluate(feature)).toEqual(Color.GREEN);
+    });
+
+    it('member expressions throw without variable notation', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'color.red');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'color["red"]');
+        }).toThrowDeveloperError();
+    });
+
+    it('member expression throws with variable property', function() {
+        var feature = new MockFeature();
+        feature.addProperty('color', Color.RED);
+        feature.addProperty('colorName', 'red');
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '${color[${colorName}]}');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates feature property', function() {
+        var feature = new MockFeature();
+        feature.addProperty('feature', {
+            color : Color.BLUE
+        });
+
+        var expression = new Expression(new MockStyleEngine(), '${feature}');
+        expect(expression.evaluate(feature)).toEqual({
+            color : Color.BLUE
+        });
+
+        expression = new Expression(new MockStyleEngine(), '${feature} === ${feature.feature}');
+        expect(expression.evaluate(feature)).toEqual(true);
+    });
 });
