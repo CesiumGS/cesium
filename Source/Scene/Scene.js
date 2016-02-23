@@ -1943,6 +1943,10 @@ define([
         viewport.width = context.drawingBufferWidth;
         viewport.height = context.drawingBufferHeight;
 
+        if (defined(scene.globe)) {
+            scene.globe.beginFrame(frameState);
+        }
+
         updateEnvironment(scene);
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
@@ -1951,6 +1955,10 @@ define([
         executeViewportCommands(scene, passState);
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
+
+        if (defined(scene.globe)) {
+            scene.globe.endFrame(frameState);
+        }
 
         frameState.creditDisplay.endFrame();
 
@@ -2128,10 +2136,10 @@ define([
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
+
         updatePrimitives(this);
         createPotentiallyVisibleSet(this);
         updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-
         executeCommands(this, passState);
         resolveFramebuffers(this, passState);
 

@@ -283,12 +283,12 @@ define([
     }
 
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * or any other functions.
      *
      * @param {FrameState} frameState The frame state.
      */
-    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
+    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
         this._imageryLayers._update();
 
         if (this._layerOrderChanged) {
@@ -300,19 +300,6 @@ define([
             });
         }
 
-        var i;
-        var len;
-
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
-            var tiles = tilesToRenderByTextureCount[i];
-            if (defined(tiles)) {
-                tiles.length = 0;
-            }
-        }
-
-        this._usedDrawCommands = 0;
-
         // Add credits for terrain and imagery providers.
         var creditDisplay = frameState.creditDisplay;
 
@@ -321,12 +308,30 @@ define([
         }
 
         var imageryLayers = this._imageryLayers;
-        for (i = 0, len = imageryLayers.length; i < len; ++i) {
+        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
             var imageryProvider = imageryLayers.get(i).imageryProvider;
             if (imageryProvider.ready && defined(imageryProvider.credit)) {
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+    };
+
+    /**
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * or any other functions.
+     *
+     * @param {FrameState} frameState The frame state.
+     */
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (defined(tiles)) {
+                tiles.length = 0;
+            }
+        }
+
+        this._usedDrawCommands = 0;
     };
 
     /**

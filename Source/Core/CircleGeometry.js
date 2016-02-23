@@ -57,9 +57,6 @@ define([
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
-        }
         //>>includeEnd('debug');
 
         var ellipseGeometryOptions = {
@@ -150,7 +147,7 @@ define([
      * Computes the geometric representation of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleGeometry} circleGeometry A description of the circle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleGeometry.createGeometry = function(circleGeometry) {
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
