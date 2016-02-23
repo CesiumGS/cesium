@@ -180,6 +180,24 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'Boolean') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'Number') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_NUMBER, 0);
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'String') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_STRING, '');
+            }
+            val = createRuntimeAst(expression, args[0]);
+            return new Node(ExpressionNodeType.UNARY, call, val);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -328,6 +346,12 @@ define([
                 node.evaluate = node._evaluateNaN;
             } else if (node._value === 'isFinite') {
                 node.evaluate = node._evaluateIsFinite;
+            } else if (node._value === 'Boolean') {
+                node.evaluate = node._evaluateBooleanConversion;
+            } else if (node._value === 'Number') {
+                node.evaluate = node._evaluateNumberConversion;
+            } else if (node._value === 'String') {
+                node.evaluate = node._evaluateStringConversion;
             }
         } else if (node._type === ExpressionNodeType.MEMBER) {
             if (node._value === 'brackets') {
@@ -550,6 +574,13 @@ define([
         return left !== right;
     };
 
+    Node.prototype._evaluateConditional = function(feature) {
+        if (this._test.evaluate(feature)) {
+            return this._left.evaluate(feature);
+        }
+        return this._right.evaluate(feature);
+    };
+
     Node.prototype._evaluateNaN = function(feature) {
         return isNaN(this._left.evaluate(feature));
     };
@@ -558,11 +589,16 @@ define([
         return isFinite(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateConditional = function(feature) {
-        if (this._test.evaluate(feature)) {
-            return this._left.evaluate(feature);
-        }
-        return this._right.evaluate(feature);
+    Node.prototype._evaluateBooleanConversion = function(feature) {
+        return Boolean(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateNumberConversion = function(feature) {
+        return Number(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateStringConversion = function(feature) {
+        return String(this._left.evaluate(feature));
     };
 
     return Expression;
