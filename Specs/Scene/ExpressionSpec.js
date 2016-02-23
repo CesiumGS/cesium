@@ -726,4 +726,38 @@ defineSuite([
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
     });
+
+    it('evaluates array expression', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'value');
+        feature.addProperty('array', [Color.GREEN, Color.PURPLE, Color.YELLOW]);
+        feature.addProperty('complicatedArray', [{
+                'subproperty' : Color.ORANGE,
+                'anotherproperty' : Color.RED
+             }, {
+                'subproperty' : Color.BLUE,
+                'anotherproperty' : Color.WHITE
+        }]);
+
+        var expression = new Expression(new MockStyleEngine(), '[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual([1, 2, 3]);
+
+        expression = new Expression(new MockStyleEngine(), '[1+2, "hello", 2 < 3, Color("blue"), ${property}]');
+        expect(expression.evaluate(feature)).toEqual([3, 'hello', true, Color.BLUE, 'value']);
+
+        expression = new Expression(new MockStyleEngine(), '[1, 2, 3] * 4');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), '-[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), '${array[1]}');
+        expect(expression.evaluate(feature)).toEqual(Color.PURPLE);
+
+        expression = new Expression(new MockStyleEngine(), '${complicatedArray[1].subproperty}');
+        expect(expression.evaluate(feature)).toEqual(Color.BLUE);
+
+        expression = new Expression(new MockStyleEngine(), '${complicatedArray[0]["anotherproperty"]}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
+    });
 });
