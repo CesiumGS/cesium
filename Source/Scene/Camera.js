@@ -1011,7 +1011,7 @@ define([
      *     destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
      * });
      *
-     * // 5. Setposition with an orientation using unit vectors.
+     * // 5. Set position with an orientation using unit vectors.
      * viewer.camera.setView({
      *     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
      *     orientation : {
@@ -2738,6 +2738,7 @@ define([
     Camera.clone = function(camera, result) {
         if (!defined(result)) {
             result = new Camera(camera._scene);
+            result.frustum = camera.frustum.clone();
         }
 
         Cartesian3.clone(camera.position, result.position);
@@ -2745,6 +2746,7 @@ define([
         Cartesian3.clone(camera.up, result.up);
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
+        camera.frustum.clone(result.frustum);
 
         return result;
     };

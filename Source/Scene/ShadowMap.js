@@ -6,12 +6,18 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
         '../Core/GeometryInstance',
         '../Core/Matrix4',
         '../Core/PixelFormat',
+        '../Core/PolylineGeometry',
+        '../Core/PrimitiveType',
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
@@ -40,12 +46,18 @@ define([
         Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
+        ComponentDatatype,
         defined,
         defineProperties,
         destroyObject,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes,
         GeometryInstance,
         Matrix4,
         PixelFormat,
+        PolylineGeometry,
+        PrimitiveType,
         SphereOutlineGeometry,
         ClearCommand,
         Framebuffer,
@@ -72,7 +84,7 @@ define([
     /**
      * @private
      */
-    function ShadowMap(context, camera) {
+    function ShadowMap(context, lightCamera) {
         this.enabled = false;
 
         this.debugShow = false;
@@ -81,11 +93,15 @@ define([
         this._debugCameraFrustum = undefined;
         this._debugShadowViewCommand = undefined;
 
-        this._lightViewProjection = new Matrix4();
         this._shadowMapMatrix = new Matrix4();
         this._shadowMapTexture = undefined;
         this._framebuffer = undefined;
         this._size = 1024; // Width and height of the shadow map in pixels
+
+        this._lightCamera = lightCamera;
+        this._shadowMapCamera = new ShadowMapCamera();
+        this._sceneCamera = undefined;
+        this._farPlane = 100.0; // Shadow map covers only a portion of the scene's camera
 
         // Only enable the color mask if the depth texture extension is not supported
         var colorMask = !context.depthTexture;
@@ -117,8 +133,6 @@ define([
         });
 
         this.passState = new PassState(context);
-
-        this.camera = camera;
     }
 
     defineProperties(ShadowMap.prototype, {
@@ -145,6 +159,18 @@ define([
         shadowMapMatrix : {
             get : function() {
                 return this._shadowMapMatrix;
+            }
+        },
+        /**
+         * The camera used for rendering into the shadow map.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {ShadowMap~ShadowMapCamera}
+         * @readonly
+         */
+        shadowMapCamera : {
+            get : function() {
+                return this._shadowMapCamera;
             }
         }
     });
@@ -274,48 +300,214 @@ define([
         frameState.commandList.push(shadows._debugShadowViewCommand);
     }
 
+    var scratchMatrix = new Matrix4();
+    var scratchFrustumCorners = new Array(8);
+    for (var i = 0; i < 8; ++i) {
+        scratchFrustumCorners[i] = new Cartesian4();
+    }
+
+    function createDebugFrustum(camera, color) {
+        var view = camera.viewMatrix;
+        var projection = camera.frustum.projectionMatrix;
+        var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
+        var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
+
+        var corners = scratchFrustumCorners;
+        Cartesian4.fromElements(-1, -1, -1, 1, corners[0]);
+        Cartesian4.fromElements(1, -1, -1, 1, corners[1]);
+        Cartesian4.fromElements(1, 1, -1, 1, corners[2]);
+        Cartesian4.fromElements(-1, 1, -1, 1, corners[3]);
+        Cartesian4.fromElements(-1, -1, 1, 1, corners[4]);
+        Cartesian4.fromElements(1, -1, 1, 1, corners[5]);
+        Cartesian4.fromElements(1, 1, 1, 1, corners[6]);
+        Cartesian4.fromElements(-1, 1, 1, 1, corners[7]);
+
+        for (var i = 0; i < 8; ++i) {
+            var corner = corners[i];
+            Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
+            Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
+        }
+
+        var geometryInstances = new Array(8);
+        for (var j = 0; j < 8; ++j) {
+            geometryInstances[j] = new GeometryInstance({
+                geometry : new SphereOutlineGeometry({
+                    radius : 1.0
+                }),
+                modelMatrix : Matrix4.fromTranslation(corners[j]),
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(color)
+                }
+            });
+        }
+
+        return new Primitive({
+            geometryInstances : geometryInstances,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
+
+    }
+
     function applyDebugSettings(shadowMap, frameState) {
         if (!shadowMap.debugShow) {
             return;
         }
 
-        if (!defined(shadowMap._debugLightFrustum)) {
-            // Create the light frustum
-            shadowMap._debugLightFrustum = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : new BoxOutlineGeometry({
-                        minimum : new Cartesian3(-1, -1, -1),
-                        maximum : new Cartesian3(1, 1, 1)
-                    }),
-                    attributes : {
-                        color : ColorGeometryInstanceAttribute.fromColor(Color.BLUE)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    translucent : false,
-                    flat : true
-                }),
-                asynchronous : false
-            });
-        }
+        // TODO : for now need to always recreate the primitive, find a faster alternative if it exists
+        shadowMap._debugLightFrustum = shadowMap._debugLightFrustum && shadowMap._debugLightFrustum.destroy();
+        shadowMap._debugLightFrustum = createDebugFrustum(shadowMap._shadowMapCamera, Color.RED);
 
-        var debugLightFrustumMatrix = shadowMap._debugLightFrustum.modelMatrix;
-        Matrix4.inverse(shadowMap._lightViewProjection, debugLightFrustumMatrix);
+        shadowMap._debugCameraFrustum = shadowMap._debugCameraFrustum && shadowMap._debugCameraFrustum.destroy();
+        shadowMap._debugCameraFrustum = createDebugFrustum(shadowMap._sceneCamera, Color.BLUE);
+
         shadowMap._debugLightFrustum.update(frameState);
-        //shadowMap._debugCameraFrustum.update(frameState);
+        shadowMap._debugCameraFrustum.update(frameState);
 
         updateDebugShadowViewCommand(shadowMap, frameState);
     }
 
-    function updateLightViewProjectionFixed(shadowMap) {
-        // Use hardcoded camera and frustum for shadow map
-        var lightView = shadowMap.camera.viewMatrix;
-        var lightProjection = shadowMap.camera.frustum.projectionMatrix;
-        shadowMap._lightViewProjection = Matrix4.multiplyTransformation(lightProjection, lightView, shadowMap._lightViewProjection);
+    function ShadowMapCamera() {
+        this.viewMatrix = new Matrix4();
+        this.inverseViewMatrix = new Matrix4();
+        this.frustum = new OrthographicFrustum();
+        this.positionWC = new Cartesian3();
+        this.directionWC = new Cartesian3();
+        this.upWC = new Cartesian3();
+        this.rightWC = new Cartesian3();
+    }
+
+    ShadowMapCamera.prototype.clone = function(camera) {
+        Matrix4.clone(camera.viewMatrix, this.viewMatrix);
+        Matrix4.clone(camera.inverseViewMatrix, this.inverseViewMatrix);
+        camera.frustum.clone(this.frustum);
+        Cartesian3.clone(camera.positionWC, this.positionWC);
+        Cartesian3.clone(camera.directionWC, this.directionWC);
+        Cartesian3.clone(camera.upWC, this.upWC);
+        Cartesian3.clone(camera.rightWC, this.rightWC);
+    };
+
+    var scratchRight = new Cartesian3();
+    var scratchUp = new Cartesian3();
+
+    function createViewMatrix(d, u, r, result) {
+        result[0] = r.x;
+        result[1] = u.x;
+        result[2] = -d.x;
+        result[3] = 0.0;
+        result[4] = r.y;
+        result[5] = u.y;
+        result[6] = -d.y;
+        result[7] = 0.0;
+        result[8] = r.z;
+        result[9] = u.z;
+        result[10] = -d.z;
+        result[11] = 0.0;
+        result[12] = 0.0;
+        result[13] = 0.0;
+        result[14] = 0.0;
+        result[15] = 1.0;
+        return result;
+    }
+
+    var scratchLightView = new Matrix4();
+    var scratchMin = new Cartesian3();
+    var scratchMax = new Cartesian3();
+    var scratchTranslation = new Cartesian3();
+
+    function updateLightViewProjection(shadowMap) {
+        var shadowMapCamera = shadowMap._shadowMapCamera;
+        var sceneCamera = shadowMap._sceneCamera;
+
+        // 1. First find a tight bounding box in light space that contains the entire camera frustum.
+        var viewProjection = Matrix4.multiply(sceneCamera.frustum.projectionMatrix, sceneCamera.viewMatrix, scratchMatrix);
+        var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
+
+        // Start to construct the light view matrix. Set translation later once the bounding box is found.
+        var lightDir = shadowMapCamera.directionWC;
+        var lightUp = sceneCamera.directionWC; // Align shadows to the camera view.
+        var lightRight = Cartesian3.cross(lightDir, lightUp, scratchRight);
+        lightUp = Cartesian3.cross(lightRight, lightDir, scratchUp); // Recalculate up now that right is derived
+
+        var lightView = createViewMatrix(lightDir, lightUp, lightRight, scratchLightView);
+        var cameraToLight = Matrix4.multiply(lightView, inverseViewProjection, scratchMatrix);
+
+        // Define the corners of the camera frustum in NDC space
+        var frustumCorners = scratchFrustumCorners;
+        Cartesian4.fromElements(-1, -1, 1, 1, frustumCorners[0]);
+        Cartesian4.fromElements(1, -1, 1, 1, frustumCorners[1]);
+        Cartesian4.fromElements(1, 1, 1, 1, frustumCorners[2]);
+        Cartesian4.fromElements(-1, 1, 1, 1, frustumCorners[3]);
+        Cartesian4.fromElements(1, -1, -1, 1, frustumCorners[4]);
+        Cartesian4.fromElements(1, 1, -1, 1, frustumCorners[5]);
+        Cartesian4.fromElements(-1, 1, -1, 1, frustumCorners[6]);
+        Cartesian4.fromElements(-1, -1, -1, 1, frustumCorners[7]);
+
+        // Project each corner from NDC space to light view space, and calculate a min and max in light view space
+        var min = Cartesian3.fromElements(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, scratchMin);
+        var max = Cartesian3.fromElements(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE, scratchMax);
+
+        for(var i = 0; i < 8; ++i) {
+            var corner = frustumCorners[i];
+            Matrix4.multiplyByVector(cameraToLight, corner, corner);
+            Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
+            Cartesian3.minimumByComponent(corner, min, min);
+            Cartesian3.maximumByComponent(corner, max, max);
+        }
+
+        // 2. TODO : Set bounding box back to include objects in the light's view
+
+        // 3. Adjust light view matrix so that it is centered on the bounding volume
+        var translation = scratchTranslation;
+        translation.x = -(0.5 * (min.x + max.x));
+        translation.y = -(0.5 * (min.y + max.y));
+        translation.z = -max.z;
+
+        var translationMatrix = Matrix4.fromTranslation(translation, scratchMatrix);
+        lightView = Matrix4.multiply(translationMatrix, lightView, lightView);
+
+        // 4. Now create an orthographic projection matrix that covers the bounding box extents
+        var halfWidth = 0.5 * (max.x - min.x);
+        var halfHeight = 0.5 * (max.y - min.y);
+        var depth = max.z - min.z;
+
+        // Update the shadow map camera
+        var frustum = shadowMapCamera.frustum;
+        frustum.left = -halfWidth;
+        frustum.right = halfWidth;
+        frustum.bottom = -halfHeight;
+        frustum.top = halfHeight;
+        frustum.near = 0.01;
+        frustum.far = depth;
+
+        Matrix4.clone(lightView, shadowMapCamera.viewMatrix);
+        Matrix4.inverseTransformation(lightView, shadowMapCamera.inverseViewMatrix);
+        Matrix4.getTranslation(shadowMapCamera.inverseViewMatrix, shadowMapCamera.positionWC);
+        Cartesian3.clone(lightDir, shadowMapCamera.directionWC);
+        Cartesian3.clone(lightUp, shadowMapCamera.upWC);
+        Cartesian3.clone(lightRight, shadowMapCamera.rightWC);
+    }
+
+    function updateCameras(shadowMap, camera) {
+        if (shadowMap.debugFreezeFrame) {
+            return;
+        }
+
+        // TODO : rename
+        // Clone light camera into the shadow map camera
+        shadowMap._shadowMapCamera.clone(shadowMap._lightCamera);
+
+        // Clone scene camera and limit the far plane
+        shadowMap._sceneCamera = Camera.clone(camera, shadowMap._sceneCamera);
+        shadowMap._sceneCamera.frustum.far = shadowMap._farPlane;
     }
 
     ShadowMap.prototype.update = function(frameState) {
-        updateLightViewProjectionFixed(this);
+        updateCameras(this, frameState.camera);
+        updateLightViewProjection(this);
         applyDebugSettings(this, frameState);
         updateFramebuffer(this, frameState.context);
     };
@@ -325,8 +517,11 @@ define([
 
     ShadowMap.prototype.updateShadowMapMatrix = function(uniformState) {
         // Calculate shadow map matrix. It converts gl_Position to shadow map texture space.
+        var view = this._shadowMapCamera.viewMatrix;
+        var projection = this._shadowMapCamera.frustum.projectionMatrix;
         var shadowMapMatrix = this._shadowMapMatrix;
-        Matrix4.multiplyTransformation(scaleBiasMatrix, this._lightViewProjection, shadowMapMatrix);
+        Matrix4.multiply(projection, view, shadowMapMatrix);
+        Matrix4.multiply(scaleBiasMatrix, shadowMapMatrix, shadowMapMatrix);
         Matrix4.multiply(shadowMapMatrix, uniformState.inverseViewProjection, shadowMapMatrix);
     };
 

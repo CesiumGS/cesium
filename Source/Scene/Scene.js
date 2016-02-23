@@ -1661,7 +1661,7 @@ define([
         shadowMap.clearCommand.execute(context);
 
         // Render from the shadow's camera
-        uniformState.updateCamera(shadowMap.camera);
+        uniformState.updateCamera(shadowMap.shadowMapCamera);
 
         var shadowMapCommands = scene._frustumCommandsList[0]; // TODO : temporary solution
         if (defined(shadowMapCommands)) {
