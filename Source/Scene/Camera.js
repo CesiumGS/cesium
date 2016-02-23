@@ -2498,7 +2498,7 @@ define([
 
         if (defined(sscc) || mode === SceneMode.SCENE2D) {
             var ellipsoid = this._scene.mapProjection.ellipsoid;
-            var destinationCartographic = Cartographic.fromCartesian(destination);
+            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
             var height = destinationCartographic.height;
 
             // Make sure camera doesn't zoom outside set limits
@@ -2514,7 +2514,7 @@ define([
 
             //Only change if we clamped the height
             if (destinationCartographic.height !== height) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
             }
         }
 
