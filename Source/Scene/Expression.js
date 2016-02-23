@@ -275,7 +275,7 @@ define([
             node = parseMemberExpression(expression, ast);
         } else if (ast.type === 'ArrayExpression') {
             var val = [];
-            for (var i=0; i < ast.elements.length; i++) {
+            for (var i = 0; i < ast.elements.length; i++) {
                 val[i] = createRuntimeAst(expression, ast.elements[i]);
             }
             node = new Node(ExpressionNodeType.ARRAY, val);
