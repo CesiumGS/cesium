@@ -666,6 +666,12 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '[1+2, "hello", 2 < 3, Color("blue"), ${property}]');
         expect(expression.evaluate(feature)).toEqual([3, 'hello', true, Color.BLUE, 'value']);
 
+        expression = new Expression(new MockStyleEngine(), '[1, 2, 3] * 4');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), '-[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
         expression = new Expression(new MockStyleEngine(), '${array[1]}');
         expect(expression.evaluate(feature)).toEqual(Color.PURPLE);
 
