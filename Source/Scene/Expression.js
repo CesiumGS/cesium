@@ -205,7 +205,7 @@ define([
         var obj = createRuntimeAst(expression, ast.object);
         if (ast.computed) {
             var val = createRuntimeAst(expression, ast.property);
-            return new Node(ExpressionNodeType.MEMBER, 'computed', obj, val);
+            return new Node(ExpressionNodeType.MEMBER, 'brackets', obj, val);
         } else {
             return new Node(ExpressionNodeType.MEMBER, 'dot', obj, ast.property.name);
         }
@@ -330,8 +330,8 @@ define([
                 node.evaluate = node._evaluateIsFinite;
             }
         } else if (node._type === ExpressionNodeType.MEMBER) {
-            if (node._value === 'computed') {
-                node.evaluate = node._evaluateMemberComputed;
+            if (node._value === 'brackets') {
+                node.evaluate = node._evaluateMemberBrackets;
             } else {
                 node.evaluate = node._evaluateMemberDot;
             }
@@ -385,7 +385,7 @@ define([
         return property[this._right];
     };
 
-    Node.prototype._evaluateMemberComputed = function(feature) {
+    Node.prototype._evaluateMemberBrackets = function(feature) {
         if(checkFeature(this._left)) {
             return feature.getProperty(this._right.evaluate(feature));
         }
