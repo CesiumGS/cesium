@@ -19,7 +19,8 @@ define([
         LITERAL_NUMBER : 7,
         LITERAL_STRING: 8,
         LITERAL_COLOR: 9,
-        VARIABLE_IN_STRING : 10
+        LITERAL_REGEX: 10,
+        VARIABLE_IN_STRING : 11
     };
 
     return freezeObject(ExpressionNodeType);

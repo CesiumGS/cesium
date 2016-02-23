@@ -25,6 +25,11 @@ defineSuite([
         return this._properties[name];
     };
 
+    it ('parses backslashes', function() {
+        var expression = new Expression(new MockStyleEngine(), '"\\he\\\\\\ll\\\\o"');
+        expect(expression.evaluate(undefined)).toEqual('\\he\\\\\\ll\\\\o');
+    });
+
     it('evaluates variable', function() {
         var feature = new MockFeature();
         feature.addProperty('height', 10);
@@ -679,5 +684,46 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature} === ${feature.feature}');
         expect(expression.evaluate(feature)).toEqual(true);
+    });
+
+    it('constructs regex', function() {
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(/a/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("\\w")');
+        expect(expression.evaluate(undefined)).toEqual(/\w/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp(1)');
+        expect(expression.evaluate(undefined)).toEqual(/1/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp(true)');
+        expect(expression.evaluate(undefined)).toEqual(/true/);
+    });
+
+    it('throws if regex constructor does not have literal as argument', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'RegExp(1+1)');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates regex matches operator', function() {
+        var expression = new Expression(new MockStyleEngine(), '"abc" =~ RegExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a") =~ "abc"');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a") =~ "bcd"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '"bcd" =~ RegExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('throws if regex match operator does not have regex as argument', function() {
+        expect(function() {
+            var expression = new Expression(new MockStyleEngine(), '"abc" =~ "abc"');
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
     });
 });

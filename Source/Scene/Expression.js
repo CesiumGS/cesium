@@ -15,7 +15,13 @@ define([
         ExpressionNodeType) {
     "use strict";
 
+    var unaryOperators = ['!', '-', '+'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '=~', '&&', '||'];
+
     var variableRegex = /\${(.*?)}/g;
+    var backslashRegex = /\\/g;
+    var backslashReplacement = '@#%';
+    var replacementRegex = /@#%/g;
 
     /**
      * DOC_TBA
@@ -23,9 +29,17 @@ define([
     function Expression(styleEngine, expression) {
         this._styleEngine = styleEngine;
 
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(expression) !== 'string') {
+            throw new DeveloperError('Expresion must be a string');
+        }
+        //>>includeEnd('debug');
+
+        jsep.addBinaryOp("=~", 0);
+
         var ast;
         try {
-            ast = jsep(replaceVariables(expression));
+            ast = jsep(replaceVariables(removeBackslashes(expression)));
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
@@ -53,6 +67,14 @@ define([
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
+    }
+
+    function removeBackslashes(expression) {
+        return String(expression).replace(backslashRegex, backslashReplacement);
+    }
+
+    function replaceBackslashes(expression) {
+        return String(expression).replace(replacementRegex, '\\');
     }
 
     function replaceVariables(expression) {
@@ -198,6 +220,17 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'RegExp') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
+            }
+            val = args[0];
+            //>>includeStart('debug', pragmas.debug);
+            if (val.type !== 'Literal' && typeof(val.value) !== 'string') {
+                throw new DeveloperError('Error: RegExp constructor requires a string');
+            }
+            //>>includeEnd('debug');
+            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value)));
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -252,7 +285,7 @@ define([
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
-            if (op === '!' || op === '-' || op === '+') {
+            if (unaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -263,10 +296,7 @@ define([
             op = ast.operator;
             left = createRuntimeAst(expression, ast.left);
             right = createRuntimeAst(expression, ast.right);
-            if (op === '+' || op === '-' || op === '*' ||
-                op === '/' || op === '%' || op === '===' ||
-                op === '!==' || op === '>' || op === '>=' ||
-                op === '<' || op === '<=') {
+            if (binaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -277,7 +307,7 @@ define([
             op = ast.operator;
             left = createRuntimeAst(expression, ast.left);
             right = createRuntimeAst(expression, ast.right);
-            if (op === '&&' || op === '||') {
+            if (binaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -334,6 +364,8 @@ define([
                 node.evaluate = node._evaluateAnd;
             } else if (node._value === '||') {
                 node.evaluate = node._evaluateOr;
+            } else if (node._value === '=~') {
+                node.evaluate = node._evaluateRegExpMatch;
             }
         } else if (node._type === ExpressionNodeType.UNARY) {
             if (node._value === '!') {
@@ -363,6 +395,8 @@ define([
             node.evaluate = node._evaluateVariable;
         } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
             node.evaluate = node._evaluateVariableString;
+        } else if (node._type === ExpressionNodeType.LITERAL_STRING) {
+            node.evaluate = node._evaluateLiteralString;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -370,6 +404,10 @@ define([
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateLiteralString = function(feature) {
+        return replaceBackslashes(this._value);
     };
 
     Node.prototype._evaluateVariableString = function(feature) {
@@ -599,6 +637,17 @@ define([
 
     Node.prototype._evaluateStringConversion = function(feature) {
         return String(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateRegExpMatch = function(feature) {
+        if (this._left._type === ExpressionNodeType.LITERAL_REGEX) {
+            return this._left._value.test(this._right.evaluate(feature));
+        } else if (this._right._type === ExpressionNodeType.LITERAL_REGEX) {
+            return this._right._value.test(this._left.evaluate(feature));
+        }
+        //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Operation is undefined');
+        //>>includeEnd('debug');
     };
 
     return Expression;
