@@ -4,6 +4,7 @@ Change Log
 ### 1.19 - 2016-03-01
 * Breaking changes
    * Functionality changed in `PolygonGeometry` that changes the `Cartesian3` values of `options.positions` so that they are on the ellipsoid surface.  This will only effect you if your polygons are drawn synchronously with `options.perPositionHeight = false`, your positions have a non-zero height, and you are using the same positions for multiple entities.  In this case, make a copy of the `Cartesian3` values used for the polygon positions.
+   * Removed ability to rotate the map in 2D.
 * Deprecated
    * Deprecated `definedNotNull`. It will be removed in 1.20. Use `defined` instead, which now checks for `null` as well as `undefined`.
    * Deprecated KmlDataSource taking a proxy object. It will throw an exception in 1.21. It now should take a options object with camera and canvas as required parameters.
@@ -22,6 +23,7 @@ Change Log
 * Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
+* Added infinite horizontal scrolling in 2D.
 
 ### 1.18 - 2016-02-01
 * Breaking changes
