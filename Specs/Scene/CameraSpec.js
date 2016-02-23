@@ -67,7 +67,10 @@ defineSuite([
         this.drawingBufferHeight = 768;
         this.mapProjection = defaultValue(projection, new GeographicProjection());
         this.tweens = new TweenCollection();
-        this.screenSpaceCameraController = {};
+        this.screenSpaceCameraController = {
+            minimumZoomDistance: 0,
+            maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
+        };
         this.camera = undefined;
         this.context = {
             drawingBufferWidth : 1024,
@@ -2346,5 +2349,55 @@ defineSuite([
 
         var rect = camera.computeViewRectangle();
         expect(rect).not.toBeDefined();
+    });
+
+    it('flyTo does not zoom closer than minimumZoomDistance', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        scene.mode = SceneMode.SCENE3D;
+        scene.screenSpaceCameraController.minimumZoomDistance = 1000;
+        scene.screenSpaceCameraController.maximumZoomDistance = 10000;
+
+        var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100);
+        var expectedDestination = Cartesian3.clone(sourceDestination);
+        expectedDestination.z = Cartesian3.fromDegrees(-117.16, 32.71, 1000).z;
+
+        camera.flyTo({destination : sourceDestination});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
+    it('flyTo does not zoom further than maximumZoomDistance', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        scene.mode = SceneMode.SCENE3D;
+        scene.screenSpaceCameraController.minimumZoomDistance = 1000;
+        scene.screenSpaceCameraController.maximumZoomDistance = 10000;
+
+        var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 100000);
+        var expectedDestination = Cartesian3.clone(sourceDestination);
+        expectedDestination.z = Cartesian3.fromDegrees(-117.16, 32.71, 10000).z;
+
+        camera.flyTo({destination : sourceDestination});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
+    it('flyTo zooms in between minimumZoomDistance and maximumZoomDistance', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        scene.mode = SceneMode.SCENE3D;
+        scene.screenSpaceCameraController.minimumZoomDistance = 1000;
+        scene.screenSpaceCameraController.maximumZoomDistance = 10000;
+
+        var sourceDestination = Cartesian3.fromDegrees(-117.16, 32.71, 5000);
+        var expectedDestination = Cartesian3.clone(sourceDestination);
+
+        camera.flyTo({destination : sourceDestination});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
     });
 });
