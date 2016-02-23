@@ -177,6 +177,17 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
+    it('converts to literal boolean', function() {
+        var expression = new Expression(new MockStyleEngine(), 'Boolean()');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'Boolean(1)');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'Boolean("true")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+    });
+
     it('evaluates literal number', function() {
         var expression = new Expression(new MockStyleEngine(), '1');
         expect(expression.evaluate(undefined)).toEqual(1);
@@ -191,9 +202,31 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(Infinity);
     });
 
+    it('converts to literal number', function() {
+        var expression = new Expression(new MockStyleEngine(), 'Number()');
+        expect(expression.evaluate(undefined)).toEqual(0);
+
+        expression = new Expression(new MockStyleEngine(), 'Number("1")');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'Number(true)');
+        expect(expression.evaluate(undefined)).toEqual(1);
+    });
+
     it('evaluates literal string', function() {
         var expression = new Expression(new MockStyleEngine(), '\'hello\'');
         expect(expression.evaluate(undefined)).toEqual('hello');
+    });
+
+    it('converts to literal string', function() {
+        var expression = new Expression(new MockStyleEngine(), 'String()');
+        expect(expression.evaluate(undefined)).toEqual('');
+
+        expression = new Expression(new MockStyleEngine(), 'String(1)');
+        expect(expression.evaluate(undefined)).toEqual('1');
+
+        expression = new Expression(new MockStyleEngine(), 'String(true)');
+        expect(expression.evaluate(undefined)).toEqual('true');
     });
 
     it('evaluates literal color', function() {
