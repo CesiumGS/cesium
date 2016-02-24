@@ -724,7 +724,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('evaluates regex matches operator', function() {
+    it('evaluates regex test function', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
 
@@ -736,6 +736,17 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'RegExp("a").test()');
         expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates regex exec function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("abc")');
+        expect(expression.evaluate(undefined)).toEqual('b');
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("qbc")');
+        expect(expression.evaluate(undefined)).toEqual(null);
     });
 
     it('throws if test is not call with a RegExp', function() {

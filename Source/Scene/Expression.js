@@ -138,19 +138,23 @@ define([
 
         if (ast.callee.type === 'MemberExpression') {
             call = ast.callee.property.name;
-            if (call === 'test') {
-                // Make sure test is called on a valid type
+            if (call === 'test' || call === 'exec') {
+                // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
                 if (ast.callee.object.callee.name !== 'RegExp') {
-                    throw new DeveloperError('Error: test is not a function');
+                    throw new DeveloperError('Error: ' + call + ' is not a function');
                 }
                 //>>includeEnd('debug');
                 if (args.length === 0) {
-                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                    if (call === 'test') {
+                        return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                    } else {
+                        return new Node(ExpressionNodeType.LITERAL_NULL, null);
+                    }
                 }
                 var left = createRuntimeAst(expression, ast.callee.object);
                 var right = createRuntimeAst(expression, args[0]);
-                return new Node(ExpressionNodeType.BINARY, call, left, right);
+                return new Node(ExpressionNodeType.FUNCTION_CALL, call, left, right);
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -249,12 +253,13 @@ define([
             val = args[0];
             if (args.length > 1) {
                 try {
-                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value), args[1].value));
+                    val = new RegExp(replaceBackslashes(val.value), args[1].value);
                 } catch (e) {
                     //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError(e);
                     //>>includeEnd('debug');
                 }
+                return new Node(ExpressionNodeType.LITERAL_REGEX, val);
             }
             //>>includeStart('debug', pragmas.debug);
             if (val.type !== 'Literal') {
@@ -374,6 +379,12 @@ define([
     function setEvaluateFunction(node) {
         if (node._type === ExpressionNodeType.CONDITIONAL) {
             node.evaluate = node._evaluateConditional;
+        } else if (node._type === ExpressionNodeType.FUNCTION_CALL) {
+            if (node._value === 'test') {
+                node.evaluate = node._evaluateRegExpTest;
+            } else if (node._value === 'exec') {
+                node.evaluate = node._evaluateRegExpExec;
+            }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
@@ -401,8 +412,6 @@ define([
                 node.evaluate = node._evaluateAnd;
             } else if (node._value === '||') {
                 node.evaluate = node._evaluateOr;
-            } else if (node._value === 'test') {
-                node.evaluate = node._evaluateRegExpMatch;
             }
         } else if (node._type === ExpressionNodeType.UNARY) {
             if (node._value === '!') {
@@ -686,8 +695,16 @@ define([
         return String(this._left.evaluate(feature));
     };
 
-    Node.prototype._evaluateRegExpMatch = function(feature) {
+    Node.prototype._evaluateRegExpTest = function(feature) {
         return this._left._value.test(this._right.evaluate(feature));
+    };
+
+    Node.prototype._evaluateRegExpExec = function(feature) {
+        var result = this._left._value.exec(this._right.evaluate(feature));
+        if (!defined(result)) {
+            return null;
+        }
+        return result[1];
     };
 
     return Expression;
