@@ -141,7 +141,7 @@ define([
             if (call === 'test' || call === 'exec') {
                 // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
-                if (ast.callee.object.callee.name !== 'RegExp') {
+                if (ast.callee.object.callee.name !== 'regExp') {
                     throw new DeveloperError('Error: ' + call + ' is not a function');
                 }
                 //>>includeEnd('debug');
@@ -164,7 +164,7 @@ define([
 
         call = ast.callee.name;
 
-        if (call === 'Color') {
+        if (call === 'color') {
             val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
                 var alpha = createRuntimeAst(expression, args[1]);
@@ -226,7 +226,7 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'RegExp') {
+        } else if (call === 'regExp') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
             }
@@ -438,7 +438,7 @@ define([
 
     Node.prototype._evaluateLiteralColor = function(feature) {
         var args = this._left;
-        if (this._value === 'Color') {
+        if (this._value === 'color') {
             if (args.length > 1) {
                 return Color.fromAlpha(Color.fromCssColorString(args[0].evaluate(feature)), args[1].evaluate(feature));
             }
