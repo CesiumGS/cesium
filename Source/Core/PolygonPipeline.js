@@ -952,11 +952,11 @@ define([
     /**
      * Scales each position of a geometry's position attribute to a height, in place.
      *
-     * @param {Geometry} geometry The geometry whose positions are to be scaled.
-     * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
+     * @param {Number[]} positions The array of numbers representing the positions to be scaled
+     * @param {Number} [height=0.0] The desired height to add to the positions
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
-     * @returns {Geometry} The same geometry whose positions where scaled.
+     * @returns {Number[]} The input array of positions, scaled to height
      */
     PolygonPipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, scaleToSurface) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
