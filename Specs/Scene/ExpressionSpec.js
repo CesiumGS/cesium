@@ -260,7 +260,7 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
     });
 
-    it('evaluates literal color with expressions as arguments', function() {
+    it('evaluates color with expressions as arguments', function() {
         var feature = new MockFeature();
         feature.addProperty('hex6', '#ffffff');
         feature.addProperty('hex3', '#fff');
@@ -283,6 +283,73 @@ defineSuite([
         expect(expression.evaluate(feature).alpha).toEqual(0.8);
     });
 
+    it('evaluates rgb with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('red', 100);
+        feature.addProperty('green', 200);
+        feature.addProperty('blue', 255);
+
+        var expression = new Expression(new MockStyleEngine(), 'rgb(${red}, ${green}, ${blue})');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(100, 200, 255));
+
+        expression = new Expression(new MockStyleEngine(), 'rgb(${red}/2, ${green}/2, ${blue})');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(50, 100, 255));
+    });
+
+    it('evaluates hsl with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('h', 0.0);
+        feature.addProperty('s', 0.0);
+        feature.addProperty('l', 1.0);
+
+        var expression = new Expression(new MockStyleEngine(), 'hsl(${h}, ${s}, ${l})');
+        expect(expression.evaluate(feature)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'hsl(${h} + 0.2, ${s} + 1.0, ${l} - 0.5)');
+        expect(expression.evaluate(feature)).toEqual(Color.fromHsl(0.2, 1.0, 0.5));
+    });
+
+    it('evaluates rgba with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('red', 100);
+        feature.addProperty('green', 200);
+        feature.addProperty('blue', 255);
+        feature.addProperty('a', 0.3);
+
+        var expression = new Expression(new MockStyleEngine(), 'rgba(${red}, ${green}, ${blue}, ${a})');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(100, 200, 255, 0.3*255));
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(${red}/2, ${green}/2, ${blue}, ${a} * 2)');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(50, 100, 255, 0.6*255));
+    });
+
+    it('evaluates hsla with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('h', 0.0);
+        feature.addProperty('s', 0.0);
+        feature.addProperty('l', 1.0);
+        feature.addProperty('a', 1.0);
+
+        var expression = new Expression(new MockStyleEngine(), 'hsla(${h}, ${s}, ${l}, ${a})');
+        expect(expression.evaluate(feature)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'hsla(${h} + 0.2, ${s} + 1.0, ${l} - 0.5, ${a} / 4)');
+        expect(expression.evaluate(feature)).toEqual(Color.fromHsl(0.2, 1.0, 0.5, 0.25));
+    });
+
+    it('evaluates rgba with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('red', 100);
+        feature.addProperty('green', 200);
+        feature.addProperty('blue', 255);
+        feature.addProperty('alpha', 0.5);
+
+        var expression = new Expression(new MockStyleEngine(), 'rgba(${red}, ${green}, ${blue}, ${alpha})');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(100, 200, 255, 0.5 * 255));
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(${red}/2, ${green}/2, ${blue}, ${alpha} + 0.1)');
+        expect(expression.evaluate(feature)).toEqual(Color.fromBytes(50, 100, 255, 0.6 * 255));
+    });
 
     it('color constructors throw with wrong number of arguments', function() {
         expect(function() {

@@ -174,7 +174,7 @@ define([
         } else if (call === 'rgb' || call === 'hsl') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 3) {
-                throw new DeveloperError('Error: " + call + " requires three arguments');
+                throw new DeveloperError('Error: ' + call + ' requires three arguments');
             }
             //>>includeEnd('debug');
             val = [
@@ -186,7 +186,7 @@ define([
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 4) {
-                throw new DeveloperError('Error: " + call + " requires four arguments');
+                throw new DeveloperError('Error: ' + call + ' requires four arguments');
             }
             //>>includeEnd('debug');
             val = [
