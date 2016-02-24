@@ -255,6 +255,30 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
     });
 
+    it('evaluates literal color with expressions as arguments', function() {
+        var feature = new MockFeature();
+        feature.addProperty('hex6', '#ffffff');
+        feature.addProperty('hex3', '#fff');
+        feature.addProperty('keyword', 'white');
+        feature.addProperty('alpha', 0.2);
+
+        var expression = new Expression(new MockStyleEngine(), 'Color(${hex6})');
+        expect(expression.evaluate(feature)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'Color(${hex3})');
+        expect(expression.evaluate(feature)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'Color(${keyword})');
+        expect(expression.evaluate(feature)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'Color(${keyword}, ${alpha} + 0.6)');
+        expect(expression.evaluate(feature).red).toEqual(1.0);
+        expect(expression.evaluate(feature).green).toEqual(1.0);
+        expect(expression.evaluate(feature).blue).toEqual(1.0);
+        expect(expression.evaluate(feature).alpha).toEqual(0.8);
+    });
+
+
     it('color constructors throw with wrong number of arguments', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), 'rgb(255, 255)');
