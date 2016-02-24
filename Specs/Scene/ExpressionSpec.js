@@ -734,8 +734,14 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'RegExp("a").test("bcd")');
         expect(expression.evaluate(undefined)).toEqual(false);
 
+        expression = new Expression(new MockStyleEngine(), 'RegExp("quick\\s(brown).+?(jumps)", "ig").test("The Quick Brown Fox Jumps Over The Lazy Dog")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
         expression = new Expression(new MockStyleEngine(), 'RegExp("a").test()');
         expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test(${property})');
+        expect(expression.evaluate(feature)).toEqual(true);
     });
 
     it('evaluates regex exec function', function() {
@@ -747,6 +753,12 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("qbc")');
         expect(expression.evaluate(undefined)).toEqual(null);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")');
+        expect(expression.evaluate(undefined)).toEqual('Brown');
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec(${property})');
+        expect(expression.evaluate(feature)).toEqual('b');
     });
 
     it('throws if test is not call with a RegExp', function() {
