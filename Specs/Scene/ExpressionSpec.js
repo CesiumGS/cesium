@@ -754,6 +754,9 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("qbc")');
         expect(expression.evaluate(undefined)).toEqual(null);
 
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec()');
+        expect(expression.evaluate(undefined)).toEqual(null);
+
         expression = new Expression(new MockStyleEngine(), 'RegExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")');
         expect(expression.evaluate(undefined)).toEqual('Brown');
 
