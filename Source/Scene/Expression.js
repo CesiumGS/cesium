@@ -35,8 +35,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        jsep.addBinaryOp("=~", 0);
-
         var ast;
         try {
             ast = jsep(replaceVariables(removeBackslashes(expression)));
@@ -141,11 +139,12 @@ define([
         if (ast.callee.type === 'MemberExpression') {
             call = ast.callee.property.name;
             if (call === 'test') {
+                // Make sure test is called on a valid type
+                //>>includeStart('debug', pragmas.debug);
                 if (ast.callee.object.callee.name !== 'RegExp') {
-                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Error: test is not a function');
-                    //>>includeEnd('debug');
                 }
+                //>>includeEnd('debug');
                 if (args.length === 0) {
                     return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
                 }
@@ -248,9 +247,18 @@ define([
                 return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
             }
             val = args[0];
+            if (args.length > 1) {
+                try {
+                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value), args[1].value));
+                } catch (e) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError(e);
+                    //>>includeEnd('debug');
+                }
+            }
             //>>includeStart('debug', pragmas.debug);
             if (val.type !== 'Literal') {
-                throw new DeveloperError('Error: RegExp constructor requires a string');
+                throw new DeveloperError('Error: RegExp requires a string');
             }
             //>>includeEnd('debug');
             return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value)));

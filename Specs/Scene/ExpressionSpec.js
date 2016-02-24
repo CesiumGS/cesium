@@ -698,11 +698,29 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'RegExp(true)');
         expect(expression.evaluate(undefined)).toEqual(/true/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp()');
+        expect(expression.evaluate(undefined)).toEqual(/(?:)/);
+
+    });
+
+    it ('constructs regex with flags', function() {
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a", "i")');
+        expect(expression.evaluate(undefined)).toEqual(/a/i);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a", "mg")');
+        expect(expression.evaluate(undefined)).toEqual(/a/mg);
     });
 
     it('throws if regex constructor does not have literal as argument', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), 'RegExp(1+1)');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if regex constructor has invalid flags', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'RegExp("a", "q")');
         }).toThrowDeveloperError();
     });
 
