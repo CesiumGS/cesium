@@ -15,7 +15,13 @@ define([
         ExpressionNodeType) {
     "use strict";
 
+    var unaryOperators = ['!', '-', '+'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||'];
+
     var variableRegex = /\${(.*?)}/g;
+    var backslashRegex = /\\/g;
+    var backslashReplacement = '@#%';
+    var replacementRegex = /@#%/g;
 
     /**
      * DOC_TBA
@@ -23,9 +29,15 @@ define([
     function Expression(styleEngine, expression) {
         this._styleEngine = styleEngine;
 
+        //>>includeStart('debug', pragmas.debug);
+        if (typeof(expression) !== 'string') {
+            throw new DeveloperError('Expresion must be a string');
+        }
+        //>>includeEnd('debug');
+
         var ast;
         try {
-            ast = jsep(replaceVariables(expression));
+            ast = jsep(replaceVariables(removeBackslashes(expression)));
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
@@ -53,6 +65,14 @@ define([
         this.evaluate = undefined;
 
         setEvaluateFunction(this);
+    }
+
+    function removeBackslashes(expression) {
+        return String(expression).replace(backslashRegex, backslashReplacement);
+    }
+
+    function replaceBackslashes(expression) {
+        return String(expression).replace(replacementRegex, '\\');
     }
 
     function replaceVariables(expression) {
@@ -112,10 +132,38 @@ define([
     }
 
     function parseCall(expression, ast) {
-        var call = ast.callee.name;
         var args = ast.arguments;
+        var call;
         var val;
-        
+
+        if (ast.callee.type === 'MemberExpression') {
+            call = ast.callee.property.name;
+            if (call === 'test' || call === 'exec') {
+                // Make sure this is called on a valid type
+                //>>includeStart('debug', pragmas.debug);
+                if (ast.callee.object.callee.name !== 'RegExp') {
+                    throw new DeveloperError('Error: ' + call + ' is not a function');
+                }
+                //>>includeEnd('debug');
+                if (args.length === 0) {
+                    if (call === 'test') {
+                        return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                    } else {
+                        return new Node(ExpressionNodeType.LITERAL_NULL, null);
+                    }
+                }
+                var left = createRuntimeAst(expression, ast.callee.object);
+                var right = createRuntimeAst(expression, args[0]);
+                return new Node(ExpressionNodeType.FUNCTION_CALL, call, left, right);
+            }
+
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+            //>>includeEnd('debug');
+        }
+
+        call = ast.callee.name;
+
         if (call === 'Color') {
             val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
@@ -178,6 +226,27 @@ define([
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
+        } else if (call === 'RegExp') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
+            }
+            val = args[0];
+            if (args.length > 1) {
+                try {
+                    val = new RegExp(replaceBackslashes(val.value), args[1].value);
+                } catch (e) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError(e);
+                    //>>includeEnd('debug');
+                }
+                return new Node(ExpressionNodeType.LITERAL_REGEX, val);
+            }
+            //>>includeStart('debug', pragmas.debug);
+            if (val.type !== 'Literal') {
+                throw new DeveloperError('Error: RegExp requires a string');
+            }
+            //>>includeEnd('debug');
+            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value)));
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -232,7 +301,7 @@ define([
         } else if (ast.type === 'UnaryExpression') {
             op = ast.operator;
             var child = createRuntimeAst(expression, ast.argument);
-            if (op === '!' || op === '-' || op === '+') {
+            if (unaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -243,10 +312,7 @@ define([
             op = ast.operator;
             left = createRuntimeAst(expression, ast.left);
             right = createRuntimeAst(expression, ast.right);
-            if (op === '+' || op === '-' || op === '*' ||
-                op === '/' || op === '%' || op === '===' ||
-                op === '!==' || op === '>' || op === '>=' ||
-                op === '<' || op === '<=') {
+            if (binaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -257,7 +323,7 @@ define([
             op = ast.operator;
             left = createRuntimeAst(expression, ast.left);
             right = createRuntimeAst(expression, ast.right);
-            if (op === '&&' || op === '||') {
+            if (binaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
@@ -271,6 +337,12 @@ define([
             node = new Node(ExpressionNodeType.CONDITIONAL, '?', left, right, test);
         } else if (ast.type === 'MemberExpression') {
             node = parseMemberExpression(expression, ast);
+        } else if (ast.type === 'ArrayExpression') {
+            var val = [];
+            for (var i = 0; i < ast.elements.length; i++) {
+                val[i] = createRuntimeAst(expression, ast.elements[i]);
+            }
+            node = new Node(ExpressionNodeType.ARRAY, val);
         }
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
@@ -287,6 +359,12 @@ define([
     function setEvaluateFunction(node) {
         if (node._type === ExpressionNodeType.CONDITIONAL) {
             node.evaluate = node._evaluateConditional;
+        } else if (node._type === ExpressionNodeType.FUNCTION_CALL) {
+            if (node._value === 'test') {
+                node.evaluate = node._evaluateRegExpTest;
+            } else if (node._value === 'exec') {
+                node.evaluate = node._evaluateRegExpExec;
+            }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
                 node.evaluate = node._evaluatePlus;
@@ -339,12 +417,16 @@ define([
             } else {
                 node.evaluate = node._evaluateMemberDot;
             }
+        } else if (node._type === ExpressionNodeType.ARRAY) {
+            node.evaluate = node._evaluateArray;
         } else if (node._type === ExpressionNodeType.VARIABLE) {
             node.evaluate = node._evaluateVariable;
         } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
             node.evaluate = node._evaluateVariableString;
         } else if (node._type === ExpressionNodeType.LITERAL_COLOR) {
             node.evaluate = node._evaluateLiteralColor;
+        } else if (node._type === ExpressionNodeType.LITERAL_STRING) {
+            node.evaluate = node._evaluateLiteralString;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -372,6 +454,10 @@ define([
         } else if (this._value === 'hsla') {
             return Color.fromHsl(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature), args[3].evaluate(feature));
         }
+    };
+
+    Node.prototype._evaluateLiteralString = function(feature) {
+        return replaceBackslashes(this._value);
     };
 
     Node.prototype._evaluateVariableString = function(feature) {
@@ -420,6 +506,14 @@ define([
             return undefined;
         }
         return property[this._right.evaluate(feature)];
+    };
+
+    Node.prototype._evaluateArray = function(feature) {
+        var result = [];
+        for (var i = 0; i<this._value.length; i++) {
+            result[i] = this._value[i].evaluate(feature);
+        }
+        return result;
     };
 
 
@@ -601,6 +695,18 @@ define([
 
     Node.prototype._evaluateStringConversion = function(feature) {
         return String(this._left.evaluate(feature));
+    };
+
+    Node.prototype._evaluateRegExpTest = function(feature) {
+        return this._left._value.test(this._right.evaluate(feature));
+    };
+
+    Node.prototype._evaluateRegExpExec = function(feature) {
+        var result = this._left._value.exec(this._right.evaluate(feature));
+        if (!defined(result)) {
+            return null;
+        }
+        return result[1];
     };
 
     return Expression;

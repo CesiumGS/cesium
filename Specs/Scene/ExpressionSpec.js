@@ -25,6 +25,11 @@ defineSuite([
         return this._properties[name];
     };
 
+    it ('parses backslashes', function() {
+        var expression = new Expression(new MockStyleEngine(), '"\\he\\\\\\ll\\\\o"');
+        expect(expression.evaluate(undefined)).toEqual('\\he\\\\\\ll\\\\o');
+    });
+
     it('evaluates variable', function() {
         var feature = new MockFeature();
         feature.addProperty('height', 10);
@@ -703,5 +708,127 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature} === ${feature.feature}');
         expect(expression.evaluate(feature)).toEqual(true);
+    });
+
+    it('constructs regex', function() {
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(/a/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("\\w")');
+        expect(expression.evaluate(undefined)).toEqual(/\w/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp(1)');
+        expect(expression.evaluate(undefined)).toEqual(/1/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp(true)');
+        expect(expression.evaluate(undefined)).toEqual(/true/);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp()');
+        expect(expression.evaluate(undefined)).toEqual(/(?:)/);
+
+    });
+
+    it ('constructs regex with flags', function() {
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a", "i")');
+        expect(expression.evaluate(undefined)).toEqual(/a/i);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a", "mg")');
+        expect(expression.evaluate(undefined)).toEqual(/a/mg);
+    });
+
+    it('throws if regex constructor does not have literal as argument', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'RegExp(1+1)');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if regex constructor has invalid flags', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'RegExp("a", "q")');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates regex test function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a").test("abc")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test("bcd")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("quick\\s(brown).+?(jumps)", "ig").test("The Quick Brown Fox Jumps Over The Lazy Dog")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test()');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a").test(${property})');
+        expect(expression.evaluate(feature)).toEqual(true);
+    });
+
+    it('evaluates regex exec function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("abc")');
+        expect(expression.evaluate(undefined)).toEqual('b');
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec("qbc")');
+        expect(expression.evaluate(undefined)).toEqual(null);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec()');
+        expect(expression.evaluate(undefined)).toEqual(null);
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")');
+        expect(expression.evaluate(undefined)).toEqual('Brown');
+
+        expression = new Expression(new MockStyleEngine(), 'RegExp("a(.)").exec(${property})');
+        expect(expression.evaluate(feature)).toEqual('b');
+    });
+
+    it('throws if test is not call with a RegExp', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'Color("blue").test()');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '"blue".test()');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates array expression', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'value');
+        feature.addProperty('array', [Color.GREEN, Color.PURPLE, Color.YELLOW]);
+        feature.addProperty('complicatedArray', [{
+                'subproperty' : Color.ORANGE,
+                'anotherproperty' : Color.RED
+             }, {
+                'subproperty' : Color.BLUE,
+                'anotherproperty' : Color.WHITE
+        }]);
+
+        var expression = new Expression(new MockStyleEngine(), '[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual([1, 2, 3]);
+
+        expression = new Expression(new MockStyleEngine(), '[1+2, "hello", 2 < 3, Color("blue"), ${property}]');
+        expect(expression.evaluate(feature)).toEqual([3, 'hello', true, Color.BLUE, 'value']);
+
+        expression = new Expression(new MockStyleEngine(), '[1, 2, 3] * 4');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), '-[1, 2, 3]');
+        expect(expression.evaluate(undefined)).toEqual(NaN);
+
+        expression = new Expression(new MockStyleEngine(), '${array[1]}');
+        expect(expression.evaluate(feature)).toEqual(Color.PURPLE);
+
+        expression = new Expression(new MockStyleEngine(), '${complicatedArray[1].subproperty}');
+        expect(expression.evaluate(feature)).toEqual(Color.BLUE);
+
+        expression = new Expression(new MockStyleEngine(), '${complicatedArray[0]["anotherproperty"]}');
+        expect(expression.evaluate(feature)).toEqual(Color.RED);
     });
 });
