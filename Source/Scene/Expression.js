@@ -164,58 +164,38 @@ define([
 
         call = ast.callee.name;
 
-        // TODO: Throw error if returned Color is not defined
-
         if (call === 'Color') {
-            val = Color.fromCssColorString(args[0].value);
+            val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
-                val = Color.fromAlpha(val, args[1].value);
+                var alpha = createRuntimeAst(expression, args[1]);
+                return new Node(ExpressionNodeType.LITERAL_COLOR, call, [val, alpha]);
             }
-            if (defined(val)) {
-               return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-            }
-        } else if (call === 'rgb') {
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, [val]);
+        } else if (call === 'rgb' || call === 'hsl') {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length !== 3) {
-                throw new DeveloperError('Error: rgb requires three arguments');
+            if (args.length < 3) {
+                throw new DeveloperError('Error: ' + call + ' requires three arguments');
             }
             //>>includeEnd('debug');
-            val = Color.fromBytes(args[0].value, args[1].value, args[2].value);
-            if (defined(val)) {
-               return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-            }
-        } else if (call === 'hsl') {
+            val = [
+                createRuntimeAst(expression, args[0]),
+                createRuntimeAst(expression, args[1]),
+                createRuntimeAst(expression, args[2])
+            ];
+           return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
+        } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
-            if (args.length !== 3) {
-                throw new DeveloperError('Error: hsl requires three arguments');
+            if (args.length < 4) {
+                throw new DeveloperError('Error: ' + call + ' requires four arguments');
             }
             //>>includeEnd('debug');
-            val = Color.fromHsl(args[0].value, args[1].value, args[2].value);
-            if (defined(val)) {
-               return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-            }
-        } else if (call === 'rgba') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length !== 4) {
-                throw new DeveloperError('Error: rgba requires four arguments');
-            }
-            //>>includeEnd('debug');
-            // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-            var a = args[3].value * 255;
-            val = Color.fromBytes(args[0].value, args[1].value, args[2].value, a);
-            if (defined(val)) {
-               return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-            }
-        } else if (call === 'hsla') {
-            //>>includeStart('debug', pragmas.debug);
-            if (args.length !== 4) {
-                throw new DeveloperError('Error: hlsa requires four arguments');
-            }
-            //>>includeEnd('debug');
-            val = Color.fromHsl(args[0].value, args[1].value, args[2].value, args[3].value);
-            if (defined(val)) {
-               return new Node(ExpressionNodeType.LITERAL_COLOR, val);
-            }
+            val = [
+                createRuntimeAst(expression, args[0]),
+                createRuntimeAst(expression, args[1]),
+                createRuntimeAst(expression, args[2]),
+                createRuntimeAst(expression, args[3])
+            ];
+            return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
         } else if (call === 'isNaN') {
             if (args.length === 0) {
                 return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
@@ -443,6 +423,8 @@ define([
             node.evaluate = node._evaluateVariable;
         } else if (node._type === ExpressionNodeType.VARIABLE_IN_STRING) {
             node.evaluate = node._evaluateVariableString;
+        } else if (node._type === ExpressionNodeType.LITERAL_COLOR) {
+            node.evaluate = node._evaluateLiteralColor;
         } else if (node._type === ExpressionNodeType.LITERAL_STRING) {
             node.evaluate = node._evaluateLiteralString;
         } else {
@@ -452,6 +434,26 @@ define([
 
     Node.prototype._evaluateLiteral = function(feature) {
         return this._value;
+    };
+
+    Node.prototype._evaluateLiteralColor = function(feature) {
+        var args = this._left;
+        if (this._value === 'Color') {
+            if (args.length > 1) {
+                return Color.fromAlpha(Color.fromCssColorString(args[0].evaluate(feature)), args[1].evaluate(feature));
+            }
+            return Color.fromCssColorString(this._left[0].evaluate(feature));
+        } else if (this._value === 'rgb') {
+            return Color.fromBytes(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature));
+        } else if (this._value === 'rgba') {
+            // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
+            var a = args[3].evaluate(feature) * 255;
+            return Color.fromBytes(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature), a);
+        } else if (this._value === 'hsl') {
+            return Color.fromHsl(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature));
+        } else if (this._value === 'hsla') {
+            return Color.fromHsl(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature), args[3].evaluate(feature));
+        }
     };
 
     Node.prototype._evaluateLiteralString = function(feature) {
