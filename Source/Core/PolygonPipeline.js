@@ -958,7 +958,7 @@ define([
      * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
      * @returns {Geometry} The same geometry whose positions where scaled.
      */
-    PolygonPipeline.scaleToGeodeticHeight = function(geometry, height, ellipsoid, scaleToSurface) {
+    PolygonPipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, scaleToSurface) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var n = scaleToGeodeticHeightN;
@@ -967,8 +967,7 @@ define([
         height = defaultValue(height, 0.0);
         scaleToSurface = defaultValue(scaleToSurface, true);
 
-        if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
-            var positions = geometry.attributes.position.values;
+        if (defined(positions)) {
             var length = positions.length;
 
             for ( var i = 0; i < length; i += 3) {
@@ -991,7 +990,7 @@ define([
             }
         }
 
-        return geometry;
+        return positions;
     };
 
     /**

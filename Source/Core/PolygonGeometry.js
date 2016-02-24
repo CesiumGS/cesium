@@ -723,7 +723,8 @@ define([
                 geometry = new GeometryInstance({
                     geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight)
                 });
-                options.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
+                options.geometry = geometry.geometry;
                 geometry.geometry = computeAttributes(options);
                 geometries.push(geometry);
             }

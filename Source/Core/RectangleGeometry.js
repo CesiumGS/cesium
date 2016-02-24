@@ -344,14 +344,13 @@ define([
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, maxHeight, ellipsoid, false);
-        var topPositions = new Float64Array(topBottomGeo.attributes.position.values);
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
+        topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
         var newLength = length*2;
         var positions = new Float64Array(newLength);
         positions.set(topPositions);
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, minHeight, ellipsoid);
-        var bottomPositions = topBottomGeo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         topBottomGeo.attributes.position.values = positions;
 
@@ -767,7 +766,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 
