@@ -49,7 +49,7 @@ define([
 
     defineProperties(Expression.prototype, {
 
-        // TODO: Expose any public properties
+        // TODO: Expose AST?
 
     });
 
@@ -68,7 +68,7 @@ define([
         setEvaluateFunction(this);
     }
 
-    // TODO: Fix jsep to allow backslashes
+    // TODO: Make fix to jsep to allow backslashes
 
     function removeBackslashes(expression) {
         return String(expression).replace(backslashRegex, backslashReplacement);
@@ -79,8 +79,12 @@ define([
     }
 
     // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
+    // TODO: Allow for escaped variables in strings
 
     function replaceVariables(expression) {
+
+        // PERFORMANCE_IDEA: Use regex and replace function
+
         var exp = expression;
         var result = "";
         var i = exp.indexOf('${');
@@ -141,6 +145,7 @@ define([
         var call;
         var val;
 
+        // Member function calls
         if (ast.callee.type === 'MemberExpression') {
             call = ast.callee.property.name;
             if (call === 'test' || call === 'exec') {
@@ -167,8 +172,8 @@ define([
             //>>includeEnd('debug');
         }
 
+        // Non-member function calls
         call = ast.callee.name;
-
         if (call === 'color') {
             val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
@@ -543,6 +548,8 @@ define([
         return result;
     };
 
+    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
+    // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(feature) {
         return !(this._left.evaluate(feature));
@@ -556,8 +563,6 @@ define([
         return +(this._left.evaluate(feature));
     };
 
-    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
-    // that we can assign if we know the types before runtime
     Node.prototype._evaluateLessThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
@@ -626,8 +631,6 @@ define([
         return left && right;
     };
 
-    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
-    // that we can assign if we know the types before runtime
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
@@ -724,7 +727,6 @@ define([
         return String(this._left.evaluate(feature));
     };
 
-    // PREFORMANCE_IDEA: Determine if this is a literal regex before runtime
     Node.prototype._evaluateRegExp = function(feature) {
         var pattern = this._value.evaluate(feature);
         var flags = '';
