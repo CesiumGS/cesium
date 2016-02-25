@@ -122,13 +122,11 @@ define([
         var height = options.height;
         var width = options.width;
 
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
-        var topPositions = geo.attributes.position.values;
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
         var length = topPositions.length;
         var positions = new Float64Array(length*2);
         positions.set(topPositions);
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
-        var bottomPositions = geo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         geo.attributes.position.values = positions;
 
@@ -349,7 +347,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

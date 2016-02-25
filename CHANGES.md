@@ -30,6 +30,7 @@ Change Log
 * Fixed flying to `latitude, longitude, height` in the Geocoder.
 * Upgraded Knockout from version 3.2.0 to 3.4.0.
 * Added `DataSouceDisplay.ready` for determining whether or not static data associated with the Entity API has been rendered
+* Fixed crash caused when drawing `CorridorGeometry` and `CorridorOutlineGeometry` synchronously
 
 ### 1.18 - 2016-02-01
 * Breaking changes
