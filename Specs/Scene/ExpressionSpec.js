@@ -778,14 +778,17 @@ defineSuite([
     });
 
     it('constructs regex', function() {
+        var feature = new MockFeature();
+        feature.addProperty('pattern', "[abc]");
+
         var expression = new Expression(new MockStyleEngine(), 'regExp("a")');
         expect(expression.evaluate(undefined)).toEqual(/a/);
 
         expression = new Expression(new MockStyleEngine(), 'regExp("\\w")');
         expect(expression.evaluate(undefined)).toEqual(/\w/);
 
-        expression = new Expression(new MockStyleEngine(), 'regExp(1)');
-        expect(expression.evaluate(undefined)).toEqual(/1/);
+        expression = new Expression(new MockStyleEngine(), 'regExp(1 + 1)');
+        expect(expression.evaluate(undefined)).toEqual(/2/);
 
         expression = new Expression(new MockStyleEngine(), 'regExp(true)');
         expect(expression.evaluate(undefined)).toEqual(/true/);
@@ -793,6 +796,8 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'regExp()');
         expect(expression.evaluate(undefined)).toEqual(/(?:)/);
 
+        expression = new Expression(new MockStyleEngine(), 'regExp(${pattern})');
+        expect(expression.evaluate(feature)).toEqual(/[abc]/);
     });
 
     it ('constructs regex with flags', function() {
@@ -803,15 +808,10 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(/a/mg);
     });
 
-    it('throws if regex constructor does not have literal as argument', function() {
-        expect(function() {
-            return new Expression(new MockStyleEngine(), 'regExp(1+1)');
-        }).toThrowDeveloperError();
-    });
-
     it('throws if regex constructor has invalid flags', function() {
         expect(function() {
-            return new Expression(new MockStyleEngine(), 'regExp("a", "q")');
+            var expression = new Expression(new MockStyleEngine(), 'regExp("a", "q")');
+            expression.evaluate(undefined);
         }).toThrowDeveloperError();
     });
 

@@ -21,7 +21,7 @@ define([
         LITERAL_NUMBER : 9,
         LITERAL_STRING: 10,
         LITERAL_COLOR: 11,
-        LITERAL_REGEX: 12,
+        REGEX: 12,
         VARIABLE_IN_STRING : 13
     };
 
