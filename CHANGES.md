@@ -19,6 +19,7 @@ Change Log
     * Added support for local `StyleMap`. The `highlight` style is still ignored.
     * Added support for `root://` URLs.
     * Added more warnings for unsupported features.
+    * Improved style processing in IE.
 * Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
