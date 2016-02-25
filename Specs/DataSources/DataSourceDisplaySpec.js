@@ -52,6 +52,7 @@ defineSuite([
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
+        return true;
     };
 
     MockVisualizer.prototype.getBoundingSphere = function(entity, result) {
@@ -278,6 +279,22 @@ defineSuite([
         expect(source1Visualizer.updatesCalled).toEqual(1);
         expect(source2Visualizer.lastUpdateTime).toEqual(Iso8601.MINIMUM_VALUE);
         expect(source2Visualizer.updatesCalled).toEqual(1);
+    });
+
+    it('ready is true when datasources are ready', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        display.update(Iso8601.MINIMUM_VALUE);
+
+       expect(display.ready).toBe(true);
     });
 
     it('constructor throws if scene undefined', function() {
