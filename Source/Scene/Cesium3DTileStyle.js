@@ -9,6 +9,7 @@ define([
        './ColorRampExpression',
        './ColorMapExpression',
        './ColorExpression',
+       './Expression',
        './getPropertyName',
        './LiteralBooleanExpression',
        './LiteralColorExpression'
@@ -22,6 +23,7 @@ define([
         ColorRampExpression,
         ColorMapExpression,
         ColorExpression,
+        Expression,
         getPropertyName,
         LiteralBooleanExpression,
         LiteralColorExpression) {
@@ -66,11 +68,9 @@ define([
 
         var show;
         if (typeof(showExpression) === 'boolean') {
-            show = new LiteralBooleanExpression(styleEngine, showExpression);
-        } else if (defined(showExpression.operator)) {
-            show = new BooleanExpression(styleEngine, showExpression);
-        } else if (defined(showExpression.pattern)) {
-            show = new BooleanRegularExpression(styleEngine, showExpression);
+            show = new Expression(styleEngine, String(showExpression));
+        } else if (typeof(showExpression) === 'string') {
+            show = new Expression(styleEngine, showExpression);
         }
 
         /**
