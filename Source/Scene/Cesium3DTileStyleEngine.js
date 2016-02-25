@@ -124,7 +124,7 @@ define([
             //>>includeStart('debug', pragmas.debug);
             if (typeof(showExpression) !== 'boolean')
             {
-                throw new DeveloperError('show expected boolean expression');
+                throw new DeveloperError('show expects boolean expression');
             }
             //>>includeEnd('debug');
             feature.show = showExpression;

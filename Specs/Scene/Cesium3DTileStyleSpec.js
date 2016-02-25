@@ -35,27 +35,27 @@ defineSuite([
         var tileset = new MockTileset(styleEngine);
 
         var style = new Cesium3DTileStyle(tileset, {
-            'show' : 'true'
+            show : 'true'
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'true'));
 
         style = new Cesium3DTileStyle(tileset, {
-            'show' : 'false'
+            show : 'false'
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'false'));
 
         style = new Cesium3DTileStyle(tileset, {
-            'show' : '${height} * 10 >= 1000'
+            show : '${height} * 10 >= 1000'
         });
         expect(style.show).toEqual(new Expression(styleEngine, '${height} * 10 >= 1000'));
 
         style = new Cesium3DTileStyle(new MockTileset(new MockStyleEngine()), {
-            'show' : true
+            show : true
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'true'));
 
         style = new Cesium3DTileStyle(new MockTileset(new MockStyleEngine()), {
-            'show' : false
+            show : false
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'false'));
     });
@@ -65,7 +65,7 @@ defineSuite([
         var tileset = new MockTileset(styleEngine);
 
         var style = new Cesium3DTileStyle(tileset, {
-            'show' : 1
+            show : 1
         });
         expect(style.show).toEqual(undefined);
     });

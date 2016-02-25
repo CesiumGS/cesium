@@ -4,28 +4,24 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './BooleanExpression',
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
        './ColorExpression',
        './Expression',
        './getPropertyName',
-       './LiteralBooleanExpression',
        './LiteralColorExpression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         isArray,
-        BooleanExpression,
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
         ColorExpression,
         Expression,
         getPropertyName,
-        LiteralBooleanExpression,
         LiteralColorExpression) {
     'use strict';
 
