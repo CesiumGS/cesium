@@ -31,7 +31,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (typeof(expression) !== 'string') {
-            throw new DeveloperError('Expresion must be a string');
+            throw new DeveloperError('Expression must be a string');
         }
         //>>includeEnd('debug');
 
@@ -43,13 +43,14 @@ define([
             throw new DeveloperError(e);
             //>>includeEnd('debug');
         }
-        console.log(ast);
 
         this._runtimeAst = createRuntimeAst(this, ast);
-        console.log(this._runtimeAst);
     }
 
     defineProperties(Expression.prototype, {
+
+        // TODO: Expose AST?
+
     });
 
     Expression.prototype.evaluate = function(feature) {
@@ -67,6 +68,8 @@ define([
         setEvaluateFunction(this);
     }
 
+    // TODO: Make fix to jsep to allow backslashes
+
     function removeBackslashes(expression) {
         return String(expression).replace(backslashRegex, backslashReplacement);
     }
@@ -75,7 +78,13 @@ define([
         return String(expression).replace(replacementRegex, '\\');
     }
 
+    // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
+    // TODO: Allow for escaped variables in strings
+
     function replaceVariables(expression) {
+
+        // PERFORMANCE_IDEA: Use regex and replace function
+
         var exp = expression;
         var result = "";
         var i = exp.indexOf('${');
@@ -136,6 +145,7 @@ define([
         var call;
         var val;
 
+        // Member function calls
         if (ast.callee.type === 'MemberExpression') {
             call = ast.callee.property.name;
             if (call === 'test' || call === 'exec') {
@@ -162,8 +172,8 @@ define([
             //>>includeEnd('debug');
         }
 
+        // Non-member function calls
         call = ast.callee.name;
-
         if (call === 'color') {
             val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
@@ -196,15 +206,13 @@ define([
                 createRuntimeAst(expression, args[3])
             ];
             return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
-        } else if (call === 'isNaN') {
+        } else if (call === 'isNaN' || call === 'isFinite') {
             if (args.length === 0) {
-                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
-            }
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'isFinite') {
-            if (args.length === 0) {
-                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                if (call === 'isNaN') {
+                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
+                } else {
+                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                }
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
@@ -540,6 +548,8 @@ define([
         return result;
     };
 
+    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
+    // that we can assign if we know the types before runtime
 
     Node.prototype._evaluateNot = function(feature) {
         return !(this._left.evaluate(feature));
@@ -553,8 +563,6 @@ define([
         return +(this._left.evaluate(feature));
     };
 
-    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
-    // that we can assign if we know the types before runtime
     Node.prototype._evaluateLessThan = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
@@ -623,8 +631,6 @@ define([
         return left && right;
     };
 
-    // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
-    // that we can assign if we know the types before runtime
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
