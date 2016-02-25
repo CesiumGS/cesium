@@ -31,7 +31,7 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (typeof(expression) !== 'string') {
-            throw new DeveloperError('Expresion must be a string');
+            throw new DeveloperError('Expression must be a string');
         }
         //>>includeEnd('debug');
 
@@ -43,13 +43,14 @@ define([
             throw new DeveloperError(e);
             //>>includeEnd('debug');
         }
-        console.log(ast);
 
         this._runtimeAst = createRuntimeAst(this, ast);
-        console.log(this._runtimeAst);
     }
 
     defineProperties(Expression.prototype, {
+
+        // TODO: Expose any public properties
+
     });
 
     Expression.prototype.evaluate = function(feature) {
@@ -67,6 +68,8 @@ define([
         setEvaluateFunction(this);
     }
 
+    // TODO: Fix jsep to allow backslashes
+
     function removeBackslashes(expression) {
         return String(expression).replace(backslashRegex, backslashReplacement);
     }
@@ -74,6 +77,8 @@ define([
     function replaceBackslashes(expression) {
         return String(expression).replace(replacementRegex, '\\');
     }
+
+    // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
 
     function replaceVariables(expression) {
         var exp = expression;
@@ -196,15 +201,13 @@ define([
                 createRuntimeAst(expression, args[3])
             ];
             return new Node(ExpressionNodeType.LITERAL_COLOR, call, val);
-        } else if (call === 'isNaN') {
+        } else if (call === 'isNaN' || call === 'isFinite') {
             if (args.length === 0) {
-                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
-            }
-            val = createRuntimeAst(expression, args[0]);
-            return new Node(ExpressionNodeType.UNARY, call, val);
-        } else if (call === 'isFinite') {
-            if (args.length === 0) {
-                return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                if (call === 'isNaN') {
+                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, true);
+                } else {
+                    return new Node(ExpressionNodeType.LITERAL_BOOLEAN, false);
+                }
             }
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
@@ -687,6 +690,7 @@ define([
         return String(this._left.evaluate(feature));
     };
 
+    // PREFORMANCE_IDEA: Determine if this is a literal regex before runtime
     Node.prototype._evaluateRegExp = function(feature) {
         if (!defined(this._value)) {
             return new RegExp();
