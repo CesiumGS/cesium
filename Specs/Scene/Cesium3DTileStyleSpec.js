@@ -59,4 +59,14 @@ defineSuite([
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'false'));
     });
+
+    it ('sets show to undefined if not a string or a boolean', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            'show' : 1
+        });
+        expect(style.show).toEqual(undefined);
+    });
 });
