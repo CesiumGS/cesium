@@ -6,7 +6,7 @@ Thanks for contributing to Cesium.  You rock!  Are you
 
 # Submitting an Issue
 
-When you [submit a new issue](https://github.com/AnalyticalGraphicsInc/cesium/issues/new), the issue's comment are initialized with instructions.
+When you [submit a new issue](https://github.com/AnalyticalGraphicsInc/cesium/issues/new), the issue's comment is initialized with instructions.
 
 # Getting Started Contributing
 
