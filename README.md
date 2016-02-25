@@ -15,7 +15,7 @@ npm install cesium
 
 Have questions?  Ask them on the [forum](http://cesiumjs.org/forum.html).
 
-Interested in contributing?  See [CONTRIBUTING.md](CONTRIBUTING.md).
+Interested in contributing?  See [CONTRIBUTING.md](.github/CONTRIBUTING.md).
 
 ### Mission ###
 

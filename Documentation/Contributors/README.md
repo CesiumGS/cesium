@@ -1,6 +1,6 @@
 # Contributor Guides
 
-* [CONTRIBUTING.md](../../CONTRIBUTING.md) - Start here.  How to find something to work on, submit issues, and open pull requests.
+* [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) - Start here.  How to find something to work on, submit issues, and open pull requests.
 * [Build Guide](BuildGuide/README.md) - How to build and run Cesium locally.
 * **IDEs** - use any IDE you want for Cesium development.  Most contributors use WebStorm (commercial) or Eclipse (open source).
    * [WebStorm Guide](WebStormGuide/README.md) - How to set up WebStorm.
