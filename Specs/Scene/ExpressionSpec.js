@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Expression',
+        'Scene/ExpressionNodeType',
         'Core/Color'
     ], function(
         Expression,
+        ExpressionNodeType,
         Color) {
     'use strict';
 
@@ -783,29 +785,37 @@ defineSuite([
 
         var expression = new Expression(new MockStyleEngine(), 'regExp("a")');
         expect(expression.evaluate(undefined)).toEqual(/a/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.LITERAL_REGEX);
 
         expression = new Expression(new MockStyleEngine(), 'regExp("\\w")');
         expect(expression.evaluate(undefined)).toEqual(/\w/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.LITERAL_REGEX);
 
         expression = new Expression(new MockStyleEngine(), 'regExp(1 + 1)');
         expect(expression.evaluate(undefined)).toEqual(/2/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
 
         expression = new Expression(new MockStyleEngine(), 'regExp(true)');
         expect(expression.evaluate(undefined)).toEqual(/true/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.LITERAL_REGEX);
 
         expression = new Expression(new MockStyleEngine(), 'regExp()');
         expect(expression.evaluate(undefined)).toEqual(/(?:)/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.LITERAL_REGEX);
 
         expression = new Expression(new MockStyleEngine(), 'regExp(${pattern})');
         expect(expression.evaluate(feature)).toEqual(/[abc]/);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
     });
 
     it ('constructs regex with flags', function() {
         var expression = new Expression(new MockStyleEngine(), 'regExp("a", "i")');
         expect(expression.evaluate(undefined)).toEqual(/a/i);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.LITERAL_REGEX);
 
-        expression = new Expression(new MockStyleEngine(), 'regExp("a", "mg")');
+        expression = new Expression(new MockStyleEngine(), 'regExp("a", "m" + "g")');
         expect(expression.evaluate(undefined)).toEqual(/a/mg);
+        expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
     });
 
     it('throws if regex constructor has invalid flags', function() {
