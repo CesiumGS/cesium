@@ -227,31 +227,49 @@ define([
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'regExp') {
-            if (args.length === 0) {
-                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
-            }
-            val = args[0];
-            if (args.length > 1) {
-                try {
-                    val = new RegExp(replaceBackslashes(val.value), args[1].value);
-                } catch (e) {
-                    //>>includeStart('debug', pragmas.debug);
-                    throw new DeveloperError(e);
-                    //>>includeEnd('debug');
-                }
-                return new Node(ExpressionNodeType.LITERAL_REGEX, val);
-            }
-            //>>includeStart('debug', pragmas.debug);
-            if (val.type !== 'Literal') {
-                throw new DeveloperError('Error: RegExp requires a string');
-            }
-            //>>includeEnd('debug');
-            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(val.value)));
+            return parseRegex(expression, ast);
         }
 
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Error: Unexpected function call "' + call + '"');
         //>>includeEnd('debug');
+    }
+
+    function parseRegex(expression, ast) {
+        var args = ast.arguments;
+        // no arguments, return default regex
+        if (args.length === 0) {
+            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
+        }
+
+        var pattern = createRuntimeAst(expression, args[0]);
+
+        // optional flag argument supplied
+        if (args.length > 1) {
+            var flags = createRuntimeAst(expression, args[1]);
+            if (isLiteralType(pattern) && isLiteralType(flags)) {
+                try {
+                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value), flags._value));
+                } catch (e) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError(e);
+                    //>>includeEnd('debug');
+                }
+            }
+            return new Node(ExpressionNodeType.REGEX, pattern, flags);
+        }
+
+        // only pattern argument supplied
+        if (isLiteralType(pattern)) {
+            try {
+                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value)));
+            } catch (e) {
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError(e);
+                //>>includeEnd('debug');
+            }
+        }
+        return new Node(ExpressionNodeType.REGEX, pattern);
     }
 
     function parseKeywordsAndVariables(ast) {
@@ -276,6 +294,10 @@ define([
         } else {
             return new Node(ExpressionNodeType.MEMBER, 'dot', obj, ast.property.name);
         }
+    }
+
+    function isLiteralType(node) {
+        return (node._type >= ExpressionNodeType.LITERAL_NULL);
     }
 
     function isVariable(name) {
@@ -427,6 +449,8 @@ define([
             node.evaluate = node._evaluateLiteralColor;
         } else if (node._type === ExpressionNodeType.LITERAL_STRING) {
             node.evaluate = node._evaluateLiteralString;
+        } else if (node._type === ExpressionNodeType.REGEX) {
+            node.evaluate = node._evaluateRegExp;
         } else {
             node.evaluate = node._evaluateLiteral;
         }
@@ -697,12 +721,31 @@ define([
         return String(this._left.evaluate(feature));
     };
 
+    Node.prototype._evaluateRegExp = function(feature) {
+        var pattern = this._value.evaluate(feature);
+        var flags = '';
+
+        if (defined(this._left)) {
+            flags = this._left.evaluate(feature);
+        }
+
+        var result;
+        try {
+            result = new RegExp(pattern, flags);
+        } catch (e) {
+            //>>includeStart('debug', pragmas.debug);
+            throw new DeveloperError(e);
+            //>>includeEnd('debug');
+        }
+        return result;
+    };
+
     Node.prototype._evaluateRegExpTest = function(feature) {
-        return this._left._value.test(this._right.evaluate(feature));
+        return this._left.evaluate(feature).test(this._right.evaluate(feature));
     };
 
     Node.prototype._evaluateRegExpExec = function(feature) {
-        var result = this._left._value.exec(this._right.evaluate(feature));
+        var result = this._left.evaluate(feature).exec(this._right.evaluate(feature));
         if (!defined(result)) {
             return null;
         }

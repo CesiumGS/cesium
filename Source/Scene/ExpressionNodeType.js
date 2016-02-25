@@ -16,13 +16,14 @@ define([
         MEMBER : 4,
         FUNCTION_CALL : 5,
         ARRAY : 6,
-        LITERAL_NULL : 7,
-        LITERAL_BOOLEAN : 8,
-        LITERAL_NUMBER : 9,
-        LITERAL_STRING: 10,
-        LITERAL_COLOR: 11,
-        LITERAL_REGEX: 12,
-        VARIABLE_IN_STRING : 13
+        REGEX: 7,
+        VARIABLE_IN_STRING : 8,
+        LITERAL_NULL : 9,
+        LITERAL_BOOLEAN : 10,
+        LITERAL_NUMBER : 11,
+        LITERAL_STRING: 12,
+        LITERAL_COLOR: 13,
+        LITERAL_REGEX: 14
     };
 
     return freezeObject(ExpressionNodeType);
