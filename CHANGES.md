@@ -29,6 +29,7 @@ Change Log
 * `Camera.flyTo` now honors max and min zoom settings in `ScreenSpaceCameraController`.
 * Fixed flying to `latitude, longitude, height` in the Geocoder.
 * Upgraded Knockout from version 3.2.0 to 3.4.0.
+* Added jspm configuration description to package.json
 
 ### 1.18 - 2016-02-01
 * Breaking changes
