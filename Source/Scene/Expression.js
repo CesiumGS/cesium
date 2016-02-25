@@ -230,19 +230,49 @@ define([
             val = createRuntimeAst(expression, args[0]);
             return new Node(ExpressionNodeType.UNARY, call, val);
         } else if (call === 'regExp') {
-            if (args.length === 0) {
-                return new Node(ExpressionNodeType.REGEX);
-            }
-            val = createRuntimeAst(expression, args[0]);
-            if (args.length > 1) {
-                return new Node(ExpressionNodeType.REGEX, val, createRuntimeAst(expression, args[1]));
-            }
-            return new Node(ExpressionNodeType.REGEX, val);
+            return parseRegex(expression, ast);
         }
 
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('Error: Unexpected function call "' + call + '"');
         //>>includeEnd('debug');
+    }
+
+    function parseRegex(expression, ast) {
+        var args = ast.arguments;
+        // no arguments, return default regex
+        if (args.length === 0) {
+            return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp());
+        }
+
+        var pattern = createRuntimeAst(expression, args[0]);
+
+        // optional flag argument supplied
+        if (args.length > 1) {
+            var flags = createRuntimeAst(expression, args[1]);
+            if (isLiteralType(pattern) && isLiteralType(flags)) {
+                try {
+                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value), flags._value));
+                } catch (e) {
+                    //>>includeStart('debug', pragmas.debug);
+                    throw new DeveloperError(e);
+                    //>>includeEnd('debug');
+                }
+            }
+            return new Node(ExpressionNodeType.REGEX, pattern, flags);
+        }
+
+        // only pattern argument supplied
+        if (isLiteralType(pattern)) {
+            try {
+                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value)));
+            } catch (e) {
+                //>>includeStart('debug', pragmas.debug);
+                throw new DeveloperError(e);
+                //>>includeEnd('debug');
+            }
+        }
+        return new Node(ExpressionNodeType.REGEX, pattern);
     }
 
     function parseKeywordsAndVariables(ast) {
@@ -267,6 +297,10 @@ define([
         } else {
             return new Node(ExpressionNodeType.MEMBER, 'dot', obj, ast.property.name);
         }
+    }
+
+    function isLiteralType(node) {
+        return (node._type >= ExpressionNodeType.LITERAL_NULL);
     }
 
     function isVariable(name) {
@@ -692,12 +726,9 @@ define([
 
     // PREFORMANCE_IDEA: Determine if this is a literal regex before runtime
     Node.prototype._evaluateRegExp = function(feature) {
-        if (!defined(this._value)) {
-            return new RegExp();
-        }
-
         var pattern = this._value.evaluate(feature);
         var flags = '';
+
         if (defined(this._left)) {
             flags = this._left.evaluate(feature);
         }
@@ -706,7 +737,9 @@ define([
         try {
             result = new RegExp(pattern, flags);
         } catch (e) {
+            //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
+            //>>includeEnd('debug');
         }
         return result;
     };
