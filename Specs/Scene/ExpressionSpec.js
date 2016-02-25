@@ -809,9 +809,13 @@ defineSuite([
     });
 
     it('throws if regex constructor has invalid flags', function() {
+        var expression = new Expression(new MockStyleEngine(), 'regExp("a" + "b", "q")');
         expect(function() {
-            var expression = new Expression(new MockStyleEngine(), 'regExp("a", "q")');
             expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'regExp("a", "q")');
         }).toThrowDeveloperError();
     });
 
@@ -831,7 +835,7 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'regExp("a").test()');
         expect(expression.evaluate(undefined)).toEqual(false);
 
-        expression = new Expression(new MockStyleEngine(), 'regExp("a").test(${property})');
+        expression = new Expression(new MockStyleEngine(), 'regExp(${property}).test(${property})');
         expect(expression.evaluate(feature)).toEqual(true);
     });
 
@@ -851,8 +855,8 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'regExp("quick\\s(b.*n).+?(jumps)", "ig").exec("The Quick Brown Fox Jumps Over The Lazy Dog")');
         expect(expression.evaluate(undefined)).toEqual('Brown');
 
-        expression = new Expression(new MockStyleEngine(), 'regExp("a(.)").exec(${property})');
-        expect(expression.evaluate(feature)).toEqual('b');
+        expression = new Expression(new MockStyleEngine(), 'regExp("(" + ${property} + ")").exec(${property})');
+        expect(expression.evaluate(feature)).toEqual('abc');
     });
 
     it('throws if test is not call with a RegExp', function() {
