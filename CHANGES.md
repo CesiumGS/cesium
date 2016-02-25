@@ -27,6 +27,7 @@ Change Log
 * Fixed issue that kept `GroundPrimitive` with an `EllipseGeometry` from having a `rotation`.
 * `Camera.flyTo` now honors max and min zoom settings in `ScreenSpaceCameraController`.
 * Fixed flying to `latitude, longitude, height` in the Geocoder.
+* Added `DataSouceDisplay.ready`
 
 ### 1.18 - 2016-02-01
 * Breaking changes

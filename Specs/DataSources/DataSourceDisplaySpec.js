@@ -290,11 +290,17 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             visualizersCallback : visualizersCallback
         });
+        expect(display.ready).toBe(false);
+
         dataSourceCollection.add(source1);
         dataSourceCollection.add(source2);
         display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(true);
 
-       expect(display.ready).toBe(true);
+
+        spyOn(MockVisualizer.prototype, 'update').and.returnValue(false);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(false);
     });
 
     it('constructor throws if scene undefined', function() {
