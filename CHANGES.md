@@ -19,6 +19,7 @@ Change Log
     * Added support for local `StyleMap`. The `highlight` style is still ignored.
     * Added support for `root://` URLs.
     * Added more warnings for unsupported features.
+    * Improved style processing in IE.
 * Added `owner` property to `CompositeEntityCollection`.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
@@ -27,6 +28,7 @@ Change Log
 * Fixed issue that kept `GroundPrimitive` with an `EllipseGeometry` from having a `rotation`.
 * `Camera.flyTo` now honors max and min zoom settings in `ScreenSpaceCameraController`.
 * Fixed flying to `latitude, longitude, height` in the Geocoder.
+* Upgraded Knockout from version 3.2.0 to 3.4.0.
 * Added `DataSouceDisplay.ready`
 
 ### 1.18 - 2016-02-01
