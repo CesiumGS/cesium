@@ -1484,6 +1484,70 @@ define([
             getValue : function(uniformState) {
                 return uniformState.shadowMap.shadowMapMatrix;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade far splits.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapCascadeSplitsNear
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeSplitsNear : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeSplitsNear;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade near splits.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapCascadeSplitsFar
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeSplitsFar : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeSplitsFar;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade offsets.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapCascadeOffsets
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeOffsets : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeOffsets;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade scales.
+         *
+         * @private
+         *
+         * @alias czm_sunShadowMapCascadeScales
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeScales : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeScales;
+            }
         })
     };
 

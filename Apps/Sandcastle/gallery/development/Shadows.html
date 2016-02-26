@@ -36,7 +36,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
     globe : globeVisible ? undefined : false,
-    skyAtmosphere : globeVisible ? undefined : false
+    skyAtmosphere : globeVisible ? undefined : false,
+    timeline : false
 });
 
 var terrainProvider;
@@ -61,7 +62,7 @@ var offset = 20.0;
 var frustumSize = 15;
 var frustumNear = 1.0;
 var frustumFar = 100.0;
-var tilt = 30.0;
+var tilt = 0.0;
 
 //// Everest
 //var centerLongitude = 1.517132688;
@@ -110,9 +111,9 @@ function createScene(height) {
 
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
     createModel('../../SampleData/models/shadow_tester.gltf', center);
-    createBox(position3);
-    createBoxRTC(position2);
-    createSphere(position1);
+//    createBox(position3);
+//    createBoxRTC(position2);
+//    createSphere(position1);
     shadowMap.enabled = true;
 }
 
