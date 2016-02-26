@@ -22,7 +22,6 @@ defineSuite([
         var tileset = new MockTileset(styleEngine);
 
         var style = new Cesium3DTileStyle(tileset, {
-
         });
         expect(style.show).toEqual(new Expression(styleEngine, 'true'));
 
