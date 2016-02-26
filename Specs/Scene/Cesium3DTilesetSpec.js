@@ -869,4 +869,55 @@ defineSuite([
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
+
+    it('applies color style to a tileset', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue")'});
+            var color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+
+            // set color to transparent
+            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue", 0.0)'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("cyan")'});
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toBeGreaterThan(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+        });
+    });
+
+    it('applies style with complex color expression to a tileset', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            // Each feature in the b3dm file has an id property from 0 to 99
+            // ${id} >= 100 will always evaluate to false
+            tileset.style = new Cesium3DTileStyle(tileset, {color : '(${id} >= 50 * 2) ? color("red") : color("blue")'});
+            var color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle(tileset, {color : '(${id} < 50 * 2) ? color("red") : color("blue")'});
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+        });
+    });
 }, 'WebGL');
