@@ -1,10 +1,22 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileStyle',
-        'Scene/Expression'
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/HeadingPitchRange',
+        'Renderer/ContextLimits',
+        'Scene/Expression',
+        'Specs/Cesium3DTilesTester',
+        'Specs/createScene'
     ], function(
         Cesium3DTileStyle,
-        Expression) {
+        Cartesian3,
+        Color,
+        HeadingPitchRange,
+        ContextLimits,
+        Expression,
+        Cesium3DTilesTester,
+        createScene) {
     'use strict';
 
     function MockStyleEngine() {
@@ -16,6 +28,12 @@ defineSuite([
     function MockTileset(styleEngine) {
         this.styleEngine = styleEngine;
     }
+
+    var scene;
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
+
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
 
     it ('sets show value to default expression', function() {
         var styleEngine = new MockStyleEngine();
@@ -69,4 +87,36 @@ defineSuite([
         });
         expect(style.show).toEqual(undefined);
     });
-});
+
+    it('renders translucent style when vertex texture fetch is not supported', function() {
+        scene = createScene();
+
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        // Disable VTF
+        var maximumVertexTextureImageUnits = ContextLimits.maximumVertexTextureImageUnits;
+        ContextLimits._maximumVertexTextureImageUnits = 0;
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'false'});
+            var hideColor = scene.renderForSpecs();
+            expect(hideColor).not.toEqual(showColor);
+            expect(hideColor).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
+            var restoredShow = scene.renderForSpecs();
+            expect(restoredShow).toEqual(showColor);
+
+            // Re-enable VTF
+            ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
+
+            scene.primitives.removeAll();
+
+            scene.destroyForSpecs();
+        });
+    });
+}, 'WebGL');
