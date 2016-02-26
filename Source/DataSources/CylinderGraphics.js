@@ -37,9 +37,8 @@ define([
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around perimeter of the cylinder.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
      */
-    var CylinderGraphics = function(options) {
+    function CylinderGraphics(options) {
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
@@ -65,7 +64,8 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
+
     defineProperties(CylinderGraphics.prototype, {
         /**
          * Gets the event that is raised whenever a property or sub-property is changed or modified.

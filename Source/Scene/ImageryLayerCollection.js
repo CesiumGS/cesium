@@ -32,7 +32,7 @@ define([
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
-    var ImageryLayerCollection = function ImageryLayerCollection() {
+    function ImageryLayerCollection() {
         this._layers = [];
 
         /**
@@ -69,7 +69,7 @@ define([
          * @default Event()
          */
         this.layerShownOrHidden = new Event();
-    };
+    }
 
     defineProperties(ImageryLayerCollection.prototype, {
         /**
@@ -217,7 +217,7 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @returns {ImageryLayer} The imagery layer at the given index.
      */
     ImageryLayerCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -374,7 +374,6 @@ define([
 
         // Find the terrain tile containing the picked location.
         var tilesToRender = scene.globe._surface._tilesToRender;
-        var length = tilesToRender.length;
         var pickedTile;
 
         for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
@@ -389,7 +388,6 @@ define([
         }
 
         // Pick against all attached imagery tiles containing the pickedLocation.
-        var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
@@ -488,10 +486,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * 
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);

@@ -85,14 +85,6 @@ define([
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMTS GetFeatureInfo requests.
      *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see UrlTemplateImageryProvider
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -120,8 +112,17 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
+     *
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see WebMapServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      */
-    var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
+    function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {
@@ -158,6 +159,8 @@ define([
         this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
         this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
+        this._readyPromise = when.resolve(true);
+
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
         // level will cause too many tiles to be downloaded and rendered.
@@ -181,7 +184,7 @@ define([
         } else {
             this._subdomains = ['a', 'b', 'c'];
         }
-    };
+    }
 
     var defaultParameters = freezeObject({
         service : 'WMTS',
@@ -386,6 +389,18 @@ define([
          */
         ready : {
             value: true
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
         },
 
         /**

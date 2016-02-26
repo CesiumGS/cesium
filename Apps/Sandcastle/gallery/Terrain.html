@@ -27,6 +27,12 @@
 <div id="zoomButtons"></div>
 <div id="toggleLighting"></div>
 <div id="sampleButtons"></div>
+<table><tbody>
+    <tr>
+        <td>Enable fog</td>
+        <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
+    </tr>
+</tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -177,6 +183,16 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
 
     Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
 }, 'sampleButtons');
+
+var viewModel = { fogEnabled : true };
+Cesium.knockout.track(viewModel);
+
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'fogEnabled').subscribe(function(newValue) {
+    viewer.scene.fog.enabled = newValue;
+});
+viewModel.enabled = viewer.scene.fog.enabled;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

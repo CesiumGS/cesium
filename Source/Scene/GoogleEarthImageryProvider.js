@@ -82,22 +82,23 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
      *     url : '//earth.localdomain',
      *     channel : 1008
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var GoogleEarthImageryProvider = function GoogleEarthImageryProvider(options) {
+    function GoogleEarthImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -140,6 +141,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var metadataUrl = this._url + this._path + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var that = this;
@@ -204,12 +206,14 @@ define([
               .replace('{channel}', that._channel).replace('{version}', that._version);
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + metadataUrl + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -220,8 +224,7 @@ define([
         }
 
         requestMetadata();
-    };
-
+    }
 
     defineProperties(GoogleEarthImageryProvider.prototype, {
         /**
@@ -467,6 +470,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof GoogleEarthImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

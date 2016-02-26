@@ -4,20 +4,24 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         Credit,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Event,
         Rectangle,
         WebMercatorTilingScheme,
+        when,
         ImageryProvider) {
     "use strict";
 
@@ -48,21 +52,25 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * // OpenStreetMap tile provider
      * var osm = new Cesium.OpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
+     * 
+     * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * 
+     * @deprecated
      */
-    var OpenStreetMapImageryProvider = function OpenStreetMapImageryProvider(options) {
+    function OpenStreetMapImageryProvider(options) {
+        deprecationWarning('OpenStreetMapImageryProvider', 'OpenStreetMapImageryProvider is deprecated. It will be removed in Cesium 1.18. Use createOpenStreetMapImageryProvider instead.');
         options = defaultValue(options, {});
         
         var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
@@ -104,13 +112,14 @@ define([
         this._errorEvent = new Event();
 
         this._ready = true;
+        this._readyPromise = when.resolve(true);
 
         var credit = defaultValue(options.credit, defaultCredit);
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
         this._credit = credit;
-    };
+    }
 
     function chooseSubdomain(subdomains, x, y) {
         if (subdomains === undefined) {
@@ -315,6 +324,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof OpenStreetMapImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

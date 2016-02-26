@@ -1,0 +1,161 @@
+/* Calendar*/
+
+.nihilo .dijitCalendarIncrementControl {
+	/* next/prev month buttons */
+	width:15px;
+	height:15px;
+	background-image: url("images/spriteRoundedIconsSmall.png");
+	background-repeat: no-repeat
+}
+.dj_ie6 .nihilo .dijitCalendarIncrementControl {
+	font-size:.1em;
+	background-image: url("images/spriteRoundedIconsSmall.gif");
+}
+
+.nihilo .dijitA11ySideArrow {
+	display: none;
+}
+
+.nihilo .dijitCalendarDecrease {
+	background-position: top left;
+}
+.nihilo .dijitCalendarIncrease {
+	background-position: -30px top;
+}
+
+.nihilo table.dijitCalendarContainer {
+	font-size: 100%;
+	border-spacing: 0;
+	border-collapse: separate;
+	border: 1px solid #ccc;
+	margin: 0;
+}
+
+.nihilo .dijitCalendarMonthContainer th {
+	/* month header cell */
+	background:#d3d3d3 url("images/titleBar.png") repeat-x top;
+	padding-top:.3em;
+	padding-bottom:.2em;
+	text-align:center;
+}
+.dj_ie6 .nihilo .dijitCalendarMonthContainer th {
+	padding-top:.2em;
+	padding-bottom:.1em;
+}
+
+.nihilo .dijitCalendarDayLabelTemplate {
+	/* day of week labels */
+	background:#fefefe;
+	font-weight:normal;
+	padding-top:.15em;
+	padding-bottom:.2em;
+	border-bottom: 1px solid #eeeeee;
+	color:#293a4b;
+	text-align:center;
+}
+
+.nihilo .dijitCalendarBodyContainer {
+	border-bottom: 1px solid #eeeeee;
+}
+
+.nihilo .dijitCalendarMonthLabel {
+	color:#293a4b;
+	font-weight: bold;
+	padding: 0 4px;
+}
+
+.nihilo .dijitCalendarDateTemplate {
+	/* style for each day cell */
+	font-size: 0.9em;
+	font-weight: bold;
+	text-align: center;
+	padding: 0.3em 0.3em 0.05em 0.3em;
+	letter-spacing: 1px;
+	background-color: #fdfdfd;
+	border:#fdfdfd solid 1px !important;
+}
+
+.dj_ie .nihilo .dijitCalendarDateTemplate {
+	padding: 0.1em .33em 0.02em .33em;
+}
+
+.nihilo .dijitCalendarPreviousMonth,
+.nihilo .dijitCalendarNextMonth 		{
+	/* days that are part of the previous or next month */
+	color:#999999;
+	background-color:#f5f5f5 !important;
+	border:#f5f5f5 solid 1px !important;
+}
+
+.nihilo .dijitCalendarCurrentMonth {
+	/* days that are part of this month */
+}
+
+.nihilo .dijitCalendarDisabledDate {
+	text-decoration:line-through !important;
+}
+
+.nihilo .dijitCalendarCurrentDate {
+	/* cell for today's date */
+	text-decoration:underline;
+	font-weight:bold;
+}
+
+.nihilo .dijitCalendarSelectedDate {
+	/* cell for the selected date */
+	background-color:#ffe284 !important;
+	color:black !important;
+	border:#f7c95c solid 1px !important;
+}
+
+
+.nihilo .dijitCalendarYearContainer {
+	/* footer of the table that contains the year display/selector */
+	background:white url("images/titleBar.png") repeat-x top;
+}
+
+.nihilo .dijitCalendarYearLabel {
+	/* container for all of 3 year labels */
+	margin:0;
+	padding:0.4em 0 0.25em 0;
+	text-align:center;
+	font-size: 1.17em;
+}
+
+.nihilo .dijitCalendarSelectedYear {
+	/* label for selected year */
+	font-weight:bolder;
+	color:black;
+	padding:0.2em;
+	padding-bottom:0.1em;
+	background-color:#ffe284 !important;
+	border:#f7c95c solid 1px !important;
+}
+
+.nihilo .dijitCalendarNextYear,
+.nihilo .dijitCalendarPreviousYear {
+	/* label for next/prev years */
+	color:black !important;
+	font-weight:normal;
+}
+
+/* Styling for month DropDownButton */
+
+.nihilo .dijitCalendar .dijitDropDownButton {
+	margin: 0;
+}
+.nihilo .dijitCalendar .dijitButtonText {
+	padding: 0;
+}
+.nihilo .dijitCalendar .dijitDropDownButton .dijitButtonNode {
+	background-color: transparent;
+	background-image: none;
+	padding: 0;
+}
+
+/* Styling for month drop down list */
+
+.nihilo .dijitCalendarMonthMenu .dijitCalendarMonthLabelHover {
+	background-color: #ffe284;
+	color: #243C5F;
+}

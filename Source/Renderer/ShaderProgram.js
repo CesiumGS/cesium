@@ -24,14 +24,13 @@ define([
         createUniform,
         createUniformArray) {
     "use strict";
-    /*global console*/
 
     var nextShaderProgramId = 0;
 
     /**
      * @private
      */
-    var ShaderProgram = function(options) {
+    function ShaderProgram(options) {
         var modifiedFS = handleUniformPrecisionMismatches(options.vertexShaderText, options.fragmentShaderText);
 
         this._gl = options.gl;
@@ -63,8 +62,7 @@ define([
          * @private
          */
         this.id = nextShaderProgramId++;
-    };
-
+    }
     ShaderProgram.fromCache = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 

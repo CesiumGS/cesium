@@ -22,7 +22,6 @@ defineSuite([
         VertexFormat,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);

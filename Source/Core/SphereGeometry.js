@@ -32,8 +32,6 @@ define([
      *
      * @see SphereGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sphere.html|Cesium Sandcastle Sphere Demo}
-     *
      * @example
      * var sphere = new Cesium.SphereGeometry({
      *   radius : 100.0,
@@ -41,7 +39,7 @@ define([
      * });
      * var geometry = Cesium.SphereGeometry.createGeometry(sphere);
      */
-    var SphereGeometry = function(options) {
+    function SphereGeometry(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -53,7 +51,7 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
         this._workerName = 'createSphereGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -63,7 +61,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {SphereGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

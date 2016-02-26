@@ -34,8 +34,6 @@ define([
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
-     *@demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Color.html|Cesium Sandcastle Polyline Color Appearance Demo}
-     *
      * @example
      * // A solid white line segment
      * var primitive = new Cesium.Primitive({
@@ -57,7 +55,7 @@ define([
      *   })
      * });
      */
-    var PolylineColorAppearance = function(options) {
+    function PolylineColorAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -92,7 +90,7 @@ define([
         // Non-derived members
 
         this._vertexFormat = vertexFormat;
-    };
+    }
 
     defineProperties(PolylineColorAppearance.prototype, {
         /**

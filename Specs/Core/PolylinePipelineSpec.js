@@ -12,7 +12,6 @@ defineSuite([
         CesiumMath,
         Transforms) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('wrapLongitude', function() {
         var positions = Cartesian3.fromDegreesArray([
@@ -87,11 +86,11 @@ defineSuite([
         expect(noDuplicates).toEqual(positions);
     });
 
-    it('removeDuplicates to remove positions within absolute epsilon 7', function() {
+    it('removeDuplicates to remove positions within absolute epsilon 10', function() {
         var positions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 2.0, 3.0),
-            new Cartesian3(1.0, 2.0, 3.0 + CesiumMath.EPSILON7)];
+            new Cartesian3(1.0, 2.0, 3.0 + CesiumMath.EPSILON10)];
         var expectedPositions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 2.0, 3.0)];
@@ -99,11 +98,11 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
-    it('removeDuplicates to remove positions within relative epsilon 7', function() {
+    it('removeDuplicates to remove positions within relative epsilon 10', function() {
         var positions = [
             new Cartesian3(0.0, 0.0, 1000000.0),
             new Cartesian3(0.0, 0.0, 3000000.0),
-            new Cartesian3(0.0, 0.0, 3000000.2)];
+            new Cartesian3(0.0, 0.0, 3000000.0002)];
         var expectedPositions = [
             new Cartesian3(0.0, 0.0, 1000000.0),
             new Cartesian3(0.0, 0.0, 3000000.0)];
@@ -111,16 +110,16 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
-    it('removeDuplicates keeps positions that add up past relative epsilon 7', function() {
-        var eightyPercentOfEpsilon7 = 0.8 * CesiumMath.EPSILON7;
+    it('removeDuplicates keeps positions that add up past relative epsilon 10', function() {
+        var eightyPercentOfEpsilon = 0.8 * CesiumMath.EPSILON10;
         var positions = [
             new Cartesian3(0.0, 0.0, 1.0),
-            new Cartesian3(0.0, 0.0, 1.0 + eightyPercentOfEpsilon7),
-            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon7)),
-            new Cartesian3(0.0, 0.0, 1.0 + (3 * eightyPercentOfEpsilon7))];
+            new Cartesian3(0.0, 0.0, 1.0 + eightyPercentOfEpsilon),
+            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon)),
+            new Cartesian3(0.0, 0.0, 1.0 + (3 * eightyPercentOfEpsilon))];
         var expectedPositions = [
             new Cartesian3(0.0, 0.0, 1.0),
-            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon7))];
+            new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon))];
         var noDuplicates = PolylinePipeline.removeDuplicates(positions);
         expect(noDuplicates).toEqual(expectedPositions);
     });

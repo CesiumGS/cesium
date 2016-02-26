@@ -27,8 +27,8 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the polygon.
@@ -42,7 +42,7 @@ define([
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
      */
-    var PolygonGraphics = function(options) {
+    function PolygonGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -70,7 +70,7 @@ define([
         this._fillSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(PolygonGraphics.prototype, {
         /**

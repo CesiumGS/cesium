@@ -34,7 +34,6 @@ defineSuite([
         VerticalOrigin,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -95,7 +94,7 @@ defineSuite([
 
     function verifyPrimitivesRender(primitives, color) {
         scene.primitives.removeAll();
-        scene.camera.viewRectangle(rectangle);
+        scene.camera.setView({ destination : rectangle });
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 

@@ -52,8 +52,6 @@ define([
      *
      * @see CylinderOutlineGeometry.createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder%20Outline.html|Cesium Sandcastle Cylinder Outline Demo}
-     *
      * @example
      * // create cylinder geometry
      * var cylinder = new Cesium.CylinderOutlineGeometry({
@@ -63,7 +61,7 @@ define([
      * });
      * var geometry = Cesium.CylinderOutlineGeometry.createGeometry(cylinder);
      */
-    var CylinderOutlineGeometry = function(options) {
+    function CylinderOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -96,7 +94,7 @@ define([
         this._slices = slices;
         this._numberOfVerticalLines = numberOfVerticalLines;
         this._workerName = 'createCylinderOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -106,7 +104,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CylinderOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

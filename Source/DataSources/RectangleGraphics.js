@@ -27,8 +27,8 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.coordinates] The Property specifying the {@link Rectangle}.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the rectangle.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the rectangle extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the rectangle relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the rectangle's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.closeTop=true] A boolean Property specifying whether the rectangle has a top cover when extruded
      * @param {Property} [options.closeBottom=true] A boolean Property specifying whether the rectangle has a bottom cover when extruded.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the rectangle.
@@ -44,7 +44,7 @@ define([
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      */
-    var RectangleGraphics = function(options) {
+    function RectangleGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -76,7 +76,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(RectangleGraphics.prototype, {
         /**

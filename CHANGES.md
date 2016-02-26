@@ -1,11 +1,103 @@
 Change Log
 ==========
 
+### 1.18 - 2016-02-01
+* Breaking changes
+    * Removed support for `CESIUM_binary_glTF`. Use `KHR_binary_glTF` instead, which is the default for the online [COLLADA-to-glTF converter](http://cesiumjs.org/convertmodel.html).
+* Deprecated
+    * Deprecated `GroundPrimitive.geometryInstance`. It will be removed in 1.20. Use `GroundPrimitive.geometryInstances` instead.
+    * Deprecated `TileMapServiceImageryProvider`. It will be removed in 1.20. Use `createTileMapServiceImageryProvider` instead.
+* Reduced the amount of CPU memory used by terrain by ~25% in Chrome.
+* Added a Sandcastle example to "star burst" overlapping billboards and labels.
+* Added `VRButton` which is a simple, single-button widget that toggles VR mode. It is off by default. To enable the button, set the `vrButton` option to `Viewer` to `true`. Only Cardboard for mobile is supported. More VR devices will be supported when the WebVR API is more stable.
+* Added `Scene.useWebVR` to switch the scene to use stereoscopic rendering.
+* Cesium now honors `window.devicePixelRatio` on browsers that support the CSS `imageRendering` attribute.  This greatly improves performance on mobile devices and high DPI displays by rendering at the browser-recommended resolution. This also reduces bandwidth usage and increases battery life in these cases.  To enable the previous behavior, use the following code:
+    ```javascript
+    if(Cesium.FeatureDetection.supportsImageRenderingPixelated()){
+        viewer.resolutionScale = window.devicePixelRatio;
+    }
+    ```
+* `GroundPrimitive` now supports batching geometry for better performance.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
+* Added `ImageryLayer.getViewableRectangle` to make it easy to get the effective bounds of an imagery layer.
+* Improved compatibility with glTF KHR_binary_glTF and KHR_materials_common extensions
+* Fixed a picking issue that sometimes prevented objects being selected. [#3386](https://github.com/AnalyticalGraphicsInc/cesium/issues/3386)
+* Fixed cracking between tiles in 2D. [#3486](https://github.com/AnalyticalGraphicsInc/cesium/pull/3486)
+* Fixed creating bounding volumes for `GroundPrimitive`s whose containing rectangle has a width greater than pi.
+* Fixed incorrect texture coordinates for polygons with large height.
+* Fixed camera.flyTo not working when in 2D mode and only orientation changes
+* Added `UrlTemplateImageryProvider.reinitialize` for changing imagery provider options without creating a new instance.
+* `UrlTemplateImageryProvider` now accepts a promise to an `options` object in addition to taking the object directly.
+* Fixed a bug that prevented WMS feature picking from working with THREDDS XML and msGMLOutput in Internet Explorer 11.
+* Added `Scene.useDepthPicking` to enable or disable picking using the depth buffer. [#3390](https://github.com/AnalyticalGraphicsInc/cesium/pull/3390)
+* Added `BoundingSphere.fromEncodedCartesianVertices` to create bounding volumes from parallel arrays of the upper and lower bits of `EncodedCartesian3`s.
+* Added helper functions: `getExtensionFromUri`, `getAbsoluteUri`, and `Math.logBase`.
+* Added `Rectangle.union` and `Rectangle.expand`.
+
+### 1.17 - 2016-01-04
+
+* Breaking changes
+    * Removed `Camera.viewRectangle`. Use `Camera.setView({destination: rectangle})` instead.
+    * Removed `RectanglePrimitive`. Use `RectangleGeometry` or `Entity.rectangle` instead.
+    * Removed `Polygon`. Use `PolygonGeometry` or `Entity.polygon` instead.
+    * Removed `OrthographicFrustum.getPixelSize`. Use `OrthographicFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveFrustum.getPixelSize`. Use `PerspectiveFrustum.getPixelDimensions` instead.
+    * Removed `PerspectiveOffCenterFrustum.getPixelSize`. Use `PerspectiveOffCenterFrustum.getPixelDimensions` instead.
+    * Removed `Scene\HeadingPitchRange`. Use `Core\HeadingPitchRange` instead.
+    * Removed `jsonp`. Use `loadJsonp` instead.
+    * Removed `HeightmapTessellator` from the public API. It is an implementation details.
+    * Removed `TerrainMesh` from the public API. It is an implementation details.
+* Reduced the amount of GPU and CPU memory used by terrain by using [compression](http://cesiumjs.org/2015/12/18/Terrain-Quantization/). The CPU memory was reduced by up to 40%.
+* Added the ability to manipulate `Model` node transformations via CZML and the Entity API. See the new Sandcastle example: [CZML Model - Node Transformations](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML%20Model%20-%20Node%20Transformations.html&label=CZML). [#3316](https://github.com/AnalyticalGraphicsInc/cesium/pull/3316)
+* Added `Globe.tileLoadProgressEvent`, which is raised when the length of the tile load queue changes, enabling incremental loading indicators.
+* Added support for msGMLOutput and Thredds server feature information formats to `GetFeatureInfoFormat` and `WebMapServiceImageryProvider`.
+* Added dynamic `enableFeaturePicking` toggle to all ImageryProviders that support feature picking.
+* Fixed disappearing terrain while fog is active. [#3335](https://github.com/AnalyticalGraphicsInc/cesium/issues/3335)
+* Fixed short segments in `CorridorGeometry` and `PolylineVolumeGeometry`.  [#3293](https://github.com/AnalyticalGraphicsInc/cesium/issues/3293)
+* Fixed `CorridorGeometry` with nearly colinear points. [#3320](https://github.com/AnalyticalGraphicsInc/cesium/issues/3320)
+* Added missing points to `EllipseGeometry` and `EllipseOutlineGeometry`. [#3078](https://github.com/AnalyticalGraphicsInc/cesium/issues/3078)
+* `Rectangle.fromCartographicArray` now uses the smallest rectangle regardess of whether or not it crosses the international date line. [#3227](https://github.com/AnalyticalGraphicsInc/cesium/issues/3227)
+* Added `TranslationRotationScale` property, which represents an affine transformation defined by a translation, rotation, and scale.
+* Added `Matrix4.fromTranslationRotationScale`.
+* Added `NodeTransformationProperty`, which is a `Property` value that is defined by independent `translation`, `rotation`, and `scale` `Property` instances.
+* Added `PropertyBag`, which is a `Property` whose value is a key-value mapping of property names to the computed value of other properties.
+* Added `ModelGraphics.runAnimations` which is a boolean `Property` indicating if all model animations should be started after the model is loaded.
+* Added `ModelGraphics.nodeTransformations` which is a `PropertyBag` of `TranslationRotationScale` properties to be applied to a loaded model.
+* Added CZML support for new `runAnimations` and `nodeTransformations` properties on the `model` packet.
+
 ### 1.16 - 2015-12-01
 
+* Deprecated
+    * Deprecated `HeightmapTessellator`. It will be removed in 1.17.
+    * Deprecated `TerrainMesh`. It will be removed in 1.17.
+    * Deprecated `OpenStreetMapImageryProvider`. It will be removed in 1.18. Use `createOpenStreetMapImageryProvider` instead.
+* Improved terrain performance by up to 35%. Added support for fog near the horizon, which improves performance by rendering less terrain tiles and reduces terrain tile requests.  This is enabled by default.  See `Scene.fog` for options.  [#3154](https://github.com/AnalyticalGraphicsInc/cesium/pull/3154)
+* Added terrain exaggeration. Enabled on viewer creation with the exaggeration scalar as the `terrainExaggeration` option.
+* Added support for incrementally loading textures after a Model is ready. This allows the Model to be visible as soon as possible while its textures are loaded in the background.
+* `ImageMaterialProperty.image` now accepts an `HTMLVideoElement`. You can also assign a video element directly to an Entity `material` property.
+* `Material` image uniforms now accept and `HTMLVideoElement` anywhere it could previously take a `Canvas` element.
+* Added `VideoSynchronizer` helper object for keeping an `HTMLVideoElement` in sync with a scene's clock.
+* Fixed an issue with loading skeletons for skinned glTF models. [#3224](https://github.com/AnalyticalGraphicsInc/cesium/pull/3224)
+* Fixed an issue with tile selection when below the surface of the ellipsoid. [#3170](https://github.com/AnalyticalGraphicsInc/cesium/issues/3170)
+* Added `Cartographic.fromCartesian` function.
+* Added `createOpenStreetMapImageryProvider` function to replace the `OpenStreetMapImageryProvider` class. This function returns a constructed `UrlTemplateImageryProvider`.
 * `GeoJsonDataSource.load` now takes an optional `describeProperty` function for generating feature description properties. [#3140](https://github.com/AnalyticalGraphicsInc/cesium/pull/3140)
-* Entities have a reference to their entity collection.
-* Entity collections have a reference to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+* Added `ImageryProvider.readyPromise` and `TerrainProvider.readyPromise` and implemented it in all terrain and imagery providers.  This is a promise which resolves when `ready` becomes true and rejected if there is an error during initialization. [#3175](https://github.com/AnalyticalGraphicsInc/cesium/pull/3175)
+* Fixed an issue where the sun texture is not generated correctly on some mobile devices. [#3141](https://github.com/AnalyticalGraphicsInc/cesium/issues/3141)
+* Fixed a bug that caused setting `Entity.parent` to `undefined` to throw an exception. [#3169](https://github.com/AnalyticalGraphicsInc/cesium/issues/3169)
+* Fixed a bug which caused `Entity` polyline graphics to be incorrect when a scene's ellipsoid was not WGS84. [#3174](https://github.com/AnalyticalGraphicsInc/cesium/pull/3174)
+* Entities have a reference to their entity collection and to their owner (usually a data source, but can be a `CompositeEntityCollection`).
+* Added `ImageMaterialProperty.alpha` and a `alpha` uniform to `Image` and `Material` types to control overall image opacity. It defaults to 1.0, fully opaque.
+* Added `Camera.getPixelSize` function to get the size of a pixel in meters based on the current view.
+* Added `Camera.distanceToBoundingSphere` function.
+* Added `BoundingSphere.fromOrientedBoundingBox` function.
+* Added utility function `getBaseUri`, which given a URI with or without query parameters, returns the base path of the URI.
+* Added `Queue.peek` to return the item at the front of a Queue.
+* Fixed `JulianDate.fromIso8601` so that it correctly parses the `YYYY-MM-DDThh:mmTZD` format.
+* Added `Model.maximumScale` and `ModelGraphics.maximumScale` properties, giving an upper limit for minimumPixelSize.
+* Fixed glTF implementation to read the version as a string as per the specification and to correctly handle backwards compatibility for axis-angle rotations in glTF 0.8 models.
+* Fixed a bug in the deprecated `jsonp` that prevented it from returning a promise.  Its replacement, `loadJsonp`, was unaffected.
+* Fixed a bug where loadWithXhr would reject the returned promise with successful HTTP responses (2xx) that weren't 200.
 
 ### 1.15 - 2015-11-02
 

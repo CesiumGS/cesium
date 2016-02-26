@@ -16,7 +16,6 @@ defineSuite([
         pollToPromise,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -102,7 +101,6 @@ defineSuite([
         it('discards an image that is identical to the missing image even if the missing image is transparent', function() {
             var promises = [];
 
-            var transparentImage;
             promises.push(loadImage('Data/Images/Transparent.png'));
 
             var missingImageUrl = 'Data/Images/Transparent.png';

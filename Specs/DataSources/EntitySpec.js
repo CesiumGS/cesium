@@ -54,7 +54,6 @@ defineSuite([
         RectangleGraphics,
         WallGraphics) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -136,7 +135,7 @@ defineSuite([
         expect(entity.rectangle).toBeInstanceOf(RectangleGraphics);
         expect(entity.viewFrom).toBeInstanceOf(ConstantProperty);
         expect(entity.wall).toBeInstanceOf(WallGraphics);
-        
+
         expect(entity.entityCollection).toBeUndefined();
     });
 
@@ -224,8 +223,6 @@ defineSuite([
         source.addProperty(propertyName);
         source[propertyName] = value;
 
-        var listener = jasmine.createSpy('listener');
-
         var target = new Entity({
             id : 'target'
         });
@@ -291,10 +288,24 @@ defineSuite([
     it('can add and remove custom properties.', function() {
         var entity = new Entity();
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+
         entity.addProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
+
         entity.removeProperty('bob');
         expect(entity.hasOwnProperty('bob')).toBe(false);
+        expect(entity.propertyNames).not.toContain('bob');
+    });
+
+    it('can re-add removed properties', function() {
+        var entity = new Entity();
+        entity.addProperty('bob');
+        entity.removeProperty('bob');
+        entity.addProperty('bob');
+        expect(entity.hasOwnProperty('bob')).toBe(true);
+        expect(entity.propertyNames).toContain('bob');
     });
 
     it('addProperty throws with no property specified.', function() {
@@ -461,5 +472,22 @@ defineSuite([
         expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
         expect(entity.show).toBe(true);
         expect(entity.isShowing).toBe(false);
+    });
+
+    it('isShowing works when removing parent.', function() {
+        var entity = new Entity();
+        entity.parent = new Entity({
+            show : false
+        });
+        expect(entity.isShowing).toBe(false);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entity.parent = undefined;
+
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
+        expect(entity.isShowing).toBe(true);
     });
 });

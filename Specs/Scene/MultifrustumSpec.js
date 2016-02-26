@@ -54,7 +54,6 @@ defineSuite([
         createScene,
         when) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var context;
@@ -213,7 +212,7 @@ defineSuite([
         bounded = defaultValue(bounded, true);
         closestFrustum = defaultValue(closestFrustum, false);
 
-        var Primitive = function() {
+        function Primitive() {
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
@@ -230,8 +229,7 @@ defineSuite([
                     return that._modelMatrix;
                 }
             };
-        };
-
+        }
         Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';
@@ -249,11 +247,11 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-                var minimumCorner = Cartesian3.negate(maximumCorner, new Cartesian3());
+                var maximum = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+                var minimum = Cartesian3.negate(maximum, new Cartesian3());
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-                    minimumCorner: minimumCorner,
-                    maximumCorner: maximumCorner
+                    minimum : minimum,
+                    maximum : maximum
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
                 this._va = VertexArray.fromGeometry({

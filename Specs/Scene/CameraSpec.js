@@ -44,7 +44,6 @@ defineSuite([
         SceneMode,
         TweenCollection) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var camera;
@@ -59,7 +58,7 @@ defineSuite([
     var rotateAmount = CesiumMath.PI_OVER_TWO;
     var zoomAmount = 1.0;
 
-    var FakeScene = function(projection) {
+    function FakeScene(projection) {
         this.canvas = {
             clientWidth: 512,
             clientHeight: 384
@@ -70,8 +69,11 @@ defineSuite([
         this.tweens = new TweenCollection();
         this.screenSpaceCameraController = {};
         this.camera = undefined;
-    };
-
+        this.context = {
+            drawingBufferWidth : 1024,
+            drawingBufferHeight : 768
+        };
+    }
     beforeEach(function() {
         position = Cartesian3.clone(Cartesian3.UNIT_Z);
         up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -1810,7 +1812,6 @@ defineSuite([
 
     it('pick map in columbus view', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.maximumRadius;
 
         camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0), new Cartesian3()), 5.0 * maxRadii, new Cartesian3());
@@ -2245,6 +2246,65 @@ defineSuite([
         var distance = Cartesian3.distance(camera.position, sphere.center);
         expect(distance).toBeGreaterThan(sphere.radius);
         expect(distance).toBeLessThan(sphere.radius * 3.0);
+    });
+
+    it('distanceToBoundingSphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var distance = camera.distanceToBoundingSphere(sphere);
+        expect(distance).toEqual(0.5);
+    });
+
+    it('distanceToBoundingSphere throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.distanceToBoundingSphere();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+        var context = scene.context;
+        var drawingBufferWidth = context.drawingBufferWidth;
+        var drawingBufferHeight = context.drawingBufferHeight;
+
+        // Compute expected pixel size
+        var distance = camera.distanceToBoundingSphere(sphere);
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cartesian2());
+        var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
+
+        var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);
+        expect(pixelSize).toEqual(expectedPixelSize);
+    });
+
+    it('getPixelSize throws when there is no bounding sphere', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        expect(function() {
+            camera.getPixelSize();
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no drawing buffer width', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere);
+        }).toThrowDeveloperError();
+    });
+
+    it('getPixelSize throws when there is no drawing buffer height', function() {
+        scene.mode = SceneMode.SCENE3D;
+        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
+
+        expect(function() {
+            camera.getPixelSize(sphere, 10);
+        }).toThrowDeveloperError();
     });
 
 });

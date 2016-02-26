@@ -15,9 +15,9 @@ define(function() {
      *      doSomethingElse();
      * }
      */
-    var defined = function(value) {
+    function defined(value) {
         return value !== undefined;
-    };
+    }
 
     return defined;
 });

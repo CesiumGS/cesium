@@ -3,13 +3,13 @@
 /Build
 /Instrumented
 /Cesium-*.zip
+/cesium-*.tgz
 .DS_Store
 Thumbs.db
 
 /Apps/CesiumViewer/Gallery/gallery-index.js
 
 /Apps/Sandcastle/jsHintOptions.js
-/Apps/Sandcastle/.jshintrc
 /Apps/Sandcastle/gallery/gallery-index.js
 
 /Source/Cesium.js

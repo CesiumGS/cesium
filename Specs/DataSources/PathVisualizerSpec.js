@@ -42,7 +42,6 @@ defineSuite([
         SceneMode,
         createScene) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var scene;
     var visualizer;
@@ -492,7 +491,7 @@ defineSuite([
         expect(result).toEqual([new Cartesian3(0, 0, 3)]);
     });
 
-    var CustomPositionProperty = function(innerProperty) {
+    function CustomPositionProperty(innerProperty) {
         this.SampledProperty = innerProperty;
         this.isConstant = innerProperty.isConstant;
         this.definitionChanged = innerProperty.definitionChanged;
@@ -509,7 +508,7 @@ defineSuite([
         this.equals = function(other) {
             return innerProperty.equals(other);
         };
-    };
+    }
 
     it('subSample works for custom properties', function() {
         var t1 = new JulianDate(0, 0);

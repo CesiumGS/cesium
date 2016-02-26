@@ -49,7 +49,7 @@ define([
         PassThrough) {
     "use strict";
 
-    var SunPostProcess = function() {
+    function SunPostProcess() {
         this._fbo = undefined;
 
         this._downSampleFBO1 = undefined;
@@ -81,7 +81,7 @@ define([
         this._uRadius = undefined;
 
         this._blurStep = new Cartesian2();
-    };
+    }
 
     SunPostProcess.prototype.clear = function(context, color) {
         var clear = this._clearFBO1Command;
@@ -112,7 +112,10 @@ define([
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
-    SunPostProcess.prototype.update = function(context) {
+
+    SunPostProcess.prototype.update = function(passState) {
+        var context = passState.context;
+        var viewport = passState.viewport;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -126,11 +129,9 @@ define([
                 color : new Color()
             });
 
-            var rs;
             var uniformMap = {};
 
             this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -149,7 +150,6 @@ define([
             };
 
             this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -170,7 +170,6 @@ define([
             };
 
             this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -188,7 +187,6 @@ define([
             };
 
             this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -203,7 +201,6 @@ define([
             };
 
             this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -211,7 +208,6 @@ define([
             uniformMap = {};
 
             this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -220,10 +216,6 @@ define([
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
         var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
         var downSampleSize = Math.max(downSampleWidth, downSampleHeight);
-
-        var viewport = viewportBoundingRectangle;
-        viewport.width = width;
-        viewport.height = height;
 
         var downSampleViewport = downSampleViewportBoundingRectangle;
         downSampleViewport.width = downSampleSize;
@@ -294,7 +286,6 @@ define([
             var downSampleRenderState = RenderState.fromCache({
                 viewport : downSampleViewport
             });
-            var upSampleRenderState = RenderState.fromCache();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture(0);
@@ -321,6 +312,12 @@ define([
                 return that._blurStep;
             };
             this._blurYCommand.renderState = downSampleRenderState;
+
+            var upSampledViewport = viewportBoundingRectangle;
+            upSampledViewport.width = width;
+            upSampledViewport.height = height;
+
+            var upSampleRenderState = RenderState.fromCache({ viewport : upSampledViewport });
 
             this._blendCommand.uniformMap.u_texture0 = function() {
                 return fbo.getColorTexture(0);
