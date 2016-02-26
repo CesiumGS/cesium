@@ -883,6 +883,10 @@ defineSuite([
             expect(color[2]).toBeGreaterThan(0);
             expect(color[3]).toEqual(255);
 
+            // set color to transparent
+            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue", 0.0)'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
             tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("cyan")'});
             color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
