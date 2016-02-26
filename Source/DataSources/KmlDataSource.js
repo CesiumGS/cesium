@@ -381,7 +381,7 @@ define([
             return undefined;
         }
         var result = [];
-        var childNodes = node.getElementsByTagName(tagName);
+        var childNodes = node.getElementsByTagNameNS('*', tagName);
         var length = childNodes.length;
         for (var q = 0; q < length; q++) {
             var child = childNodes[q];
