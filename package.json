@@ -72,5 +72,15 @@
     "release": "gulp release",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires"
+  },
+  "jspm": {
+    "main": "Build/Cesium/Cesium",
+    "format": "global",
+    "shim": {
+      "Build/Cesium/Cesium": {
+        "exports": "Cesium"
+      }
+    },
+    "registry": "npm"
   }
 }

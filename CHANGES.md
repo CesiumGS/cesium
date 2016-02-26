@@ -32,6 +32,7 @@ Change Log
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
 * Fixed bug causing `navigator is not defined` reference error when Cesium is used with Node.js.
 * Upgraded Knockout from version 3.2.0 to 3.4.0.
+* Added jspm configuration description to package.json
 
 ### 1.18 - 2016-02-01
 * Breaking changes
