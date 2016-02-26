@@ -118,12 +118,18 @@ define([
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            feature.color = style.color.evaluate(feature);
+
+            var colorExpression = style.color.evaluate(feature);
+            //>>includeStart('debug', pragmas.debug);
+            if (!(colorExpression instanceof Color)) {
+                throw new DeveloperError('color expects a color expression');
+            }
+            //>>includeEnd('debug');
+            feature.color = colorExpression;
 
             var showExpression = style.show.evaluate(feature);
             //>>includeStart('debug', pragmas.debug);
-            if (typeof(showExpression) !== 'boolean')
-            {
+            if (typeof(showExpression) !== 'boolean') {
                 throw new DeveloperError('show expects boolean expression');
             }
             //>>includeEnd('debug');
