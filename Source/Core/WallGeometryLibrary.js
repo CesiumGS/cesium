@@ -33,11 +33,12 @@ define([
     function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
         var length = positions.length;
         if (length < 2) {
-            return { positions: positions };
+            return;
         }
 
-        var hasBottomHeights = (defined(bottomHeights));
-        var hasTopHeights = (defined(topHeights));
+        var hasBottomHeights = defined(bottomHeights);
+        var hasTopHeights = defined(topHeights);
+        var hasAllZeroHeights = true;
 
         var cleanedPositions = new Array(length);
         var cleanedTopHeights = new Array(length);
@@ -50,6 +51,9 @@ define([
         if (hasTopHeights) {
             c0.height = topHeights[0];
         }
+
+        hasAllZeroHeights = hasAllZeroHeights && c0.height <= 0;
+
         cleanedTopHeights[0] = c0.height;
 
         if (hasBottomHeights) {
@@ -65,6 +69,7 @@ define([
             if (hasTopHeights) {
                 c1.height = topHeights[i];
             }
+            hasAllZeroHeights = hasAllZeroHeights && c1.height <= 0;
 
             if (!latLonEquals(c0, c1)) {
                 cleanedPositions[index] = v1; // Shallow copy!
@@ -81,6 +86,10 @@ define([
             } else if (c0.height < c1.height) {
                 cleanedTopHeights[index - 1] = c1.height;
             }
+        }
+
+        if (hasAllZeroHeights || index < 2) {
+            return;
         }
 
         cleanedPositions.length = index;
@@ -109,13 +118,13 @@ define([
     WallGeometryLibrary.computePositions = function(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, duplicateCorners) {
         var o = removeDuplicates(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
+        if (!defined(o)) {
+            return;
+        }
+
         wallPositions = o.positions;
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
-
-        if (wallPositions.length < 2) {
-            return undefined;
-        }
 
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise
@@ -130,6 +139,7 @@ define([
         }
 
         var length = wallPositions.length;
+        var numCorners = length - 2;
         var topPositions;
         var bottomPositions;
 
@@ -184,7 +194,8 @@ define([
 
         return {
             bottomPositions: bottomPositions,
-            topPositions: topPositions
+            topPositions: topPositions,
+            numCorners: numCorners
         };
     };
 

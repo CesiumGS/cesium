@@ -297,7 +297,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
-     * 
+     *
      * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
@@ -358,10 +358,6 @@ define([
         var granularity = wallGeometry._granularity;
         var ellipsoid = wallGeometry._ellipsoid;
 
-        if (wallPositions.length < 2) {
-            return;
-        }
-
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         if (!defined(pos)) {
             return;
@@ -369,6 +365,7 @@ define([
 
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
+        var numCorners = pos.numCorners;
 
         var length = topPositions.length;
         var size = length * 2;
@@ -536,7 +533,7 @@ define([
         //
 
         var numVertices = size / 3;
-        size -= 6;
+        size -= 6 * (numCorners + 1);
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;
