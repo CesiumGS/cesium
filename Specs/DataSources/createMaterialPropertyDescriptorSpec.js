@@ -12,12 +12,10 @@ defineSuite([
         ColorMaterialProperty,
         ImageMaterialProperty) {
     "use strict";
-    /*global it,expect*/
 
-    var MockGraphics = function() {
+    function MockGraphics() {
         this._definitionChanged = new Event();
-    };
-
+    }
     Object.defineProperties(MockGraphics.prototype, {
         materialProperty : createMaterialPropertyDescriptor('materialProperty')
     });

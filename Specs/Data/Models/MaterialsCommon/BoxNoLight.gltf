@@ -69,7 +69,7 @@
             "api": "WebGL",
             "version": "1.0.2"
         },
-        "version": 1
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -138,32 +138,20 @@
                     "technique": "PHONG",
                     "transparent": false,
                     "values": {
-                        "ambient": {
-                            "type": 35666,
-                            "value": [
-                                1,
-                                1,
-                                1,
-                                1
-                            ]
-                        },
-                        "diffuse": {
-                            "type": 35678,
-                            "value": "texture_Image0001"
-                        },
-                        "shininess": {
-                            "type": 5126,
-                            "value": 256
-                        },
-                        "specular": {
-                            "type": 35666,
-                            "value": [
-                                0.20000000298023224,
-                                0.20000000298023224,
-                                0.20000000298023224,
-                                1
-                            ]
-                        }
+                        "ambient": [
+                            1,
+                            1,
+                            1,
+                            1
+                        ],
+                        "diffuse": "texture_Image0001",
+                        "shininess": 256,
+                        "specular": [
+                            0.20000000298023224,
+                            0.20000000298023224,
+                            0.20000000298023224,
+                            1
+                        ]
                     }
                 }
             },

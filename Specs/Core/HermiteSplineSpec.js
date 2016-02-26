@@ -8,7 +8,6 @@ defineSuite([
         Cartesian3,
         CesiumMath) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var points;
     var times;
@@ -59,7 +58,7 @@ defineSuite([
 
     // returns a function for a hermite curve between points p and q
     // with tangents pT and qT respectively on the interval [0, 1]
-    var createHermiteBasis = function(p, pT, q, qT) {
+    function createHermiteBasis(p, pT, q, qT) {
         return function(u) {
             var a = 2.0 * u * u * u - 3.0 * u * u + 1.0;
             var b = -2.0 * u * u * u + 3.0 * u * u;
@@ -73,7 +72,7 @@ defineSuite([
 
             return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1, p0), p2, p0), p3, p0);
         };
-    };
+    }
 
     it('create spline', function() {
         var hs = new HermiteSpline({

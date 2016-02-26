@@ -30,7 +30,6 @@ defineSuite([
         pollToPromise,
         Uri) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -52,7 +51,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 12;
         var tilerow = 5;
@@ -102,7 +101,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 1;
         var tilerow = 1;
@@ -123,7 +122,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 1;
         var tilerow = 1;
@@ -145,7 +144,7 @@ defineSuite([
 
         var provider = new WebMapTileServiceImageryProvider(options);
 
-        var loadImageSpy = spyOn(ImageryProvider, 'loadImage');
+        spyOn(ImageryProvider, 'loadImage');
 
         var tilecol = 12;
         var tilerow = 5;
@@ -197,6 +196,20 @@ defineSuite([
             });
         }
         expect(createWithoutTMS).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new WebMapTileServiceImageryProvider({
+            layer : 'someLayer',
+            style : 'someStyle',
+            url : 'http://wmts.invalid',
+            tileMatrixSetID : 'someTMS'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     // default parameters values

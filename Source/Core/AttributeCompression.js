@@ -16,8 +16,7 @@ define([
     /**
      * Attribute compression and decompression functions.
      *
-     * @namespace
-     * @alias AttributeCompression
+     * @exports AttributeCompression
      *
      * @private
      */
@@ -34,8 +33,6 @@ define([
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
      * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
      *
-     * @exception {DeveloperError} vector must be defined.
-     * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} vector must be normalized.
      *
      * @see AttributeCompression.octDecode
@@ -77,7 +74,6 @@ define([
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} result must be defined.
      * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
      *
      * @see AttributeCompression.octEncode
@@ -112,7 +108,6 @@ define([
      * @param {Cartesian2} encoded The oct encoded vector.
      * @returns {Number} The oct encoded vector packed into a single float.
      *
-     * @exception {DeveloperError} encoded is required.
      */
     AttributeCompression.octPackFloat = function(encoded) {
         //>>includeStart('debug', pragmas.debug);
@@ -132,7 +127,6 @@ define([
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @returns {Number} The 2 byte oct-encoded unit length vector.
      *
-     * @exception {DeveloperError} vector must be defined.
      * @exception {DeveloperError} vector must be normalized.
      */
     AttributeCompression.octEncodeFloat = function(vector) {
@@ -147,8 +141,6 @@ define([
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} value must be defined.
-     * @exception {DeveloperError} result must be defined.
      */
     AttributeCompression.octDecodeFloat = function(value, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -174,10 +166,6 @@ define([
      * @param {Cartesian2} result The 'oct' encoded vectors packed into two floating-point numbers.
      * @returns {Cartesian2} The 'oct' encoded vectors packed into two floating-point numbers.
      *
-     * @exception {DeveloperError} v1 must be defined.
-     * @exception {DeveloperError} v2 must be defined.
-     * @exception {DeveloperError} v3 must be defined.
-     * @exception {DeveloperError} result must be defined.
      */
     AttributeCompression.octPack = function(v1, v2, v3, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -211,11 +199,6 @@ define([
      * @param {Cartesian3} v1 One decoded and normalized vector.
      * @param {Cartesian3} v2 One decoded and normalized vector.
      * @param {Cartesian3} v3 One decoded and normalized vector.
-     *
-     * @exception {DeveloperError} packed must be defined.
-     * @exception {DeveloperError} v1 must be defined.
-     * @exception {DeveloperError} v2 must be defined.
-     * @exception {DeveloperError} v3 must be defined.
      */
     AttributeCompression.octUnpack = function(packed, v1, v2, v3) {
         //>>includeStart('debug', pragmas.debug);
@@ -252,7 +235,6 @@ define([
      * @param {Cartesian2} textureCoordinates The texture coordinates to compress
      * @returns {Number} The packed texture coordinates.
      *
-     * @exception {DeveloperError} textureCoordinates is required.
      */
     AttributeCompression.compressTextureCoordinates = function(textureCoordinates) {
         //>>includeStart('debug', pragmas.debug);
@@ -273,8 +255,6 @@ define([
      * @param {Cartesian2} result The decompressed texture coordinates.
      * @returns {Cartesian2} The modified result parameter.
      *
-     * @exception {DeveloperError} compressed is required.
-     * @exception {DeveloperError} result is required.
      */
     AttributeCompression.decompressTextureCoordinates = function(compressed, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -150,7 +150,7 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
-    var ImageryLayer = function ImageryLayer(imageryProvider, options) {
+    function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
         options = defaultValue(options, {});
@@ -235,7 +235,7 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
-    };
+    }
 
     defineProperties(ImageryLayer.prototype, {
 
@@ -341,10 +341,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayer#isDestroyed
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
+     * 
+     * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
         return destroyObject(this);
@@ -353,6 +354,28 @@ define([
     var imageryBoundsScratch = new Rectangle();
     var tileImageryBoundsScratch = new Rectangle();
     var clippedRectangleScratch = new Rectangle();
+
+    /**
+     * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
+     * producing the overall bounds of imagery that can be produced by this layer.
+     *
+     * @returns {Promise} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
+     *
+     * @example
+     * // Zoom to an imagery layer.
+     * imageryLayer.getViewableRectangle().then(function (rectangle) {
+     *     return camera.flyTo({
+     *         destination: rectangle
+     *     });
+     * });
+     */
+    ImageryLayer.prototype.getViewableRectangle = function() {
+        var imageryProvider = this._imageryProvider;
+        var rectangle = this._rectangle;
+        return imageryProvider.readyPromise.then(function() {
+            return Rectangle.intersection(imageryProvider.rectangle, rectangle);
+        });
+    };
 
     /**
      * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
@@ -721,12 +744,13 @@ define([
      *
      * @private
      *
-     * @param {Context} context The rendered context to use.
+     * @param {FrameState} frameState The frameState.
      * @param {Imagery} imagery The imagery instance to reproject.
      */
-    ImageryLayer.prototype._reprojectTexture = function(context, commandList, imagery) {
+    ImageryLayer.prototype._reprojectTexture = function(frameState, imagery) {
         var texture = imagery.texture;
         var rectangle = imagery.rectangle;
+        var context = frameState.context;
 
         // Reproject this texture if it is not already in a geographic projection and
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
@@ -749,7 +773,7 @@ define([
                         finalizeReprojectTexture(that, context, imagery, outputTexture);
                     }
                 });
-                commandList.push(computeCommand);
+                frameState.commandList.push(computeCommand);
         } else {
             finalizeReprojectTexture(this, context, imagery, texture);
         }

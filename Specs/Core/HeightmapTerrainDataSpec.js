@@ -12,7 +12,6 @@ defineSuite([
         TerrainData,
         when) {
      "use strict";
-     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);
@@ -150,23 +149,16 @@ defineSuite([
              }).toThrowDeveloperError();
          });
 
-         it('upsamples by subsetting when number of samples is odd in each direction', function() {
-             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
-                 expect(upsampled.wasCreatedByUpsampling()).toBe(true);
-                 expect(upsampled._width).toBe(2);
-                 expect(upsampled._height).toBe(2);
-                 expect(upsampled._buffer).toEqual([1.0, 2.0, 4.0, 5.0]);
-             });
-         });
-
-         it('upsamples by interpolating when number of samples is even in either direction', function() {
+         it('upsamples', function() {
              data = new HeightmapTerrainData({
                  buffer : new Float32Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]),
                  width : 4,
                  height : 4
              });
 
-             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -174,26 +166,7 @@ defineSuite([
              });
          });
 
-         it('upsample by subsetting works with a stride', function() {
-             data = new HeightmapTerrainData({
-                 buffer : new Uint8Array([1, 1, 10, 2, 1, 10, 3, 1, 10, 4, 1, 10, 5, 1, 10, 6, 1, 10, 7, 1, 10, 8, 1, 10, 9, 1, 10]),
-                 width : 3,
-                 height : 3,
-                 structure : {
-                     stride : 3,
-                     elementsPerHeight : 2
-                 }
-             });
-
-             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
-                 expect(upsampled.wasCreatedByUpsampling()).toBe(true);
-                 expect(upsampled._width).toBe(2);
-                 expect(upsampled._height).toBe(2);
-                 expect(upsampled._buffer).toEqual([1, 1, 10, 2, 1, 10, 4, 1, 10, 5, 1, 10]);
-             });
-         });
-
-         it('upsample by interpolating works with a stride', function() {
+         it('upsample works with a stride', function() {
              data = new HeightmapTerrainData({
                  buffer : new Uint8Array([1, 1, 10, 2, 1, 10, 3, 1, 10, 4, 1, 10, 5, 1, 10, 6, 1, 10, 7, 1, 10, 8, 1, 10, 9, 1, 10, 10, 1, 10, 11, 1, 10, 12, 1, 10, 13, 1, 10, 14, 1, 10, 15, 1, 10, 16, 1, 10]),
                  width : 4,
@@ -204,7 +177,9 @@ defineSuite([
                  }
              });
 
-             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -212,7 +187,7 @@ defineSuite([
              });
          });
 
-         it('upsample by interpolating works with a big endian stride', function() {
+         it('upsample works with a big endian stride', function() {
              data = new HeightmapTerrainData({
                  buffer : new Uint8Array([1, 1, 10, 1, 2, 10, 1, 3, 10, 1, 4, 10, 1, 5, 10, 1, 6, 10, 1, 7, 10, 1, 8, 10, 1, 9, 10, 1, 10, 10, 1, 11, 10, 1, 12, 10, 1, 13, 10, 1, 14, 10, 1, 15, 10, 1, 16, 10]),
                  width : 4,
@@ -224,7 +199,9 @@ defineSuite([
                  }
              });
 
-             return when(data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1), function(upsampled) {
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -232,14 +209,16 @@ defineSuite([
              });
          });
 
-         it('upsample by interpolating works for an eastern child', function() {
+         it('upsample works for an eastern child', function() {
              data = new HeightmapTerrainData({
                  buffer : new Float32Array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]),
                  width : 4,
                  height : 4
              });
 
-             return when(data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1), function(upsampled) {
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+             }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
@@ -247,7 +226,7 @@ defineSuite([
              });
          });
 
-         it('upsample by interpolating works with a stride for an eastern child', function() {
+         it('upsample works with a stride for an eastern child', function() {
              data = new HeightmapTerrainData({
                  buffer : new Uint8Array([1, 1, 10, 2, 1, 10, 3, 1, 10, 4, 1, 10, 5, 1, 10, 6, 1, 10, 7, 1, 10, 8, 1, 10, 9, 1, 10, 10, 1, 10, 11, 1, 10, 12, 1, 10, 13, 1, 10, 14, 1, 10, 15, 1, 10, 16, 1, 10]),
                  width : 4,
@@ -258,7 +237,9 @@ defineSuite([
                  }
              });
 
-             return when(data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1), function(upsampled) {
+             return data.createMesh(tilingScheme, 0, 0, 0, 1).then(function() {
+                 return data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
+             }).then(function(upsampled) {
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);

@@ -38,7 +38,6 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Material.html|Cesium Sandcastle Polyline Material Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({
@@ -57,7 +56,7 @@ define([
      *   })
      * });
      */
-    var PolylineMaterialAppearance = function(options) {
+    function PolylineMaterialAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -94,7 +93,7 @@ define([
         // Non-derived members
 
         this._vertexFormat = vertexFormat;
-    };
+    }
 
     defineProperties(PolylineMaterialAppearance.prototype, {
         /**

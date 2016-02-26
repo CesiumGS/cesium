@@ -19,7 +19,7 @@ define([
      * @alias InfoBoxViewModel
      * @constructor
      */
-    var InfoBoxViewModel = function() {
+    function InfoBoxViewModel() {
         this._cameraClicked = new Event();
         this._closeClicked = new Event();
 
@@ -79,7 +79,7 @@ define([
                 return !defined(this.description) || this.description.length === 0;
             }
         });
-    };
+    }
 
     /**
      * Gets the maximum height of sections within the info box, minus an offset, in CSS-ready form.

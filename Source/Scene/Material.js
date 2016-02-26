@@ -258,7 +258,7 @@ define([
      *     }
      * });
      */
-    var Material = function(options) {
+    function Material(options) {
         /**
          * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
          * @type {String}
@@ -321,7 +321,7 @@ define([
         if (!defined(Material._uniformList[this.type])) {
             Material._uniformList[this.type] = Object.keys(this._uniforms);
         }
-    };
+    }
 
     // Cached list of combined uniform names indexed by type.
     // Used to get the list of uniforms in the same order.
@@ -495,10 +495,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Material#isDestroyed
      *
      * @example
      * material = material && material.destroy();
+     * 
+     * @see Material#isDestroyed
      */
     Material.prototype.destroy = function() {
         var textures = this._textures;
@@ -657,13 +658,43 @@ define([
     };
 
     function createTexture2DUpdateFunction(uniformId) {
+        var oldUniformValue;
         return function(material, context) {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
+            var uniformChanged = oldUniformValue !== uniformValue;
+            oldUniformValue = uniformValue;
             var texture = material._textures[uniformId];
 
             var uniformDimensionsName;
             var uniformDimensions;
+
+            if (uniformValue instanceof HTMLVideoElement) {
+                // HTMLVideoElement.readyState >=2 means we have enough data for the current frame.
+                // See: https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+                if (uniformValue.readyState >= 2) {
+                    if (uniformChanged && defined(texture)) {
+                        if (texture !== context.defaultTexture) {
+                            texture.destroy();
+                        }
+                        texture = undefined;
+                    }
+
+                    if (!defined(texture) || texture === context.defaultTexture) {
+                        texture = new Texture({
+                            context : context,
+                            source : uniformValue
+                        });
+                        material._textures[uniformId] = texture;
+                        return;
+                    }
+
+                    texture.copyFrom(uniformValue);
+                } else if (!defined(texture)) {
+                    material._textures[uniformId] = context.defaultTexture;
+                }
+                return;
+            }
 
             if (uniformValue instanceof Texture && uniformValue !== texture) {
                 material._texturePaths[uniformId] = undefined;
@@ -998,14 +1029,17 @@ define([
             type : Material.ImageType,
             uniforms : {
                 image : Material.DefaultImageId,
-                repeat : new Cartesian2(1.0, 1.0)
+                repeat : new Cartesian2(1.0, 1.0),
+                alpha : 1.0
             },
             components : {
                 diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb',
-                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a'
+                alpha : 'texture2D(image, fract(repeat * materialInput.st)).a * alpha'
             }
         },
-        translucent : true
+        translucent : function(material) {
+            return material.uniforms.alpha < 1.0;
+        }
     });
 
     /**

@@ -18,7 +18,6 @@ defineSuite([
         TilingScheme,
         WebMercatorProjection) {
     "use strict";
-    /*global describe,it,expect,beforeEach*/
 
     var tilingScheme;
     beforeEach(function() {

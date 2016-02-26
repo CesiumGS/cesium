@@ -171,9 +171,9 @@ define([
      * @param {Rectangle} options.rectangle A cartographic rectangle with north, south, east and west properties in radians.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
-     * @param {Number} [options.extrudedHeight] Height of extruded surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
      *
      * @exception {DeveloperError} <code>options.rectangle.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
      * @exception {DeveloperError} <code>options.rectangle.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -183,8 +183,6 @@ define([
      *
      * @see RectangleOutlineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle%20Outline.html|Cesium Sandcastle Rectangle Outline Demo}
-     *
      * @example
      * var rectangle = new Cesium.RectangleOutlineGeometry({
      *   ellipsoid : Cesium.Ellipsoid.WGS84,
@@ -193,7 +191,7 @@ define([
      * });
      * var geometry = Cesium.RectangleOutlineGeometry.createGeometry(rectangle);
      */
-    var RectangleOutlineGeometry = function(options) {
+    function RectangleOutlineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var rectangle = options.rectangle;
@@ -220,7 +218,7 @@ define([
         this._rotation = rotation;
         this._extrudedHeight = extrudedHeight;
         this._workerName = 'createRectangleOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.

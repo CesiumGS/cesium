@@ -113,9 +113,9 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
+     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
-    var Entity = function(options) {
+    function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
@@ -181,7 +181,7 @@ define([
 
         this.parent = options.parent;
         this.merge(options);
-    };
+    }
 
     function updateShow(entity, children, isShowing) {
         var length = children.length;
@@ -303,7 +303,9 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(this);
+                if (defined(value)) {
+                    value._children.push(this);
+                }
 
                 var isShowing = this.isShowing;
 
@@ -317,7 +319,7 @@ define([
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
-         * @type {Event}
+         * @type {Array}
          */
         propertyNames : {
             get : function() {
@@ -497,17 +499,18 @@ define([
      */
     Entity.prototype.removeProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
+        var index = propertyNames.indexOf(propertyName);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-        if (propertyNames.indexOf(propertyName) === -1) {
+        if (index === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
         //>>includeEnd('debug');
 
-        this._propertyNames.push(propertyName);
+        this._propertyNames.splice(index, 1);
         delete this[propertyName];
     };
 

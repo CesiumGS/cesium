@@ -4,8 +4,10 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/defineProperties',
+        'Core/EventHelper',
         'Core/GeographicTilingScheme',
         'Core/Visibility',
+        'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
         'Specs/createContext',
         'Specs/createFrameState',
@@ -16,8 +18,10 @@ defineSuite([
         Cartesian3,
         Cartographic,
         defineProperties,
+        EventHelper,
         GeographicTilingScheme,
         Visibility,
+        QuadtreeTile,
         QuadtreeTileLoadState,
         createContext,
         createFrameState,
@@ -46,11 +50,11 @@ defineSuite([
 
     it('must be constructed with a tileProvider', function() {
         expect(function() {
-            var primitive = new QuadtreePrimitive();
+            return new QuadtreePrimitive();
         }).toThrowDeveloperError();
 
         expect(function() {
-            var primitive = new QuadtreePrimitive({});
+            return new QuadtreePrimitive({});
         }).toThrowDeveloperError();
     });
 
@@ -300,4 +304,4 @@ defineSuite([
             tilingScheme : tileProvider.tilingScheme
         });
     }
-});
+}, 'WebGL');

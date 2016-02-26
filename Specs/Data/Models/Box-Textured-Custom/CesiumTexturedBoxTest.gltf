@@ -69,7 +69,7 @@
             "api": "WebGL",
             "version": "1.0.2"
         },
-        "version": 1
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -354,6 +354,71 @@
                     "semantic": "VIEWPORT",
                     "type": 35666
                 },
+                "nodeModelMatrix": {
+                    "semantic": "MODEL",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewMatrix": {
+                    "semantic": "VIEW",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeProjectionMatrix": {
+                    "semantic": "PROJECTION",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewMatrix": {
+                    "semantic": "MODELVIEW",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewProjectionMatrix": {
+                    "semantic": "MODELVIEWPROJECTION",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelInverseMatrix": {
+                    "semantic": "MODELINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewInverseMatrix": {
+                    "semantic": "VIEWINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewInverseMatrix": {
+                    "semantic": "MODELVIEWINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeProjectionInverseMatrix" : {
+                    "semantic": "PROJECTIONINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewProjectionInverseMatrix": {
+                    "semantic": "MODELVIEWPROJECTIONINVERSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelInverseTransposeMatrix": {
+                    "semantic": "MODELINVERSETRANSPOSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeModelViewInverseTransposeMatrix": {
+                    "semantic": "MODELVIEWINVERSETRANSPOSE",
+                    "type": 35676,
+                    "node" : "node_3"
+                },
+                "nodeViewportMatrix": {
+                    "semantic": "VIEWPORT",
+                    "type": 35666,
+                    "node" : "node_3"
+                },
                 "vec2": {
                     "type": 35664
                 },
@@ -392,6 +457,19 @@
                 "u_projectionInverseMatrix": "projectionInverseMatrix",
                 "u_modelInverseTransposeMatrix": "modelInverseTransposeMatrix",
                 "u_viewport": "viewportMatrix",
+                "u_nodeModelMatrix": "nodeModelMatrix",
+                "u_nodeViewMatrix": "nodeViewMatrix",
+                "u_nodeProjectionMatrix": "nodeProjectionMatrix",
+                "u_nodeModelViewMatrix": "nodeModelViewMatrix",
+                "u_nodeModelViewProjectionMatrix": "nodeModelViewProjectionMatrix",
+                "u_nodeModelInverseMatrix": "nodeModelInverseMatrix",
+                "u_nodeViewInverseMatrix": "nodeViewInverseMatrix",
+                "u_nodeModelViewInverseMatrix": "nodeModelViewInverseMatrix",
+                "u_nodeModelViewProjectionInverseMatrix": "nodeModelViewProjectionInverseMatrix",
+                "u_nodeProjectionInverseMatrix": "nodeProjectionInverseMatrix",
+                "u_nodeModelInverseTransposeMatrix": "nodeModelInverseTransposeMatrix",
+                "u_nodeModelViewInverseTransposeMatrix": "nodeModelViewInverseTransposeMatrix",
+                "u_nodeViewport": "nodeViewportMatrix",
                 "u_vec2": "vec2",
                 "u_mat2": "mat2",
                 "u_mat3": "mat3",

@@ -17,9 +17,10 @@ defineSuite([
         'Scene/NeverTileDiscardPolicy',
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
-        'Scene/TileMapServiceImageryProvider',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/WebMapServiceImageryProvider',
         'Specs/createContext',
+        'Specs/createFrameState',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
@@ -39,18 +40,20 @@ defineSuite([
         NeverTileDiscardPolicy,
         QuadtreeTile,
         SingleTileImageryProvider,
-        TileMapServiceImageryProvider,
+        createTileMapServiceImageryProvider,
         WebMapServiceImageryProvider,
         createContext,
+        createFrameState,
         pollToPromise) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var context;
+    var frameState;
     var computeEngine;
 
     beforeAll(function() {
         context = createContext();
+        frameState = createFrameState(context);
         computeEngine = new ComputeEngine(context);
     });
 
@@ -172,9 +175,8 @@ defineSuite([
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
-                    var commandList = [];
-                    layer._reprojectTexture(context, commandList, imagery);
-                    commandList[0].execute(computeEngine);
+                    layer._reprojectTexture(frameState, imagery);
+                    frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
@@ -235,9 +237,26 @@ defineSuite([
         });
     });
 
+    it('getViewableRectangle works', function() {
+        var providerRectangle = Rectangle.fromDegrees(8.2, 61.09, 8.5, 61.7);
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Green4x4.png',
+            rectangle : providerRectangle
+        });
+
+        var layerRectangle = Rectangle.fromDegrees(7.2, 60.9, 9.0, 61.7);
+        var layer = new ImageryLayer(provider, {
+            rectangle : layerRectangle
+        });
+
+        return layer.getViewableRectangle().then(function(rectangle) {
+            expect(rectangle).toEqual(Rectangle.intersection(providerRectangle, layerRectangle));
+        });
+    });
+
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -286,7 +305,7 @@ defineSuite([
                 url : 'Data/Images/Blue.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -332,7 +351,7 @@ defineSuite([
                 url : 'Data/Images/Green4x4.png'
             });
 
-            var provider = new TileMapServiceImageryProvider({
+            var provider = createTileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 

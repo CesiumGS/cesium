@@ -47,6 +47,7 @@ define([
      * @see Matrix4.fromColumnMajorArray
      * @see Matrix4.fromRowMajorArray
      * @see Matrix4.fromRotationTranslation
+     * @see Matrix4.fromTranslationRotationScale
      * @see Matrix4.fromTranslationQuaternionRotationScale
      * @see Matrix4.fromTranslation
      * @see Matrix4.fromScale
@@ -61,7 +62,7 @@ define([
      * @see Matrix3
      * @see Packable
      */
-    var Matrix4 = function(column0Row0, column1Row0, column2Row0, column3Row0,
+    function Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
                            column0Row1, column1Row1, column2Row1, column3Row1,
                            column0Row2, column1Row2, column2Row2, column3Row2,
                            column0Row3, column1Row3, column2Row3, column3Row3) {
@@ -81,7 +82,7 @@ define([
         this[13] = defaultValue(column3Row1, 0.0);
         this[14] = defaultValue(column3Row2, 0.0);
         this[15] = defaultValue(column3Row3, 0.0);
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -408,6 +409,23 @@ define([
         result[15] = 1.0;
 
         return result;
+    };
+
+    /**
+     * Creates a Matrix4 instance from a {@link TranslationRotationScale} instance.
+     *
+     * @param {TranslationRotationScale} translationRotationScale The instance.
+     * @param {Matrix4} [result] The object in which the result will be stored, if undefined a new instance will be created.
+     * @returns {Matrix4} The modified result parameter, or a new Matrix4 instance if one was not provided.
+     */
+    Matrix4.fromTranslationRotationScale = function(translationRotationScale, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(translationRotationScale)) {
+            throw new DeveloperError('translationRotationScale is required.');
+        }
+        //>>includeEnd('debug');
+
+        return Matrix4.fromTranslationQuaternionRotationScale(translationRotationScale.translation, translationRotationScale.rotation, translationRotationScale.scale, result);
     };
 
     /**
@@ -1724,12 +1742,13 @@ define([
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromUniformScale
-     * @see Matrix4.multiplyByScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
+     * 
+     * @see Matrix4.fromUniformScale
+     * @see Matrix4.multiplyByScale
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1762,12 +1781,13 @@ define([
      * @param {Matrix4} result The object onto which to store the result.
      * @returns {Matrix4} The modified result parameter.
      *
-     * @see Matrix4.fromScale
-     * @see Matrix4.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
+     * 
+     * @see Matrix4.fromScale
+     * @see Matrix4.multiplyByUniformScale
      */
     Matrix4.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);

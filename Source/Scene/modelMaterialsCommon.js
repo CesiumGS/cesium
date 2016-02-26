@@ -1,12 +1,12 @@
 /*global define*/
 define([
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Renderer/WebGLConstants'
-], function(
-    defaultValue,
-    defined,
-    WebGLConstants) {
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Renderer/WebGLConstants'
+    ], function(
+        defaultValue,
+        defined,
+        WebGLConstants) {
     "use strict";
 
     function webGLConstantToGlslType(webGLValue) {
@@ -223,14 +223,16 @@ define([
         var lowerCase;
         var hasTexCoords = false;
         for(var name in parameterValues) {
-            if (parameterValues.hasOwnProperty(name)) {
-                var value = parameterValues[name];
+            //generate shader parameters for KHR_materials_common attributes
+            //(including a check, because some boolean flags should not be used as shader parameters)
+            if (parameterValues.hasOwnProperty(name) && (name !== 'transparent') && (name !== 'doubleSided')) {
+                var valType = getKHRMaterialsCommonValueType(name, parameterValues[name]);
                 lowerCase = name.toLowerCase();
-                if (!hasTexCoords && (value.type === WebGLConstants.SAMPLER_2D)) {
+                if (!hasTexCoords && (valType === WebGLConstants.SAMPLER_2D)) {
                     hasTexCoords = true;
                 }
                 techniqueParameters[lowerCase] = {
-                    type: value.type
+                    type: valType
                 };
             }
         }
@@ -609,18 +611,54 @@ define([
         return techniqueId;
     }
 
+    function getKHRMaterialsCommonValueType(paramName, paramValue)
+    {
+        var value;
+
+        // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
+        // materials using KHR_materials_common with explicit type/value members
+        if (defined(paramValue.value)) {
+            value = paramValue.value;
+        } else {
+            value = paramValue;
+        }
+     
+        switch (paramName)  {
+            case 'ambient':
+                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+            case 'diffuse':
+                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+            case 'emission':
+                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+            case 'specular':
+                return (value instanceof String || typeof value === 'string') ? WebGLConstants.SAMPLER_2D : WebGLConstants.FLOAT_VEC4;
+            case 'shininess':
+                return WebGLConstants.FLOAT;
+            case 'transparency':
+                return WebGLConstants.FLOAT;
+                
+            // these two are usually not used directly within shaders,
+            // they are just added here for completeness
+            case 'transparent':
+                return WebGLConstants.BOOL;                
+            case 'doubleSided':
+                return WebGLConstants.BOOL;                
+        }
+    }
+
     function getTechniqueKey(khrMaterialsCommon) {
         var techniqueKey = '';
-         techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
+        techniqueKey += 'technique:' + khrMaterialsCommon.technique + ';';
 
         var values = khrMaterialsCommon.values;
         var keys = Object.keys(values).sort();
         var keysCount = keys.length;
         for (var i=0;i<keysCount;++i) {
             var name = keys[i];
-            if (values.hasOwnProperty(name)) {
-                var value = values[name];
-                techniqueKey += name + ':' + value.type.toString();
+            //generate first part of key using shader parameters for KHR_materials_common attributes
+            //(including a check, because some boolean flags should not be used as shader parameters)
+            if (values.hasOwnProperty(name) && (name !== 'transparent') && (name !== 'doubleSided')) {
+                techniqueKey += name + ':' + getKHRMaterialsCommonValueType(name, values[name]);
                 techniqueKey += ';';
             }
         }
@@ -640,7 +678,7 @@ define([
      *
      * @private
      */
-    var modelMaterialsCommon = function(gltf) {
+    function modelMaterialsCommon(gltf) {
         if (!defined(gltf)) {
             return undefined;
         }
@@ -692,7 +730,14 @@ define([
                         for (var valueName in values) {
                             if (values.hasOwnProperty(valueName)) {
                                 var value = values[valueName];
-                                material.values[valueName] = value.value;
+
+                                // Backwards compatibility for COLLADA2GLTF v1.0-draft when it encoding
+                                // materials using KHR_materials_common with explicit type/value members
+                                if (defined(value.value)) {
+                                    material.values[valueName] = value.value;
+                                } else {
+                                    material.values[valueName] = value;
+                                }
                             }
                         }
 
@@ -709,7 +754,7 @@ define([
         }
 
         return gltf;
-    };
+    }
 
     return modelMaterialsCommon;
 });

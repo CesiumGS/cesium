@@ -29,8 +29,6 @@ define([
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sphere%20Outline.html|Cesium Sandcastle Sphere Outline Demo}
-     *
      * @example
      * var sphere = new Cesium.SphereOutlineGeometry({
      *   radius : 100.0,
@@ -39,7 +37,7 @@ define([
      * });
      * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
      */
-    var SphereOutlineGeometry = function(options) {
+    function SphereOutlineGeometry(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -51,7 +49,7 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
         this._workerName = 'createSphereOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -61,7 +59,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {SphereOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

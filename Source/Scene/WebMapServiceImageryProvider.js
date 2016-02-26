@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
@@ -19,7 +18,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
@@ -74,9 +72,9 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
@@ -92,7 +90,7 @@ define([
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -183,7 +181,7 @@ define([
             getFeatureInfoFormats : getFeatureInfoFormats,
             enablePickFeatures: options.enablePickFeatures
         });
-    };
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -338,6 +336,18 @@ define([
         ready : {
             get : function() {
                 return this._tileProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
             }
         },
 

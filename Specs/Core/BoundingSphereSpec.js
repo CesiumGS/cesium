@@ -5,11 +5,13 @@ defineSuite([
         'Core/Cartesian4',
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/EncodedCartesian3',
         'Core/GeographicProjection',
         'Core/Intersect',
         'Core/Interval',
         'Core/Math',
         'Core/Matrix4',
+        'Core/OrientedBoundingBox',
         'Core/Plane',
         'Core/Rectangle',
         'Specs/createPackableSpecs'
@@ -19,16 +21,17 @@ defineSuite([
         Cartesian4,
         Cartographic,
         Ellipsoid,
+        EncodedCartesian3,
         GeographicProjection,
         Intersect,
         Interval,
         CesiumMath,
         Matrix4,
+        OrientedBoundingBox,
         Plane,
         Rectangle,
         createPackableSpecs) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);
@@ -69,6 +72,25 @@ defineSuite([
             result.push(4.56);
         }
         return result;
+    }
+
+    function getPositionsAsEncodedFlatArray() {
+        var positions = getPositions();
+        var high = [];
+        var low = [];
+        for (var i = 0; i < positions.length; ++i) {
+            var encoded = EncodedCartesian3.fromCartesian(positions[i]);
+            high.push(encoded.high.x);
+            high.push(encoded.high.y);
+            high.push(encoded.high.z);
+            low.push(encoded.low.x);
+            low.push(encoded.low.y);
+            low.push(encoded.low.z);
+        }
+        return {
+            high : high,
+            low : low
+        };
     }
 
     it('default constructing produces expected values', function() {
@@ -269,6 +291,85 @@ defineSuite([
         expect(result.radius).toEqual(positionsRadius);
     });
 
+    it('fromEncodedCartesianVertices without positions returns an empty sphere', function() {
+        var sphere = BoundingSphere.fromEncodedCartesianVertices();
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromEncodedCartesianVertices without positions of different lengths returns an empty sphere', function() {
+        var positions = getPositionsAsEncodedFlatArray();
+        positions.low.length = positions.low.length - 1;
+        var sphere = BoundingSphere.fromEncodedCartesianVertices(positions.high, positions.low);
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(0.0);
+    });
+
+    it('fromEncodedCartesianVertices computes a center from points', function() {
+        var positions = getPositionsAsEncodedFlatArray();
+        var sphere = BoundingSphere.fromEncodedCartesianVertices(positions.high, positions.low);
+        expect(sphere.center).toEqual(positionsCenter);
+        expect(sphere.radius).toEqual(positionsRadius);
+    });
+
+    it('fromEncodedCartesianVertices contains all points (naive)', function() {
+        var positions = getPositionsAsEncodedFlatArray();
+        var sphere = BoundingSphere.fromEncodedCartesianVertices(positions.high, positions.low);
+        var radius = sphere.radius;
+        var center = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = Cartesian3.add(r, center, new Cartesian3());
+        var min = Cartesian3.subtract(center, r, new Cartesian3());
+
+        positions = getPositions();
+        var numPositions = positions.length;
+        for ( var i = 0; i < numPositions; i++) {
+            var currentPos = positions[i];
+            expect(currentPos.x <= max.x && currentPos.x >= min.x).toEqual(true);
+            expect(currentPos.y <= max.y && currentPos.y >= min.y).toEqual(true);
+            expect(currentPos.z <= max.z && currentPos.z >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromEncodedCartesianVertices contains all points (ritter)', function() {
+        var positions = getPositionsAsEncodedFlatArray();
+        var appendedPositions = [new Cartesian3(1, 1, 1), new Cartesian3(2, 2, 2), new Cartesian3(3, 3, 3)];
+        for (var j = 0; j < appendedPositions.length; ++j) {
+            var encoded = EncodedCartesian3.fromCartesian(Cartesian3.add(appendedPositions[j], center, new Cartesian3()));
+            positions.high.push(encoded.high.x);
+            positions.high.push(encoded.high.y);
+            positions.high.push(encoded.high.z);
+            positions.low.push(encoded.low.x);
+            positions.low.push(encoded.low.y);
+            positions.low.push(encoded.low.z);
+        }
+
+        var sphere = BoundingSphere.fromEncodedCartesianVertices(positions.high, positions.low);
+        var radius = sphere.radius;
+        var sphereCenter = sphere.center;
+
+        var r = new Cartesian3(radius, radius, radius);
+        var max = Cartesian3.add(r, sphereCenter, new Cartesian3());
+        var min = Cartesian3.subtract(sphereCenter, r, new Cartesian3());
+
+        var numElements = positions.length;
+        for (var i = 0; i < numElements; i += 3) {
+            expect(positions[i] <= max.x && positions[i] >= min.x).toEqual(true);
+            expect(positions[i + 1] <= max.y && positions[i + 1] >= min.y).toEqual(true);
+            expect(positions[i + 2] <= max.z && positions[i + 2] >= min.z).toEqual(true);
+        }
+    });
+
+    it('fromEncodedCartesianVertices fills result parameter if specified', function() {
+        var positions = getPositionsAsEncodedFlatArray();
+        var result = new BoundingSphere();
+        var sphere = BoundingSphere.fromEncodedCartesianVertices(positions.high, positions.low, result);
+        expect(sphere).toEqual(result);
+        expect(result.center).toEqual(positionsCenter);
+        expect(result.radius).toEqual(positionsRadius);
+    });
+
     it('fromRectangle2D creates an empty sphere if no rectangle provided', function() {
         var sphere = BoundingSphere.fromRectangle2D();
         expect(sphere.center).toEqual(Cartesian3.ZERO);
@@ -383,6 +484,21 @@ defineSuite([
 
         var expected = new BoundingSphere(new Cartesian3(0.0, 1.5, 2.0), 3.5);
         var sphere = BoundingSphere.fromBoundingSpheres([one, two, three]);
+        expect(sphere).toEqual(expected);
+    });
+
+    it('fromOrientedBoundingBox works with a result', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
+        var sphere = new BoundingSphere();
+        BoundingSphere.fromOrientedBoundingBox(box, sphere);
+        expect(sphere).toEqual(expected);
+    });
+
+    it('fromOrientedBoundingBox works without a result parameter', function() {
+        var box = OrientedBoundingBox.fromPoints(getPositions());
+        var expected = new BoundingSphere(positionsCenter, positionsRadius);
+        var sphere = BoundingSphere.fromOrientedBoundingBox(box);
         expect(sphere).toEqual(expected);
     });
 

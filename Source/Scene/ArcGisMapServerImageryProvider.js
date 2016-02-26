@@ -16,6 +16,7 @@ define([
         '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
         '../Core/WebMercatorTilingScheme',
@@ -40,6 +41,7 @@ define([
         loadJsonp,
         CesiumMath,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         WebMercatorProjection,
         WebMercatorTilingScheme,
@@ -97,22 +99,23 @@ define([
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
+     * 
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
-    var ArcGisMapServerImageryProvider = function ArcGisMapServerImageryProvider(options) {
+    function ArcGisMapServerImageryProvider(options) {
         options = defaultValue(options, {});
 
         //>>includeStart('debug', pragmas.debug);
@@ -148,6 +151,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         // Grab the details of this MapServer.
         var that = this;
@@ -212,12 +216,14 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(metadataError);
         }
 
         function metadataFailure(e) {
             var message = 'An error occurred while accessing ' + that._url + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function requestMetadata() {
@@ -242,8 +248,9 @@ define([
             requestMetadata();
         } else {
             this._ready = true;
+            this._readyPromise.resolve(true);
         }
-    };
+    }
 
     function buildImageUrl(imageryProvider, x, y, level) {
         var url;
@@ -482,6 +489,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof ArcGisMapServerImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

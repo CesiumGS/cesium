@@ -2,6 +2,7 @@
 define([
         '../ThirdParty/when',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './defaultValue',
         './defined',
@@ -12,10 +13,12 @@ define([
         './Math',
         './OrientedBoundingBox',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh'
     ], function(
         when,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         defaultValue,
         defined,
@@ -26,6 +29,7 @@ define([
         CesiumMath,
         OrientedBoundingBox,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh) {
     "use strict";
 
@@ -74,8 +78,6 @@ define([
      * @param {Uint8Array} [options.encodedNormals] The buffer containing per vertex normals, encoded using 'oct' encoding
      * @param {Uint8Array} [options.waterMask] The buffer containing the watermask.
      *
-     * @see TerrainData
-     * @see HeightmapTerrainData
      *
      * @example
      * var data = new Cesium.QuantizedMeshTerrainData({
@@ -102,8 +104,11 @@ define([
      *     eastSkirtHeight : 1.0,
      *     northSkirtHeight : 1.0
      * });
+     * 
+     * @see TerrainData
+     * @see HeightmapTerrainData
      */
-    var QuantizedMeshTerrainData = function QuantizedMeshTerrainData(options) {
+    function QuantizedMeshTerrainData(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.quantizedVertices)) {
             throw new DeveloperError('options.quantizedVertices is required.');
@@ -175,7 +180,6 @@ define([
             return uValues[a] - uValues[b];
         }
 
-        var requires32BitIndices = vertexCount > 64 * 1024;
         this._westIndices = sortIndicesIfNecessary(options.westIndices, sortByV, vertexCount);
         this._southIndices = sortIndicesIfNecessary(options.southIndices, sortByU, vertexCount);
         this._eastIndices = sortIndicesIfNecessary(options.eastIndices, sortByV, vertexCount);
@@ -190,7 +194,9 @@ define([
 
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+
+        this._mesh = undefined;
+    }
 
     defineProperties(QuantizedMeshTerrainData.prototype, {
         /**
@@ -235,11 +241,12 @@ define([
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
      * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    QuantizedMeshTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -257,6 +264,7 @@ define([
 
         var ellipsoid = tilingScheme.ellipsoid;
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         var verticesPromise = createMeshTaskProcessor.scheduleTask({
             minimumHeight : this._minimumHeight,
@@ -274,7 +282,8 @@ define([
             northSkirtHeight : this._northSkirtHeight,
             rectangle : rectangle,
             relativeToCenter : this._boundingSphere.center,
-            ellipsoid : ellipsoid
+            ellipsoid : ellipsoid,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {
@@ -288,16 +297,46 @@ define([
             vertexCount += that._westIndices.length + that._southIndices.length + that._eastIndices.length + that._northIndices.length;
             var indicesTypedArray = IndexDatatype.createTypedArray(vertexCount, result.indices);
 
-            return new TerrainMesh(
-                    that._boundingSphere.center,
-                    new Float32Array(result.vertices),
+            var vertices = new Float32Array(result.vertices);
+            var rtc = result.center;
+            var minimumHeight = result.minimumHeight;
+            var maximumHeight = result.maximumHeight;
+            var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
+            var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
+            var occlusionPoint = defaultValue(result.occludeePointInScaledSpace, that._horizonOcclusionPoint);
+            var stride = result.vertexStride;
+            var terrainEncoding = TerrainEncoding.clone(result.encoding);
+
+            that._skirtIndex = result.skirtIndex;
+            that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
+
+            that._mesh = new TerrainMesh(
+                    rtc,
+                    vertices,
                     indicesTypedArray,
-                    that._minimumHeight,
-                    that._maximumHeight,
-                    that._boundingSphere,
-                    that._horizonOcclusionPoint,
-                    defined(that._encodedNormals) ? 7 : 6,
-                    that._orientedBoundingBox);
+                    minimumHeight,
+                    maximumHeight,
+                    boundingSphere,
+                    occlusionPoint,
+                    stride,
+                    obb,
+                    terrainEncoding);
+
+            // Free memory received from server after mesh is created.
+            that._quantizedVertices = undefined;
+            that._encodedNormals = undefined;
+            that._indices = undefined;
+
+            that._uValues = undefined;
+            that._vValues = undefined;
+            that._heightValues = undefined;
+
+            that._westIndices = undefined;
+            that._southIndices = undefined;
+            that._eastIndices = undefined;
+            that._northIndices = undefined;
+
+            return that._mesh;
         });
     };
 
@@ -347,6 +386,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var mesh = this._mesh;
+        if (!defined(this._mesh)) {
+            return undefined;
+        }
+
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
 
@@ -354,9 +398,11 @@ define([
         var childRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
 
         var upsamplePromise = upsampleTaskProcessor.scheduleTask({
-            vertices : this._quantizedVertices,
-            indices : this._indices,
-            encodedNormals : this._encodedNormals,
+            vertices : mesh.vertices,
+            vertexCountWithoutSkirts : this._vertexCountWithoutSkirts,
+            indices : mesh.indices,
+            skirtIndex : this._skirtIndex,
+            encoding : mesh.encoding,
             minimumHeight : this._minimumHeight,
             maximumHeight : this._maximumHeight,
             isEastChild : isEastChild,
@@ -428,11 +474,51 @@ define([
         var v = CesiumMath.clamp((latitude - rectangle.south) / rectangle.height, 0.0, 1.0);
         v *= maxShort;
 
-        var uBuffer = this._uValues;
-        var vBuffer = this._vValues;
-        var heightBuffer = this._heightValues;
+        if (!defined(this._mesh)) {
+            return interpolateHeight(this, u, v);
+        }
 
-        var indices = this._indices;
+        interpolateMeshHeight(this, u, v);
+    };
+
+    var texCoordScratch0 = new Cartesian2();
+    var texCoordScratch1 = new Cartesian2();
+    var texCoordScratch2 = new Cartesian2();
+
+    function interpolateMeshHeight(terrainData, u, v) {
+        var mesh = terrainData._mesh;
+        var vertices = mesh.vertices;
+        var encoding = mesh.encoding;
+        var indices = mesh.indices;
+
+        for (var i = 0, len = indices.length; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var uv0 = encoding.decodeTextureCoordinates(vertices, i0, texCoordScratch0);
+            var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
+            var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
+
+            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
+            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                var h0 = encoding.decodeHeight(vertices, i0);
+                var h1 = encoding.decodeHeight(vertices, i1);
+                var h2 = encoding.decodeHeight(vertices, i2);
+                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            }
+        }
+
+        // Position does not lie in any triangle in this mesh.
+        return undefined;
+    }
+
+    function interpolateHeight(terrainData, u, v) {
+        var uBuffer = terrainData._uValues;
+        var vBuffer = terrainData._vValues;
+        var heightBuffer = terrainData._heightValues;
+
+        var indices = terrainData._indices;
         for (var i = 0, len = indices.length; i < len; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
@@ -451,13 +537,13 @@ define([
                 var quantizedHeight = barycentric.x * heightBuffer[i0] +
                                       barycentric.y * heightBuffer[i1] +
                                       barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(this._minimumHeight, this._maximumHeight, quantizedHeight / maxShort);
+                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
             }
         }
 
         // Position does not lie in any triangle in this mesh.
         return undefined;
-    };
+    }
 
     /**
      * Determines if a given child tile is available, based on the

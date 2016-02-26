@@ -8,8 +8,7 @@ define([
     /**
      * Describes how to draw a label.
      *
-     * @namespace
-     * @alias LabelStyle
+     * @exports LabelStyle
      *
      * @see Label#style
      */

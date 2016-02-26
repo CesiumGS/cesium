@@ -72,12 +72,13 @@ define([
      * @alias Sun
      * @constructor
      *
-     * @see Scene#sun
      *
      * @example
      * scene.sun = new Cesium.Sun();
+     * 
+     * @see Scene#sun
      */
-    var Sun = function() {
+    function Sun() {
         /**
          * Determines if the sun will be shown.
          *
@@ -116,7 +117,7 @@ define([
                 return that._size;
             }
         };
-    };
+    }
 
     defineProperties(Sun.prototype, {
         /**
@@ -147,6 +148,7 @@ define([
      * @private
      */
     Sun.prototype.update = function(scene) {
+        var passState = scene._passState;
         var frameState = scene.frameState;
         var context = scene.context;
 
@@ -163,8 +165,8 @@ define([
             return undefined;
         }
 
-        var drawingBufferWidth = scene.drawingBufferWidth;
-        var drawingBufferHeight = scene.drawingBufferHeight;
+        var drawingBufferWidth = passState.viewport.width;
+        var drawingBufferHeight = passState.viewport.height;
 
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
@@ -201,6 +203,7 @@ define([
             this._commands.computeCommand = new ComputeCommand({
                 fragmentShaderSource : SunTextureFS,
                 outputTexture  : this._texture,
+                uniformMap : uniformMap,
                 persists : false,
                 owner : this,
                 postExecute : function() {
@@ -337,10 +340,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Sun#isDestroyed
      *
      * @example
      * sun = sun && sun.destroy();
+     * 
+     *  @see Sun#isDestroyed
      */
     Sun.prototype.destroy = function() {
         var command = this._drawCommand;

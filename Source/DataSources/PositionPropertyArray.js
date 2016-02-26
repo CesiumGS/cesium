@@ -27,14 +27,15 @@ define([
      * @constructor
      *
      * @param {Property[]} [value] An array of Property instances.
+     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
-    var PositionPropertyArray = function(value, referenceFrame) {
+    function PositionPropertyArray(value, referenceFrame) {
         this._value = undefined;
         this._definitionChanged = new Event();
         this._eventHelper = new EventHelper();
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
         this.setValue(value);
-    };
+    }
 
     defineProperties(PositionPropertyArray.prototype, {
         /**

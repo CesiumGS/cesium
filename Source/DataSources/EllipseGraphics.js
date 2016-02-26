@@ -29,8 +29,8 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
      * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipse.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipse is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipse.
@@ -44,7 +44,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
-    var EllipseGraphics = function(options) {
+    function EllipseGraphics(options) {
         this._semiMajorAxis = undefined;
         this._semiMajorAxisSubscription = undefined;
         this._semiMinorAxis = undefined;
@@ -76,7 +76,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(EllipseGraphics.prototype, {
         /**

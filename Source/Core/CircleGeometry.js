@@ -29,10 +29,10 @@ define([
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
      * @param {Number} options.radius The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
+     * @param {Number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
+     * @param {Number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      *
      * @exception {DeveloperError} radius must be greater than zero.
@@ -40,8 +40,6 @@ define([
      *
      * @see CircleGeometry.createGeometry
      * @see Packable
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle.html|Cesium Sandcastle Circle Demo}
      *
      * @example
      * // Create a circle.
@@ -51,7 +49,7 @@ define([
      * });
      * var geometry = Cesium.CircleGeometry.createGeometry(circle);
      */
-    var CircleGeometry = function(options) {
+    function CircleGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
@@ -77,7 +75,7 @@ define([
         };
         this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
         this._workerName = 'createCircleGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -87,7 +85,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CircleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

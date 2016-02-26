@@ -4,18 +4,18 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
+        '../../Scene/createOpenStreetMapImageryProvider',
+        '../../Scene/createTileMapServiceImageryProvider',
         '../../Scene/MapboxImageryProvider',
-        '../../Scene/OpenStreetMapImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
+        createOpenStreetMapImageryProvider,
+        createTileMapServiceImageryProvider,
         MapboxImageryProvider,
-        OpenStreetMapImageryProvider,
-        TileMapServiceImageryProvider,
         ProviderViewModel) {
     "use strict";
 
@@ -149,7 +149,7 @@ mapping applications.\nhttp://www.esri.com',
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//a.tile.openstreetmap.org/'
                 });
             }
@@ -161,7 +161,7 @@ of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -173,7 +173,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -186,7 +186,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
-                return new OpenStreetMapImageryProvider({
+                return createOpenStreetMapImageryProvider({
                     url : '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 });
             }
@@ -198,7 +198,7 @@ map of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
+                return createTileMapServiceImageryProvider({
                     url : '//cesiumjs.org/blackmarble',
                     maximumLevel : 8,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -211,7 +211,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
+                return createTileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }

@@ -60,8 +60,6 @@ define([
      *
      * @see EllipsoidGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid.html|Cesium Sandcastle Ellipsoid Demo}
-     *
      * @example
      * var ellipsoid = new Cesium.EllipsoidGeometry({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
@@ -69,7 +67,7 @@ define([
      * });
      * var geometry = Cesium.EllipsoidGeometry.createGeometry(ellipsoid);
      */
-    var EllipsoidGeometry = function(options) {
+    function EllipsoidGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
@@ -91,7 +89,7 @@ define([
         this._slicePartitions = slicePartitions;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._workerName = 'createEllipsoidGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -101,7 +99,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipsoidGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

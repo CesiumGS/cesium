@@ -5,6 +5,10 @@ define([
         defined) {
     "use strict";
 
+    if (typeof window === 'undefined') {
+        return;
+    }
+
     var implementation = window.cancelAnimationFrame;
     (function() {
         // look for vendor prefixed function
@@ -36,12 +40,12 @@ define([
      *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */
-    var cancelAnimationFrame = function(requestID) {
+    function cancelAnimationFrame(requestID) {
         // we need this extra wrapper function because the native cancelAnimationFrame
         // functions must be invoked on the global scope (window), which is not the case
         // if invoked as Cesium.cancelAnimationFrame(requestID)
         implementation(requestID);
-    };
+    }
 
     return cancelAnimationFrame;
 });

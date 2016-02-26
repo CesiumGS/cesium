@@ -7,7 +7,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/EasingFunction',
         '../Core/Ellipsoid',
@@ -33,7 +32,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         EasingFunction,
         Ellipsoid,
@@ -83,7 +81,7 @@ define([
      * camera.frustum.near = 1.0;
      * camera.frustum.far = 2.0;
      */
-    var Camera = function(scene) {
+    function Camera(scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -218,7 +216,7 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
-    };
+    }
 
     /**
      * @private
@@ -235,7 +233,7 @@ define([
     Camera.TRANSFORM_2D_INVERSE = Matrix4.inverseTransformation(Camera.TRANSFORM_2D, new Matrix4());
 
     /**
-     * The default extent the camera will view on creation.
+     * The default rectangle the camera will view on creation.
      * @type Rectangle
      */
     Camera.DEFAULT_VIEW_RECTANGLE = Rectangle.fromDegrees(-95.0, -20.0, -70.0, 90.0);
@@ -694,7 +692,6 @@ define([
         heading : {
             get : function () {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -722,7 +719,6 @@ define([
         pitch : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -750,7 +746,6 @@ define([
         roll : {
             get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
-                    var origin = this.positionWC;
                     var ellipsoid = this._projection.ellipsoid;
 
                     var oldTransform = Matrix4.clone(this._transform, scratchHPRMatrix1);
@@ -978,7 +973,7 @@ define([
      * Sets the camera position, orientation and transform.
      *
      * @param {Object} options Object with the following properties:
-     * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
+     * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
@@ -1027,39 +1022,6 @@ define([
     Camera.prototype.setView = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
-
-        var newOptions = scratchSetViewOptions;
-        var newOrientation = newOptions.orientation;
-
-        if (defined(options.heading) || defined(options.pitch) || defined(options.roll)) {
-            deprecationWarning('Camera.setView options', 'options.heading/pitch/roll has been moved to options.orientation.heading/pitch/roll.');
-            newOrientation.heading = defaultValue(options.heading, this.heading);
-            newOrientation.pitch = defaultValue(options.pitch, this.pitch);
-            newOrientation.roll = defaultValue(options.roll, this.roll);
-        } else {
-            newOrientation.heading = orientation.heading;
-            newOrientation.pitch = orientation.pitch;
-            newOrientation.roll = orientation.roll;
-            newOrientation.direction = orientation.direction;
-            newOrientation.up = orientation.up;
-        }
-
-        if (defined(options.position)) {
-            deprecationWarning('Camera.setView options', 'options.position has been renamed to options.destination.');
-            options.destination = options.position;
-        } else if (defined(options.positionCartographic)) {
-            deprecationWarning('Camera.setView options', 'options.positionCartographic has been deprecated.  Convert to a Cartesian3 and use options.position instead.');
-            var projection = this._projection;
-            var ellipsoid = projection.ellipsoid;
-            options.destination = ellipsoid.cartographicToCartesian(options.positionCartographic, scratchSetViewCartesian);
-        } else {
-            newOptions.destination = options.destination;
-        }
-
-        newOptions.endTransform = options.endTransform;
-
-        options = newOptions;
-        orientation = newOrientation;
 
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
@@ -1663,7 +1625,6 @@ define([
     };
 
     var scratchLookAtMatrix4 = new Matrix4();
-    var scratchLookAtTransformMatrix4 = new Matrix4();
 
     /**
      * Sets the camera position and orientation using a target and offset. The target must be given in
@@ -1671,7 +1632,7 @@ define([
      * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
      * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
@@ -1737,7 +1698,7 @@ define([
      * If the offset is a cartesian, then it is an offset from the center of the reference frame defined by the transformation matrix. If the offset
      * is heading/pitch/range, then the heading and the pitch angles are defined in the reference frame defined by the transformation matrix.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center.
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center.
      *
      * In 2D, there must be a top down view. The camera will be placed above the center of the reference frame. The height above the
      * target will be the magnitude of the offset. The heading will be determined from the offset. If the heading cannot be
@@ -2071,27 +2032,6 @@ define([
         return undefined;
     };
 
-    /**
-     * View a rectangle on an ellipsoid or map.
-     *
-     * @param {Rectangle} rectangle The rectangle to view.
-     *
-     * @deprecated
-     */
-    Camera.prototype.viewRectangle = function(rectangle) {
-        deprecationWarning('Camera.viewRectangle', 'Camera.viewRectangle has been deprecated.  Use Camera.setView({ destination:rectangle }) instead');
-
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(rectangle)) {
-            throw new DeveloperError('rectangle is required.');
-        }
-        //>>includeEnd('debug');
-
-        this.setView({
-            destination: rectangle
-        });
-    };
-
     var pickEllipsoid3DRay = new Ray();
     function pickEllipsoid3D(camera, windowPosition, ellipsoid, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -2253,6 +2193,55 @@ define([
         return getPickRayOrthographic(this, windowPosition, result);
     };
 
+    var scratchToCenter = new Cartesian3();
+    var scratchProj = new Cartesian3();
+
+    /**
+     * Return the distance from the camera to the front of the bounding sphere.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @returns {Number} The distance to the bounding sphere.
+     */
+    Camera.prototype.distanceToBoundingSphere = function(boundingSphere) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        var toCenter = Cartesian3.subtract(this.positionWC, boundingSphere.center, scratchToCenter);
+        var proj = Cartesian3.multiplyByScalar(this.directionWC, Cartesian3.dot(toCenter, this.directionWC), scratchProj);
+        return Math.max(0.0, Cartesian3.magnitude(proj) - boundingSphere.radius);
+    };
+
+    var scratchPixelSize = new Cartesian2();
+
+    /**
+     * Return the pixel size in meters.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere in world coordinates.
+     * @param {Number} drawingBufferWidth The drawing buffer width.
+     * @param {Number} drawingBufferHeight The drawing buffer height.
+     * @returns {Number} The pixel size in meters.
+     */
+    Camera.prototype.getPixelSize = function(boundingSphere, drawingBufferWidth, drawingBufferHeight) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        if (!defined(drawingBufferWidth)) {
+            throw new DeveloperError('drawingBufferWidth is required.');
+        }
+        if (!defined(drawingBufferHeight)) {
+            throw new DeveloperError('drawingBufferHeight is required.');
+        }
+        //>>includeEnd('debug');
+
+        var distance = this.distanceToBoundingSphere(boundingSphere);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        return Math.max(pixelSize.x, pixelSize.y);
+    };
+
     function createAnimation2D(camera, duration) {
         var position = camera.position;
         var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
@@ -2325,11 +2314,10 @@ define([
             newPosition.z += -maxY - center.z;
         }
 
-        var updateCV = function(value) {
+        function updateCV(value) {
             var interp = Cartesian3.lerp(position, newPosition, value.time, new Cartesian3());
             camera.worldToCameraCoordinatesPoint(interp, camera.position);
-        };
-
+        }
         return {
             easingFunction : EasingFunction.EXPONENTIAL_OUT,
             startObject : {
@@ -2388,8 +2376,6 @@ define([
      * @param {Number} duration The duration, in seconds, of the animation.
      * @returns {Object} The animation or undefined if the scene mode is 3D or the map is already ion view.
      *
-     * @exception {DeveloperException} duration is required.
-     *
      * @private
      */
     Camera.prototype.createCorrectPositionTween = function(duration) {
@@ -2410,11 +2396,6 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToQuaternion = new Quaternion();
-    var scratchFlyToMatrix3 = new Matrix3();
-    var scratchFlyToDirection = new Cartesian3();
-    var scratchFlyToUp = new Cartesian3();
-    var scratchFlyToMatrix4 = new Matrix4();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2436,7 +2417,7 @@ define([
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view or 2D.
-     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
@@ -2582,7 +2563,7 @@ define([
      * <p>The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center. If the range is
      * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
      * <p>In 2D, there must be a top down view. The camera will be placed above the target looking down. The height above the
@@ -2624,7 +2605,7 @@ define([
      * <p> The offset is heading/pitch/range in the local east-north-up reference frame centered at the center of the bounding sphere.
      * The heading and the pitch angles are defined in the local east-north-up reference frame.
      * The heading is the angle from y axis and increasing towards the x axis. Pitch is the rotation from the xy-plane. Positive pitch
-     * angles are above the plane. Negative pitch angles are below the plane. The range is the distance from the center. If the range is
+     * angles are below the plane. Negative pitch angles are above the plane. The range is the distance from the center. If the range is
      * zero, a range will be computed such that the whole bounding sphere is visible.</p>
      *
      * <p>In 2D and Columbus View, there must be a top down view. The camera will be placed above the target looking down. The height above the
@@ -2632,7 +2613,7 @@ define([
      *
      * @param {BoundingSphere} boundingSphere The bounding sphere to view, in world coordinates.
      * @param {Object} [options] Object with the following properties:
-     * @param {Number} [options.duration] The duration of the flight in seconds. If ommitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
+     * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {HeadingPitchRange} [options.offset] The offset from the target in the local east-north-up reference frame centered at the target.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.

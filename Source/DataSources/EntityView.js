@@ -199,7 +199,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      * @param {BoundingSphere} [boundingSphere] An initial bounding sphere for setting the default view.
      */
-    var EntityView = function(entity, scene, ellipsoid, boundingSphere) {
+    function EntityView(entity, scene, ellipsoid, boundingSphere) {
 
         /**
          * The entity to track with the camera.
@@ -235,7 +235,7 @@ define([
         this._defaultOffset3D = undefined;
 
         this._offset3D = new Cartesian3();
-    };
+    }
 
     // STATIC properties defined here, not per-instance.
     defineProperties(EntityView, {

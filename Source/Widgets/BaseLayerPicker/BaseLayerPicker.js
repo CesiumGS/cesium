@@ -21,7 +21,7 @@ define([
 
     /**
      * <span style="display: block; text-align: center;">
-     * <img src="images/BaseLayerPicker.png" style="border: none; border-radius: 5px;" />
+     * <img src="images/BaseLayerPicker.png" width="264" height="287" alt="" />
      * <br />BaseLayerPicker with its drop-panel open.
      * </span>
      * <br /><br />
@@ -45,9 +45,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see TerrainProvider
-     * @see ImageryProvider
-     * @see ImageryLayerCollection
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
@@ -63,7 +60,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new Cesium.OpenStreetMapImageryProvider({
+     *          return Cesium.createOpenStreetMapImageryProvider({
      *              url : '//a.tile.openstreetmap.org/'
      *          });
      *      }
@@ -75,7 +72,7 @@ define([
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      * in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return Cesium.createTileMapServiceImageryProvider({
      *              url : '//cesiumjs.org/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -88,7 +85,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new Cesium.TileMapServiceImageryProvider({
+     *          return Cesium.createTileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
@@ -103,8 +100,12 @@ define([
      *     globe : cesiumWidget.scene.globe,
      *     imageryProviderViewModels : imageryViewModels
      * });
+     * 
+     * @see TerrainProvider
+     * @see ImageryProvider
+     * @see ImageryLayerCollection
      */
-    var BaseLayerPicker = function(container, options) {
+    function BaseLayerPicker(container, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
@@ -218,7 +219,7 @@ click: function($data) { $parent.selectedTerrain = $data; }');
             document.addEventListener('mousedown', this._closeDropDown, true);
             document.addEventListener('touchstart', this._closeDropDown, true);
         }
-    };
+    }
 
     defineProperties(BaseLayerPicker.prototype, {
         /**

@@ -1,9 +1,24 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.15.6",
+  "version": "1.18.0",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
+  "author": {
+    "name": "Analytical Graphics, Inc.",
+    "url": "http://www.agi.com"
+  },
+  "contributors": {
+    "name": "Cesium community",
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+  },
+  "keywords": [
+    "3D",
+    "webgl",
+    "geospatial",
+    "map",
+    "globe"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/TerriaJS/cesium.git"
@@ -11,36 +26,44 @@
   "directories": {
     "lib": "Source"
   },
+  "bugs": {
+    "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
+    "email": "cesium-dev@googlegroups.com"
+  },
+  "dependencies": {
+    "requirejs": "2.1.22"
+  },
   "devDependencies": {
     "almond": "0.3.1",
     "browserify": "^9.0.8",
-    "async": "^1.4.2",
-    "bluebird": "^2.10.2",
-    "compression": "1.6.0",
-    "event-stream": "^3.3.2",
+    "async": "1.5.2",
+    "bluebird": "3.1.5",
+    "compression": "1.6.1",
+    "event-stream": "3.3.2",
     "exorcist": "^0.3.0",
-    "express": "4.13.3",
+    "express": "4.13.4",
     "glob-all": "^3.0.1",
-    "globby": "^3.0.1",
-    "gulp": "^3.9.0",
-    "gulp-insert": "^0.5.0",
-    "gulp-jshint": "^1.11.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-replace": "^0.5.4",
+    "globby": "4.0.0",
+    "gulp": "3.9.0",
+    "gulp-insert": "0.5.0",
+    "gulp-jshint": "2.0.0",
+    "gulp-rename": "1.2.2",
+    "gulp-replace": "0.5.4",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
-    "gulp-zip": "^3.0.2",
-    "jsdoc": "3.3.3",
-    "jshint-stylish": "^2.0.1",
-    "mkdirp": "^0.5.1",
-    "request": "2.65.0",
+    "gulp-zip": "3.1.0",
+    "jsdoc": "3.4.0",
+    "jshint": "2.9.1",
+    "jshint-stylish": "2.1.0",
+    "mkdirp": "0.5.1",
+    "request": "2.69.0",
     "requirejs": "2.1.20",
-    "rimraf": "^2.4.3",
-    "strip-comments": "^0.3.2",
+    "rimraf": "2.5.1",
+    "strip-comments": "0.3.2",
     "vinyl-buffer": "^1.0.0",
     "vinyl-source-stream": "^1.1.0",
     "vinyl-transform": "^1.0.0",
-    "yargs": "3.27.0"
+    "yargs": "3.32.0"
   },
   "dependencies": {
     "deamdify": "^0.1.1"

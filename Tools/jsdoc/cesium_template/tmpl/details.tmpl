@@ -96,11 +96,4 @@ var self = this;
         <?js }); ?></ul>
     </dd>
     <?js } ?>
-    
-    <?js if (data.meta && data.meta.sourceUrl) {?>
-    <div class="source-link">
-        Source: 
-        <?js= self.linkto(data.meta.sourceUrl, meta.filename + ', line ' + meta.lineno, null, 'L' + meta.lineno) ?>
-    </div>
-    <?js } ?>
 </dl>
