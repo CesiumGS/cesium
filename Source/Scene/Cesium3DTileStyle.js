@@ -8,9 +8,7 @@ define([
        './ColorRampExpression',
        './ColorMapExpression',
        './ColorExpression',
-       './Expression',
-       './getPropertyName',
-       './LiteralColorExpression'
+       './Expression'
     ], function(
         defaultValue,
         defined,
@@ -20,12 +18,10 @@ define([
         ColorRampExpression,
         ColorMapExpression,
         ColorExpression,
-        Expression,
-        getPropertyName,
-        LiteralColorExpression) {
+        Expression) {
     'use strict';
 
-    var DEFAULT_JSON_COLOR_EXPRESSION = "#ffffff";
+    var DEFAULT_JSON_COLOR_EXPRESSION = 'color("#ffffff")';
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 
     /**
@@ -46,11 +42,7 @@ define([
 
         var color;
         if (typeof(colorExpression) === 'string') {
-            if (defined(getPropertyName(colorExpression))) {
-                color = new ColorExpression(styleEngine, colorExpression);
-            } else {
-                color = new LiteralColorExpression(styleEngine, colorExpression);
-            }
+            color = new Expression(styleEngine, colorExpression);
         } else if (defined(colorExpression.map)) {
             color = new ColorMapExpression(styleEngine, colorExpression);
         } else if (defined(colorExpression.intervals)) {
