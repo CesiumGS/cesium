@@ -8,6 +8,7 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTileStyle',
         'Scene/CullingVolume',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -22,6 +23,7 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        Cesium3DTileStyle,
         CullingVolume,
         Cesium3DTilesTester,
         createScene,
@@ -52,6 +54,9 @@ defineSuite([
     // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 
     var originalMaximumRequests;
 
@@ -830,4 +835,38 @@ defineSuite([
         });
     });
 
+    it('applies show style to a tileset', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'false'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
+    it('applies style with complex show expression to a tileset', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            // Each feature in the b3dm file has an id property from 0 to 99
+            // ${id} >= 100 will always evaluate to false
+            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} >= 50 * 2'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} < 200 / 2'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
 }, 'WebGL');
