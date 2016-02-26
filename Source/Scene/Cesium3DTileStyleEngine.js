@@ -2,11 +2,13 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       '../Core/DeveloperError'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     /**
@@ -117,7 +119,15 @@ define([
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
             feature.color = style.color.evaluate(feature);
-            feature.show = style.show.evaluate(feature);
+
+            var showExpression = style.show.evaluate(feature);
+            //>>includeStart('debug', pragmas.debug);
+            if (typeof(showExpression) !== 'boolean')
+            {
+                throw new DeveloperError('show expects boolean expression');
+            }
+            //>>includeEnd('debug');
+            feature.show = showExpression;
         }
     }
 

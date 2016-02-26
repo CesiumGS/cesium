@@ -4,26 +4,24 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './BooleanExpression',
        './BooleanRegularExpression',
        './ColorRampExpression',
        './ColorMapExpression',
        './ColorExpression',
+       './Expression',
        './getPropertyName',
-       './LiteralBooleanExpression',
        './LiteralColorExpression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         isArray,
-        BooleanExpression,
         BooleanRegularExpression,
         ColorRampExpression,
         ColorMapExpression,
         ColorExpression,
+        Expression,
         getPropertyName,
-        LiteralBooleanExpression,
         LiteralColorExpression) {
     'use strict';
 
@@ -66,11 +64,9 @@ define([
 
         var show;
         if (typeof(showExpression) === 'boolean') {
-            show = new LiteralBooleanExpression(styleEngine, showExpression);
-        } else if (defined(showExpression.operator)) {
-            show = new BooleanExpression(styleEngine, showExpression);
-        } else if (defined(showExpression.pattern)) {
-            show = new BooleanRegularExpression(styleEngine, showExpression);
+            show = new Expression(styleEngine, String(showExpression));
+        } else if (typeof(showExpression) === 'string') {
+            show = new Expression(styleEngine, showExpression);
         }
 
         /**

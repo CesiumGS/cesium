@@ -109,21 +109,8 @@ function loadTileset(url) {
                     "#0000ff"
                 ]
             },
-//                "show": false
-//            "show" : {
-//                "pattern" : "^Seattle_South_9",
-//                "propertyName" : "Building_ID"
-//            }
-//            "show" : {
-//                "leftOperand" : "${Building_ID}",  // String compare
-//                "operator" : "===",
-//                "rightOperand" : "Seattle_South_919"
-//            }
-            "show" : {
-                "leftOperand" : "${Height}",
-                "operator" : ">",
-                "rightOperand" : 0
-            }
+//          "show": false
+            "show" : "${Height} > 0"
         });
 
         tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
@@ -414,11 +401,7 @@ function getStyleFunction(name) {
                 "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
                 "colors" :  Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors)
             },
-            "show" : {
-                "leftOperand" : "${" + name + "}",
-                "operator" : ">",
-                "rightOperand" : 0
-            }
+            "show" : "${" + name + "} > 0"
         });
 
         currentPropertyName = name;
@@ -466,11 +449,16 @@ function addExpressionUI() {
         return;
     }
 
+    var leftOperand = 0;
+    var rightOperand = 0;
+    var op = '===';
+
     // Left operand (properties and literals)
 
     function getLeftOperandFunction(name) {
         return function() {
-            tileset.style.show.leftOperand = name;
+            leftOperand = name;
+            updateExpression();
         };
     }
     addOperands('Expression left operand', getLeftOperandFunction);
@@ -486,7 +474,8 @@ function addExpressionUI() {
 
     function getOperatorFunction(operator) {
         return function() {
-            tileset.style.show.operator = operator;
+            op = operator;
+            updateExpression();
         };
     }
 
@@ -504,10 +493,16 @@ function addExpressionUI() {
 
     function getRightOperandFunction(operand) {
         return function() {
-            tileset.style.show.rightOperand = operand;
+            rightOperand = operand;
+            updateExpression();
         };
     }
     addOperands('Right operand', getRightOperandFunction);
+
+    function updateExpression() {
+        var exp = '' + leftOperand + op + rightOperand;
+        tileset.style = new Cesium.Cesium3DTileStyle(tileset, { show : exp });
+    }
 }
 
 function addOperands(text, getOperandFunction) {
