@@ -1457,8 +1457,6 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map depth texture.
          *
-         * @private
-         *
          * @alias czm_sunShadowMapTexture
          * @glslUniform
          */
@@ -1473,8 +1471,6 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map matrix.
          *
-         * @private
-         *
          * @alias czm_sunShadowMapMatrix
          * @glslUniform
          */
@@ -1487,9 +1483,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade far splits.
-         *
-         * @private
+         * An automatic GLSL uniform representing the sun's shadow map cascade near splits.
          *
          * @alias czm_sunShadowMapCascadeSplitsNear
          * @glslUniform
@@ -1503,9 +1497,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade near splits.
-         *
-         * @private
+         * An automatic GLSL uniform representing the sun's shadow map cascade far splits.
          *
          * @alias czm_sunShadowMapCascadeSplitsFar
          * @glslUniform
@@ -1521,8 +1513,6 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map cascade offsets.
          *
-         * @private
-         *
          * @alias czm_sunShadowMapCascadeOffsets
          * @glslUniform
          */
@@ -1536,8 +1526,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the sun's shadow map cascade scales.
-         *
-         * @private
          *
          * @alias czm_sunShadowMapCascadeScales
          * @glslUniform
