@@ -624,26 +624,6 @@ define([
         }
     }
 
-    function createViewMatrix(d, u, r, result) {
-        result[0] = r.x;
-        result[1] = u.x;
-        result[2] = -d.x;
-        result[3] = 0.0;
-        result[4] = r.y;
-        result[5] = u.y;
-        result[6] = -d.y;
-        result[7] = 0.0;
-        result[8] = r.z;
-        result[9] = u.z;
-        result[10] = -d.z;
-        result[11] = 0.0;
-        result[12] = 0.0;
-        result[13] = 0.0;
-        result[14] = 0.0;
-        result[15] = 1.0;
-        return result;
-    }
-
     var scratchLightView = new Matrix4();
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
@@ -664,8 +644,9 @@ define([
         var lightUp = sceneCamera.directionWC; // Align shadows to the camera view.
         var lightRight = Cartesian3.cross(lightDir, lightUp, scratchRight);
         lightUp = Cartesian3.cross(lightRight, lightDir, scratchUp); // Recalculate up now that right is derived
+        var lightPosition = Cartesian3.fromElements(0.0, 0.0, 0.0, scratchTranslation);
 
-        var lightView = createViewMatrix(lightDir, lightUp, lightRight, scratchLightView);
+        var lightView = Matrix4.computeView(lightDir, lightUp, lightRight, lightPosition, scratchLightView);
         var cameraToLight = Matrix4.multiply(lightView, inverseViewProjection, scratchMatrix);
 
         // Project each corner from NDC space to light view space, and calculate a min and max in light view space
