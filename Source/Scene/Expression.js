@@ -56,8 +56,11 @@ define([
 
     });
 
-    Expression.prototype.evaluate = function(feature) {
-        return this._runtimeAst.evaluate(feature);
+    Expression.prototype.evaluate = function(feature, result) {
+        if (!defined(result)) {
+            result = new Color();
+        }
+        return this._runtimeAst.evaluate(feature, result);
     };
 
     function Node(type, value, left, right, test) {
@@ -471,23 +474,23 @@ define([
         return this._value;
     };
 
-    Node.prototype._evaluateLiteralColor = function(feature) {
+    Node.prototype._evaluateLiteralColor = function(feature, result) {
         var args = this._left;
         if (this._value === 'color') {
             if (args.length > 1) {
-                return Color.fromAlpha(Color.fromCssColorString(args[0].evaluate(feature)), args[1].evaluate(feature));
+                return Color.fromAlpha(Color.fromCssColorString(args[0].evaluate(feature, result)), args[1].evaluate(feature, result));
             }
-            return Color.fromCssColorString(this._left[0].evaluate(feature));
+            return Color.fromCssColorString(this._left[0].evaluate(feature, result));
         } else if (this._value === 'rgb') {
-            return Color.fromBytes(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature));
+            return Color.fromBytes(args[0].evaluate(feature, result), args[1].evaluate(feature, result), args[2].evaluate(feature, result));
         } else if (this._value === 'rgba') {
             // convert between css alpha (0 to 1) and cesium alpha (0 to 255)
-            var a = args[3].evaluate(feature) * 255;
-            return Color.fromBytes(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature), a);
+            var a = args[3].evaluate(feature, result) * 255;
+            return Color.fromBytes(args[0].evaluate(feature, result), args[1].evaluate(feature, result), args[2].evaluate(feature, result), a);
         } else if (this._value === 'hsl') {
-            return Color.fromHsl(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature));
+            return Color.fromHsl(args[0].evaluate(feature, result), args[1].evaluate(feature, result), args[2].evaluate(feature, result));
         } else if (this._value === 'hsla') {
-            return Color.fromHsl(args[0].evaluate(feature), args[1].evaluate(feature), args[2].evaluate(feature), args[3].evaluate(feature));
+            return Color.fromHsl(args[0].evaluate(feature, result), args[1].evaluate(feature, result), args[2].evaluate(feature, result), args[3].evaluate(feature, result));
         }
     };
 
@@ -521,77 +524,77 @@ define([
     }
 
     // PERFORMANCE_IDEA: Determine if parent property needs to be computed before runtime
-    Node.prototype._evaluateMemberDot = function(feature) {
+    Node.prototype._evaluateMemberDot = function(feature, result) {
         if(checkFeature(this._left)) {
             return feature.getProperty(this._right);
         }
-        var property = this._left.evaluate(feature);
+        var property = this._left.evaluate(feature, result);
         if (!defined(property)) {
             return undefined;
         }
         return property[this._right];
     };
 
-    Node.prototype._evaluateMemberBrackets = function(feature) {
+    Node.prototype._evaluateMemberBrackets = function(feature, result) {
         if(checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(feature));
+            return feature.getProperty(this._right.evaluate(feature, result));
         }
-        var property = this._left.evaluate(feature);
+        var property = this._left.evaluate(feature, result);
         if (!defined(property)) {
             return undefined;
         }
-        return property[this._right.evaluate(feature)];
+        return property[this._right.evaluate(feature, result)];
     };
 
-    Node.prototype._evaluateArray = function(feature) {
-        var result = [];
+    Node.prototype._evaluateArray = function(feature, result) {
+        var array = [];
         for (var i = 0; i<this._value.length; i++) {
-            result[i] = this._value[i].evaluate(feature);
+            array[i] = this._value[i].evaluate(feature, result);
         }
-        return result;
+        return array;
     };
 
     // PERFORMANCE_IDEA: Have "fast path" functions that deal only with specific types
     // that we can assign if we know the types before runtime
 
-    Node.prototype._evaluateNot = function(feature) {
-        return !(this._left.evaluate(feature));
+    Node.prototype._evaluateNot = function(feature, result) {
+        return !(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateNegative = function(feature) {
-        return -(this._left.evaluate(feature));
+    Node.prototype._evaluateNegative = function(feature, result) {
+        return -(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluatePositive = function(feature) {
-        return +(this._left.evaluate(feature));
+    Node.prototype._evaluatePositive = function(feature, result) {
+        return +(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateLessThan = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateLessThan = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         return left < right;
     };
 
-    Node.prototype._evaluateLessThanOrEquals = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateLessThanOrEquals = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         return left <= right;
     };
 
-    Node.prototype._evaluateGreaterThan = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateGreaterThan = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         return left > right;
     };
 
-    Node.prototype._evaluateGreaterThanOrEquals = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateGreaterThanOrEquals = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         return left >= right;
     };
 
-    Node.prototype._evaluateOr = function(feature) {
-        var left = this._left.evaluate(feature);
+    Node.prototype._evaluateOr = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -603,7 +606,7 @@ define([
             return true;
         }
 
-        var right = this._right.evaluate(feature);
+        var right = this._right.evaluate(feature, result);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -612,8 +615,8 @@ define([
         return left || right;
     };
 
-    Node.prototype._evaluateAnd = function(feature) {
-        var left = this._left.evaluate(feature);
+    Node.prototype._evaluateAnd = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -625,7 +628,7 @@ define([
             return false;
         }
 
-        var right = this._right.evaluate(feature);
+        var right = this._right.evaluate(feature, result);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
             throw new DeveloperError('Error: Operation is undefined.');
@@ -634,131 +637,131 @@ define([
         return left && right;
     };
 
-    Node.prototype._evaluatePlus = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluatePlus = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.add(left, right, new Color());
+            return Color.add(left, right, result);
         }
         return left + right;
     };
 
-    Node.prototype._evaluateMinus = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateMinus = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.subtract(left, right, new Color());
+            return Color.subtract(left, right, result);
         }
         return left - right;
     };
 
-    Node.prototype._evaluateTimes = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateTimes = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.multiply(left, right, new Color());
+            return Color.multiply(left, right, result);
         } else if ((right instanceof Color) && (typeof(left) === 'number')) {
-            return Color.multiplyByScalar(right, left, new Color());
+            return Color.multiplyByScalar(right, left, result);
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.multiplyByScalar(left, right, new Color());
+            return Color.multiplyByScalar(left, right, result);
         }
         return left * right;
     };
 
-    Node.prototype._evaluateDivide = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateDivide = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.divide(left, right, new Color());
+            return Color.divide(left, right, result);
         } else if ((left instanceof Color) && (typeof(right) === 'number')) {
-            return Color.divideByScalar(left, right, new Color());
+            return Color.divideByScalar(left, right, result);
         }
         return left / right;
     };
 
-    Node.prototype._evaluateMod = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateMod = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
-            return Color.mod(left, right, new Color());
+            return Color.mod(left, right, result);
         }
         return left % right;
     };
 
-    Node.prototype._evaluateEquals = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateEquals = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.equals(left, right);
         }
         return left === right;
     };
 
-    Node.prototype._evaluateNotEquals = function(feature) {
-        var left = this._left.evaluate(feature);
-        var right = this._right.evaluate(feature);
+    Node.prototype._evaluateNotEquals = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
             return !Color.equals(left, right);
         }
         return left !== right;
     };
 
-    Node.prototype._evaluateConditional = function(feature) {
-        if (this._test.evaluate(feature)) {
-            return this._left.evaluate(feature);
+    Node.prototype._evaluateConditional = function(feature, result) {
+        if (this._test.evaluate(feature, result)) {
+            return this._left.evaluate(feature, result);
         }
-        return this._right.evaluate(feature);
+        return this._right.evaluate(feature, result);
     };
 
-    Node.prototype._evaluateNaN = function(feature) {
-        return isNaN(this._left.evaluate(feature));
+    Node.prototype._evaluateNaN = function(feature, result) {
+        return isNaN(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateIsFinite = function(feature) {
-        return isFinite(this._left.evaluate(feature));
+    Node.prototype._evaluateIsFinite = function(feature, result) {
+        return isFinite(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateBooleanConversion = function(feature) {
-        return Boolean(this._left.evaluate(feature));
+    Node.prototype._evaluateBooleanConversion = function(feature, result) {
+        return Boolean(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateNumberConversion = function(feature) {
-        return Number(this._left.evaluate(feature));
+    Node.prototype._evaluateNumberConversion = function(feature, result) {
+        return Number(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateStringConversion = function(feature) {
-        return String(this._left.evaluate(feature));
+    Node.prototype._evaluateStringConversion = function(feature, result) {
+        return String(this._left.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateRegExp = function(feature) {
-        var pattern = this._value.evaluate(feature);
+    Node.prototype._evaluateRegExp = function(feature, result) {
+        var pattern = this._value.evaluate(feature, result);
         var flags = '';
 
         if (defined(this._left)) {
-            flags = this._left.evaluate(feature);
+            flags = this._left.evaluate(feature, result);
         }
 
-        var result;
+        var exp;
         try {
-            result = new RegExp(pattern, flags);
+            exp = new RegExp(pattern, flags);
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
             //>>includeEnd('debug');
         }
-        return result;
+        return exp;
     };
 
-    Node.prototype._evaluateRegExpTest = function(feature) {
-        return this._left.evaluate(feature).test(this._right.evaluate(feature));
+    Node.prototype._evaluateRegExpTest = function(feature, result) {
+        return this._left.evaluate(feature, result).test(this._right.evaluate(feature, result));
     };
 
-    Node.prototype._evaluateRegExpExec = function(feature) {
-        var result = this._left.evaluate(feature).exec(this._right.evaluate(feature));
-        if (!defined(result)) {
+    Node.prototype._evaluateRegExpExec = function(feature, result) {
+        var exec = this._left.evaluate(feature, result).exec(this._right.evaluate(feature, result));
+        if (!defined(exec)) {
             return null;
         }
-        return result[1];
+        return exec[1];
     };
 
     return Expression;
