@@ -494,11 +494,12 @@ define([
         Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), shadowMap._debugLightFrustum.modelMatrix);
         shadowMap._debugLightFrustum.update(frameState);
 
-
-        for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-            shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] || createDebugFrustum(debugCascadeColors[i]);
-            Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), shadowMap._debugCascadeFrustums[i].modelMatrix);
-            shadowMap._debugCascadeFrustums[i].update(frameState);
+        if (shadowMap._cascadesEnabled) {
+            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
+                shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] || createDebugFrustum(debugCascadeColors[i]);
+                Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), shadowMap._debugCascadeFrustums[i].modelMatrix);
+                shadowMap._debugCascadeFrustums[i].update(frameState);
+            }
         }
 
         updateDebugShadowViewCommand(shadowMap, frameState);
