@@ -272,6 +272,42 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
     });
 
+    it('evaluates literal color with result parameter', function() {
+        var color = new Color();
+
+        var expression = new Expression(new MockStyleEngine(), 'color(\'#0000ff\')');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.BLUE);
+        expect(color).toEqual(Color.BLUE);
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'#f00\')');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.RED);
+        expect(color).toEqual(Color.RED);
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'cyan\')');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.CYAN);
+        expect(color).toEqual(Color.CYAN);
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'white\', 0.5)');
+        expect(expression.evaluateColor(undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'rgb(0, 0, 0)');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.BLACK);
+        expect(color).toEqual(Color.BLACK);
+
+        expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.WHITE);
+        expect(color).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 0, 255, 0.5)');
+        expect(expression.evaluateColor(undefined, color)).toEqual(new Color(1.0, 0, 1.0, 0.5));
+        expect(color).toEqual(new Color(1.0, 0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
+        expect(expression.evaluateColor(undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+        expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+    });
+
     it('evaluates color with expressions as arguments', function() {
         var feature = new MockFeature();
         feature.addProperty('hex6', '#ffffff');
