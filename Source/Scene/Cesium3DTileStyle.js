@@ -6,7 +6,6 @@ define([
        '../Core/isArray',
        './ColorRampExpression',
        './ColorMapExpression',
-       './ColorExpression',
        './Expression'
     ], function(
         defaultValue,
@@ -15,7 +14,6 @@ define([
         isArray,
         ColorRampExpression,
         ColorMapExpression,
-        ColorExpression,
         Expression) {
     'use strict';
 
