@@ -36,9 +36,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        expression = replaceVariables(removeBackslashes(expression));
+
         var ast;
         try {
-            ast = jsep(replaceVariables(removeBackslashes(expression)));
+            ast = jsep(expression);
         } catch (e) {
             //>>includeStart('debug', pragmas.debug);
             throw new DeveloperError(e);
@@ -72,22 +74,19 @@ define([
     // TODO: Make fix to jsep to allow backslashes
 
     function removeBackslashes(expression) {
-        return String(expression).replace(backslashRegex, backslashReplacement);
+        return expression.replace(backslashRegex, backslashReplacement);
     }
 
     function replaceBackslashes(expression) {
-        return String(expression).replace(replacementRegex, '\\');
+        return expression.replace(replacementRegex, '\\');
     }
 
-    // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
-    // TODO: Allow for escaped variables in strings
-
     function replaceVariables(expression) {
-
-        // PERFORMANCE_IDEA: Use regex and replace function
+        // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
+        // TODO: Allow for escaped variables in strings
 
         var exp = expression;
-        var result = "";
+        var result = '';
         var i = exp.indexOf('${');
         while (i >= 0) {
             // check if string is inside quotes
@@ -258,7 +257,7 @@ define([
             var flags = createRuntimeAst(expression, args[1]);
             if (isLiteralType(pattern) && isLiteralType(flags)) {
                 try {
-                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value), flags._value));
+                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(String(pattern._value)), flags._value));
                 } catch (e) {
                     //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError(e);
@@ -271,7 +270,7 @@ define([
         // only pattern argument supplied
         if (isLiteralType(pattern)) {
             try {
-                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(pattern._value)));
+                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(String(pattern._value))));
             } catch (e) {
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError(e);
@@ -282,12 +281,12 @@ define([
     }
 
     function parseKeywordsAndVariables(ast) {
-        if (ast.name === 'NaN') {
+        if (isVariable(ast.name)) {
+            return new Node(ExpressionNodeType.VARIABLE, getPropertyName(ast.name));
+        } else if (ast.name === 'NaN') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
-        } else if (isVariable(ast.name)) {
-            return new Node(ExpressionNodeType.VARIABLE, getPropertyName(ast.name));
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -635,7 +634,7 @@ define([
     Node.prototype._evaluatePlus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.add(left, right, new Color());
         }
         return left + right;
@@ -644,7 +643,7 @@ define([
     Node.prototype._evaluateMinus = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.subtract(left, right, new Color());
         }
         return left - right;
@@ -653,11 +652,11 @@ define([
     Node.prototype._evaluateTimes = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.multiply(left, right, new Color());
-        } else if (right instanceof Color && typeof(left) === 'number') {
+        } else if ((right instanceof Color) && (typeof(left) === 'number')) {
             return Color.multiplyByScalar(right, left, new Color());
-        } else if (left instanceof Color && typeof(right) === 'number') {
+        } else if ((left instanceof Color) && (typeof(right) === 'number')) {
             return Color.multiplyByScalar(left, right, new Color());
         }
         return left * right;
@@ -666,9 +665,9 @@ define([
     Node.prototype._evaluateDivide = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.divide(left, right, new Color());
-        } else if (left instanceof Color && typeof(right) === 'number') {
+        } else if ((left instanceof Color) && (typeof(right) === 'number')) {
             return Color.divideByScalar(left, right, new Color());
         }
         return left / right;
@@ -677,7 +676,7 @@ define([
     Node.prototype._evaluateMod = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.mod(left, right, new Color());
         }
         return left % right;
@@ -686,7 +685,7 @@ define([
     Node.prototype._evaluateEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return Color.equals(left, right);
         }
         return left === right;
@@ -695,7 +694,7 @@ define([
     Node.prototype._evaluateNotEquals = function(feature) {
         var left = this._left.evaluate(feature);
         var right = this._right.evaluate(feature);
-        if (right instanceof Color && left instanceof Color) {
+        if ((right instanceof Color) && (left instanceof Color)) {
             return !Color.equals(left, right);
         }
         return left !== right;
