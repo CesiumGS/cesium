@@ -2,6 +2,8 @@
 define(function() {
     'use strict';
 
+// TODO: delete this when NumberExpression.js is deleted
+
     /**
      * @private
      */
