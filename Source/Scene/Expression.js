@@ -106,11 +106,11 @@ define([
             } else {
                 result += exp.substr(0, i);
                 var j = exp.indexOf('}');
+                //>>includeStart('debug', pragmas.debug);
                 if (j < 0) {
-                    //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError('Error: unmatched {');
-                    //>>includeEnd('debug');
                 }
+                //>>includeEnd('debug');
                 result += "czm_" + exp.substr(i + 2, j - (i + 2));
                 exp = exp.substr(j + 1);
                 i = exp.indexOf('${');
