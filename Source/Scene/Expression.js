@@ -256,26 +256,30 @@ define([
         if (args.length > 1) {
             var flags = createRuntimeAst(expression, args[1]);
             if (isLiteralType(pattern) && isLiteralType(flags)) {
+                var exp;
                 try {
-                    return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(String(pattern._value)), flags._value));
+                    exp = new RegExp(replaceBackslashes(String(pattern._value)), flags._value);
                 } catch (e) {
                     //>>includeStart('debug', pragmas.debug);
                     throw new DeveloperError(e);
                     //>>includeEnd('debug');
                 }
+                return new Node(ExpressionNodeType.LITERAL_REGEX, exp);
             }
             return new Node(ExpressionNodeType.REGEX, pattern, flags);
         }
 
         // only pattern argument supplied
         if (isLiteralType(pattern)) {
+            var exp;
             try {
-                return new Node(ExpressionNodeType.LITERAL_REGEX, new RegExp(replaceBackslashes(String(pattern._value))));
+                exp = new RegExp(replaceBackslashes(String(pattern._value)));
             } catch (e) {
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError(e);
                 //>>includeEnd('debug');
             }
+            return new Node(ExpressionNodeType.LITERAL_REGEX, exp);
         }
         return new Node(ExpressionNodeType.REGEX, pattern);
     }
