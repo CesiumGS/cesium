@@ -27,11 +27,12 @@ define([
      * DOC_TBA
      */
     function Expression(styleEngine, expression) {
+        // TODO: remove _styleEngine unless it is needed, e.g., because AST is exposed
         this._styleEngine = styleEngine;
 
         //>>includeStart('debug', pragmas.debug);
         if (typeof(expression) !== 'string') {
-            throw new DeveloperError('Expression must be a string');
+            throw new DeveloperError('expression must be a string.');
         }
         //>>includeEnd('debug');
 
@@ -108,7 +109,7 @@ define([
                 var j = exp.indexOf('}');
                 //>>includeStart('debug', pragmas.debug);
                 if (j < 0) {
-                    throw new DeveloperError('Error: unmatched {');
+                    throw new DeveloperError('Error: unmatched {.');
                 }
                 //>>includeEnd('debug');
                 result += "czm_" + exp.substr(i + 2, j - (i + 2));
@@ -136,7 +137,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: ' + ast.value + ' is not defined');
+        throw new DeveloperError('Error: ' + ast.value + ' is not defined.');
         //>>includeEnd('debug');
     }
 
@@ -152,7 +153,7 @@ define([
                 // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
                 if (ast.callee.object.callee.name !== 'regExp') {
-                    throw new DeveloperError('Error: ' + call + ' is not a function');
+                    throw new DeveloperError('Error: ' + call + ' is not a function.');
                 }
                 //>>includeEnd('debug');
                 if (args.length === 0) {
@@ -168,7 +169,7 @@ define([
             }
 
             //>>includeStart('debug', pragmas.debug);
-            throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+            throw new DeveloperError('Error: Unexpected function call "' + call + '".');
             //>>includeEnd('debug');
         }
 
@@ -184,7 +185,7 @@ define([
         } else if (call === 'rgb' || call === 'hsl') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 3) {
-                throw new DeveloperError('Error: ' + call + ' requires three arguments');
+                throw new DeveloperError('Error: ' + call + ' requires three arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -196,7 +197,7 @@ define([
         } else if (call === 'rgba' || call === 'hsla') {
             //>>includeStart('debug', pragmas.debug);
             if (args.length < 4) {
-                throw new DeveloperError('Error: ' + call + ' requires four arguments');
+                throw new DeveloperError('Error: ' + call + ' requires four arguments.');
             }
             //>>includeEnd('debug');
             val = [
@@ -239,7 +240,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: Unexpected function call "' + call + '"');
+        throw new DeveloperError('Error: Unexpected function call "' + call + '".');
         //>>includeEnd('debug');
     }
 
@@ -290,7 +291,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: ' + ast.name + ' is not defined');
+        throw new DeveloperError('Error: ' + ast.name + ' is not defined.');
         //>>includeEnd('debug');
     }
 
@@ -335,7 +336,7 @@ define([
                 node = new Node(ExpressionNodeType.UNARY, op, child);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'BinaryExpression') {
@@ -346,7 +347,7 @@ define([
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'LogicalExpression') {
@@ -357,7 +358,7 @@ define([
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
             } else {
                 //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '"');
+                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
                 //>>includeEnd('debug');
             }
         } else if (ast.type === 'ConditionalExpression') {
@@ -377,9 +378,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         else if (ast.type === 'CompoundExpression') {
             // empty expression or multiple expressions
-            throw new DeveloperError('Error: Provide exactly one expression');
+            throw new DeveloperError('Error: Provide exactly one expression.');
         }  else {
-            throw new DeveloperError('Error: Cannot parse expression');
+            throw new DeveloperError('Error: Cannot parse expression.');
         }
         //>>includeEnd('debug');
 
@@ -591,7 +592,7 @@ define([
         var left = this._left.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined');
+            throw new DeveloperError('Error: Operation is undefined.');
         }
         //>>includeEnd('debug');
 
@@ -603,7 +604,7 @@ define([
         var right = this._right.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined');
+            throw new DeveloperError('Error: Operation is undefined.');
         }
         //>>includeEnd('debug');
         return left || right;
@@ -613,7 +614,7 @@ define([
         var left = this._left.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(left) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined');
+            throw new DeveloperError('Error: Operation is undefined.');
         }
         //>>includeEnd('debug');
 
@@ -625,7 +626,7 @@ define([
         var right = this._right.evaluate(feature);
         //>>includeStart('debug', pragmas.debug);
         if (typeof(right) !== 'boolean') {
-            throw new DeveloperError('Error: Operation is undefined');
+            throw new DeveloperError('Error: Operation is undefined.');
         }
         //>>includeEnd('debug');
         return left && right;

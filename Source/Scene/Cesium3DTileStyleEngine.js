@@ -122,7 +122,7 @@ define([
             var colorExpression = style.color.evaluate(feature);
             //>>includeStart('debug', pragmas.debug);
             if (!(colorExpression instanceof Color)) {
-                throw new DeveloperError('color expects a color expression');
+                throw new DeveloperError('color style property expects a color expression.');
             }
             //>>includeEnd('debug');
             feature.color = colorExpression;
@@ -130,7 +130,7 @@ define([
             var showExpression = style.show.evaluate(feature);
             //>>includeStart('debug', pragmas.debug);
             if (typeof(showExpression) !== 'boolean') {
-                throw new DeveloperError('show expects boolean expression');
+                throw new DeveloperError('show style property expects boolean expression.');
             }
             //>>includeEnd('debug');
             feature.show = showExpression;
