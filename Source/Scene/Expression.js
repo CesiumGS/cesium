@@ -132,7 +132,7 @@ define([
             if (ast.value.indexOf('${') >= 0) {
                 return new Node(ExpressionNodeType.VARIABLE_IN_STRING, ast.value);
             }
-            return new Node(ExpressionNodeType.LITERAL_STRING, ast.value);
+            return new Node(ExpressionNodeType.LITERAL_STRING, replaceBackslashes(ast.value));
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -251,12 +251,12 @@ define([
         }
 
         var pattern = createRuntimeAst(expression, args[0]);
+        var exp;
 
         // optional flag argument supplied
         if (args.length > 1) {
             var flags = createRuntimeAst(expression, args[1]);
             if (isLiteralType(pattern) && isLiteralType(flags)) {
-                var exp;
                 try {
                     exp = new RegExp(replaceBackslashes(String(pattern._value)), flags._value);
                 } catch (e) {
@@ -271,7 +271,6 @@ define([
 
         // only pattern argument supplied
         if (isLiteralType(pattern)) {
-            var exp;
             try {
                 exp = new RegExp(replaceBackslashes(String(pattern._value)));
             } catch (e) {
@@ -493,7 +492,7 @@ define([
     };
 
     Node.prototype._evaluateLiteralString = function(feature) {
-        return replaceBackslashes(this._value);
+        return this._value;
     };
 
     Node.prototype._evaluateVariableString = function(feature) {
