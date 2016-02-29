@@ -105,7 +105,11 @@ defineSuite([
         }).toThrowDeveloperError();
 
         expect(function() {
-            return new Expression(new MockStyleEngine(), '2 3');
+            return new Expression(new MockStyleEngine(), 'this');
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), '2; 3;');
         }).toThrowDeveloperError();
     });
 
@@ -134,6 +138,12 @@ defineSuite([
     it('throws on unknown function calls', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), 'unknown()');
+        }).toThrowDeveloperError();
+    });
+
+    it('throws on unknown member function calls', function() {
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'regExp().unknown()');
         }).toThrowDeveloperError();
     });
 
@@ -550,6 +560,18 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws with invalid and operands', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 && true');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'true && color(\'red\')');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('evaluates logical or', function() {
         var expression = new Expression(new MockStyleEngine(), 'false || false');
         expect(expression.evaluate(undefined)).toEqual(false);
@@ -559,8 +581,15 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'true || true');
         expect(expression.evaluate(undefined)).toEqual(true);
+    });
 
-        expression = new Expression(new MockStyleEngine(), '2 || color(\'red\')');
+    it('throws with invalid or operands', function() {
+        var expression = new Expression(new MockStyleEngine(), '2 || false');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expression = new Expression(new MockStyleEngine(), 'false || color(\'red\')');
         expect(function() {
             expression.evaluate(undefined);
         }).toThrowDeveloperError();
@@ -816,6 +845,17 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'regExp("a", "m" + "g")');
         expect(expression.evaluate(undefined)).toEqual(/a/mg);
         expect(expression._runtimeAst._type).toEqual(ExpressionNodeType.REGEX);
+    });
+
+    it('throws if regex constructor has invalid pattern', function() {
+        var expression = new Expression(new MockStyleEngine(), 'regExp("(?<=\\s)" + ".")');
+        expect(function() {
+            expression.evaluate(undefined);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            return new Expression(new MockStyleEngine(), 'regExp("(?<=\\s)")');
+        }).toThrowDeveloperError();
     });
 
     it('throws if regex constructor has invalid flags', function() {

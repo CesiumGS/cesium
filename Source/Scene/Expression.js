@@ -137,10 +137,6 @@ define([
             }
             return new Node(ExpressionNodeType.LITERAL_STRING, replaceBackslashes(ast.value));
         }
-
-        //>>includeStart('debug', pragmas.debug);
-        throw new DeveloperError('Error: ' + ast.value + ' is not defined.');
-        //>>includeEnd('debug');
     }
 
     function parseCall(expression, ast) {
@@ -361,10 +357,6 @@ define([
             right = createRuntimeAst(expression, ast.right);
             if (binaryOperators.indexOf(op) > -1) {
                 node = new Node(ExpressionNodeType.BINARY, op, left, right);
-            } else {
-                //>>includeStart('debug', pragmas.debug);
-                throw new DeveloperError('Error: Unexpected operator "' + op + '".');
-                //>>includeEnd('debug');
             }
         } else if (ast.type === 'ConditionalExpression') {
             var test = createRuntimeAst(expression, ast.test);
@@ -381,7 +373,7 @@ define([
             node = new Node(ExpressionNodeType.ARRAY, val);
         }
         //>>includeStart('debug', pragmas.debug);
-        else if (ast.type === 'CompoundExpression') {
+        else if (ast.type === 'Compound') {
             // empty expression or multiple expressions
             throw new DeveloperError('Error: Provide exactly one expression.');
         }  else {
