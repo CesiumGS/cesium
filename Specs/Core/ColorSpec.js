@@ -259,6 +259,24 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromCssColorString works with a result parameter.', function() {
+        var c = new Color();
+        expect(Color.fromCssColorString('yellow', c)).toEqual(Color.YELLOW);
+        expect(c).toEqual(Color.YELLOW);
+
+        expect(Color.fromCssColorString('#f00', c)).toEqual(Color.RED);
+        expect(c).toEqual(Color.RED);
+
+        expect(Color.fromCssColorString('#0000ff', c)).toEqual(Color.BLUE);
+        expect(c).toEqual(Color.BLUE);
+
+        expect(Color.fromCssColorString('rgb(0, 255, 255)', c)).toEqual(Color.CYAN);
+        expect(c).toEqual(Color.CYAN);
+
+        expect(Color.fromCssColorString('hsl(120, 100%, 50%)', c)).toEqual(Color.LIME);
+        expect(c).toEqual(Color.LIME);
+    });
+
     it('fromHsl produces expected output', function() {
         expect(Color.fromHsl(0.0, 1.0, 0.5, 1.0)).toEqual(Color.RED);
         expect(Color.fromHsl(120.0 / 360.0, 1.0, 0.5, 1.0)).toEqual(Color.LIME);
@@ -268,6 +286,12 @@ defineSuite([
 
     it('fromHsl properly wraps hue into valid range', function() {
         expect(Color.fromHsl(5, 1.0, 0.5, 1.0)).toEqual(Color.RED);
+    });
+
+    it('fromHsl works with result parameter', function() {
+        var c = new Color();
+        expect(Color.fromHsl(5, 1.0, 0.5, 1.0, c)).toEqual(Color.RED);
+        expect(c).toEqual(Color.RED);
     });
 
     it('fromRandom generates a random color with no options', function() {
