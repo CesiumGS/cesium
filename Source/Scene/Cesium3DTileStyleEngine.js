@@ -2,13 +2,11 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError'
+       '../Core/defineProperties'
     ], function(
         Color,
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**
@@ -118,22 +116,8 @@ define([
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-
-            var colorExpression = style.color.evaluate(feature);
-            //>>includeStart('debug', pragmas.debug);
-            if (!(colorExpression instanceof Color)) {
-                throw new DeveloperError('color style property expects a color expression.');
-            }
-            //>>includeEnd('debug');
-            feature.color = colorExpression;
-
-            var showExpression = style.show.evaluate(feature);
-            //>>includeStart('debug', pragmas.debug);
-            if (typeof(showExpression) !== 'boolean') {
-                throw new DeveloperError('show style property expects boolean expression.');
-            }
-            //>>includeEnd('debug');
-            feature.show = showExpression;
+            feature.color = style.color.evaluate(feature);
+            feature.show = style.show.evaluate(feature);
         }
     }
 
