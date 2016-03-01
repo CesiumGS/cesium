@@ -109,11 +109,11 @@ function createScene(height) {
 
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
 
-    //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb');
+    //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
     createModel('../../SampleData/models/shadow_tester.gltf', center);
-//    createBox(position3);
-//    createBoxRTC(position2);
-//    createSphere(position1);
+    createBox(position3);
+    createBoxRTC(position2);
+    createSphere(position1);
     shadowMap.enabled = true;
 }
 

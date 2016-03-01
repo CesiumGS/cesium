@@ -700,7 +700,7 @@ define([
 
         // 5. Update the shadow map camera
         Matrix4.clone(lightView, shadowMapCamera.viewMatrix);
-        Matrix4.inverseTransformation(lightView, shadowMapCamera.inverseViewMatrix);
+        Matrix4.inverse(lightView, shadowMapCamera.inverseViewMatrix);
         Matrix4.getTranslation(shadowMapCamera.inverseViewMatrix, shadowMapCamera.positionWC);
         Cartesian3.clone(lightDir, shadowMapCamera.directionWC);
         Cartesian3.clone(lightUp, shadowMapCamera.upWC);
