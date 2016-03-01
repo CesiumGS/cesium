@@ -661,11 +661,11 @@ The first 73 Cesium tests from March 2011.
 
 When you load the Cesium Webstorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
 
-![](webstorm-test-configuration.jpg)
+![](webstorm-test-configuration.png)
 
 You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the Webstorm test runner:
 
-![](webstorm-test-runner.jpg)
+![](webstorm-test-runner.png)
 
 This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
 
