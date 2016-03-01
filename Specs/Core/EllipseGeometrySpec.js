@@ -186,6 +186,48 @@ defineSuite([
         expect(geometry3).toBeUndefined();
     });
 
+    it('createShadowVolume uses properties from geometry', function() {
+        var m = new EllipseGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 3000.0,
+            semiMinorAxis : 1500.0,
+            ellipsoid : Ellipsoid.WGS84,
+            rotation : CesiumMath.PI_OVER_TWO,
+            stRotation : CesiumMath.PI_OVER_FOUR,
+            granularity : 10000,
+            extrudedHeight : 0,
+            height : 100,
+            vertexFormat : VertexFormat.ALL
+        });
+
+        var minHeightFunc = function() {
+            return 100;
+        };
+
+        var maxHeightFunc = function() {
+            return 1000;
+        };
+
+        var sv = EllipseGeometry.createShadowVolume(m, minHeightFunc, maxHeightFunc);
+
+        expect(sv._center.equals(m._center)).toBe(true);
+        expect(sv._semiMajorAxis).toBe(m._semiMajorAxis);
+        expect(sv._semiMinorAxis).toBe(m._semiMinorAxis);
+        expect(sv._ellipsoid.equals(m._ellipsoid)).toBe(true);
+        expect(sv._rotation).toBe(m._rotation);
+        expect(sv._stRotation).toBe(m._stRotation);
+        expect(sv._granularity).toBe(m._granularity);
+        expect(sv._extrudedHeight).toBe(minHeightFunc());
+        expect(sv._height).toBe(maxHeightFunc());
+
+        expect(sv._vertexFormat.binormal).toBe(VertexFormat.POSITION_ONLY.binormal);
+        expect(sv._vertexFormat.color).toBe(VertexFormat.POSITION_ONLY.color);
+        expect(sv._vertexFormat.normal).toBe(VertexFormat.POSITION_ONLY.normal);
+        expect(sv._vertexFormat.position).toBe(VertexFormat.POSITION_ONLY.position);
+        expect(sv._vertexFormat.st).toBe(VertexFormat.POSITION_ONLY.st);
+        expect(sv._vertexFormat.tangent).toBe(VertexFormat.POSITION_ONLY.tangent);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var packableInstance = new EllipseGeometry({

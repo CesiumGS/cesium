@@ -39,7 +39,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+    it('returns undefined with less than 2 unique positions', function() {
         var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
@@ -47,7 +47,28 @@ defineSuite([
                 49.0, 18.0, 1000.0
             ])
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
+    });
+
+    it('returns undefined with no heights', function() {
+        var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ])
+        }));
+        expect(geometry).toBeUndefined();
+
+        geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ]),
+            maximumHeights: [0, 0, 0]
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('creates positions relative to ellipsoid', function() {
@@ -156,20 +177,6 @@ defineSuite([
 
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 9));
         expect(cartographic.height).toEqualEpsilon(max, CesiumMath.EPSILON8);
-    });
-
-    it('undefined is returned if there are less than two positions', function() {
-        var wallOutline = WallOutlineGeometry.fromConstantHeights({
-                positions : Cartesian3.fromDegreesArray([
-                19.0, 47.0
-            ]),
-            minimumHeight : 20000.0,
-            maximumHeight : 10000.0
-        });
-
-        var geometry = WallOutlineGeometry.createGeometry(wallOutline);
-
-        expect(geometry).toBeUndefined();
     });
 
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];

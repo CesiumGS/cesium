@@ -864,6 +864,7 @@ define([
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipsoid,
+            rotation : ellipseGeometry._rotation,
             stRotation : ellipseGeometry._stRotation,
             granularity : granularity,
             extrudedHeight : minHeight,
