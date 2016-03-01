@@ -52,7 +52,7 @@ define([
 
     ShadowMapShader.createShadowReceiveFragmentShader = function(fs, context) {
         var cascadesEnabled = true;
-        var debugVisualizeCascades = true;
+        var debugVisualizeCascades = false;
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
             'varying vec3 v_shadowPosition; \n' +

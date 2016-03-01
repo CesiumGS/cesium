@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
@@ -54,6 +55,7 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -106,21 +108,20 @@ define([
         this._farPlane = 100.0; // Limit the far plane of the scene camera
         this._fitToScene = true;
 
-        var numberOfCascades = 4;
-        this._cascadesEnabled = true;
-        this._numberOfCascades = numberOfCascades;
+        var maximumNumberOfCascades = 4;
+        this._numberOfCascades = 4;
 
-        this._cascadeCameras = new Array(numberOfCascades);
-        this._cascadePassStates = new Array(numberOfCascades);
-        this._cascadeViewports = new Array(numberOfCascades);
+        this._cascadeCameras = new Array(maximumNumberOfCascades);
+        this._cascadePassStates = new Array(maximumNumberOfCascades);
+        this._cascadeViewports = new Array(maximumNumberOfCascades);
 
         // Uniforms
         this._cascadeSplitsNear = new Cartesian4();
         this._cascadeSplitsFar = new Cartesian4();
-        this._cascadeOffsets = new Array(numberOfCascades);
-        this._cascadeScales = new Array(numberOfCascades);
+        this._cascadeOffsets = new Array(maximumNumberOfCascades);
+        this._cascadeScales = new Array(maximumNumberOfCascades);
 
-        for (var i = 0; i < numberOfCascades; ++i) {
+        for (var i = 0; i < maximumNumberOfCascades; ++i) {
             this._cascadeCameras[i] = new ShadowMapCamera();
             this._cascadePassStates[i] = new PassState(context);
             this._cascadePassStates[i].viewport = new BoundingRectangle(); // Updated in setSize
@@ -128,18 +129,12 @@ define([
             this._cascadeScales[i] = new Cartesian3();
         }
 
-        // Mirrors the viewports in the shader (offset x, offset y, scale x, scale y)
-        this._cascadeViewports[0] = new Cartesian4(0.0, 0.0, 0.5, 0.5);
-        this._cascadeViewports[1] = new Cartesian4(0.5, 0.0, 0.5, 0.5);
-        this._cascadeViewports[2] = new Cartesian4(0.0, 0.5, 0.5, 0.5);
-        this._cascadeViewports[3] = new Cartesian4(0.5, 0.5, 0.5, 0.5);
-
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this.debugVisualizeCascades = false;
         this._debugLightFrustum = undefined;
         this._debugCameraFrustum = undefined;
-        this._debugCascadeFrustums = new Array(numberOfCascades);
+        this._debugCascadeFrustums = new Array(maximumNumberOfCascades);
         this._debugShadowViewCommand = undefined;
 
         // Only enable the color mask if the depth texture extension is not supported
@@ -173,6 +168,7 @@ define([
         this._passState = new PassState(context);
         this._passState.viewport = new BoundingRectangle(); // Updated in setSize
 
+        this.setNumberOfCascades(this._numberOfCascades);
         this.setSize(this._shadowMapSize);
     }
 
@@ -295,11 +291,6 @@ define([
             get : function() {
                 return this._cascadeScales;
             }
-        },
-        cascadesEnabled : {
-            get : function() {
-                return this._cascadesEnabled;
-            }
         }
     });
 
@@ -379,8 +370,28 @@ define([
         }
     }
 
+    ShadowMap.prototype.setNumberOfCascades = function(numberOfCascades) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(numberOfCascades) || ((numberOfCascades !== 1) && (numberOfCascades !== 4))) {
+            throw new DeveloperError('Only one or four cascades are supported.');
+        }
+        //>>includeEnd('debug');
+
+        this._numberOfCascades = numberOfCascades;
+
+        if (numberOfCascades === 1) {
+            this._cascadeViewports[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
+        } else if (numberOfCascades === 4) {
+            // Mirrors the viewports in the shader (offset x, offset y, scale x, scale y)
+            this._cascadeViewports[0] = new Cartesian4(0.0, 0.0, 0.5, 0.5);
+            this._cascadeViewports[1] = new Cartesian4(0.5, 0.0, 0.5, 0.5);
+            this._cascadeViewports[2] = new Cartesian4(0.0, 0.5, 0.5, 0.5);
+            this._cascadeViewports[3] = new Cartesian4(0.5, 0.5, 0.5, 0.5);
+        }
+    };
+
     ShadowMap.prototype.setSize = function(size) {
-        if (this._cascadesEnabled) {
+        if (this._numberOfCascades === 4) {
             size *= 2;
         }
 
@@ -494,12 +505,10 @@ define([
         Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), shadowMap._debugLightFrustum.modelMatrix);
         shadowMap._debugLightFrustum.update(frameState);
 
-        if (shadowMap._cascadesEnabled) {
-            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-                shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] || createDebugFrustum(debugCascadeColors[i]);
-                Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), shadowMap._debugCascadeFrustums[i].modelMatrix);
-                shadowMap._debugCascadeFrustums[i].update(frameState);
-            }
+        for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
+            shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] || createDebugFrustum(debugCascadeColors[i]);
+            Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), shadowMap._debugCascadeFrustums[i].modelMatrix);
+            shadowMap._debugCascadeFrustums[i].update(frameState);
         }
 
         updateDebugShadowViewCommand(shadowMap, frameState);
@@ -601,7 +610,9 @@ define([
             // Limit min to 0.0, sometimes precision errors cause it to go slightly negative.
             min.x = Math.max(min.x, 0.0);
             min.y = Math.max(min.y, 0.0);
-            min.z = 0.0; // Always start cascade frustum at the top of the light frustum to capture objects in the light's path
+
+            // Always start cascade frustum at the top of the light frustum to capture objects in the light's path
+            min.z = 0.0;
 
             var cascadeCamera = shadowMap._cascadeCameras[j];
             cascadeCamera.clone(shadowMapCamera); // PERFORMANCE_IDEA : could do a shallow clone for all properties except the frustum
@@ -718,8 +729,10 @@ define([
             fitShadowMapToScene(this);
         }
 
-        if (this._cascadesEnabled) {
+        if (this._numberOfCascades > 1) {
             computeCascades(this);
+        } else {
+            this._cascadeCameras[0] = this._shadowMapCamera;
         }
 
         if (this.debugShow) {
