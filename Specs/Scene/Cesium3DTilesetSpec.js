@@ -58,6 +58,8 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 
+    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+
     var originalMaximumRequests;
 
     beforeAll(function() {
@@ -838,12 +840,14 @@ defineSuite([
     it('applies show style to a tileset', function() {
         // One building in each data set is always located in the center, so point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
-            tileset.style = new Cesium3DTileStyle(tileset, {show : 'false'});
+            var hideStyle = new Cesium3DTileStyle(tileset, {show : 'false'});
+            tileset.style = hideStyle;
+            expect(tileset.style).toBe(hideStyle);
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
@@ -870,12 +874,29 @@ defineSuite([
         });
     });
 
+    it('applies show style to a tileset with a composite tile', function() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'false'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
     it('applies color style to a tileset', function() {
         // One building in each data set is always located in the center, so point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var originalColor = scene.renderForSpecs();
+
             tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue")'});
             var color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
@@ -883,12 +904,53 @@ defineSuite([
             expect(color[2]).toBeGreaterThan(0);
             expect(color[3]).toEqual(255);
 
+            // set color to transparent
+            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue", 0.0)'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
             tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("cyan")'});
             color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
             expect(color[1]).toBeGreaterThan(0);
             expect(color[2]).toBeGreaterThan(0);
             expect(color[3]).toEqual(255);
+
+            // Remove style
+            tileset.style = undefined;
+            color = scene.renderForSpecs();
+            expect(color).toEqual(originalColor);
+        });
+    });
+
+    it('applies style when feature properties change', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            // Initially, all feature ids are less than 100
+            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} < 100'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+
+            // Change feature ids so the show expression will evaluate to false
+            var content = tileset._root.content;
+            var length = content.featuresLength;
+            var i;
+            var feature;
+            for (i = 0; i < length; ++i) {
+                feature = content.getFeature(i);
+                feature.setProperty('id', feature.getProperty('id') + 100);
+            }
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // Change ids back
+            for (i = 0; i < length; ++i) {
+                feature = content.getFeature(i);
+                feature.setProperty('id', feature.getProperty('id') - 100);
+            }
+            expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
 

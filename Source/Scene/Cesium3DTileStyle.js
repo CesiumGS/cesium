@@ -4,20 +4,14 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './BooleanRegularExpression',
-       './ColorRampExpression',
        './ColorConditional',
-       './ColorExpression',
        './Expression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         isArray,
-        BooleanRegularExpression,
-        ColorRampExpression,
         ColorConditional,
-        ColorExpression,
         Expression) {
     'use strict';
 

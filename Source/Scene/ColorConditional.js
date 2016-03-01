@@ -108,5 +108,23 @@ define([
         return defaultColor.evaluate(feature);
     };
 
+    /**
+     * DOC_TBA
+     */
+    ColorConditional.prototype.evaluateColor = function(feature, result) {
+        var defaultColor = this._runtimeDefault;
+        var conditional = this._runtimeConditional;
+        if (defined(conditional)) {
+            for (var i in conditional) {
+                if (conditional.hasOwnProperty(i)) {
+                    if (conditional[i].condition.evaluate(feature, result)) {
+                        return conditional[i].color.evaluate(feature, result);
+                    }
+                }
+            }
+        }
+        return defaultColor.evaluate(feature, result);
+    };
+
     return ColorConditional;
 });
