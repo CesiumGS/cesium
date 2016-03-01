@@ -37,7 +37,7 @@ defineSuite([
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        expect(m.indices.length).toEqual(3 * 12);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -53,7 +53,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * 16);
         expect(m.attributes.tangent.values.length).toEqual(3 * 16);
         expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        expect(m.indices.length).toEqual(3 * 12);
     });
 
     it('computes attributes for a unit sphere', function() {
