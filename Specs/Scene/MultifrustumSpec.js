@@ -53,7 +53,7 @@ defineSuite([
         TextureAtlas,
         createScene,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;

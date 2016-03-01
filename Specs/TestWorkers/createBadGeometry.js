@@ -3,7 +3,7 @@ define([
         'Core/RuntimeError'
     ], function(
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     return function() {
         throw new RuntimeError('BadGeometry.createGeometry');

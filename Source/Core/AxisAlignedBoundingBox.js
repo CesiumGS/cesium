@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         Intersect) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.

@@ -3,7 +3,7 @@ define([
         'Workers/createTaskProcessorWorker'
     ], function(
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     return createTaskProcessorWorker(function(parameters, transferableObjects) {
         var arrayBuffer = new ArrayBuffer(parameters.byteLength);

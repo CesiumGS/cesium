@@ -7,7 +7,7 @@ define([
         Color,
         defined,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

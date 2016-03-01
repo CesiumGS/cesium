@@ -15,7 +15,7 @@ defineSuite([
         JulianDate,
         CesiumMath,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     //Video textures do not work on Internet Explorer
     if (FeatureDetection.isInternetExplorer()) {

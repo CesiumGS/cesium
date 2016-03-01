@@ -4,6 +4,7 @@ define([
         './Cartesian4',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './freezeObject',
         './Math',
@@ -14,12 +15,13 @@ define([
         Cartesian4,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         freezeObject,
         CesiumMath,
         Matrix3,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     /**
      * A 4x4 matrix, indexable as a column-major order array.
@@ -2703,6 +2705,20 @@ define([
      * @constant
      */
     Matrix4.COLUMN3ROW3 = 15;
+
+    defineProperties(Matrix4.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix4.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix4.packedLength;
+            }
+        }
+    });
 
     /**
      * Duplicates the provided Matrix4 instance.

@@ -21,7 +21,7 @@ define([
         GeoJsonDataSource,
         KmlDataSource,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -237,6 +237,7 @@ define([
     }
 
     function createOnLoadCallback(viewer, file, proxy) {
+        var scene = viewer.scene;
         return function(evt) {
             var fileName = file.name;
             try {
@@ -253,7 +254,9 @@ define([
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
                     loadPromise = KmlDataSource.load(file, {
                         sourceUri : fileName,
-                        proxy : proxy
+                        proxy : proxy,
+                        camera : scene.camera,
+                        canvas : scene.canvas
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);

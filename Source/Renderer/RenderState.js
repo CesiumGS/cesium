@@ -19,7 +19,7 @@ define([
         WindingOrder,
         ContextLimits,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     function validateBlendEquation(blendEquation) {
         return ((blendEquation === WebGLConstants.FUNC_ADD) ||

@@ -1,5 +1,5 @@
 /*jshint node:true*/
-"use strict";
+'use strict';
 
 var path = require('path');
 var requirejs = require('requirejs');

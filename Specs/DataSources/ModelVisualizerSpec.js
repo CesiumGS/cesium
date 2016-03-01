@@ -33,7 +33,7 @@ defineSuite([
         Globe,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
 

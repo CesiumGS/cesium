@@ -43,7 +43,7 @@ defineSuite([
         PrimitiveType,
         Tipsify,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({

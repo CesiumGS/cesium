@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         loadBlob,
         RequestErrorEvent) {
-    "use strict";
+    'use strict';
 
     var fakeXHR;
 

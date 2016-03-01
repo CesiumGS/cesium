@@ -23,7 +23,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates tweens for camera flights.

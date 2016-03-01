@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
@@ -13,6 +14,7 @@ define([
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
         '../Core/HeadingPitchRange',
+        '../Core/Intersect',
         '../Core/IntersectionTests',
         '../Core/Math',
         '../Core/Matrix3',
@@ -25,6 +27,7 @@ define([
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -38,6 +41,7 @@ define([
         EllipsoidGeodesic,
         Event,
         HeadingPitchRange,
+        Intersect,
         IntersectionTests,
         CesiumMath,
         Matrix3,
@@ -49,7 +53,7 @@ define([
         CameraFlightPath,
         PerspectiveFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * The camera is defined by a position, orientation, and view frustum.
@@ -966,6 +970,7 @@ define([
             pitch : undefined,
             roll : undefined
         },
+        convert: undefined,
         endTransform : undefined
     };
 
@@ -1032,7 +1037,7 @@ define([
             this._setTransform(options.endTransform);
         }
 
-        var convert = true;
+        var convert = defaultValue(options.convert, true);
         var destination = defaultValue(options.destination, Cartesian3.clone(this.positionWC, scratchSetViewCartesian));
         if (defined(destination) && defined(destination.west)) {
             destination = this.getRectangleCameraCoordinates(destination, scratchSetViewCartesian);
@@ -1053,6 +1058,58 @@ define([
             setView2D(this, destination, heading, convert);
         } else {
             setViewCV(this, destination, heading, pitch, roll, convert);
+        }
+    };
+
+    var pitchScratch = new Cartesian3();
+    /**
+     * Fly the camera to the home view.  Use {@link Camera#.DEFAULT_VIEW_RECTANGLE} to set
+     * the default view for the 3D scene.  The home view for 2D and columbus view shows the
+     * entire map.
+     *
+     * @param {Number} [duration] The number of seconds to complete the camera flight to home. See {@link Camera#flyTo}
+     */
+    Camera.prototype.flyHome = function(duration) {
+        var mode = this._mode;
+
+        if (mode === SceneMode.MORPHING) {
+            this._scene.completeMorph();
+        }
+
+        if (mode === SceneMode.SCENE2D) {
+            this.flyTo({
+                destination : Rectangle.MAX_VALUE,
+                duration : duration,
+                endTransform : Matrix4.IDENTITY
+            });
+        } else if (mode === SceneMode.SCENE3D) {
+            var destination = this.getRectangleCameraCoordinates(Camera.DEFAULT_VIEW_RECTANGLE);
+
+            var mag = Cartesian3.magnitude(destination);
+            mag += mag * Camera.DEFAULT_VIEW_FACTOR;
+            Cartesian3.normalize(destination, destination);
+            Cartesian3.multiplyByScalar(destination, mag, destination);
+
+            this.flyTo({
+                destination : destination,
+                duration : duration,
+                endTransform : Matrix4.IDENTITY
+            });
+        } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            var maxRadii = this._projection.ellipsoid.maximumRadius;
+            var position = new Cartesian3(0.0, -1.0, 1.0);
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
+            this.flyTo({
+                destination : position,
+                duration : duration,
+                orientation : {
+                    heading : 0.0,
+                    pitch : -Math.acos(Cartesian3.normalize(position, pitchScratch).z),
+                    roll : 0.0
+                },
+                endTransform : Matrix4.IDENTITY,
+                convert : false
+            });
         }
     };
 
@@ -2421,8 +2478,6 @@ define([
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame the camera will be in when the flight is completed.
-     * @param {Boolean} [options.convert=true] When <code>true</code>, the destination is converted to the correct coordinate system for each scene mode. When <code>false</code>, the destination is expected
-     *                  to be in the correct coordinate system.
      * @param {Number} [options.maximumHeight] The maximum height at the peak of the flight.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
@@ -2483,6 +2538,7 @@ define([
             setViewOptions.orientation.heading = orientation.heading;
             setViewOptions.orientation.pitch = orientation.pitch;
             setViewOptions.orientation.roll = orientation.roll;
+            setViewOptions.convert = options.convert;
             setViewOptions.endTransform = options.endTransform;
             this.setView(setViewOptions);
             if (typeof options.complete === 'function'){
@@ -2494,6 +2550,20 @@ define([
         var isRectangle = defined(destination.west);
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
+        }
+
+        var sscc = this._scene.screenSpaceCameraController;
+        var ellipsoid = this._scene.mapProjection.ellipsoid;
+        var destinationCartographic = Cartographic.fromCartesian(destination);
+
+        // Make sure camera doesn't zoom outside set limits
+        if (defined(sscc)) {
+            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+
+            //Only change if we clamped the height
+            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            }
         }
 
         newOptions.destination = destination;
@@ -2678,6 +2748,153 @@ define([
             maximumHeight : options.maximumHeight,
             easingFunction : options.easingFunction
         });
+    };
+
+    var scratchCartesian3_1 = new Cartesian3();
+    var scratchCartesian3_2 = new Cartesian3();
+    var scratchCartesian3_3 = new Cartesian3();
+    var scratchCartesian3_4 = new Cartesian3();
+    var horizonPoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+
+    function computeHorizonQuad(camera, ellipsoid) {
+        var radii = ellipsoid.radii;
+        var p = camera.positionWC;
+
+        // Find the corresponding position in the scaled space of the ellipsoid.
+        var q = Cartesian3.multiplyComponents(ellipsoid.oneOverRadii, p, scratchCartesian3_1);
+
+        var qMagnitude = Cartesian3.magnitude(q);
+        var qUnit = Cartesian3.normalize(q, scratchCartesian3_2);
+
+        // Determine the east and north directions at q.
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q, scratchCartesian3_3), scratchCartesian3_3);
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit, scratchCartesian3_4), scratchCartesian3_4);
+
+        // Determine the radius of the 'limb' of the ellipsoid.
+        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
+
+        // Compute the center and offsets.
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude, scratchCartesian3_1);
+        var scalar = wMagnitude / qMagnitude;
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar, scratchCartesian3_2);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar, scratchCartesian3_3);
+
+        // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
+        var upperLeft = Cartesian3.add(center, northOffset, horizonPoints[0]);
+        Cartesian3.subtract(upperLeft, eastOffset, upperLeft);
+        Cartesian3.multiplyComponents(radii, upperLeft, upperLeft);
+
+        var lowerLeft = Cartesian3.subtract(center, northOffset, horizonPoints[1]);
+        Cartesian3.subtract(lowerLeft, eastOffset, lowerLeft);
+        Cartesian3.multiplyComponents(radii, lowerLeft, lowerLeft);
+
+        var lowerRight = Cartesian3.subtract(center, northOffset, horizonPoints[2]);
+        Cartesian3.add(lowerRight, eastOffset, lowerRight);
+        Cartesian3.multiplyComponents(radii, lowerRight, lowerRight);
+
+        var upperRight = Cartesian3.add(center, northOffset, horizonPoints[3]);
+        Cartesian3.add(upperRight, eastOffset, upperRight);
+        Cartesian3.multiplyComponents(radii, upperRight, upperRight);
+
+        return horizonPoints;
+    }
+
+    var scratchPickCartesian2 = new Cartesian2();
+
+    /**
+     * Computes the approximate visible rectangle on the ellipsoid.
+     *
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+     *
+     * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
+     */
+    Camera.prototype.computeViewRectangle = function(ellipsoid) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var cullingVolume = this.frustum.computeCullingVolume(this.positionWC, this.directionWC, this.upWC);
+        var boundingSphere = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
+        var visibility = cullingVolume.computeVisibility(boundingSphere);
+        if (visibility === Intersect.OUTSIDE) {
+            return undefined;
+        }
+
+        var canvas = this._scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        var that = this;
+        var computedHorizonQuad;
+        var cartographics = [];
+        var successfulPickCount = 0;
+        function addToResult(x, y, index) {
+            scratchPickCartesian2.x = x;
+            scratchPickCartesian2.y = y;
+            var r = that.pickEllipsoid(scratchPickCartesian2, ellipsoid, new Cartesian3());
+            if (defined(r)) {
+                cartographics.push(ellipsoid.cartesianToCartographic(r));
+                ++successfulPickCount;
+            } else {
+                if (!defined(computedHorizonQuad)) {
+                    computedHorizonQuad = computeHorizonQuad(that, ellipsoid);
+                }
+                cartographics.push(ellipsoid.cartesianToCartographic(computedHorizonQuad[index]));
+            }
+        }
+
+        addToResult(0, 0, 0);
+        addToResult(0, height, 1);
+        addToResult(width, height, 2);
+        addToResult(width, 0, 3);
+
+        if (successfulPickCount === 0 || successfulPickCount === 1) {
+            // If we have space non-globe in 3 or 4 corners then return the whole globe
+            return Rectangle.MAX_VALUE;
+        }
+
+        var i;
+        var point;
+        var cartographicsCount = cartographics.length;
+
+        // Detect if we go over the poles
+        var distance = 0;
+        var lastLon = cartographics[cartographicsCount-1].longitude;
+        for (i=0;i<cartographicsCount;++i) {
+            point = cartographics[i];
+            var lon = point.longitude;
+            var diff = Math.abs(lon - lastLon);
+            if (diff > CesiumMath.PI) {
+                // Crossed the dateline
+                distance += CesiumMath.TWO_PI - diff;
+            } else {
+                distance += diff;
+            }
+
+            lastLon = lon;
+        }
+
+        var result;
+        for(i=0;i<cartographicsCount;++i) {
+            point = cartographics[i];
+            if (!defined(result)) {
+                result = new Rectangle(point.longitude, point.latitude,
+                    point.longitude, point.latitude);
+            } else {
+                Rectangle.expand(result, point, result);
+            }
+        }
+
+        // We are over one of the poles so adjust the rectangle accordingly
+        if (CesiumMath.equalsEpsilon(Math.abs(distance), CesiumMath.TWO_PI, CesiumMath.EPSILON9)) {
+            result.west = -CesiumMath.PI;
+            result.east = CesiumMath.PI;
+            if (cartographics[0].latitude >= 0.0) {
+                result.north = CesiumMath.PI_OVER_TWO;
+            } else {
+                result.south = -CesiumMath.PI_OVER_TWO;
+            }
+        }
+
+        return result;
     };
 
     /**

@@ -29,7 +29,7 @@ define([
         VerticalOrigin,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultEyeOffset = Cartesian3.ZERO;

@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         ClearCommand,
         Color) {
-    "use strict";
+    'use strict';
 
     it('constructs with defaults', function() {
         var c = new ClearCommand();

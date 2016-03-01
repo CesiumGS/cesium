@@ -1,6 +1,6 @@
 /*global define*/
 define([], function() {
-    "use strict";
+    'use strict';
 
     /**
      * Parses the result of XMLHttpRequest's getAllResponseHeaders() method into

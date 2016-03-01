@@ -19,7 +19,7 @@ define([
         DeveloperError,
         Matrix4,
         CullingVolume) {
-    "use strict";
+    'use strict';
 
     /**
      * The viewing frustum is defined by 6 planes.
@@ -39,7 +39,7 @@ define([
      * frustum.bottom = -1.0;
      * frustum.near = 1.0;
      * frustum.far = 2.0;
-     * 
+     *
      * @see PerspectiveFrustum
      */
     function PerspectiveOffCenterFrustum() {

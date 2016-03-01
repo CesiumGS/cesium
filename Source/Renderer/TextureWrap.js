@@ -5,7 +5,7 @@ define([
     ], function(
         freezeObject,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

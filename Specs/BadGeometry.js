@@ -5,7 +5,7 @@ define([
     ], function(
         queryToObject,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     function BadGeometry() {
         this._workerName = '../../Specs/TestWorkers/createBadGeometry';

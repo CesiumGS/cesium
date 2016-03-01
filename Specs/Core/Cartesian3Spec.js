@@ -11,7 +11,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();

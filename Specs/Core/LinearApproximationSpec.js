@@ -3,7 +3,7 @@ defineSuite([
         'Core/LinearApproximation'
     ], function(
         LinearApproximation) {
-    "use strict";
+    'use strict';
 
     it('should produce correct results', function() {
         var xTable = [2.0, 4.0];

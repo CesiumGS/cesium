@@ -29,7 +29,7 @@ defineSuite([
         Plane,
         Quaternion,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),

@@ -15,7 +15,7 @@ define([
         freezeObject,
         CesiumMath,
         scaleToGeodeticSurface) {
-    "use strict";
+    'use strict';
 
     /**
      * A position defined by longitude, latitude, and height.

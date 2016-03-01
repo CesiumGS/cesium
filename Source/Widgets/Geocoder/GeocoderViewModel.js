@@ -29,7 +29,7 @@ define([
         knockout,
         when,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -210,8 +210,7 @@ define([
                 viewModel._complete.raiseEvent();
             },
             duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY,
-            convert : false
+            endTransform : Matrix4.IDENTITY
         });
     }
 

@@ -29,7 +29,7 @@ defineSuite([
         createScene,
         pick,
         render) {
-    "use strict";
+    'use strict';
 
     var context;
     var frameState;

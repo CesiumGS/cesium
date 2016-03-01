@@ -21,7 +21,7 @@ defineSuite([
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     var globe;
