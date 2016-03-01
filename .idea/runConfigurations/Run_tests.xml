@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run tests" type="JavaScriptTestRunnerKarma" factoryName="Karma" config-file="$PROJECT_DIR$/Specs/karma.conf.js" browsers="Electron">
+    <karma-package-dir value="$PROJECT_DIR$/node_modules/karma" />
+    <envs />
+    <method />
+  </configuration>
+</component>
