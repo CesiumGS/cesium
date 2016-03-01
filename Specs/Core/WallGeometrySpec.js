@@ -41,16 +41,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 positions', function() {
-        expect(function() {
-            return WallGeometry.createGeometry(new WallGeometry({
-                vertexFormat : VertexFormat.POSITION_ONLY,
-                positions    : ([Cartesian3.fromDegrees(49.0, 18.0, 1000.0)])
-            }));
-        }).toThrowDeveloperError();
-    });
-
-    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+    it('returns undefined with less than 2 unique positions', function() {
         var geometry = WallGeometry.createGeometry(new WallGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
@@ -58,7 +49,28 @@ defineSuite([
                 49.0, 18.0, 1000.0
             ])
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
+    });
+
+    it('returns undefined with no heights', function() {
+        var geometry = WallGeometry.createGeometry(new WallGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ])
+        }));
+        expect(geometry).toBeUndefined();
+
+        geometry = WallGeometry.createGeometry(new WallGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ]),
+            maximumHeights: [0, 0, 0]
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('does not throw when positions are unique but close', function() {
@@ -81,8 +93,10 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
-        expect(w.indices.length).toEqual(2 * 3);
+        var numPositions = 4;
+        var numTriangles = 2;
+        expect(positions.length).toEqual(numPositions * 3);
+        expect(w.indices.length).toEqual(numTriangles * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
@@ -103,8 +117,10 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
-        expect(w.indices.length).toEqual(2 * 3);
+        var numPositions = 4;
+        var numTriangles = 2;
+        expect(positions.length).toEqual(numPositions * 3);
+        expect(w.indices.length).toEqual(numTriangles * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
@@ -133,9 +149,11 @@ defineSuite([
             ])
         }));
 
+        var numPositions = 8;
+        var numTriangles = 4;
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(4 * 2 * 3);
-        expect(w.indices.length).toEqual((4 * 2 - 2) * 3);
+        expect(positions.length).toEqual(numPositions * 3);
+        expect(w.indices.length).toEqual(numTriangles * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
@@ -182,9 +200,11 @@ defineSuite([
             ])
         }));
 
+        var numPositions = 8;
+        var numTriangles = 4;
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(4 * 2 * 3);
-        expect(w.indices.length).toEqual((4 * 2 - 2) * 3);
+        expect(positions.length).toEqual(numPositions * 3);
+        expect(w.indices.length).toEqual(numTriangles * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
@@ -203,12 +223,14 @@ defineSuite([
             ])
         }));
 
-        expect(w.attributes.position.values.length).toEqual(4 * 2 * 3);
-        expect(w.attributes.normal.values.length).toEqual(4 * 2 * 3);
-        expect(w.attributes.tangent.values.length).toEqual(4 * 2 * 3);
-        expect(w.attributes.binormal.values.length).toEqual(4 * 2 * 3);
-        expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
-        expect(w.indices.length).toEqual((4 * 2 - 2) * 3);
+        var numPositions = 8;
+        var numTriangles = 4;
+        expect(w.attributes.position.values.length).toEqual(numPositions * 3);
+        expect(w.attributes.normal.values.length).toEqual(numPositions * 3);
+        expect(w.attributes.tangent.values.length).toEqual(numPositions * 3);
+        expect(w.attributes.binormal.values.length).toEqual(numPositions * 3);
+        expect(w.attributes.st.values.length).toEqual(numPositions * 2);
+        expect(w.indices.length).toEqual(numTriangles * 3);
     });
 
     it('creates correct texture coordinates', function() {
@@ -254,9 +276,11 @@ defineSuite([
             maximumHeight : max
         }));
 
+        var numPositions = 4;
+        var numTriangles = 2;
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
-        expect(w.indices.length).toEqual(2 * 3);
+        expect(positions.length).toEqual(numPositions * 3);
+        expect(w.indices.length).toEqual(numTriangles * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);

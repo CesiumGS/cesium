@@ -92,9 +92,6 @@ define([
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
         }
-        if (wallPositions.length < 2) {
-            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
-        }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
@@ -300,7 +297,7 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
-     * 
+     *
      * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
@@ -363,11 +360,12 @@ define([
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         if (!defined(pos)) {
-            return undefined;
+            return;
         }
 
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
+        var numCorners = pos.numCorners;
 
         var length = topPositions.length;
         var size = length * 2;
@@ -535,7 +533,7 @@ define([
         //
 
         var numVertices = size / 3;
-        size -= 6;
+        size -= 6 * (numCorners + 1);
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;

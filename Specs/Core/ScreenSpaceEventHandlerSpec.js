@@ -475,7 +475,7 @@ defineSuite([
                 createAllMouseSpecCombinations(testWheelEvent, possibleButtons, possibleModifiers, possibleEventTypes);
             });
 
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
 
             describe('using legacy mousewheel event', function() {
                 function testMouseWheelEvent(eventType, modifier, eventOptions) {

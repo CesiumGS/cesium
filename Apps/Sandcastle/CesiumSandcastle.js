@@ -441,7 +441,7 @@ require({
     });
 
     function registerScroll(demoContainer) {
-        if (defined(document.onmousewheel)) {
+        if (document.onmousewheel !== undefined) {
             demoContainer.addEventListener('mousewheel', function(e) {
                 if (defined(e.wheelDelta) && e.wheelDelta) {
                     demoContainer.scrollLeft -= e.wheelDelta * 70 / 120;

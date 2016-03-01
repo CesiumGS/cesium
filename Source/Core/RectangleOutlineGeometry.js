@@ -122,13 +122,11 @@ define([
         var height = options.height;
         var width = options.width;
 
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, maxHeight, ellipsoid, false);
-        var topPositions = geo.attributes.position.values;
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
         var length = topPositions.length;
         var positions = new Float64Array(length*2);
         positions.set(topPositions);
-        geo = PolygonPipeline.scaleToGeodeticHeight(geo, minHeight, ellipsoid);
-        var bottomPositions = geo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         geo.attributes.position.values = positions;
 
@@ -321,7 +319,7 @@ define([
      * Computes the geometric representation of an outline of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleOutlineGeometry} rectangleGeometry A description of the rectangle outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
@@ -337,6 +335,11 @@ define([
         var geometry;
         var boundingSphere;
         rectangle = rectangleGeometry._rectangle;
+
+        if ((CesiumMath.equalsEpsilon(rectangle.north, rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangle.east, rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
         if (defined(extrudedHeight)) {
             geometry = constructExtrudedRectangle(options);
             var topBS = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight, topBoundingSphere);
@@ -344,7 +347,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 
