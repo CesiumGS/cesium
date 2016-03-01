@@ -286,6 +286,7 @@ gulp.task('test', function(done) {
     var excludeCategory = '';
     var webglValidation = false;
     var release = false;
+    var browsers;
 
     if (argv.all) {
         enableAllBrowsers = true;
@@ -307,6 +308,10 @@ gulp.task('test', function(done) {
         release = true;
     }
 
+    if (argv.browsers) {
+        browsers = argv.browsers.split(',');
+    }
+
     var files = [
         'Specs/karma-main.js',
         {pattern: 'Source/**', included: false},
@@ -319,6 +324,7 @@ gulp.task('test', function(done) {
 
     karma.start({
         configFile: karmaConfigFile,
+        browsers : browsers,
         detectBrowsers : {
             enabled: enableAllBrowsers
         },

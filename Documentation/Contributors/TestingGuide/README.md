@@ -35,6 +35,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 * [Pragmatic Advice](#pragmatic-advice)
    * [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
    * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
+* [Testing in Webstorm](#webstorm)
 * [Resources](#resources)
 
 ## Running the Tests
@@ -155,9 +156,11 @@ When one or more tests fail, output looks like this:
 
 The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
 
-In order to modify testing configurations, such as default browser or excluding certain tests, modify the [Karma configuration file](http://karma-runner.github.io/0.13/config/configuration-file.html), located at `Specs\karma.conf.js`.
-
 It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
+
+#### Run Tests with a Specific Browser or Browsers
+
+`npm run test -- --browsers Firefox,Chrome`
 
 #### Run All Tests with WebGL Validation
 
@@ -174,6 +177,10 @@ It is also possible for Karma to run all tests against each browser installed on
 #### Run All Tests Against the Minified Release Version of Cesium
 
  `npm run test-release`
+
+#### Run a Single Test or Suite
+
+Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdefineSuite` instead of `defineSuite`.
 
 ## Testing Previous Versions of Cesium
 
@@ -649,6 +656,20 @@ The first 73 Cesium tests from March 2011.
 > Even today, with modern tools and experience, I never code for hours straight without testing, and I rarely write new code without seeing it execute in the debugger.  Debuggers are not a reactive tool for when a bug is found, they are a proactive tool for gaining insight and avoiding surprises.
 
 > Try this approach for yourself!
+
+## Testing in Webstorm
+
+When you load the Cesium Webstorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
+
+![](webstorm-test-configuration.jpg)
+
+You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the Webstorm test runner:
+
+![](webstorm-test-runner.jpg)
+
+This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
+
+Instead of using Chrome or Firefox, the Webstorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
 
 ## Resources
 
