@@ -20,12 +20,16 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
+var karma = require('karma').Server;
+var yargs = require('yargs');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
 if (/\.0$/.test(version)) {
     version = version.substring(0, version.length - 2);
 }
+
+var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -273,6 +277,65 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 });
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
+
+gulp.task('test', function(done) {
+    var argv = yargs.argv;
+
+    var enableAllBrowsers = false;
+    var includeCategory = '';
+    var excludeCategory = '';
+    var webglValidation = false;
+    var release = false;
+    var browsers;
+
+    if (argv.all) {
+        enableAllBrowsers = true;
+    }
+
+    if (argv.include) {
+        includeCategory = argv.include;
+    }
+
+    if (argv.exclude) {
+        excludeCategory = argv.exclude;
+    }
+
+    if (argv.webglValidation) {
+        webglValidation = true;
+    }
+
+    if (argv.release) {
+        release = true;
+    }
+
+    if (argv.browsers) {
+        browsers = argv.browsers.split(',');
+    }
+
+    var files = [
+        'Specs/karma-main.js',
+        {pattern: 'Source/**', included: false},
+        {pattern: 'Specs/**', included: false}
+    ];
+
+    if (release) {
+        files.push({pattern: 'Build/**', included: false});
+    }
+
+    karma.start({
+        configFile: karmaConfigFile,
+        browsers : browsers,
+        detectBrowsers : {
+            enabled: enableAllBrowsers
+        },
+        files: files,
+        client: {
+            args: [includeCategory, excludeCategory, webglValidation, release]
+        }
+    }, function() {
+        return done();
+    });
+});
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));

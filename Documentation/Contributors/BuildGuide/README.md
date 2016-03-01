@@ -91,4 +91,9 @@ Here's the full set of scripts and what they do.
    * `clean` - Removes all generated build artifacts.
    * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
    * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.
-
+   * `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
+   * `test-all` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using all browsers installed on the current system.
+   * `test-non-webgl` - Runs only non-WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+   * `test-webgl` - Runs only WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+   * `test-webgl-validation` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) and enables low-level WebGL validation.
+   * `test-release` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) on the minified release version of built Cesium.
