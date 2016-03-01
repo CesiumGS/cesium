@@ -100,7 +100,7 @@ define([
         if ('onwheel' in element) {
             // spec event type
             wheelEvent = 'wheel';
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
             // legacy event type
             wheelEvent = 'mousewheel';
         } else {
