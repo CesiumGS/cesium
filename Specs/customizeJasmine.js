@@ -9,8 +9,8 @@ define([
     "use strict";
 
     return function (env, includedCategory, excludedCategory, webglValidation, release) {
-        window.defineSuite = function(deps, name, suite, categories) {
-            /*global define,describe*/
+        function defineSuite(deps, name, suite, categories, focus) {
+            /*global define,describe,fdescribe*/
             if (typeof suite === 'object' || typeof suite === 'string') {
                 categories = suite;
             }
@@ -30,10 +30,25 @@ define([
 
             define(deps, function() {
                 var args = arguments;
-                describe(name, function() {
-                    suite.apply(null, args);
-                }, categories);
+                if (focus) {
+                    fdescribe(name, function() {
+                        suite.apply(null, args);
+                    }, categories);
+                } else {
+                    describe(name, function() {
+                        suite.apply(null, args);
+                    }, categories);
+                }
             });
+        }
+
+        window.fdefineSuite = function(deps, name, suite, categories) {
+            defineSuite(deps, name, suite, categories, true);
+        };
+
+        window.defineSuite = function(deps, name, suite, categories) {
+            defineSuite(deps, name, suite, categories, false);
+
         };
 
         var originalDescribe = window.describe;
