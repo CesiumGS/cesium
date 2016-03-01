@@ -174,17 +174,18 @@ define([
      * of the system.
      *
      * @param {Number} rgba A single numeric unsigned 32-bit RGBA value.
-     * @returns {Color} A new color instance.
+     * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
+     * @returns {Color} The color object.
      *
      * @example
      * var color = Cesium.Color.fromRgba(0x67ADDFFF);
      *
      * @see Color#toRgba
      */
-    Color.fromRgba = function(rgba) {
+    Color.fromRgba = function(rgba, result) {
         // scratchUint32Array and scratchUint8Array share an underlying array buffer
         scratchUint32Array[0] = rgba;
-        return Color.fromBytes(scratchUint8Array[0], scratchUint8Array[1], scratchUint8Array[2], scratchUint8Array[3]);
+        return Color.fromBytes(scratchUint8Array[0], scratchUint8Array[1], scratchUint8Array[2], scratchUint8Array[3], result);
     };
 
     /**

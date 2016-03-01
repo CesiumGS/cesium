@@ -261,19 +261,24 @@ defineSuite([
 
     it('fromCssColorString works with a result parameter.', function() {
         var c = new Color();
-        expect(Color.fromCssColorString('yellow', c)).toEqual(Color.YELLOW);
+        var c2 = Color.fromCssColorString('yellow', c);
+        expect(c).toBe(c2);
         expect(c).toEqual(Color.YELLOW);
 
-        expect(Color.fromCssColorString('#f00', c)).toEqual(Color.RED);
+        c2 = Color.fromCssColorString('#f00', c);
+        expect(c).toBe(c2);
         expect(c).toEqual(Color.RED);
 
-        expect(Color.fromCssColorString('#0000ff', c)).toEqual(Color.BLUE);
+        c2 = Color.fromCssColorString('#0000ff', c);
+        expect(c).toBe(c2);
         expect(c).toEqual(Color.BLUE);
 
-        expect(Color.fromCssColorString('rgb(0, 255, 255)', c)).toEqual(Color.CYAN);
+        c2 = Color.fromCssColorString('rgb(0, 255, 255)', c);
+        expect(c).toBe(c2);
         expect(c).toEqual(Color.CYAN);
 
-        expect(Color.fromCssColorString('hsl(120, 100%, 50%)', c)).toEqual(Color.LIME);
+        c2 = Color.fromCssColorString('hsl(120, 100%, 50%)', c);
+        expect(c).toBe(c2);
         expect(c).toEqual(Color.LIME);
     });
 
@@ -289,9 +294,10 @@ defineSuite([
     });
 
     it('fromHsl works with result parameter', function() {
-        var c = new Color();
-        expect(Color.fromHsl(5, 1.0, 0.5, 1.0, c)).toEqual(Color.RED);
-        expect(c).toEqual(Color.RED);
+        var c1 = new Color();
+        var c2 = Color.fromHsl(5, 1.0, 0.5, 1.0, c1);
+        expect(c1).toEqual(Color.RED);
+        expect(c1).toBe(c2);
     });
 
     it('fromRandom generates a random color with no options', function() {
@@ -436,11 +442,18 @@ defineSuite([
         var rgba = color.toRgba();
         expect(rgba).toBeGreaterThan(0);
 
+        var result = new Color();
+        var newColor = Color.fromRgba(rgba, result);
+        expect(result).toBe(newColor);
+        expect(color).toEqual(newColor);
+    });
+
+    it('fromRgba works with result parameter', function() {
+        var color = Color.fromBytes(0xFF, 0xCC, 0x00, 0xEE);
+        var rgba = color.toRgba();
+
         var newColor = Color.fromRgba(rgba);
         expect(color).toEqual(newColor);
-
-        var newRgba = newColor.toRgba();
-        expect(rgba).toEqual(newRgba);
     });
 
     it('Can brighten', function() {

@@ -30,7 +30,7 @@ Change Log
 * Fixed bug in `IntersectionTests.lineSegmentSphere` where the ray origin was not set.
 * Added `length` to `Matrix2`, `Matrix3` and `Matrix4` so these can be used as array-like objects.
 * Added `Color.add`, `Color.subtract`, `Color.multiply`, `Color.divide`, `Color.mod`, `Color.multiplyByScalar`, and `Color.divideByScalar` functions to perform arithmetic operations on colors.
-* Added optional `result` parameter to `Color.fromHsl` and `Color.fromCssColorString`
+* Added optional `result` parameter to `Color.fromRgba`, Color.fromHsl` and `Color.fromCssColorString`
 * Fixed bug causing `navigator is not defined` reference error when Cesium is used with Node.js.
 * Upgraded Knockout from version 3.2.0 to 3.4.0.
 
