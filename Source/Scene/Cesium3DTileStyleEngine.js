@@ -100,6 +100,8 @@ define([
         }
     }
 
+    var scratchColor = new Color();
+
     function styleContent(styleEngine, content) {
         var length = content.featuresLength;
         var style = styleEngine._style;
@@ -116,7 +118,7 @@ define([
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);
-            feature.color = style.color.evaluate(feature);
+            feature.color = style.color.evaluateColor(feature, scratchColor);
             feature.show = style.show.evaluate(feature);
         }
     }
