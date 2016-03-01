@@ -2,10 +2,17 @@
     /*global __karma__,require*/
     "use strict";
 
-    var included = __karma__.config.args[0];
-    var excluded = __karma__.config.args[1];
-    var webglValidation = __karma__.config.args[2];
-    var release = __karma__.config.args[3];
+    var included = '';
+    var excluded = '';
+    var webglValidation = false;
+    var release = false;
+
+    if(__karma__.config.args){
+        included = __karma__.config.args[0];
+        excluded = __karma__.config.args[1];
+        webglValidation = __karma__.config.args[2];
+        release = __karma__.config.args[3];
+    }
 
     var toRequire = ['Cesium'];
 
