@@ -77,37 +77,16 @@ function loadTileset(url) {
 //            "color" : "color('cyan', 0.5)",
 //            "color" : "rgb(100, 255, 190)",
 //            "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
-//            "color" : {
-//                "propertyName" : "id",
-//                "pattern" : "^1(\\d)$",
-//                "map" : {
-//                    "1" : "#ff0000",
-//                    "2" : "#00ff00"
-//                },
-//                "default" : "#ffffff"
-//            },
             "color" : {
-                "expression" : {
-                    "leftOperand" : "${Height}",
-                    "operator" : "+",
-                    "rightOperand" : 0
+                "conditional" : {
+                    "${Height} >= 83" : "color('purple')",
+                    "${Height} >= 80" : "color('red')",
+                    "${Height} >= 70" : "color('orange')",
+                    "${Height} >= 12" : "color('yellow')",
+                    "${Height} >= 7" : "color('lime')",
+                    "${Height} >= 1" : "color('cyan')"
                 },
-                "intervals" : [
-                    1,  // [1, 10)
-                    10, // [10, 30)
-                    30, // [30, 50)
-                    50, // [50, 70)
-                    70, // [70, 100)
-                    100 // [100, infinity)
-                ],
-                "colors" : [
-                    "#ff00ff",
-                    "#ff0000",
-                    "#ffff00",
-                    "#00ff00",
-                    "#00ffff",
-                    "#0000ff"
-                ]
+                "default": "color('blue')"
             },
 //          "show": false
             "show" : "${Height} > 0"
