@@ -476,10 +476,10 @@ define([
         var args = this._left;
         if (this._value === 'color') {
             if (args.length > 1) {
-                scratchColor = Color.fromCssColorString(args[0].evaluate(feature, result));
-                Color.fromAlpha(scratchColor, args[1].evaluate(feature, result), result);
+                Color.fromCssColorString(args[0].evaluate(feature, result), result);
+                Color.fromAlpha(result, args[1].evaluate(feature, result), result);
             } else {
-                Color.clone(Color.fromCssColorString(this._left[0].evaluate(feature, result)), result);
+                Color.fromCssColorString(this._left[0].evaluate(feature, result), result);
             }
         } else if (this._value === 'rgb') {
             Color.fromBytes(
@@ -496,16 +496,18 @@ define([
                 args[2].evaluate(feature, result),
                 a, result);
         } else if (this._value === 'hsl') {
-            Color.clone(Color.fromHsl(
-                args[0].evaluate(feature, result),
-                args[1].evaluate(feature, result),
-                args[2].evaluate(feature, result)), result);
-        } else if (this._value === 'hsla') {
-            Color.clone(Color.fromHsl(
+            Color.fromHsl(
                 args[0].evaluate(feature, result),
                 args[1].evaluate(feature, result),
                 args[2].evaluate(feature, result),
-                args[3].evaluate(feature, result)), result);
+                1.0, result);
+        } else if (this._value === 'hsla') {
+            Color.fromHsl(
+                args[0].evaluate(feature, result),
+                args[1].evaluate(feature, result),
+                args[2].evaluate(feature, result),
+                args[3].evaluate(feature, result),
+                result);
         }
         return result;
     };
