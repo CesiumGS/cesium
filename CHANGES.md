@@ -33,6 +33,7 @@ Change Log
 * Added optional `result` parameter to `Color.fromRgba`, `Color.fromHsl` and `Color.fromCssColorString`.
 * Fixed bug causing `navigator is not defined` reference error when Cesium is used with Node.js.
 * Upgraded Knockout from version 3.2.0 to 3.4.0.
+* Fixed hole that appeared in the top of in dynamic ellipsoids
 
 ### 1.18 - 2016-02-01
 * Breaking changes
