@@ -1111,9 +1111,10 @@ define([
         var fs = appearance.getFragmentShaderSource();
 
         // Create shadow cast program
-        if (!defined(primitive._shadowCastSP) && frameState.shadowsEnabled && primitive.castShadows) {
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive.castShadows) {
             var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, context);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState);
             primitive._shadowCastSP = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,
@@ -1142,9 +1143,9 @@ define([
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
         // Modify program to receive shadows
-        if (frameState.shadowsEnabled && primitive.receiveShadows) {
+        if (shadowsEnabled && primitive.receiveShadows) {
             vs = ShadowMapShader.createShadowReceiveVertexShader(vs);
-            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState.context);
+            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState);
         }
 
         primitive._sp = ShaderProgram.replaceCache({
@@ -1430,10 +1431,11 @@ define([
             createSP = true;
         }
 
-        if ((this._sceneShadowsEnabled !== frameState.shadowsEnabled) ||
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        if ((this._sceneShadowsEnabled !== shadowsEnabled) ||
             (this._castShadows !== this.castShadows) ||
             (this._receiveShadows !== this.receiveShadows)) {
-                this._sceneShadowsEnabled = frameState.shadowsEnabled;
+                this._sceneShadowsEnabled = shadowsEnabled;
                 this._castShadows = this.castShadows;
                 this._receiveShadows = this.receiveShadows;
                 createSP = true;

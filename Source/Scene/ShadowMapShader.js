@@ -14,13 +14,13 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, context, opaque) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, frameState, opaque) {
         // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
         opaque = defaultValue(opaque, false);
         if (opaque) {
             fs = 'void main() \n' +
                  '{ \n' +
-                 '    gl_FragColor = ' + (context.depthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
+                 '    gl_FragColor = ' + (frameState.context.depthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
                  '}';
         } else {
             fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
@@ -31,7 +31,7 @@ define([
                 '    if (gl_FragColor.a == 0.0) { \n' +
                 '       discard; \n' +
                 '    } \n' +
-                '    gl_FragColor = ' + (context.depthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
+                '    gl_FragColor = ' + (frameState.context.depthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
                 '}';
         }
 
@@ -50,9 +50,9 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, context) {
-        var cascadesEnabled = true;
-        var debugVisualizeCascades = false;
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState) {
+        var cascadesEnabled = frameState.shadowMap.numberOfCascades > 1;
+        var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
             'varying vec3 v_shadowPosition; \n' +
@@ -101,7 +101,7 @@ define([
             'float sampleTexture(vec2 shadowCoordinate) \n' +
             '{ \n' +
 
-            (context.depthTexture ?
+            (frameState.context.depthTexture ?
             '    return texture2D(czm_sunShadowMapTexture, shadowCoordinate).r; \n' :
             '    return czm_unpackDepth(texture2D(czm_sunShadowMapTexture, shadowCoordinate)); \n') +
 

@@ -1083,7 +1083,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.shadowsEnabled = scene.sunShadowMap.enabled;
+        frameState.shadowMap = scene.sunShadowMap;
 
         clearPasses(frameState.passes);
     }
