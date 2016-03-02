@@ -888,6 +888,8 @@ define([
                             id : instance.id,
                             pickPrimitive : this
                         });
+                    } else {
+                        groundInstances[i] = instance;
                     }
                 }
 
