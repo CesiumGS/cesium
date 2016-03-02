@@ -471,7 +471,8 @@ define([
         var outlineWidth = rectangle.outlineWidth;
         var closeBottom = rectangle.closeBottom;
         var closeTop = rectangle.closeTop;
-        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) &&
+                        isColorMaterial && GroundPrimitive.isSupported(this._scene);
 
         if (outlineEnabled && onTerrain) {
             oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');

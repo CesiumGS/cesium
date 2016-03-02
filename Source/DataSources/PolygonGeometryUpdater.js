@@ -472,7 +472,8 @@ define([
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
         var outlineWidth = polygon.outlineWidth;
-        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial && !perPositionHeightEnabled;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial &&
+                        !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
 
         if (outlineEnabled && onTerrain) {
             oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');

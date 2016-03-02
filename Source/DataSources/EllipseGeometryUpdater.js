@@ -473,7 +473,8 @@ define([
         var stRotation = ellipse.stRotation;
         var outlineWidth = ellipse.outlineWidth;
         var numberOfVerticalLines = ellipse.numberOfVerticalLines;
-        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) &&
+                        isColorMaterial && GroundPrimitive.isSupported(this._scene);
 
         if (outlineEnabled && onTerrain) {
             oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');
