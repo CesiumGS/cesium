@@ -401,7 +401,7 @@ Sandcastle.addToolbarButton('Custom style', function() {
             }
         },
         color : {
-            evaluate : function(feature) {
+            evaluateColor : function(feature) {
                 tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
                 return Cesium.Color.fromRandom();
             }
