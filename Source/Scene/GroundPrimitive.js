@@ -889,7 +889,7 @@ define([
                             pickPrimitive : this
                         });
                     } else {
-                        groundInstances[i] = instance;
+                        throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                     }
                 }
 
