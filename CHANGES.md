@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.20 - 2016-04-01
+
+* Breaking changes
+  *
+* Fixed TimeIntervalCollection.removeInterval bug that resulted in too many intervals being removed
+
 ### 1.19 - 2016-03-01
 
 * Breaking changes
