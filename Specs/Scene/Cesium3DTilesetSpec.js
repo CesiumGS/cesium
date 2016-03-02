@@ -989,9 +989,9 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle(tileset, {
                 color : {
                     conditional : {
-                        '${id} < 100' : 'color("red")'
-                    },
-                    default : 'color("blue")'
+                        '${id} < 100' : 'color("red")',
+                        'true' : 'color("blue")'
+                    }
                 }
             });
             var color = scene.renderForSpecs();
@@ -1004,9 +1004,9 @@ defineSuite([
             tileset.style = new Cesium3DTileStyle(tileset, {
                 color : {
                     conditional : {
-                        '${id} >= 100' : 'color("red")'
-                    },
-                    default : 'color("blue")'
+                        '${id} >= 100' : 'color("red")',
+                        'true' : 'color("blue")'
+                    }
                 }
             });
             color = scene.renderForSpecs();

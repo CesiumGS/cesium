@@ -108,9 +108,9 @@ defineSuite([
         var tileset = new MockTileset(styleEngine);
         var jsonExp = {
             conditional : {
-                '${height} > 2' : 'color("cyan")'
-            },
-            default: 'color("blue")'
+                '${height} > 2' : 'color("cyan")',
+                'true' : 'color("blue")'
+            }
         };
 
         var style = new Cesium3DTileStyle(tileset, { color : jsonExp });
