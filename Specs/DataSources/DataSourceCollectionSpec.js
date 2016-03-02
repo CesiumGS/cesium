@@ -7,7 +7,7 @@ defineSuite([
         DataSourceCollection,
         MockDataSource,
         when) {
-    "use strict";
+    'use strict';
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();

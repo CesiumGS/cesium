@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Attribute compression and decompression functions.

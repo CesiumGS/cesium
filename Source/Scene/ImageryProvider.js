@@ -13,7 +13,7 @@ define([
         loadImage,
         loadImageViaBlob,
         throttleRequestByServer) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an

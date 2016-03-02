@@ -53,7 +53,7 @@ define([
         Plane,
         PrimitiveType,
         Tipsify) {
-    "use strict";
+    'use strict';
 
     /**
      * Content pipeline functions for geometries.

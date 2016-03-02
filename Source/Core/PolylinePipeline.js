@@ -25,7 +25,7 @@ define([
         CesiumMath,
         Matrix4,
         Plane) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

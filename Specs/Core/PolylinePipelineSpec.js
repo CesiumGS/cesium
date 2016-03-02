@@ -11,7 +11,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         Transforms) {
-    "use strict";
+    'use strict';
 
     it('wrapLongitude', function() {
         var positions = Cartesian3.fromDegreesArray([

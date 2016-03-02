@@ -9,7 +9,7 @@ define([
         defineProperties,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is

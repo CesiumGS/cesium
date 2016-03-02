@@ -17,7 +17,7 @@ defineSuite([
         ConstantPositionProperty,
         Entity,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var defaultOffset = EntityView.defaultOffset3D;

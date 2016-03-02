@@ -3,7 +3,7 @@ define([
         'Core/FeatureDetection'
     ], function(
         FeatureDetection) {
-    "use strict";
+    'use strict';
     /*global CanvasPixelArray*/
 
     var typedArrayTypes = [];

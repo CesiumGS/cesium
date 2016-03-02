@@ -63,7 +63,7 @@ define([
         BlendingState,
         SceneMode,
         SceneTransforms) {
-    "use strict";
+    'use strict';
 
     /**
      * Draws a sun billboard.

@@ -29,7 +29,7 @@ define([
         Transforms,
         EllipsoidPrimitive,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * Draws the Moon in 3D.

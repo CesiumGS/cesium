@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         ImageryState) {
-    "use strict";
+    'use strict';
 
     /**
      * The assocation between a terrain tile and an imagery tile.

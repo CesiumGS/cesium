@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         defined) {
-    "use strict";
+    'use strict';
 
     function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         namePrefix = defaultValue(namePrefix, '');

@@ -45,7 +45,7 @@ define([
         PrimitiveType,
         VertexFormat,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();

@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a single leap second, which is constructed from a {@link JulianDate} and a

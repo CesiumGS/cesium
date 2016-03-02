@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Plane,
         Ray) {
-    "use strict";
+    'use strict';
 
     it('rayPlane intersects', function() {
         var ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));

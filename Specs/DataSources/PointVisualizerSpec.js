@@ -23,7 +23,7 @@ defineSuite([
         EntityCollection,
         PointGraphics,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var visualizer;

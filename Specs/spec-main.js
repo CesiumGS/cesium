@@ -206,6 +206,10 @@
 
          var queryString = Cesium.queryToObject(window.location.search.substring(1));
 
+         if (queryString.webglValidation !== undefined) {
+            window.webglValidation = true;
+         }
+
          var queryStringForSpecFocus = Cesium.clone(queryString);
          if (queryStringForSpecFocus.category === 'none') {
             delete queryStringForSpecFocus.category;

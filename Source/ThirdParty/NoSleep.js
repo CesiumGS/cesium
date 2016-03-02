@@ -10,8 +10,8 @@ define(function() {
 
     // UA matching
     var ua = {
-        Android: /Android/ig.test(navigator.userAgent),
-        iOS: /AppleWebKit/.test(navigator.userAgent) && /Mobile\/\w+/.test(navigator.userAgent)
+        Android: typeof navigator !== 'undefined' && /Android/ig.test(navigator.userAgent),
+        iOS: typeof navigator !== 'undefined' && /AppleWebKit/.test(navigator.userAgent) && /Mobile\/\w+/.test(navigator.userAgent)
     };
 
     var media = {

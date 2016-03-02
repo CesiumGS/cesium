@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         EllipsoidGeometry) {
-    "use strict";
+    'use strict';
 
     return function(ellipsoidGeometry, offset) {
         if (defined(offset)) {

@@ -41,7 +41,7 @@ define([
         SkyBoxVS,
         BlendingState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * A sky box around the scene to draw stars.  The sky box is defined using the True Equator Mean Equinox (TEME) axes.

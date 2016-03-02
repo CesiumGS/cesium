@@ -21,7 +21,7 @@ define([
         QuadraticRealPolynomial,
         QuarticRealPolynomial,
         Ray) {
-    "use strict";
+    'use strict';
 
     /**
      * Functions for computing the intersection between geometries such as rays, planes, triangles, and ellipsoids.
@@ -343,6 +343,7 @@ define([
         //>>includeEnd('debug');
 
         var ray = scratchLineSegmentRay;
+        Cartesian3.clone(p0, ray.origin);
         var direction = Cartesian3.subtract(p1, p0, ray.direction);
 
         var maxT = Cartesian3.magnitude(direction);

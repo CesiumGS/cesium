@@ -31,7 +31,7 @@ define([
         TaskProcessor,
         TerrainEncoding,
         TerrainMesh) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized

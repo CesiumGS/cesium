@@ -61,7 +61,7 @@ define([
         Property,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);
@@ -277,7 +277,7 @@ define([
          */
         isShowing : {
             get : function() {
-                return this._show && (!defined(this._parent) || this._parent.isShowing);
+                return this._show && (!defined(this.entityCollection) || this.entityCollection.show) && (!defined(this._parent) || this._parent.isShowing);
             }
         },
         /**

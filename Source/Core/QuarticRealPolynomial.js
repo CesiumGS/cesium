@@ -9,7 +9,7 @@ define([
         DeveloperError,
         CesiumMath,
         QuadraticRealPolynomial) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines functions for 4th order polynomial functions of one variable with only real coefficients.

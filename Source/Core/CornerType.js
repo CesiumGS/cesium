@@ -3,7 +3,7 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Style options for corners.

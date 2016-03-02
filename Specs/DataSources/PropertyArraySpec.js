@@ -9,7 +9,7 @@ defineSuite([
         JulianDate,
         ConstantProperty,
         SampledProperty) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

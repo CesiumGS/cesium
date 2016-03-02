@@ -15,7 +15,7 @@ defineSuite([
         ImageryProvider,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     it('conforms to ImageryProvider interface', function() {
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);

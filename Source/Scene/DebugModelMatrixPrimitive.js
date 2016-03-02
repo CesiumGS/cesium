@@ -21,7 +21,7 @@ define([
         PolylineGeometry,
         PolylineColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     /**
      * Draws the axes of a reference frame defined by a matrix that transforms to world

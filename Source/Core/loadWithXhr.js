@@ -13,7 +13,7 @@ define([
         DeveloperError,
         RequestErrorEvent,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     /**
      * Asynchronously loads the given URL.  Returns a promise that will resolve to
