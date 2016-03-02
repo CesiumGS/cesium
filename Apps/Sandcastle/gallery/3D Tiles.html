@@ -77,37 +77,16 @@ function loadTileset(url) {
 //            "color" : "color('cyan', 0.5)",
 //            "color" : "rgb(100, 255, 190)",
 //            "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
-//            "color" : {
-//                "propertyName" : "id",
-//                "pattern" : "^1(\\d)$",
-//                "map" : {
-//                    "1" : "#ff0000",
-//                    "2" : "#00ff00"
-//                },
-//                "default" : "#ffffff"
-//            },
             "color" : {
-                "expression" : {
-                    "leftOperand" : "${Height}",
-                    "operator" : "+",
-                    "rightOperand" : 0
-                },
-                "intervals" : [
-                    1,  // [1, 10)
-                    10, // [10, 30)
-                    30, // [30, 50)
-                    50, // [50, 70)
-                    70, // [70, 100)
-                    100 // [100, infinity)
-                ],
-                "colors" : [
-                    "#ff00ff",
-                    "#ff0000",
-                    "#ffff00",
-                    "#00ff00",
-                    "#00ffff",
-                    "#0000ff"
-                ]
+                "conditional" : {
+                    "${Height} >= 83" : "color('purple')",
+                    "${Height} >= 80" : "color('red')",
+                    "${Height} >= 70" : "color('orange')",
+                    "${Height} >= 12" : "color('yellow')",
+                    "${Height} >= 7" : "color('lime')",
+                    "${Height} >= 1" : "color('cyan')",
+                    "true" : "color('blue')"
+                }
             },
 //          "show": false
             "show" : "${Height} > 0"
@@ -380,31 +359,36 @@ Sandcastle.addToolbarButton('SSE--', function() {
 var numberofColors = 6;
 var currentPropertyName = '';
 
-function getRandomColors() {
-    var colors = [];
-    for (var i = 0; i < numberofColors; ++i) {
-        colors[i] = Cesium.Color.fromRandom().toCssColorString();
-    }
+function getRandomColor() {
+    var color = Cesium.Color.fromRandom();
+    color.alpha = 1.0;
+    return color.toCssColorString();
+}
 
-    return colors;
+function styleFunction(name) {
+    var style = {
+        "color" : {
+            "conditional" : {}
+        },
+        "show" : "${" + name + "} > 0"
+    };
+
+    var conditions = {};
+    var intervalSize = Math.floor(100/numberofColors);
+    for (var i = numberofColors; i >= 0; --i) {
+        var cond = '${' + name + '} > ' + (i * intervalSize);
+        style.color.conditional[cond] = getRandomColor();
+    }
+    style.color.conditional['true'] = getRandomColor();
+
+    tileset.style = new Cesium.Cesium3DTileStyle(tileset, style);
+
+    currentPropertyName = name;
 }
 
 function getStyleFunction(name) {
     return function() {
-        tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
-            "color" : {
-                "expression" : {
-                    "leftOperand" : "${" + name + "}",
-                    "operator" : "+",
-                    "rightOperand" : 0
-                },
-                "intervals" : Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, name, numberofColors),
-                "colors" :  Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors)
-            },
-            "show" : "${" + name + "} > 0"
-        });
-
-        currentPropertyName = name;
+        styleFunction(name);
     };
 }
 
@@ -417,7 +401,7 @@ Sandcastle.addToolbarButton('Custom style', function() {
             }
         },
         color : {
-            evaluate : function(feature) {
+            evaluateColor : function(feature) {
                 tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
                 return Cesium.Color.fromRandom();
             }
@@ -431,16 +415,12 @@ Sandcastle.addToolbarButton('Remove style', function() {
 
 Sandcastle.addToolbarButton('colors++', function() {
     ++numberofColors;
-
-    tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
-    tileset.style.color.colors = Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors);
+    styleFunction(currentPropertyName);
 });
 
 Sandcastle.addToolbarButton('colors--', function() {
     numberofColors = Math.max(numberofColors - 1, 1);
-
-    tileset.style.color.intervals = Cesium.ColorRampExpression.computeEvenlySpacedIntervals(tileset, currentPropertyName, numberofColors);
-    tileset.style.color.colors = Cesium.ColorRampExpression.computePalette(getRandomColors(), numberofColors);
+    styleFunction(currentPropertyName);
 });
 
 function addExpressionUI() {

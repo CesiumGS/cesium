@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileStyle',
+        'Scene/ConditionalExpression',
         'Scene/Expression'
     ], function(
         Cesium3DTileStyle,
+        ConditionalExpression,
         Expression) {
     'use strict';
 
@@ -101,7 +103,22 @@ defineSuite([
         expect(style.color).toEqual(new Expression(styleEngine, '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'));
     });
 
-    it ('sets color to undefined if not a string or a boolean', function() {
+    it ('sets color value to conditional', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+        var jsonExp = {
+            conditional : {
+                '${height} > 2' : 'color("cyan")',
+                'true' : 'color("blue")'
+            }
+        };
+
+        var style = new Cesium3DTileStyle(tileset, { color : jsonExp });
+        expect(style.color).toEqual(new ConditionalExpression(styleEngine, jsonExp));
+    });
+
+
+    it ('sets color to undefined if not a string or conditional', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
 

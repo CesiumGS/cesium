@@ -4,16 +4,14 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './ColorRampExpression',
-       './ColorMapExpression',
+       './ConditionalExpression',
        './Expression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         isArray,
-        ColorRampExpression,
-        ColorMapExpression,
+        ConditionalExpression,
         Expression) {
     'use strict';
 
@@ -39,10 +37,8 @@ define([
         var color;
         if (typeof(colorExpression) === 'string') {
             color = new Expression(styleEngine, colorExpression);
-        } else if (defined(colorExpression.map)) {
-            color = new ColorMapExpression(styleEngine, colorExpression);
-        } else if (defined(colorExpression.intervals)) {
-            color = new ColorRampExpression(styleEngine, colorExpression);
+        } else if (defined(colorExpression.conditional)) {
+            color = new ConditionalExpression(styleEngine, colorExpression);
         }
 
         /**
