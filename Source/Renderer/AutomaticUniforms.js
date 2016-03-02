@@ -1488,25 +1488,11 @@ define([
          * @alias czm_sunShadowMapCascadeSplitsNear
          * @glslUniform
          */
-        czm_sunShadowMapCascadeSplitsNear : new AutomaticUniform({
-            size : 1,
+        czm_sunShadowMapCascadeSplits : new AutomaticUniform({
+            size : 2,
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
-                return uniformState.shadowMap.cascadeSplitsNear;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade far splits.
-         *
-         * @alias czm_sunShadowMapCascadeSplitsFar
-         * @glslUniform
-         */
-        czm_sunShadowMapCascadeSplitsFar : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT_VEC4,
-            getValue : function(uniformState) {
-                return uniformState.shadowMap.cascadeSplitsFar;
+                return uniformState.shadowMap.cascadeSplits;
             }
         }),
 

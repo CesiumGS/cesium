@@ -116,8 +116,7 @@ define([
         this._cascadeViewports = new Array(maximumNumberOfCascades);
 
         // Uniforms
-        this._cascadeSplitsNear = new Cartesian4();
-        this._cascadeSplitsFar = new Cartesian4();
+        this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
         this._cascadeOffsets = new Array(maximumNumberOfCascades);
         this._cascadeScales = new Array(maximumNumberOfCascades);
 
@@ -272,14 +271,9 @@ define([
                 return this._cascadeCameras;
             }
         },
-        cascadeSplitsNear : {
+        cascadeSplits : {
             get : function() {
-                return this._cascadeSplitsNear;
-            }
-        },
-        cascadeSplitsFar : {
-            get : function() {
-                return this._cascadeSplitsFar;
+                return this._cascadeSplits;
             }
         },
         cascadeOffsets : {
@@ -575,8 +569,8 @@ define([
             splitsFar[i] = split;
             splitsNear[i + 1] = split;
         }
-        Cartesian4.unpack(splitsNear, 0, shadowMap._cascadeSplitsNear);
-        Cartesian4.unpack(splitsFar, 0, shadowMap._cascadeSplitsFar);
+        Cartesian4.unpack(splitsNear, 0, shadowMap._cascadeSplits[0]);
+        Cartesian4.unpack(splitsFar, 0, shadowMap._cascadeSplits[1]);
 
         var left = shadowMapCamera.frustum.left;
         var right = shadowMapCamera.frustum.right;

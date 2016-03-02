@@ -60,8 +60,8 @@ define([
             'vec4 getCascadeWeights(float depthEye) \n' +
             '{ \n' +
             '    // One component is set to 1.0 and all others set to 0.0. \n' +
-            '    vec4 near = step(czm_sunShadowMapCascadeSplitsNear, vec4(depthEye)); \n' +
-            '    vec4 far = step(depthEye, czm_sunShadowMapCascadeSplitsFar); \n' +
+            '    vec4 near = step(czm_sunShadowMapCascadeSplits[0], vec4(depthEye)); \n' +
+            '    vec4 far = step(depthEye, czm_sunShadowMapCascadeSplits[1]); \n' +
             '    return near * far; \n' +
             '} \n' +
             'vec4 getCascadeViewport(vec4 weights) \n' +
