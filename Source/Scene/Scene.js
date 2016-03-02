@@ -1650,6 +1650,27 @@ define([
         }
     }
 
+    function getShadowMapCommands(scene) {
+        // TODO : temporary solution for testing
+        var shadowMapCommands = [];
+        var frustumCommands = scene._frustumCommandsList[0];
+        if (defined(frustumCommands)) {
+            var startPass = Pass.GLOBE;
+            var endPass = Pass.TRANSLUCENT;
+            for (var pass = startPass; pass <= endPass; ++pass) {
+                var commands = frustumCommands.commands[pass];
+                var length = frustumCommands.indices[pass];
+                for (var i = 0; i < length; ++i) {
+                    var command = commands[i];
+                    if (defined(command.shadowCastProgram)) {
+                        shadowMapCommands.push(command);
+                    }
+                }
+            }
+        }
+        return shadowMapCommands;
+    }
+
     function executeShadowMapCommands(scene) {
         var context = scene.context;
         var uniformState = context.uniformState;
@@ -1658,25 +1679,18 @@ define([
         var passState = shadowMap.passState;
 
         // Clear shadow depth
-        shadowMap.clearCommand.execute(context);
+        shadowMap.clearCommand.execute(context, passState);
 
-        // Render from the shadow's camera
-        uniformState.updateCamera(shadowMap.camera);
+        var commands = getShadowMapCommands(scene);
+        var numberOfCommands = commands.length;
 
-        var shadowMapCommands = scene._frustumCommandsList[0]; // TODO : temporary solution
-        if (defined(shadowMapCommands)) {
-            // TODO : Execute only opaque and translucent commands for now.
-            var startPass = Pass.GLOBE;
-            var endPass = Pass.TRANSLUCENT;
-            for (var pass = startPass; pass <= endPass; ++pass) {
-                var commands = shadowMapCommands.commands[pass];
-                var length = shadowMapCommands.indices[pass];
-                for (var i = 0; i < length; ++i) {
-                    var command = commands[i];
-                    if (defined(command.shadowCastProgram)) {
-                        executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
-                    }
-                }
+        var numberOfCascades = shadowMap.numberOfCascades;
+        for (var i = 0; i < numberOfCascades; ++i) {
+            uniformState.updateCamera(shadowMap.cascadeCameras[i]);
+            passState = shadowMap.cascadePassStates[i];
+            for (var j = 0; j < numberOfCommands; ++j) {
+                var command = commands[j];
+                executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
             }
         }
     }

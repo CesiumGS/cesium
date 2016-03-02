@@ -58,6 +58,7 @@ define([
      * @see Matrix4.computePerspectiveOffCenter
      * @see Matrix4.computeInfinitePerspectiveOffCenter
      * @see Matrix4.computeViewportTransformation
+     * @see Matrix4.computeView
      * @see Matrix2
      * @see Matrix3
      * @see Packable
@@ -953,6 +954,54 @@ define([
         result[13] = column3Row1;
         result[14] = column3Row2;
         result[15] = column3Row3;
+        return result;
+    };
+
+    /**
+     * Computes a Matrix4 instance that transforms from world space to view space.
+     *
+     * @param {Cartesian3} direction The forward direction.
+     * @param {Cartesian3} up The up direction.
+     * @param {Cartesian3} right The right direction.
+     * @param {Cartesian3} position The position of the camera.
+     * @param {Matrix4} result The object in which the result will be stored.
+     * @returns {Matrix4} The modified result parameter.
+     */
+    Matrix4.computeView = function(direction, up, right, position, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(direction)) {
+            throw new DeveloperError('direction is required');
+        }
+        if (!defined(up)) {
+            throw new DeveloperError('up is required');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('right is required');
+        }
+        if (!defined(position)) {
+            throw new DeveloperError('position is required');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required');
+        }
+        //>>includeEnd('debug');
+
+        result[0] = right.x;
+        result[1] = up.x;
+        result[2] = -direction.x;
+        result[3] = 0.0;
+        result[4] = right.y;
+        result[5] = up.y;
+        result[6] = -direction.y;
+        result[7] = 0.0;
+        result[8] = right.z;
+        result[9] = up.z;
+        result[10] = -direction.z;
+        result[11] = 0.0;
+        result[12] = -Cartesian3.dot(right, position);
+        result[13] = -Cartesian3.dot(up, position);
+        result[14] = Cartesian3.dot(direction, position);
+        result[15] = 1.0;
         return result;
     };
 

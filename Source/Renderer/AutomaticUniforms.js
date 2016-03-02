@@ -1457,8 +1457,6 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map depth texture.
          *
-         * @private
-         *
          * @alias czm_sunShadowMapTexture
          * @glslUniform
          */
@@ -1473,8 +1471,6 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map matrix.
          *
-         * @private
-         *
          * @alias czm_sunShadowMapMatrix
          * @glslUniform
          */
@@ -1483,6 +1479,48 @@ define([
             datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.shadowMap.shadowMapMatrix;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade splits.
+         *
+         * @alias czm_sunShadowMapCascadeSplits
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeSplits : new AutomaticUniform({
+            size : 2,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeSplits;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade offsets.
+         *
+         * @alias czm_sunShadowMapCascadeOffsets
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeOffsets : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeOffsets;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map cascade scales.
+         *
+         * @alias czm_sunShadowMapCascadeScales
+         * @glslUniform
+         */
+        czm_sunShadowMapCascadeScales : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeScales;
             }
         })
     };

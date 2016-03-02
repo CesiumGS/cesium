@@ -5,6 +5,7 @@ Change Log
 * Added `Primitive.castShadows` and `Primitive.receiveShadows`.
 * Added `Globe.castShadows` and `Globe.receiveShadows`.
 * Added `Model.castShadows` and `Model.receiveShadows`.
+* Added `Matrix4.computeView`
 
 ### 1.19 - 2016-03-01
 * Breaking changes

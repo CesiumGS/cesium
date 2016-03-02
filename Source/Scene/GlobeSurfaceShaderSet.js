@@ -192,8 +192,8 @@ define([
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
             if (receiveShadows) {
-                vs.sources[1] = ShadowMapShader.createReceiveShadowsVertexShader(vs.sources[1]);
-                fs.sources[0] = ShadowMapShader.createReceiveShadowsFragmentShader(fs.sources[0], frameState.context);
+                vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1]);
+                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState.context);
             }
 
             var shader = ShaderProgram.fromCache({
