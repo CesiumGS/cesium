@@ -1483,7 +1483,7 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade near splits.
+         * An automatic GLSL uniform representing the sun's shadow map cascade splits.
          *
          * @alias czm_sunShadowMapCascadeSplitsNear
          * @glslUniform
