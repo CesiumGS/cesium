@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### Shadows TODO
+* Added `Primitive.castShadows` and `Primitive.receiveShadows`.
+* Added `Globe.castShadows` and `Globe.receiveShadows`.
+* Added `Model.castShadows` and `Model.receiveShadows`.
+
 ### 1.19 - 2016-03-01
 * Breaking changes
    * 
