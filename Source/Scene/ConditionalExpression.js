@@ -21,7 +21,7 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ExpressionConditional(styleEngine, jsonExpression) {
+    function ConditionalExpression (styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
         this._conditional = clone(jsonExpression.conditional, true);
 
@@ -30,7 +30,7 @@ define([
         setRuntime(this);
     }
 
-    defineProperties(ExpressionConditional.prototype, {
+    defineProperties(ConditionalExpression.prototype, {
         // TODO : Expose default expression and conditional?
     });
 
@@ -58,7 +58,7 @@ define([
     /**
      * DOC_TBA
      */
-    ExpressionConditional.prototype.evaluate = function(feature) {
+    ConditionalExpression.prototype.evaluate = function(feature) {
         var conditional = this._runtimeConditional;
         if (defined(conditional)) {
             for (var i=0; i<conditional.length; ++i) {
@@ -73,7 +73,7 @@ define([
     /**
      * DOC_TBA
      */
-    ExpressionConditional.prototype.evaluateColor = function(feature, result) {
+    ConditionalExpression.prototype.evaluateColor = function(feature, result) {
         var conditional = this._runtimeConditional;
         if (defined(conditional)) {
             for (var i=0; i<conditional.length; ++i) {
@@ -85,5 +85,5 @@ define([
         }
     };
 
-    return ExpressionConditional;
+    return ConditionalExpression;
 });

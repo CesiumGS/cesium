@@ -4,14 +4,14 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './ExpressionConditional',
+       './ConditionalExpression',
        './Expression'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         isArray,
-        ColorConditional,
+        ConditionalExpression,
         Expression) {
     'use strict';
 
@@ -38,7 +38,7 @@ define([
         if (typeof(colorExpression) === 'string') {
             color = new Expression(styleEngine, colorExpression);
         } else if (defined(colorExpression.conditional)) {
-            color = new ColorConditional(styleEngine, colorExpression);
+            color = new ConditionalExpression(styleEngine, colorExpression);
         }
 
         /**

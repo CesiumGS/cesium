@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/ExpressionConditional',
+        'Scene/ConditionalExpression',
         'Scene/Expression',
         'Core/Color'
     ], function(
-        ExpressionConditional,
+        ConditionalExpression,
         Expression,
         Color) {
     'use strict';
@@ -32,7 +32,7 @@ defineSuite([
     };
 
     it('constructs', function() {
-        var expression = new ExpressionConditional(new MockStyleEngine(), jsonExp);
+        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
         expect(expression._conditional).toEqual({
             '${Height} > 100' : 'color("blue")',
             '${Height} > 50' : 'color("red")',
@@ -41,14 +41,14 @@ defineSuite([
     });
 
     it('evaluates conditional', function() {
-        var expression = new ExpressionConditional(new MockStyleEngine(), jsonExp);
+        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.RED);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
     it('constructs and evaluates empty conditional', function() {
-        var expression = new ExpressionConditional(new MockStyleEngine(), {
+        var expression = new ConditionalExpression(new MockStyleEngine(), {
             conditional: {}
         });
         expect(expression._conditional).toEqual({});
