@@ -497,14 +497,20 @@ define([
             return;
         }
 
-        shadowMap._debugLightFrustum = shadowMap._debugLightFrustum || createDebugFrustum(Color.YELLOW);
-        Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), shadowMap._debugLightFrustum.modelMatrix);
-        shadowMap._debugLightFrustum.update(frameState);
+        var debugLightFrustum = shadowMap._debugLightFrustum;
+        if (!defined(debugLightFrustum)) {
+            debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
+        }
+        Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
+        debugLightFrustum.update(frameState);
 
         for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-            shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] || createDebugFrustum(debugCascadeColors[i]);
-            Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), shadowMap._debugCascadeFrustums[i].modelMatrix);
-            shadowMap._debugCascadeFrustums[i].update(frameState);
+            var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
+            if (!defined(debugCascadeFrustum)) {
+                debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
+            }
+            Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
+            debugCascadeFrustum.update(frameState);
         }
 
         updateDebugShadowViewCommand(shadowMap, frameState);
@@ -603,7 +609,7 @@ define([
                 Cartesian3.maximumByComponent(corner, max, max);
             }
 
-            // Limit min to 0.0, sometimes precision errors cause it to go slightly negative.
+            // Limit min to 0.0. Sometimes precision errors cause it to go slightly negative, which affects the frustum extent computations below.
             min.x = Math.max(min.x, 0.0);
             min.y = Math.max(min.y, 0.0);
 

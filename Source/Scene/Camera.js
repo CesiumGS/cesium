@@ -2716,6 +2716,7 @@ define([
     Camera.clone = function(camera, result) {
         if (!defined(result)) {
             result = new Camera(camera._scene);
+            result.frustum = camera.frustum.clone(); // Allocate a new frustum of the correct type
         }
 
         Cartesian3.clone(camera.position, result.position);
@@ -2723,7 +2724,11 @@ define([
         Cartesian3.clone(camera.up, result.up);
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
-        camera.frustum.clone(result.frustum);
+
+        // Clone frustum only if it is the same type
+        if (defined(camera.frustum.left) === defined(result.frustum.left)) {
+            camera.frustum.clone(result.frustum);
+        }
 
         return result;
     };
