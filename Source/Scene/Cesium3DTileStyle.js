@@ -4,7 +4,7 @@ define([
        '../Core/defined',
        '../Core/DeveloperError',
        '../Core/isArray',
-       './ColorConditional',
+       './ExpressionConditional',
        './Expression'
     ], function(
         defaultValue,
