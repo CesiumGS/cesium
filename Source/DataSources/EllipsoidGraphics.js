@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.

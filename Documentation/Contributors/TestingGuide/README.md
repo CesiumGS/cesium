@@ -13,6 +13,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
    * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+   * [Run All Tests on the Command Line with Karma](#run-all-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of Cesium](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
 * [Writing Tests](#writing-tests)
@@ -34,6 +35,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 * [Pragmatic Advice](#pragmatic-advice)
    * [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
    * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
+* [Testing in Webstorm](#testing-in-webstorm)
 * [Resources](#resources)
 
 ## Running the Tests
@@ -138,6 +140,48 @@ It is possible to have 100% code coverage with two tests: one test where `a` and
 
 The number of linearly independent paths (four in this case) is called the **cyclomatic complexity**.  Be mindful of this when writing tests.  On one extreme, 100% code coverage is the least amount of testing, on the other extreme is covering the cyclomatic complexity, which quickly becomes unreasonable.  Use your knowledge of the implementation to devise the best strategy.
 
+### Run All Tests on the Command Line with Karma
+
+[Karma](http://karma-runner.github.io/0.13/index.html) is a tool which spawns a browser window, runs tests against that browser, and displays the results on the command line.
+
+To run all tests with Karma, run `npm run test`.
+
+When all tests pass, output looks like this:
+
+![](test.jpg)
+
+When one or more tests fail, output looks like this:
+
+![](test-fail.jpg)
+
+The failed tests will be listed by name, and details on each failure are listed below, including the expected and actual value of the failed expectation and the call stack.
+
+It is also possible for Karma to run all tests against each browser installed on the current system. To do so, run `npm run test-all`. Currently included are launchers for Chrome, Firefox, IE, and Safari.
+
+#### Run Tests with a Specific Browser or Browsers
+
+`npm run test -- --browsers Firefox,Chrome`
+
+#### Run All Tests with WebGL Validation
+
+`npm run test-webgl-validation`
+
+#### Run Only WebGL Tests with Karma
+
+`npm run test-webgl`
+
+#### Run Only Non-WebGL Tests with Karma
+ 
+ `npm run test-non-webgl`
+ 
+#### Run All Tests Against the Minified Release Version of Cesium
+
+ `npm run test-release`
+
+#### Run a Single Test or Suite
+
+Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdefineSuite` instead of `defineSuite`.
+
 ## Testing Previous Versions of Cesium
 
 Sometimes it is useful to see if an issue exists in a previous version of Cesium.  The tests for all versions of Cesium back to b15 (April 2013) are hosted on the Cesium website via the [downloads page](http://cesiumjs.org/downloads.html).  Use the "Documentation, Sandcastle, tests, etc." links.
@@ -182,7 +226,7 @@ defineSuite([
         'Core/Cartesian3'
     ], function(
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var cartesian = new Cartesian3();
@@ -435,7 +479,7 @@ Sometimes, a test requires sample data, like a CZML file or glTF model, or a ser
 When external data can't be avoided, prefer storing a small file in a subdirectory of [Specs/Data](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data).  Avoid bloating the repo with an unnecessarily large file.  Update [LICENSE.md](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/LICENSE.md) if the data requires a license or attribution.  Include a README file when useful, for example, see [Specs/Data/Models/Box-Textured-Custom](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Specs/Data/Models/Box-Textured-Custom).
 
 Make external requests that assume the tests are being used with an Internet connection very sparingly.  We anticipate being able to run the tests offline.
- 
+
 ### Promises
 
 (For an introduction to promises, see [JavaScript Promises - There and back again](http://www.html5rocks.com/en/tutorials/es6/promises/)).
@@ -568,7 +612,7 @@ defineSuite([
     ], function(
         DebugModelMatrixPrimitive,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 
@@ -612,6 +656,20 @@ The first 73 Cesium tests from March 2011.
 > Even today, with modern tools and experience, I never code for hours straight without testing, and I rarely write new code without seeing it execute in the debugger.  Debuggers are not a reactive tool for when a bug is found, they are a proactive tool for gaining insight and avoiding surprises.
 
 > Try this approach for yourself!
+
+## Testing in Webstorm
+
+When you load the Cesium Webstorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
+
+![](webstorm-test-configuration.png)
+
+You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the Webstorm test runner:
+
+![](webstorm-test-runner.png)
+
+This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
+
+Instead of using Chrome or Firefox, the Webstorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
 
 ## Resources
 

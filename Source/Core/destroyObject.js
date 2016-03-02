@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     function returnTrue() {
         return true;

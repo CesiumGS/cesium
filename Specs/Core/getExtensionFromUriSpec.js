@@ -3,7 +3,7 @@ defineSuite([
         'Core/getExtensionFromUri'
     ], function(
         getExtensionFromUri) {
-    "use strict";
+    'use strict';
 
     it('works as expected', function() {
         var result = getExtensionFromUri('http://www.mysite.com/awesome?makeitawesome=true');

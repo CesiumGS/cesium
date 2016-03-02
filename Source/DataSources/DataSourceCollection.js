@@ -15,7 +15,7 @@ define([
         DeveloperError,
         Event,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of {@link DataSource} instances.

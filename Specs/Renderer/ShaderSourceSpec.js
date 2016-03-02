@@ -3,7 +3,7 @@ defineSuite([
         'Renderer/ShaderSource'
     ], function(
         ShaderSource) {
-    "use strict";
+    'use strict';
 
     it('combines #defines', function() {
         var source = new ShaderSource({

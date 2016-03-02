@@ -9,7 +9,7 @@ defineSuite([
         ComponentDatatype,
         BufferUsage,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

@@ -7,7 +7,7 @@ define([
         freezeObject,
         JulianDate,
         TimeInterval) {
-    "use strict";
+    'use strict';
 
     var MINIMUM_VALUE = freezeObject(JulianDate.fromIso8601('0000-01-01T00:00:00Z'));
     var MAXIMUM_VALUE = freezeObject(JulianDate.fromIso8601('9999-12-31T24:00:00Z'));

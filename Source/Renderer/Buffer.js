@@ -17,7 +17,7 @@ define([
         IndexDatatype,
         BufferUsage,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

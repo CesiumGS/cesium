@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Rectangle,
         QuadtreeTileLoadState) {
-    "use strict";
+    'use strict';
 
     /**
      * A single tile in a {@link QuadtreePrimitive}.

@@ -7,7 +7,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A model's material with modifiable parameters.  A glTF material

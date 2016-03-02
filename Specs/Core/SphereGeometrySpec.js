@@ -11,7 +11,7 @@ defineSuite([
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws with invalid stackPartitions', function() {
         expect(function() {
@@ -38,7 +38,7 @@ defineSuite([
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        expect(m.indices.length).toEqual(3 * 12);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -55,7 +55,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * 16);
         expect(m.attributes.tangent.values.length).toEqual(3 * 16);
         expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        expect(m.indices.length).toEqual(3 * 12);
     });
 
     it('computes attributes for a unit sphere', function() {
@@ -82,6 +82,17 @@ defineSuite([
             expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent, normal), CesiumMath.EPSILON7);
         }
+    });
+
+    it('undefined is returned if radius is equals to zero', function() {
+         var sphere = new SphereGeometry({
+             radius : 0.0,
+             vertexFormat : VertexFormat.POSITION_ONLY
+         });
+
+        var geometry = SphereGeometry.createGeometry(sphere);
+
+        expect(geometry).toBeUndefined();
     });
 
     var sphere = new SphereGeometry({

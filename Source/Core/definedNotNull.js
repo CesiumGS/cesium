@@ -1,6 +1,9 @@
 /*global define*/
-define(function() {
-    "use strict";
+define([
+        './deprecationWarning'
+    ], function(
+        deprecationWarning) {
+    'use strict';
 
     /**
      * @exports definedNotNull
@@ -14,8 +17,11 @@ define(function() {
      * } else {
      *      doSomethingElse();
      * }
+     *
+     * @deprecated
      */
     function definedNotNull(value) {
+        deprecationWarning('definedNotNull', 'definedNotNull has been deprecated and will be removed in Cesium 1.20.  Use `defined` instead, which has been updated to check for null.');
         return value !== undefined && value !== null;
     }
 

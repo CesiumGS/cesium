@@ -7,7 +7,7 @@ defineSuite([
         Spline,
         Cartesian3,
         HermiteSpline) {
-    "use strict";
+    'use strict';
 
     it('contructor throws', function() {
         expect(function() {

@@ -17,7 +17,7 @@ defineSuite([
         StripeOrientation,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    "use strict";
+    'use strict';
 
     it('constructor provides the expected defaults', function() {
         var property = new StripeMaterialProperty();

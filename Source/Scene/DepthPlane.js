@@ -37,7 +37,7 @@ define([
         DepthFunction,
         Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

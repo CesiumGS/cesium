@@ -15,6 +15,7 @@ define([
         './IndexDatatype',
         './Math',
         './PolylinePipeline',
+        './PolygonPipeline',
         './PrimitiveType'
     ], function(
         BoundingSphere,
@@ -32,8 +33,9 @@ define([
         IndexDatatype,
         CesiumMath,
         PolylinePipeline,
+        PolygonPipeline,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
@@ -267,8 +269,8 @@ define([
         extrudedPositions.set(positions);
         var newPositions = new Float64Array(length * 2);
 
-        positions = CorridorGeometryLibrary.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
-        extrudedPositions = CorridorGeometryLibrary.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid, extrudedPositions);
+        positions = PolygonPipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+        extrudedPositions = PolygonPipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
         newPositions.set(positions);
         newPositions.set(extrudedPositions, length);
         attributes.position.values = newPositions;
@@ -464,20 +466,21 @@ define([
     CorridorOutlineGeometry.createGeometry = function(corridorOutlineGeometry) {
         var positions = corridorOutlineGeometry._positions;
         var height = corridorOutlineGeometry._height;
+        var width = corridorOutlineGeometry._width;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
 
-        if (cleanPositions.length < 2) {
-            return undefined;
+        if ((cleanPositions.length < 2) || (width <= 0)) {
+            return;
         }
 
         var ellipsoid = corridorOutlineGeometry._ellipsoid;
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,
-            width : corridorOutlineGeometry._width,
+            width : width,
             cornerType : corridorOutlineGeometry._cornerType,
             granularity : corridorOutlineGeometry._granularity,
             saveAttributes : false
@@ -493,7 +496,7 @@ define([
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, params.cornerType);
-            attr.attributes.position.values = CorridorGeometryLibrary.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
+            attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

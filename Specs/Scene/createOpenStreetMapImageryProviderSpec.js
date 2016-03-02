@@ -25,7 +25,7 @@ defineSuite([
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;

@@ -13,7 +13,7 @@ define([
         Primitive,
         BoundingSphereState,
         MaterialProperty) {
-    "use strict";
+    'use strict';
 
     function Batch(primitives, appearanceType, materialProperty, closed) {
         this.primitives = primitives;

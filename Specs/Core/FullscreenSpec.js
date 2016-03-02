@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         Fullscreen,
         FeatureDetection) {
-    "use strict";
+    'use strict';
 
     it('can tell if fullscreen is supported', function() {
         // just make sure the function runs, the test can't expect a particular result.

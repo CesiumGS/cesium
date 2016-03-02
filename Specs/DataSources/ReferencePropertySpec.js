@@ -23,7 +23,7 @@ defineSuite([
         ConstantProperty,
         Entity,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     var time = JulianDate.now();
 

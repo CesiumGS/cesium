@@ -49,7 +49,7 @@ define([
         Rectangle,
         RectangleGeometryLibrary,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var positionScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
@@ -344,14 +344,13 @@ define([
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, maxHeight, ellipsoid, false);
-        var topPositions = new Float64Array(topBottomGeo.attributes.position.values);
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
+        topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
         var newLength = length*2;
         var positions = new Float64Array(newLength);
         positions.set(topPositions);
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, minHeight, ellipsoid);
-        var bottomPositions = topBottomGeo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         topBottomGeo.attributes.position.values = positions;
 
@@ -715,11 +714,16 @@ define([
      * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
     RectangleGeometry.createGeometry = function(rectangleGeometry) {
+        if ((CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.north, rectangleGeometry._rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.east, rectangleGeometry._rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
+
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
@@ -762,7 +766,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

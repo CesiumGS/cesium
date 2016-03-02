@@ -37,7 +37,7 @@ define([
         Matrix4,
         Quaternion,
         TimeConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions for transforming positions to various reference frames.

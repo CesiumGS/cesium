@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var surfaceCartesian = new Cartesian3(4094327.7921465295, 1909216.4044747739, 4487348.4088659193);
     var surfaceCartographic = new Cartographic(CesiumMath.toRadians(25.0), CesiumMath.toRadians(45.0), 0.0);

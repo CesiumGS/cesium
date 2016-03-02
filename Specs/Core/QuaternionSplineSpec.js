@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     var points;
     var times;

@@ -11,7 +11,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     var ellipsoid = Ellipsoid.WGS84;
 
@@ -39,15 +39,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws with less than 2 positions', function() {
-        expect(function() {
-            return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
-                positions : [Cartesian3.fromDegrees(49.0, 18.0, 1000.0)]
-            }));
-        }).toThrowDeveloperError();
-    });
-
-    it('createGeometry returnes undefined with less than 2 unique positions', function() {
+    it('returns undefined with less than 2 unique positions', function() {
         var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions : Cartesian3.fromDegreesArrayHeights([
                 49.0, 18.0, 1000.0,
@@ -55,7 +47,28 @@ defineSuite([
                 49.0, 18.0, 1000.0
             ])
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
+    });
+
+    it('returns undefined with no heights', function() {
+        var geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ])
+        }));
+        expect(geometry).toBeUndefined();
+
+        geometry = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                49.0, 18.0,
+                49.0, 18.0,
+                49.0, 18.0
+            ]),
+            maximumHeights: [0, 0, 0]
+        }));
+        expect(geometry).toBeUndefined();
     });
 
     it('creates positions relative to ellipsoid', function() {

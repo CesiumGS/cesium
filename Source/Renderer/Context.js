@@ -67,7 +67,7 @@ define([
         UniformState,
         VertexArray,
         WebGLConstants) {
-    "use strict";
+    'use strict';
     /*global WebGLRenderingContext*/
     /*global WebGL2RenderingContext*/
 

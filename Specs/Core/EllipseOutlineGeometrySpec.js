@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without a center', function() {
         expect(function() {
@@ -34,16 +34,6 @@ defineSuite([
             return new EllipseOutlineGeometry({
                 center : Cartesian3.fromDegrees(0,0),
                 semiMajorAxis : 1.0
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws with a negative axis', function() {
-        expect(function() {
-            return new EllipseOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                semiMajorAxis : 1.0,
-                semiMinorAxis : -1.0
             });
         }).toThrowDeveloperError();
     });
@@ -110,6 +100,39 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(3 * 8 * 2);
         expect(m.indices.length).toEqual(2 * 8 * 2);
+    });
+
+    it('undefined is returned if the minor axis is equal to or less than zero', function() {
+        var ellipseOutline0 = new EllipseOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 300000.0,
+            semiMinorAxis : 0.0
+        });
+        var ellipseOutline1 = new EllipseOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 0.0,
+            semiMinorAxis : -1.0
+        });
+        var ellipseOutline2 = new EllipseOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : 300000.0,
+            semiMinorAxis : -10.0
+        });
+        var ellipseOutline3 = new EllipseOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            semiMajorAxis : -1.0,
+            semiMinorAxis : -2.0
+        });
+
+        var geometry0 = EllipseOutlineGeometry.createGeometry(ellipseOutline0);
+        var geometry1 = EllipseOutlineGeometry.createGeometry(ellipseOutline1);
+        var geometry2 = EllipseOutlineGeometry.createGeometry(ellipseOutline2);
+        var geometry3 = EllipseOutlineGeometry.createGeometry(ellipseOutline3);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
     });
 
     var center = new Cartesian3(8, 9, 10);

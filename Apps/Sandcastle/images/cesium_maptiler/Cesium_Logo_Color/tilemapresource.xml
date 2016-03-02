@@ -3,8 +3,8 @@
 	  <Title>Cesium_Logo_Color.jpg</Title>
 	  <Abstract></Abstract>
 	  <SRS>EPSG:900913</SRS>
-	  <BoundingBox minx="19.98909517812623" miny="-119.99999999999991" maxx="39.99999999999996" maxy="-60.00762865915187"/>
-	  <Origin x="19.98909517812623" y="-119.99999999999991"/>
+	  <BoundingBox miny="19.98909517812623" minx="-119.99999999999991" maxy="39.99999999999996" maxx="-60.00762865915187"/>
+	  <Origin y="19.98909517812623" x="-119.99999999999991"/>
 	  <TileFormat width="256" height="256" mime-type="image/png" extension="png"/>
 	  <TileSets profile="mercator">
 	    <TileSet href="0" units-per-pixel="156543.03390000000945" order="0"/>
