@@ -106,6 +106,8 @@ define([
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
         this._farPlane = 100.0; // Limit the far plane of the scene camera
+
+        // When false, use the light camera as-is without fitting to the scene's camera
         this._fitToScene = true;
 
         var maximumNumberOfCascades = 4;
@@ -721,12 +723,12 @@ define([
 
         if (this._fitToScene) {
             fitShadowMapToScene(this);
-        }
 
-        if (this._numberOfCascades > 1) {
-            computeCascades(this);
-        } else {
-            this._cascadeCameras[0] = this._shadowMapCamera;
+            if (this._numberOfCascades > 1) {
+                computeCascades(this);
+            } else {
+                this._cascadeCameras[0].clone(this._shadowMapCamera);
+            }
         }
 
         if (this.debugShow) {
