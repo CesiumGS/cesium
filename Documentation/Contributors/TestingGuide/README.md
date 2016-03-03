@@ -35,7 +35,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 * [Pragmatic Advice](#pragmatic-advice)
    * [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
    * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
-* [Testing in Webstorm](#webstorm)
+* [Testing in Webstorm](#testing-in-webstorm)
 * [Resources](#resources)
 
 ## Running the Tests
