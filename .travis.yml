@@ -1,7 +1,28 @@
 language: node_js
 node_js:
-  - "0.12"
+  - '0.12'
 sudo: false
+before_script:
+  - export DISPLAY=:99.0
+  - sh -e /etc/init.d/xvfb start
 script:
-  - npm run jsHint
+  - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
+  - npm run cloc
+  - echo -en 'travis_fold:end:script.cloc\\r'
+
+  - echo 'jsHint' && echo -en 'travis_fold:start:script.jsHint\\r'
+  - npm run jsHint --failTaskOnError
+  - echo -en 'travis_fold:end:script.jsHint\\r'
+
+  - echo 'test non-webgl' && echo -en 'travis_fold:start:script.test\\r'
+  - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --suppressPassed
+  - echo -en 'travis_fold:end:script.test\\r'
+
+  - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
+  - npm run clean
   - npm run makeZipFile
+  - echo -en 'travis_fold:end:script.makeZipFile\\r'
+
+  - echo 'test non-webgl release' && echo -en 'travis_fold:start:script test.release\\r'
+  - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --release --suppressPassed
+  - echo -en 'travis_fold:end:script test.release\\r'
