@@ -203,11 +203,15 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
 });
 
 gulp.task('jsHint', ['build'], function() {
-    return gulp.src(jsHintFiles)
+    var stream = gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'))
-        .pipe(jshint.reporter('fail'));
+        .pipe(jshint.reporter('jshint-stylish'));
+
+    if (yargs.argv.failTaskOnError) {
+        stream = stream.pipe(jshint.reporter('fail'));
+    }
+    return stream;
 });
 
 gulp.task('jsHint-watch', function() {
@@ -281,50 +285,38 @@ gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 gulp.task('test', function(done) {
     var argv = yargs.argv;
 
-    var enableAllBrowsers = false;
-    var includeCategory = '';
-    var excludeCategory = '';
-    var webglValidation = false;
-    var release = false;
+    var enableAllBrowsers = argv.all ? true : false;
+    var includeCategory = argv.include ? argv.include : '';
+    var excludeCategory = argv.exclude ? argv.exclude : '';
+    var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var release = argv.release ? argv.release : false;
+    var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+    var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+
     var browsers;
-
-    if (argv.all) {
-        enableAllBrowsers = true;
-    }
-
-    if (argv.include) {
-        includeCategory = argv.include;
-    }
-
-    if (argv.exclude) {
-        excludeCategory = argv.exclude;
-    }
-
-    if (argv.webglValidation) {
-        webglValidation = true;
-    }
-
-    if (argv.release) {
-        release = true;
-    }
-
     if (argv.browsers) {
         browsers = argv.browsers.split(',');
     }
 
     var files = [
         'Specs/karma-main.js',
-        {pattern: 'Source/**', included: false},
-        {pattern: 'Specs/**', included: false}
+        {pattern : 'Source/**', included : false},
+        {pattern : 'Specs/**', included : false}
     ];
 
     if (release) {
-        files.push({pattern: 'Build/**', included: false});
+        files.push({pattern : 'Build/**', included : false});
     }
 
     karma.start({
         configFile: karmaConfigFile,
         browsers : browsers,
+        specReporter: {
+            suppressErrorSummary: false,
+            suppressFailed: false,
+            suppressPassed: suppressPassed,
+            suppressSkipped: true
+        },
         detectBrowsers : {
             enabled: enableAllBrowsers
         },
@@ -332,8 +324,8 @@ gulp.task('test', function(done) {
         client: {
             args: [includeCategory, excludeCategory, webglValidation, release]
         }
-    }, function() {
-        return done();
+    }, function(e) {
+        return done(failTaskOnError ? e : undefined);
     });
 });
 
