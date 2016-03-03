@@ -28,7 +28,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var globeVisible = false;
+var globeVisible = true;
 var terrainEnabled = false;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
@@ -74,21 +74,21 @@ var tilt = 0.0;
 //var tilt = 30.0;
 
 var scene = viewer.scene;
+var context = scene.context;
 var camera = scene.camera;
-var shadowMap = scene.sunShadowMap;
-shadowMap.debugShow = true;
-shadowMap.enabled = false;
+var shadowMap;
+var height;
+var fixedLightCamera;
+var sunCamera = new Cesium.Camera(scene);
 
 var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
 var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
 Cesium.when(promise, function(updatedPositions) {
-    var height = updatedPositions[0].height;
+    height = updatedPositions[0].height + 50.0;
     createScene(height);
 });
 
-function createScene(height) {
-    height += 50.0;
-
+function createScene() {
     var frustum = new Cesium.OrthographicFrustum();
     frustum.left = -frustumSize;
     frustum.right = frustumSize;
@@ -97,24 +97,46 @@ function createScene(height) {
     frustum.near = frustumNear;
     frustum.far = frustumFar;
 
-    var lightCamera = new Cesium.Camera(scene);
-    lightCamera.frustum = frustum;
-    lightCamera.lookAt(Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height), new Cesium.Cartesian3(tilt, tilt, offset));
-    shadowMap._lightCamera = lightCamera;
+    fixedLightCamera = new Cesium.Camera(scene);
+    fixedLightCamera.frustum = frustum;
+    fixedLightCamera.lookAt(Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height), new Cesium.Cartesian3(tilt, tilt, offset));
+
+    var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+    camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+
+    resetShadows({
+        context : context,
+        lightCamera : sunCamera
+    });
+}
+
+function resetShadows(shadowOptions) {
+    // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
+    // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
+    scene.primitives.removeAll();
+
+    if (globeVisible) {
+        //scene.globe.destroy();
+        //scene.globe = new Cesium.Globe();
+    }
+
+    scene.sunShadowMap.destroy();
+    scene.sunShadowMap = new Cesium.ShadowMap(shadowOptions);
+
+    shadowMap = scene.sunShadowMap;
+    shadowMap.enabled = true;
+    shadowMap.debugShow = true;
 
     var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
-    camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
-
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
     createModel('../../SampleData/models/shadow_tester.gltf', center);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);
-    shadowMap.enabled = true;
 }
 
 function createModel(url, origin) {
@@ -228,22 +250,69 @@ function createSphere(origin) {
     scene.primitives.add(sphere);
 }
 
-function setCascades(cascades) {
+var shadowModes = [];
+
+shadowModes.push({
+    text : 'Cascaded Shadow Map',
+    onselect : function() {
+        resetShadows({
+            context : context,
+            lightCamera : sunCamera
+        });
+    }
+});
+
+shadowModes.push({
+    text : 'Cascaded Shadow Map w/ Colors',
+    onselect : function() {
+        resetShadows({
+            context : context,
+            lightCamera : sunCamera
+        });
+        shadowMap.debugVisualizeCascades = true;
+    }
+});
+
+shadowModes.push({
+    text : 'Single Shadow Map',
+    onselect : function() {
+        resetShadows({
+            context : context,
+            lightCamera : sunCamera,
+            numberOfCascades : 1
+        });
+    }
+});
+
+shadowModes.push({
+    text : 'Fixed Shadow Map',
+    onselect : function() {
+        resetShadows({
+            context : context,
+            lightCamera : fixedLightCamera,
+            fitToScene : false
+        });
+    }
+});
+
+function setSize(size) {
     return function() {
-        window.alert('Set cascades: ' + i);
+        shadowMap.setSize(size);
     };
 }
 
-var cascades = 4;
-var cascadeOptions = [];
-for (var i = 1; i <= cascades; ++i) {
-    cascadeOptions.push({
-        text : 'Cascades: ' + i,
-        onSelect : setCascades(i)
+var sizeModes = [];
+var sizes = [256, 512, 1024, 2048];
+var length = sizes.length;
+for (var i = 0; i < length; ++i) {
+    sizeModes.push({
+        text : 'Size: ' + sizes[i],
+        onselect : setSize(sizes[i])
     });
 }
 
-Sandcastle.addToolbarMenu(cascadeOptions);
+Sandcastle.addToolbarMenu(shadowModes);
+Sandcastle.addToolbarMenu(sizeModes);
 
 Sandcastle.addToolbarButton('Debug on/off', function() {
     shadowMap.debugShow = !shadowMap.debugShow;

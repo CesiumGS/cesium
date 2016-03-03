@@ -535,11 +535,16 @@ define([
          */
         this.fog = new Fog();
 
+        this._lightCamera = new Camera(this);
+
         /**
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.sunShadowMap = new ShadowMap(context, new Camera(this));
+        this.sunShadowMap = new ShadowMap({
+            context : context,
+            lightCamera : this._lightCamera
+        });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 

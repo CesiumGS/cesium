@@ -7,6 +7,9 @@ define([
         ShaderSource) {
     'use strict';
 
+    /**
+     * @private
+     */
     function ShadowMapShader() {
     }
 

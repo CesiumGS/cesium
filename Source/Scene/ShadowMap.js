@@ -8,6 +8,7 @@ define([
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
@@ -52,6 +53,7 @@ define([
         Color,
         ColorGeometryInstanceAttribute,
         ComponentDatatype,
+        defaultValue,
         defined,
         defineProperties,
         destroyObject,
@@ -90,9 +92,37 @@ define([
     'use strict';
 
     /**
+     * Creates a cascaded shadow map from the provided light camera.
+     *
+     * @alias ShadowMap
+     * @constructor
+     *
+     * @param {Object} options An object containing the following properties:
+     * @param {Context} options.context The context in which to create the shadow map.
+     * @param {Camera} options.lightCamera A camera representing the light source.
+     * @param {Boolean} [options.fitToScene=true] When false, use the light camera as-is without fitting to the scene's camera.
+     * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
+     * @param {Number} [options.size=1024] The width and height, in pixels, of each cascade in the shadow map.
+     *
+     * @see ShadowMapShader
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     *
      * @private
      */
-    function ShadowMap(context, lightCamera) {
+    function ShadowMap(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var context = options.context;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(context)) {
+            throw new DeveloperError('context is required.');
+        }
+        if (!defined(options.lightCamera)) {
+            throw new DeveloperError('lightCamera is required.');
+        }
+        //>>includeEnd('debug');
+
         this.enabled = false;
 
         // Uniforms
@@ -100,18 +130,17 @@ define([
         this._shadowMapTexture = undefined;
 
         this._framebuffer = undefined;
-        this._shadowMapSize = 1024;
+        this._shadowMapSize = defaultValue(options.size, 1024);
 
-        this._lightCamera = lightCamera;
+        this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
         this._farPlane = 100.0; // Limit the far plane of the scene camera
 
-        // When false, use the light camera as-is without fitting to the scene's camera
-        this._fitToScene = true;
+        this._fitToScene = defaultValue(options.fitToScene, true);
 
         var maximumNumberOfCascades = 4;
-        this._numberOfCascades = 4;
+        this._numberOfCascades = this._fitToScene ? defaultValue(options.numberOfCascades, maximumNumberOfCascades) : 1;
 
         this._cascadeCameras = new Array(maximumNumberOfCascades);
         this._cascadePassStates = new Array(maximumNumberOfCascades);
@@ -732,9 +761,11 @@ define([
 
             if (this._numberOfCascades > 1) {
                 computeCascades(this);
-            } else {
-                this._cascadeCameras[0].clone(this._shadowMapCamera);
             }
+        }
+
+        if (this._numberOfCascades === 1) {
+            this._cascadeCameras[0].clone(this._shadowMapCamera);
         }
 
         if (this.debugShow) {
