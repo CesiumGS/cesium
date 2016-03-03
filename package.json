@@ -74,6 +74,7 @@
     "cloc": "gulp cloc",
     "combine": "gulp combine",
     "combineRelease": "gulp combineRelease",
+    "requirejs": "gulp requirejs",
     "generateDocumentation": "gulp generateDocumentation",
     "instrumentForCoverage": "gulp instrumentForCoverage",
     "jsHint": "gulp jsHint",
