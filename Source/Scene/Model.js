@@ -2613,6 +2613,7 @@ define([
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
                     shadowCastProgram : rendererShadowCastPrograms[technique.program],
+                    castShadows : model.castShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,

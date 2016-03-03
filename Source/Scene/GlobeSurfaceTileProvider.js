@@ -1083,6 +1083,7 @@ define([
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, receiveShadows);
             command.shadowCastProgram = tileProvider._surfaceShaderSet.getShadowCastProgram(frameState, surfaceTile, useWebMercatorProjection, castShadows);
+            command.castShadows = castShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

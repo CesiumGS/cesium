@@ -1667,7 +1667,7 @@ define([
                 var length = frustumCommands.indices[pass];
                 for (var i = 0; i < length; ++i) {
                     var command = commands[i];
-                    if (defined(command.shadowCastProgram)) {
+                    if (command.castShadows) {
                         shadowMapCommands.push(command);
                     }
                 }

@@ -1112,7 +1112,7 @@ define([
 
         // Create shadow cast program
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive.castShadows) {
+        if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive._castShadows) {
             var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
             var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState);
             primitive._shadowCastSP = ShaderProgram.fromCache({
@@ -1143,7 +1143,7 @@ define([
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
         // Modify program to receive shadows
-        if (shadowsEnabled && primitive.receiveShadows) {
+        if (shadowsEnabled && primitive._receiveShadows) {
             vs = ShadowMapShader.createShadowReceiveVertexShader(vs);
             fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState);
         }
@@ -1214,6 +1214,7 @@ define([
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
                 colorCommand.shadowCastProgram = primitive._shadowCastSP;
+                colorCommand.castShadows = primitive._castShadows;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1231,6 +1232,7 @@ define([
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
             colorCommand.shadowCastProgram = primitive._shadowCastSP;
+            colorCommand.castShadows = primitive._castShadows;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
