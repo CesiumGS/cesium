@@ -101,7 +101,7 @@ gulp.task('build-watch', function() {
     gulp.watch(buildFiles, ['build']);
 });
 
-gulp.task('buildApps', ['combine', 'minifyRelease'], function() {
+gulp.task('buildApps', function() {
     return buildCesiumViewer();
 });
 
