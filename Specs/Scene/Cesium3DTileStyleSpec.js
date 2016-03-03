@@ -19,6 +19,43 @@ defineSuite([
         this.styleEngine = styleEngine;
     }
 
+    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+
+    it ('throws with undefined tileset', function() {
+        expect(function () {
+            return new Cesium3DTileStyle();
+        }).toThrowDeveloperError();
+    });
+
+    it ('rejects readyPromise with undefined url', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var tileStyle = new Cesium3DTileStyle(tileset, 'invalid.json');
+
+        return tileStyle.readyPromise.then(function(style) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(tileStyle.ready).toEqual(false);
+            expect(error.statusCode).toEqual(404);
+        });
+    });
+
+    it ('loads style from uri', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var tileStyle = new Cesium3DTileStyle(tileset, styleUrl);
+
+        return tileStyle.readyPromise.then(function(style) {
+            expect(style.show).toEqual(new Expression(styleEngine, '${id} < 100'));
+            expect(style.color).toEqual(new Expression(styleEngine, 'color("red")'));
+            expect(tileStyle.ready).toEqual(true);
+        }).otherwise(function() {
+            fail('should load style.json');
+        });
+    });
+
     it ('sets show value to default expression', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
@@ -37,10 +74,14 @@ defineSuite([
 
         var style = new Cesium3DTileStyle(tileset, {
         });
-        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
 
-        style = new Cesium3DTileStyle(tileset);
-        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
+        style.readyPromise.then(function(s) {
+            expect(s.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
+        });
+
+        //
+        //style = new Cesium3DTileStyle(tileset);
+        //expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
     });
 
     it ('sets show value to expression', function() {
