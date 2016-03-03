@@ -2,11 +2,13 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       '../Core/DeveloperError'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     /**
@@ -112,6 +114,12 @@ define([
             clearStyle(content);
             return;
         }
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!style.ready) {
+            throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+        }
+        //>>includeEnd('debug');
 
         // PERFORMANCE_IDEA: we can create a slightly faster internal interface by directly
         // using Cesium3DTileBatchTableResources.  We might also be able to use less memory

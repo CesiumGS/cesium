@@ -49,17 +49,17 @@ define([
         this._readyPromise = when.defer();
         this._ready = false;
 
-        var that = this;
+        var style = this;
         if (typeof data === 'string') {
             RequestScheduler.request(data, loadJson).then(function(styleJson) {
-                setup(that, tileset, styleJson);
-                that._readyPromise.resolve(that);
+                setup(style, tileset, styleJson);
+                style._readyPromise.resolve(style);
             }).otherwise(function(error) {
-                that._readyPromise.reject(error);
+                style._readyPromise.reject(error);
             });
         } else {
-            setup(that, tileset, data);
-            that._readyPromise.resolve(that);
+            setup(style, tileset, data);
+            style._readyPromise.resolve(style);
         }
     }
 

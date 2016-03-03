@@ -72,16 +72,11 @@ defineSuite([
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
 
-        var style = new Cesium3DTileStyle(tileset, {
-        });
+        var style = new Cesium3DTileStyle(tileset, {});
+        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
 
-        style.readyPromise.then(function(s) {
-            expect(s.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
-        });
-
-        //
-        //style = new Cesium3DTileStyle(tileset);
-        //expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
+        style = new Cesium3DTileStyle(tileset);
+        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
     });
 
     it ('sets show value to expression', function() {
