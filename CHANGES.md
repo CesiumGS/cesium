@@ -16,6 +16,13 @@ TODO: these are still private:
 TODO: this is not finished yet:
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
+### 1.20 - 2016-04-01
+
+* Breaking changes
+  * 
+* Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
+* `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
+
 ### 1.19 - 2016-03-01
 
 * Breaking changes
