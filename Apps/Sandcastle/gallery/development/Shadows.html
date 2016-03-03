@@ -19,10 +19,40 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="buttons"></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td>Light Horizon</td>
+            <td>
+                <input type="range" min="0" max="90" step="1.0" data-bind="value: lightHorizon, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: lightHorizon">
+            </td>
+        </tr>
+        <tr>
+            <td>Light Angle</td>
+            <td>
+                <input type="range" min="0" max="360" step="1.0" data-bind="value: lightAngle, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: lightAngle">
+            </td>
+        </tr>
+        <tr>
+            <td>Shadow Far</td>
+            <td>
+                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: shadowFar, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: shadowFar">
+            </td>
+        </tr>
+    </tbody></table>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -58,7 +88,7 @@ if (globeVisible) {
 // Exton
 var centerLongitude = -1.31968;
 var centerLatitude = 0.698874;
-var offset = 20.0;
+var offsetZ = 20.0;
 var frustumSize = 15;
 var frustumNear = 1.0;
 var frustumFar = 100.0;
@@ -67,7 +97,7 @@ var tilt = 0.0;
 //// Everest
 //var centerLongitude = 1.517132688;
 //var centerLatitude = 0.4884844964;
-//var offset = 50.0;
+//var offsetZ = 50.0;
 //var frustumSize = 55.0;
 //var frustumNear = 1.0;
 //var frustumFar = 400.0;
@@ -77,10 +107,12 @@ var scene = viewer.scene;
 var context = scene.context;
 var camera = scene.camera;
 var shadowMap;
+var center;
 var height;
 var fixedLightCamera;
 var sunCamera = new Cesium.Camera(scene);
 
+// Get the height of the terrain at the given longitude/latitude, then create the scene.
 var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
 var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
 Cesium.when(promise, function(updatedPositions) {
@@ -89,6 +121,8 @@ Cesium.when(promise, function(updatedPositions) {
 });
 
 function createScene() {
+    center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+
     var frustum = new Cesium.OrthographicFrustum();
     frustum.left = -frustumSize;
     frustum.right = frustumSize;
@@ -99,9 +133,8 @@ function createScene() {
 
     fixedLightCamera = new Cesium.Camera(scene);
     fixedLightCamera.frustum = frustum;
-    fixedLightCamera.lookAt(Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height), new Cesium.Cartesian3(tilt, tilt, offset));
+    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(tilt, tilt, offsetZ));
 
-    var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
 
     resetShadows({
@@ -115,10 +148,7 @@ function resetShadows(shadowOptions) {
     // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
     scene.primitives.removeAll();
 
-    if (globeVisible) {
-        //scene.globe.destroy();
-        //scene.globe = new Cesium.Globe();
-    }
+    // TODO : reset terrain shaders
 
     scene.sunShadowMap.destroy();
     scene.sunShadowMap = new Cesium.ShadowMap(shadowOptions);
@@ -311,16 +341,74 @@ for (var i = 0; i < length; ++i) {
     });
 }
 
-Sandcastle.addToolbarMenu(shadowModes);
-Sandcastle.addToolbarMenu(sizeModes);
+Sandcastle.addToolbarMenu(shadowModes, 'buttons');
+Sandcastle.addToolbarMenu(sizeModes, 'buttons');
 
 Sandcastle.addToolbarButton('Debug on/off', function() {
     shadowMap.debugShow = !shadowMap.debugShow;
-});
+}, 'buttons');
 
 Sandcastle.addToolbarButton('Freeze on/off', function() {
     shadowMap.debugFreezeFrame = !shadowMap.debugFreezeFrame;
+}, 'buttons');
+
+Sandcastle.addToolbarButton('Shadows on/off', function() {
+    shadowMap.enabled = !shadowMap.enabled;
+}, 'buttons');
+
+function updateLightDirection() {
+    var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
+    var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
+    offset.z = Math.cos(lightHorizon);
+    offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
+    offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
+
+    sunCamera.lookAt(center, offset);
+}
+
+var offset = new Cesium.Cartesian3();
+var viewModel = {
+    lightAngle : 0.0,
+    lightHorizon : 0.0,
+    shadowFar : 1000.0
+};
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(function(value) {
+    shadowMap._farPlane = Number(value);
 });
+
+updateLightDirection();
+
+var canvas = viewer.canvas;
+canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+canvas.onclick = function() {
+    // To get key events
+    canvas.focus();
+};
+
+var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+// Double click object to turn castShadows on/off
+handler.setInputAction(function(movement) {
+    var picked = scene.pick(movement.position);
+    console.log(picked);
+    if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
+        picked.primitive.castShadows = !picked.primitive.castShadows;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+// Middle click object to turn receiveShadows on/off
+handler.setInputAction(function(movement) {
+    var picked = scene.pick(movement.position);
+    if (Cesium.defined(picked)) {
+        picked.primitive.receiveShadows = !picked.primitive.receiveShadows;
+    }
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+
 
 //Sandcastle_End
 Sandcastle.finishedLoading();

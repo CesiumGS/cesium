@@ -135,7 +135,7 @@ define([
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
-        this._farPlane = 100.0; // Limit the far plane of the scene camera
+        this._farPlane = 1000.0; // Limit the far plane of the scene camera
 
         this._fitToScene = defaultValue(options.fitToScene, true);
 
@@ -589,7 +589,7 @@ define([
         var numberOfCascades = shadowMap._numberOfCascades;
 
         // Split cascades. Use a mix of linear and log splits.
-        var lambda = 0.5;
+        var lambda = 0.9;
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
