@@ -24,9 +24,18 @@ defineSuite([
     };
 
     var jsonExp = {
-        conditional : {
+        conditions : {
             '${Height} > 100' : 'color("blue")',
             '${Height} > 50' : 'color("red")',
+            'true' : 'color("green")'
+        }
+    };
+
+    var jsonExpWithExpression = {
+        expression : '${Height}/2',
+        conditions : {
+            '${expression} > 50' : 'color("blue")',
+            '${expression} > 25' : 'color("red")',
             'true' : 'color("green")'
         }
     };
@@ -40,6 +49,16 @@ defineSuite([
         });
     });
 
+    it('constructs with expression', function() {
+        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithExpression);
+        expect(expression._expression).toEqual('${Height}/2');
+        expect(expression._conditional).toEqual({
+            '${expression} > 50' : 'color("blue")',
+            '${expression} > 25' : 'color("red")',
+            'true' : 'color("green")'
+        });
+    });
+
     it('evaluates conditional', function() {
         var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
@@ -47,9 +66,16 @@ defineSuite([
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
+    it('evaluates conditional with expression', function() {
+        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithExpression);
+        expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
+        expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.RED);
+        expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
+    });
+
     it('constructs and evaluates empty conditional', function() {
         var expression = new ConditionalExpression(new MockStyleEngine(), {
-            conditional: {}
+            conditions: {}
         });
         expect(expression._conditional).toEqual({});
         expect(expression.evaluate(new MockFeature('101'))).toEqual(undefined);

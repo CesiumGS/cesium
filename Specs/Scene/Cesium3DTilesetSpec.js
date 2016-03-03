@@ -988,7 +988,7 @@ defineSuite([
             // ${id} < 100 will always evaluate to true
             tileset.style = new Cesium3DTileStyle(tileset, {
                 color : {
-                    conditional : {
+                    conditions : {
                         '${id} < 100' : 'color("red")',
                         'true' : 'color("blue")'
                     }
@@ -1003,7 +1003,7 @@ defineSuite([
             // ${id}>= 100 will always evaluate to false
             tileset.style = new Cesium3DTileStyle(tileset, {
                 color : {
-                    conditional : {
+                    conditions : {
                         '${id} >= 100' : 'color("red")',
                         'true' : 'color("blue")'
                     }

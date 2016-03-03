@@ -23,7 +23,8 @@ define([
      */
     function ConditionalExpression (styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
-        this._conditional = clone(jsonExpression.conditional, true);
+        this._conditional = clone(jsonExpression.conditions, true);
+        this._expression = jsonExpression.expression;
 
         this._runtimeConditional = undefined;
 
@@ -42,9 +43,13 @@ define([
     function setRuntime(expression) {
         var runtimeConditional = [];
         var conditional = expression._conditional;
+        var exp = expression._expression;
         for (var cond in conditional) {
             if (conditional.hasOwnProperty(cond)) {
                 var colorExpression = conditional[cond];
+                if (defined(exp)) {
+                    cond = cond.replace('${expression}', exp);
+                }
                 runtimeConditional.push(new Statement(
                     new Expression(expression._styleEngine, cond),
                     new Expression(expression._styleEngine, colorExpression)
