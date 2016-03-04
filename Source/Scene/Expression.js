@@ -150,10 +150,11 @@ define([
         // Member function calls
         if (ast.callee.type === 'MemberExpression') {
             call = ast.callee.property.name;
+            var object = ast.callee.object;
             if (call === 'test' || call === 'exec') {
                 // Make sure this is called on a valid type
                 //>>includeStart('debug', pragmas.debug);
-                if (ast.callee.object.callee.name !== 'regExp') {
+                if (object.callee.name !== 'regExp') {
                     throw new DeveloperError('Error: ' + call + ' is not a function.');
                 }
                 //>>includeEnd('debug');
@@ -164,9 +165,12 @@ define([
                         return new Node(ExpressionNodeType.LITERAL_NULL, null);
                     }
                 }
-                var left = createRuntimeAst(expression, ast.callee.object);
+                var left = createRuntimeAst(expression, object);
                 var right = createRuntimeAst(expression, args[0]);
                 return new Node(ExpressionNodeType.FUNCTION_CALL, call, left, right);
+            } else if (call === 'toString') {
+                val = createRuntimeAst(expression, object);
+                return new Node(ExpressionNodeType.FUNCTION_CALL, call, val);
             }
 
             //>>includeStart('debug', pragmas.debug);
@@ -177,6 +181,9 @@ define([
         // Non-member function calls
         call = ast.callee.name;
         if (call === 'color') {
+            if (args.length === 0) {
+                return new Node(ExpressionNodeType.LITERAL_COLOR, call);
+            }
             val = createRuntimeAst(expression, args[0]);
             if (defined(args[1])) {
                 var alpha = createRuntimeAst(expression, args[1]);
@@ -397,6 +404,8 @@ define([
                 node.evaluate = node._evaluateRegExpTest;
             } else if (node._value === 'exec') {
                 node.evaluate = node._evaluateRegExpExec;
+            } else if (node._value === 'toString') {
+                node.evaluate = node._evaluateToString;
             }
         } else if (node._type === ExpressionNodeType.BINARY) {
             if (node._value === '+') {
@@ -477,7 +486,9 @@ define([
         }
         var args = this._left;
         if (this._value === 'color') {
-            if (args.length > 1) {
+            if (!defined(args)) {
+                return Color.fromBytes(255, 255, 255, 255, result);
+            } else if (args.length > 1) {
                 Color.fromCssColorString(args[0].evaluate(feature, result), result);
                 Color.fromAlpha(result, args[1].evaluate(feature, result), result);
             } else {
@@ -782,6 +793,18 @@ define([
             return null;
         }
         return exec[1];
+    };
+
+    Node.prototype._evaluateToString = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        if ((left instanceof RegExp) || (left instanceof Color)) {
+            return String(left);
+        }
+        //>>includeStart('debug', pragmas.debug);
+        else {
+            throw new DeveloperError('Error: Unexpected function call "' + this._value + '".');
+        }
+        //>>includeEnd('debug');
     };
 
     return Expression;

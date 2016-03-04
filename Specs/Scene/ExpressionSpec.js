@@ -238,6 +238,12 @@ defineSuite([
     it('evaluates literal string', function() {
         var expression = new Expression(new MockStyleEngine(), '\'hello\'');
         expect(expression.evaluate(undefined)).toEqual('hello');
+
+        expression = new Expression(new MockStyleEngine(), '\'Cesium\'');
+        expect(expression.evaluate(undefined)).toEqual('Cesium');
+
+        expression = new Expression(new MockStyleEngine(), '"Cesium"');
+        expect(expression.evaluate(undefined)).toEqual('Cesium');
     });
 
     it('converts to literal string', function() {
@@ -255,11 +261,20 @@ defineSuite([
         var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
+        expression = new Expression(new MockStyleEngine(), 'color(\'#00FFFF\')');
+        expect(expression.evaluate(undefined)).toEqual(Color.CYAN);
+
         expression = new Expression(new MockStyleEngine(), 'color(\'#fff\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
+        expression = new Expression(new MockStyleEngine(), 'color(\'#0FF\')');
+        expect(expression.evaluate(undefined)).toEqual(Color.CYAN);
+
         expression = new Expression(new MockStyleEngine(), 'color(\'white\')');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'color(\'cyan\')');
+        expect(expression.evaluate(undefined)).toEqual(Color.CYAN);
 
         expression = new Expression(new MockStyleEngine(), 'color(\'white\', 0.5)');
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
@@ -267,14 +282,29 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 255)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
 
+        expression = new Expression(new MockStyleEngine(), 'rgb(100, 255, 190)');
+        expect(expression.evaluate(undefined)).toEqual(Color.fromBytes(100, 255, 190));
+
         expression = new Expression(new MockStyleEngine(), 'hsl(0, 0, 1)');
         expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
+
+        expression = new Expression(new MockStyleEngine(), 'hsl(1.0, 0.6, 0.7)');
+        expect(expression.evaluate(undefined)).toEqual(Color.fromHsl(1.0, 0.6, 0.7));
 
         expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 255, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
 
+        expression = new Expression(new MockStyleEngine(), 'rgba(100, 255, 190, 0.25)');
+        expect(expression.evaluate(undefined)).toEqual(Color.fromBytes(100, 255, 190, 0.25 * 255));
+
         expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'hsla(1.0, 0.6, 0.7, 0.75)');
+        expect(expression.evaluate(undefined)).toEqual(Color.fromHsl(1.0, 0.6, 0.7, 0.75));
+
+        expression = new Expression(new MockStyleEngine(), 'color()');
+        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
     it('evaluates literal color with result parameter', function() {
@@ -311,6 +341,10 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
         expect(expression.evaluateColor(undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
         expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'color()');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.WHITE);
+        expect(color).toEqual(Color.WHITE);
     });
 
     it('evaluates color with expressions as arguments', function() {
@@ -420,6 +454,20 @@ defineSuite([
         expect(function() {
             return new Expression(new MockStyleEngine(), 'hsla(1, 1, 1)');
         }).toThrowDeveloperError();
+    });
+
+    it('evaluates color properties', function() {
+        var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\').red');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 0).green');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'color("cyan").blue');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 0, 0.5).alpha');
+        expect(expression.evaluate(undefined)).toEqual(0.5);
     });
 
     it('evaluates unary not', function() {
@@ -664,8 +712,28 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'color(\'green\') === color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(true);
 
+        expression = new Expression(new MockStyleEngine(), 'color() === color()');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '!!color() === true');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
         expression = new Expression(new MockStyleEngine(), 'color(\'green\') !== color(\'green\')');
         expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
+    it('evaluates color toString function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', Color.BLUE);
+
+        var expression = new Expression(new MockStyleEngine(), 'color("red").toString()');
+        expect(expression.evaluate(undefined)).toEqual('(1, 0, 0, 1)');
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(0, 0, 255, 0.5).toString()');
+        expect(expression.evaluate(undefined)).toEqual('(0, 0, 1, 0.5)');
+
+        expression = new Expression(new MockStyleEngine(), '${property}.toString()');
+        expect(expression.evaluate(feature)).toEqual('(0, 0, 1, 1)');
     });
 
     it('evaluates isNaN function', function() {
@@ -745,6 +813,10 @@ defineSuite([
         });
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
+        feature.addProperty('address', {
+            "street" : "Example Street",
+            "city" : "Example City"
+        });
 
         var expression = new Expression(new MockStyleEngine(), '${color.red}');
         expect(expression.evaluate(feature)).toEqual(1.0);
@@ -758,6 +830,11 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), '${undefined.blue}');
         expect(expression.evaluate(feature)).toEqual(undefined);
 
+        expression = new Expression(new MockStyleEngine(), '${feature}');
+        expect(expression.evaluate(feature)).toEqual({
+            color : Color.BLUE
+        });
+
         expression = new Expression(new MockStyleEngine(), '${feature.color}');
         expect(expression.evaluate(feature)).toEqual(Color.RED);
 
@@ -766,6 +843,12 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature.color.red}');
         expect(expression.evaluate(feature)).toEqual(1.0);
+
+        expression = new Expression(new MockStyleEngine(), '${address.street}');
+        expect(expression.evaluate(feature)).toEqual("Example Street");
+
+        expression = new Expression(new MockStyleEngine(), '${address.city}');
+        expect(expression.evaluate(feature)).toEqual("Example City");
     });
 
     it('evaluates member expression with brackets', function() {
@@ -782,6 +865,11 @@ defineSuite([
         });
         feature.addProperty('null', null);
         feature.addProperty('undefined', undefined);
+        feature.addProperty('address.street', "Other Street");
+        feature.addProperty('address', {
+            "street" : "Example Street",
+            "city" : "Example City"
+        });
 
         var expression = new Expression(new MockStyleEngine(), '${color["red"]}');
         expect(expression.evaluate(feature)).toEqual(1.0);
@@ -812,6 +900,24 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${feature["feature.color"]}');
         expect(expression.evaluate(feature)).toEqual(Color.GREEN);
+
+        expression = new Expression(new MockStyleEngine(), '${address.street}');
+        expect(expression.evaluate(feature)).toEqual("Example Street");
+
+        expression = new Expression(new MockStyleEngine(), '${feature.address.street}');
+        expect(expression.evaluate(feature)).toEqual("Example Street");
+
+        expression = new Expression(new MockStyleEngine(), '${feature["address"].street}');
+        expect(expression.evaluate(feature)).toEqual("Example Street");
+
+        expression = new Expression(new MockStyleEngine(), '${feature["address.street"]}');
+        expect(expression.evaluate(feature)).toEqual("Other Street");
+
+        expression = new Expression(new MockStyleEngine(), '${address["street"]}');
+        expect(expression.evaluate(feature)).toEqual("Example Street");
+
+        expression = new Expression(new MockStyleEngine(), '${address["city"]}');
+        expect(expression.evaluate(feature)).toEqual("Example City");
     });
 
     it('member expressions throw without variable notation', function() {
@@ -933,8 +1039,9 @@ defineSuite([
     it('evaluates regex exec function', function() {
         var feature = new MockFeature();
         feature.addProperty('property', 'abc');
+        feature.addProperty('Name', 'Building 1');
 
-        var expression = new Expression(new MockStyleEngine(), 'regExp("a(.)").exec("abc")');
+        var expression = new Expression(new MockStyleEngine(), 'regExp("a(.)", "i").exec("Abc")');
         expect(expression.evaluate(undefined)).toEqual('b');
 
         expression = new Expression(new MockStyleEngine(), 'regExp("a(.)").exec("qbc")');
@@ -948,6 +1055,9 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'regExp("(" + ${property} + ")").exec(${property})');
         expect(expression.evaluate(feature)).toEqual('abc');
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("Building\\s(\\d)").exec(${Name})');
+        expect(expression.evaluate(feature)).toEqual('1');
     });
 
     it('throws if test is not call with a RegExp', function() {
@@ -957,6 +1067,30 @@ defineSuite([
 
         expect(function() {
             return new Expression(new MockStyleEngine(), '"blue".test()');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates regExp toString function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'regExp().toString()');
+        expect(expression.evaluate(undefined)).toEqual('/(?:)/');
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("\\d\\s\\d", "ig").toString()');
+        expect(expression.evaluate(undefined)).toEqual('/\\d\\s\\d/gi');
+
+        expression = new Expression(new MockStyleEngine(), 'regExp(${property}).toString()');
+        expect(expression.evaluate(feature)).toEqual('/abc/');
+    });
+
+    it('throws when using toString on other type', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), '${property}.toString()');
+        expect(function() {
+            return expression.evaluate(feature);
         }).toThrowDeveloperError();
     });
 
@@ -971,6 +1105,10 @@ defineSuite([
                 'subproperty' : Color.BLUE,
                 'anotherproperty' : Color.WHITE
         }]);
+        feature.addProperty('temperatures', {
+            "scale" : "fahrenheit",
+            "values" : [70, 80, 90]
+        });
 
         var expression = new Expression(new MockStyleEngine(), '[1, 2, 3]');
         expect(expression.evaluate(undefined)).toEqual([1, 2, 3]);
@@ -992,5 +1130,14 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), '${complicatedArray[0]["anotherproperty"]}');
         expect(expression.evaluate(feature)).toEqual(Color.RED);
+
+        expression = new Expression(new MockStyleEngine(), '${temperatures["scale"]}');
+        expect(expression.evaluate(feature)).toEqual('fahrenheit');
+
+        expression = new Expression(new MockStyleEngine(), '${temperatures.values[0]}');
+        expect(expression.evaluate(feature)).toEqual(70);
+
+        expression = new Expression(new MockStyleEngine(), '${temperatures["values"][0]}');
+        expect(expression.evaluate(feature)).toEqual(70);
     });
 });
