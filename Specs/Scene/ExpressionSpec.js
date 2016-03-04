@@ -270,6 +270,9 @@ defineSuite([
 
         expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
         expect(expression.evaluate(undefined)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'color()');
+        expect(expression.evaluate(undefined)).toEqual(Color.WHITE);
     });
 
     it('evaluates literal color with result parameter', function() {
@@ -306,6 +309,10 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'hsla(0, 0, 1, 0.5)');
         expect(expression.evaluateColor(undefined, color)).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
         expect(color).toEqual(new Color(1.0, 1.0, 1.0, 0.5));
+
+        expression = new Expression(new MockStyleEngine(), 'color()');
+        expect(expression.evaluateColor(undefined, color)).toEqual(Color.WHITE);
+        expect(color).toEqual(Color.WHITE);
     });
 
     it('evaluates color with expressions as arguments', function() {
@@ -663,6 +670,20 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(false);
     });
 
+    it('evaluates color toString function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', Color.BLUE);
+
+        var expression = new Expression(new MockStyleEngine(), 'color("red").toString()');
+        expect(expression.evaluate(undefined)).toEqual('(1, 0, 0, 1)');
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(0, 0, 255, 0.5).toString()');
+        expect(expression.evaluate(undefined)).toEqual('(0, 0, 1, 0.5)');
+
+        expression = new Expression(new MockStyleEngine(), '${property}.toString()');
+        expect(expression.evaluate(feature)).toEqual('(0, 0, 1, 1)');
+    });
+
     it('evaluates isNaN function', function() {
         var expression = new Expression(new MockStyleEngine(), 'isNaN()');
         expect(expression.evaluate(undefined)).toEqual(true);
@@ -952,6 +973,30 @@ defineSuite([
 
         expect(function() {
             return new Expression(new MockStyleEngine(), '"blue".test()');
+        }).toThrowDeveloperError();
+    });
+
+    it('evaluates regExp toString function', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'regExp().toString()');
+        expect(expression.evaluate(undefined)).toEqual('/(?:)/');
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("\\d\\s\\d", "ig").toString()');
+        expect(expression.evaluate(undefined)).toEqual('/\\d\\s\\d/gi');
+
+        expression = new Expression(new MockStyleEngine(), 'regExp(${property}).toString()');
+        expect(expression.evaluate(feature)).toEqual('/abc/');
+    });
+
+    it('throws when using toString on other type', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), '${property}.toString()');
+        expect(function() {
+            return expression.evaluate(feature);
         }).toThrowDeveloperError();
     });
 
