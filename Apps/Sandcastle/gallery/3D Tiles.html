@@ -207,6 +207,9 @@ handler.setInputAction(function(movement) {
                 }
             }
 
+            // evaluate feature color
+            console.log("Evaluated Color : " + tileset.style.color.evaluate(building));
+
             building.setProperty('clicked', true);
         }
     }
