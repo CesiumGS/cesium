@@ -186,6 +186,11 @@ defineSuite([
         expect(expression.evaluate(undefined)).toEqual(null);
     });
 
+    it('evaluates literal undefined', function() {
+        var expression = new Expression(new MockStyleEngine(), 'undefined');
+        expect(expression.evaluate(undefined)).toEqual(undefined);
+    });
+
     it('evaluates literal boolean', function() {
         var expression = new Expression(new MockStyleEngine(), 'true');
         expect(expression.evaluate(undefined)).toEqual(true);

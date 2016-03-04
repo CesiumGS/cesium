@@ -15,6 +15,8 @@ define([
         defineProperties) {
     'use strict';
 
+    var expressionPlaceholder = '${expression}';
+
     /**
      * DOC_TBA
      * <p>
@@ -48,7 +50,9 @@ define([
             if (conditional.hasOwnProperty(cond)) {
                 var colorExpression = conditional[cond];
                 if (defined(exp)) {
-                    cond = cond.replace('${expression}', exp);
+                    cond = cond.replace(expressionPlaceholder, exp);
+                } else {
+                    cond = cond.replace(expressionPlaceholder, 'undefined');
                 }
                 runtimeConditional.push(new Statement(
                     new Expression(expression._styleEngine, cond),
