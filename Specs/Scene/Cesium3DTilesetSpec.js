@@ -1019,20 +1019,6 @@ defineSuite([
         });
     });
 
-    it('throws if style is not ready', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            // ${id} < 100 will always evaluate to true
-            tileset.style = new Cesium3DTileStyle(tileset, styleUrl);
-            expect(function() {
-                scene.renderForSpecs();
-            }).toThrowDeveloperError();
-        });
-    });
-
     it('loads style from uri', function() {
         // One building in each data set is always located in the center, so point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);

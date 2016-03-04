@@ -36,16 +36,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        /**
-         * DOC_TBA
-         */
-        this.color = undefined;
-
-        /**
-         * DOC_TBA
-         */
-        this.show = undefined;
-
+        this._color = undefined;
+        this._show = undefined;
         this._readyPromise = when.defer();
         this._ready = false;
 
@@ -77,7 +69,7 @@ define([
             color = new ConditionalExpression(styleEngine, colorExpression);
         }
 
-        that.color = color;
+        that._color = color;
 
         var show;
         if (typeof(showExpression) === 'boolean') {
@@ -86,7 +78,7 @@ define([
             show = new Expression(styleEngine, showExpression);
         }
 
-        that.show = show;
+        that._show = show;
 
         that._ready = true;
     }
@@ -107,6 +99,40 @@ define([
         readyPromise : {
             get : function() {
                 return this._readyPromise;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        show : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+                return this._show;
+            },
+            set : function(value) {
+                this._show = value;
+            }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        color : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+                return this._color;
+            },
+            set : function(value) {
+                this._color = value;
             }
         }
     });
