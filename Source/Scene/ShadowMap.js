@@ -128,6 +128,7 @@ define([
         // Uniforms
         this._shadowMapMatrix = new Matrix4();
         this._shadowMapTexture = undefined;
+        this._lightDirectionEC = new Cartesian3();
 
         this._framebuffer = undefined;
         this._shadowMapSize = defaultValue(options.size, 1024);
@@ -174,7 +175,7 @@ define([
         this._renderState = RenderState.fromCache({
             cull : {
                 enabled : true, // TODO : need to handle objects that don't use back face culling, like walls
-                face : CullFace.BACK
+                face : CullFace.FRONT
             },
             depthTest : {
                 enabled : true
@@ -185,7 +186,12 @@ define([
                 blue : colorMask,
                 alpha : colorMask
             },
-            depthMask : true
+            depthMask : true,
+            polygonOffset : {
+                enabled : true,
+                factor : 1.1,
+                units : 4.0
+            }
         });
 
         // For clearing the shadow map texture every frame
@@ -315,6 +321,11 @@ define([
         cascadeScales : {
             get : function() {
                 return this._cascadeScales;
+            }
+        },
+        lightDirectionEC : {
+            get : function() {
+                return this._lightDirectionEC;
             }
         }
     });
@@ -744,7 +755,14 @@ define([
         }
 
         // Clone light camera into the shadow map camera
-        shadowMap._shadowMapCamera.clone(shadowMap._lightCamera);
+        var shadowMapCamera = shadowMap._shadowMapCamera;
+        shadowMapCamera.clone(shadowMap._lightCamera);
+
+        // Get the light direction in eye coordinates
+        var lightDirection = shadowMap._lightDirectionEC;
+        Matrix4.multiplyByPointAsVector(camera.viewMatrix, shadowMapCamera.directionWC, lightDirection);
+        Cartesian3.normalize(lightDirection, lightDirection);
+        Cartesian3.negate(lightDirection, lightDirection);
 
         // Clone scene camera and limit the far plane
         shadowMap._sceneCamera = Camera.clone(camera, shadowMap._sceneCamera);

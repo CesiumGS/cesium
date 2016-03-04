@@ -157,6 +157,7 @@ function resetShadows(shadowOptions) {
     shadowMap.enabled = true;
     shadowMap.debugShow = true;
 
+    var ground = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height - 50.0);
     var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
@@ -164,6 +165,7 @@ function resetShadows(shadowOptions) {
 
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
     createModel('../../SampleData/models/shadow_tester.gltf', center);
+    createModel('../../SampleData/models/wood_tower.gltf', ground);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);

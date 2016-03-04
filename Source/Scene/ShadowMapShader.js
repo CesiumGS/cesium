@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Renderer/ShaderSource'
     ], function(
         defaultValue,
+        defined,
         ShaderSource) {
     'use strict';
 
@@ -53,7 +55,11 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName) {
+        // Check if the normal varying actually exists
+        if (fs.indexOf(normalVaryingName) === -1) {
+            normalVaryingName = undefined;
+        }
         var cascadesEnabled = frameState.shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
@@ -114,11 +120,17 @@ define([
             '{ \n' +
             '    float depth = shadowPosition.z; \n' +
             '    float shadowDepth = sampleTexture(shadowPosition.xy); \n' +
-            '    if (depth - 0.005 > shadowDepth) { \n' +
-            '        return 0.2; // In shadow \n' +
-            '    } else { \n' +
-            '        return 1.0; \n' +
-            '    } \n' +
+            '    float visibility = step(depth, shadowDepth); \n' +
+
+            (defined(normalVaryingName) ?
+            '    // If the normal is facing away from the light, then it is in shadow \n' +
+            '    float angle = dot(normalize(' + normalVaryingName + '), czm_sunShadowMapLightDirectionEC); \n' +
+            '    //float strength = step(0.0, angle); \n' +
+            '    float strength = clamp(angle * 10.0, 0.0, 1.0); \n' +
+            '    visibility *= strength; \n' : '') +
+
+            '    visibility = max(visibility, 0.3); \n' +
+            '    return visibility; \n' +
             '} \n' +
             ' \n' +
             'void main() \n' +

@@ -1145,7 +1145,7 @@ define([
         // Modify program to receive shadows
         if (shadowsEnabled && primitive._receiveShadows) {
             vs = ShadowMapShader.createShadowReceiveVertexShader(vs);
-            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState);
+            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC');
         }
 
         primitive._sp = ShaderProgram.replaceCache({

@@ -1522,6 +1522,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.shadowMap.cascadeScales;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map light direction in eye coordinates.
+         *
+         * @alias czm_sunShadowMapLightDirection
+         * @glslUniform
+         */
+        czm_sunShadowMapLightDirectionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.lightDirectionEC;
+            }
         })
     };
 
