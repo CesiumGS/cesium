@@ -424,6 +424,20 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('evaluates color properties', function() {
+        var expression = new Expression(new MockStyleEngine(), 'color(\'#ffffff\').red');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 0).green');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'rgb("cyan").blue');
+        expect(expression.evaluate(undefined)).toEqual(1);
+
+        expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 0, 0.5).alpha');
+        expect(expression.evaluate(undefined)).toEqual(0.5);
+    });
+
     it('evaluates unary not', function() {
         var expression = new Expression(new MockStyleEngine(), '!true');
         expect(expression.evaluate(undefined)).toEqual(false);
