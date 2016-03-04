@@ -153,7 +153,6 @@ defineSuite([
         expect(style.color).toEqual(new ConditionalExpression(styleEngine, jsonExp));
     });
 
-
     it ('sets color to undefined if not a string or conditional', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
@@ -162,5 +161,29 @@ defineSuite([
             color : 1
         });
         expect(style.color).toEqual(undefined);
+    });
+
+    it ('throws on accessing color if not ready', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        style._ready = false;
+
+        expect(function() {
+            return style.color;
+        }).toThrowDeveloperError();
+    });
+
+    it ('throws on accessing color if not ready', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        style._ready = false;
+
+        expect(function() {
+            return style.show;
+        }).toThrowDeveloperError();
     });
 });
