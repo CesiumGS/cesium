@@ -107,7 +107,7 @@ defineSuite([
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
         var jsonExp = {
-            conditional : {
+            conditions : {
                 '${height} > 2' : 'color("cyan")',
                 'true' : 'color("blue")'
             }

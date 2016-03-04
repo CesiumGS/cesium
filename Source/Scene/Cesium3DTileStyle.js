@@ -37,7 +37,7 @@ define([
         var color;
         if (typeof(colorExpression) === 'string') {
             color = new Expression(styleEngine, colorExpression);
-        } else if (defined(colorExpression.conditional)) {
+        } else if (defined(colorExpression.conditions)) {
             color = new ConditionalExpression(styleEngine, colorExpression);
         }
 

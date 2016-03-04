@@ -292,6 +292,8 @@ define([
             return new Node(ExpressionNodeType.LITERAL_NUMBER, NaN);
         } else if (ast.name === 'Infinity') {
             return new Node(ExpressionNodeType.LITERAL_NUMBER, Infinity);
+        } else if (ast.name === 'undefined') {
+            return new Node(ExpressionNodeType.LITERAL_UNDEFINED, undefined);
         }
 
         //>>includeStart('debug', pragmas.debug);
