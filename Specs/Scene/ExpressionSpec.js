@@ -431,7 +431,7 @@ defineSuite([
         expression = new Expression(new MockStyleEngine(), 'rgb(255, 255, 0).green');
         expect(expression.evaluate(undefined)).toEqual(1);
 
-        expression = new Expression(new MockStyleEngine(), 'rgb("cyan").blue');
+        expression = new Expression(new MockStyleEngine(), 'color("cyan").blue');
         expect(expression.evaluate(undefined)).toEqual(1);
 
         expression = new Expression(new MockStyleEngine(), 'rgba(255, 255, 0, 0.5).alpha');
