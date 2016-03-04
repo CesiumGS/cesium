@@ -60,6 +60,8 @@ defineSuite([
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
 
+    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+
     var originalMaximumRequests;
 
     beforeAll(function() {
@@ -1014,6 +1016,26 @@ defineSuite([
             expect(color[1]).toEqual(0);
             expect(color[2]).toBeGreaterThan(0);
             expect(color[3]).toEqual(255);
+        });
+    });
+
+    it('loads style from uri', function() {
+        // One building in each data set is always located in the center, so point the camera there
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle(tileset, styleUrl);
+            return tileset.style.readyPromise.then(function(style) {
+                var color = scene.renderForSpecs();
+                expect(color[0]).toBeGreaterThan(0);
+                expect(color[1]).toEqual(0);
+                expect(color[2]).toEqual(0);
+                expect(color[3]).toEqual(255);
+            }).otherwise(function(error) {
+                expect(error).not.toBeDefined();
+            });
         });
     });
 }, 'WebGL');

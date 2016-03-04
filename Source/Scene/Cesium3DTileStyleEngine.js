@@ -2,11 +2,13 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties'
+       '../Core/defineProperties',
+       '../Core/DeveloperError'
     ], function(
         Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     /**
@@ -44,6 +46,10 @@ define([
 
     Cesium3DTileStyleEngine.prototype.applyStyle = function(tileset, frameState) {
         if (!tileset.ready) {
+            return;
+        }
+
+        if (defined(this._style) && !this._style.ready) {
             return;
         }
 

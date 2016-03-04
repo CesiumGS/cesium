@@ -19,6 +19,43 @@ defineSuite([
         this.styleEngine = styleEngine;
     }
 
+    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
+
+    it ('throws with undefined tileset', function() {
+        expect(function () {
+            return new Cesium3DTileStyle();
+        }).toThrowDeveloperError();
+    });
+
+    it ('rejects readyPromise with undefined url', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var tileStyle = new Cesium3DTileStyle(tileset, 'invalid.json');
+
+        return tileStyle.readyPromise.then(function(style) {
+            fail('should not resolve');
+        }).otherwise(function(error) {
+            expect(tileStyle.ready).toEqual(false);
+            expect(error.statusCode).toEqual(404);
+        });
+    });
+
+    it ('loads style from uri', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var tileStyle = new Cesium3DTileStyle(tileset, styleUrl);
+
+        return tileStyle.readyPromise.then(function(style) {
+            expect(style.show).toEqual(new Expression(styleEngine, '${id} < 100'));
+            expect(style.color).toEqual(new Expression(styleEngine, 'color("red")'));
+            expect(tileStyle.ready).toEqual(true);
+        }).otherwise(function() {
+            fail('should load style.json');
+        });
+    });
+
     it ('sets show value to default expression', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
@@ -35,8 +72,7 @@ defineSuite([
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
 
-        var style = new Cesium3DTileStyle(tileset, {
-        });
+        var style = new Cesium3DTileStyle(tileset, {});
         expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
 
         style = new Cesium3DTileStyle(tileset);
@@ -117,7 +153,6 @@ defineSuite([
         expect(style.color).toEqual(new ConditionalExpression(styleEngine, jsonExp));
     });
 
-
     it ('sets color to undefined if not a string or conditional', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
@@ -126,5 +161,29 @@ defineSuite([
             color : 1
         });
         expect(style.color).toEqual(undefined);
+    });
+
+    it ('throws on accessing color if not ready', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        style._ready = false;
+
+        expect(function() {
+            return style.color;
+        }).toThrowDeveloperError();
+    });
+
+    it ('throws on accessing color if not ready', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        style._ready = false;
+
+        expect(function() {
+            return style.show;
+        }).toThrowDeveloperError();
     });
 });
