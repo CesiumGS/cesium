@@ -1,10 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/ConditionalExpression',
+        'Scene/ConditionsExpression',
         'Scene/Expression',
         'Core/Color'
     ], function(
-        ConditionalExpression,
+        ConditionsExpression,
         Expression,
         Color) {
     'use strict';
@@ -59,8 +59,8 @@ defineSuite([
 
 
     it('constructs', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
-        expect(expression._conditional).toEqual({
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExp);
+        expect(expression._conditions).toEqual({
             '${Height} > 100' : 'color("blue")',
             '${Height} > 50' : 'color("red")',
             'true' : 'color("green")'
@@ -68,9 +68,9 @@ defineSuite([
     });
 
     it('constructs with expression', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithExpression);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExpWithExpression);
         expect(expression._expression).toEqual('${Height}/2');
-        expect(expression._conditional).toEqual({
+        expect(expression._conditions).toEqual({
             '${expression} > 50' : 'color("blue")',
             '${expression} > 25' : 'color("red")',
             'true' : 'color("green")'
@@ -78,9 +78,9 @@ defineSuite([
     });
 
     it('evaluates undefined expression', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithExpression);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExpWithExpression);
         expect(expression._expression).toEqual('${Height}/2');
-        expect(expression._conditional).toEqual({
+        expect(expression._conditions).toEqual({
             '${expression} > 50' : 'color("blue")',
             '${expression} > 25' : 'color("red")',
             'true' : 'color("green")'
@@ -88,46 +88,46 @@ defineSuite([
     });
 
     it('evaluates conditional', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExp);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.RED);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
     it('evaluates conditional with multiple expressions', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithMultipleExpression);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExpWithMultipleExpression);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.GREEN);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
     it('constructs and evaluates empty conditional', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), {
+        var expression = new ConditionsExpression(new MockStyleEngine(), {
             "conditions" : {}
         });
-        expect(expression._conditional).toEqual({});
+        expect(expression._conditions).toEqual({});
         expect(expression.evaluate(new MockFeature('101'))).toEqual(undefined);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(undefined);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(undefined);
     });
 
     it('constructs and evaluates empty', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), {});
-        expect(expression._conditional).toEqual(undefined);
+        var expression = new ConditionsExpression(new MockStyleEngine(), {});
+        expect(expression._conditions).toEqual(undefined);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(undefined);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(undefined);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(undefined);
     });
 
     it('evaluates conditional with expression', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithExpression);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExpWithExpression);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.RED);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
     it('evaluates undefined conditional expression', function() {
-        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithUndefinedExpression);
+        var expression = new ConditionsExpression(new MockStyleEngine(), jsonExpWithUndefinedExpression);
         expect(expression._expression).toEqual(undefined);
         expect(expression.evaluate(undefined)).toEqual(Color.BLUE);
     });
