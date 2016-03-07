@@ -225,6 +225,9 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+
+    // Tests for examples from the style spec
+
     it ('applies default style', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
