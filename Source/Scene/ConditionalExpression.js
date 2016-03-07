@@ -15,7 +15,7 @@ define([
         defineProperties) {
     'use strict';
 
-    var expressionPlaceholder = '${expression}';
+    var expressionPlaceholder = /\$\{expression}/g;
 
     /**
      * DOC_TBA

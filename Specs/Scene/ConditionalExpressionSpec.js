@@ -40,6 +40,16 @@ defineSuite([
         }
     };
 
+    var jsonExpWithMultipleExpression = {
+        expression : '${Height}/2',
+        conditions : {
+            '${expression} > 50 && ${expression} < 100' : 'color("blue")',
+            '${expression} > 25 && ${expression} < 26' : 'color("red")',
+            'true' : 'color("green")'
+        }
+    };
+
+
     var jsonExpWithUndefinedExpression = {
         conditions : {
             '${expression} === undefined' : 'color("blue")',
@@ -81,6 +91,13 @@ defineSuite([
         var expression = new ConditionalExpression(new MockStyleEngine(), jsonExp);
         expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
         expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.RED);
+        expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
+    });
+
+    it('evaluates conditional with multiple expressions', function() {
+        var expression = new ConditionalExpression(new MockStyleEngine(), jsonExpWithMultipleExpression);
+        expect(expression.evaluate(new MockFeature('101'))).toEqual(Color.BLUE);
+        expect(expression.evaluate(new MockFeature('52'))).toEqual(Color.GREEN);
         expect(expression.evaluate(new MockFeature('3'))).toEqual(Color.GREEN);
     });
 
