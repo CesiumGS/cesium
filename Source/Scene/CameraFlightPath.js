@@ -60,7 +60,7 @@ define([
 
     function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
         var altitude = optionAltitude;
-        var maxHeight = Math.max(startHeight, endHeight);;
+        var maxHeight = Math.max(startHeight, endHeight);
 
         if (!defined(optionAltitude)) {
             var start = camera.position;
