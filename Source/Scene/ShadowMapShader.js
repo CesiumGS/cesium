@@ -55,11 +55,17 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName) {
-        // Check if the normal varying actually exists
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName) {
         if (fs.indexOf(normalVaryingName) === -1) {
+            // Check if the normal varying actually exists
             normalVaryingName = undefined;
         }
+
+        if (fs.indexOf(positionVaryingName) === -1) {
+            // Check if the position varying actually exists
+            positionVaryingName = undefined;
+        }
+
         var cascadesEnabled = frameState.shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
@@ -104,7 +110,11 @@ define([
             ' \n' +
             'float getDepthEye() \n' +
             '{ \n' +
-            '    return czm_projection[3][2] / ((gl_FragCoord.z * 2.0 - 1.0) + czm_projection[2][2]); \n' +
+
+            (defined(positionVaryingName) ?
+            '    return czm_projection[3][2] / ((gl_FragCoord.z * 2.0 - 1.0) + czm_projection[2][2]); \n' :
+            '    return ' + positionVaryingName + '.z; \n') +
+
             '} \n' +
             ' \n' +
             'float sampleTexture(vec2 shadowCoordinate) \n' +
