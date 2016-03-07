@@ -60,7 +60,7 @@ define([
 
     function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
         var altitude = optionAltitude;
-        var maxHeight;
+        var maxHeight = Math.max(startHeight, endHeight);;
 
         if (!defined(optionAltitude)) {
             var start = camera.position;
@@ -73,7 +73,6 @@ define([
             var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
             var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
 
-            maxHeight = Math.max(startHeight, endHeight);
             altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
         }
 
