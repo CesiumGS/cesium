@@ -38,6 +38,7 @@ var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
 var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
 
+//travis reports 32 cores but only has 3GB of memory, which causes the VM to run out.  Limit to 8 cores instead.
 var concurrency = Math.min(os.cpus().length, 8);
 
 //Since combine and minify run in parallel already, split concurrency in half when building both.
