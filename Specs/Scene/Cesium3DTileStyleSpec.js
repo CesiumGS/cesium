@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileStyle',
+        'Core/Color',
         'Scene/ConditionalExpression',
         'Scene/Expression'
     ], function(
         Cesium3DTileStyle,
+        Color,
         ConditionalExpression,
         Expression) {
     'use strict';
@@ -18,6 +20,42 @@ defineSuite([
     function MockTileset(styleEngine) {
         this.styleEngine = styleEngine;
     }
+
+    function MockFeature() {
+        this._properties = {};
+    }
+
+    MockFeature.prototype.addProperty = function(name, value) {
+        this._properties[name] = value;
+    };
+
+    MockFeature.prototype.getProperty = function(name) {
+        return this._properties[name];
+    };
+
+    var feature1 = new MockFeature();
+    feature1.addProperty('ZipCode', '19341');
+    feature1.addProperty('County', 'Chester');
+    feature1.addProperty('YearBuilt', 1979);
+    feature1.addProperty('Temperature', 78);
+    feature1.addProperty('red', 38);
+    feature1.addProperty('green', 255);
+    feature1.addProperty('blue', 82);
+    feature1.addProperty('volume', 128);
+    feature1.addProperty('Height', 100);
+    feature1.addProperty('id', 11);
+
+    var feature2 = new MockFeature();
+    feature2.addProperty('ZipCode', '19342');
+    feature2.addProperty('County', 'Delaware');
+    feature2.addProperty('YearBuilt', 1979);
+    feature2.addProperty('Temperature', 92);
+    feature2.addProperty('red', 255);
+    feature2.addProperty('green', 30);
+    feature2.addProperty('blue', 30);
+    feature2.addProperty('volume', 50);
+    feature2.addProperty('Height', 38);
+    feature2.addProperty('id', 12);
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
@@ -185,5 +223,130 @@ defineSuite([
         expect(function() {
             return style.show;
         }).toThrowDeveloperError();
+    });
+
+    it ('applies default style', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "show" : "true",
+            "color" : "color('#ffffff')"
+        });
+
+        expect(style.show.evaluate(undefined)).toEqual(true);
+        expect(style.color.evaluate(undefined)).toEqual(Color.WHITE);
+    });
+
+    it ('applies show style with variable', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "show" : "${ZipCode} === '19341'"
+        });
+
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.show.evaluate(feature2)).toEqual(false);
+        expect(style.color.evaluate(undefined)).toEqual(Color.WHITE);
+    });
+
+    it ('applies show style with regexp and variables', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "show" : "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)"
+        });
+
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.show.evaluate(feature2)).toEqual(false);
+        expect(style.color.evaluate(undefined)).toEqual(Color.WHITE);
+    });
+
+    it ('applies color style variables', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "color" : "(${Temperature} > 90) ? color('red') : color('white')"
+        });
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.color.evaluate(feature1)).toEqual(Color.WHITE);
+        expect(style.color.evaluate(feature2)).toEqual(Color.RED);
+    });
+
+    it ('applies color style with new color', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "color" : "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))"
+        });
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.color.evaluate(feature1)).toEqual(new Color(38/255, 255/255, 82/255, 0.5));
+        expect(style.color.evaluate(feature2)).toEqual(new Color(255/255, 30/255, 30/255, 1.0));
+    });
+
+    it ('applies color style that maps id to color', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "color" : {
+                "expression" : "regExp('^1(\\d)').exec(${id})",
+                "conditions" : {
+                    "${expression} === '1'" : "color('#FF0000')",
+                    "${expression} === '2'" : "color('#00FF00')",
+                    "true" : "color('#FFFFFF')"
+                }
+            }
+        });
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.color.evaluate(feature1)).toEqual(Color.RED);
+        expect(style.color.evaluate(feature2)).toEqual(Color.LIME);
+    });
+
+    it ('applies color style with complex conditional', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "color" : {
+                "expression" : "${Height}",
+                "conditions" : {
+                    "(${expression} >= 1.0)  && (${expression} < 10.0)" : "color('#FF00FF')",
+                    "(${expression} >= 10.0) && (${expression} < 30.0)" : "color('#FF0000')",
+                    "(${expression} >= 30.0) && (${expression} < 50.0)" : "color('#FFFF00')",
+                    "(${expression} >= 50.0) && (${expression} < 70.0)" : "color('#00FF00')",
+                    "(${expression} >= 70.0) && (${expression} < 100.0)" : "color('#00FFFF')",
+                    "(${expression} >= 100.0)" : "color('#0000FF')"
+                }
+            }
+        });
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.color.evaluate(feature1)).toEqual(Color.BLUE);
+        expect(style.color.evaluate(feature2)).toEqual(Color.YELLOW);
+    });
+
+    it ('applies color style with conditional', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {
+            "color" : {
+                "conditions" : {
+                    "(${Height} >= 100.0)" : "color('#0000FF')",
+                    "(${Height} >= 70.0)" : "color('#00FFFF')",
+                    "(${Height} >= 50.0)" : "color('#00FF00')",
+                    "(${Height} >= 30.0)" : "color('#FFFF00')",
+                    "(${Height} >= 10.0)" : "color('#FF0000')",
+                    "(${Height} >= 1.0)" : "color('#FF00FF')"
+                }
+            }
+        });
+        expect(style.show.evaluate(feature1)).toEqual(true);
+        expect(style.color.evaluate(feature1)).toEqual(Color.BLUE);
+        expect(style.color.evaluate(feature2)).toEqual(Color.YELLOW);
     });
 });
