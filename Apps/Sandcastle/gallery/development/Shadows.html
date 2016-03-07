@@ -27,7 +27,6 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="buttons"></div>
 <div id="toolbar">
     <table><tbody>
         <tr>
@@ -51,12 +50,123 @@
                 <input type="text" size="2" data-bind="value: shadowFar">
             </td>
         </tr>
+        <tr>
+            <td>Shadow Mode</td>
+            <td><select data-bind="options: shadowModeOptions, value: shadowMode"/></td>
+        </tr>
+        <tr>
+            <td>Light Source</td>
+            <td><select data-bind="options: lightSourceOptions, value: lightSource"/></td>
+        </tr>
+        <tr>
+            <td>Texture Size</td>
+            <td><select data-bind="options: sizeOptions, value: size"/></td>
+        </tr>
+        <tr>
+            <td>Enabled</td>
+            <td><input type="checkbox" data-bind="checked: shadows"/></td>
+        </tr>
+        <tr>
+            <td>Show debug</td>
+            <td><input type="checkbox" data-bind="checked: debug"/></td>
+        </tr>
+        <tr>
+            <td>Freeze frame</td>
+            <td><input type="checkbox" data-bind="checked: freeze"/></td>
+        </tr>
+        <tr>
+            <td>Cascade colors</td>
+            <td><input type="checkbox" data-bind="checked: cascadeColors"/></td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+
+var viewModel = {
+    lightAngle : 0.0,
+    lightHorizon : 0.0,
+    shadowFar : 1000.0,
+    shadows : true,
+    debug : true,
+    freeze : false,
+    cascadeColors : false,
+    shadowModeOptions : ['Cascades', 'Single'],
+    shadowMode : 'Cascades',
+    lightSourceOptions : ['Freeform', 'Sun', 'Fixed'],
+    lightSource : 'Freeform',
+    sizeOptions : [256, 512, 1024, 2048],
+    size : 1024
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'shadowMode').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
+
+var offset = new Cesium.Cartesian3();
+
+function updateLightDirection() {
+    var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
+    var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
+    offset.z = Math.cos(lightHorizon);
+    offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
+    offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
+
+    freeformLightCamera.lookAt(center, offset);
+}
+
+function updateSettings() {
+    shadowMap._farPlane = Number(viewModel.shadowFar);
+    shadowMap.debugShow = viewModel.debug;
+    shadowMap.debugFreezeFrame = viewModel.freeze;
+    shadowMap.enabled = viewModel.shadows;
+}
+
+function updateShadows() {
+    var shadowMode = viewModel.shadowMode;
+    var lightSource = viewModel.lightSource;
+    var cascadeColors = viewModel.cascadeColors;
+
+    var lightCamera;
+    if (lightSource === 'Freeform') {
+        lightCamera = freeformLightCamera;
+    } else if (lightSource === 'Sun') {
+        lightCamera = sunCamera;
+    }
+
+    if (lightSource === 'Fixed') {
+        resetShadows({
+            context : context,
+            lightCamera : fixedLightCamera,
+            fitToScene : false
+        });
+    } else if (shadowMode === 'Cascades') {
+        resetShadows({
+            context : context,
+            lightCamera : lightCamera
+        });
+        shadowMap.debugVisualizeCascades = cascadeColors;
+    } else if (shadowMode === 'Single') {
+        resetShadows({
+            context : context,
+            lightCamera : lightCamera,
+            numberOfCascades : 1
+        });
+    }
+
+    updateSettings();
+}
 
 var globeVisible = true;
 var terrainEnabled = false;
@@ -109,8 +219,10 @@ var camera = scene.camera;
 var shadowMap;
 var center;
 var height;
-var fixedLightCamera;
-var sunCamera = new Cesium.Camera(scene);
+
+var fixedLightCamera = new Cesium.Camera(scene);
+var freeformLightCamera = new Cesium.Camera(scene);
+var sunCamera = scene._sunCamera;
 
 // Get the height of the terrain at the given longitude/latitude, then create the scene.
 var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
@@ -131,18 +243,14 @@ function createScene() {
     frustum.near = frustumNear;
     frustum.far = frustumFar;
 
-    fixedLightCamera = new Cesium.Camera(scene);
     fixedLightCamera.frustum = frustum;
     fixedLightCamera.lookAt(center, new Cesium.Cartesian3(tilt, tilt, offsetZ));
 
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
 
-    resetShadows({
-        context : context,
-        lightCamera : sunCamera
-    });
+    updateLightDirection();
+    updateShadows();
 }
-
 function resetShadows(shadowOptions) {
     // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
     // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
@@ -282,109 +390,6 @@ function createSphere(origin) {
     scene.primitives.add(sphere);
 }
 
-var shadowModes = [];
-
-shadowModes.push({
-    text : 'Cascaded Shadow Map',
-    onselect : function() {
-        resetShadows({
-            context : context,
-            lightCamera : sunCamera
-        });
-    }
-});
-
-shadowModes.push({
-    text : 'Cascaded Shadow Map w/ Colors',
-    onselect : function() {
-        resetShadows({
-            context : context,
-            lightCamera : sunCamera
-        });
-        shadowMap.debugVisualizeCascades = true;
-    }
-});
-
-shadowModes.push({
-    text : 'Single Shadow Map',
-    onselect : function() {
-        resetShadows({
-            context : context,
-            lightCamera : sunCamera,
-            numberOfCascades : 1
-        });
-    }
-});
-
-shadowModes.push({
-    text : 'Fixed Shadow Map',
-    onselect : function() {
-        resetShadows({
-            context : context,
-            lightCamera : fixedLightCamera,
-            fitToScene : false
-        });
-    }
-});
-
-function setSize(size) {
-    return function() {
-        shadowMap.setSize(size);
-    };
-}
-
-var sizeModes = [];
-var sizes = [256, 512, 1024, 2048];
-var length = sizes.length;
-for (var i = 0; i < length; ++i) {
-    sizeModes.push({
-        text : 'Size: ' + sizes[i],
-        onselect : setSize(sizes[i])
-    });
-}
-
-Sandcastle.addToolbarMenu(shadowModes, 'buttons');
-Sandcastle.addToolbarMenu(sizeModes, 'buttons');
-
-Sandcastle.addToolbarButton('Debug on/off', function() {
-    shadowMap.debugShow = !shadowMap.debugShow;
-}, 'buttons');
-
-Sandcastle.addToolbarButton('Freeze on/off', function() {
-    shadowMap.debugFreezeFrame = !shadowMap.debugFreezeFrame;
-}, 'buttons');
-
-Sandcastle.addToolbarButton('Shadows on/off', function() {
-    shadowMap.enabled = !shadowMap.enabled;
-}, 'buttons');
-
-function updateLightDirection() {
-    var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
-    var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
-    offset.z = Math.cos(lightHorizon);
-    offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
-    offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
-
-    sunCamera.lookAt(center, offset);
-}
-
-var offset = new Cesium.Cartesian3();
-var viewModel = {
-    lightAngle : 0.0,
-    lightHorizon : 0.0,
-    shadowFar : 1000.0
-};
-Cesium.knockout.track(viewModel);
-var toolbar = document.getElementById('toolbar');
-Cesium.knockout.applyBindings(viewModel, toolbar);
-Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(function(value) {
-    shadowMap._farPlane = Number(value);
-});
-
-updateLightDirection();
-
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
 canvas.onclick = function() {
@@ -397,13 +402,12 @@ var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 // Double click object to turn castShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
-    console.log(picked);
     if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
         picked.primitive.castShadows = !picked.primitive.castShadows;
     }
 }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
-// Middle click object to turn receiveShadows on/off
+// Double middle click object to turn receiveShadows on/off
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked)) {
