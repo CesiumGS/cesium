@@ -535,7 +535,7 @@ define([
          */
         this.fog = new Fog();
 
-        this._lightCamera = new Camera(this);
+        this._sunCamera = new Camera(this);
 
         /**
          * Render shadows in the scene.
@@ -543,7 +543,7 @@ define([
          */
         this.sunShadowMap = new ShadowMap({
             context : context,
-            lightCamera : this._lightCamera
+            lightCamera : this._sunCamera
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1985,6 +1985,9 @@ define([
         us.update(frameState, shadowMap);
 
         if (shadowMap.enabled) {
+            // Update the sun's direction
+            Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
+            scene._sunCamera.direction = us.sunDirectionWC;
             shadowMap.update(frameState);
         }
 
