@@ -2,12 +2,12 @@
 defineSuite([
         'Scene/Cesium3DTileStyle',
         'Core/Color',
-        'Scene/ConditionalExpression',
+        'Scene/ConditionsExpression',
         'Scene/Expression'
     ], function(
         Cesium3DTileStyle,
         Color,
-        ConditionalExpression,
+        ConditionsExpression,
         Expression) {
     'use strict';
 
@@ -188,7 +188,7 @@ defineSuite([
         };
 
         var style = new Cesium3DTileStyle(tileset, { color : jsonExp });
-        expect(style.color).toEqual(new ConditionalExpression(styleEngine, jsonExp));
+        expect(style.color).toEqual(new ConditionsExpression(styleEngine, jsonExp));
     });
 
     it ('sets color to undefined if not a string or conditional', function() {

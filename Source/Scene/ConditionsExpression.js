@@ -23,17 +23,17 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ConditionalExpression (styleEngine, jsonExpression) {
+    function ConditionsExpression (styleEngine, jsonExpression) {
         this._styleEngine = styleEngine;
-        this._conditional = clone(jsonExpression.conditions, true);
+        this._conditions = clone(jsonExpression.conditions, true);
         this._expression = jsonExpression.expression;
 
-        this._runtimeConditional = undefined;
+        this._runtimeConditions = undefined;
 
         setRuntime(this);
     }
 
-    defineProperties(ConditionalExpression.prototype, {
+    defineProperties(ConditionsExpression.prototype, {
         // TODO : Expose default expression and conditional?
     });
 
@@ -43,35 +43,35 @@ define([
     }
 
     function setRuntime(expression) {
-        var runtimeConditional = [];
-        var conditional = expression._conditional;
+        var runtimeConditions = [];
+        var conditions = expression._conditions;
         var exp = expression._expression;
-        for (var cond in conditional) {
-            if (conditional.hasOwnProperty(cond)) {
-                var colorExpression = conditional[cond];
+        for (var cond in conditions) {
+            if (conditions.hasOwnProperty(cond)) {
+                var colorExpression = conditions[cond];
                 if (defined(exp)) {
                     cond = cond.replace(expressionPlaceholder, exp);
                 } else {
                     cond = cond.replace(expressionPlaceholder, 'undefined');
                 }
-                runtimeConditional.push(new Statement(
+                runtimeConditions.push(new Statement(
                     new Expression(expression._styleEngine, cond),
                     new Expression(expression._styleEngine, colorExpression)
                 ));
             }
         }
 
-        expression._runtimeConditional = runtimeConditional;
+        expression._runtimeConditions = runtimeConditions;
     }
 
     /**
      * DOC_TBA
      */
-    ConditionalExpression.prototype.evaluate = function(feature) {
-        var conditional = this._runtimeConditional;
-        if (defined(conditional)) {
-            for (var i=0; i<conditional.length; ++i) {
-                var statement = conditional[i];
+    ConditionsExpression.prototype.evaluate = function(feature) {
+        var conditions = this._runtimeConditions;
+        if (defined(conditions)) {
+            for (var i=0; i<conditions.length; ++i) {
+                var statement = conditions[i];
                 if (statement.condition.evaluate(feature)) {
                     return statement.expression.evaluate(feature);
                 }
@@ -82,11 +82,11 @@ define([
     /**
      * DOC_TBA
      */
-    ConditionalExpression.prototype.evaluateColor = function(feature, result) {
-        var conditional = this._runtimeConditional;
-        if (defined(conditional)) {
-            for (var i=0; i<conditional.length; ++i) {
-                var statement = conditional[i];
+    ConditionsExpression.prototype.evaluateColor = function(feature, result) {
+        var conditions = this._runtimeConditions;
+        if (defined(conditions)) {
+            for (var i=0; i<conditions.length; ++i) {
+                var statement = conditions[i];
                 if (statement.condition.evaluate(feature, result)) {
                     return statement.expression.evaluateColor(feature, result);
                 }
@@ -94,5 +94,5 @@ define([
         }
     };
 
-    return ConditionalExpression;
+    return ConditionsExpression;
 });

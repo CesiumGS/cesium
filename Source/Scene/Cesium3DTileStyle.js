@@ -8,7 +8,7 @@ define([
        '../Core/loadJson',
        '../Core/RequestScheduler',
        '../ThirdParty/when',
-       './ConditionalExpression',
+       './ConditionsExpression',
        './Expression'
     ], function(
         defaultValue,
@@ -19,7 +19,7 @@ define([
         loadJson,
         RequestScheduler,
         when,
-        ConditionalExpression,
+        ConditionsExpression,
         Expression) {
     'use strict';
 
@@ -66,7 +66,7 @@ define([
         if (typeof(colorExpression) === 'string') {
             color = new Expression(styleEngine, colorExpression);
         } else if (defined(colorExpression.conditions)) {
-            color = new ConditionalExpression(styleEngine, colorExpression);
+            color = new ConditionsExpression(styleEngine, colorExpression);
         }
 
         that._color = color;
