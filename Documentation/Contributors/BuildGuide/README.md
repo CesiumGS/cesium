@@ -81,6 +81,7 @@ Here's the full set of scripts and what they do.
    * `minify` - Runs `combine`, plus [minifies](http://en.wikipedia.org/wiki/Minification_\(programming\)) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
    * `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors.  The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
    * `minifyRelease` - Runs `minify`, and removes debugging code.
+   * `requirejs` - Used internally by the build system and can not be called directly.
    * `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
    * `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc).
    * `release` - A full release build that creates a shippable product, including building apps and generating documentation.

@@ -245,8 +245,8 @@ define([
 
         var minX = Number.MAX_VALUE;
         var minY = Number.MAX_VALUE;
-        var maxX = Number.MIN_VALUE;
-        var maxY = Number.MIN_VALUE;
+        var maxX = -Number.MAX_VALUE;
+        var maxY = -Number.MAX_VALUE;
 
         for (var row = 0; row < height; ++row) {
             for (var col = 0; col < width; ++col) {
