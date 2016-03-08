@@ -78,7 +78,7 @@ function loadTileset(url) {
 //            "color" : "rgb(100, 255, 190)",
 //            "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
             "color" : {
-                "conditional" : {
+                "conditions" : {
                     "${Height} >= 83" : "color('purple')",
                     "${Height} >= 80" : "color('red')",
                     "${Height} >= 70" : "color('orange')",
@@ -371,7 +371,7 @@ function getRandomColor() {
 function styleFunction(name) {
     var style = {
         "color" : {
-            "conditional" : {}
+            "conditions" : {}
         },
         "show" : "${" + name + "} > 0"
     };
@@ -380,9 +380,9 @@ function styleFunction(name) {
     var intervalSize = Math.floor(100/numberofColors);
     for (var i = numberofColors; i >= 0; --i) {
         var cond = '${' + name + '} > ' + (i * intervalSize);
-        style.color.conditional[cond] = getRandomColor();
+        style.color.conditions[cond] = getRandomColor();
     }
-    style.color.conditional['true'] = getRandomColor();
+    style.color.conditions['true'] = getRandomColor();
 
     tileset.style = new Cesium.Cesium3DTileStyle(tileset, style);
 
