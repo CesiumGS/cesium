@@ -131,7 +131,7 @@ defineSuite([
             DomEventSimulator.fireWheel(canvas, combine({
                 deltaY : -wheelDelta
             }));
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
             DomEventSimulator.fireMouseWheel(canvas, combine({
                 wheelDelta : wheelDelta
             }));

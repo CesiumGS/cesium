@@ -888,6 +888,8 @@ define([
                             id : instance.id,
                             pickPrimitive : this
                         });
+                    } else {
+                        throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                     }
                 }
 

@@ -103,15 +103,15 @@ define([
             update(that, time);
         });
 
-        this._hiddenPropertyName = defined(document.hidden) ? 'hidden' :
-                                   defined(document.mozHidden) ? 'mozHidden' :
-                                   defined(document.msHidden) ? 'msHidden' :
-                                   defined(document.webkitHidden) ? 'webkitHidden' : undefined;
+        this._hiddenPropertyName = (document.hidden !== undefined) ? 'hidden' :
+                                   (document.mozHidden !== undefined) ? 'mozHidden' :
+                                   (document.msHidden !== undefined) ? 'msHidden' :
+                                   (document.webkitHidden !== undefined) ? 'webkitHidden' : undefined;
 
-        var visibilityChangeEventName = defined(document.hidden) ? 'visibilitychange' :
-            defined(document.mozHidden) ? 'mozvisibilitychange' :
-            defined(document.msHidden) ? 'msvisibilitychange' :
-            defined(document.webkitHidden) ? 'webkitvisibilitychange' : undefined;
+        var visibilityChangeEventName = (document.hidden !== undefined) ? 'visibilitychange' :
+            (document.mozHidden !== undefined) ? 'mozvisibilitychange' :
+            (document.msHidden !== undefined) ? 'msvisibilitychange' :
+            (document.webkitHidden !== undefined) ? 'webkitvisibilitychange' : undefined;
 
         function visibilityChangeListener() {
             visibilityChanged(that);

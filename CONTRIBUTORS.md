@@ -85,3 +85,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Max Limper](https://github.com/mlimper)
 * [Sanuj Sharma](https://github.com/sanuj)
 * [Allen Korenevsky](https://github.com/theplatapi)
+* [Samy Beaudoux](https://github.com/vrittis)
+* [Mati Ostrovsky](https://github.com/mati-o)

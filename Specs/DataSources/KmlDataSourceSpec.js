@@ -802,7 +802,7 @@ defineSuite([
         });
     });
 
-    it('Styles: supports local styles with styleUrl mssing #', function() {
+    it('Styles: supports local styles with styleUrl missing #', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document>\
             <Style id="testStyle">\
@@ -3094,10 +3094,21 @@ defineSuite([
 
     it('can load a KML file with explicit namespaces', function() {
         return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
-            expect(dataSource.entities.values.length).toBe(2);
+            expect(dataSource.entities.values.length).toBe(3);
         });
     });
 
+	it('can load styles from a KML file with namespaces', function() {
+		return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
+			console.debug(dataSource.entities.values[2]);
+			var polyline = dataSource.entities.values[2].polyline;
+			var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
+			var polylineColor = polyline.material.color.getValue();
+			expect(polylineColor).toEqual(expectedColor);
+			expect(polyline.width.getValue()).toEqual(10);
+		});
+	});
+	
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
