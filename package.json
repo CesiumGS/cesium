@@ -33,9 +33,9 @@
   "devDependencies": {
     "almond": "0.3.1",
     "async": "1.5.2",
-    "bluebird": "3.3.1",
+    "bluebird": "3.3.4",
     "compression": "1.6.1",
-    "electron-prebuilt": "0.36.9",
+    "electron-prebuilt": "0.36.10",
     "event-stream": "3.3.2",
     "express": "4.13.4",
     "globby": "4.0.0",
@@ -44,7 +44,7 @@
     "gulp-jshint": "2.0.0",
     "gulp-rename": "1.2.2",
     "gulp-replace": "0.5.4",
-    "gulp-zip": "3.0.2",
+    "gulp-zip": "3.2.0",
     "jasmine-core": "2.4.1",
     "jsdoc": "3.4.0",
     "jshint": "2.9.1",
@@ -63,7 +63,7 @@
     "request": "2.69.0",
     "rimraf": "2.5.2",
     "strip-comments": "0.3.2",
-    "yargs": "3.32.0"
+    "yargs": "4.2.0"
   },
   "scripts": {
     "start": "node server.js",
