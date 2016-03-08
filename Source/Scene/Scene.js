@@ -535,11 +535,16 @@ define([
          */
         this.fog = new Fog();
 
+        this._lightCamera = new Camera(this);
+
         /**
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.sunShadowMap = new ShadowMap(context, new Camera(this));
+        this.sunShadowMap = new ShadowMap({
+            context : context,
+            lightCamera : this._lightCamera
+        });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1083,7 +1088,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.shadowsEnabled = scene.sunShadowMap.enabled;
+        frameState.shadowMap = scene.sunShadowMap;
 
         clearPasses(frameState.passes);
     }
@@ -1662,7 +1667,7 @@ define([
                 var length = frustumCommands.indices[pass];
                 for (var i = 0; i < length; ++i) {
                     var command = commands[i];
-                    if (defined(command.shadowCastProgram)) {
+                    if (command.castShadows) {
                         shadowMapCommands.push(command);
                     }
                 }

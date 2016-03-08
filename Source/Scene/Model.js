@@ -1500,9 +1500,10 @@ define([
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         // Create shadow cast program
-        if (frameState.shadowsEnabled && model.castShadows) {
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        if (shadowsEnabled && model.castShadows) {
             var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS);
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, context);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, frameState);
             model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,
@@ -1512,9 +1513,9 @@ define([
         }
 
         // Modify draw program to receive shadows
-        if (frameState.shadowsEnabled && model.receiveShadows) {
+        if (shadowsEnabled && model.receiveShadows) {
             drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS);
-            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, context);
+            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState);
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
@@ -2612,6 +2613,7 @@ define([
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
                     shadowCastProgram : rendererShadowCastPrograms[technique.program],
+                    castShadows : model.castShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,

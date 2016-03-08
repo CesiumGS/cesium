@@ -873,8 +873,9 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
-        var castShadows = frameState.shadowsEnabled && tileProvider.castShadows;
-        var receiveShadows = frameState.shadowsEnabled && tileProvider.receiveShadows;
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        var castShadows = shadowsEnabled && tileProvider.castShadows;
+        var receiveShadows = shadowsEnabled && tileProvider.receiveShadows;
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -1082,6 +1083,7 @@ define([
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, receiveShadows);
             command.shadowCastProgram = tileProvider._surfaceShaderSet.getShadowCastProgram(frameState, surfaceTile, useWebMercatorProjection, castShadows);
+            command.castShadows = castShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

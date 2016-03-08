@@ -119,6 +119,14 @@ define([
         this.shadowCastProgram = options.shadowCastProgram;
 
         /**
+         * Whether this command should cast shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.castShadows = defaultValue(options.castShadows, false);
+
+        /**
          * An object with functions whose names match the uniforms in the shader program
          * and return values to set those uniforms.
          *

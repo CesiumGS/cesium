@@ -164,10 +164,10 @@ define([
         this.terrainExaggeration = 1.0;
 
         /**
-        * Whether shadow mapping is enabled or not.
-        * @type {Boolean}
+        * The shadow map being used.
+        * @type {ShadowMap}
         */
-        this.shadowsEnabled = false;
+        this.shadowMap = undefined;
     }
 
     /**
