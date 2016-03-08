@@ -193,7 +193,7 @@ define([
 
             if (receiveShadows) {
                 vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1]);
-                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState);
+                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, '-v_normalEC');
             }
 
             var shader = ShaderProgram.fromCache({
