@@ -8,7 +8,8 @@ Change Log
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
 * `GeoJsonDataSource` now handles CRS `urn:ogc:def:crs:EPSG::4326`
-
+* Fixed `Color.fromCssColorString` from reusing the input `result` alpha value in some cases.
+ 
 ### 1.19 - 2016-03-01
 
 * Breaking changes
