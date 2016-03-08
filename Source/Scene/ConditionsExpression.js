@@ -70,7 +70,8 @@ define([
     ConditionsExpression.prototype.evaluate = function(feature) {
         var conditions = this._runtimeConditions;
         if (defined(conditions)) {
-            for (var i=0; i<conditions.length; ++i) {
+            var length = conditions.length;
+            for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
                 if (statement.condition.evaluate(feature)) {
                     return statement.expression.evaluate(feature);
@@ -85,7 +86,8 @@ define([
     ConditionsExpression.prototype.evaluateColor = function(feature, result) {
         var conditions = this._runtimeConditions;
         if (defined(conditions)) {
-            for (var i=0; i<conditions.length; ++i) {
+            var length = conditions.length;
+            for (var i = 0; i < length; ++i) {
                 var statement = conditions[i];
                 if (statement.condition.evaluate(feature, result)) {
                     return statement.expression.evaluateColor(feature, result);

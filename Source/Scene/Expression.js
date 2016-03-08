@@ -490,7 +490,7 @@ define([
                 return Color.fromBytes(255, 255, 255, 255, result);
             } else if (args.length > 1) {
                 Color.fromCssColorString(args[0].evaluate(feature, result), result);
-                Color.fromAlpha(result, args[1].evaluate(feature, result), result);
+                result.alpha = args[1].evaluate(feature, result);
             } else {
                 Color.fromCssColorString(this._left[0].evaluate(feature, result), result);
             }
