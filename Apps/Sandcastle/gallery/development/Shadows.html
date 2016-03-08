@@ -113,6 +113,7 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'shadowMode').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 
 var offset = new Cesium.Cartesian3();
 
@@ -131,6 +132,7 @@ function updateSettings() {
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;
+    shadowMap.setSize(viewModel.size);
 }
 
 function updateShadows() {
