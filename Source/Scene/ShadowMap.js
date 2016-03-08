@@ -136,7 +136,7 @@ define([
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
-        this._farPlane = 1000.0; // Limit the far plane of the scene camera
+        this._distance = 1000.0;
 
         this._fitToScene = defaultValue(options.fitToScene, true);
         this._fitNearFar = true;
@@ -767,12 +767,15 @@ define([
         Cartesian3.negate(lightDirection, lightDirection);
 
         // Get the near and far of the scene camera
-        var near = camera.frustum.near;
-        var far = shadowMap._farPlane;
-
+        var near;
+        var far;
         if (shadowMap._fitNearFar) {
+            // shadowFar can be very large, so limit to shadowMap._distance
             near = frameState.shadowNear;
-            far = Math.min(frameState.shadowFar, near + shadowMap._farPlane); // Limit to the far plane
+            far = Math.min(frameState.shadowFar, near + shadowMap._distance);
+        } else {
+            near = camera.frustum.near;
+            far = shadowMap._distance;
         }
 
         shadowMap._sceneCamera = Camera.clone(camera, shadowMap._sceneCamera);

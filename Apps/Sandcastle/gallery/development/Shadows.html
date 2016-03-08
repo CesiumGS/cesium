@@ -47,10 +47,10 @@
             </td>
         </tr>
         <tr>
-            <td>Shadow Far</td>
+            <td>Distance Limit</td>
             <td>
-                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: shadowFar, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: shadowFar">
+                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: distance">
             </td>
         </tr>
         <tr>
@@ -99,7 +99,7 @@ function startup(Cesium) {
 var viewModel = {
     lightAngle : 0.0,
     lightHorizon : 0.0,
-    shadowFar : 1000.0,
+    distance : 1000.0,
     shadows : true,
     terrainCast : false,
     debug : true,
@@ -119,7 +119,7 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
 Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
@@ -143,7 +143,7 @@ function updateLightDirection() {
 }
 
 function updateSettings() {
-    shadowMap._farPlane = Number(viewModel.shadowFar);
+    shadowMap._distance = Number(viewModel.distance);
     shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
