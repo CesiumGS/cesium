@@ -1253,6 +1253,10 @@ define([
             far = Math.max(Math.min(far, camera.frustum.far), near);
         }
 
+        // Use the computed near and far for shadows
+        frameState.shadowNear = near;
+        frameState.shadowFar = far;
+
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
@@ -1669,15 +1673,17 @@ define([
     function getShadowMapCommands(scene) {
         // TODO : temporary solution for testing
         var shadowMapCommands = [];
-        var frustumCommands = scene._frustumCommandsList[0];
-        if (defined(frustumCommands)) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            var frustumCommands = frustumCommandsList[i];
             var startPass = Pass.GLOBE;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass <= endPass; ++pass) {
                 var commands = frustumCommands.commands[pass];
                 var length = frustumCommands.indices[pass];
-                for (var i = 0; i < length; ++i) {
-                    var command = commands[i];
+                for (var j = 0; j < length; ++j) {
+                    var command = commands[j];
                     if (command.castShadows) {
                         shadowMapCommands.push(command);
                     }

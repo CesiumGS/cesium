@@ -1215,6 +1215,7 @@ define([
                 colorCommand.shaderProgram = primitive._sp;
                 colorCommand.shadowCastProgram = primitive._shadowCastSP;
                 colorCommand.castShadows = primitive._castShadows;
+                colorCommand.receiveShadows = primitive._receiveShadows;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1233,6 +1234,7 @@ define([
             colorCommand.shaderProgram = primitive._sp;
             colorCommand.shadowCastProgram = primitive._shadowCastSP;
             colorCommand.castShadows = primitive._castShadows;
+            colorCommand.receiveShadows = primitive._receiveShadows;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 

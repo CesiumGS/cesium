@@ -127,6 +127,14 @@ define([
         this.castShadows = defaultValue(options.castShadows, false);
 
         /**
+         * Whether this command should receive shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.receiveShadows = defaultValue(options.receiveShadows, false);
+
+        /**
          * An object with functions whose names match the uniforms in the shader program
          * and return values to set those uniforms.
          *
