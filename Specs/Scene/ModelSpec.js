@@ -485,8 +485,8 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -0.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(0.866, CesiumMath.EPSILON3);
     });
 
     it('boundingSphere returns the bounding sphere when scale property is set', function() {
@@ -494,8 +494,8 @@ defineSuite([
         texturedBoxModel.scale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.scale = originalScale;
     });
@@ -507,8 +507,8 @@ defineSuite([
         texturedBoxModel.maximumScale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.scale = originalScale;
         texturedBoxModel.maximumScale = originalMaximumScale;
@@ -519,8 +519,8 @@ defineSuite([
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -1.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.modelMatrix = originalMatrix;
     });
@@ -656,8 +656,9 @@ defineSuite([
             minimumPixelSize : 1
         }).then(function(m) {
             var bs = m.boundingSphere;
-            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, -0.25, 0.0), CesiumMath.EPSILON14));
-            expect(bs.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON14);
+            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, 0.0, 0.0), CesiumMath.EPSILON14));
+            var radius = Math.sqrt(0.5 * 0.5 * 3);
+            expect(bs.radius).toEqualEpsilon(radius, CesiumMath.EPSILON14);
 
             expectRender(m);
             primitives.remove(m);

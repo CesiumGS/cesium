@@ -1102,7 +1102,7 @@ define([
         var nodeStack = [];
 
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        var max = new Cartesian3(Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
+        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];

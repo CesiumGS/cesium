@@ -1182,7 +1182,7 @@ define([
         overlayList.length = 0;
 
         var near = Number.MAX_VALUE;
-        var far = Number.MIN_VALUE;
+        var far = -Number.MAX_VALUE;
         var undefBV = false;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
