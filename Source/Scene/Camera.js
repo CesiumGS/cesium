@@ -826,6 +826,10 @@ define([
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
         }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, this.position);
+        }
     };
 
     var setTransformPosition = new Cartesian3();
