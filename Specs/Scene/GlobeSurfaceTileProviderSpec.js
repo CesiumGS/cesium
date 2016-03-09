@@ -88,7 +88,9 @@ defineSuite([
     function updateUntilDone(globe) {
         // update until the load queue is empty.
         return pollToPromise(function() {
+            globe.beginFrame(frameState);
             globe.update(frameState);
+            globe.endFrame(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
@@ -399,7 +401,9 @@ defineSuite([
         frameState.camera.setView({ destination : new Rectangle(0.0000001, 0.0000001, 0.0000025, 0.0000025) });
 
         return pollToPromise(function() {
+            globe.beginFrame(frameState);
             globe.update(frameState);
+            globe.endFrame(frameState);
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0 && globe._surface._debug.maxDepth >= 11;
         }).then(function() {
             expect(render(frameState, globe)).toBeGreaterThan(0);

@@ -417,16 +417,8 @@ define([
     /**
      * @private
      */
-    Globe.prototype.update = function(frameState) {
+    Globe.prototype.beginFrame = function(frameState) {
         if (!this.show) {
-            return;
-        }
-
-        var context = frameState.context;
-        var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
-
-        if (width === 0 || height === 0) {
             return;
         }
 
@@ -483,11 +475,40 @@ define([
             tileProvider.castShadows = this.castShadows;
             tileProvider.receiveShadows = this.receiveShadows;
 
+            surface.beginFrame(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var surface = this._surface;
+        var pass = frameState.passes;
+
+        if (pass.render) {
             surface.update(frameState);
         }
 
         if (pass.pick) {
             surface.update(frameState);
+        }
+    };
+
+    /**
+     * @private
+     */
+    Globe.prototype.endFrame = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        if (frameState.passes.render) {
+            this._surface.endFrame(frameState);
         }
     };
 
@@ -520,7 +541,7 @@ define([
      *
      * @example
      * globe = globe && globe.destroy();
-     * 
+     *
      * @see Globe#isDestroyed
      */
     Globe.prototype.destroy = function() {

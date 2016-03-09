@@ -77,6 +77,14 @@ define([
          */
         loadingEvent : {
             get : DeveloperError.throwInstantiationError
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof DataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 

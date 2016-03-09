@@ -46,6 +46,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Aviture](http://aviture.us.com)
    * [Mike Macaulay](https://github.com/mmacaula)
    * [Nathan Schulte](https://github.com/nmschulte)
+   * [Jed Fong](https://github.com/jedfong)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
@@ -83,5 +84,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Dmitriy Pushkov](https://github.com/ezze)
 * [Max Limper](https://github.com/mlimper)
 * [Sanuj Sharma](https://github.com/sanuj)
-
-Also see [our contributors page](http://cesiumjs.org/contributors.html) for more information.
+* [Allen Korenevsky](https://github.com/theplatapi)
+* [Samy Beaudoux](https://github.com/vrittis)
+* [Mati Ostrovsky](https://github.com/mati-o)

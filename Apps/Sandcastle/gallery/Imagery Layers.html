@@ -37,8 +37,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var layers = viewer.imageryLayers;
 var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
     url : '//cesiumjs.org/blackmarble',
-    maximumLevel : 8,
-    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+    flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
 }));
 blackMarble.alpha = 0.5;
 blackMarble.brightness = 2.0;

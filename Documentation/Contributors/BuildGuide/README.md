@@ -81,6 +81,7 @@ Here's the full set of scripts and what they do.
    * `minify` - Runs `combine`, plus [minifies](http://en.wikipedia.org/wiki/Minification_\(programming\)) Cesium.js using [UglifyJS2](https://github.com/mishoo/UglifyJS2) for a smaller deployable file.
    * `combineRelease` - Runs `combine`, plus uses the optimizer to remove debugging code that validates function input and throws DeveloperErrors.  The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
    * `minifyRelease` - Runs `minify`, and removes debugging code.
+   * `requirejs` - Used internally by the build system and can not be called directly.
    * `buildApps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
    * `generateDocumentation` - Generates HTML documentation in `Build/Documentation` using [JSDoc 3](https://github.com/jsdoc3/jsdoc).
    * `release` - A full release build that creates a shippable product, including building apps and generating documentation.
@@ -91,4 +92,9 @@ Here's the full set of scripts and what they do.
    * `clean` - Removes all generated build artifacts.
    * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
    * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.
-
+   * `test` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using the default browser specified in the Karma config file.
+   * `test-all` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) using all browsers installed on the current system.
+   * `test-non-webgl` - Runs only non-WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+   * `test-webgl` - Runs only WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
+   * `test-webgl-validation` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) and enables low-level WebGL validation.
+   * `test-release` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) on the minified release version of built Cesium.

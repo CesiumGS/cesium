@@ -59,7 +59,8 @@ define([
 
     var crsNames = {
         'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
-        'EPSG:4326' : defaultCrsFunction
+        'EPSG:4326' : defaultCrsFunction,
+        'urn:ogc:def:crs:EPSG::4326' : defaultCrsFunction
     };
 
     var crsLinkHrefs = {};
@@ -716,6 +717,19 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof GeoJsonDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
             }
         }
     });
