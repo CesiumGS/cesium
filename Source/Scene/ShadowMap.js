@@ -100,7 +100,7 @@ define([
      * @param {Object} options An object containing the following properties:
      * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
-     * @param {Boolean} [options.fitToScene=true] When false, use the light camera as-is without fitting to the scene's camera.
+     * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
      * @param {Number} [options.size=1024] The width and height, in pixels, of each cascade in the shadow map.
      *
@@ -138,11 +138,11 @@ define([
         this._sceneCamera = undefined;
         this._distance = 1000.0;
 
-        this._fitToScene = defaultValue(options.fitToScene, true);
+        this._cascadesEnabled = defaultValue(options.cascadesEnabled, true);
         this._fitNearFar = true;
 
         var maximumNumberOfCascades = 4;
-        this._numberOfCascades = this._fitToScene ? defaultValue(options.numberOfCascades, maximumNumberOfCascades) : 1;
+        this._numberOfCascades = this._cascadesEnabled ? defaultValue(options.numberOfCascades, maximumNumberOfCascades) : 1;
 
         this._cascadeCameras = new Array(maximumNumberOfCascades);
         this._cascadePassStates = new Array(maximumNumberOfCascades);
@@ -534,7 +534,7 @@ define([
     var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
 
     function applyDebugSettings(shadowMap, frameState) {
-        var showFrustumOutlines = !shadowMap._fitToScene || shadowMap.debugFreezeFrame;
+        var showFrustumOutlines = !shadowMap._cascadesEnabled || shadowMap.debugFreezeFrame;
         if (showFrustumOutlines) {
             var debugLightFrustum = shadowMap._debugLightFrustum;
             if (!defined(debugLightFrustum)) {
@@ -787,7 +787,7 @@ define([
         updateFramebuffer(this, frameState.context);
         updateCameras(this, frameState);
 
-        if (this._fitToScene) {
+        if (this._cascadesEnabled) {
             fitShadowMapToScene(this);
 
             if (this._numberOfCascades > 1) {
