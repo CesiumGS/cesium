@@ -495,7 +495,7 @@ define([
                 var worldPosition = object._zoomWorldPosition;
                 var endPosition = camera.position;
 
-                if (!Cartesian3.equals(worldPosition, endPosition)) {
+                if (!Cartesian3.equals(worldPosition, endPosition) && camera.positionCartographic.height < object._maxCoord.x * 2.0) {
                     var savedX = camera.position.x;
 
                     var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
