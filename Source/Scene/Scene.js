@@ -1493,7 +1493,7 @@ define([
             executeCommand(environmentState.skyAtmosphereCommand, scene, context, passState);
         }
 
-        var useWebVR = scene._useWebVR && scene.mode === SceneMode.SCENE2D;
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
 
         if (environmentState.isSunVisible) {
             environmentState.sunDrawCommand.execute(context, passState);
@@ -1703,11 +1703,7 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             if (mode !== SceneMode.SCENE2D) {
-                updatePrimitives(scene);
-                createPotentiallyVisibleSet(scene);
-                updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
-                executeComputeCommands(scene);
-                executeCommands(scene, passState);
+                executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
             } else {
                 execute2DViewportCommands(scene, passState, backgroundColor, picking);
             }
@@ -1748,21 +1744,13 @@ define([
         var width;
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
-            executeComputeCommands(scene);
-            executeCommands(scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
             camera.frustum.right = maxCoord.x - x;
 
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
-            executeComputeCommands(scene);
-            executeCommands(scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x += windowCoordinates.x;
 
@@ -1772,20 +1760,14 @@ define([
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            executeCommands(scene, passState);
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
             viewport.x += windowCoordinates.x;
             viewport.width -= windowCoordinates.x;
 
             camera.frustum.left = -maxCoord.x - x;
 
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
-            executeComputeCommands(scene);
-            executeCommands(scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x = viewport.x - viewport.width;
 
@@ -1795,9 +1777,7 @@ define([
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
-            updatePrimitives(scene);
-            createPotentiallyVisibleSet(scene);
-            executeCommands(scene, passState);
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         }
 
         Cartesian3.clone(position, camera.position);
@@ -1805,6 +1785,16 @@ define([
 
         viewport.x = viewportX;
         viewport.width = viewportWidth;
+    }
+
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor, picking) {
+        updatePrimitives(scene);
+        createPotentiallyVisibleSet(scene);
+        if (firstViewport) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
+            executeComputeCommands(scene);
+        }
+        executeCommands(scene, passState);
     }
 
     function updateEnvironment(scene) {
