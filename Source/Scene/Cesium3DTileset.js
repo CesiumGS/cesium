@@ -427,7 +427,7 @@ define([
 
             // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
             // Get the baseUrl relative to the external tileset.
-            var baseUrl = getBaseUri(tilesetUrl);
+            var baseUrl = getBaseUri(tilesetUrl, true);
             baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 

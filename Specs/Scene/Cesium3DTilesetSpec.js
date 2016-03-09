@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/loadWithXhr',
         'Core/RequestScheduler',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
@@ -18,6 +19,7 @@ defineSuite([
         Cartesian3,
         defined,
         HeadingPitchRange,
+        loadWithXhr,
         RequestScheduler,
         Cesium3DTile,
         Cesium3DTileContentState,
@@ -598,6 +600,34 @@ defineSuite([
                 expect(subtreeRoot.hasTilesetContent).toEqual(false);
                 expect(subtreeRoot.children.length).toEqual(4);
             });
+        });
+    });
+
+    it('preserves query string with external tileset.json', function() {
+        // Set view so that no tiles are loaded initially
+        viewNothing();
+
+        //Spy on loadWithXhr so we can verify requested urls
+        spyOn(loadWithXhr, 'load').and.callThrough();
+
+        var queryParams = '?a=1&b=boy';
+        var expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json' + queryParams;
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl + queryParams).then(function(tileset) {
+            //Make sure tileset.json was requested with query parameters
+            expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
+
+            loadWithXhr.load.calls.reset();
+
+            // Set view so that root's content is requested
+            viewRootOnly();
+            scene.renderForSpecs();
+
+            return tileset._root.contentReadyPromise;
+        }).then(function() {
+            //Make sure tileset2.json was requested with query parameters and version
+            var queryParamsWithVersion = queryParams + '&v=0.0';
+            expectedUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json' + queryParamsWithVersion;
+            expect(loadWithXhr.load.calls.argsFor(0)[0]).toEqual(expectedUrl);
         });
     });
 
