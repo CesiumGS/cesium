@@ -123,6 +123,11 @@ defineSuite([
         }
     };
 
+    beforeEach(function() {
+        // Reset camera - x value will change during onStop tests
+        options.camera.positionWC.x = 0.0;
+    });
+
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource(options);
         expect(dataSource.name).toBeUndefined();
@@ -3026,9 +3031,6 @@ defineSuite([
                 expect(link2).toEqual(link2);
                 expect(folder2).not.toEqual(folder1);
                 expect(placemark2).not.toEqual(placemark1);
-
-                // Reset camera
-                options.camera.positionWC.x = 0.0;
             });
         });
     });
