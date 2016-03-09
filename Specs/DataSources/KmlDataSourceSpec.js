@@ -12,6 +12,7 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadBlob',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
@@ -22,7 +23,8 @@ defineSuite([
         'DataSources/ImageMaterialProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], function(
         KmlDataSource,
         BoundingRectangle,
@@ -36,6 +38,7 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadBlob,
+        loadWithXhr,
         CesiumMath,
         NearFarScalar,
         Rectangle,
@@ -46,7 +49,8 @@ defineSuite([
         ImageMaterialProperty,
         HorizontalOrigin,
         LabelStyle,
-        pollToPromise) {
+        pollToPromise,
+        when) {
     "use strict";
 
     var parser = new DOMParser();
@@ -3023,6 +3027,27 @@ defineSuite([
                 expect(folder2).not.toEqual(folder1);
                 expect(placemark2).not.toEqual(placemark1);
             });
+        });
+    });
+
+    it('NetworkLink: Url is correct on initial load', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/refresh.kml</href>\
+            </Link>\
+          </NetworkLink>';
+
+        var requestNetworkLink = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual('./Data/KML/refresh.kml');
         });
     });
 
