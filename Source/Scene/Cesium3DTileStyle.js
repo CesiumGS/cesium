@@ -84,12 +84,11 @@ define([
         that._show = show;
 
         var meta = {};
-        var json = styleJson.meta;
-        if(defined(json)) {
-            for (var property in json) {
-                if (json.hasOwnProperty(property)) {
-                    var exp = json[property];
-                    meta[property] = new Expression(styleEngine, exp);
+        var metaJson = styleJson.meta;
+        if(defined(metaJson)) {
+            for (var property in metaJson) {
+                if (metaJson.hasOwnProperty(property)) {
+                    meta[property] = new Expression(styleEngine, metaJson[property]);
                 }
             }
         }
