@@ -66,6 +66,8 @@ defineSuite([
         loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
+
+        frameState.commandList.length = 0;
     });
 
     function CustomDiscardPolicy() {
@@ -117,7 +119,7 @@ defineSuite([
         });
     });
 
-    it('reprojects web mercator images', function() {
+    function createWebMercatorProvider() {
         loadJsonp.loadAndExecuteScript = function(url, functionName) {
             window[functionName]({
                 "authenticationResultCode" : "ValidCredentials",
@@ -152,11 +154,14 @@ defineSuite([
             loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
 
-        var provider = new BingMapsImageryProvider({
+        return new BingMapsImageryProvider({
             url : 'http://host.invalid',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
+    }
 
+    it('reprojects web mercator images', function() {
+        var provider = createWebMercatorProvider();
         var layer = new ImageryLayer(provider);
 
         return pollToPromise(function() {
@@ -185,6 +190,34 @@ defineSuite([
                         expect(textureBeforeReprojection).not.toEqual(imagery.texture);
                         imagery.releaseReference();
                     });
+                });
+            });
+        });
+    });
+
+    it('cancels reprojection', function() {
+        var provider = createWebMercatorProvider();
+        var layer = new ImageryLayer(provider);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                layer._createTexture(context, imagery);
+
+                return pollToPromise(function() {
+                    return imagery.state === ImageryState.TEXTURE_LOADED;
+                }).then(function() {
+                    layer._reprojectTexture(frameState, imagery);
+                    layer.cancelReprojections();
+                    layer.update(frameState);
+                    expect(frameState.commandList.length).toEqual(0);
                 });
             });
         });

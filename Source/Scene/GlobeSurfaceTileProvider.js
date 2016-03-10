@@ -289,7 +289,12 @@ define([
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
-        this._imageryLayers._update();
+        var imageryLayers = this._imageryLayers;
+
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        imageryLayers._update();
+        // update each layer for texture reprojection.
+        imageryLayers.update(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;
@@ -307,15 +312,12 @@ define([
             creditDisplay.addCredit(this._terrainProvider.credit);
         }
 
-        var imageryLayers = this._imageryLayers;
         for (var i = 0, len = imageryLayers.length; i < len; ++i) {
             var imageryProvider = imageryLayers.get(i).imageryProvider;
             if (imageryProvider.ready && defined(imageryProvider.credit)) {
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
-
-        imageryLayers.update(frameState);
     };
 
     /**
