@@ -100,12 +100,16 @@ define([
      * @param {Object} options An object containing the following properties:
      * @param {Context} options.context The context in which to create the shadow map.
      * @param {Camera} options.lightCamera A camera representing the light source.
+     * @param {Boolean} [options.isPointLight=false] Whether the light source is a point light. Point light shadows do not use cascades.
+     * @param {Boolean} [options.radius=100.0] Radius of the point light.
      * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
-     * @param {Number} [options.size=1024] The width and height, in pixels, of each cascade in the shadow map.
+     * @param {Number} [options.size=1024] The width and height, in pixels, of each shadow map.
      *
      * @see ShadowMapShader
      *
+     * @exception {DeveloperError} Only one or four cascades are supported.
+
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      *
      * @private
@@ -121,6 +125,9 @@ define([
         if (!defined(options.lightCamera)) {
             throw new DeveloperError('lightCamera is required.');
         }
+        if (defined(options.numberOfCascades) && ((options.numberOfCascades !== 1) && (options.numberOfCascades !== 4))) {
+            throw new DeveloperError('Only one or four cascades are supported.');
+        }
         //>>includeEnd('debug');
 
         this.enabled = false;
@@ -132,33 +139,41 @@ define([
 
         this._framebuffer = undefined;
         this._shadowMapSize = defaultValue(options.size, 1024);
+        this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
 
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
-        this._distance = 1000.0;
 
-        this._cascadesEnabled = defaultValue(options.cascadesEnabled, true);
+        this._isPointLight = defaultValue(options.isPointLight, false);
+        this._radius = defaultValue(options.radius, 100.0);
+
+        this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
+        this._numberOfCascades = !this._cascadesEnabled ? 0 :defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-
-        var maximumNumberOfCascades = 4;
-        this._numberOfCascades = this._cascadesEnabled ? defaultValue(options.numberOfCascades, maximumNumberOfCascades) : 1;
-
-        this._cascadeCameras = new Array(maximumNumberOfCascades);
-        this._cascadePassStates = new Array(maximumNumberOfCascades);
-        this._cascadeViewports = new Array(maximumNumberOfCascades);
+        this._distance = 1000.0;
 
         // Uniforms
         this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
-        this._cascadeOffsets = new Array(maximumNumberOfCascades);
-        this._cascadeScales = new Array(maximumNumberOfCascades);
+        this._cascadeOffsets = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+        this._cascadeScales = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
-        for (var i = 0; i < maximumNumberOfCascades; ++i) {
-            this._cascadeCameras[i] = new ShadowMapCamera();
-            this._cascadePassStates[i] = new PassState(context);
-            this._cascadePassStates[i].viewport = new BoundingRectangle(); // Updated in setSize
-            this._cascadeOffsets[i] = new Cartesian3();
-            this._cascadeScales[i] = new Cartesian3();
+        var numberOfPasses;
+        if (this._isPointLight) {
+            numberOfPasses = 6; // One shadow map for each direction
+        } else if (!this._cascadesEnabled) {
+            numberOfPasses = 1;
+        } else {
+            numberOfPasses = this._numberOfCascades;
+        }
+
+        this._numberOfPasses = numberOfPasses;
+        this._passCameras = new Array(numberOfPasses);
+        this._passStates = new Array(numberOfPasses);
+
+        for (var i = 0; i < numberOfPasses; ++i) {
+            this._passCameras[i] = new ShadowMapCamera();
+            this._passStates[i] = new PassState(context);
         }
 
         this.debugShow = false;
@@ -166,7 +181,7 @@ define([
         this.debugVisualizeCascades = false;
         this._debugLightFrustum = undefined;
         this._debugCameraFrustum = undefined;
-        this._debugCascadeFrustums = new Array(maximumNumberOfCascades);
+        this._debugCascadeFrustums = new Array(this._numberOfCascades);
         this._debugShadowViewCommand = undefined;
 
         // Only enable the color mask if the depth texture extension is not supported
@@ -199,13 +214,12 @@ define([
         this._clearCommand = new ClearCommand({
             depth : 1.0,
             color : new Color(),
-            renderState : RenderState.fromCache()
+            framebuffer : undefined,
+            renderState : RenderState.fromCache({
+                viewport : new BoundingRectangle(0, 0, this._textureSize.x, this._textureSize.y)
+            })
         });
 
-        this._passState = new PassState(context);
-        this._passState.viewport = new BoundingRectangle(); // Updated in setSize
-
-        this.setNumberOfCascades(this._numberOfCascades);
         this.setSize(this._shadowMapSize);
     }
 
@@ -235,31 +249,6 @@ define([
                 return this._shadowMapMatrix;
             }
         },
-        /**
-         * The camera used for rendering into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {ShadowMap~ShadowMapCamera}
-         * @readonly
-         */
-        shadowMapCamera : {
-            get : function() {
-                return this._shadowMapCamera;
-            }
-        },
-
-        /**
-         * The number of cascades used in the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Number}
-         * @readonly
-         */
-        numberOfCascades : {
-            get : function() {
-                return this._numberOfCascades;
-            }
-        },
 
         /**
          * The render state used for rendering shadow casters into the shadow map.
@@ -275,20 +264,7 @@ define([
         },
 
         /**
-         * The pass state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {PassState}
-         * @readonly
-         */
-        passState : {
-            get : function() {
-                return this._passState;
-            }
-        },
-
-        /**
-         * The clear command used for clearing the shadow map, used in conjunction with the pass state.
+         * The clear command used for clearing the shadow map.
          *
          * @memberof ShadowMap.prototype
          * @type {ClearCommand}
@@ -299,16 +275,37 @@ define([
                 return this._clearCommand;
             }
         },
-        cascadePassStates : {
+
+        /**
+         * The number of passes required for rendering shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Number}
+         * @readonly
+         */
+        numberOfPasses : {
             get : function() {
-                return this._cascadePassStates;
+                return this._numberOfPasses;
             }
         },
-        cascadeCameras : {
+
+        passStates : {
             get : function() {
-                return this._cascadeCameras;
+                return this._passStates;
             }
         },
+        passCameras : {
+            get : function() {
+                return this._passCameras;
+            }
+        },
+
+        numberOfCascades : {
+            get : function() {
+                return this._numberOfCascades;
+            }
+        },
+
         cascadeSplits : {
             get : function() {
                 return this._cascadeSplits;
@@ -347,15 +344,15 @@ define([
     function createFramebufferColor(shadowMap, context) {
         var depthRenderbuffer = new Renderbuffer({
             context : context,
-            width : shadowMap._shadowMapSize,
-            height : shadowMap._shadowMapSize,
+            width : shadowMap._textureSize.x,
+            height : shadowMap._textureSize.y,
             format : RenderbufferFormat.DEPTH_COMPONENT16
         });
 
         var colorTexture = new Texture({
             context : context,
-            width : shadowMap._shadowMapSize,
-            height : shadowMap._shadowMapSize,
+            width : shadowMap._textureSize.x,
+            height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
@@ -374,8 +371,8 @@ define([
     function createFramebufferDepth(shadowMap, context) {
         var depthStencilTexture = new Texture({
             context : context,
-            width : shadowMap._shadowMapSize,
-            height : shadowMap._shadowMapSize,
+            width : shadowMap._textureSize.x,
+            height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.DEPTH_STENCIL,
             pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8,
             sampler : createSampler()
@@ -394,61 +391,61 @@ define([
         var createFunction = (context.depthTexture) ? createFramebufferDepth : createFramebufferColor;
         var framebuffer = createFunction(shadowMap, context);
         shadowMap._framebuffer = framebuffer;
-        shadowMap._passState.framebuffer = framebuffer;
-        for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-            shadowMap._cascadePassStates[i].framebuffer = framebuffer;
+        shadowMap._clearCommand.framebuffer = framebuffer;
+        for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
+            shadowMap._passStates[i].framebuffer = framebuffer;
         }
     }
 
     function updateFramebuffer(shadowMap, context) {
-        if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._shadowMapSize)) {
+        if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._textureSize.x)) {
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
         }
     }
 
-    ShadowMap.prototype.setNumberOfCascades = function(numberOfCascades) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(numberOfCascades) || ((numberOfCascades !== 1) && (numberOfCascades !== 4))) {
-            throw new DeveloperError('Only one or four cascades are supported.');
-        }
-        //>>includeEnd('debug');
-
-        this._numberOfCascades = numberOfCascades;
-
-        if (numberOfCascades === 1) {
-            this._cascadeViewports[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-        } else if (numberOfCascades === 4) {
-            // Mirrors the viewports in the shader (offset x, offset y, scale x, scale y)
-            this._cascadeViewports[0] = new Cartesian4(0.0, 0.0, 0.5, 0.5);
-            this._cascadeViewports[1] = new Cartesian4(0.5, 0.0, 0.5, 0.5);
-            this._cascadeViewports[2] = new Cartesian4(0.0, 0.5, 0.5, 0.5);
-            this._cascadeViewports[3] = new Cartesian4(0.5, 0.5, 0.5, 0.5);
-        }
-    };
-
     ShadowMap.prototype.setSize = function(size) {
-        if (this._numberOfCascades === 4) {
-            size *= 2;
-        }
-
         this._shadowMapSize = size;
+        var numberOfPasses = this._numberOfPasses;
+        var textureSize = this._textureSize;
 
-        // Update pass state
-        this._passState.viewport.x = 0;
-        this._passState.viewport.y = 0;
-        this._passState.viewport.width = size;
-        this._passState.viewport.height = size;
-
-        // Update cascade pass states
-        for (var i = 0; i < this._numberOfCascades; ++i) {
-            var passState = this._cascadePassStates[i];
-            var viewport = this._cascadeViewports[i];
-            passState.viewport.x = size * viewport.x;
-            passState.viewport.y = size * viewport.y;
-            passState.viewport.width = size * viewport.z;
-            passState.viewport.height = size * viewport.w;
+        if (numberOfPasses === 1) {
+            // +----+
+            // |  1 |
+            // +----+
+            textureSize.x = size;
+            textureSize.y = size;
+            this._passStates[0].viewport = new BoundingRectangle(0, 0, size, size);
+        } else if (numberOfPasses === 4) {
+            // +----+----+
+            // |  3 |  4 |
+            // +----+----+
+            // |  1 |  2 |
+            // +----+----+
+            textureSize.x = size * 2;
+            textureSize.y = size * 2;
+            this._passStates[0].viewport = new BoundingRectangle(0, 0, size, size);
+            this._passStates[1].viewport = new BoundingRectangle(size, 0, size, size);
+            this._passStates[2].viewport = new BoundingRectangle(0, size, size, size);
+            this._passStates[3].viewport = new BoundingRectangle(size, size, size, size);
+        } else if (numberOfPasses === 6) {
+            // +----+----+----+
+            // |  4 |  5 |  6 |
+            // +----+----+----+
+            // |  1 |  2 |  3 |
+            // +----+----+----+
+            textureSize.x = size * 3;
+            textureSize.y = size * 2;
+            this._passStates[0].viewport = new BoundingRectangle(0, 0, size, size);
+            this._passStates[1].viewport = new BoundingRectangle(size, 0, size, size);
+            this._passStates[2].viewport = new BoundingRectangle(size * 2, 0, size, size);
+            this._passStates[3].viewport = new BoundingRectangle(0, size, size, size);
+            this._passStates[4].viewport = new BoundingRectangle(size, size, size, size);
+            this._passStates[5].viewport = new BoundingRectangle(size * 2, size, size, size);
         }
+
+        // Update clear command
+        this._clearCommand.renderState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
     };
 
     function updateDebugShadowViewCommand(shadows, frameState) {
@@ -534,26 +531,34 @@ define([
     var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
 
     function applyDebugSettings(shadowMap, frameState) {
-        var showFrustumOutlines = !shadowMap._cascadesEnabled || shadowMap.debugFreezeFrame;
-        if (showFrustumOutlines) {
-            var debugLightFrustum = shadowMap._debugLightFrustum;
-            if (!defined(debugLightFrustum)) {
-                debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
-            }
-            Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
-            debugLightFrustum.update(frameState);
+        updateDebugShadowViewCommand(shadowMap, frameState);
 
-            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-                var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
-                if (!defined(debugCascadeFrustum)) {
-                    debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
-                }
-                Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
-                debugCascadeFrustum.update(frameState);
-            }
+        // Only show cascades in freeze frame mode.
+        if (shadowMap._cascadesEnabled && !shadowMap.debugFreezeFrame) {
+            return;
         }
 
-        updateDebugShadowViewCommand(shadowMap, frameState);
+        var debugLightFrustum = shadowMap._debugLightFrustum;
+        if (!defined(debugLightFrustum)) {
+            debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
+        }
+        debugLightFrustum.update(frameState);
+
+        if (shadowMap._isPointLight) {
+            // TODO : get model matrix of light
+        } else {
+            Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
+            debugLightFrustum.update(frameState);
+        }
+
+        for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
+            var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
+            if (!defined(debugCascadeFrustum)) {
+                debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
+            }
+            Matrix4.inverse(shadowMap._passCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
+            debugCascadeFrustum.update(frameState);
+        }
     }
 
     function ShadowMapCamera() {
@@ -656,7 +661,7 @@ define([
             // Always start cascade frustum at the top of the light frustum to capture objects in the light's path
             min.z = 0.0;
 
-            var cascadeCamera = shadowMap._cascadeCameras[j];
+            var cascadeCamera = shadowMap._passCameras[j];
             cascadeCamera.clone(shadowMapCamera); // PERFORMANCE_IDEA : could do a shallow clone for all properties except the frustum
             cascadeCamera.frustum.left = left + min.x * (right - left);
             cascadeCamera.frustum.right = left + max.x * (right - left);
@@ -787,6 +792,10 @@ define([
         updateFramebuffer(this, frameState.context);
         updateCameras(this, frameState);
 
+        if (this._isPointLight) {
+            // TODO
+        }
+
         if (this._cascadesEnabled) {
             fitShadowMapToScene(this);
 
@@ -795,8 +804,8 @@ define([
             }
         }
 
-        if (this._numberOfCascades === 1) {
-            this._cascadeCameras[0].clone(this._shadowMapCamera);
+        if (this._numberOfPasses === 1) {
+            this._passCameras[0].clone(this._shadowMapCamera);
         }
 
         if (this.debugShow) {

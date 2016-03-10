@@ -1698,18 +1698,16 @@ define([
         var uniformState = context.uniformState;
         var shadowMap = scene.sunShadowMap;
         var renderState = shadowMap.renderState;
-        var passState = shadowMap.passState;
 
         // Clear shadow depth
-        shadowMap.clearCommand.execute(context, passState);
+        shadowMap.clearCommand.execute(context);
 
         var commands = getShadowMapCommands(scene);
         var numberOfCommands = commands.length;
-
-        var numberOfCascades = shadowMap.numberOfCascades;
-        for (var i = 0; i < numberOfCascades; ++i) {
-            uniformState.updateCamera(shadowMap.cascadeCameras[i]);
-            passState = shadowMap.cascadePassStates[i];
+        var numberOfPasses = shadowMap.numberOfPasses;
+        for (var i = 0; i < numberOfPasses; ++i) {
+            uniformState.updateCamera(shadowMap.passCameras[i]);
+            var passState = shadowMap.passStates[i];
             for (var j = 0; j < numberOfCommands; ++j) {
                 var command = commands[j];
                 executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);

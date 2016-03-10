@@ -66,7 +66,7 @@ define([
             positionVaryingName = undefined;
         }
 
-        var cascadesEnabled = frameState.shadowMap.numberOfCascades > 1;
+        var hasCascades = frameState.shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
@@ -153,7 +153,7 @@ define([
             '    } \n' +
             ' \n' +
 
-            (cascadesEnabled ?
+            (hasCascades ?
             '    // Get the cascade \n' +
             '    float depthEye = getDepthEye(); \n' +
             '    vec4 weights = getCascadeWeights(depthEye); \n' +

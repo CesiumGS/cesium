@@ -54,8 +54,8 @@
             </td>
         </tr>
         <tr>
-            <td>Shadow Mode</td>
-            <td><select data-bind="options: shadowModeOptions, value: shadowMode"/></td>
+            <td>Cascades</td>
+            <td><select data-bind="options: cascadeOptions, value: cascades"/></td>
         </tr>
         <tr>
             <td>Light Source</td>
@@ -106,8 +106,8 @@ var viewModel = {
     freeze : false,
     cascadeColors : false,
     fitNearFar : true,
-    shadowModeOptions : ['Cascades', 'Single'],
-    shadowMode : 'Cascades',
+    cascadeOptions : [1, 4],
+    cascades : 4,
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed'],
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
@@ -126,7 +126,7 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'shadowMode').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 
@@ -156,7 +156,7 @@ function updateSettings() {
 }
 
 function updateShadows() {
-    var shadowMode = viewModel.shadowMode;
+    var cascades = viewModel.cascades;
     var lightSource = viewModel.lightSource;
     var cascadeColors = viewModel.cascadeColors;
 
@@ -173,13 +173,13 @@ function updateShadows() {
             lightCamera : fixedLightCamera,
             cascadesEnabled : false
         });
-    } else if (shadowMode === 'Cascades') {
+    } else if (cascades === 4) {
         resetShadows({
             context : context,
             lightCamera : lightCamera
         });
         shadowMap.debugVisualizeCascades = cascadeColors;
-    } else if (shadowMode === 'Single') {
+    } else if (cascades === 1) {
         resetShadows({
             context : context,
             lightCamera : lightCamera,
