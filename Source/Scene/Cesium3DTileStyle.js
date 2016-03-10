@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/clone',
        '../Core/defaultValue',
        '../Core/defined',
        '../Core/defineProperties',
@@ -11,6 +12,7 @@ define([
        './ConditionsExpression',
        './Expression'
     ], function(
+        clone,
         defaultValue,
         defined,
         defineProperties,
@@ -38,6 +40,7 @@ define([
 
         this._color = undefined;
         this._show = undefined;
+        this._meta = undefined;
         this._readyPromise = when.defer();
         this._ready = false;
 
@@ -79,6 +82,19 @@ define([
         }
 
         that._show = show;
+
+        var meta = {};
+        var json = styleJson.meta;
+        if(defined(json)) {
+            for (var property in json) {
+                if (json.hasOwnProperty(property)) {
+                    var exp = json[property];
+                    meta[property] = new Expression(styleEngine, exp);
+                }
+            }
+        }
+
+        that.meta = meta;
 
         that._ready = true;
     }
@@ -134,7 +150,25 @@ define([
             set : function(value) {
                 this._color = value;
             }
-        }
+        },
+
+        /**
+         * DOC_TBA
+         */
+        meta : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+                return this._meta;
+            },
+            set : function(value) {
+                this._meta = value;
+            }
+        },
+
     });
 
     return Cesium3DTileStyle;

@@ -44,6 +44,7 @@ defineSuite([
     feature1.addProperty('volume', 128);
     feature1.addProperty('Height', 100);
     feature1.addProperty('id', 11);
+    feature1.addProperty('name', 'Hello');
 
     var feature2 = new MockFeature();
     feature2.addProperty('ZipCode', '19342');
@@ -213,7 +214,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it ('throws on accessing color if not ready', function() {
+    it ('throws on accessing show if not ready', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
 
@@ -225,6 +226,55 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it ('sets meta properties', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+        var jsonExp = {
+            meta : {
+                description : '"Hello, ${name}"'
+            }
+        };
+
+        var style = new Cesium3DTileStyle(tileset, jsonExp);
+        expect(style.meta.description.evaluate(feature1)).toEqual("Hello, Hello");
+    });
+
+    it ('default meta has no properties', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        expect(style.meta).toEqual({});
+
+        style = new Cesium3DTileStyle(tileset, { meta: {} });
+        expect(style.meta).toEqual({});
+    });
+
+    it ('default meta has no properties', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        expect(style.meta).toEqual({});
+
+        style = new Cesium3DTileStyle(tileset, { meta: {} });
+        expect(style.meta).toEqual({});
+
+        style = new Cesium3DTileStyle(tileset, { meta: 1 });
+        expect(style.meta).toEqual({});
+    });
+
+    it ('throws on accessing meta if not ready', function() {
+        var styleEngine = new MockStyleEngine();
+        var tileset = new MockTileset(styleEngine);
+
+        var style = new Cesium3DTileStyle(tileset, {});
+        style._ready = false;
+
+        expect(function() {
+            return style.meta;
+        }).toThrowDeveloperError();
+    });
 
     // Tests for examples from the style spec
 
