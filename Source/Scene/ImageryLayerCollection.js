@@ -460,6 +460,32 @@ define([
     };
 
     /**
+     * Updates frame state to execute any queued texture re-projections.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     */
+    ImageryLayerCollection.prototype.update = function(frameState) {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].update(frameState);
+        }
+    };
+
+    /**
+     * Cancels re-projection commands queued for the next frame.
+     *
+     * @private
+     */
+    ImageryLayerCollection.prototype.cancelReprojections = function() {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].cancelReprojections();
+        }
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than

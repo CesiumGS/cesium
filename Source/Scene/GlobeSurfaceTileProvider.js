@@ -314,6 +314,8 @@ define([
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+
+        imageryLayers.update(frameState);
     };
 
     /**
@@ -405,6 +407,13 @@ define([
         for (var i = 0, length = this._usedDrawCommands; i < length; ++i) {
             addPickCommandsForTile(this, drawCommands[i], frameState);
         }
+    };
+
+    /**
+     * Cancels any imagery re-projections in the queue.
+     */
+    GlobeSurfaceTileProvider.prototype.cancelReprojections = function() {
+        this._imageryLayers.cancelReprojections();
     };
 
     /**

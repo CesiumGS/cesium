@@ -176,6 +176,7 @@ defineSuite([
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
                     layer._reprojectTexture(frameState, imagery);
+                    layer.update(frameState);
                     frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
