@@ -1060,6 +1060,84 @@ defineSuite([
         expect(expression.evaluate(feature)).toEqual('1');
     });
 
+    it('evaluates regex match operator', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'regExp("a") =~ "abc"');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '"abc" =~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") =~ "bcd"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '"bcd" =~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("quick\\s(brown).+?(jumps)", "ig") =~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") =~ 1');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '1 =~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '1 =~ 1');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp(${property}) =~ ${property}');
+        expect(expression.evaluate(feature)).toEqual(true);
+    });
+
+    it('evaluates regex not match operator', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'regExp("a") !~ "abc"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), '"abc" !~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") !~ "bcd"');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '"bcd" !~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("quick\\s(brown).+?(jumps)", "ig") !~ "The Quick Brown Fox Jumps Over The Lazy Dog"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") !~ 1');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '1 !~ regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), '1 !~ 1');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp(${property}) !~ ${property}');
+        expect(expression.evaluate(feature)).toEqual(false);
+    });
+
+    it('evaluates regex equals operator', function() {
+        var feature = new MockFeature();
+        feature.addProperty('property', 'abc');
+
+        var expression = new Expression(new MockStyleEngine(), 'regExp("a") === regExp("a")');
+        expect(expression.evaluate(undefined)).toEqual(true);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") === regExp("b")');
+        expect(expression.evaluate(undefined)).toEqual(false);
+
+        expression = new Expression(new MockStyleEngine(), 'regExp("a") === "a"');
+        expect(expression.evaluate(undefined)).toEqual(false);
+    });
+
     it('throws if test is not call with a RegExp', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), 'color("blue").test()');
