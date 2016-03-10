@@ -89,7 +89,10 @@ function loadTileset(url) {
                 }
             },
 //          "show": false
-            "show" : "${Height} > 0"
+            "show" : "${Height} > 0",
+            "meta" : {
+                "description" : "'Building id ${id} has height ${Height}.'"
+            }
         });
 
         tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
@@ -207,8 +210,10 @@ handler.setInputAction(function(movement) {
                 }
             }
 
-            // evaluate feature color
-            console.log("Evaluated Color : " + tileset.style.color.evaluate(building));
+            // evaluate feature description
+            if (Cesium.defined(tileset.style.meta.description)) {
+                console.log("Description : " + tileset.style.meta.description.evaluate(building));
+            }
 
             building.setProperty('clicked', true);
         }
