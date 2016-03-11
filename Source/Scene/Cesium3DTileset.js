@@ -422,11 +422,7 @@ define([
             }
 
             // Append the version to the baseUrl
-            var versionQuery = '?v=' + tilesetJson.asset.version;
-            var tilesetVersion = tilesetJson.asset.tilesetVersion;
-            if (defined(tilesetVersion)) {
-                versionQuery += '&tilesetVersion=' + tilesetVersion;
-            }
+            var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
             that._baseUrl = joinUrls(that._baseUrl, versionQuery);
 
             // A tileset.json referenced from a tile may exist in a different directory than the root tileset.
