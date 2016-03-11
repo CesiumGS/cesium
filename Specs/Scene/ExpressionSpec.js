@@ -1124,20 +1124,6 @@ defineSuite([
         expect(expression.evaluate(feature)).toEqual(false);
     });
 
-    it('evaluates regex equals operator', function() {
-        var feature = new MockFeature();
-        feature.addProperty('property', 'abc');
-
-        var expression = new Expression(new MockStyleEngine(), 'regExp("a") === regExp("a")');
-        expect(expression.evaluate(undefined)).toEqual(true);
-
-        expression = new Expression(new MockStyleEngine(), 'regExp("a") === regExp("b")');
-        expect(expression.evaluate(undefined)).toEqual(false);
-
-        expression = new Expression(new MockStyleEngine(), 'regExp("a") === "a"');
-        expect(expression.evaluate(undefined)).toEqual(false);
-    });
-
     it('throws if test is not call with a RegExp', function() {
         expect(function() {
             return new Expression(new MockStyleEngine(), 'color("blue").test()');

@@ -732,8 +732,6 @@ define([
         var right = this._right.evaluate(feature, result);
         if ((right instanceof Color) && (left instanceof Color)) {
             return Color.equals(left, right);
-        } else if ((right instanceof RegExp) && (left instanceof RegExp)) {
-            return left.toString() === right.toString();
         }
         return left === right;
     };
