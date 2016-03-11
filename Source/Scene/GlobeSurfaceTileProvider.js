@@ -294,7 +294,7 @@ define([
         // update collection: imagery indices, base layers, raise layer show/hide event
         imageryLayers._update();
         // update each layer for texture reprojection.
-        imageryLayers.update(frameState);
+        imageryLayers.queueReprojectionCommands(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;

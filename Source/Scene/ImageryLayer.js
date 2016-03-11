@@ -788,7 +788,7 @@ define([
      *
      * @param {FrameState} frameState The frameState.
      */
-    ImageryLayer.prototype.update = function(frameState) {
+    ImageryLayer.prototype.queueReprojectionCommands = function(frameState) {
         var computeCommands = this._reprojectComputeCommands;
         var length = computeCommands.length;
         for (var i = 0; i < length; ++i) {

@@ -181,7 +181,7 @@ defineSuite([
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
                     layer._reprojectTexture(frameState, imagery);
-                    layer.update(frameState);
+                    layer.queueReprojectionCommands(frameState);
                     frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
@@ -216,7 +216,7 @@ defineSuite([
                 }).then(function() {
                     layer._reprojectTexture(frameState, imagery);
                     layer.cancelReprojections();
-                    layer.update(frameState);
+                    layer.queueReprojectionCommands(frameState);
                     expect(frameState.commandList.length).toEqual(0);
                 });
             });
