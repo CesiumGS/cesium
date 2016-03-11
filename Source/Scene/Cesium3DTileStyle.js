@@ -29,7 +29,7 @@ define([
     /**
      * DOC_TBA
      */
-    function Cesium3DTileStyle (tileset, data) {
+    function Cesium3DTileStyle(tileset, data) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tileset)) {
             throw new DeveloperError('tileset is required.');
@@ -55,7 +55,7 @@ define([
         }
     }
 
-    function setup (that, tileset, styleJson) {
+    function setup(that, tileset, styleJson) {
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
