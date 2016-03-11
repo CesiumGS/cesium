@@ -16,7 +16,7 @@ define([
     "use strict";
 
     var unaryOperators = ['!', '-', '+'];
-    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||'];
+    var binaryOperators = ['+', '-', '*', '/', '%', '===', '!==', '>', '>=', '<', '<=', '&&', '||', '!~', '=~'];
 
     var variableRegex = /\${(.*?)}/g;
     var backslashRegex = /\\/g;
@@ -39,6 +39,10 @@ define([
         //>>includeEnd('debug');
 
         expression = replaceVariables(removeBackslashes(expression));
+
+        // customize jsep operators
+        jsep.addBinaryOp("=~", 0);
+        jsep.addBinaryOp("!~", 0);
 
         var ast;
         try {
@@ -434,6 +438,10 @@ define([
                 node.evaluate = node._evaluateAnd;
             } else if (node._value === '||') {
                 node.evaluate = node._evaluateOr;
+            } else if (node._value === '=~') {
+                node.evaluate = node._evaluateRegExpMatch;
+            } else if (node._value === '!~') {
+                node.evaluate = node._evaluateRegExpNotMatch;
             }
         } else if (node._type === ExpressionNodeType.UNARY) {
             if (node._value === '!') {
@@ -785,6 +793,30 @@ define([
 
     Node.prototype._evaluateRegExpTest = function(feature, result) {
         return this._left.evaluate(feature, result).test(this._right.evaluate(feature, result));
+    };
+
+    Node.prototype._evaluateRegExpMatch = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
+        if (left instanceof RegExp) {
+            return left.test(right);
+        } else if (right instanceof RegExp) {
+            return right.test(left);
+        } else {
+            return false;
+        }
+    };
+
+    Node.prototype._evaluateRegExpNotMatch = function(feature, result) {
+        var left = this._left.evaluate(feature, result);
+        var right = this._right.evaluate(feature, result);
+        if (left instanceof RegExp) {
+            return !(left.test(right));
+        } else if (right instanceof RegExp) {
+            return !(right.test(left));
+        } else {
+            return false;
+        }
     };
 
     Node.prototype._evaluateRegExpExec = function(feature, result) {
