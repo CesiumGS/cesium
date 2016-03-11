@@ -1322,9 +1322,9 @@ define([
     }
 
     var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                        1.0, 0.0, 0.0, 0.0,
-                                        0.0, 1.0, 0.0, 0.0,
-                                        0.0, 0.0, 0.0, 1.0);
+                                      1.0, 0.0, 0.0, 0.0,
+                                      0.0, 1.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
     function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
@@ -1649,7 +1649,7 @@ define([
         }
     }
 
-    function updateAndExecuteCommands(scene, passState) {
+    function updateAndExecuteCommands(scene, passState, backgroundColor, picking) {
         var context = scene._context;
 
         var viewport = passState.viewport;
@@ -1661,6 +1661,7 @@ define([
         if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
             updatePrimitives(scene);
             createPotentiallyVisibleSet(scene);
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
 
             // Based on Calculating Stereo pairs by Paul Bourke
@@ -1702,9 +1703,9 @@ define([
             viewport.height = context.drawingBufferHeight;
 
             if (mode !== SceneMode.SCENE2D) {
-                executeCommandsInViewport(true, scene, passState);
+                executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
             } else {
-                execute2DViewportCommands(scene, passState);
+                execute2DViewportCommands(scene, passState, backgroundColor, picking);
             }
         }
     }
@@ -1716,7 +1717,7 @@ define([
     var scratch2DViewportEyePoint = new Cartesian3();
     var scratch2DViewportWindowCoords = new Cartesian3();
 
-    function execute2DViewportCommands(scene, passState) {
+    function execute2DViewportCommands(scene, passState, backgroundColor, picking) {
         var context = scene.context;
         var frameState = scene.frameState;
         var camera = scene.camera;
@@ -1743,13 +1744,13 @@ define([
         var width;
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
-            executeCommandsInViewport(true, scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
             camera.frustum.right = maxCoord.x - x;
 
-            executeCommandsInViewport(true, scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x += windowCoordinates.x;
 
@@ -1759,14 +1760,14 @@ define([
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
-            executeCommandsInViewport(false, scene, passState);
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
             viewport.x += windowCoordinates.x;
             viewport.width -= windowCoordinates.x;
 
             camera.frustum.left = -maxCoord.x - x;
 
-            executeCommandsInViewport(true, scene, passState);
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x = viewport.x - viewport.width;
 
@@ -1776,7 +1777,7 @@ define([
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
 
-            executeCommandsInViewport(false, scene, passState);
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         }
 
         Cartesian3.clone(position, camera.position);
@@ -1786,7 +1787,7 @@ define([
         viewport.width = viewportWidth;
     }
 
-    function executeCommandsInViewport(firstViewport, scene, passState) {
+    function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor, picking) {
         if (!firstViewport) {
             scene.frameState.commandList.length = 0;
         }
@@ -1795,6 +1796,7 @@ define([
         createPotentiallyVisibleSet(scene);
 
         if (firstViewport) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
         }
 
@@ -1813,12 +1815,7 @@ define([
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
-    }
 
-    function updatePrimitives(scene) {
-        var frameState = scene._frameState;
-
-        var environmentState = scene._environmentState;
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
@@ -1827,6 +1824,10 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
+    }
+
+    function updatePrimitives(scene) {
+        var frameState = scene._frameState;
 
         if (scene._globe) {
             scene._globe.update(frameState);
@@ -2025,12 +2026,8 @@ define([
             scene.globe.beginFrame(frameState);
         }
 
-        var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
-        var picking = false;
-
         updateEnvironment(scene);
-        updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
-        updateAndExecuteCommands(scene, passState);
+        updateAndExecuteCommands(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         resolveFramebuffers(scene, passState);
         executeOverlayCommands(scene, passState);
 
@@ -2213,8 +2210,7 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
-        updateAndClearFramebuffers(this, passState, scratchColorZero, true);
-        updateAndExecuteCommands(this, passState);
+        updateAndExecuteCommands(this, passState, scratchColorZero, true);
         resolveFramebuffers(this, passState);
 
         var object = this._pickFramebuffer.end(scratchRectangle);
