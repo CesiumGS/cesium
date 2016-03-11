@@ -43,6 +43,8 @@ defineSuite([
     feature1.addProperty('blue', 82);
     feature1.addProperty('volume', 128);
     feature1.addProperty('Height', 100);
+    feature1.addProperty('Width', 20);
+    feature1.addProperty('Depth', 20);
     feature1.addProperty('id', 11);
     feature1.addProperty('name', 'Hello');
 
@@ -229,14 +231,22 @@ defineSuite([
     it ('sets meta properties', function() {
         var styleEngine = new MockStyleEngine();
         var tileset = new MockTileset(styleEngine);
-        var jsonExp = {
+
+        var style = new Cesium3DTileStyle(tileset, {
             meta : {
                 description : '"Hello, ${name}"'
             }
-        };
-
-        var style = new Cesium3DTileStyle(tileset, jsonExp);
+        });
         expect(style.meta.description.evaluate(feature1)).toEqual("Hello, Hello");
+
+        style = new Cesium3DTileStyle(tileset, {
+            meta : {
+                featureColor : 'rgb(${red}, ${green}, ${blue})',
+                volume : '${Height} * ${Width} * ${Depth}'
+            }
+        });
+        expect(style.meta.featureColor.evaluate(feature1)).toEqual(Color.fromBytes(38, 255, 82));
+        expect(style.meta.volume.evaluate(feature1)).toEqual(20 * 20 * 100);
     });
 
     it ('default meta has no properties', function() {
@@ -261,7 +271,7 @@ defineSuite([
         expect(style.meta).toEqual({});
 
         style = new Cesium3DTileStyle(tileset, { meta: 1 });
-        expect(style.meta).toEqual({});
+        expect(style.meta).toEqual(undefined);
     });
 
     it ('throws on accessing meta if not ready', function() {
