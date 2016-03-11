@@ -62,7 +62,6 @@ define([
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
-        var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
 
         var styleEngine = tileset.styleEngine;
 
@@ -85,9 +84,12 @@ define([
         that._show = show;
 
         var meta = {};
-        for (var property in metaJson) {
-            if (metaJson.hasOwnProperty(property)) {
-                meta[property] = new Expression(styleEngine, metaJson[property]);
+        if (defined(styleJson.meta)) {
+            var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
+            for (var property in metaJson) {
+                if (metaJson.hasOwnProperty(property)) {
+                    meta[property] = new Expression(styleEngine, metaJson[property]);
+                }
             }
         }
 

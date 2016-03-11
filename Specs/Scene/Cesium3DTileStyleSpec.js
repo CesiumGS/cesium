@@ -269,9 +269,6 @@ defineSuite([
 
         style = new Cesium3DTileStyle(tileset, { meta: {} });
         expect(style.meta).toEqual({});
-
-        style = new Cesium3DTileStyle(tileset, { meta: 1 });
-        expect(style.meta).toEqual(undefined);
     });
 
     it ('throws on accessing meta if not ready', function() {
