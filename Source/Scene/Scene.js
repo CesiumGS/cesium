@@ -1787,11 +1787,17 @@ define([
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState) {
+        if (!firstViewport) {
+            scene.frameState.commandList.length = 0;
+        }
+
         updatePrimitives(scene);
         createPotentiallyVisibleSet(scene);
+
         if (firstViewport) {
             executeComputeCommands(scene);
         }
+
         executeCommands(scene, passState);
     }
 
@@ -1807,7 +1813,12 @@ define([
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
+    }
 
+    function updatePrimitives(scene) {
+        var frameState = scene._frameState;
+
+        var environmentState = scene._environmentState;
         var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
@@ -1816,10 +1827,6 @@ define([
             // of the globe are not picked.
             scene._depthPlane.update(frameState);
         }
-    }
-
-    function updatePrimitives(scene) {
-        var frameState = scene._frameState;
 
         if (scene._globe) {
             scene._globe.update(frameState);
@@ -2206,7 +2213,8 @@ define([
 
         var passState = this._pickFramebuffer.begin(scratchRectangle);
 
-        updateAndExecuteCommands(this, passState, scratchColorZero, true);
+        updateAndClearFramebuffers(this, passState, scratchColorZero, true);
+        updateAndExecuteCommands(this, passState);
         resolveFramebuffers(this, passState);
 
         var object = this._pickFramebuffer.end(scratchRectangle);
