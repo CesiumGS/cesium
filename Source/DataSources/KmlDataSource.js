@@ -1815,7 +1815,7 @@ define([
                 var queryString = makeQueryString(viewFormat, httpQuery);
 
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString, false),
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
                                                             viewBoundScale, dataSource._lastCameraView.bbox);
 
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {
