@@ -22,6 +22,10 @@ TODO: this is not finished yet:
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
 * `GeoJsonDataSource` now handles CRS `urn:ogc:def:crs:EPSG::4326`
+* Fixed loading for KML `NetworkLink` to not append a `?` if there isn't a query string.
+* Fixed `Color.fromCssColorString` from reusing the input `result` alpha value in some cases.
+* Fix issue with billboard collections that have at least one billboard with an aligned axis and at least one billboard without an aligned axis. [#3318](https://github.com/AnalyticalGraphicsInc/cesium/issues/3318)
+* Fix a race condition that would cause the terrain to continue loading and unloading or cause a crash when changing terrain providers. [#3690](https://github.com/AnalyticalGraphicsInc/cesium/issues/3690)
 
 ### 1.19 - 2016-03-01
 

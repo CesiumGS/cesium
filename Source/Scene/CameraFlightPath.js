@@ -62,7 +62,7 @@ define([
         var altitude = optionAltitude;
         var maxHeight = Math.max(startHeight, endHeight);
 
-        if (!defined(optionAltitude)) {
+        if (!defined(altitude)) {
             var start = camera.position;
             var end = destination;
             var up = camera.up;
@@ -76,7 +76,7 @@ define([
             altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
         }
 
-        if ((defined(optionAltitude) && optionAltitude < altitude) || maxHeight < altitude) {
+        if (maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
 
