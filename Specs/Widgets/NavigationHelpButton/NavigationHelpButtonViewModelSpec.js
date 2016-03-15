@@ -3,7 +3,7 @@ defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButtonViewModel'
     ], function(
         NavigationHelpButtonViewModel) {
-    "use strict";
+    'use strict';
 
     it('Can construct', function() {
         var viewModel = new NavigationHelpButtonViewModel();

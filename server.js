@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
     /*jshint node:true*/
 
     var express = require('express');

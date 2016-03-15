@@ -21,7 +21,7 @@ define([
         PointAppearanceFS,
         PointAppearanceVS,
         Appearance) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for point geometry {@link PointGeometry}

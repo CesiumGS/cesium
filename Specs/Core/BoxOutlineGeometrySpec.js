@@ -9,7 +9,7 @@ defineSuite([
         AxisAlignedBoundingBox,
         Cartesian3,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws without maximum corner', function() {
         expect(function() {
@@ -72,6 +72,17 @@ defineSuite([
         var m = BoxOutlineGeometry.fromAxisAlignedBoundingBox(new AxisAlignedBoundingBox(min, max));
         expect(m._min).toEqual(min);
         expect(m._max).toEqual(max);
+    });
+
+    it('undefined is returned if min and max are equal', function() {
+        var box = new BoxOutlineGeometry({
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(250000.0, 250000.0, 250000.0)
+        });
+
+        var geometry = BoxOutlineGeometry.createGeometry(box);
+
+        expect(geometry).toBeUndefined();
     });
 
     createPackableSpecs(BoxOutlineGeometry, new BoxOutlineGeometry({

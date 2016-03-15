@@ -29,7 +29,7 @@ define([
         RenderState,
         Texture,
         FXAAFS) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

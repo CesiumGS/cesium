@@ -43,7 +43,7 @@ defineSuite([
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
+    'use strict';
 
     var time;
     var time2;
@@ -63,11 +63,11 @@ defineSuite([
 
     function createBasicWall() {
         var wall = new WallGraphics();
-        wall.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1
+        wall.positions = new ConstantProperty(Cartesian3.fromRadiansArrayHeights([
+            0, 0, 1,
+            1, 0, 1,
+            1, 1, 1,
+            0, 1, 1
         ]));
         var entity = new Entity();
         entity.wall = wall;

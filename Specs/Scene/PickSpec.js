@@ -33,7 +33,7 @@ defineSuite([
         Primitive,
         SceneMode,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var primitives;

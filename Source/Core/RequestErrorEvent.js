@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         parseResponseHeaders) {
-    "use strict";
+    'use strict';
 
     /**
      * An event that is raised when a request encounters an error.

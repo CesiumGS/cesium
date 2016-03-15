@@ -19,7 +19,7 @@ defineSuite([
         createCanvas,
         createFrameState,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 

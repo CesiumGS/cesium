@@ -1,6 +1,6 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.18.1",
+  "version": "1.19.0",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
@@ -51,7 +51,7 @@
     "gulp-replace": "0.5.4",
     "gulp-sourcemaps": "^1.5.2",
     "gulp-uglify": "^1.2.0",
-    "gulp-zip": "3.1.0",
+    "gulp-zip": "3.0.2",
     "jsdoc": "3.4.0",
     "jshint": "2.9.1",
     "jshint-stylish": "2.1.0",

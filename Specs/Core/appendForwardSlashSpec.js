@@ -3,7 +3,7 @@ defineSuite([
         'Core/appendForwardSlash'
     ], function(
         appendForwardSlash) {
-    "use strict";
+    'use strict';
 
     it('Appends to a url', function() {
         expect(appendForwardSlash('http://cesiumjs.org')).toEqual('http://cesiumjs.org/');

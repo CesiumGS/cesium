@@ -29,7 +29,7 @@ define([
         OrientedBoundingBox,
         TerrainEncoding,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     var maxShort = 32767;
     var halfMaxShort = (maxShort / 2) | 0;

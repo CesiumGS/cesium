@@ -7,7 +7,7 @@ defineSuite([
         Spherical,
         Cartesian3,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     //Mock object to make sure methods take non-sphericals.
     function NotSpherical(clock, cone, magnitude) {

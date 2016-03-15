@@ -13,7 +13,7 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
@@ -52,7 +52,7 @@ define([
      * var osm = Cesium.createOpenStreetMapImageryProvider({
      *     url : '//a.tile.openstreetmap.org/'
      * });
-     * 
+     *
      * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */

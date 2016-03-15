@@ -21,7 +21,7 @@ defineSuite([
         LinearApproximation,
         CesiumMath,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Cartesian3);

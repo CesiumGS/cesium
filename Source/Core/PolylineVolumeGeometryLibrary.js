@@ -25,7 +25,7 @@ define([
         PolylinePipeline,
         Quaternion,
         Transforms) {
-    "use strict";
+    'use strict';
 
     var scratch2Array = [new Cartesian3(), new Cartesian3()];
     var scratchCartesian1 = new Cartesian3();

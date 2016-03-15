@@ -7,7 +7,7 @@ defineSuite([
         Animation,
         AnimationViewModel,
         ClockViewModel) {
-    "use strict";
+    'use strict';
 
     it('sanity check', function() {
         var clockViewModel = new ClockViewModel();

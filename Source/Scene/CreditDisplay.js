@@ -11,7 +11,7 @@ define([
         defined,
         destroyObject,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     function displayTextCredit(credit, container, delimiter) {
         if (!defined(credit.element)) {

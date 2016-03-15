@@ -26,26 +26,30 @@
 
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
+var options = {
+    camera : viewer.scene.camera,
+    canvas : viewer.scene.canvas
+};
 
 Sandcastle.addToolbarMenu([{
     text : 'KML - Global Science Facilities',
     onselect : function() {
-        viewer.homeButton.viewModel.command();
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml'));
+        viewer.camera.flyHome(0);
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/facilities/facilities.kml', options));
     }
 }, {
     text : 'KMZ with embedded data - GDP per capita',
     onselect : function() {
-        viewer.homeButton.viewModel.command();
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz'));
+        viewer.camera.flyHome(0);
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/gdpPerCapita2008.kmz', options));
     }
 }, {
     text : 'gx KML extensions - Bike Ride',
     onselect : function() {
-        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml')).then(function(dataSource){
+        viewer.dataSources.add(Cesium.KmlDataSource.load('../../SampleData/kml/bikeRide.kml', options)).then(function(dataSource){
             viewer.clock.shouldAnimate = false;
             var rider = dataSource.entities.getById('tour');
             viewer.flyTo(rider).then(function(){

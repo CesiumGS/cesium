@@ -37,7 +37,7 @@ define([
         SceneMode,
         SceneTransforms,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
@@ -1134,7 +1134,7 @@ define([
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
-     * 
+     *
      * @see Billboard#eyeOffset
      * @see Billboard#pixelOffset
      */

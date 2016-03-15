@@ -3,7 +3,6 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
@@ -11,11 +10,10 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        definedNotNull,
         DeveloperError,
         RuntimeError,
         ImageryLayerFeatureInfo) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
@@ -94,7 +92,7 @@ define([
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
             // If this is a point feature, use the coordinates of the point.
-            if (definedNotNull(feature.geometry) && feature.geometry.type === 'Point') {
+            if (defined(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
                 var latitude = feature.geometry.coordinates[1];
                 featureInfo.position = Cartographic.fromDegrees(longitude, latitude);

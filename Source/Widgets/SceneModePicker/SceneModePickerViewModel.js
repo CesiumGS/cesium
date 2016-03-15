@@ -19,7 +19,7 @@ define([
         SceneMode,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link SceneModePicker}.

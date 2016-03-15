@@ -11,7 +11,7 @@ defineSuite([
         Cartesian3,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws without maximum corner', function() {
         expect(function() {
@@ -97,6 +97,18 @@ defineSuite([
         var m = BoxGeometry.fromAxisAlignedBoundingBox(new AxisAlignedBoundingBox(min, max));
         expect(m._minimum).toEqual(min);
         expect(m._maximum).toEqual(max);
+    });
+
+    it('undefined is returned if min and max are equal', function() {
+        var box = new BoxGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(250000.0, 250000.0, 250000.0)
+        });
+
+        var geometry = BoxGeometry.createGeometry(box);
+
+        expect(geometry).toBeUndefined();
     });
 
     createPackableSpecs(BoxGeometry, new BoxGeometry({

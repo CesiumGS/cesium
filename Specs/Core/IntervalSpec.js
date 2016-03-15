@@ -3,7 +3,7 @@ defineSuite([
         'Core/Interval'
     ], function(
         Interval) {
-    "use strict";
+    'use strict';
 
     it('constructs without arguments', function() {
         var interval = new Interval();

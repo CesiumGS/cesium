@@ -11,7 +11,7 @@ defineSuite([
         Cartesian4,
         Intersect,
         Plane) {
-    "use strict";
+    'use strict';
 
     var positions = [
                      new Cartesian3(3, -1, -3),

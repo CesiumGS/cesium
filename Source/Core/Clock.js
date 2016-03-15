@@ -17,7 +17,7 @@ define([
         Event,
         getTimestamp,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * A simple clock for keeping track of simulated time.

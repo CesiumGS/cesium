@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         writeTextToCanvas,
         Color) {
-    "use strict";
+    'use strict';
 
     it('returns undefined when text is blank', function() {
         var canvas = writeTextToCanvas('');

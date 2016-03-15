@@ -3,7 +3,7 @@ define([
         './Math'
     ], function(
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
