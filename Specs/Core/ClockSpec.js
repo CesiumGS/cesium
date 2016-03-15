@@ -11,7 +11,7 @@ defineSuite([
         ClockStep,
         JulianDate,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     it('constructor sets default parameters', function() {
         var clock = new Clock();

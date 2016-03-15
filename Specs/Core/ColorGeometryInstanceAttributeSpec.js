@@ -7,7 +7,7 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         Color,
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);

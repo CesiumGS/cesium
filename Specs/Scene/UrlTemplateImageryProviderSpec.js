@@ -33,9 +33,8 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when,
-        GetFeatureInfoFormat) {
-    "use strict";
+        when) {
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;

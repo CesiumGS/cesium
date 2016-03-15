@@ -27,7 +27,7 @@ define([
         Buffer,
         BufferUsage,
         ContextLimits) {
-    "use strict";
+    'use strict';
 
     function addAttribute(attributes, attribute, index, context) {
         var hasVertexBuffer = defined(attribute.vertexBuffer);

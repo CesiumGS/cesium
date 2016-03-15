@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         loadImage) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

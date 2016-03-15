@@ -3,7 +3,7 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * This enumerated type is for representing keyboard modifiers. These are keys

@@ -21,7 +21,7 @@ defineSuite([
         CallbackProperty,
         EntityCollection,
         when) {
-    "use strict";
+    'use strict';
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -248,6 +248,19 @@ defineSuite([
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('Works with null geometry', function() {

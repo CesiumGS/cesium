@@ -17,7 +17,7 @@ defineSuite([
         ContextLimits,
         createContext,
         renderFragment) {
-    "use strict";
+    'use strict';
 
     var context;
 

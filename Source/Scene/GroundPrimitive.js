@@ -65,7 +65,7 @@ define([
         SceneMode,
         StencilFunction,
         StencilOperation) {
-    "use strict";
+    'use strict';
 
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.

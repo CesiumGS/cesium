@@ -13,7 +13,7 @@ defineSuite([
         Cartesian4,
         CesiumMath,
         Matrix4) {
-    "use strict";
+    'use strict';
 
     var frustum, planes;
 

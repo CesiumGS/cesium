@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         Viewer) {
-    "use strict";
+    'use strict';
 
     function createViewer(container, options) {
         options = defaultValue(options, {});

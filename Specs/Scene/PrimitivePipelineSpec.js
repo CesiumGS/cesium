@@ -19,7 +19,7 @@ defineSuite([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     it('can pack and unpack geometry', function() {
         var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({

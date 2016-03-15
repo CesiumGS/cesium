@@ -9,7 +9,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without a center', function() {
         expect(function() {
@@ -23,15 +23,6 @@ defineSuite([
         expect(function() {
             return new CircleOutlineGeometry({
                 center : Cartesian3.fromDegrees(0,0)
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws with a negative radius', function() {
-        expect(function() {
-            return new CircleOutlineGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                radius : -1.0
             });
         }).toThrowDeveloperError();
     });
@@ -84,6 +75,23 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(2 * 8 * 3);
         expect(m.indices.length).toEqual(2 * 8 * 2);
+    });
+
+    it('undefined is returned if radius is equal to or less than zero', function () {
+        var circleOutline0 = new CircleOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : 0.0
+        });
+        var circleOutline1 = new CircleOutlineGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : -10.0
+        });
+
+        var geometry0 = CircleOutlineGeometry.createGeometry(circleOutline0);
+        var geometry1 = CircleOutlineGeometry.createGeometry(circleOutline1);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
     });
 
     var center = new Cartesian3(8, 9, 10);

@@ -21,7 +21,7 @@ define([
         CesiumMath,
         Matrix4,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.

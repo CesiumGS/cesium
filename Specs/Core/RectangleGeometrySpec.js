@@ -21,7 +21,7 @@ defineSuite([
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -233,6 +233,26 @@ defineSuite([
 
         expect(positions.length).toEqual(9 * 3);
         expect(m.indices.length).toEqual(8 * 3);
+    });
+
+    it('undefined is returned if any side are of length zero', function() {
+        var rectangle0 = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 42.0)
+        });
+        var rectangle1 = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-81.0, 42.0, -80.0, 42.0)
+        });
+        var rectangle2 = new RectangleGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 39.0)
+        });
+
+        var geometry0 = RectangleGeometry.createGeometry(rectangle0);
+        var geometry1 = RectangleGeometry.createGeometry(rectangle1);
+        var geometry2 = RectangleGeometry.createGeometry(rectangle2);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
 
     var rectangle = new RectangleGeometry({

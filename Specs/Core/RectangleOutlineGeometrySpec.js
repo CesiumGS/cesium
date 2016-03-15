@@ -19,7 +19,7 @@ defineSuite([
         Matrix2,
         Rectangle,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -148,6 +148,26 @@ defineSuite([
 
         expect(positions.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(8 * 2);
+    });
+
+    it('undefined is returned if any side are of length zero', function() {
+        var rectangleOutline0 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 42.0)
+        });
+        var rectangleOutline1 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-81.0, 42.0, -80.0, 42.0)
+        });
+        var rectangleOutline2 = new RectangleOutlineGeometry({
+            rectangle : Rectangle.fromDegrees(-80.0, 39.0, -80.0, 39.0)
+        });
+
+        var geometry0 = RectangleOutlineGeometry.createGeometry(rectangleOutline0);
+        var geometry1 = RectangleOutlineGeometry.createGeometry(rectangleOutline1);
+        var geometry2 = RectangleOutlineGeometry.createGeometry(rectangleOutline2);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
     });
 
     var rectangle = new RectangleOutlineGeometry({

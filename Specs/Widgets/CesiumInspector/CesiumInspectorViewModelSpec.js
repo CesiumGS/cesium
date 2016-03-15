@@ -29,7 +29,7 @@ defineSuite([
         Primitive,
         QuadtreeTile,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var performanceContainer;

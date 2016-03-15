@@ -7,7 +7,7 @@ define([
         Uri,
         when,
         defaultValue) {
-    "use strict";
+    'use strict';
 
     var activeRequests = {};
 

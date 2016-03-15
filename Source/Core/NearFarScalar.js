@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents a scalar value's lower and upper bound at a near distance and far distance in eye space.

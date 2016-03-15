@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         EllipsoidOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     return function(ellipsoidGeometry, offset) {
         if (defined(ellipsoidGeometry.buffer, offset)) {

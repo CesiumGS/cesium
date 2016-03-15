@@ -47,7 +47,7 @@ defineSuite([
         PrimitiveCollection,
         createDynamicProperty,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function(){

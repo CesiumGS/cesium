@@ -15,7 +15,7 @@ define([
         DeveloperError,
         PixelFormat,
         ContextLimits) {
-    "use strict";
+    'use strict';
 
     function attachTexture(framebuffer, attachment, texture) {
         var gl = framebuffer._gl;

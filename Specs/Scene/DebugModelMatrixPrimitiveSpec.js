@@ -11,7 +11,7 @@ defineSuite([
         Cartesian3,
         Matrix4,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 

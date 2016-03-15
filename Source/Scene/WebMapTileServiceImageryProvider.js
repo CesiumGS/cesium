@@ -49,7 +49,7 @@ define([
         when,
         GetFeatureInfoFormat,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.

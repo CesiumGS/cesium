@@ -17,7 +17,7 @@ define([
         Event,
         Iso8601,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * Synchronizes a video element with a simulation clock.

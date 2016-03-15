@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Quaternion,
         Spline) {
-    "use strict";
+    'use strict';
 
     function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {
         var length = points.length;

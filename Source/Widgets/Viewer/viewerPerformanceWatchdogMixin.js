@@ -11,7 +11,7 @@ define([
         defineProperties,
         DeveloperError,
         PerformanceWatchdog) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds the {@link PerformanceWatchdog} widget to the {@link Viewer} widget.

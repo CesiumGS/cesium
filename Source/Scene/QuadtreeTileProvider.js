@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides general quadtree tiles to be displayed on or near the surface of an ellipsoid.  It is intended to be

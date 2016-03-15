@@ -13,7 +13,7 @@ defineSuite([
         CornerType,
         Ellipsoid,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     var shape;
 
