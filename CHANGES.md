@@ -4,7 +4,9 @@ Change Log
 ### 1.20 - 2016-04-01
 
 * Breaking changes
-  * 
+  * Removed `TileMapServiceImageryProvider`.  Use `createTileMapServiceImageryProvider` instead.
+  * Removed `GroundPrimitive.geometryInstance`.  Use `GroundPrimitive.geometryInstances` instead.
+  * Removed `definedNotNull`.  Use `defined` instead.
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
 * `GeoJsonDataSource` now handles CRS `urn:ogc:def:crs:EPSG::4326`
