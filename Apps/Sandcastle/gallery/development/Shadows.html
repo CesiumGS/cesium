@@ -19,6 +19,9 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar input[type=range] {
+        width : 70px;
+    }
     #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
@@ -44,10 +47,10 @@
             </td>
         </tr>
         <tr>
-            <td>Shadow Far</td>
+            <td>Distance Limit</td>
             <td>
-                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: shadowFar, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: shadowFar">
+                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: distance">
             </td>
         </tr>
         <tr>
@@ -67,6 +70,10 @@
             <td><input type="checkbox" data-bind="checked: shadows"/></td>
         </tr>
         <tr>
+            <td>Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
             <td>Show debug</td>
             <td><input type="checkbox" data-bind="checked: debug"/></td>
         </tr>
@@ -78,6 +85,10 @@
             <td>Cascade colors</td>
             <td><input type="checkbox" data-bind="checked: cascadeColors"/></td>
         </tr>
+        <tr>
+            <td>Fit near/far</td>
+            <td><input type="checkbox" data-bind="checked: fitNearFar"/></td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -88,11 +99,13 @@ function startup(Cesium) {
 var viewModel = {
     lightAngle : 0.0,
     lightHorizon : 0.0,
-    shadowFar : 1000.0,
+    distance : 1000.0,
     shadows : true,
+    terrainCast : false,
     debug : true,
     freeze : false,
     cascadeColors : false,
+    fitNearFar : true,
     shadowModeOptions : ['Cascades', 'Single'],
     shadowMode : 'Cascades',
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed'],
@@ -100,16 +113,18 @@ var viewModel = {
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024
 };
-
+    
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
 Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'shadowMode').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
@@ -128,11 +143,16 @@ function updateLightDirection() {
 }
 
 function updateSettings() {
-    shadowMap._farPlane = Number(viewModel.shadowFar);
+    shadowMap._distance = Number(viewModel.distance);
+    shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;
     shadowMap.setSize(viewModel.size);
+
+    if (globeVisible) {
+        globe.castShadows = viewModel.terrainCast;
+    }
 }
 
 function updateShadows() {
@@ -218,6 +238,7 @@ var tilt = 0.0;
 var scene = viewer.scene;
 var context = scene.context;
 var camera = scene.camera;
+var globe = scene.globe;
 var shadowMap;
 var center;
 var height;

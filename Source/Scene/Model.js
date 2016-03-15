@@ -2615,6 +2615,7 @@ define([
                     shaderProgram : rendererPrograms[technique.program],
                     shadowCastProgram : rendererShadowCastPrograms[technique.program],
                     castShadows : model.castShadows,
+                    receiveShadows : model.receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,

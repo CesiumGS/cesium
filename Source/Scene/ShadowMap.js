@@ -136,9 +136,10 @@ define([
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._sceneCamera = undefined;
-        this._farPlane = 1000.0; // Limit the far plane of the scene camera
+        this._distance = 1000.0;
 
         this._fitToScene = defaultValue(options.fitToScene, true);
+        this._fitNearFar = true;
 
         var maximumNumberOfCascades = 4;
         this._numberOfCascades = this._fitToScene ? defaultValue(options.numberOfCascades, maximumNumberOfCascades) : 1;
@@ -533,24 +534,23 @@ define([
     var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
 
     function applyDebugSettings(shadowMap, frameState) {
-        if (!shadowMap.debugShow) {
-            return;
-        }
-
-        var debugLightFrustum = shadowMap._debugLightFrustum;
-        if (!defined(debugLightFrustum)) {
-            debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
-        }
-        Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
-        debugLightFrustum.update(frameState);
-
-        for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-            var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
-            if (!defined(debugCascadeFrustum)) {
-                debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
+        var showFrustumOutlines = !shadowMap._fitToScene || shadowMap.debugFreezeFrame;
+        if (showFrustumOutlines) {
+            var debugLightFrustum = shadowMap._debugLightFrustum;
+            if (!defined(debugLightFrustum)) {
+                debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
             }
-            Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
-            debugCascadeFrustum.update(frameState);
+            Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
+            debugLightFrustum.update(frameState);
+
+            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
+                var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
+                if (!defined(debugCascadeFrustum)) {
+                    debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
+                }
+                Matrix4.inverse(shadowMap._cascadeCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
+                debugCascadeFrustum.update(frameState);
+            }
         }
 
         updateDebugShadowViewCommand(shadowMap, frameState);
@@ -749,10 +749,12 @@ define([
         Cartesian3.clone(lightRight, shadowMapCamera.rightWC);
     }
 
-    function updateCameras(shadowMap, camera) {
+    function updateCameras(shadowMap, frameState) {
         if (shadowMap.debugFreezeFrame) {
             return;
         }
+
+        var camera = frameState.camera;
 
         // Clone light camera into the shadow map camera
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -764,15 +766,26 @@ define([
         Cartesian3.normalize(lightDirection, lightDirection);
         Cartesian3.negate(lightDirection, lightDirection);
 
-        // Clone scene camera and limit the far plane
+        // Get the near and far of the scene camera
+        var near;
+        var far;
+        if (shadowMap._fitNearFar) {
+            // shadowFar can be very large, so limit to shadowMap._distance
+            near = frameState.shadowNear;
+            far = Math.min(frameState.shadowFar, near + shadowMap._distance);
+        } else {
+            near = camera.frustum.near;
+            far = shadowMap._distance;
+        }
+
         shadowMap._sceneCamera = Camera.clone(camera, shadowMap._sceneCamera);
-        shadowMap._sceneCamera.frustum.near = camera.frustum.near;
-        shadowMap._sceneCamera.frustum.far = shadowMap._farPlane;
+        shadowMap._sceneCamera.frustum.near = near;
+        shadowMap._sceneCamera.frustum.far = far;
     }
 
     ShadowMap.prototype.update = function(frameState) {
         updateFramebuffer(this, frameState.context);
-        updateCameras(this, frameState.camera);
+        updateCameras(this, frameState);
 
         if (this._fitToScene) {
             fitShadowMapToScene(this);

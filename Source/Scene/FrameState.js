@@ -168,6 +168,18 @@ define([
         * @type {ShadowMap}
         */
         this.shadowMap = undefined;
+
+        /**
+        * The near plane of the scene's frustum commands. Used for fitting the shadow map.
+        * @type {Number}
+        */
+        this.shadowNear = 1.0;
+
+        /**
+        * The far plane of the scene's frustum commands. Used for fitting the shadow map.
+        * @type {Number}
+        */
+        this.shadowFar = 10000.0;
     }
 
     /**
