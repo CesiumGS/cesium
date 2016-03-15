@@ -602,7 +602,7 @@ define([
             y = 7 - Math.min(y / 32, 7);
             var iconNum = (8 * y) + x;
 
-            href = '//maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
+            href = 'https://maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
         href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
