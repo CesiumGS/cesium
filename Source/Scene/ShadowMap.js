@@ -790,7 +790,7 @@ define([
         var numberOfCascades = shadowMap._numberOfCascades;
 
         // Split cascades. Use a mix of linear and log splits.
-        var lambda = 1.0;
+        var lambda = 0.9;
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
