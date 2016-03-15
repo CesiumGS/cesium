@@ -11,6 +11,7 @@ Change Log
 * Fixed loading for KML `NetworkLink` to not append a `?` if there isn't a query string.
 * Fixed `Color.fromCssColorString` from reusing the input `result` alpha value in some cases.
 * Fix issue with billboard collections that have at least one billboard with an aligned axis and at least one billboard without an aligned axis. [#3318](https://github.com/AnalyticalGraphicsInc/cesium/issues/3318)
+* Fix issue where the `GroundPrimitive` volume was being clipped by the far plane. [#3706](https://github.com/AnalyticalGraphicsInc/cesium/issues/3706)
 
 ### 1.19 - 2016-03-01
 
