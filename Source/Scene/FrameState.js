@@ -179,7 +179,7 @@ define([
         * The far plane of the scene's frustum commands. Used for fitting the shadow map.
         * @type {Number}
         */
-        this.shadowFar = 100.0;
+        this.shadowFar = 10000.0;
     }
 
     /**

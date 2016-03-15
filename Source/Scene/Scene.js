@@ -1194,6 +1194,9 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
+        var shadowNear = Number.MAX_VALUE;
+        var shadowFar = -Number.MAX_VALUE;
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -1229,6 +1232,14 @@ define([
                     distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
+
+                    // When moving the camera low LOD terrain tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update shadowNear and shadowFar
+                    // for reasonably sized bounding volumes.
+                    if (!(distances.start < 0.0 && distances.stop > frameState.shadowFar)) {
+                        shadowNear = Math.min(shadowNear, distances.start);
+                        shadowFar = Math.max(shadowFar, distances.stop);
+                    }
                 } else {
                     // Clear commands don't need a bounding volume - just add the clear to all frustums.
                     // If another command has no bounding volume, though, we need to use the camera's
@@ -1251,11 +1262,14 @@ define([
             // This will handle the case where the computed near plane is further than the user defined far plane.
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
+
+            shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+            shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
         }
 
         // Use the computed near and far for shadows
-        frameState.shadowNear = near;
-        frameState.shadowFar = far;
+        frameState.shadowNear = shadowNear;
+        frameState.shadowFar = shadowFar;
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.

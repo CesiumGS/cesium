@@ -113,7 +113,7 @@ var viewModel = {
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024
 };
-
+    
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
