@@ -91,7 +91,6 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render. This option is deprecated. Please use options.geometryInstances instead.
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
@@ -150,25 +149,6 @@ define([
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (defined(options.geometryInstance)) {
-            deprecationWarning('GroundPrimitive.geometryInstance', 'GroundPrimitive.geometryInstance is deprecated in version 1.18 and will be removed in version 1.20. Please use GroundPrimitive.geometryInstances.');
-        }
-
-        /**
-         * The geometry instance rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
-         * is <code>true</code> when the primitive is constructed.
-         * <p>
-         * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         *
-         * @type {GeometryInstance}
-         *
-         * @default undefined
-         *
-         * @deprecated
-         */
-        this.geometryInstance = options.geometryInstance;
         /**
          * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
@@ -824,7 +804,7 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance) && !defined(this.geometryInstances))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -842,55 +822,39 @@ define([
             var geometry;
             var instanceType;
 
-            if (defined(this.geometryInstance)) {
-                instance = this.geometryInstance;
+
+            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var length = instances.length;
+            var groundInstances = new Array(length);
+
+            var color;
+
+            for (var i = 0 ; i < length; ++i) {
+                instance = instances[i];
                 geometry = instance.geometry;
 
                 instanceType = geometry.constructor;
                 if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                    instance = new GeometryInstance({
+                    var attributes = instance.attributes;
+
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(attributes) || !defined(attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (!defined(color)) {
+                        color = attributes.color;
+                    }
+                    //>>includeEnd('debug');
+
+                    groundInstances[i] = new GeometryInstance({
                         geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                        attributes : instance.attributes,
+                        attributes : attributes,
                         id : instance.id,
                         pickPrimitive : this
                     });
-                }
-
-                primitiveOptions.geometryInstances = instance;
-            } else {
-                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
-                var length = instances.length;
-                var groundInstances = new Array(length);
-
-                var color;
-
-                for (var i = 0 ; i < length; ++i) {
-                    instance = instances[i];
-                    geometry = instance.geometry;
-
-                    instanceType = geometry.constructor;
-                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                        var attributes = instance.attributes;
-
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(attributes) || !defined(attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (!defined(color)) {
-                            color = attributes.color;
-                        }
-                        //>>includeEnd('debug');
-
-                        groundInstances[i] = new GeometryInstance({
-                            geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                            attributes : attributes,
-                            id : instance.id,
-                            pickPrimitive : this
-                        });
-                    } else {
-                        throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
-                    }
+                } else {
+                    throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                 }
 
                 primitiveOptions.geometryInstances = groundInstances;
@@ -918,7 +882,6 @@ define([
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
-                    that.geometryInstance = undefined;
                     that.geometryInstances = undefined;
                 }
 

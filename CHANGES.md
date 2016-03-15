@@ -4,6 +4,9 @@ Change Log
 ### 1.20 - 2016-04-01
 
 * Breaking changes
+  * Removed `TileMapServiceImageryProvider`.  Use `createTileMapServiceImageryProvider` instead.
+  * Removed `GroundPrimitive.geometryInstance`.  Use `GroundPrimitive.geometryInstances` instead.
+  * Removed `definedNotNull`.  Use `defined` instead.
   * Removed ability to rotate the map in 2D.
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
@@ -11,6 +14,7 @@ Change Log
 * Fixed loading for KML `NetworkLink` to not append a `?` if there isn't a query string.
 * Fixed `Color.fromCssColorString` from reusing the input `result` alpha value in some cases.
 * Fix issue with billboard collections that have at least one billboard with an aligned axis and at least one billboard without an aligned axis. [#3318](https://github.com/AnalyticalGraphicsInc/cesium/issues/3318)
+* Fix a race condition that would cause the terrain to continue loading and unloading or cause a crash when changing terrain providers. [#3690](https://github.com/AnalyticalGraphicsInc/cesium/issues/3690)
 * Added infinite horizontal scrolling in 2D.
 
 ### 1.19 - 2016-03-01
