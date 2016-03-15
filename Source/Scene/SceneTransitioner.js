@@ -466,10 +466,14 @@ define([
             var ray = scratchCVTo2DRay;
             Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, startPos, ray.origin);
             Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, startDir, ray.direction);
-            var pickPos = scene.globe.pick(ray, scene, scratchCVTo2DPickPos);
-            if (defined(pickPos)) {
-                Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
-                endPos.z += Cartesian3.distance(startPos, endPos);
+
+            var globe = scene.globe;
+            if (defined(globe)) {
+                var pickPos = globe.pick(ray, scene, scratchCVTo2DPickPos);
+                if (defined(pickPos)) {
+                    Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
+                    endPos.z += Cartesian3.distance(startPos, endPos);
+                }
             }
         }
 
@@ -566,11 +570,14 @@ define([
             Matrix4.multiplyByPointAsVector(toENU, rayDirection, rayDirection);
             Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, rayDirection, rayDirection);
 
-            var pickedPos = scene.globe.pick(ray, scene, scratch3DTo2DPickPosition);
-            if (defined(pickedPos)) {
-                var height = Cartesian3.distance(camera2D.position2D, pickedPos);
-                pickedPos.x += height;
-                Cartesian3.clone(pickedPos, camera2D.position2D);
+            var globe = scene.globe;
+            if (defined(globe)) {
+                var pickedPos = globe.pick(ray, scene, scratch3DTo2DPickPosition);
+                if (defined(pickedPos)) {
+                    var height = Cartesian3.distance(camera2D.position2D, pickedPos);
+                    pickedPos.x += height;
+                    Cartesian3.clone(pickedPos, camera2D.position2D);
+                }
             }
         }
 
