@@ -557,7 +557,10 @@ defineSuite([
             geometryInstances : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
-                })
+                }),
+                attributes: {
+                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                }
             }),
             compressVertices : false
         });
@@ -588,7 +591,10 @@ defineSuite([
             geometryInstances : new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
                     positions : []
-                })
+                }),
+                attributes: {
+                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                }
             }),
             asynchronous : false,
             compressVertices : false
