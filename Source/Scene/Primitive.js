@@ -1114,7 +1114,7 @@ define([
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
         if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive._castShadows) {
             var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState);
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState, false);
             primitive._shadowCastSP = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,
@@ -1144,7 +1144,7 @@ define([
 
         // Modify program to receive shadows
         if (shadowsEnabled && primitive._receiveShadows) {
-            vs = ShadowMapShader.createShadowReceiveVertexShader(vs);
+            vs = ShadowMapShader.createShadowReceiveVertexShader(vs, frameState);
             fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC', 'v_positionEC');
         }
 

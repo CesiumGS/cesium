@@ -1551,7 +1551,7 @@ define([
         /**
          * An automatic GLSL uniform representing the sun's shadow map light direction in eye coordinates.
          *
-         * @alias czm_sunShadowMapLightDirection
+         * @alias czm_sunShadowMapLightDirectionEC
          * @glslUniform
          */
         czm_sunShadowMapLightDirectionEC : new AutomaticUniform({
@@ -1559,6 +1559,34 @@ define([
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.shadowMap.lightDirectionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map light position in eye coordinates.
+         *
+         * @alias czm_sunShadowMapLightPositionEC
+         * @glslUniform
+         */
+        czm_sunShadowMapLightPositionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.lightPositionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the sun's shadow map radius.
+         *
+         * @alias czm_sunShadowMapRadius
+         * @glslUniform
+         */
+        czm_sunShadowMapRadius : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.radius;
             }
         })
     };
