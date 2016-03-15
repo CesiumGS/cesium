@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+var ellipsoid = viewer.scene.globe.ellipsoid;
+
+var upScratch = new Cesium.Cartesian3();
+var rightScratch = new Cesium.Cartesian3();
+var dirScratch = new Cesium.Cartesian3();
+function originNextToFixedFrame(origin, next, transform) {
+    var n1 = ellipsoid.geodeticSurfaceNormal(origin);
+    var n2 = ellipsoid.geodeticSurfaceNormal(next);
+    var dir;
+    if (Cesium.Cartesian3.equalsEpsilon(n1, n2, Cesium.Math.EPSILON6)) {
+        var east = Cesium.Cartesian3.normalize(new Cesium.Cartesian3(-origin.y, origin.x, 0));
+        dir = n1;
+        var north = Cesium.Cartesian3.cross(dir, east, new Cesium.Cartesian3());
+            return new Cesium.Matrix4(
+                north.x, dir.x, east.x, origin.x,
+                north.y, dir.y, east.y, origin.y,
+                north.z, dir.z, east.z, origin.z,
+                0.0,       0.0,         0.0,      1.0);
+    }
+    
+    var up = n1;
+    dir = Cesium.Cartesian3.normalize(Cesium.Cartesian3.subtract(next, origin, dirScratch), dirScratch);  
+    var right = Cesium.Cartesian3.cross(dir, up, rightScratch);
+    right = Cesium.Cartesian3.normalize(right, right);
+    up = Cesium.Cartesian3.cross(right, dir, up);
+    return new Cesium.Matrix4(
+        up.x, dir.x, right.x, origin.x,
+        up.y, dir.y, right.y, origin.y,
+        up.z, dir.z, right.z, origin.z,
+        0.0,       0.0,         0.0,      1.0);
+}
+
+function boxPositions(size) {
+    size*=2;
+    return [new Cesium.Cartesian3(0, 0, 0),
+            new Cesium.Cartesian3(size,  0, 0),
+            new Cesium.Cartesian3(size,  0, size),
+            new Cesium.Cartesian3(0,  0, size)
+    ];
+}
+
+var size = 100000;
+var shape = boxPositions(size);
+var west = new Cesium.Cartesian3();
+var center = Cesium.Cartesian3.fromDegrees(-110, 40);
+var next = Cesium.Cartesian3.fromDegrees(-110, 35, 600000);
+
+viewer.entities.add({
+    position : center,
+    point : {
+        pixelSize : 10,
+        color : Cesium.Color.YELLOW
+    }
+});
+
+viewer.entities.add({
+    position : next,
+    point : {
+        pixelSize : 10,
+        color : Cesium.Color.YELLOW
+    }
+});
+
+var transform = originNextToFixedFrame(center, next);
+
+for (var i = 0; i < shape.length; i++) {
+    var pos = shape[i];
+    pos = Cesium.Matrix4.multiplyByPoint(transform, pos, pos);
+    shape[i] = pos;
+}
+
+viewer.scene.primitives.add(new Cesium.Primitive({
+    geometryInstances : new Cesium.GeometryInstance({
+        geometry : new Cesium.PolylineGeometry({
+            positions : shape,
+            followSurface: false,
+            width : 5.0,
+            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
+        }),
+        attributes: {
+            color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.8))
+        }
+    }),
+    appearance : new Cesium.PolylineColorAppearance()
+}));
+
+/*
+    var centerScratch1 = new Cartesian3();
+    var centerScratch2 = new Cartesian3();
+    var centerScratch3 = new Cartesian3();
+    var fScratch = new Cartesian3();
+    var bScratch = new Cartesian3();
+    var middleVec = new Cartesian3();
+    var crossVec = new Cartesian3();
+    function addPositions(centers, shape, finalPositions, heights, xScalar) {
+        if (centers.length < 6) {
+            return finalPositions;
+        }
+        var previous = Cartesian3.fromArray(centers, 0, centerScratch1);
+        var current = Cartesian3.fromArray(centers, 3, centerScratch2);
+        var forward = Cartesian3.normalize(Cartesian3.subtract(current, previous, fScratch), fScratch);
+        finalPositions = addPosition(previous, forward, shape, finalPositions, heights[0], xScalar, 1);
+        var backward = Cartesian3.negate(forward, bScratch);
+        for (var i = 6; i < centers.length; i += 3) {
+            var next = Cartesian3.fromArray(centers, i, centerScratch3);
+            forward = Cartesian3.normalize(Cartesian3.subtract(next, current, fScratch), fScratch);
+            var middle = Cartesian3.add(forward, backward, middleVec);
+            if (Cartesian3.magnitude(middle) > CesiumMath.EPSILON6) {
+                var cross = Cartesian3.cross(forward, middle, crossVec);
+                middle = Cartesian3.normalize(Cartesian3.cross(middle, cross, middle), middle);
+            } else {
+                middle = Cartesian3.clone(forward, middle);
+            }
+
+            finalPositions = addPosition(current, middle, shape, finalPositions, heights[i / 3], xScalar, 1);
+            previous = Cartesian3.clone(current, previous);
+            current = Cartesian3.clone(next, previous);
+            backward = Cartesian3.negate(forward, bScratch);
+        }
+        finalPositions = addPosition(current, forward, shape, finalPositions, heights[(centers.length - 3) / 3], xScalar, 1);
+        return finalPositions;
+    }
+
+*///Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
