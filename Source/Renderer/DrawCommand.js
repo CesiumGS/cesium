@@ -132,6 +132,7 @@ define([
          * @type {Boolean}
          * @default false
          */
+        // TODO : not used right now, but keep if it proves useful
         this.receiveShadows = defaultValue(options.receiveShadows, false);
 
         /**
