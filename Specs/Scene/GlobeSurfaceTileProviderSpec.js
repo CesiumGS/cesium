@@ -665,7 +665,7 @@ defineSuite([
 
         var terrainCredit = new Credit('terrain credit');
         globe.terrainProvider = new CesiumTerrainProvider({
-            url : '//assets.agi.com/stk-terrain/world',
+            url : 'https://assets.agi.com/stk-terrain/world',
             credit : terrainCredit
         });
 
