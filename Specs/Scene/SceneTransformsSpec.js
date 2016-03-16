@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/Rectangle',
         'Scene/Camera',
         'Specs/createScene'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        Rectangle,
         Camera,
         createScene) {
     'use strict';
@@ -158,6 +160,10 @@ defineSuite([
     });
 
     it('returns correct window position in 2D', function() {
+        scene.camera.setView({
+            destination : Rectangle.fromDegrees(-0.000001, -0.000001, 0.000001, 0.000001)
+        });
+
         // Update scene state
         scene.morphTo2D(0);
         scene.initializeFrame();

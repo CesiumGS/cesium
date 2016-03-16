@@ -34,10 +34,10 @@
     "almond": "0.3.1",
     "async": "1.5.2",
     "aws-sdk": "2.2.42",
-    "bluebird": "3.3.1",
+    "bluebird": "3.3.4",
     "compressible": "2.0.7",
     "compression": "1.6.1",
-    "electron-prebuilt": "0.36.9",
+    "electron-prebuilt": "0.36.10",
     "event-stream": "3.3.2",
     "express": "4.13.4",
     "globby": "4.0.0",
@@ -67,7 +67,7 @@
     "request": "2.69.0",
     "rimraf": "2.5.2",
     "strip-comments": "0.3.2",
-    "yargs": "3.32.0"
+    "yargs": "4.2.0"
   },
   "scripts": {
     "start": "node server.js",

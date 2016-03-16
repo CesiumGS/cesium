@@ -269,6 +269,11 @@ defineSuite([
         expect(c).toBe(c2);
         expect(c).toEqual(Color.RED);
 
+        c.alpha = 0.5;
+        c2 = Color.fromCssColorString('#f00', c); // resets alpha to 1.0
+        expect(c).toBe(c2);
+        expect(c).toEqual(Color.RED);
+
         c2 = Color.fromCssColorString('#0000ff', c);
         expect(c).toBe(c2);
         expect(c).toEqual(Color.BLUE);
