@@ -2174,7 +2174,6 @@ define([
     var cartesian2Scratch1 = new Cartesian2();
 
     var cartesian3Scratch0 = new Cartesian3();
-    var cartesian3Scratch1 = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
     var cartesian3Scratch3 = new Cartesian3();
     var cartesian3Scratch4 = new Cartesian3();
@@ -2182,6 +2181,9 @@ define([
     var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
+
+    var offsetScalar = 5.0 * CesiumMath.EPSILON9;
+    var coplanarOffset = CesiumMath.EPSILON6;
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
@@ -2204,23 +2206,53 @@ define([
         var length = positions.length / 3;
         for (i = 0; i < length; i += 4) {
             var i0 = i;
-            var i1 = i + 1;
             var i2 = i + 2;
-            var i3 = i + 3;
 
             var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
-            var p1 = Cartesian3.fromArray(positions, i1 * 3, cartesian3Scratch1);
             var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
-            var p3 = Cartesian3.fromArray(positions, i3 * 3, cartesian3Scratch3);
 
-            if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
-                p0.y = CesiumMath.EPSILON6 * (p2.y < 0.0 ? -1.0 : 1.0);
-                p1.y = p0.y;
+            if (Math.abs(p0.y) < coplanarOffset) {
+                if (p2.y < 0.0) {
+                    p0.y = -coplanarOffset;
+
+                    positions[i * 3 + 1] = p0.y;
+                    positions[(i + 1) * 3 + 1] = p0.y;
+
+                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                        prevPositions[j] = positions[j];
+                    }
+                } else {
+                    p0.y = coplanarOffset;
+
+                    positions[i * 3 + 1] = p0.y;
+                    positions[(i + 1) * 3 + 1] = p0.y;
+
+                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                        nextPositions[j] = positions[j];
+                    }
+                }
             }
 
-            if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
-                p2.y = CesiumMath.EPSILON6 * (p0.y < 0.0 ? -1.0 : 1.0);
-                p3.y = p2.y;
+            if (Math.abs(p2.y) < coplanarOffset) {
+                if (p0.y < 0.0) {
+                    p2.y = coplanarOffset;
+
+                    positions[(i + 2) * 3 + 1] = p2.y;
+                    positions[(i + 3) * 3 + 1] = p2.y;
+
+                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                        nextPositions[j] = positions[j];
+                    }
+                } else {
+                    p2.y = -coplanarOffset;
+
+                    positions[(i + 2) * 3 + 1] = p2.y;
+                    positions[(i + 3) * 3 + 1] = p2.y;
+
+                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                        prevPositions[j] = positions[j];
+                    }
+                }
             }
 
             var p0Attributes = eastGeometry.attributes;
@@ -2231,7 +2263,7 @@ define([
             var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
             if (defined(intersection)) {
                 // move point on the xz-plane slightly away from the plane
-                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch5);
+                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, offsetScalar, cartesian3Scratch5);
                 if (p0.y < 0.0) {
                     Cartesian3.negate(offset, offset);
                     p0Attributes = westGeometry.attributes;
@@ -2241,29 +2273,31 @@ define([
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch6);
-                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-
-                Cartesian3.negate(offset, offset);
-                Cartesian3.add(intersection, offset, offsetPoint);
-                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
 
                 for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
                     p0Attributes.prevPosition.values.push(prevPositions[j]);
                 }
                 p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                p2Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.prevPosition.values.push(prevPositions[j]);
-                }
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.nextPosition.values.push(nextPositions[j]);
-                }
-                p0Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                Cartesian3.negate(offset, offset);
+                Cartesian3.add(intersection, offset, offsetPoint);
+                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
+
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
                 p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
                 for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
                     p2Attributes.nextPosition.values.push(nextPositions[j]);
@@ -2339,9 +2373,9 @@ define([
                 }
 
                 currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
                 currentAttributes.position.values.push(p2.x, p2.y, p2.z);
-                currentAttributes.position.values.push(p3.x, p3.y, p3.z);
+                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
 
                 for (j = i * 3; j < i * 3 + 4 * 3; ++j) {
                     currentAttributes.prevPosition.values.push(prevPositions[j]);
