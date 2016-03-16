@@ -1385,7 +1385,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('//maps.google.com/mapfiles/kml/pal3/icon56.png');
+            expect(billboard.image.getValue()).toEqual('https://maps.google.com/mapfiles/kml/pal3/icon56.png');
         });
     });
 
