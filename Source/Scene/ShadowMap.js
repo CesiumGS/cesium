@@ -37,6 +37,7 @@ define([
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
+        '../Renderer/WebGLConstants',
         './Camera',
         './CullFace',
         './OrthographicFrustum',
@@ -82,6 +83,7 @@ define([
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
+        WebGLConstants,
         Camera,
         CullFace,
         OrthographicFrustum,
@@ -407,6 +409,7 @@ define([
         });
 
         shadowMap._shadowMapTexture = depthStencilTexture;
+
         return framebuffer;
     }
 
@@ -420,10 +423,22 @@ define([
         }
     }
 
+    function checkFramebuffer(shadowMap, context) {
+        // Attempt to make an FBO with only a depth texture. If it fails, fallback to a color texture.
+        if (shadowMap._usesDepthTexture && (shadowMap._framebuffer.status !== WebGLConstants.FRAMEBUFFER_COMPLETE)) {
+            shadowMap._usesDepthTexture = false;
+            var colorMask = shadowMap._renderState.colorMask;
+            colorMask.red = colorMask.green = colorMask.blue = colorMask.alpha = true;
+            destroyFramebuffer(shadowMap);
+            createFramebuffer(shadowMap, context);
+        }
+    }
+
     function updateFramebuffer(shadowMap, context) {
         if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._textureSize.x)) {
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
+            checkFramebuffer(shadowMap, context);
         }
     }
 
