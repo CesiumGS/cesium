@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
@@ -36,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -100,6 +102,8 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
+     *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
      *
      * @example
      * // Example 1: Create primitive with a single instance
@@ -188,6 +192,20 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the shadow volume for each geometry in the primitive. Must be <code>true</code> on
+         * creation for the volumes to be created before the geometry is released or releaseGeometryInstances
+         * must be <code>false</code>
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
+
         this._sp = undefined;
         this._spPick = undefined;
 
@@ -205,6 +223,7 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
+        this._debugPrimitive = undefined;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -896,6 +915,45 @@ define([
 
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
+
+        if (this.debugShowShadowVolume && !defined(this._debugPrimitive) && defined(this.geometryInstances)) {
+            var debugInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var debugLength = debugInstances.length;
+            var debugVolumeInstances = new Array(debugLength);
+
+            for (var j = 0 ; j < debugLength; ++j) {
+                var debugInstance = debugInstances[j];
+                var debugGeometry = debugInstance.geometry;
+                var debugInstanceType = debugGeometry.constructor;
+                if (defined(debugInstanceType) && defined(debugInstanceType.createShadowVolume)) {
+                    var debugColorArray = debugInstance.attributes.color.value;
+                    var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
+                    Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
+                    debugVolumeInstances[j] = new GeometryInstance({
+                        geometry : debugInstanceType.createShadowVolume(debugGeometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : {
+                            color : ColorGeometryInstanceAttribute.fromColor(debugColor)
+                        },
+                        id : debugInstance.id,
+                        pickPrimitive : this
+                    });
+                }
+            }
+
+            this._debugPrimitive = new Primitive({
+                geometryInstances : debugVolumeInstances,
+                releaseGeometryInstances : true,
+                allowPicking : false,
+                asynchronous : false,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true
+                })
+            });
+        }
+
+        if (this.debugShowShadowVolume && defined(this._debugPrimitive)) {
+            this._debugPrimitive.update(frameState);
+        }
     };
 
     /**
