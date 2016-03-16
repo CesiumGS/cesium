@@ -894,7 +894,11 @@ define([
 
                                 var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                                 if (defined(styleUrl)) {
-                                    var base = styleCollection.getOrCreateEntity(styleUrl);
+                                    var base = styleCollection.getById(styleUrl);
+                                    if (!defined(base)) {
+                                        base = styleCollection.getById('#' + styleUrl);
+                                    }
+
                                     if (defined(base)) {
                                         styleEntity.merge(base);
                                     }
