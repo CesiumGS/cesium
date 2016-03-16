@@ -2183,7 +2183,7 @@ define([
     var cartesian4Scratch0 = new Cartesian4();
 
     var offsetScalar = 5.0 * CesiumMath.EPSILON9;
-    var coplanarOffset = CesiumMath.EPSILON1;
+    var coplanarOffset = CesiumMath.EPSILON6;
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
