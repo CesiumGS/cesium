@@ -602,7 +602,7 @@ define([
             y = 7 - Math.min(y / 32, 7);
             var iconNum = (8 * y) + x;
 
-            href = '//maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
+            href = 'https://maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
         href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
@@ -894,7 +894,11 @@ define([
 
                                 var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                                 if (defined(styleUrl)) {
-                                    var base = styleCollection.getOrCreateEntity(styleUrl);
+                                    var base = styleCollection.getById(styleUrl);
+                                    if (!defined(base)) {
+                                        base = styleCollection.getById('#' + styleUrl);
+                                    }
+
                                     if (defined(base)) {
                                         styleEntity.merge(base);
                                     }

@@ -32,7 +32,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Element|String} options.container The DOM element or ID that will contain the widget.
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
