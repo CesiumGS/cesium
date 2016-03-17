@@ -27,7 +27,6 @@ var yargs = require('yargs');
 var aws = require('aws-sdk');
 var mime = require('mime');
 var compressible = require('compressible');
-var graceful = require('graceful-fs');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -305,6 +304,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
 
 gulp.task('deploy', function(done) {
     var cacheControl = "max-age=3600";
+    var concurrencyLimit = 2000;
 
     var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
@@ -389,14 +389,14 @@ gulp.task('deploy', function(done) {
             dot: true // include hidden files
         });
 
-        return async.forEach (files, function(filename, callback) {
+        return async.forEachLimit (files, concurrencyLimit, function(filename, callback) {
             var blobName = uploadDir + '/' + filename;
             var contentType = mime.lookup(filename);
             var compress = compressible(contentType);
             var contentEncoding = compress ? 'gzip' : undefined;
             var etag;
 
-            return graceful.readFile(filename, function(err, contents) {
+            return fs.readFile(filename, function(err, contents) {
                 if (err) {
                     callback();
                 } else {

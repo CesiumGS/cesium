@@ -41,7 +41,6 @@
     "event-stream": "3.3.2",
     "express": "4.13.4",
     "globby": "4.0.0",
-    "graceful-fs": "4.1.3",
     "gulp": "3.9.1",
     "gulp-insert": "0.5.0",
     "gulp-jshint": "2.0.0",
