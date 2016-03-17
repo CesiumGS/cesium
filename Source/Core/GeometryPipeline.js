@@ -2211,47 +2211,27 @@ define([
             var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
             var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
 
+            // Offset points that are close to the 180 longitude and change the previous/next point
+            // to be the same offset point so it can be projected to 2D. There is special handling in the
+            // shader for when position == prevPosition || position == nextPosition.
             if (Math.abs(p0.y) < coplanarOffset) {
-                if (p2.y < 0.0) {
-                    p0.y = -coplanarOffset;
+                p0.y = coplanarOffset * (p2.y < 0.0 ? -1.0 : 1.0);
+                positions[i * 3 + 1] = p0.y;
+                positions[(i + 1) * 3 + 1] = p0.y;
 
-                    positions[i * 3 + 1] = p0.y;
-                    positions[(i + 1) * 3 + 1] = p0.y;
-
-                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                        prevPositions[j] = positions[j];
-                    }
-                } else {
-                    p0.y = coplanarOffset;
-
-                    positions[i * 3 + 1] = p0.y;
-                    positions[(i + 1) * 3 + 1] = p0.y;
-
-                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                        nextPositions[j] = positions[j];
-                    }
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                    prevPositions[j] = positions[j];
                 }
             }
 
+            // Do the same but for when the line crosses 180 longitude in the opposite direction.
             if (Math.abs(p2.y) < coplanarOffset) {
-                if (p0.y < 0.0) {
-                    p2.y = coplanarOffset;
+                p2.y = coplanarOffset * (p0.y < 0.0 ? -1.0 : 1.0);
+                positions[(i + 2) * 3 + 1] = p2.y;
+                positions[(i + 3) * 3 + 1] = p2.y;
 
-                    positions[(i + 2) * 3 + 1] = p2.y;
-                    positions[(i + 3) * 3 + 1] = p2.y;
-
-                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                        nextPositions[j] = positions[j];
-                    }
-                } else {
-                    p2.y = -coplanarOffset;
-
-                    positions[(i + 2) * 3 + 1] = p2.y;
-                    positions[(i + 3) * 3 + 1] = p2.y;
-
-                    for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                        prevPositions[j] = positions[j];
-                    }
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
+                    nextPositions[j] = positions[j];
                 }
             }
 
@@ -2277,9 +2257,8 @@ define([
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.prevPosition.values.push(prevPositions[j]);
-                }
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3], prevPositions[i0 * 3 + 1], prevPositions[i0 * 3 + 2]);
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3 + 3], prevPositions[i0 * 3 + 4], prevPositions[i0 * 3 + 5]);
                 p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
 
                 p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
@@ -2299,9 +2278,8 @@ define([
                 p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
                 p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.nextPosition.values.push(nextPositions[j]);
-                }
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3], nextPositions[i2 * 3 + 1], nextPositions[i2 * 3 + 2]);
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3 + 3], nextPositions[i2 * 3 + 4], nextPositions[i2 * 3 + 5]);
 
                 var ew0 = Cartesian2.fromArray(expandAndWidths, i0 * 2, cartesian2Scratch0);
                 var width = Math.abs(ew0.y);
