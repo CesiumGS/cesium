@@ -440,7 +440,7 @@ gulp.task('deploy', function(done) {
                                     Key : blobName
                                 });
                                 req.on('error', function (err, response) {
-                                    console.log(err)
+                                    console.log(err);
                                     return reject(err);
                                 });
                                 req.on('success', function(response) {
