@@ -1113,8 +1113,8 @@ define([
         // Create shadow cast program
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
         if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive._castShadows) {
-            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs);
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState, false);
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs, frameState, 'v_positionEC');
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState, false, 'v_positionEC');
             primitive._shadowCastSP = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,

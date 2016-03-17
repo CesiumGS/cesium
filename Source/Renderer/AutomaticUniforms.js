@@ -1493,6 +1493,20 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the sun's shadow map texture as a cube map.
+         *
+         * @alias czm_sunShadowMapTextureCube
+         * @glslUniform
+         */
+        czm_sunShadowMapTextureCube : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapTexture;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing the sun's shadow map matrix.
          *
          * @alias czm_sunShadowMapMatrix

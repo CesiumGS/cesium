@@ -1502,8 +1502,8 @@ define([
         // Create shadow cast program
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
         if (shadowsEnabled && model.castShadows) {
-            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS);
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, frameState, false);
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS, frameState, 'v_positionEC');
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, frameState, false, 'v_positionEC');
             model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : shadowCastVS,
