@@ -1493,6 +1493,20 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform representing the sun's shadow map texture as a cube map.
+         *
+         * @alias czm_sunShadowMapTextureCube
+         * @glslUniform
+         */
+        czm_sunShadowMapTextureCube : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapTexture;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing the sun's shadow map matrix.
          *
          * @alias czm_sunShadowMapMatrix
@@ -1563,30 +1577,16 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map light position in eye coordinates.
+         * An automatic GLSL uniform that stores the point light's eye space position and radius.
          *
          * @alias czm_sunShadowMapLightPositionEC
          * @glslUniform
          */
         czm_sunShadowMapLightPositionEC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLConstants.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
                 return uniformState.shadowMap.lightPositionEC;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform representing the sun's shadow map radius.
-         *
-         * @alias czm_sunShadowMapRadius
-         * @glslUniform
-         */
-        czm_sunShadowMapRadius : new AutomaticUniform({
-            size : 1,
-            datatype : WebGLConstants.FLOAT,
-            getValue : function(uniformState) {
-                return uniformState.shadowMap.radius;
             }
         })
     };

@@ -24,6 +24,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
+        '../Renderer/CubeMap',
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
@@ -70,6 +71,7 @@ define([
         PrimitiveType,
         SphereOutlineGeometry,
         ClearCommand,
+        CubeMap,
         Framebuffer,
         PassState,
         PixelDatatype,
@@ -138,7 +140,7 @@ define([
         this._shadowMapMatrix = new Matrix4();
         this._shadowMapTexture = undefined;
         this._lightDirectionEC = new Cartesian3();
-        this._lightPositionEC = new Cartesian3();
+        this._lightPositionEC = new Cartesian4();
 
         this._framebuffer = undefined;
         this._shadowMapSize = defaultValue(options.size, 1024);
@@ -150,9 +152,10 @@ define([
 
         this._isPointLight = defaultValue(options.isPointLight, false);
         this._radius = defaultValue(options.radius, 100.0);
+        this._usesCubeMap = true;
 
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
-        this._numberOfCascades = !this._cascadesEnabled ? 0 :defaultValue(options.numberOfCascades, 4);
+        this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
         this._distance = 1000.0;
 
@@ -173,6 +176,7 @@ define([
         this._numberOfPasses = numberOfPasses;
         this._passCameras = new Array(numberOfPasses);
         this._passStates = new Array(numberOfPasses);
+        this._passFaces = new Array(numberOfPasses); // For point shadows
 
         for (var i = 0; i < numberOfPasses; ++i) {
             this._passCameras[i] = new ShadowMapCamera();
@@ -190,6 +194,11 @@ define([
 
         // Only enable the color mask if the depth texture extension is not supported
         this._usesDepthTexture = context.depthTexture;
+
+        if (this._isPointLight && this._usesCubeMap) {
+            this._usesDepthTexture = false;
+        }
+
         var colorMask = !this._usesDepthTexture;
 
         // For shadow casters
@@ -341,9 +350,9 @@ define([
                 return this._isPointLight;
             }
         },
-        radius : {
+        usesCubeMap : {
             get : function() {
-                return this._radius;
+                return this._usesCubeMap;
             }
         },
         usesDepthTexture : {
@@ -354,7 +363,12 @@ define([
     });
 
     function destroyFramebuffer(shadowMap) {
-        shadowMap._framebuffer = shadowMap._framebuffer && !shadowMap._framebuffer.isDestroyed() && shadowMap._framebuffer.destroy();
+        shadowMap._framebuffer = shadowMap._framebuffer && shadowMap._framebuffer.destroy();
+
+        // Need to destroy cube map separately
+        if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
+            shadowMap._shadowMapTexture = shadowMap._shadowMapTexture && shadowMap._shadowMapTexture.destroy();
+        }
     }
 
     function createSampler() {
@@ -413,9 +427,49 @@ define([
         return framebuffer;
     }
 
+    function createFramebufferCube(shadowMap, context) {
+        var depthRenderbuffer = new Renderbuffer({
+            context : context,
+            width : shadowMap._shadowMapSize,
+            height : shadowMap._shadowMapSize,
+            format : RenderbufferFormat.DEPTH_COMPONENT16
+        });
+
+        var cubeMap = new CubeMap({
+            context : context,
+            width : shadowMap._shadowMapSize,
+            height : shadowMap._shadowMapSize,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : createSampler()
+        });
+
+        var framebuffer = new Framebuffer({
+            context : context,
+            depthRenderbuffer : depthRenderbuffer,
+            colorTextures : [cubeMap.positiveX]
+        });
+
+        shadowMap._passFaces[0] = cubeMap.negativeX;
+        shadowMap._passFaces[1] = cubeMap.negativeY;
+        shadowMap._passFaces[2] = cubeMap.negativeZ;
+        shadowMap._passFaces[3] = cubeMap.positiveX;
+        shadowMap._passFaces[4] = cubeMap.positiveY;
+        shadowMap._passFaces[5] = cubeMap.positiveZ;
+
+        shadowMap._shadowMapTexture = cubeMap;
+        return framebuffer;
+    }
+
     function createFramebuffer(shadowMap, context) {
-        var createFunction = (shadowMap._usesDepthTexture) ? createFramebufferDepth : createFramebufferColor;
-        var framebuffer = createFunction(shadowMap, context);
+        var framebuffer;
+        if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
+            framebuffer = createFramebufferCube(shadowMap, context);
+        } else if (shadowMap._usesDepthTexture) {
+            framebuffer = createFramebufferDepth(shadowMap, context);
+        } else {
+            framebuffer = createFramebufferColor(shadowMap, context);
+        }
         shadowMap._framebuffer = framebuffer;
         shadowMap._clearCommand.framebuffer = framebuffer;
         for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
@@ -447,7 +501,17 @@ define([
         var numberOfPasses = this._numberOfPasses;
         var textureSize = this._textureSize;
 
-        if (numberOfPasses === 1) {
+        if (this._isPointLight && this._usesCubeMap) {
+            textureSize.x = size;
+            textureSize.y = size;
+            var viewport = new BoundingRectangle(0, 0, size, size);
+            this._passStates[0].viewport = viewport;
+            this._passStates[1].viewport = viewport;
+            this._passStates[2].viewport = viewport;
+            this._passStates[3].viewport = viewport;
+            this._passStates[4].viewport = viewport;
+            this._passStates[5].viewport = viewport;
+        } else if (numberOfPasses === 1) {
             // +----+
             // |  1 |
             // +----+
@@ -499,17 +563,63 @@ define([
         var height = size;
 
         if (!defined(shadowMap._debugShadowViewCommand)) {
-            var fs =
-                'varying vec2 v_textureCoordinates; \n' +
-                'void main() \n' +
-                '{ \n' +
+            var fs;
+            if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
+                fs = 'varying vec2 v_textureCoordinates; \n' +
+                     'void main() \n' +
+                     '{ \n' +
+                     '    vec2 uv = v_textureCoordinates; \n' +
+                     '    vec3 dir; \n' +
+                     ' \n' +
+                     '    if (uv.y < 0.5) { \n' +
+                     '        if (uv.x < 0.333) { \n' +
+                     '            dir.x = -1.0; \n' +
+                     '            dir.y = uv.x * 6.0 - 1.0; \n' +
+                     '            dir.z = uv.y * 4.0 - 1.0; \n' +
+                     '        } \n' +
+                     '        else if (uv.x < 0.666) { \n' +
+                     '            dir.y = -1.0; \n' +
+                     '            dir.x = uv.x * 6.0 - 3.0; \n' +
+                     '            dir.z = uv.y * 4.0 - 1.0; \n' +
+                     '        } \n' +
+                     '        else { \n' +
+                     '            dir.z = -1.0; \n' +
+                     '            dir.x = uv.x * 6.0 - 5.0; \n' +
+                     '            dir.y = uv.y * 4.0 - 1.0; \n' +
+                     '        } \n' +
+                     '    } else { \n' +
+                     '        if (uv.x < 0.333) { \n' +
+                     '            dir.x = 1.0; \n' +
+                     '            dir.y = uv.x * 6.0 - 1.0; \n' +
+                     '            dir.z = uv.y * 4.0 - 3.0; \n' +
+                     '        } \n' +
+                     '        else if (uv.x < 0.666) { \n' +
+                     '            dir.y = 1.0; \n' +
+                     '            dir.x = uv.x * 6.0 - 3.0; \n' +
+                     '            dir.z = uv.y * 4.0 - 3.0; \n' +
+                     '        } \n' +
+                     '        else { \n' +
+                     '            dir.z = 1.0; \n' +
+                     '            dir.x = uv.x * 6.0 - 5.0; \n' +
+                     '            dir.y = uv.y * 4.0 - 3.0; \n' +
+                     '        } \n' +
+                     '    } \n' +
+                     ' \n' +
+                     '    float shadow = czm_unpackDepth(textureCube(czm_sunShadowMapTextureCube, dir)); \n' +
+                     '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
+                     '} \n';
+            } else {
+                fs = 'varying vec2 v_textureCoordinates; \n' +
+                     'void main() \n' +
+                     '{ \n' +
 
-                (shadowMap._usesDepthTexture ?
-                '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' :
-                '    float shadow = czm_unpackDepth(texture2D(czm_sunShadowMapTexture, v_textureCoordinates)); \n') +
+                     (shadowMap._usesDepthTexture ?
+                     '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' :
+                     '    float shadow = czm_unpackDepth(texture2D(czm_sunShadowMapTexture, v_textureCoordinates)); \n') +
 
-                '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
-                '} \n';
+                     '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
+                     '} \n';
+            }
 
             // Set viewport now to avoid using a cached render state
             var renderState = RenderState.fromCache({
@@ -900,6 +1010,7 @@ define([
 
         // Get the light position in eye coordinates
         Matrix4.multiplyByPoint(camera.viewMatrix, shadowMapCamera.positionWC, shadowMap._lightPositionEC);
+        shadowMap._lightPositionEC.w = shadowMap._radius;
 
         // Get the near and far of the scene camera
         var near;
@@ -941,6 +1052,15 @@ define([
 
         if (this.debugShow) {
             applyDebugSettings(this, frameState);
+        }
+    };
+
+    ShadowMap.prototype.updatePass = function(context, pass) {
+        if (this._isPointLight && this._usesCubeMap) {
+            this._framebuffer._attachTexture(context, WebGLConstants.COLOR_ATTACHMENT0, this._passFaces[pass]);
+            this._clearCommand.execute(context);
+        } else if (pass === 0) {
+            this._clearCommand.execute(context);
         }
     };
 

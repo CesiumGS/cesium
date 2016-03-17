@@ -1699,15 +1699,13 @@ define([
         var shadowMap = scene.sunShadowMap;
         var renderState = shadowMap.renderState;
 
-        // Clear shadow depth
-        shadowMap.clearCommand.execute(context);
-
         var commands = getShadowMapCommands(scene);
         var numberOfCommands = commands.length;
         var numberOfPasses = shadowMap.numberOfPasses;
         for (var i = 0; i < numberOfPasses; ++i) {
             uniformState.updateCamera(shadowMap.passCameras[i]);
             var passState = shadowMap.passStates[i];
+            shadowMap.updatePass(context, i);
             for (var j = 0; j < numberOfCommands; ++j) {
                 var command = commands[j];
                 executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);

@@ -15,18 +15,36 @@ define([
     function ShadowMapShader() {
     }
 
-    ShadowMapShader.createShadowCastVertexShader = function(vs) {
+    ShadowMapShader.createShadowCastVertexShader = function(vs, frameState, positionVaryingName) {
+        var hasPositionVarying = defined(positionVaryingName) && (vs.indexOf(positionVaryingName) > -1);
+        var isPointLight = frameState.shadowMap.isPointLight;
+        var usesCubeMap = frameState.shadowMap.usesCubeMap;
+
+        if (isPointLight && usesCubeMap && !hasPositionVarying) {
+            vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
+            vs +=
+                'varying vec3 v_positionEC; \n' +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_shadow_main(); \n' +
+                '    v_positionEC = (czm_inverseProjection * gl_Position).xyz; \n' +
+                '}';
+        }
+
         return vs;
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, frameState, opaque) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, frameState, opaque, positionVaryingName) {
         // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
+        var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
+        positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
+        var isPointLight = frameState.shadowMap.isPointLight;
+        var usesCubeMap = frameState.shadowMap.usesCubeMap;
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
+
         if (opaque) {
             fs = 'void main() \n' +
-                 '{ \n' +
-                 '    gl_FragColor = ' + (usesDepthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
-                 '}';
+                 '{ \n';
         } else {
             fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
             fs +=
@@ -35,9 +53,24 @@ define([
                 '    czm_shadow_main(); \n' +
                 '    if (gl_FragColor.a == 0.0) { \n' +
                 '       discard; \n' +
-                '    } \n' +
-                '    gl_FragColor = ' + (usesDepthTexture ? 'vec4(1.0)' : 'czm_packDepth(gl_FragCoord.z)') + '; \n' +
-                '}';
+                '    } \n';
+        }
+
+        if (isPointLight && usesCubeMap) {
+            fs +=
+                'float distance = length(' + positionVaryingName + '); \n' +
+                'distance /= czm_sunShadowMapLightPositionEC.w; // radius \n' +
+                'gl_FragColor = czm_packDepth(distance); \n';
+        } else if (usesDepthTexture) {
+            fs += 'gl_FragColor = vec4(1.0); \n';
+        } else {
+            fs += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
+        }
+
+        fs += '}';
+
+        if (isPointLight && usesCubeMap && !hasPositionVarying) {
+            fs = 'varying vec3 v_positionEC; \n' + fs;
         }
 
         return fs;
@@ -64,6 +97,7 @@ define([
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
         var isPointLight = frameState.shadowMap.isPointLight;
+        var usesCubeMap = frameState.shadowMap.usesCubeMap;
         var hasCascades = frameState.shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
 
@@ -114,24 +148,29 @@ define([
 
             '} \n' +
             ' \n' +
+
+            (isPointLight && usesCubeMap ?
+            'float sampleTexture(vec3 d) \n' +
+            '{ \n' +
+            '    return czm_unpackDepth(textureCube(czm_sunShadowMapTextureCube, d)); \n' +
+            '} \n' :
             'float sampleTexture(vec2 uv) \n' +
             '{ \n' +
-
             (usesDepthTexture ?
             '    return texture2D(czm_sunShadowMapTexture, uv).r; \n' :
             '    return czm_unpackDepth(texture2D(czm_sunShadowMapTexture, uv)); \n') +
             '} \n' +
-            ' \n' +
+            ' \n') +
 
-            (isPointLight ?
-            'float getVisibility(vec3 shadowPosition, vec3 lightDirectionEC, vec2 faceUV)' :
-            'float getVisibility(vec3 shadowPosition, vec3 lightDirectionEC)') +
+            (isPointLight ? (usesCubeMap ?
+            'float getVisibility(vec3 uv, float depth, vec3 lightDirectionEC)' :
+            'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC, vec2 faceUV)') :
+            'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC)') +
 
             '{ \n' +
-            '    float depth = shadowPosition.z; \n' +
-            '    float shadowDepth = sampleTexture(shadowPosition.xy); \n' +
+            '    float shadowDepth = sampleTexture(uv); \n' +
 
-            (isPointLight ?
+            (isPointLight && !usesCubeMap ?
             '    vec4 shadowCoord = vec4(faceUV, shadowDepth, 1.0); \n' +
             '    shadowCoord = shadowCoord * 2.0 - 1.0; \n' +
             '    shadowCoord = czm_sunShadowMapMatrix * shadowCoord; \n' +
@@ -178,15 +217,21 @@ define([
                 '    vec3 positionEC = ' + positionVaryingName + '; \n' :
                 '    vec3 positionEC = czm_windowToEyeCoordinates(gl_FragCoord).xyz; \n') +
 
-                '    vec3 directionEC = positionEC - czm_sunShadowMapLightPositionEC; \n' +
+                '    vec3 directionEC = positionEC - czm_sunShadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
-                '    if (distance > czm_sunShadowMapRadius) { \n' +
+                '    float radius = czm_sunShadowMapLightPositionEC.w; \n' +
+                '    if (distance > radius) { \n' +
                 '        return; \n' +
                 '    } \n' +
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
+
+                (usesCubeMap ?
+                '    float visibility = getVisibility(directionWC, distance / radius, -directionEC); \n' :
+
                 '    vec2 faceUV; \n' +
                 '    vec2 uv = directionToUV(directionWC, faceUV); \n' +
-                '    float visibility = getVisibility(vec3(uv, distance), -directionEC, faceUV); \n' +
+                '    float visibility = getVisibility(uv, distance, -directionEC, faceUV); \n') +
+
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
         } else {
@@ -222,7 +267,7 @@ define([
 
                 ' \n' +
                 '    // Apply shadowing \n' +
-                '    float visibility = getVisibility(shadowPosition, czm_sunShadowMapLightDirectionEC); \n' +
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, czm_sunShadowMapLightDirectionEC); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
         }
