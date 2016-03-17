@@ -140,7 +140,7 @@ define([
         this._shadowMapMatrix = new Matrix4();
         this._shadowMapTexture = undefined;
         this._lightDirectionEC = new Cartesian3();
-        this._lightPositionEC = new Cartesian3();
+        this._lightPositionEC = new Cartesian4();
 
         this._framebuffer = undefined;
         this._shadowMapSize = defaultValue(options.size, 1024);
@@ -353,11 +353,6 @@ define([
         usesCubeMap : {
             get : function() {
                 return this._usesCubeMap;
-            }
-        },
-        radius : {
-            get : function() {
-                return this._radius;
             }
         },
         usesDepthTexture : {
@@ -1015,6 +1010,7 @@ define([
 
         // Get the light position in eye coordinates
         Matrix4.multiplyByPoint(camera.viewMatrix, shadowMapCamera.positionWC, shadowMap._lightPositionEC);
+        shadowMap._lightPositionEC.w = shadowMap._radius;
 
         // Get the near and far of the scene camera
         var near;

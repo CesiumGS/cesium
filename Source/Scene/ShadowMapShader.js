@@ -59,7 +59,7 @@ define([
         if (isPointLight && usesCubeMap) {
             fs +=
                 'float distance = length(' + positionVaryingName + '); \n' +
-                'distance /= czm_sunShadowMapRadius; \n' +
+                'distance /= czm_sunShadowMapLightPositionEC.w; // radius \n' +
                 'gl_FragColor = czm_packDepth(distance); \n';
         } else if (usesDepthTexture) {
             fs += 'gl_FragColor = vec4(1.0); \n';
@@ -217,15 +217,16 @@ define([
                 '    vec3 positionEC = ' + positionVaryingName + '; \n' :
                 '    vec3 positionEC = czm_windowToEyeCoordinates(gl_FragCoord).xyz; \n') +
 
-                '    vec3 directionEC = positionEC - czm_sunShadowMapLightPositionEC; \n' +
+                '    vec3 directionEC = positionEC - czm_sunShadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
-                '    if (distance > czm_sunShadowMapRadius) { \n' +
+                '    float radius = czm_sunShadowMapLightPositionEC.w; \n' +
+                '    if (distance > radius) { \n' +
                 '        return; \n' +
                 '    } \n' +
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
 
                 (usesCubeMap ?
-                '    float visibility = getVisibility(directionWC, distance / czm_sunShadowMapRadius, -directionEC); \n' :
+                '    float visibility = getVisibility(directionWC, distance / radius, -directionEC); \n' :
 
                 '    vec2 faceUV; \n' +
                 '    vec2 uv = directionToUV(directionWC, faceUV); \n' +
