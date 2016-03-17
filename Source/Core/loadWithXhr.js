@@ -174,7 +174,7 @@ define([
         xhr.onload = function() {
             if (xhr.status >= 200 && xhr.status < 300) {
                 var parser;
-                if (defined(xhr.response)) {
+                if (typeof xhr.response !== 'undefined') {
                     if (weWantXml) {
                         try {
                             parser = new DOMParser();
