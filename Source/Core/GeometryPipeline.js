@@ -2182,6 +2182,43 @@ define([
 
     var cartesian4Scratch0 = new Cartesian4();
 
+    function updateAdjacencyAfterSplit(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var prevPositions = attributes.prevPosition.values;
+        var nextPositions = attributes.nextPosition.values;
+
+        var length = positions.length;
+        for (var j = 0; j < length; j += 3) {
+            var position = Cartesian3.unpack(positions, j, cartesian3Scratch0);
+            if (position.x > 0.0) {
+                continue;
+            }
+
+            var prevPosition = Cartesian3.unpack(prevPositions, j, cartesian3Scratch2);
+            if ((position.y < 0.0 && prevPosition.y > 0.0) || (position.y > 0.0 && prevPosition.y < 0.0)) {
+                if (j - 3 > 0) {
+                    prevPositions[j] = positions[j - 3];
+                    prevPositions[j + 1] = positions[j - 2];
+                    prevPositions[j + 2] = positions[j - 1];
+                } else {
+                    Cartesian3.pack(position, prevPositions, j);
+                }
+            }
+
+            var nextPosition = Cartesian3.unpack(nextPositions, j, cartesian3Scratch3);
+            if ((position.y < 0.0 && nextPosition.y > 0.0) || (position.y > 0.0 && nextPosition.y < 0.0)) {
+                if (j + 3 < length) {
+                    nextPositions[j] = positions[j + 3];
+                    nextPositions[j + 1] = positions[j + 4];
+                    nextPositions[j + 2] = positions[j + 5];
+                } else {
+                    Cartesian3.pack(position, nextPositions, j);
+                }
+            }
+        }
+    }
+
     var offsetScalar = 5.0 * CesiumMath.EPSILON9;
     var coplanarOffset = CesiumMath.EPSILON6;
 
@@ -2202,6 +2239,8 @@ define([
         var i;
         var j;
         var index;
+
+        var intersectionFound = false;
 
         var length = positions.length / 3;
         for (i = 0; i < length; i += 4) {
@@ -2242,6 +2281,8 @@ define([
 
             var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
             if (defined(intersection)) {
+                intersectionFound = true;
+
                 // move point on the xz-plane slightly away from the plane
                 var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, offsetScalar, cartesian3Scratch5);
                 if (p0.y < 0.0) {
@@ -2377,6 +2418,11 @@ define([
                 currentIndices.push(index, index + 2, index + 1);
                 currentIndices.push(index + 1, index + 2, index + 3);
             }
+        }
+
+        if (intersectionFound) {
+            updateAdjacencyAfterSplit(westGeometry);
+            updateAdjacencyAfterSplit(eastGeometry);
         }
 
         updateInstanceAfterSplit(instance, westGeometry, eastGeometry);
