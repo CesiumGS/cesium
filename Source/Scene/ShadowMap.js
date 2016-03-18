@@ -136,6 +136,10 @@ define([
 
         this.enabled = false;
 
+        // Framebuffer resources
+        this._depthAttachment = undefined;
+        this._colorAttachment = undefined;
+
         // Uniforms
         this._shadowMapMatrix = new Matrix4();
         this._shadowMapTexture = undefined;
@@ -370,10 +374,9 @@ define([
             shadowMap._passFramebuffers[i] = undefined;
         }
 
-        if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
-            // Need to destroy cube map separately
-            shadowMap._shadowMapTexture = shadowMap._shadowMapTexture && shadowMap._shadowMapTexture.destroy();
-        }
+        // Destroy the framebuffer attachments
+        shadowMap._depthAttachment = shadowMap._depthAttachment && shadowMap._depthAttachment.destroy();
+        shadowMap._colorAttachment = shadowMap._colorAttachment && shadowMap._colorAttachment.destroy();
     }
 
     function createSampler() {
@@ -405,7 +408,8 @@ define([
         var framebuffer = new Framebuffer({
             context : context,
             depthRenderbuffer : depthRenderbuffer,
-            colorTextures : [colorTexture]
+            colorTextures : [colorTexture],
+            destroyAttachments : false
         });
 
         for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
@@ -414,6 +418,8 @@ define([
         }
 
         shadowMap._shadowMapTexture = colorTexture;
+        shadowMap._depthAttachment = depthRenderbuffer;
+        shadowMap._colorAttachment = colorTexture;
     }
 
     function createFramebufferDepth(shadowMap, context) {
@@ -428,7 +434,8 @@ define([
 
         var framebuffer = new Framebuffer({
             context : context,
-            depthStencilTexture : depthStencilTexture
+            depthStencilTexture : depthStencilTexture,
+            destroyAttachments : false
         });
 
         for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
@@ -437,6 +444,7 @@ define([
         }
 
         shadowMap._shadowMapTexture = depthStencilTexture;
+        shadowMap._depthAttachment = depthStencilTexture;
     }
 
     function createFramebufferCube(shadowMap, context) {
@@ -462,13 +470,16 @@ define([
             var framebuffer = new Framebuffer({
                 context : context,
                 depthRenderbuffer : depthRenderbuffer,
-                colorTextures : [faces[i]]
+                colorTextures : [faces[i]],
+                destroyAttachments : false
             });
             shadowMap._passFramebuffers[i] = framebuffer;
             shadowMap._passStates[i].framebuffer = framebuffer;
         }
 
         shadowMap._shadowMapTexture = cubeMap;
+        shadowMap._depthAttachment = depthRenderbuffer;
+        shadowMap._colorAttachment = cubeMap;
     }
 
     function createFramebuffer(shadowMap, context) {
