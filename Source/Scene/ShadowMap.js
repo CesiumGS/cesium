@@ -207,8 +207,7 @@ define([
         // For clearing the shadow map texture every frame
         this._clearCommand = new ClearCommand({
             depth : 1.0,
-            color : new Color(),
-            framebuffer : undefined
+            color : new Color()
         });
 
         this._clearPassState = new PassState(context);
