@@ -2258,8 +2258,10 @@ define([
                 positions[i * 3 + 1] = p0.y;
                 positions[(i + 1) * 3 + 1] = p0.y;
 
-                for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                    prevPositions[j] = positions[j];
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    prevPositions[j] = positions[i * 3];
+                    prevPositions[j + 1] = positions[i * 3 + 1];
+                    prevPositions[j + 2] = positions[i * 3 + 2];
                 }
             }
 
@@ -2269,8 +2271,10 @@ define([
                 positions[(i + 2) * 3 + 1] = p2.y;
                 positions[(i + 3) * 3 + 1] = p2.y;
 
-                for (j = i0 * 3; j < i0 * 3 + 4 * 3; ++j) {
-                    nextPositions[j] = positions[j];
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    nextPositions[j] = positions[(i + 2) * 3];
+                    nextPositions[j + 1] = positions[(i + 2) * 3 + 1];
+                    nextPositions[j + 2] = positions[(i + 2) * 3 + 2];
                 }
             }
 
