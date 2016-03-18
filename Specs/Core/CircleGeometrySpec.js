@@ -50,8 +50,10 @@ defineSuite([
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 22);
+        var numVertices = 16; //rows of 1 + 4 + 6 + 4 + 1
+        var numTriangles = 22; //rows of 3 + 8 + 8 + 3
+        expect(m.attributes.position.values.length).toEqual(16 * 3);
+        expect(m.indices.length).toEqual(22 * 3);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -64,12 +66,14 @@ defineSuite([
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.attributes.st.values.length).toEqual(2 * 16);
-        expect(m.attributes.normal.values.length).toEqual(3 * 16);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 16);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 22);
+        var numVertices = 16;
+        var numTriangles = 22;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('computes positions extruded', function() {
@@ -82,8 +86,10 @@ defineSuite([
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
+        var numVertices = 48; // 16 top circle + 16 bottom circle + 8 top edge + 8 bottom edge
+        var numTriangles = 60; // 22 to fill each circle + 16 for edge wall
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -96,12 +102,14 @@ defineSuite([
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.st.values.length).toEqual(2 * (16 + 8) * 2);
-        expect(m.attributes.normal.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.tangent.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.attributes.binormal.values.length).toEqual(3 * (16 + 8) * 2);
-        expect(m.indices.length).toEqual(3 * (22 + 8) * 2);
+        var numVertices = 48;
+        var numTriangles = 60;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute texture coordinates with rotation', function() {
