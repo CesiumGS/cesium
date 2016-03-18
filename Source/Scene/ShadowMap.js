@@ -609,7 +609,7 @@ define([
                      '        } \n' +
                      '    } \n' +
                      ' \n' +
-                     '    float shadow = czm_unpackDepth(textureCube(czm_sunShadowMapTextureCube, dir)); \n' +
+                     '    float shadow = czm_unpackDepth(textureCube(czm_shadowMapTextureCube, dir)); \n' +
                      '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                      '} \n';
             } else {
@@ -618,8 +618,8 @@ define([
                      '{ \n' +
 
                      (shadowMap._usesDepthTexture ?
-                     '    float shadow = texture2D(czm_sunShadowMapTexture, v_textureCoordinates).r; \n' :
-                     '    float shadow = czm_unpackDepth(texture2D(czm_sunShadowMapTexture, v_textureCoordinates)); \n') +
+                     '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' :
+                     '    float shadow = czm_unpackDepth(texture2D(czm_shadowMapTexture, v_textureCoordinates)); \n') +
 
                      '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                      '} \n';

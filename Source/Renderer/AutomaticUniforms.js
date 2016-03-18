@@ -1479,12 +1479,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map depth texture.
+         * An automatic GLSL uniform representing the shadow map depth texture.
          *
-         * @alias czm_sunShadowMapTexture
+         * @alias czm_shadowMapTexture
          * @glslUniform
          */
-        czm_sunShadowMapTexture : new AutomaticUniform({
+        czm_shadowMapTexture : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_2D,
             getValue : function(uniformState) {
@@ -1493,12 +1493,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map texture as a cube map.
+         * An automatic GLSL uniform representing the cube map for point light shadows.
          *
-         * @alias czm_sunShadowMapTextureCube
+         * @alias czm_shadowMapTextureCube
          * @glslUniform
          */
-        czm_sunShadowMapTextureCube : new AutomaticUniform({
+        czm_shadowMapTextureCube : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.SAMPLER_CUBE,
             getValue : function(uniformState) {
@@ -1507,12 +1507,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map matrix.
+         * An automatic GLSL uniform representing the shadow map matrix.
          *
-         * @alias czm_sunShadowMapMatrix
+         * @alias czm_shadowMapMatrix
          * @glslUniform
          */
-        czm_sunShadowMapMatrix : new AutomaticUniform({
+        czm_shadowMapMatrix : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
@@ -1521,12 +1521,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade splits.
+         * An automatic GLSL uniform representing the shadow map cascade splits.
          *
-         * @alias czm_sunShadowMapCascadeSplits
+         * @alias czm_shadowMapCascadeSplits
          * @glslUniform
          */
-        czm_sunShadowMapCascadeSplits : new AutomaticUniform({
+        czm_shadowMapCascadeSplits : new AutomaticUniform({
             size : 2,
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
@@ -1535,12 +1535,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade offsets.
+         * An automatic GLSL uniform representing the shadow map cascade offsets.
          *
-         * @alias czm_sunShadowMapCascadeOffsets
+         * @alias czm_shadowMapCascadeOffsets
          * @glslUniform
          */
-        czm_sunShadowMapCascadeOffsets : new AutomaticUniform({
+        czm_shadowMapCascadeOffsets : new AutomaticUniform({
             size : 4,
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
@@ -1549,12 +1549,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map cascade scales.
+         * An automatic GLSL uniform representing the shadow map cascade scales.
          *
-         * @alias czm_sunShadowMapCascadeScales
+         * @alias czm_shadowMapCascadeScales
          * @glslUniform
          */
-        czm_sunShadowMapCascadeScales : new AutomaticUniform({
+        czm_shadowMapCascadeScales : new AutomaticUniform({
             size : 4,
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
@@ -1563,12 +1563,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the sun's shadow map light direction in eye coordinates.
+         * An automatic GLSL uniform representing the shadow map light direction in eye coordinates.
          *
-         * @alias czm_sunShadowMapLightDirectionEC
+         * @alias czm_shadowMapLightDirectionEC
          * @glslUniform
          */
-        czm_sunShadowMapLightDirectionEC : new AutomaticUniform({
+        czm_shadowMapLightDirectionEC : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
@@ -1577,12 +1577,12 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform that stores the point light's eye space position and radius.
+         * An automatic GLSL uniform that stores the point light's eye space position and radius for point light shadows.
          *
-         * @alias czm_sunShadowMapLightPositionEC
+         * @alias czm_shadowMapLightPositionEC
          * @glslUniform
          */
-        czm_sunShadowMapLightPositionEC : new AutomaticUniform({
+        czm_shadowMapLightPositionEC : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {

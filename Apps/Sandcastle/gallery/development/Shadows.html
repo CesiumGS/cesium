@@ -302,10 +302,10 @@ function resetShadows(shadowOptions) {
 
     // TODO : reset terrain shaders
 
-    scene.sunShadowMap.destroy();
-    scene.sunShadowMap = new Cesium.ShadowMap(shadowOptions);
+    scene.shadowMap.destroy();
+    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
 
-    shadowMap = scene.sunShadowMap;
+    shadowMap = scene.shadowMap;
     shadowMap.enabled = true;
     shadowMap.debugShow = true;
 

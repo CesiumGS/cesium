@@ -541,7 +541,7 @@ define([
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.sunShadowMap = new ShadowMap({
+        this.shadowMap = new ShadowMap({
             context : context,
             lightCamera : this._sunCamera
         });
@@ -1088,7 +1088,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.shadowMap = scene.sunShadowMap;
+        frameState.shadowMap = scene.shadowMap;
 
         clearPasses(frameState.passes);
     }
@@ -1583,8 +1583,8 @@ define([
 
             us.updateFrustum(frustum);
 
-            if (scene.sunShadowMap.enabled) {
-                scene.sunShadowMap.updateShadowMapMatrix(us);
+            if (scene.shadowMap.enabled) {
+                scene.shadowMap.updateShadowMapMatrix(us);
             }
 
             clearDepth.execute(context, passState);
@@ -1637,8 +1637,8 @@ define([
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
 
-                if (scene.sunShadowMap.enabled) {
-                    scene.sunShadowMap.updateShadowMapMatrix(us);
+                if (scene.shadowMap.enabled) {
+                    scene.shadowMap.updateShadowMapMatrix(us);
                 }
             }
 
@@ -1710,7 +1710,7 @@ define([
     function executeShadowMapCommands(scene) {
         var context = scene.context;
         var uniformState = context.uniformState;
-        var shadowMap = scene.sunShadowMap;
+        var shadowMap = scene.shadowMap;
         var renderState = shadowMap.renderState;
 
         var commands = getShadowMapCommands(scene);
@@ -2008,7 +2008,7 @@ define([
 
         scene.fog.update(frameState);
 
-        var shadowMap = scene.sunShadowMap;
+        var shadowMap = scene.shadowMap;
         us.update(frameState, shadowMap);
 
         if (shadowMap.enabled) {
