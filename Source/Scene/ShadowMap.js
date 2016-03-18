@@ -1034,11 +1034,12 @@ define([
     }
 
     ShadowMap.prototype.update = function(frameState) {
+        var lightMoved = !Cartesian3.equals(this._lightCamera.positionWC, this._shadowMapCamera.positionWC);
+
         updateFramebuffer(this, frameState.context);
         updateCameras(this, frameState);
 
-        if (this._isPointLight) {
-            // TODO : only update if the light moves
+        if (this._isPointLight && lightMoved) {
             computeOmnidirectional(this);
         }
 
