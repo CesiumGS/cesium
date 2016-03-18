@@ -2677,7 +2677,7 @@ defineSuite([
             var prevPositions = geometry.attributes.prevPosition.values;
 
             expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
-            expect(prevPositions).toEqual(positions);
+            expect(prevPositions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
             expect(nextPositions).toEqual([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0]);
         });
 
@@ -2721,7 +2721,7 @@ defineSuite([
             var prevPositions = geometry.attributes.prevPosition.values;
 
             expect(positions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0]);
-            expect(prevPositions).toEqual(positions);
+            expect(prevPositions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
             expect(nextPositions).toEqual([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -2.0, 0.0, -1.0, -2.0, 0.0]);
         });
 
@@ -2765,7 +2765,7 @@ defineSuite([
             var prevPositions = geometry.attributes.prevPosition.values;
 
             expect(positions).toEqual([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
-            expect(nextPositions).toEqual(positions);
+            expect(nextPositions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
             expect(prevPositions).toEqual([-2.0, 2.0, 2.0, -1.0, 2.0, 2.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
         });
 
@@ -2809,7 +2809,7 @@ defineSuite([
             var prevPositions = geometry.attributes.prevPosition.values;
 
             expect(positions).toEqual([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
-            expect(nextPositions).toEqual(positions);
+            expect(nextPositions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
             expect(prevPositions).toEqual([-2.0, -2.0, 2.0, -1.0, -2.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0]);
         });
 
