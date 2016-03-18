@@ -62,10 +62,26 @@ define([
 
     });
 
+    /**
+     * Evaluates the result of an expression, using the values defined by a feature. If the result is of type
+     * <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding primitive type will be
+     * returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code> object will be returned. If
+     * the result is a <code>Color</code>, a Cesium <code>Color</code> object will be returned.
+     *
+     * @param {Cesium3DTileFeature} feature The feature of which values are used to evaluate the expression.
+     * @returns {Boolean|Number|String|Color|RegExp} The result of the expression.
+     */
     Expression.prototype.evaluate = function(feature) {
         return this._runtimeAst.evaluate(feature);
     };
 
+    /**
+     * Evaluates the result of a Color expression, using the values defined by a feature.
+     *
+     * @param {Cesium3DTileFeature} feature The feature of which values are used to evaluate the expression.
+     * @param {Color} [result] The object in which to store the result
+     * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
+     */
     Expression.prototype.evaluateColor = function(feature, result) {
         return this._runtimeAst.evaluate(feature, result);
     };
