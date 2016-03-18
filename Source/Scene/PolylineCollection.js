@@ -1535,7 +1535,9 @@ define([
                     scratchWritePrevPosition.z = 0.0;
                     scratchWritePosition.z = 0.0;
                     scratchWriteNextPosition.z = 0.0;
+                }
 
+                if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
                     if ((segmentStart || segmentEnd) && maxLon - Math.abs(scratchWritePosition.x) < 1.0) {
                         if ((scratchWritePosition.x < 0.0 && scratchWritePrevPosition.x > 0.0) ||
                             (scratchWritePosition.x > 0.0 && scratchWritePrevPosition.x < 0.0)) {
