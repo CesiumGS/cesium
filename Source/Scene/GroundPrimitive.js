@@ -372,11 +372,9 @@ define([
 
     GroundPrimitive._maxHeight = undefined;
     GroundPrimitive._minHeight = undefined;
-    GroundPrimitive._minOBBHeight = undefined;
 
     GroundPrimitive._maxTerrainHeight = 9000.0;
     GroundPrimitive._minTerrainHeight = -100000.0;
-    GroundPrimitive._minOBBTerrainHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -540,7 +538,7 @@ define([
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minHeight, ellipsoid);
             primitive._boundingVolumes.push(obb);
         } else {
             primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
@@ -548,7 +546,7 @@ define([
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight);
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minHeight);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             primitive._boundingVolumes2D.push(boundingVolume);
@@ -812,7 +810,6 @@ define([
             var exaggeration = frameState.terrainExaggeration;
             GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
             GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
-            GroundPrimitive._minOBBHeight = GroundPrimitive._minOBBTerrainHeight * exaggeration;
         }
 
         if (!defined(this._primitive)) {
