@@ -142,7 +142,6 @@ define([
         this._lightDirectionEC = new Cartesian3();
         this._lightPositionEC = new Cartesian4();
 
-        this._framebuffer = undefined;
         this._shadowMapSize = defaultValue(options.size, 1024);
         this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
 
@@ -176,7 +175,7 @@ define([
         this._numberOfPasses = numberOfPasses;
         this._passCameras = new Array(numberOfPasses);
         this._passStates = new Array(numberOfPasses);
-        this._passFaces = new Array(numberOfPasses); // For point shadows
+        this._passFramebuffers = new Array(numberOfPasses);
 
         for (var i = 0; i < numberOfPasses; ++i) {
             this._passCameras[i] = new ShadowMapCamera();
@@ -363,10 +362,16 @@ define([
     });
 
     function destroyFramebuffer(shadowMap) {
-        shadowMap._framebuffer = shadowMap._framebuffer && shadowMap._framebuffer.destroy();
+        for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
+            var framebuffer = shadowMap._passFramebuffers[i];
+            if (defined(framebuffer) && !framebuffer.isDestroyed()) {
+                framebuffer.destroy();
+            }
+            shadowMap._passFramebuffers[i] = undefined;
+        }
 
-        // Need to destroy cube map separately
         if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
+            // Need to destroy cube map separately
             shadowMap._shadowMapTexture = shadowMap._shadowMapTexture && shadowMap._shadowMapTexture.destroy();
         }
     }
@@ -403,8 +408,12 @@ define([
             colorTextures : [colorTexture]
         });
 
+        for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
+            shadowMap._passFramebuffers[i] = framebuffer;
+            shadowMap._passStates[i].framebuffer = framebuffer;
+        }
+
         shadowMap._shadowMapTexture = colorTexture;
-        return framebuffer;
     }
 
     function createFramebufferDepth(shadowMap, context) {
@@ -422,9 +431,12 @@ define([
             depthStencilTexture : depthStencilTexture
         });
 
-        shadowMap._shadowMapTexture = depthStencilTexture;
+        for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
+            shadowMap._passFramebuffers[i] = framebuffer;
+            shadowMap._passStates[i].framebuffer = framebuffer;
+        }
 
-        return framebuffer;
+        shadowMap._shadowMapTexture = depthStencilTexture;
     }
 
     function createFramebufferCube(shadowMap, context) {
@@ -444,42 +456,34 @@ define([
             sampler : createSampler()
         });
 
-        var framebuffer = new Framebuffer({
-            context : context,
-            depthRenderbuffer : depthRenderbuffer,
-            colorTextures : [cubeMap.positiveX]
-        });
+        var faces = [cubeMap.negativeX, cubeMap.negativeY, cubeMap.negativeZ, cubeMap.positiveX, cubeMap.positiveY, cubeMap.positiveZ];
 
-        shadowMap._passFaces[0] = cubeMap.negativeX;
-        shadowMap._passFaces[1] = cubeMap.negativeY;
-        shadowMap._passFaces[2] = cubeMap.negativeZ;
-        shadowMap._passFaces[3] = cubeMap.positiveX;
-        shadowMap._passFaces[4] = cubeMap.positiveY;
-        shadowMap._passFaces[5] = cubeMap.positiveZ;
+        for (var i = 0; i < 6; ++i) {
+            var framebuffer = new Framebuffer({
+                context : context,
+                depthRenderbuffer : depthRenderbuffer,
+                colorTextures : [faces[i]]
+            });
+            shadowMap._passFramebuffers[i] = framebuffer;
+            shadowMap._passStates[i].framebuffer = framebuffer;
+        }
 
         shadowMap._shadowMapTexture = cubeMap;
-        return framebuffer;
     }
 
     function createFramebuffer(shadowMap, context) {
-        var framebuffer;
         if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
-            framebuffer = createFramebufferCube(shadowMap, context);
+            createFramebufferCube(shadowMap, context);
         } else if (shadowMap._usesDepthTexture) {
-            framebuffer = createFramebufferDepth(shadowMap, context);
+            createFramebufferDepth(shadowMap, context);
         } else {
-            framebuffer = createFramebufferColor(shadowMap, context);
-        }
-        shadowMap._framebuffer = framebuffer;
-        shadowMap._clearCommand.framebuffer = framebuffer;
-        for (var i = 0; i < shadowMap._numberOfPasses; ++i) {
-            shadowMap._passStates[i].framebuffer = framebuffer;
+            createFramebufferColor(shadowMap, context);
         }
     }
 
     function checkFramebuffer(shadowMap, context) {
         // Attempt to make an FBO with only a depth texture. If it fails, fallback to a color texture.
-        if (shadowMap._usesDepthTexture && (shadowMap._framebuffer.status !== WebGLConstants.FRAMEBUFFER_COMPLETE)) {
+        if (shadowMap._usesDepthTexture && (shadowMap._passFramebuffers[0].status !== WebGLConstants.FRAMEBUFFER_COMPLETE)) {
             shadowMap._usesDepthTexture = false;
             var colorMask = shadowMap._renderState.colorMask;
             colorMask.red = colorMask.green = colorMask.blue = colorMask.alpha = true;
@@ -489,7 +493,7 @@ define([
     }
 
     function updateFramebuffer(shadowMap, context) {
-        if (!defined(shadowMap._framebuffer) || (shadowMap._shadowMapTexture.width !== shadowMap._textureSize.x)) {
+        if (!defined(shadowMap._passFramebuffers[0]) || (shadowMap._shadowMapTexture.width !== shadowMap._textureSize.x)) {
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
             checkFramebuffer(shadowMap, context);
@@ -1056,10 +1060,8 @@ define([
     };
 
     ShadowMap.prototype.updatePass = function(context, pass) {
-        if (this._isPointLight && this._usesCubeMap) {
-            this._framebuffer._attachTexture(context, WebGLConstants.COLOR_ATTACHMENT0, this._passFaces[pass]);
-            this._clearCommand.execute(context);
-        } else if (pass === 0) {
+        if ((this._isPointLight && this._usesCubeMap) || (pass === 0)) {
+            this._clearCommand.framebuffer = this._passFramebuffers[pass];
             this._clearCommand.execute(context);
         }
     };

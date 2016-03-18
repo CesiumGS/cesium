@@ -308,11 +308,6 @@ define([
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     };
 
-    Framebuffer.prototype._attachTexture = function(context, attachment, texture) {
-        context.bindFramebuffer(this);
-        attachTexture(this, attachment, texture);
-    };
-
     Framebuffer.prototype._getActiveColorAttachments = function() {
         return this._activeColorAttachments;
     };

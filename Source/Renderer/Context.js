@@ -989,10 +989,6 @@ define([
         }
     };
 
-    Context.prototype.bindFramebuffer = function(framebuffer) {
-        bindFramebuffer(this, framebuffer);
-    };
-
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
