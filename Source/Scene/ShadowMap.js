@@ -195,17 +195,32 @@ define([
         this._debugCascadeFrustums = new Array(this._numberOfCascades);
         this._debugShadowViewCommand = undefined;
 
-        // Only enable the color mask if the depth texture extension is not supported
         this._usesDepthTexture = context.depthTexture;
 
         if (this._isPointLight && this._usesCubeMap) {
             this._usesDepthTexture = false;
         }
 
-        var colorMask = !this._usesDepthTexture;
+        // Create render state for shadow casters
+        createRenderState(this);
 
-        // For shadow casters
-        this._renderState = RenderState.fromCache({
+        // For clearing the shadow map texture every frame
+        this._clearCommand = new ClearCommand({
+            depth : 1.0,
+            color : new Color(),
+            framebuffer : undefined
+        });
+
+        this._clearPassState = new PassState(context);
+
+        this.setSize(this._shadowMapSize);
+    }
+
+    function createRenderState(shadowMap) {
+        // Enable the color mask if the shadow map is backed by a color texture, e.g. when depth textures aren't supported
+        var colorMask = !shadowMap._usesDepthTexture;
+
+        shadowMap._renderState = RenderState.fromCache({
             cull : {
                 enabled : true, // TODO : need to handle objects that don't use back face culling, like walls
                 face : CullFace.FRONT
@@ -226,18 +241,6 @@ define([
                 units : 4.0
             }
         });
-
-        // For clearing the shadow map texture every frame
-        this._clearCommand = new ClearCommand({
-            depth : 1.0,
-            color : new Color(),
-            framebuffer : undefined,
-            renderState : RenderState.fromCache({
-                viewport : new BoundingRectangle(0, 0, this._textureSize.x, this._textureSize.y)
-            })
-        });
-
-        this.setSize(this._shadowMapSize);
     }
 
     defineProperties(ShadowMap.prototype, {
@@ -496,8 +499,7 @@ define([
         // Attempt to make an FBO with only a depth texture. If it fails, fallback to a color texture.
         if (shadowMap._usesDepthTexture && (shadowMap._passFramebuffers[0].status !== WebGLConstants.FRAMEBUFFER_COMPLETE)) {
             shadowMap._usesDepthTexture = false;
-            var colorMask = shadowMap._renderState.colorMask;
-            colorMask.red = colorMask.green = colorMask.blue = colorMask.alpha = true;
+            createRenderState(shadowMap);
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
         }
@@ -561,9 +563,75 @@ define([
             this._passStates[5].viewport = new BoundingRectangle(size * 2, size, size, size);
         }
 
-        // Update clear command
-        this._clearCommand.renderState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
+        // Update clear pass state
+        this._clearPassState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
     };
+
+    var scratchViewport = new BoundingRectangle();
+
+    function createDebugShadowViewCommand(shadowMap, context) {
+        var fs;
+        if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
+            fs = 'varying vec2 v_textureCoordinates; \n' +
+                 'void main() \n' +
+                 '{ \n' +
+                 '    vec2 uv = v_textureCoordinates; \n' +
+                 '    vec3 dir; \n' +
+                 ' \n' +
+                 '    if (uv.y < 0.5) { \n' +
+                 '        if (uv.x < 0.333) { \n' +
+                 '            dir.x = -1.0; \n' +
+                 '            dir.y = uv.x * 6.0 - 1.0; \n' +
+                 '            dir.z = uv.y * 4.0 - 1.0; \n' +
+                 '        } \n' +
+                 '        else if (uv.x < 0.666) { \n' +
+                 '            dir.y = -1.0; \n' +
+                 '            dir.x = uv.x * 6.0 - 3.0; \n' +
+                 '            dir.z = uv.y * 4.0 - 1.0; \n' +
+                 '        } \n' +
+                 '        else { \n' +
+                 '            dir.z = -1.0; \n' +
+                 '            dir.x = uv.x * 6.0 - 5.0; \n' +
+                 '            dir.y = uv.y * 4.0 - 1.0; \n' +
+                 '        } \n' +
+                 '    } else { \n' +
+                 '        if (uv.x < 0.333) { \n' +
+                 '            dir.x = 1.0; \n' +
+                 '            dir.y = uv.x * 6.0 - 1.0; \n' +
+                 '            dir.z = uv.y * 4.0 - 3.0; \n' +
+                 '        } \n' +
+                 '        else if (uv.x < 0.666) { \n' +
+                 '            dir.y = 1.0; \n' +
+                 '            dir.x = uv.x * 6.0 - 3.0; \n' +
+                 '            dir.z = uv.y * 4.0 - 3.0; \n' +
+                 '        } \n' +
+                 '        else { \n' +
+                 '            dir.z = 1.0; \n' +
+                 '            dir.x = uv.x * 6.0 - 5.0; \n' +
+                 '            dir.y = uv.y * 4.0 - 3.0; \n' +
+                 '        } \n' +
+                 '    } \n' +
+                 ' \n' +
+                 '    float shadow = czm_unpackDepth(textureCube(czm_shadowMapTextureCube, dir)); \n' +
+                 '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
+                 '} \n';
+        } else {
+            fs = 'varying vec2 v_textureCoordinates; \n' +
+                 'void main() \n' +
+                 '{ \n' +
+
+                 (shadowMap._usesDepthTexture ?
+                 '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' :
+                 '    float shadow = czm_unpackDepth(texture2D(czm_shadowMapTexture, v_textureCoordinates)); \n') +
+
+                 '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
+                 '} \n';
+        }
+
+        var drawCommand = context.createViewportQuadCommand(fs);
+        drawCommand.pass = Pass.OVERLAY;
+        return drawCommand;
+    }
 
     function updateDebugShadowViewCommand(shadowMap, frameState) {
         // Draws the shadow map on the bottom-right corner of the screen
@@ -572,86 +640,23 @@ define([
         var screenHeight = frameState.context.drawingBufferHeight;
         var size = Math.min(screenWidth, screenHeight) * 0.3;
 
-        var x = screenWidth - size;
-        var y = 0;
-        var width = size;
-        var height = size;
+        var viewport = scratchViewport;
+        viewport.x = screenWidth - size;
+        viewport.y = 0;
+        viewport.width = size;
+        viewport.height = size;
 
-        if (!defined(shadowMap._debugShadowViewCommand)) {
-            var fs;
-            if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
-                fs = 'varying vec2 v_textureCoordinates; \n' +
-                     'void main() \n' +
-                     '{ \n' +
-                     '    vec2 uv = v_textureCoordinates; \n' +
-                     '    vec3 dir; \n' +
-                     ' \n' +
-                     '    if (uv.y < 0.5) { \n' +
-                     '        if (uv.x < 0.333) { \n' +
-                     '            dir.x = -1.0; \n' +
-                     '            dir.y = uv.x * 6.0 - 1.0; \n' +
-                     '            dir.z = uv.y * 4.0 - 1.0; \n' +
-                     '        } \n' +
-                     '        else if (uv.x < 0.666) { \n' +
-                     '            dir.y = -1.0; \n' +
-                     '            dir.x = uv.x * 6.0 - 3.0; \n' +
-                     '            dir.z = uv.y * 4.0 - 1.0; \n' +
-                     '        } \n' +
-                     '        else { \n' +
-                     '            dir.z = -1.0; \n' +
-                     '            dir.x = uv.x * 6.0 - 5.0; \n' +
-                     '            dir.y = uv.y * 4.0 - 1.0; \n' +
-                     '        } \n' +
-                     '    } else { \n' +
-                     '        if (uv.x < 0.333) { \n' +
-                     '            dir.x = 1.0; \n' +
-                     '            dir.y = uv.x * 6.0 - 1.0; \n' +
-                     '            dir.z = uv.y * 4.0 - 3.0; \n' +
-                     '        } \n' +
-                     '        else if (uv.x < 0.666) { \n' +
-                     '            dir.y = 1.0; \n' +
-                     '            dir.x = uv.x * 6.0 - 3.0; \n' +
-                     '            dir.z = uv.y * 4.0 - 3.0; \n' +
-                     '        } \n' +
-                     '        else { \n' +
-                     '            dir.z = 1.0; \n' +
-                     '            dir.x = uv.x * 6.0 - 5.0; \n' +
-                     '            dir.y = uv.y * 4.0 - 3.0; \n' +
-                     '        } \n' +
-                     '    } \n' +
-                     ' \n' +
-                     '    float shadow = czm_unpackDepth(textureCube(czm_shadowMapTextureCube, dir)); \n' +
-                     '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
-                     '} \n';
-            } else {
-                fs = 'varying vec2 v_textureCoordinates; \n' +
-                     'void main() \n' +
-                     '{ \n' +
-
-                     (shadowMap._usesDepthTexture ?
-                     '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' :
-                     '    float shadow = czm_unpackDepth(texture2D(czm_shadowMapTexture, v_textureCoordinates)); \n') +
-
-                     '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
-                     '} \n';
-            }
-
-            // Set viewport now to avoid using a cached render state
-            var renderState = RenderState.fromCache({
-                viewport : new BoundingRectangle(x, y, width, height)
-            });
-
-            var drawCommand = context.createViewportQuadCommand(fs);
-            drawCommand.renderState = renderState;
-            drawCommand.pass = Pass.OVERLAY;
-            shadowMap._debugShadowViewCommand = drawCommand;
+        var debugCommand = shadowMap._debugShadowViewCommand;
+        if (!defined(debugCommand)) {
+            debugCommand = shadowMap._debugShadowViewCommand = createDebugShadowViewCommand(shadowMap, context);
         }
 
-        var viewport = shadowMap._debugShadowViewCommand.renderState.viewport;
-        viewport.x = x;
-        viewport.y = y;
-        viewport.width = width;
-        viewport.height = height;
+        // Get a new RenderState for the updated viewport size
+        if (!defined(debugCommand.renderState) || !BoundingRectangle.equals(debugCommand.renderState.viewport, viewport)) {
+            debugCommand.renderState = RenderState.fromCache({
+                viewport : BoundingRectangle.clone(viewport)
+            });
+        }
 
         frameState.commandList.push(shadowMap._debugShadowViewCommand);
     }
@@ -1074,7 +1079,7 @@ define([
     ShadowMap.prototype.updatePass = function(context, pass) {
         if ((this._isPointLight && this._usesCubeMap) || (pass === 0)) {
             this._clearCommand.framebuffer = this._passFramebuffers[pass];
-            this._clearCommand.execute(context);
+            this._clearCommand.execute(context, this._clearPassState);
         }
     };
 
