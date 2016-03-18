@@ -2014,7 +2014,6 @@ define([
         if (shadowMap.enabled) {
             // Update the sun's direction
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
-            scene._sunCamera.direction = us.sunDirectionWC;
             shadowMap.update(frameState);
         }
 
