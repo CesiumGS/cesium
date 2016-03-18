@@ -541,7 +541,7 @@ define([
          * Render shadows in the scene.
          * @type {ShadowMap}
          */
-        this.sunShadowMap = new ShadowMap({
+        this.shadowMap = new ShadowMap({
             context : context,
             lightCamera : this._sunCamera
         });
@@ -1088,7 +1088,7 @@ define([
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
-        frameState.shadowMap = scene.sunShadowMap;
+        frameState.shadowMap = scene.shadowMap;
 
         clearPasses(frameState.passes);
     }
@@ -1194,6 +1194,9 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
+        var shadowNear = Number.MAX_VALUE;
+        var shadowFar = -Number.MAX_VALUE;
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -1229,6 +1232,14 @@ define([
                     distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
+
+                    // When moving the camera low LOD terrain tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update shadowNear and shadowFar
+                    // for reasonably sized bounding volumes.
+                    if (!(distances.start < 0.0 && distances.stop > frameState.shadowFar)) {
+                        shadowNear = Math.min(shadowNear, distances.start);
+                        shadowFar = Math.max(shadowFar, distances.stop);
+                    }
                 } else {
                     // Clear commands don't need a bounding volume - just add the clear to all frustums.
                     // If another command has no bounding volume, though, we need to use the camera's
@@ -1251,7 +1262,14 @@ define([
             // This will handle the case where the computed near plane is further than the user defined far plane.
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
+
+            shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+            shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
         }
+
+        // Use the computed near and far for shadows
+        frameState.shadowNear = shadowNear;
+        frameState.shadowFar = shadowFar;
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
@@ -1565,8 +1583,8 @@ define([
 
             us.updateFrustum(frustum);
 
-            if (scene.sunShadowMap.enabled) {
-                scene.sunShadowMap.updateShadowMapMatrix(us);
+            if (scene.shadowMap.enabled) {
+                scene.shadowMap.updateShadowMapMatrix(us);
             }
 
             clearDepth.execute(context, passState);
@@ -1619,8 +1637,8 @@ define([
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
 
-                if (scene.sunShadowMap.enabled) {
-                    scene.sunShadowMap.updateShadowMapMatrix(us);
+                if (scene.shadowMap.enabled) {
+                    scene.shadowMap.updateShadowMapMatrix(us);
                 }
             }
 
@@ -1669,15 +1687,17 @@ define([
     function getShadowMapCommands(scene) {
         // TODO : temporary solution for testing
         var shadowMapCommands = [];
-        var frustumCommands = scene._frustumCommandsList[0];
-        if (defined(frustumCommands)) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+        for (var i = 0; i < numFrustums; ++i) {
+            var frustumCommands = frustumCommandsList[i];
             var startPass = Pass.GLOBE;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass <= endPass; ++pass) {
                 var commands = frustumCommands.commands[pass];
                 var length = frustumCommands.indices[pass];
-                for (var i = 0; i < length; ++i) {
-                    var command = commands[i];
+                for (var j = 0; j < length; ++j) {
+                    var command = commands[j];
                     if (command.castShadows) {
                         shadowMapCommands.push(command);
                     }
@@ -1690,20 +1710,16 @@ define([
     function executeShadowMapCommands(scene) {
         var context = scene.context;
         var uniformState = context.uniformState;
-        var shadowMap = scene.sunShadowMap;
+        var shadowMap = scene.shadowMap;
         var renderState = shadowMap.renderState;
-        var passState = shadowMap.passState;
-
-        // Clear shadow depth
-        shadowMap.clearCommand.execute(context, passState);
 
         var commands = getShadowMapCommands(scene);
         var numberOfCommands = commands.length;
-
-        var numberOfCascades = shadowMap.numberOfCascades;
-        for (var i = 0; i < numberOfCascades; ++i) {
-            uniformState.updateCamera(shadowMap.cascadeCameras[i]);
-            passState = shadowMap.cascadePassStates[i];
+        var numberOfPasses = shadowMap.numberOfPasses;
+        for (var i = 0; i < numberOfPasses; ++i) {
+            uniformState.updateCamera(shadowMap.passCameras[i]);
+            var passState = shadowMap.passStates[i];
+            shadowMap.updatePass(context, i);
             for (var j = 0; j < numberOfCommands; ++j) {
                 var command = commands[j];
                 executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
@@ -1992,13 +2008,12 @@ define([
 
         scene.fog.update(frameState);
 
-        var shadowMap = scene.sunShadowMap;
+        var shadowMap = scene.shadowMap;
         us.update(frameState, shadowMap);
 
         if (shadowMap.enabled) {
             // Update the sun's direction
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
-            scene._sunCamera.direction = us.sunDirectionWC;
             shadowMap.update(frameState);
         }
 

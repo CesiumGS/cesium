@@ -19,6 +19,9 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar input[type=range] {
+        width : 70px;
+    }
     #toolbar input {
         vertical-align: middle;
         padding-top: 2px;
@@ -44,15 +47,22 @@
             </td>
         </tr>
         <tr>
-            <td>Shadow Far</td>
+            <td>Distance Limit</td>
             <td>
-                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: shadowFar, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: shadowFar">
+                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: distance">
             </td>
         </tr>
         <tr>
-            <td>Shadow Mode</td>
-            <td><select data-bind="options: shadowModeOptions, value: shadowMode"/></td>
+            <td>Radius</td>
+            <td>
+                <input type="range" min="10.0" max="1000.0" step="1.0" data-bind="value: radius, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: radius">
+            </td>
+        </tr>
+        <tr>
+            <td>Cascades</td>
+            <td><select data-bind="options: cascadeOptions, value: cascades"/></td>
         </tr>
         <tr>
             <td>Light Source</td>
@@ -67,6 +77,10 @@
             <td><input type="checkbox" data-bind="checked: shadows"/></td>
         </tr>
         <tr>
+            <td>Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
             <td>Show debug</td>
             <td><input type="checkbox" data-bind="checked: debug"/></td>
         </tr>
@@ -78,6 +92,10 @@
             <td>Cascade colors</td>
             <td><input type="checkbox" data-bind="checked: cascadeColors"/></td>
         </tr>
+        <tr>
+            <td>Fit near/far</td>
+            <td><input type="checkbox" data-bind="checked: fitNearFar"/></td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -88,30 +106,36 @@ function startup(Cesium) {
 var viewModel = {
     lightAngle : 0.0,
     lightHorizon : 0.0,
-    shadowFar : 1000.0,
+    distance : 1000.0,
+    radius : 200.0,
     shadows : true,
+    terrainCast : false,
     debug : true,
     freeze : false,
     cascadeColors : false,
-    shadowModeOptions : ['Cascades', 'Single'],
-    shadowMode : 'Cascades',
-    lightSourceOptions : ['Freeform', 'Sun', 'Fixed'],
-    lightSource : 'Freeform',
+    fitNearFar : true,
+    cascadeOptions : [1, 4],
+    cascades : 4,
+    lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
+    lightSource : 'Point',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024
 };
-
+    
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
 Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
-Cesium.knockout.getObservable(viewModel, 'shadowFar').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'shadowMode').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 
@@ -128,15 +152,21 @@ function updateLightDirection() {
 }
 
 function updateSettings() {
-    shadowMap._farPlane = Number(viewModel.shadowFar);
+    shadowMap._distance = Number(viewModel.distance);
+    shadowMap._radius = Number(viewModel.radius);
+    shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;
     shadowMap.setSize(viewModel.size);
+
+    if (globeVisible) {
+        globe.castShadows = viewModel.terrainCast;
+    }
 }
 
 function updateShadows() {
-    var shadowMode = viewModel.shadowMode;
+    var cascades = viewModel.cascades;
     var lightSource = viewModel.lightSource;
     var cascadeColors = viewModel.cascadeColors;
 
@@ -151,15 +181,21 @@ function updateShadows() {
         resetShadows({
             context : context,
             lightCamera : fixedLightCamera,
-            fitToScene : false
+            cascadesEnabled : false
         });
-    } else if (shadowMode === 'Cascades') {
+    } else if (lightSource === 'Point') {
+        resetShadows({
+            context : context,
+            lightCamera : pointLightCamera,
+            isPointLight : true
+        });
+    } else if (cascades === 4) {
         resetShadows({
             context : context,
             lightCamera : lightCamera
         });
         shadowMap.debugVisualizeCascades = cascadeColors;
-    } else if (shadowMode === 'Single') {
+    } else if (cascades === 1) {
         resetShadows({
             context : context,
             lightCamera : lightCamera,
@@ -171,7 +207,7 @@ function updateShadows() {
 }
 
 var globeVisible = true;
-var terrainEnabled = false;
+var terrainEnabled = true;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true,
@@ -218,13 +254,17 @@ var tilt = 0.0;
 var scene = viewer.scene;
 var context = scene.context;
 var camera = scene.camera;
+var globe = scene.globe;
 var shadowMap;
 var center;
 var height;
 
+scene.debugShowFramesPerSecond = true;
+
 var fixedLightCamera = new Cesium.Camera(scene);
 var freeformLightCamera = new Cesium.Camera(scene);
 var sunCamera = scene._sunCamera;
+var pointLightCamera = new Cesium.Camera(scene);
 
 // Get the height of the terrain at the given longitude/latitude, then create the scene.
 var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
@@ -248,6 +288,8 @@ function createScene() {
     fixedLightCamera.frustum = frustum;
     fixedLightCamera.lookAt(center, new Cesium.Cartesian3(tilt, tilt, offsetZ));
 
+    pointLightCamera.position = center;
+
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
 
     updateLightDirection();
@@ -260,10 +302,10 @@ function resetShadows(shadowOptions) {
 
     // TODO : reset terrain shaders
 
-    scene.sunShadowMap.destroy();
-    scene.sunShadowMap = new Cesium.ShadowMap(shadowOptions);
+    scene.shadowMap.destroy();
+    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
 
-    shadowMap = scene.sunShadowMap;
+    shadowMap = scene.shadowMap;
     shadowMap.enabled = true;
     shadowMap.debugShow = true;
 
@@ -274,8 +316,8 @@ function resetShadows(shadowOptions) {
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
-    createModel('../../SampleData/models/ShadowTester/Shadow_Tester.gltf', center);
-    createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
+    createModel('../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf', center);
+    //createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);

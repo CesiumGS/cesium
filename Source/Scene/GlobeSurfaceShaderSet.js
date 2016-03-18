@@ -160,6 +160,15 @@ define([
                 fs.defines.push('FOG');
             }
 
+            if (receiveShadows) {
+                // Output v_positionEC, and v_normalEC if it has vertex normals
+                if (hasVertexNormals) {
+                    vs.defines.push('ENABLE_VERTEX_LIGHTING');
+                } else {
+                    vs.defines.push('ENABLE_DAYNIGHT_SHADING');
+                }
+            }
+
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
     {\n\
@@ -192,8 +201,9 @@ define([
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
             if (receiveShadows) {
-                vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1]);
-                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, '-v_normalEC', 'v_positionEC');
+                var normalVarying = hasVertexNormals ? 'v_normalEC' : undefined;
+                vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1], frameState);
+                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, normalVarying, 'v_positionEC');
             }
 
             var shader = ShaderProgram.fromCache({
@@ -276,8 +286,8 @@ define([
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
 
-            vs.sources[1] = ShadowMapShader.createShadowCastVertexShader(vs.sources[1]);
-            fs.sources[0] = ShadowMapShader.createShadowCastFragmentShader(fs.sources[0], frameState, true);
+            vs.sources[1] = ShadowMapShader.createShadowCastVertexShader(vs.sources[1], frameState, 'v_positionEC');
+            fs.sources[0] = ShadowMapShader.createShadowCastFragmentShader(fs.sources[0], frameState, true, 'v_positionEC');
 
             shadowCastShader = this._shadowCastPrograms[flags] = ShaderProgram.fromCache({
                 context : frameState.context,
