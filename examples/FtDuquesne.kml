@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+    <NetworkLink id="oa_Autoplay">
+      <name>Autoplay</name>
+      <Link>
+        <href>http://localhost:8765/query.html?query=playtour=FtDuquesne</href>
+      </Link>
+    </NetworkLink>
+
+        <gx:Tour id="MB_Overview">
+        <name>FtDuquesne</name>
+                <gx:Playlist>
+
+
+                <!-- Fort Duquesne -->
+                        <gx:FlyTo>
+                                <gx:duration>5.0</gx:duration>
+                                <gx:flyToMode>bounce</gx:flyToMode>
+
+	<LookAt>
+		<longitude>-80.01091500005923</longitude>
+		<latitude>40.44160300004332</latitude>
+		<altitude>0</altitude>
+		<heading>-3.839440672193166e-11</heading>
+		<tilt>0</tilt>
+		<range>1000000.000011309791</range>
+		<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+	</LookAt>
+
+                        </gx:FlyTo>
+
+                        <gx:Wait><gx:duration>2.0</gx:duration></gx:Wait>
+
+
+                        <gx:FlyTo>
+                                <gx:duration>11.0</gx:duration>
+                                <gx:flyToMode>bounce</gx:flyToMode>
+
+	<LookAt>
+		<longitude>-80.01091500005923</longitude>
+		<latitude>40.44160300004332</latitude>
+		<altitude>0</altitude>
+		<heading>-3.839440672193166e-11</heading>
+		<tilt>23</tilt>
+		<range>9000.000011309791</range>
+		<gx:altitudeMode>relativeToSeaFloor</gx:altitudeMode>
+	</LookAt>
+
+                        </gx:FlyTo>
+
+                        <gx:Wait><gx:duration>2.0</gx:duration></gx:Wait>
+
+		</gx:Playlist>
+	</gx:Tour>
+</Document>
+</kml>

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document><!--
+    <NetworkLink id="oa_Autoplay">
+      <name>Autoplay</name>
+      <Link>
+        <href>http://localhost:8765/query.html?query=playtour=Albany2NYC</href>
+      </Link>
+    </NetworkLink>
+-->
+        <gx:Tour id="Generic">
+        <name>Albany2NYC</name>
+                <gx:Playlist>
+
+
+                <!-- Fort Duquesne -->
+                        <gx:FlyTo>
+                                <gx:duration>5.0</gx:duration>
+                                <gx:flyToMode>bounce</gx:flyToMode>
+
+                                <LookAt>
+                                        <longitude>-73.75859670704939</longitude>
+                                        <latitude>42.64891692811341</latitude>
+                                        <altitude>0</altitude>
+                                        <heading>-0.952</heading>
+                                        <tilt>53.32</tilt>
+                                        <range>17564.99</range>
+                                        <gx:altitudeMode>absolute</gx:altitudeMode>
+                                </LookAt>
+
+
+                        </gx:FlyTo>
+
+                        <gx:Wait><gx:duration>2.0</gx:duration></gx:Wait>
+
+
+                        <gx:FlyTo>
+                                <gx:duration>11.0</gx:duration>
+                                <gx:flyToMode>smooth</gx:flyToMode>
+
+                                <LookAt>
+                                        <longitude>-77.99828607650575</longitude>
+                                        <latitude>36.91039650031811</latitude>
+                                        <altitude>0</altitude>
+                                        <heading>19.306</heading>
+                                        <tilt>34.248</tilt>
+                                        <range>2276025.33</range>
+                                        <gx:altitudeMode>absolute</gx:altitudeMode>
+                                </LookAt>
+
+
+                        </gx:FlyTo>
+
+                        <gx:Wait><gx:duration>2.0</gx:duration></gx:Wait>
+<!--
+                        <gx:FlyTo>
+                                <gx:duration>5.0</gx:duration>
+                                <gx:flyToMode>smooth</gx:flyToMode>
+
+                                <LookAt>
+                                        <longitude>-73.98702147169125</longitude>
+                                        <latitude>40.74600711934224</latitude>
+                                        <altitude>0</altitude>
+                                        <heading>9.417</heading>
+                                        <tilt>76.964</tilt>
+                                        <range>8003.51</range>
+                                        <gx:altitudeMode>absolute</gx:altitudeMode>
+                                </LookAt>
+
+                        </gx:FlyTo>
+-->
+                        <gx:Wait><gx:duration>2.0</gx:duration></gx:Wait>
+		</gx:Playlist>
+	</gx:Tour>
+</Document>
+</kml>
