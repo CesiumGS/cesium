@@ -135,6 +135,30 @@ defineSuite([
         entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
+    it('raises expected events when reentrant', function() {
+        var entityCollection = new EntityCollection();
+
+        var entity = new Entity();
+        var entity2 = new Entity();
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+
+        var listener = jasmine.createSpy('listener').and.callFake(function(collection, added, removed, changed) {
+            //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
+            //another event firing that occurs after all current subscribers have been notified of the
+            //event we are inside of.
+            if (entity2.name !== 'Bob') {
+                entity2.name = 'Bob';
+            }
+        });
+        entityCollection.collectionChanged.addEventListener(listener);
+
+        entity.name = 'newName';
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entityCollection, [], [], [entity]]);
+        expect(listener.calls.argsFor(1)).toEqual([entityCollection, [], [], [entity2]]);
+    });
+
     it('suspended add/remove raises expected events', function() {
         var entity = new Entity();
         var entity2 = new Entity();
