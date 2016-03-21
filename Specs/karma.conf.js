@@ -12,30 +12,7 @@ module.exports = function(config) {
 
         detectBrowsers : {
             enabled : false,
-
-            usePhantomJS : false,
-
-            // post processing of browsers list
-            // here you can edit the list of browsers used by karma
-            postDetection : function(availableBrowser) {
-                //Add IE Emulation
-                var result = availableBrowser;
-
-                if (availableBrowser.indexOf('IE') > -1) {
-                    result.push('IE9');
-                }
-
-                //Remove PhantomJS if another browser has been detected
-                if (availableBrowser.length > 1 && availableBrowser.indexOf('PhantomJS') > -1) {
-                    var i = result.indexOf('PhantomJS');
-
-                    if (i !== -1) {
-                        result.splice(i, 1);
-                    }
-                }
-
-                return result;
-            }
+            usePhantomJS : false
         },
 
         // list of files / patterns to load in the browser
