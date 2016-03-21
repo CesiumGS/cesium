@@ -143,13 +143,20 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
 
+        var inCallback = false;
         var listener = jasmine.createSpy('listener').and.callFake(function(collection, added, removed, changed) {
             //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
             //another event firing that occurs after all current subscribers have been notified of the
             //event we are inside of.
+
+            //By checking that inCallback is false, we are making sure the entity2.name assignment
+            //is delayed until after the first round of events is fired.
+            expect(inCallback).toBe(false);
+            inCallback = true;
             if (entity2.name !== 'Bob') {
                 entity2.name = 'Bob';
             }
+            inCallback = false;
         });
         entityCollection.collectionChanged.addEventListener(listener);
 

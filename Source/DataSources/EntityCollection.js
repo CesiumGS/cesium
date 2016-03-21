@@ -40,6 +40,7 @@ define([
             var removed = collection._removedEntities;
             var changed = collection._changedEntities;
             if (changed.length !== 0 || added.length !== 0 || removed.length !== 0) {
+                collection._firing = true;
                 do {
                     collection._refire = false;
                     var addedArray = collection._addedEntities.values.slice(0);
@@ -51,6 +52,7 @@ define([
                     changed.removeAll();
                     collection._collectionChanged.raiseEvent(collection, addedArray, removedArray, changedArray);
                 } while (collection._refire);
+                collection._firing = false;
             }
         }
     }
