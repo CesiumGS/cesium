@@ -136,7 +136,7 @@ define([
         //>>includeEnd('debug');
 
         this.enabled = false;
-        this._softShadows = defaultValue(options.softShadows, false);
+        this.softShadows = defaultValue(options.softShadows, false);
 
         // Framebuffer resources
         this._depthAttachment = undefined;
@@ -367,11 +367,6 @@ define([
         usesDepthTexture : {
             get : function() {
                 return this._usesDepthTexture;
-            }
-        },
-        softShadows : {
-            get : function() {
-                return this._softShadows;
             }
         },
         texelSize : {
