@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<classpath>
-	<classpathentry excluding="Source/ThirdParty/|Source/Workers/cesiumWorkerBootstrapper.js|ThirdParty/|Tools/build.js" kind="src" path=""/>
-	<classpathentry kind="con" path="org.eclipse.wst.jsdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.wst.jsdt.launching.baseBrowserLibrary/StandardBrowser/html5"/>
-	<classpathentry kind="output" path=""/>
-</classpath>

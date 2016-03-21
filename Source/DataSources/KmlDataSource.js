@@ -55,7 +55,8 @@ define([
         './SampledPositionProperty',
         './ScaledPositionProperty',
         './TimeIntervalCollectionProperty',
-        './WallGraphics'
+        './WallGraphics',
+        './KmlLookAt'
     ], function(
         AssociativeArray,
         BoundingRectangle,
@@ -112,7 +113,8 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionProperty,
-        WallGraphics) {
+        WallGraphics,
+        KmlLookAt) {
     'use strict';
 
     // IE 8 doesn't have a DOM parser and can't run Cesium anyway, so just bail.
@@ -1468,12 +1470,11 @@ define([
 
         processExtendedData(featureNode, entity);
         processDescription(featureNode, entity, styleEntity, uriResolver);
+        processLookAt(featureNode, entity);
+        processCamera(featureNode, entity);
 
         if (defined(queryFirstNode(featureNode, 'Camera', namespaces.kml))) {
             console.log('KML - Unsupported view: Camera');
-        }
-        if (defined(queryFirstNode(featureNode, 'LookAt', namespaces.kml))) {
-            console.log('KML - Unsupported view: LookAt');
         }
         if (defined(queryFirstNode(featureNode, 'Region', namespaces.kml))) {
             console.log('KML - Placemark Regions are unsupported');
@@ -1483,6 +1484,40 @@ define([
             entity : entity,
             styleEntity : styleEntity
         };
+    }
+
+    function processCamera(featureNode, entity) {
+        var camera = queryFirstNode(featureNode, 'Camera', namespaces.kml);
+        if(defined(camera)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            result.roll = queryNumericValue(lookAt, 'roll', namespaces.kml);
+
+            entity.kml.camera = new KmlCamera(entity, result);
+        }
+    }
+
+    function processLookAt(featureNode, entity) {
+        var lookAt = queryFirstNode(featureNode, 'LookAt', namespaces.kml);
+        if(defined(lookAt)) {
+            var result = {};
+
+            result.longitude = queryNumericValue(lookAt, 'longitude', namespaces.kml);
+            result.latitude = queryNumericValue(lookAt, 'latitude', namespaces.kml);
+            result.altitude = queryNumericValue(lookAt, 'altitude', namespaces.kml);
+
+            result.heading = queryNumericValue(lookAt, 'heading', namespaces.kml);
+            result.tilt = queryNumericValue(lookAt, 'tilt', namespaces.kml);
+            result.range = queryNumericValue(lookAt, 'range', namespaces.kml);
+
+            entity.kml.lookAt = new KmlLookAt(entity, result);
+        }
     }
 
     var geometryTypes = {
@@ -1534,6 +1569,9 @@ define([
             if (defined(geometryProcessor)) {
                 geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity);
                 hasGeometry = true;
+            }
+            if('lookAt' === childNode.localName) {
+                console.log('Look At');
             }
         }
 
@@ -1918,8 +1956,60 @@ define([
         GroundOverlay : processGroundOverlay,
         PhotoOverlay : processUnsupported,
         ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
+        Tour : processTour
     };
+
+    function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var name = queryStringValue(node, 'name', namespaces.kml);
+        var tour = {'name': name};
+
+        var playlistNode = queryFirstNode(node, 'Playlist', namespaces.gx);
+        if(playlistNode) {
+            tour['playlist'] = [];
+
+            var childNodes = playlistNode.childNodes;
+            for(var i = 0; i < childNodes.length; i++) {
+                var entryNode = childNodes[i];
+
+                if (entryNode.localName === 'FlyTo') {
+                    processTourFlyTo(tour, entryNode);
+                }
+                else if (entryNode.localName === 'Wait') {
+                    var w = { '_type': 'Wait' };
+
+                    var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
+                    if(duration !== null) {
+                        w['duration'] = duration;
+                    }
+
+                    tour['playlist'].push(w);
+                }
+            }
+        }
+
+        console.log('Tour');
+    }
+
+    function processTourFlyTo(tour, entryNode) {
+
+        var ft = { '_type': 'FlyTo' };
+
+        var duration = queryNumericValue(entryNode, 'duration', namespaces.gx);
+        if(duration !== null) {
+            ft['duration'] = duration;
+        }
+
+        var flyToMode = queryColorValue(entryNode, 'flyToMode', namespaces.gx);
+        if(flyToMode !== null) {
+            ft['flyToMode'] = flyToMode;
+        }
+
+        var t = {};
+        processLookAt(entryNode, t);
+        ft['lookAt'] = t.kml.lookAt;
+
+        tour['playlist'].push(ft);
+    }
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProocessor = featureTypes[node.localName];
