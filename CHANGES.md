@@ -19,6 +19,7 @@ Change Log
 * Fix issue where the `GroundPrimitive` volume was being clipped by the far plane. [#3706](https://github.com/AnalyticalGraphicsInc/cesium/issues/3706)
 * Fixed issue where `Camera.computeViewRectangle` was incorrect when crossing the international date line [#3717](https://github.com/AnalyticalGraphicsInc/cesium/issues/3717)
 * Added `Rectangle` result parameter to `Camera.computeViewRectangle`
+* Fixed a reentrancy bug in `EntityCollection.collectionChanged`. [#3739](https://github.com/AnalyticalGraphicsInc/cesium/pull/3739)
 * Fix bug when upsampling exaggerated terrain where the terrain heights were exaggerated at twice the value. [#3607](https://github.com/AnalyticalGraphicsInc/cesium/issues/3607)
 
 ### 1.19 - 2016-03-01
