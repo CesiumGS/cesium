@@ -237,8 +237,8 @@ defineSuite([
 
         var numVertices = 9;
         var numTriangles = 8;
-        expect(positions.length).toEqual(9 * 3);
-        expect(m.indices.length).toEqual(8 * 3);
+        expect(positions.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('undefined is returned if any side are of length zero', function() {
