@@ -33,7 +33,7 @@
   "devDependencies": {
     "almond": "0.3.1",
     "async": "1.5.2",
-    "aws-sdk": "2.2.42",
+    "aws-sdk-promise": "0.0.2",
     "bluebird": "3.3.4",
     "compressible": "2.0.7",
     "compression": "1.6.1",
