@@ -18,9 +18,8 @@ define([
     ShadowMapShader.createShadowCastVertexShader = function(vs, frameState, positionVaryingName) {
         var hasPositionVarying = defined(positionVaryingName) && (vs.indexOf(positionVaryingName) > -1);
         var isPointLight = frameState.shadowMap.isPointLight;
-        var usesCubeMap = frameState.shadowMap.usesCubeMap;
 
-        if (isPointLight && usesCubeMap && !hasPositionVarying) {
+        if (isPointLight && !hasPositionVarying) {
             vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
             vs +=
                 'varying vec3 v_positionEC; \n' +
@@ -39,7 +38,6 @@ define([
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
         positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
         var isPointLight = frameState.shadowMap.isPointLight;
-        var usesCubeMap = frameState.shadowMap.usesCubeMap;
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
 
         if (opaque) {
@@ -56,7 +54,7 @@ define([
                 '    } \n';
         }
 
-        if (isPointLight && usesCubeMap) {
+        if (isPointLight) {
             fs +=
                 'float distance = length(' + positionVaryingName + '); \n' +
                 'distance /= czm_shadowMapLightPositionEC.w; // radius \n' +
@@ -69,7 +67,7 @@ define([
 
         fs += '}';
 
-        if (isPointLight && usesCubeMap && !hasPositionVarying) {
+        if (isPointLight && !hasPositionVarying) {
             fs = 'varying vec3 v_positionEC; \n' + fs;
         }
 
@@ -162,21 +160,12 @@ define([
             '} \n' +
             ' \n') +
 
-            (isPointLight ? (usesCubeMap ?
+            (isPointLight && usesCubeMap ?
             'float getVisibility(vec3 uv, float depth, vec3 lightDirectionEC)' :
-            'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC, vec2 faceUV)') :
             'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC)') +
 
             '{ \n' +
             '    float shadowDepth = sampleTexture(uv); \n' +
-
-            (isPointLight && !usesCubeMap ?
-            '    vec4 shadowCoord = vec4(faceUV, shadowDepth, 1.0); \n' +
-            '    shadowCoord = shadowCoord * 2.0 - 1.0; \n' +
-            '    shadowCoord = czm_shadowMapMatrix * shadowCoord; \n' +
-            '    shadowCoord /= shadowCoord.w; \n' +
-            '    shadowDepth = length(shadowCoord.xyz); \n' : '') +
-
             '    float visibility = step(depth, shadowDepth); \n' +
 
             (hasNormalVarying ?
@@ -190,7 +179,7 @@ define([
             '    return visibility; \n' +
             '} \n' +
             ' \n' +
-            'vec2 directionToUV(vec3 d, out vec2 faceUV) { \n' +
+            'vec2 directionToUV(vec3 d) { \n' +
             ' \n' +
             '    vec3 abs = abs(d); \n' +
             '    float max = max(max(abs.x, abs.y), abs.z); // Get the largest component \n' +
@@ -198,12 +187,11 @@ define([
             '    float sign = dot(weights, sign(d)) * 0.5 + 0.5; // 0 or 1 \n' +
             '    float sc = mix(dot(weights, vec3(d.z, d.x, -d.x)), dot(weights, vec3(-d.z, d.x, d.x)), sign); \n' +
             '    float tc = mix(dot(weights, vec3(-d.y, -d.z, -d.y)), dot(weights, vec3(-d.y, d.z, -d.y)), sign); \n' +
-            '    faceUV = (vec2(sc, tc) / max) * 0.5 + 0.5; \n' +
+            '    vec2 uv = (vec2(sc, tc) / max) * 0.5 + 0.5; \n' +
             '    float offsetX = dot(weights, vec3(0.0, 1.0, 2.0)); \n' +
             '    float offsetY = sign; \n' +
-            '    vec2 uv; \n' +
-            '    uv.x = (faceUV.x + offsetX) / 3.0; \n' +
-            '    uv.y = (faceUV.y + offsetY) / 2.0; \n' +
+            '    uv.x = (uv.x + offsetX) / 3.0; \n' +
+            '    uv.y = (uv.y + offsetY) / 2.0; \n' +
             '    return uv; \n' +
             '} \n';
 
@@ -224,13 +212,13 @@ define([
                 '        return; \n' +
                 '    } \n' +
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
+                '    distance /= radius; \n' +
 
                 (usesCubeMap ?
-                '    float visibility = getVisibility(directionWC, distance / radius, -directionEC); \n' :
+                '    float visibility = getVisibility(directionWC, distance, -directionEC); \n' :
 
-                '    vec2 faceUV; \n' +
-                '    vec2 uv = directionToUV(directionWC, faceUV); \n' +
-                '    float visibility = getVisibility(uv, distance, -directionEC, faceUV); \n') +
+                '    vec2 uv = directionToUV(directionWC); \n' +
+                '    float visibility = getVisibility(uv, distance, -directionEC); \n') +
 
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';

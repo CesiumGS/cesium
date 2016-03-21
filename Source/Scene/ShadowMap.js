@@ -197,7 +197,7 @@ define([
 
         this._usesDepthTexture = context.depthTexture;
 
-        if (this._isPointLight && this._usesCubeMap) {
+        if (this._isPointLight) {
             this._usesDepthTexture = false;
         }
 
