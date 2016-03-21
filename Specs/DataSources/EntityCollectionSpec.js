@@ -143,6 +143,11 @@ defineSuite([
         entityCollection.add(entity);
         entityCollection.add(entity2);
 
+        var entityToDelete = new Entity();
+        entityCollection.add(entityToDelete);
+
+        var entityToAdd = new Entity();
+
         var inCallback = false;
         var listener = jasmine.createSpy('listener').and.callFake(function(collection, added, removed, changed) {
             //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
@@ -156,6 +161,12 @@ defineSuite([
             if (entity2.name !== 'Bob') {
                 entity2.name = 'Bob';
             }
+            if (entityCollection.contains(entityToDelete)) {
+                entityCollection.removeById(entityToDelete.id);
+            }
+            if (!entityCollection.contains(entityToAdd)) {
+                entityCollection.add(entityToAdd);
+            }
             inCallback = false;
         });
         entityCollection.collectionChanged.addEventListener(listener);
@@ -163,7 +174,12 @@ defineSuite([
         entity.name = 'newName';
         expect(listener.calls.count()).toBe(2);
         expect(listener.calls.argsFor(0)).toEqual([entityCollection, [], [], [entity]]);
-        expect(listener.calls.argsFor(1)).toEqual([entityCollection, [], [], [entity2]]);
+        expect(listener.calls.argsFor(1)).toEqual([entityCollection, [entityToAdd], [entityToDelete], [entity2]]);
+
+        expect(entity.name).toEqual('newName');
+        expect(entity2.name).toEqual('Bob');
+        expect(entityCollection.contains(entityToDelete)).toEqual(false);
+        expect(entityCollection.contains(entityToAdd)).toEqual(true);
     });
 
     it('suspended add/remove raises expected events', function() {
