@@ -244,7 +244,7 @@ define([
         });
     }
 
-    var scratchTexelSize = new Cartesian2();
+    var scratchTexelStepSize = new Cartesian2();
 
     defineProperties(ShadowMap.prototype, {
         /**
@@ -369,11 +369,11 @@ define([
                 return this._usesDepthTexture;
             }
         },
-        texelSize : {
+        texelStepSize : {
             get : function() {
-                scratchTexelSize.x = 1.0 / this._textureSize.x;
-                scratchTexelSize.y = 1.0 / this._textureSize.y;
-                return scratchTexelSize;
+                scratchTexelStepSize.x = 1.0 / this._textureSize.x;
+                scratchTexelStepSize.y = 1.0 / this._textureSize.y;
+                return scratchTexelStepSize;
             }
         }
     });

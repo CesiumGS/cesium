@@ -1591,16 +1591,16 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the size of a shadow map texel in the [0,1] range.
+         * An automatic GLSL uniform representing the step size for sampling a neighbor texel, equivalent to 1.0 / textureDimensionInPixels.
          *
-         * @alias czm_shadowMapTexelSize
+         * @alias czm_shadowMapTexelStepSize
          * @glslUniform
          */
-        czm_shadowMapTexelSize : new AutomaticUniform({
+        czm_shadowMapTexelStepSize : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
-                return uniformState.shadowMap.texelSize;
+                return uniformState.shadowMap.texelStepSize;
             }
         })
     };

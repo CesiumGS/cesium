@@ -176,10 +176,10 @@ define([
 
             (softShadows ?
             '    float radius = 1.0; \n' +
-            '    float dx0 = -czm_shadowMapTexelSize.x * radius; \n' +
-            '    float dy0 = -czm_shadowMapTexelSize.y * radius; \n' +
-            '    float dx1 = czm_shadowMapTexelSize.x * radius; \n' +
-            '    float dy1 = czm_shadowMapTexelSize.y * radius; \n' +
+            '    float dx0 = -czm_shadowMapTexelStepSize.x * radius; \n' +
+            '    float dy0 = -czm_shadowMapTexelStepSize.y * radius; \n' +
+            '    float dx1 = czm_shadowMapTexelStepSize.x * radius; \n' +
+            '    float dy1 = czm_shadowMapTexelStepSize.y * radius; \n' +
             '    float visibility = ( \n' +
             '        depthCompare(uv, depth) + \n' +
             '        depthCompare(uv + vec2(dx0, dy0), depth) + \n' +
