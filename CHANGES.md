@@ -20,6 +20,7 @@ Change Log
 * Fixed issue where `Camera.computeViewRectangle` was incorrect when crossing the international date line [#3717](https://github.com/AnalyticalGraphicsInc/cesium/issues/3717)
 * Added `Rectangle` result parameter to `Camera.computeViewRectangle`
 * Fix bug when upsampling exaggerated terrain where the terrain heights were exaggerated at twice the value. [#3607](https://github.com/AnalyticalGraphicsInc/cesium/issues/3607)
+* Fixed a crash that would occur if you added and removed an `Entity` with a path without ever actually rendering it. [#3738](https://github.com/AnalyticalGraphicsInc/cesium/pull/3738)
 
 ### 1.19 - 2016-03-01
 
