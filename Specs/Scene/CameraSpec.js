@@ -2350,7 +2350,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('computeViewRegion when zoomed in', function() {
+    it('computeViewRectangle when zoomed in', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -2367,12 +2367,15 @@ defineSuite([
         expect(rect).toEqual(correctResult);
     });
 
-    it('computeViewRegion when zoomed in to pole', function() {
+    it('computeViewRectangle when zoomed in to pole', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_Z);
         Cartesian3.multiplyByScalar(position, 7000000, position);
         camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var correctResult = new Rectangle(-CesiumMath.PI, 1.4961779388065022, CesiumMath.PI, CesiumMath.PI_OVER_TWO);
 
@@ -2380,7 +2383,23 @@ defineSuite([
         expect(rect).toEqual(correctResult);
     });
 
-    it('computeViewRegion when zoomed out', function() {
+    it('computeViewRectangle when zoomed in to IDL', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.clone(Cartesian3.UNIT_X, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).toEqual(correctResult);
+    });
+
+    it('computeViewRectangle when zoomed out', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -2395,7 +2414,7 @@ defineSuite([
         expect(rect).toEqual(Rectangle.MAX_VALUE);
     });
 
-    it('computeViewRegion when globe isn\'t visible', function() {
+    it('computeViewRectangle when globe isn\'t visible', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
