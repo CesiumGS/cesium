@@ -109,6 +109,7 @@ define([
      * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
      * @param {Number} [options.size=1024] The width and height, in pixels, of each shadow map.
+     * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      *
      * @see ShadowMapShader
      *
@@ -135,6 +136,7 @@ define([
         //>>includeEnd('debug');
 
         this.enabled = false;
+        this._softShadows = defaultValue(options.softShadows, false);
 
         // Framebuffer resources
         this._depthAttachment = undefined;
@@ -241,6 +243,8 @@ define([
             }
         });
     }
+
+    var scratchTexelSize = new Cartesian2();
 
     defineProperties(ShadowMap.prototype, {
         /**
@@ -363,6 +367,18 @@ define([
         usesDepthTexture : {
             get : function() {
                 return this._usesDepthTexture;
+            }
+        },
+        softShadows : {
+            get : function() {
+                return this._softShadows;
+            }
+        },
+        texelSize : {
+            get : function() {
+                scratchTexelSize.x = 1.0 / this._textureSize.x;
+                scratchTexelSize.y = 1.0 / this._textureSize.y;
+                return scratchTexelSize;
             }
         }
     });

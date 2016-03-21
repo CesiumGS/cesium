@@ -1588,6 +1588,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.shadowMap.lightPositionEC;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the size of a shadow map texel in the [0,1] range.
+         *
+         * @alias czm_shadowMapTexelSize
+         * @glslUniform
+         */
+        czm_shadowMapTexelSize : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC2,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.texelSize;
+            }
         })
     };
 

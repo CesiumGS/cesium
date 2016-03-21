@@ -98,6 +98,7 @@ define([
         var usesCubeMap = frameState.shadowMap.usesCubeMap;
         var hasCascades = frameState.shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
+        var softShadows = frameState.shadowMap.softShadows;
 
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
@@ -159,15 +160,40 @@ define([
             '    return czm_unpackDepth(texture2D(czm_shadowMapTexture, uv)); \n') +
             '} \n' +
             ' \n') +
-
+            (isPointLight && usesCubeMap ?
+            'float depthCompare(vec3 uv, float depth) \n' :
+            'float depthCompare(vec2 uv, float depth) \n') +
+            '{ \n' +
+            '    float shadowDepth = sampleTexture(uv); \n' +
+            '    return step(depth, shadowDepth); \n' +
+            '} \n' +
+            
             (isPointLight && usesCubeMap ?
             'float getVisibility(vec3 uv, float depth, vec3 lightDirectionEC)' :
             'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC)') +
 
             '{ \n' +
-            '    float shadowDepth = sampleTexture(uv); \n' +
-            '    float visibility = step(depth, shadowDepth); \n' +
 
+            (softShadows ?
+            '    float radius = 1.0; \n' +
+            '    float dx0 = -czm_shadowMapTexelSize.x * radius; \n' +
+            '    float dy0 = -czm_shadowMapTexelSize.y * radius; \n' +
+            '    float dx1 = czm_shadowMapTexelSize.x * radius; \n' +
+            '    float dy1 = czm_shadowMapTexelSize.y * radius; \n' +
+            '    float visibility = ( \n' +
+            '        depthCompare(uv, depth) + \n' +
+            '        depthCompare(uv + vec2(dx0, dy0), depth) + \n' +
+            '        depthCompare(uv + vec2(0.0, dy0), depth) + \n' +
+            '        depthCompare(uv + vec2(dx1, dy0), depth) + \n' +
+            '        depthCompare(uv + vec2(dx0, 0.0), depth) + \n' +
+            '        depthCompare(uv + vec2(dx1, 0.0), depth) + \n' +
+            '        depthCompare(uv + vec2(dx0, dy1), depth) + \n' +
+            '        depthCompare(uv + vec2(0.0, dy1), depth) + \n' +
+            '        depthCompare(uv + vec2(dx1, dy1), depth) \n' +
+            '    ) * (1.0 / 9.0); \n' :
+
+            '    float visibility = depthCompare(uv, depth); \n') +
+            
             (hasNormalVarying ?
             '    // If the normal is facing away from the light, then it is in shadow \n' +
             '    float angle = dot(normalize(' + normalVaryingName + '), lightDirectionEC); \n' +
