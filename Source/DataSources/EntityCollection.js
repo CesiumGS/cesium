@@ -43,9 +43,9 @@ define([
                 collection._firing = true;
                 do {
                     collection._refire = false;
-                    var addedArray = collection._addedEntities.values.slice(0);
-                    var removedArray = collection._removedEntities.values.slice(0);
-                    var changedArray = collection._changedEntities.values.slice(0);
+                    var addedArray = added.values.slice(0);
+                    var removedArray = removed.values.slice(0);
+                    var changedArray = changed.values.slice(0);
 
                     added.removeAll();
                     removed.removeAll();
