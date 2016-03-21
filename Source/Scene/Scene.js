@@ -1739,6 +1739,8 @@ define([
         var eyePoint = Cartesian3.fromElements(Math.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x, scratch2DViewportEyePoint);
         var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint, scratch2DViewportWindowCoords);
 
+        windowCoordinates.x = Math.floor(windowCoordinates.x);
+
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
         var width;
@@ -1754,11 +1756,14 @@ define([
 
             viewport.x += windowCoordinates.x;
 
-            width = camera.frustum.right - camera.frustum.left;
-            camera.frustum.left = -maxCoord.x - x;
-            camera.frustum.right = camera.frustum.left + width;
+            camera.position.x = -camera.position.x;
+
+            var right = camera.frustum.right;
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = -right;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
@@ -1771,11 +1776,14 @@ define([
 
             viewport.x = viewport.x - viewport.width;
 
-            width = camera.frustum.right - camera.frustum.left;
-            camera.frustum.right = maxCoord.x - x;
-            camera.frustum.left = camera.frustum.right - width;
+            camera.position.x = -camera.position.x;
+
+            var left = camera.frustum.left;
+            camera.frustum.left = -camera.frustum.right;
+            camera.frustum.right = -left;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         }
