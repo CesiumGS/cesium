@@ -230,7 +230,7 @@ define([
                 '    if (depth > czm_shadowMapCascadeSplits[1].w) { \n' +
                 '        return; \n' +
                 '    } \n' +
-                '    vec4 weights = getCascadeWeights(-positionEC.z); \n' +
+                '    vec4 weights = getCascadeWeights(depth); \n' +
                 '    // Transform position into the cascade \n' +
                 '    vec4 shadowPosition = getCascadeMatrix(weights) * positionEC; \n' +
 
