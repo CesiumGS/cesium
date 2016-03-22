@@ -51,6 +51,10 @@ define([
          */
         this.stack = stack;
     }
+
+    RuntimeError.prototype = Object.create(Error.prototype);
+    RuntimeError.prototype.constructor = RuntimeError;
+
     RuntimeError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
 
