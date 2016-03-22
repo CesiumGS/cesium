@@ -7,7 +7,7 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - echo 'jsHint' && echo -en 'travis_fold:start:script.jsHint\\r'
-  - npm run jsHint --failTaskOnError
+  - npm run jsHint -- --failTaskOnError
   - echo -en 'travis_fold:end:script.jsHint\\r'
 
   - echo 'test non-webgl' && echo -en 'travis_fold:start:script.test\\r'
