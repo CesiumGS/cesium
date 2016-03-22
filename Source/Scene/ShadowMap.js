@@ -166,8 +166,7 @@ define([
 
         // Uniforms
         this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
-        this._cascadeOffsets = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
-        this._cascadeScales = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+        this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
 
         var numberOfPasses;
         if (this._isPointLight) {
@@ -182,6 +181,7 @@ define([
         this._passCameras = new Array(numberOfPasses);
         this._passStates = new Array(numberOfPasses);
         this._passFramebuffers = new Array(numberOfPasses);
+        this._passTextureOffsets = new Array(numberOfPasses);
 
         for (var i = 0; i < numberOfPasses; ++i) {
             this._passCameras[i] = new ShadowMapCamera();
@@ -259,9 +259,10 @@ define([
                 return this._shadowMapTexture;
             }
         },
+
         /**
          * The shadow map matrix used in shadow receive programs.
-         * It converts gl_Position to shadow map texture space.
+         * Transforms from eye space to shadow texture space.
          *
          * @memberof ShadowMap.prototype
          * @type {Matrix4}
@@ -334,16 +335,13 @@ define([
                 return this._cascadeSplits;
             }
         },
-        cascadeOffsets : {
+
+        cascadeMatrices : {
             get : function() {
-                return this._cascadeOffsets;
+                return this._cascadeMatrices;
             }
         },
-        cascadeScales : {
-            get : function() {
-                return this._cascadeScales;
-            }
-        },
+
         lightDirectionEC : {
             get : function() {
                 return this._lightDirectionEC;
@@ -531,13 +529,13 @@ define([
         if (this._isPointLight && this._usesCubeMap) {
             textureSize.x = size;
             textureSize.y = size;
-            var viewport = new BoundingRectangle(0, 0, size, size);
-            this._passStates[0].viewport = viewport;
-            this._passStates[1].viewport = viewport;
-            this._passStates[2].viewport = viewport;
-            this._passStates[3].viewport = viewport;
-            this._passStates[4].viewport = viewport;
-            this._passStates[5].viewport = viewport;
+            var faceViewport = new BoundingRectangle(0, 0, size, size);
+            this._passStates[0].viewport = faceViewport;
+            this._passStates[1].viewport = faceViewport;
+            this._passStates[2].viewport = faceViewport;
+            this._passStates[3].viewport = faceViewport;
+            this._passStates[4].viewport = faceViewport;
+            this._passStates[5].viewport = faceViewport;
         } else if (numberOfPasses === 1) {
             // +----+
             // |  1 |
@@ -575,6 +573,16 @@ define([
 
         // Update clear pass state
         this._clearPassState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
+
+        // Transforms shadow coordinates [0, 1] into the pass's region of the texture
+        for (var i = 0; i < numberOfPasses; ++i) {
+            var viewport = this._passStates[i].viewport;
+            var biasX = viewport.x / textureSize.x;
+            var biasY = viewport.y / textureSize.y;
+            var scaleX = viewport.width / textureSize.x;
+            var scaleY = viewport.height / textureSize.y;
+            this._passTextureOffsets[i] = new Matrix4(scaleX, 0.0, 0.0, biasX, 0.0, scaleY, 0.0, biasY, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        }
     };
 
     var scratchViewport = new BoundingRectangle();
@@ -848,6 +856,7 @@ define([
         var far = shadowMapCamera.frustum.far;
 
         var cascadeSubFrustum = sceneCamera.frustum.clone(scratchFrustum);
+        var shadowViewProjection = shadowMapCamera.getViewProjection();
 
         for (var j = 0; j < numberOfCascades; ++j) {
             // Find the bounding box of the camera sub-frustum in shadow map texture space
@@ -855,7 +864,7 @@ define([
             cascadeSubFrustum.far = splitsFar[j];
             var viewProjection = Matrix4.multiply(cascadeSubFrustum.projectionMatrix, sceneCamera.viewMatrix, scratchMatrix);
             var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
-            var cascadeMatrix = Matrix4.multiply(shadowMapCamera.getViewProjection(), inverseViewProjection, scratchMatrix);
+            var shadowMapMatrix = Matrix4.multiply(shadowViewProjection, inverseViewProjection, scratchMatrix);
 
             // Project each corner from camera NDC space to shadow map texture space. Min and max will be from 0 to 1.
             var min = Cartesian3.fromElements(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE, scratchMin);
@@ -863,7 +872,7 @@ define([
 
             for (var k = 0; k < 8; ++k) {
                 var corner = Cartesian4.clone(frustumCornersNDC[k], scratchFrustumCorners[k]);
-                Matrix4.multiplyByVector(cascadeMatrix, corner, corner);
+                Matrix4.multiplyByVector(shadowMapMatrix, corner, corner);
                 Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
                 Cartesian3.minimumByComponent(corner, min, min);
                 Cartesian3.maximumByComponent(corner, max, max);
@@ -885,16 +894,10 @@ define([
             cascadeCamera.frustum.near = near + min.z * (far - near);
             cascadeCamera.frustum.far = near + max.z * (far - near);
 
-            // Scale and offset are used to transform shadowPosition to the proper cascade in the shader
-            var cascadeScale = shadowMap._cascadeScales[j];
-            cascadeScale.x = 1.0 / (max.x - min.x);
-            cascadeScale.y = 1.0 / (max.y - min.y);
-            cascadeScale.z = 1.0 / (max.z - min.z);
-
-            var cascadeOffset = shadowMap._cascadeOffsets[j];
-            cascadeOffset.x = -min.x;
-            cascadeOffset.y = -min.y;
-            cascadeOffset.z = -min.z;
+            // Transforms from eye space to the cascade's texture space
+            var cascadeMatrix = shadowMap._cascadeMatrices[j];
+            Matrix4.multiply(cascadeCamera.getViewProjection(), sceneCamera.inverseViewMatrix, cascadeMatrix);
+            Matrix4.multiply(shadowMap._passTextureOffsets[j], cascadeMatrix, cascadeMatrix);
         }
     }
 
@@ -1004,9 +1007,6 @@ define([
         frustum.far = shadowMap._radius;
         frustum.aspectRatio = 1.0;
 
-        // Re-purpose the shadow map matrix
-        Matrix4.inverse(frustum.projectionMatrix, shadowMap._shadowMapMatrix);
-
         for (var i = 0; i < 6; ++i) {
             var camera = shadowMap._passCameras[i];
             camera.positionWC = shadowMap._shadowMapCamera.positionWC;
@@ -1081,6 +1081,12 @@ define([
             this._passCameras[0].clone(this._shadowMapCamera);
         }
 
+        // Transforms from eye space to shadow texture space
+        if (!this._isPointLight && this._numberOfCascades <= 1) {
+            var inverseView = this._sceneCamera.inverseViewMatrix;
+            Matrix4.multiply(this._shadowMapCamera.getViewProjection(), inverseView, this._shadowMapMatrix);
+        }
+
         if (this.debugShow) {
             applyDebugSettings(this, frameState);
         }
@@ -1091,17 +1097,6 @@ define([
             this._clearCommand.framebuffer = this._passFramebuffers[pass];
             this._clearCommand.execute(context, this._clearPassState);
         }
-    };
-
-    ShadowMap.prototype.updateShadowMapMatrix = function(uniformState) {
-        if (this._isPointLight) {
-            // Point light shadows do not project into light space
-            return;
-        }
-        // Calculate shadow map matrix. It converts gl_Position to shadow map texture space.
-        // Needs to be updated for each frustum in multi-frustum rendering because the projection matrix changes.
-        var shadowViewProjection = this._shadowMapCamera.getViewProjection();
-        Matrix4.multiply(shadowViewProjection, uniformState.inverseViewProjection, this._shadowMapMatrix);
     };
 
     ShadowMap.prototype.isDestroyed = function() {

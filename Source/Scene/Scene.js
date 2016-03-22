@@ -1583,10 +1583,6 @@ define([
 
             us.updateFrustum(frustum);
 
-            if (scene.shadowMap.enabled) {
-                scene.shadowMap.updateShadowMapMatrix(us);
-            }
-
             clearDepth.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
@@ -1636,10 +1632,6 @@ define([
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
-
-                if (scene.shadowMap.enabled) {
-                    scene.shadowMap.updateShadowMapMatrix(us);
-                }
             }
 
             us.updatePass(Pass.TRANSLUCENT);

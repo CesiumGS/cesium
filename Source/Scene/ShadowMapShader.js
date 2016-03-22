@@ -75,18 +75,6 @@ define([
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs, frameState) {
-        var isPointLight = frameState.shadowMap.isPointLight;
-        if (!isPointLight) {
-            vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
-            vs +=
-                'varying vec3 v_shadowPosition; \n' +
-                'void main() \n' +
-                '{ \n' +
-                '    czm_shadow_main(); \n' +
-                '    v_shadowPosition = (czm_shadowMapMatrix * gl_Position).xyz; \n' +
-                '} \n';
-        }
-
         return vs;
     };
 
@@ -109,26 +97,12 @@ define([
             '    vec4 far = step(depthEye, czm_shadowMapCascadeSplits[1]); \n' +
             '    return near * far; \n' +
             '} \n' +
-            'vec4 getCascadeViewport(vec4 weights) \n' +
+            'mat4 getCascadeMatrix(vec4 weights) \n' +
             '{ \n' +
-            '    return vec4(0.0, 0.0, 0.5, 0.5) * weights.x + \n' +
-            '           vec4(0.5, 0.0, 0.5, 0.5) * weights.y + \n' +
-            '           vec4(0.0, 0.5, 0.5, 0.5) * weights.z + \n' +
-            '           vec4(0.5, 0.5, 0.5, 0.5) * weights.w; \n' +
-            '} \n' +
-            'vec3 getCascadeOffset(vec4 weights) \n' +
-            '{ \n' +
-            '    return czm_shadowMapCascadeOffsets[0] * weights.x + \n' +
-            '           czm_shadowMapCascadeOffsets[1] * weights.y + \n' +
-            '           czm_shadowMapCascadeOffsets[2] * weights.z + \n' +
-            '           czm_shadowMapCascadeOffsets[3] * weights.w; \n' +
-            '} \n' +
-            'vec3 getCascadeScale(vec4 weights) \n' +
-            '{ \n' +
-            '    return czm_shadowMapCascadeScales[0] * weights.x + \n' +
-            '           czm_shadowMapCascadeScales[1] * weights.y + \n' +
-            '           czm_shadowMapCascadeScales[2] * weights.z + \n' +
-            '           czm_shadowMapCascadeScales[3] * weights.w; \n' +
+            '    return czm_shadowMapCascadeMatrices[0] * weights.x + \n' +
+            '           czm_shadowMapCascadeMatrices[1] * weights.y + \n' +
+            '           czm_shadowMapCascadeMatrices[2] * weights.z + \n' +
+            '           czm_shadowMapCascadeMatrices[3] * weights.w; \n' +
             '} \n' +
             'vec4 getCascadeColor(vec4 weights) \n' +
             '{ \n' +
@@ -138,12 +112,12 @@ define([
             '           vec4(1.0, 0.0, 1.0, 1.0) * weights.w; \n' +
             '} \n' +
             ' \n' +
-            'float getDepthEye() \n' +
+            'vec4 getPositionEC() \n' +
             '{ \n' +
 
             (hasPositionVarying ?
-            '    return -' + positionVaryingName + '.z; \n' :
-            '    return czm_projection[3][2] / ((gl_FragCoord.z * 2.0 - 1.0) + czm_projection[2][2]); \n') +
+            '    return vec4(' + positionVaryingName + ', 1.0); \n' :
+            '    return czm_windowToEyeCoordinates(gl_FragCoord); \n') +
 
             '} \n' +
             ' \n' +
@@ -171,10 +145,9 @@ define([
             (isPointLight && usesCubeMap ?
             'float getVisibility(vec3 uv, float depth, vec3 lightDirectionEC)' :
             'float getVisibility(vec2 uv, float depth, vec3 lightDirectionEC)') +
-
             '{ \n' +
 
-            (softShadows ?
+            (softShadows && !isPointLight ?
             '    float radius = 1.0; \n' +
             '    float dx0 = -czm_shadowMapTexelStepSize.x * radius; \n' +
             '    float dy0 = -czm_shadowMapTexelStepSize.y * radius; \n' +
@@ -226,14 +199,11 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    czm_shadow_main(); \n' +
-
-                (hasPositionVarying ?
-                '    vec3 positionEC = ' + positionVaryingName + '; \n' :
-                '    vec3 positionEC = czm_windowToEyeCoordinates(gl_FragCoord).xyz; \n') +
-
-                '    vec3 directionEC = positionEC - czm_shadowMapLightPositionEC.xyz; \n' +
+                '    vec4 positionEC = getPositionEC(); \n' +
+                '    vec3 directionEC = positionEC.xyz - czm_shadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
                 '    float radius = czm_shadowMapLightPositionEC.w; \n' +
+                '    // Stop early if the fragment is beyond the point light radius \n' +
                 '    if (distance > radius) { \n' +
                 '        return; \n' +
                 '    } \n' +
@@ -250,36 +220,31 @@ define([
                 '} \n';
         } else {
             fs +=
-                'varying vec3 v_shadowPosition; \n' +
                 'void main() \n' +
                 '{ \n' +
                 '    czm_shadow_main(); \n' +
-                '    vec3 shadowPosition = v_shadowPosition; \n' +
-                '    // Do not apply shadowing if outside of the shadow map bounds \n' +
-                '    if (any(lessThan(shadowPosition, vec3(0.0))) || any(greaterThan(shadowPosition, vec3(1.0)))) { \n' +
-                '        return; \n' +
-                '    } \n' +
-                ' \n' +
+                '    vec4 positionEC = getPositionEC(); \n' +
 
                 (hasCascades ?
-                '    // Get the cascade \n' +
-                '    float depthEye = getDepthEye(); \n' +
-                '    vec4 weights = getCascadeWeights(depthEye); \n' +
-                ' \n' +
-                '    // Transform shadowPosition into the cascade \n' +
-                '    shadowPosition += getCascadeOffset(weights); \n' +
-                '    shadowPosition *= getCascadeScale(weights); \n' +
-                ' \n' +
-                '    // Modify texture coordinates to read from the correct cascade in the texture atlas \n' +
-                '    vec4 viewport = getCascadeViewport(weights); \n' +
-                '    shadowPosition.xy = shadowPosition.xy * viewport.zw + viewport.xy; \n' +
-                ' \n' +
-
+                '    // Get the cascade based on the eye-space depth \n' +
+                '    float depth = -positionEC.z; \n' +
+                '    // Stop early if the eye depth exceeds the last cascade \n' +
+                '    if (depth > czm_shadowMapCascadeSplits[1].w) { \n' +
+                '        return; \n' +
+                '    } \n' +
+                '    vec4 weights = getCascadeWeights(-positionEC.z); \n' +
+                '    // Transform position into the cascade \n' +
+                '    vec4 shadowPosition = getCascadeMatrix(weights) * positionEC; \n' +
                 (debugVisualizeCascades ?
                 '    // Draw cascade colors for debugging \n' +
-                '    gl_FragColor *= getCascadeColor(weights); \n' : '') : '') +
+                '    gl_FragColor *= getCascadeColor(weights); \n' : '') :
 
-                ' \n' +
+                '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
+                '    // Stop early if the fragment is not in the shadow bounds \n' +
+                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.0)))) { \n' +
+                '        return; \n' +
+                '    } \n') +
+
                 '    // Apply shadowing \n' +
                 '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, czm_shadowMapLightDirectionEC); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
