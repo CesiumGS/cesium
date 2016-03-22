@@ -218,14 +218,12 @@ define([
 
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
-        } else {
+        } else if (hasCascades) {
             fs +=
                 'void main() \n' +
                 '{ \n' +
                 '    czm_shadow_main(); \n' +
                 '    vec4 positionEC = getPositionEC(); \n' +
-
-                (hasCascades ?
                 '    // Get the cascade based on the eye-space depth \n' +
                 '    float depth = -positionEC.z; \n' +
                 '    // Stop early if the eye depth exceeds the last cascade \n' +
@@ -235,16 +233,26 @@ define([
                 '    vec4 weights = getCascadeWeights(-positionEC.z); \n' +
                 '    // Transform position into the cascade \n' +
                 '    vec4 shadowPosition = getCascadeMatrix(weights) * positionEC; \n' +
+
                 (debugVisualizeCascades ?
                 '    // Draw cascade colors for debugging \n' +
-                '    gl_FragColor *= getCascadeColor(weights); \n' : '') :
+                '    gl_FragColor *= getCascadeColor(weights); \n' : '') +
 
+                '    // Apply shadowing \n' +
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, czm_shadowMapLightDirectionEC); \n' +
+                '    gl_FragColor.rgb *= visibility; \n' +
+                '} \n';
+        } else {
+            fs +=
+                'void main() \n' +
+                '{ \n' +
+                '    czm_shadow_main(); \n' +
+                '    vec4 positionEC = getPositionEC(); \n' +
                 '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
                 '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.0)))) { \n' +
                 '        return; \n' +
-                '    } \n') +
-
+                '    } \n' +
                 '    // Apply shadowing \n' +
                 '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, czm_shadowMapLightDirectionEC); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
