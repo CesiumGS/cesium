@@ -94,6 +94,6 @@
     "test-release": "gulp test --release",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires",
-    "uploadCesium": "gulp deploy -b cesiumjs -d cesium"
+    "deploy-s3": "gulp deploy-s3"
   }
 }

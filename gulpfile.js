@@ -303,7 +303,7 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('deploy', function(done) {
+gulp.task('deploy-s3', function(done) {
     var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
@@ -336,7 +336,7 @@ gulp.task('deploy', function(done) {
 
 });
 
-// Deploy cesium to aws
+// Deploy cesium to s3
 function deployCesium(bucketName, uploadDirectory, cacheControl) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
