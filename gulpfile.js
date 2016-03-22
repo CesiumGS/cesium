@@ -361,8 +361,9 @@ function deployCesium(bucketName, uploadDirectory) {
     }).then(function(files) {
         return Promise.map(files, function(file) {
             var blobName = uploadDirectory + '/' + file;
-            var contentType = mime.lookup(file);
-            var compress = compressible(contentType);
+            var mimeLookup = getMimeType(blobName);
+            var contentType = mimeLookup.type;
+            var compress = mimeLookup.compress;
             var contentEncoding = compress ? 'gzip' : undefined;
             var contents;
             var etag;
@@ -441,6 +442,26 @@ function deployCesium(bucketName, uploadDirectory) {
             });
         }
     });
+}
+
+function getMimeType(filename) {
+    var ext = path.extname(filename);
+    if (ext === '.bin' || ext === '.terrain') {
+        return { type : 'application/octet-stream', compress : true };
+    } else if (ext === '.md' || ext === '.glsl') {
+        return { type : 'text/plain', compress : true };
+    } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
+        return { type : 'application/json', compress : true };
+    } else if (ext === '.js') {
+        return { type : 'application/javascript', compress : true };
+    } else if (ext === '.svg') {
+        return { type : 'image/svg+xml', compress : true };
+    } else if (ext === '.woff') {
+        return { type : 'application/font-woff', compress : false };
+    }
+
+    var mimeType = mime.lookup(filename);
+    return {type : mimeType, compress : compressible(mimeType)};
 }
 
 // get all files currently in bucket asynchronously
