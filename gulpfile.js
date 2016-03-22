@@ -7,6 +7,7 @@ var os = require('os');
 var child_process = require('child_process');
 var crypto = require('crypto');
 var zlib = require('zlib');
+var readline = require('readline');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
@@ -302,22 +303,41 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
-gulp.task('deploy', function() {
+gulp.task('deploy', function(done) {
     var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
     var uploadDirectory = argv.d;
     var bucketName = argv.b;
 
+    var iface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function (answer) {
+        if (answer === 'y') {
+            deployCesium(bucketName, uploadDirectory).then(function() {
+                done();
+            });
+        } else {
+            console.log('Deploy aborted by user.');
+            done();
+        }
+    });
+});
+
+// Deploy cesium to aws
+function deployCesium(bucketName, uploadDirectory) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
     var concurrencyLimit = 2000;
     var cacheControl = "max-age=3600";
 
     var s3 = new aws.S3({
-        maxRetries: 10,
-        retryDelayOptions: {
-            base: 500
+        maxRetries : 10,
+        retryDelayOptions : {
+            base : 500
         }
     });
 
@@ -335,8 +355,8 @@ gulp.task('deploy', function() {
             '!.git*',
             '!.git/**'
         ], {
-            dot: true, // include hidden files
-            nodir: true // only directory files
+            dot : true, // include hidden files
+            nodir : true // only directory files
         });
     }).then(function(files) {
         return Promise.map(files, function(file) {
@@ -350,67 +370,66 @@ gulp.task('deploy', function() {
             totalFiles++;
 
             return readFile(file)
-            .then(function(content) {
-                if (compress) {
-                    return gzip(content).then(function(result) {
-                        contents = result;
-                    });
-                } else {
-                    contents = content;
-                }
-            })
-            .then(function() {
-                // compute hash and etag
-                var hash = crypto.createHash('md5').update(contents).digest('hex');
-                etag = crypto.createHash('md5').update(contents).digest('base64');
+                .then(function(content) {
+                    if (compress) {
+                        return gzip(content).then(function(result) {
+                            contents = result;
+                        });
+                    } else {
+                        contents = content;
+                    }
+                })
+                .then(function() {
+                    // compute hash and etag
+                    var hash = crypto.createHash('md5').update(contents).digest('hex');
+                    etag = crypto.createHash('md5').update(contents).digest('base64');
 
-                var index = existingBlobs.indexOf(blobName);
-                if (index > -1) {
-                    // remove files ad we find them on disk
-                    existingBlobs.splice(index, 1);
+                    var index = existingBlobs.indexOf(blobName);
+                    if (index > -1) {
+                        // remove files ad we find them on disk
+                        existingBlobs.splice(index, 1);
 
-                    // get file info
-                    return s3.headObject({
-                        Bucket : bucketName,
-                        Key : blobName
-                    }).promise().then(function(request) {
-                        var data = request.data;
-
-                        if (data.ETag === ('"' + hash + '"') &&
-                           data.CacheControl === cacheControl &&
-                           data.ContentType === contentType &&
-                           data.ContentEncoding === contentEncoding) {
-                           // We don't need to upload this file again
-                           skipped++;
-                           return false;
-                        }
+                        // get file info
+                        return s3.headObject({
+                            Bucket : bucketName,
+                            Key : blobName}).promise()
+                        .then(function(request) {
+                            var data = request.data;
+                            if (data.ETag === ('"' + hash + '"') &&
+                                data.CacheControl === cacheControl &&
+                                data.ContentType === contentType &&
+                                data.ContentEncoding === contentEncoding) {
+                                // We don't need to upload this file again
+                                skipped++;
+                                return false;
+                            }
+                            return true;
+                        });
+                    } else {
                         return true;
-                    });
-                } else {
-                    return true;
-                }
-            })
-            .then(function(upload) {
-                if (upload) {
-                    console.log('Uploading ' + blobName + '...');
-                    var params = {
-                        Bucket : bucketName,
-                        Key : blobName,
-                        Body : contents,
-                        ContentMD5 : etag,
-                        ContentType : contentType,
-                        ContentEncoding : contentEncoding,
-                        CacheControl : cacheControl
-                    };
+                    }
+                })
+                .then(function(upload) {
+                    if (upload) {
+                        console.log('Uploading ' + blobName + '...');
+                        var params = {
+                            Bucket : bucketName,
+                            Key : blobName,
+                            Body : contents,
+                            ContentMD5 : etag,
+                            ContentType : contentType,
+                            ContentEncoding : contentEncoding,
+                            CacheControl : cacheControl
+                        };
 
-                    return s3.putObject(params).promise().then(function(request) {
-                        uploaded++;
-                    },
-                    function(error) {
-                        console.log(error);
-                    });
-                }
-            });
+                        return s3.putObject(params).promise().then(function(request) {
+                            uploaded++;
+                        },
+                        function(error) {
+                            console.log(error);
+                        });
+                    }
+                });
         }, {concurrency : concurrencyLimit});
     })
     .then(function() {
@@ -422,30 +441,30 @@ gulp.task('deploy', function() {
             });
         }
     });
-});
+}
 
 // get all files currently in bucket asynchronously
 function listAll(s3, bucketName, directory, files, marker) {
     return s3.listObjects({
-                              Bucket : bucketName,
-                              MaxKeys : 1000,
-                              Prefix: directory,
-                              Marker : marker
-                          }).promise()
-        .then(function(request) {
-                  var items = request.data.Contents;
-                  for (var i = 0; i < items.length; i++) {
-                      files.push(items[i].Key);
-                  }
+        Bucket : bucketName,
+        MaxKeys : 1000,
+        Prefix: directory,
+        Marker : marker
+    }).promise()
+    .then(function(request) {
+        var items = request.data.Contents;
+        for (var i = 0; i < items.length; i++) {
+            files.push(items[i].Key);
+        }
 
-                  if (request.data.IsTruncated) {
-                      // get next page of results
-                      return listAll(s3, bucketName, directory, files, files[files.length - 1]);
-                  }
-              },
-              function(error) {
-                  console.log(error);
-              });
+        if (request.data.IsTruncated) {
+            // get next page of results
+            return listAll(s3, bucketName, directory, files, files[files.length - 1]);
+        }
+    },
+    function(error) {
+        console.log(error);
+    });
 }
 
 // delete unneeded files in bucket asynchronously
