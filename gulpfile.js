@@ -25,7 +25,7 @@ var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
 var yargs = require('yargs');
-var aws = require('aws-sdk-promise');
+var aws = require('aws-sdk');
 var mime = require('mime');
 var compressible = require('compressible');
 
@@ -334,12 +334,12 @@ function deployCesium(bucketName, uploadDirectory) {
     var concurrencyLimit = 2000;
     var cacheControl = "max-age=3600";
 
-    var s3 = new aws.S3({
+    var s3 = new Promise.promisifyAll(new aws.S3({
         maxRetries : 10,
         retryDelayOptions : {
             base : 500
         }
-    });
+    }));
 
     var existingBlobs = [];
     var totalFiles = 0;
@@ -391,11 +391,11 @@ function deployCesium(bucketName, uploadDirectory) {
                         existingBlobs.splice(index, 1);
 
                         // get file info
-                        return s3.headObject({
+                        return s3.headObjectAsync({
                             Bucket : bucketName,
-                            Key : blobName}).promise()
-                        .then(function(request) {
-                            var data = request.data;
+                            Key : blobName
+                        })
+                        .then(function(data) {
                             if (data.ETag === ('"' + hash + '"') &&
                                 data.CacheControl === cacheControl &&
                                 data.ContentType === contentType &&
@@ -423,7 +423,7 @@ function deployCesium(bucketName, uploadDirectory) {
                             CacheControl : cacheControl
                         };
 
-                        return s3.putObject(params).promise().then(function(request) {
+                        return s3.putObjectAsync(params).then(function() {
                             uploaded++;
                         },
                         function(error) {
@@ -466,19 +466,19 @@ function getMimeType(filename) {
 
 // get all files currently in bucket asynchronously
 function listAll(s3, bucketName, directory, files, marker) {
-    return s3.listObjects({
+    return s3.listObjectsAsync({
         Bucket : bucketName,
         MaxKeys : 1000,
         Prefix: directory,
         Marker : marker
-    }).promise()
-    .then(function(request) {
-        var items = request.data.Contents;
+    })
+    .then(function(data) {
+        var items = data.Contents;
         for (var i = 0; i < items.length; i++) {
             files.push(items[i].Key);
         }
 
-        if (request.data.IsTruncated) {
+        if (data.IsTruncated) {
             // get next page of results
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
@@ -502,7 +502,7 @@ function cleanFiles(s3, bucketName, files) {
         params.Delete.Objects.push({Key: blob});
     }
 
-    return s3.deleteObjects(params).promise();
+    return s3.deleteObjectsAsync(params);
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
