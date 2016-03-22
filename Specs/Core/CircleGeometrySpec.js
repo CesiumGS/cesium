@@ -52,8 +52,8 @@ defineSuite([
 
         var numVertices = 16; //rows of 1 + 4 + 6 + 4 + 1
         var numTriangles = 22; //rows of 3 + 8 + 8 + 3
-        expect(m.attributes.position.values.length).toEqual(16 * 3);
-        expect(m.indices.length).toEqual(22 * 3);
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
