@@ -315,16 +315,24 @@ gulp.task('deploy', function(done) {
         output: process.stdout
     });
 
-    iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function (answer) {
-        if (answer === 'y') {
-            deployCesium(bucketName, uploadDirectory).then(function() {
-                done();
-            });
-        } else {
-            console.log('Deploy aborted by user.');
+    if (argv.confirm) {
+        // skip prompt for travis
+        deployCesium(bucketName, uploadDirectory).then(function() {
             done();
-        }
-    });
+        });
+    } else {
+        // prompt for confirmation
+        iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
+            if (answer === 'y') {
+                deployCesium(bucketName, uploadDirectory).then(function() {
+                    done();
+                });
+            } else {
+                console.log('Deploy aborted by user.');
+                done();
+            }
+        });
+    }
 });
 
 // Deploy cesium to aws
