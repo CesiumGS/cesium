@@ -381,82 +381,91 @@ function deployCesium(bucketName, uploadDirectory, cacheControl) {
             var contentType = mimeLookup.type;
             var compress = mimeLookup.compress;
             var contentEncoding = compress ? 'gzip' : undefined;
-            var contents;
             var etag;
 
             totalFiles++;
 
             return readFile(file)
-                .then(function(content) {
-                    if (compress) {
-                        return gzip(content).then(function(result) {
-                            contents = result;
-                        });
-                    } else {
-                        contents = content;
-                    }
+            .then(function(content) {
+                return compress ? gzip(content) : content;
+            })
+            .then(function(content) {
+                // compute hash and etag
+                var hash = crypto.createHash('md5').update(content).digest('hex');
+                etag = crypto.createHash('md5').update(content).digest('base64');
+
+                var index = existingBlobs.indexOf(blobName);
+                if (index <= -1) {
+                    return content;
+                }
+
+                // remove files as we find them on disk
+                existingBlobs.splice(index, 1);
+
+                // get file info
+                return s3.headObjectAsync({
+                    Bucket : bucketName,
+                    Key : blobName
                 })
-                .then(function() {
-                    // compute hash and etag
-                    var hash = crypto.createHash('md5').update(contents).digest('hex');
-                    etag = crypto.createHash('md5').update(contents).digest('base64');
-
-                    var index = existingBlobs.indexOf(blobName);
-                    if (index > -1) {
-                        // remove files ad we find them on disk
-                        existingBlobs.splice(index, 1);
-
-                        // get file info
-                        return s3.headObjectAsync({
-                            Bucket : bucketName,
-                            Key : blobName
-                        })
-                        .then(function(data) {
-                            if (data.ETag === ('"' + hash + '"') &&
-                                data.CacheControl === cacheControl &&
-                                data.ContentType === contentType &&
-                                data.ContentEncoding === contentEncoding) {
-                                // We don't need to upload this file again
-                                skipped++;
-                                return false;
-                            }
-                            return true;
-                        });
-                    } else {
-                        return true;
+                .then(function(data) {
+                    if (data.ETag !== ('"' + hash + '"') ||
+                        data.CacheControl !== cacheControl ||
+                        data.ContentType !== contentType ||
+                        data.ContentEncoding !== contentEncoding) {
+                        return content;
                     }
+
+                    // We don't need to upload this file again
+                    skipped++;
+                    return undefined;
                 })
-                .then(function(upload) {
-                    if (upload) {
-                        console.log('Uploading ' + blobName + '...');
-                        var params = {
-                            Bucket : bucketName,
-                            Key : blobName,
-                            Body : contents,
-                            ContentMD5 : etag,
-                            ContentType : contentType,
-                            ContentEncoding : contentEncoding,
-                            CacheControl : cacheControl
-                        };
-
-                        return s3.putObjectAsync(params).then(function() {
-                            uploaded++;
-                        },
-                        function(error) {
-                            console.log(error);
-                        });
-                    }
+                .catch(function() {
+                    return content;
                 });
+            })
+            .then(function(content) {
+                if (!content) {
+                    return;
+                }
+
+                console.log('Uploading ' + blobName + '...');
+                var params = {
+                    Bucket : bucketName,
+                    Key : blobName,
+                    Body : content,
+                    ContentMD5 : etag,
+                    ContentType : contentType,
+                    ContentEncoding : contentEncoding,
+                    CacheControl : cacheControl
+                };
+
+                return s3.putObjectAsync(params).then(function() {
+                    uploaded++;
+                })
+                .catch(function(error) {
+                    console.log(error);
+                });
+            });
         }, {concurrency : concurrencyLimit});
     })
     .then(function() {
         console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
-        if (existingBlobs.length > 0) {
-            console.log('Cleaning up old files...');
-            return cleanFiles(s3, bucketName, existingBlobs).then(function() {
-                console.log('Cleaned ' + existingBlobs.length + ' files.');
-            });
+        if (existingBlobs.length === 0) {
+           return;
         }
+
+        console.log('Cleaning up old files...');
+        return s3.deleteObjectsAsync({
+            Bucket : bucketName,
+            Delete : {
+                Objects : existingBlobs.map(function(file) {
+                    return {Key : file};
+                })
+            }
+        })
+        .then(function() {
+            console.log('Cleaned ' + existingBlobs.length + ' files.');
+        });
     });
 }
 
@@ -498,27 +507,10 @@ function listAll(s3, bucketName, directory, files, marker) {
             // get next page of results
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
-    },
-    function(error) {
+    })
+    .catch(function(error) {
         console.log(error);
     });
-}
-
-// delete unneeded files in bucket asynchronously
-function cleanFiles(s3, bucketName, files) {
-    var params = {
-        Bucket: bucketName,
-        Delete: {
-            Objects: []
-        }
-    };
-
-    for (var i = 0; i < files.length; i++) {
-        var blob = files[i];
-        params.Delete.Objects.push({Key: blob});
-    }
-
-    return s3.deleteObjectsAsync(params);
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
