@@ -54,8 +54,10 @@ define([
         this.stack = stack;
     }
 
-    DeveloperError.prototype = Object.create(Error.prototype);
-    DeveloperError.prototype.constructor = DeveloperError;
+    if (defined(Object.create)) {
+        DeveloperError.prototype = Object.create(Error.prototype);
+        DeveloperError.prototype.constructor = DeveloperError;
+    }
 
     DeveloperError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
