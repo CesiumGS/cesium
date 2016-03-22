@@ -309,6 +309,7 @@ gulp.task('deploy', function(done) {
 
     var uploadDirectory = argv.d;
     var bucketName = argv.b;
+    var cacheControl = argv.c ? argv.c : 'max-age=3600';
 
     var iface = readline.createInterface({
         input: process.stdin,
@@ -317,30 +318,29 @@ gulp.task('deploy', function(done) {
 
     if (argv.confirm) {
         // skip prompt for travis
-        deployCesium(bucketName, uploadDirectory).then(function() {
-            done();
-        });
-    } else {
-        // prompt for confirmation
-        iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
-            if (answer === 'y') {
-                deployCesium(bucketName, uploadDirectory).then(function() {
-                    done();
-                });
-            } else {
-                console.log('Deploy aborted by user.');
-                done();
-            }
-        });
+        return deployCesium(bucketName, uploadDirectory, cacheControl);
     }
+
+    // prompt for confirmation
+    iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
+        iface.close();
+        if (answer === 'y') {
+            deployCesium(bucketName, uploadDirectory).then(function() {
+                done();
+            });
+        } else {
+            console.log('Deploy aborted by user.');
+            done();
+        }
+    });
+
 });
 
 // Deploy cesium to aws
-function deployCesium(bucketName, uploadDirectory) {
+function deployCesium(bucketName, uploadDirectory, cacheControl) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
     var concurrencyLimit = 2000;
-    var cacheControl = "max-age=3600";
 
     var s3 = new Promise.promisifyAll(new aws.S3({
         maxRetries : 10,
@@ -357,11 +357,19 @@ function deployCesium(bucketName, uploadDirectory) {
     return listAll(s3, bucketName, uploadDirectory, existingBlobs)
     .then(function() {
         return globby([
-            '**',
-            '!node_modules/**',
-            '!Tools/**',
-            '!.git*',
-            '!.git/**'
+            'Apps/**',
+            'Build/**',
+            'Source/**',
+            'Specs/**',
+            'ThirdParty/**',
+            '*.md',
+            'favicon.ico',
+            'gulpfile.js',
+            'index.html',
+            'logo.png',
+            'package.json',
+            'server.js',
+            'web.config'
         ], {
             dot : true, // include hidden files
             nodir : true // only directory files
