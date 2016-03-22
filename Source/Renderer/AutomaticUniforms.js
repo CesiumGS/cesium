@@ -1535,30 +1535,16 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the shadow map cascade offsets.
+         * An automatic GLSL uniform representing the shadow map cascade matrices.
          *
-         * @alias czm_shadowMapCascadeOffsets
+         * @alias czm_shadowMapCascadeMatrices
          * @glslUniform
          */
-        czm_shadowMapCascadeOffsets : new AutomaticUniform({
+        czm_shadowMapCascadeMatrices : new AutomaticUniform({
             size : 4,
-            datatype : WebGLConstants.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
-                return uniformState.shadowMap.cascadeOffsets;
-            }
-        }),
-
-        /**
-         * An automatic GLSL uniform representing the shadow map cascade scales.
-         *
-         * @alias czm_shadowMapCascadeScales
-         * @glslUniform
-         */
-        czm_shadowMapCascadeScales : new AutomaticUniform({
-            size : 4,
-            datatype : WebGLConstants.FLOAT_VEC3,
-            getValue : function(uniformState) {
-                return uniformState.shadowMap.cascadeScales;
+                return uniformState.shadowMap.cascadeMatrices;
             }
         }),
 
