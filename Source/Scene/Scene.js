@@ -1744,7 +1744,6 @@ define([
 
         var viewportX = viewport.x;
         var viewportWidth = viewport.width;
-        var width;
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
