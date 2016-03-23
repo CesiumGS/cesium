@@ -315,7 +315,7 @@ define([
         }
 
         if (this._adjustTranslucentCommand) {
-            this._adjustTranslucentCommand.renderstate = this._rs;
+            this._adjustTranslucentCommand.renderState = this._rs;
         }
 
         if (defined(this._adjustAlphaCommand)) {
