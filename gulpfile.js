@@ -355,9 +355,6 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var errors = [];
 
     return listAll(s3, bucketName, uploadDirectory, existingBlobs)
-    .catch(function(error) {
-        errors.push(error);
-    })
     .then(function() {
         return globby([
             'Apps/**',
@@ -377,7 +374,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
             dot : true, // include hidden files
             nodir : true // only directory files
         });
-    }).then(function(files) {
+    })
+    .then(function(files) {
         return Promise.map(files, function(file) {
             var blobName = uploadDirectory + '/' + file;
             var mimeLookup = getMimeType(blobName);
@@ -468,11 +466,12 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
         })
         .then(function() {
             console.log('Cleaned ' + existingBlobs.length + ' files.');
-        })
-        .catch(function(error) {
-            errors.push(error);
         });
-    }).then(function() {
+    })
+    .catch(function(error) {
+        errors.push(error);
+    })
+    .then(function() {
         if (errors.length === 0) {
             done();
             return;
