@@ -1106,7 +1106,15 @@ define([
         positionEC.z += zEyeOffset.z;
 
         var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
+
+        var canvas = scene.canvas;
+        var viewport = new BoundingRectangle();
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = canvas.clientWidth;
+        viewport.height = canvas.clientHeight;
+
+        var positionWC = SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, result);
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
@@ -1130,7 +1138,6 @@ define([
      * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
-     *
      *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
