@@ -34,7 +34,8 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
-     * @param {Property} [options.alpha=1.0] The alpha blending value of this layer, with 0.0 representing fully transparent and 1.0 representing fully opaque.
+     * @param {Property} [options.color=Color.WHITE] The color applied to the image
+     * @param {Property} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
      */
     function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -108,6 +109,7 @@ define([
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default 1.0
+         * @deprecated
          */
         alpha : createPropertyDescriptor('alpha'),
         /**
@@ -175,6 +177,7 @@ define([
                (other instanceof ImageMaterialProperty &&
                 Property.equals(this._image, other._image) &&
                 Property.equals(this._alpha, other._alpha) &&
+                Property.equals(this._color, other._color) &&
                 Property.equals(this._transparent, other._transparent) &&
                 Property.equals(this._repeat, other._repeat));
     };
