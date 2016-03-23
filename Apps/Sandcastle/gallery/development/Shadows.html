@@ -62,7 +62,7 @@
         </tr>
         <tr>
             <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">Cascades</td>
-            <td><select data-bind="options: cascadeOptions, value: cascades, enabled: cascadesEnabled"/></td>
+            <td><select data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"/></td>
         </tr>
         <tr>
             <td>Light Source</td>
@@ -78,7 +78,7 @@
         </tr>
         <tr>
             <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast, enabled: terrainCastEnabled"/></td>
+            <td><input type="checkbox" data-bind="checked: terrainCast, enable: terrainCastEnabled"/></td>
         </tr>
         <tr>
             <td>Show debug</td>
@@ -90,19 +90,15 @@
         </tr>
         <tr>
             <td data-bind="style: { color: cascadeColorsEnabled ? '' : 'gray'}">Cascade colors</td>
-            <td><input type="checkbox" data-bind="checked: cascadeColors, enabled: cascadeColorsEnabled"/></td>
+            <td><input type="checkbox" data-bind="checked: cascadeColors, enable: cascadeColorsEnabled"/></td>
         </tr>
         <tr>
             <td data-bind="style: { color: fitNearFarEnabled ? '' : 'gray'}">Fit near/far</td>
-            <td><input type="checkbox" data-bind="checked: fitNearFar, enabled: fitNearFarEnabled"/></td>
+            <td><input type="checkbox" data-bind="checked: fitNearFar, enable: fitNearFarEnabled"/></td>
         </tr>
         <tr>
             <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">Soft shadows</td>
-            <td><input type="checkbox" data-bind="checked: softShadows, enabled: softShadowsEnabled"/></td>
-        </tr>
-        <tr>
-            <td>Soft shadows</td>
-            <td><input type="checkbox" data-bind="checked: softShadows"/></td>
+            <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
         </tr>
     </tbody></table>
 </div>
@@ -137,7 +133,7 @@ var viewModel = {
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
-    size : 1024,
+    size : 1024
 };
 
 var uiOptions = {
@@ -167,7 +163,6 @@ Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows)
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
 
 var offset = new Cesium.Cartesian3();
 
@@ -246,8 +241,7 @@ function updateUI() {
     uiOptions.all.forEach(function(setting) {
         if (uiOptions.disable[viewModel.lightSource].indexOf(setting) > -1) {
             viewModel[setting + 'Enabled'] = false;
-        }
-        else {
+        } else {
             viewModel[setting + 'Enabled'] = true;
         }
     });
