@@ -72,7 +72,7 @@ function loadTileset(url) {
             }
         }
 
-        tileset.style = new Cesium.Cesium3DTileStyle(tileset, {
+        tileset.style = new Cesium.Cesium3DTileStyle({
 //            "color" : "color('#BAA5EC')",
 //            "color" : "color('cyan', 0.5)",
 //            "color" : "rgb(100, 255, 190)",
@@ -365,7 +365,7 @@ Sandcastle.addToolbarButton('SSE--', function() {
 // Styling ////////////////////////////////////////////////////////////////////
 
 var numberofColors = 6;
-var currentPropertyName = '';
+var currentPropertyName = 'Height';
 
 function getRandomColor() {
     var color = Cesium.Color.fromRandom();
@@ -374,22 +374,20 @@ function getRandomColor() {
 }
 
 function styleFunction(name) {
-    var style = {
-        "color" : {
-            "conditions" : {}
-        },
-        "show" : "${" + name + "} > 0"
-    };
-
     var conditions = {};
     var intervalSize = Math.floor(100/numberofColors);
     for (var i = numberofColors; i >= 0; --i) {
         var cond = '${' + name + '} > ' + (i * intervalSize);
-        style.color.conditions[cond] = getRandomColor();
+        conditions[cond] = getRandomColor();
     }
-    style.color.conditions['true'] = getRandomColor();
+    conditions['true'] = getRandomColor();
 
-    tileset.style = new Cesium.Cesium3DTileStyle(tileset, style);
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : {
+            conditions : conditions
+        },
+        show : '${' + name + '} > 0'
+    });
 
     currentPropertyName = name;
 }
@@ -497,7 +495,7 @@ function addExpressionUI() {
 
     function updateExpression() {
         var exp = '' + leftOperand + op + rightOperand;
-        tileset.style = new Cesium.Cesium3DTileStyle(tileset, { show : exp });
+        tileset.style = new Cesium.Cesium3DTileStyle({ show : exp });
     }
 }
 

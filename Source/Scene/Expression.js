@@ -28,10 +28,7 @@ define([
     /**
      * DOC_TBA
      */
-    function Expression(styleEngine, expression) {
-        // TODO: remove _styleEngine unless it is needed, e.g., because AST is exposed
-        this._styleEngine = styleEngine;
-
+    function Expression(expression) {
         //>>includeStart('debug', pragmas.debug);
         if (typeof(expression) !== 'string') {
             throw new DeveloperError('expression must be a string.');

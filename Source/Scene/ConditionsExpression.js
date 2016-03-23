@@ -23,8 +23,7 @@ define([
      * Do not construct this directly; instead use {@link Cesium3DTileStyle}.
      * </p>
      */
-    function ConditionsExpression (styleEngine, jsonExpression) {
-        this._styleEngine = styleEngine;
+    function ConditionsExpression (jsonExpression) {
         this._conditions = clone(jsonExpression.conditions, true);
         this._expression = jsonExpression.expression;
 
@@ -55,8 +54,8 @@ define([
                     cond = cond.replace(expressionPlaceholder, 'undefined');
                 }
                 runtimeConditions.push(new Statement(
-                    new Expression(expression._styleEngine, cond),
-                    new Expression(expression._styleEngine, colorExpression)
+                    new Expression(cond),
+                    new Expression(colorExpression)
                 ));
             }
         }

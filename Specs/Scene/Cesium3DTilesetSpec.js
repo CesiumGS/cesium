@@ -873,12 +873,12 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
-            var hideStyle = new Cesium3DTileStyle(tileset, {show : 'false'});
+            var hideStyle = new Cesium3DTileStyle({show : 'false'});
             tileset.style = hideStyle;
             expect(tileset.style).toBe(hideStyle);
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-            tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
+            tileset.style = new Cesium3DTileStyle({show : 'true'});
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
@@ -889,11 +889,11 @@ defineSuite([
 
             // Each feature in the b3dm file has an id property from 0 to 99
             // ${id} >= 100 will always evaluate to false
-            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} >= 50 * 2'});
+            tileset.style = new Cesium3DTileStyle({show : '${id} >= 50 * 2'});
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             // ${id} < 100 will always evaluate to true
-            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} < 200 / 2'});
+            tileset.style = new Cesium3DTileStyle({show : '${id} < 200 / 2'});
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
@@ -905,10 +905,10 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
-            tileset.style = new Cesium3DTileStyle(tileset, {show : 'false'});
+            tileset.style = new Cesium3DTileStyle({show : 'false'});
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-            tileset.style = new Cesium3DTileStyle(tileset, {show : 'true'});
+            tileset.style = new Cesium3DTileStyle({show : 'true'});
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
@@ -917,7 +917,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var originalColor = scene.renderForSpecs();
 
-            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("blue")'});
             var color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
             expect(color[1]).toEqual(0);
@@ -925,10 +925,10 @@ defineSuite([
             expect(color[3]).toEqual(255);
 
             // set color to transparent
-            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("blue", 0.0)'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("blue", 0.0)'});
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-            tileset.style = new Cesium3DTileStyle(tileset, {color : 'color("cyan")'});
+            tileset.style = new Cesium3DTileStyle({color : 'color("cyan")'});
             color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
             expect(color[1]).toBeGreaterThan(0);
@@ -947,7 +947,7 @@ defineSuite([
             var showColor = scene.renderForSpecs();
 
             // Initially, all feature ids are less than 100
-            tileset.style = new Cesium3DTileStyle(tileset, {show : '${id} < 100'});
+            tileset.style = new Cesium3DTileStyle({show : '${id} < 100'});
             expect(scene.renderForSpecs()).toEqual(showColor);
 
             // Change feature ids so the show expression will evaluate to false
@@ -974,7 +974,7 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // Each feature in the b3dm file has an id property from 0 to 99
             // ${id} >= 100 will always evaluate to false
-            tileset.style = new Cesium3DTileStyle(tileset, {color : '(${id} >= 50 * 2) ? color("red") : color("blue")'});
+            tileset.style = new Cesium3DTileStyle({color : '(${id} >= 50 * 2) ? color("red") : color("blue")'});
             var color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
             expect(color[1]).toEqual(0);
@@ -982,7 +982,7 @@ defineSuite([
             expect(color[3]).toEqual(255);
 
             // ${id} < 100 will always evaluate to true
-            tileset.style = new Cesium3DTileStyle(tileset, {color : '(${id} < 50 * 2) ? color("red") : color("blue")'});
+            tileset.style = new Cesium3DTileStyle({color : '(${id} < 50 * 2) ? color("red") : color("blue")'});
             color = scene.renderForSpecs();
             expect(color[0]).toBeGreaterThan(0);
             expect(color[1]).toEqual(0);
@@ -994,7 +994,7 @@ defineSuite([
     it('applies conditional color style to a tileset', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // ${id} < 100 will always evaluate to true
-            tileset.style = new Cesium3DTileStyle(tileset, {
+            tileset.style = new Cesium3DTileStyle({
                 color : {
                     conditions : {
                         '${id} < 100' : 'color("red")',
@@ -1009,7 +1009,7 @@ defineSuite([
             expect(color[3]).toEqual(255);
 
             // ${id}>= 100 will always evaluate to false
-            tileset.style = new Cesium3DTileStyle(tileset, {
+            tileset.style = new Cesium3DTileStyle({
                 color : {
                     conditions : {
                         '${id} >= 100' : 'color("red")',
@@ -1028,7 +1028,7 @@ defineSuite([
     it('loads style from uri', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // ${id} < 100 will always evaluate to true
-            tileset.style = new Cesium3DTileStyle(tileset, styleUrl);
+            tileset.style = new Cesium3DTileStyle(styleUrl);
             return tileset.style.readyPromise.then(function(style) {
                 var color = scene.renderForSpecs();
                 expect(color[0]).toBeGreaterThan(0);

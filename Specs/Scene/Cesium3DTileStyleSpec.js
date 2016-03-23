@@ -11,16 +11,6 @@ defineSuite([
         Expression) {
     'use strict';
 
-    function MockStyleEngine() {
-    }
-
-    MockStyleEngine.prototype.makeDirty = function() {
-    };
-
-    function MockTileset(styleEngine) {
-        this.styleEngine = styleEngine;
-    }
-
     function MockFeature() {
         this._properties = {};
     }
@@ -62,17 +52,8 @@ defineSuite([
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
-    it ('throws with undefined tileset', function() {
-        expect(function () {
-            return new Cesium3DTileStyle();
-        }).toThrowDeveloperError();
-    });
-
     it ('rejects readyPromise with undefined url', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var tileStyle = new Cesium3DTileStyle(tileset, 'invalid.json');
+        var tileStyle = new Cesium3DTileStyle('invalid.json');
 
         return tileStyle.readyPromise.then(function(style) {
             fail('should not resolve');
@@ -83,14 +64,11 @@ defineSuite([
     });
 
     it ('loads style from uri', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var tileStyle = new Cesium3DTileStyle(tileset, styleUrl);
+        var tileStyle = new Cesium3DTileStyle(styleUrl);
 
         return tileStyle.readyPromise.then(function(style) {
-            expect(style.show).toEqual(new Expression(styleEngine, '${id} < 100'));
-            expect(style.color).toEqual(new Expression(styleEngine, 'color("red")'));
+            expect(style.show).toEqual(new Expression('${id} < 100'));
+            expect(style.color).toEqual(new Expression('color("red")'));
             expect(tileStyle.ready).toEqual(true);
         }).otherwise(function() {
             fail('should load style.json');
@@ -98,91 +76,73 @@ defineSuite([
     });
 
     it ('sets show value to default expression', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
+        var style = new Cesium3DTileStyle({});
+        expect(style.show).toEqual(new Expression('true'));
 
-        var style = new Cesium3DTileStyle(tileset, {
-        });
-        expect(style.show).toEqual(new Expression(styleEngine, 'true'));
-
-        style = new Cesium3DTileStyle(tileset);
-        expect(style.show).toEqual(new Expression(styleEngine, 'true'));
+        style = new Cesium3DTileStyle();
+        expect(style.show).toEqual(new Expression('true'));
     });
 
     it ('sets color value to default expression', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
+        var style = new Cesium3DTileStyle({});
+        expect(style.color).toEqual(new Expression('color("#ffffff")'));
 
-        var style = new Cesium3DTileStyle(tileset, {});
-        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
-
-        style = new Cesium3DTileStyle(tileset);
-        expect(style.color).toEqual(new Expression(styleEngine, 'color("#ffffff")'));
+        style = new Cesium3DTileStyle();
+        expect(style.color).toEqual(new Expression('color("#ffffff")'));
     });
 
     it ('sets show value to expression', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             show : 'true'
         });
-        expect(style.show).toEqual(new Expression(styleEngine, 'true'));
+        expect(style.show).toEqual(new Expression('true'));
 
-        style = new Cesium3DTileStyle(tileset, {
+        style = new Cesium3DTileStyle({
             show : 'false'
         });
-        expect(style.show).toEqual(new Expression(styleEngine, 'false'));
+        expect(style.show).toEqual(new Expression('false'));
 
-        style = new Cesium3DTileStyle(tileset, {
+        style = new Cesium3DTileStyle({
             show : '${height} * 10 >= 1000'
         });
-        expect(style.show).toEqual(new Expression(styleEngine, '${height} * 10 >= 1000'));
+        expect(style.show).toEqual(new Expression('${height} * 10 >= 1000'));
 
-        style = new Cesium3DTileStyle(new MockTileset(new MockStyleEngine()), {
+        style = new Cesium3DTileStyle({
             show : true
         });
-        expect(style.show).toEqual(new Expression(styleEngine, 'true'));
+        expect(style.show).toEqual(new Expression('true'));
 
-        style = new Cesium3DTileStyle(new MockTileset(new MockStyleEngine()), {
+        style = new Cesium3DTileStyle({
             show : false
         });
-        expect(style.show).toEqual(new Expression(styleEngine, 'false'));
+        expect(style.show).toEqual(new Expression('false'));
     });
 
     it ('sets show to undefined if not a string or a boolean', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             show : 1
         });
         expect(style.show).toEqual(undefined);
     });
 
     it ('sets color value to expression', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             color : 'color("red")'
         });
-        expect(style.color).toEqual(new Expression(styleEngine, 'color("red")'));
+        expect(style.color).toEqual(new Expression('color("red")'));
 
-        style = new Cesium3DTileStyle(tileset, {
+        style = new Cesium3DTileStyle({
             color : 'rgba(30, 30, 30, 0.5)'
         });
-        expect(style.color).toEqual(new Expression(styleEngine, 'rgba(30, 30, 30, 0.5)'));
+        expect(style.color).toEqual(new Expression('rgba(30, 30, 30, 0.5)'));
 
-        style = new Cesium3DTileStyle(tileset, {
+        style = new Cesium3DTileStyle({
             color : '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'
         });
-        expect(style.color).toEqual(new Expression(styleEngine, '(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'));
+        expect(style.color).toEqual(new Expression('(${height} * 10 >= 1000) ? rgba(0.0, 0.0, 1.0, 0.5) : color("blue")'));
     });
 
     it ('sets color value to conditional', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
         var jsonExp = {
             conditions : {
                 '${height} > 2' : 'color("cyan")',
@@ -190,25 +150,21 @@ defineSuite([
             }
         };
 
-        var style = new Cesium3DTileStyle(tileset, { color : jsonExp });
-        expect(style.color).toEqual(new ConditionsExpression(styleEngine, jsonExp));
+        var style = new Cesium3DTileStyle({
+            color : jsonExp
+        });
+        expect(style.color).toEqual(new ConditionsExpression(jsonExp));
     });
 
     it ('sets color to undefined if not a string or conditional', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             color : 1
         });
         expect(style.color).toEqual(undefined);
     });
 
     it ('throws on accessing color if not ready', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {});
+        var style = new Cesium3DTileStyle({});
         style._ready = false;
 
         expect(function() {
@@ -217,10 +173,7 @@ defineSuite([
     });
 
     it ('throws on accessing show if not ready', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {});
+        var style = new Cesium3DTileStyle({});
         style._ready = false;
 
         expect(function() {
@@ -229,17 +182,14 @@ defineSuite([
     });
 
     it ('sets meta properties', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             meta : {
                 description : '"Hello, ${name}"'
             }
         });
         expect(style.meta.description.evaluate(feature1)).toEqual("Hello, Hello");
 
-        style = new Cesium3DTileStyle(tileset, {
+        style = new Cesium3DTileStyle({
             meta : {
                 featureColor : 'rgb(${red}, ${green}, ${blue})',
                 volume : '${Height} * ${Width} * ${Depth}'
@@ -250,32 +200,27 @@ defineSuite([
     });
 
     it ('default meta has no properties', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {});
+        var style = new Cesium3DTileStyle({});
         expect(style.meta).toEqual({});
 
-        style = new Cesium3DTileStyle(tileset, { meta: {} });
+        style = new Cesium3DTileStyle({
+            meta: {}
+        });
         expect(style.meta).toEqual({});
     });
 
     it ('default meta has no properties', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {});
+        var style = new Cesium3DTileStyle({});
         expect(style.meta).toEqual({});
 
-        style = new Cesium3DTileStyle(tileset, { meta: {} });
+        style = new Cesium3DTileStyle({
+            meta: {}
+        });
         expect(style.meta).toEqual({});
     });
 
     it ('throws on accessing meta if not ready', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {});
+        var style = new Cesium3DTileStyle({});
         style._ready = false;
 
         expect(function() {
@@ -286,10 +231,7 @@ defineSuite([
     // Tests for examples from the style spec
 
     it ('applies default style', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "show" : "true",
             "color" : "color('#ffffff')"
         });
@@ -299,10 +241,7 @@ defineSuite([
     });
 
     it ('applies show style with variable', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "show" : "${ZipCode} === '19341'"
         });
 
@@ -312,10 +251,7 @@ defineSuite([
     });
 
     it ('applies show style with regexp and variables', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "show" : "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)"
         });
 
@@ -325,10 +261,7 @@ defineSuite([
     });
 
     it ('applies color style variables', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "color" : "(${Temperature} > 90) ? color('red') : color('white')"
         });
         expect(style.show.evaluate(feature1)).toEqual(true);
@@ -337,10 +270,7 @@ defineSuite([
     });
 
     it ('applies color style with new color', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "color" : "rgba(${red}, ${green}, ${blue}, (${volume} > 100 ? 0.5 : 1.0))"
         });
         expect(style.show.evaluate(feature1)).toEqual(true);
@@ -349,10 +279,7 @@ defineSuite([
     });
 
     it ('applies color style that maps id to color', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "color" : {
                 "expression" : "regExp('^1(\\d)').exec(${id})",
                 "conditions" : {
@@ -368,10 +295,7 @@ defineSuite([
     });
 
     it ('applies color style with complex conditional', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "color" : {
                 "expression" : "${Height}",
                 "conditions" : {
@@ -390,10 +314,7 @@ defineSuite([
     });
 
     it ('applies color style with conditional', function() {
-        var styleEngine = new MockStyleEngine();
-        var tileset = new MockTileset(styleEngine);
-
-        var style = new Cesium3DTileStyle(tileset, {
+        var style = new Cesium3DTileStyle({
             "color" : {
                 "conditions" : {
                     "(${Height} >= 100.0)" : "color('#0000FF')",

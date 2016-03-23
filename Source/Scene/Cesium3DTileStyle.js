@@ -31,13 +31,7 @@ define([
     /**
      * DOC_TBA
      */
-    function Cesium3DTileStyle(tileset, data) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(tileset)) {
-            throw new DeveloperError('tileset is required.');
-        }
-        //>>includeEnd('debug');
-
+    function Cesium3DTileStyle(data) {
         this._color = undefined;
         this._show = undefined;
         this._meta = undefined;
@@ -47,38 +41,36 @@ define([
         var style = this;
         if (typeof data === 'string') {
             RequestScheduler.request(data, loadJson).then(function(styleJson) {
-                setup(style, tileset, styleJson);
+                setup(style, styleJson);
                 style._readyPromise.resolve(style);
             }).otherwise(function(error) {
                 style._readyPromise.reject(error);
             });
         } else {
-            setup(style, tileset, data);
+            setup(style, data);
             style._readyPromise.resolve(style);
         }
     }
 
-    function setup(that, tileset, styleJson) {
+    function setup(that, styleJson) {
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
 
-        var styleEngine = tileset.styleEngine;
-
         var color;
         if (typeof(colorExpression) === 'string') {
-            color = new Expression(styleEngine, colorExpression);
+            color = new Expression(colorExpression);
         } else if (defined(colorExpression.conditions)) {
-            color = new ConditionsExpression(styleEngine, colorExpression);
+            color = new ConditionsExpression(colorExpression);
         }
 
         that._color = color;
 
         var show;
         if (typeof(showExpression) === 'boolean') {
-            show = new Expression(styleEngine, String(showExpression));
+            show = new Expression(String(showExpression));
         } else if (typeof(showExpression) === 'string') {
-            show = new Expression(styleEngine, showExpression);
+            show = new Expression(showExpression);
         }
 
         that._show = show;
@@ -88,7 +80,7 @@ define([
             var metaJson = defaultValue(styleJson.meta, defaultValue.EMPTY_OBJECT);
             for (var property in metaJson) {
                 if (metaJson.hasOwnProperty(property)) {
-                    meta[property] = new Expression(styleEngine, metaJson[property]);
+                    meta[property] = new Expression(metaJson[property]);
                 }
             }
         }
