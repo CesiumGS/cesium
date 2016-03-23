@@ -524,7 +524,6 @@ define([
 
         this._mode = undefined;
         this._projection = undefined;
-        this._scale = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
