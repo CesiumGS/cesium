@@ -79,7 +79,7 @@ function loadTileset(url) {
 //            "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
             "color" : {
                 "conditions" : {
-                    "${Height} >= 83" : "color('purple')",
+                    "${Height} >= 83" : "color('purple', 0.5)",
                     "${Height} >= 80" : "color('red')",
                     "${Height} >= 70" : "color('orange')",
                     "${Height} >= 12" : "color('yellow')",
@@ -402,6 +402,8 @@ function getStyleFunction(name) {
 
 Sandcastle.addToolbarButton('Custom style', function() {
     tileset.style = {
+        ready : true,
+        readyPromise : Cesium.when.defer().resolve(this), // TODO: which this is this?
         show : {
             evaluate : function(feature) {
                 tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
@@ -409,9 +411,15 @@ Sandcastle.addToolbarButton('Custom style', function() {
             }
         },
         color : {
-            evaluateColor : function(feature) {
+            evaluateColor : function(feature, result) {
+                if (!Cesium.defined(result)) {
+                    result = new Cesium.Color();
+                }
+
                 tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
-                return Cesium.Color.fromRandom();
+                result = Cesium.Color.fromRandom();
+
+                return result;
             }
         }
     };
