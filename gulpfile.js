@@ -5,6 +5,9 @@ var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var child_process = require('child_process');
+var crypto = require('crypto');
+var zlib = require('zlib');
+var readline = require('readline');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
@@ -22,6 +25,9 @@ var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
 var yargs = require('yargs');
+var aws = require('aws-sdk');
+var mime = require('mime');
+var compressible = require('compressible');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -296,6 +302,229 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
         outputDirectory : path.join('Build', 'Cesium')
     });
 });
+
+gulp.task('deploy-s3', function(done) {
+    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+        .demand(['b', 'd']).argv;
+
+    var uploadDirectory = argv.d;
+    var bucketName = argv.b;
+    var cacheControl = argv.c ? argv.c : 'max-age=3600';
+
+    var iface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    if (argv.confirm) {
+        // skip prompt for travis
+        deployCesium(bucketName, uploadDirectory, cacheControl, done);
+        return;
+    }
+
+    // prompt for confirmation
+    iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
+        iface.close();
+        if (answer === 'y') {
+            deployCesium(bucketName, uploadDirectory, cacheControl, done);
+        } else {
+            console.log('Deploy aborted by user.');
+            done();
+        }
+    });
+
+});
+
+// Deploy cesium to s3
+function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
+    var readFile = Promise.promisify(fs.readFile);
+    var gzip = Promise.promisify(zlib.gzip);
+    var concurrencyLimit = 2000;
+
+    var s3 = new Promise.promisifyAll(new aws.S3({
+        maxRetries : 10,
+        retryDelayOptions : {
+            base : 500
+        }
+    }));
+
+    var existingBlobs = [];
+    var totalFiles = 0;
+    var uploaded = 0;
+    var skipped = 0;
+    var errors = [];
+
+    return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+    .then(function() {
+        return globby([
+            'Apps/**',
+            'Build/**',
+            'Source/**',
+            'Specs/**',
+            'ThirdParty/**',
+            '*.md',
+            'favicon.ico',
+            'gulpfile.js',
+            'index.html',
+            'logo.png',
+            'package.json',
+            'server.js',
+            'web.config'
+        ], {
+            dot : true, // include hidden files
+            nodir : true // only directory files
+        });
+    })
+    .then(function(files) {
+        return Promise.map(files, function(file) {
+            var blobName = uploadDirectory + '/' + file;
+            var mimeLookup = getMimeType(blobName);
+            var contentType = mimeLookup.type;
+            var compress = mimeLookup.compress;
+            var contentEncoding = compress ? 'gzip' : undefined;
+            var etag;
+
+            totalFiles++;
+
+            return readFile(file)
+            .then(function(content) {
+                return compress ? gzip(content) : content;
+            })
+            .then(function(content) {
+                // compute hash and etag
+                var hash = crypto.createHash('md5').update(content).digest('hex');
+                etag = crypto.createHash('md5').update(content).digest('base64');
+
+                var index = existingBlobs.indexOf(blobName);
+                if (index <= -1) {
+                    return content;
+                }
+
+                // remove files as we find them on disk
+                existingBlobs.splice(index, 1);
+
+                // get file info
+                return s3.headObjectAsync({
+                    Bucket : bucketName,
+                    Key : blobName
+                })
+                .then(function(data) {
+                    if (data.ETag !== ('"' + hash + '"') ||
+                        data.CacheControl !== cacheControl ||
+                        data.ContentType !== contentType ||
+                        data.ContentEncoding !== contentEncoding) {
+                        return content;
+                    }
+
+                    // We don't need to upload this file again
+                    skipped++;
+                    return undefined;
+                })
+                .catch(function(error) {
+                    errors.push(error);
+                });
+            })
+            .then(function(content) {
+                if (!content) {
+                    return;
+                }
+
+                console.log('Uploading ' + blobName + '...');
+                var params = {
+                    Bucket : bucketName,
+                    Key : blobName,
+                    Body : content,
+                    ContentMD5 : etag,
+                    ContentType : contentType,
+                    ContentEncoding : contentEncoding,
+                    CacheControl : cacheControl
+                };
+
+                return s3.putObjectAsync(params).then(function() {
+                    uploaded++;
+                })
+                .catch(function(error) {
+                    errors.push(error);
+                });
+            });
+        }, {concurrency : concurrencyLimit});
+    })
+    .then(function() {
+        console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
+        if (existingBlobs.length === 0) {
+           return;
+        }
+
+        console.log('Cleaning up old files...');
+        return s3.deleteObjectsAsync({
+            Bucket : bucketName,
+            Delete : {
+                Objects : existingBlobs.map(function(file) {
+                    return {Key : file};
+                })
+            }
+        })
+        .then(function() {
+            console.log('Cleaned ' + existingBlobs.length + ' files.');
+        });
+    })
+    .catch(function(error) {
+        errors.push(error);
+    })
+    .then(function() {
+        if (errors.length === 0) {
+            done();
+            return;
+        }
+
+        console.log('Errors: ');
+        errors.map(function(e) {
+            console.log(e);
+        });
+        done(1);
+    });
+}
+
+function getMimeType(filename) {
+    var ext = path.extname(filename);
+    if (ext === '.bin' || ext === '.terrain') {
+        return { type : 'application/octet-stream', compress : true };
+    } else if (ext === '.md' || ext === '.glsl') {
+        return { type : 'text/plain', compress : true };
+    } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
+        return { type : 'application/json', compress : true };
+    } else if (ext === '.js') {
+        return { type : 'application/javascript', compress : true };
+    } else if (ext === '.svg') {
+        return { type : 'image/svg+xml', compress : true };
+    } else if (ext === '.woff') {
+        return { type : 'application/font-woff', compress : false };
+    }
+
+    var mimeType = mime.lookup(filename);
+    return {type : mimeType, compress : compressible(mimeType)};
+}
+
+// get all files currently in bucket asynchronously
+function listAll(s3, bucketName, directory, files, marker) {
+    return s3.listObjectsAsync({
+        Bucket : bucketName,
+        MaxKeys : 1000,
+        Prefix: directory,
+        Marker : marker
+    })
+    .then(function(data) {
+        var items = data.Contents;
+        for (var i = 0; i < items.length; i++) {
+            files.push(items[i].Key);
+        }
+
+        if (data.IsTruncated) {
+            // get next page of results
+            return listAll(s3, bucketName, directory, files, files[files.length - 1]);
+        }
+    });
+}
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
 
