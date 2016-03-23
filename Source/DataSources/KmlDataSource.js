@@ -1608,11 +1608,7 @@ define([
             }
 
             geometry.material = href;
-            var color = queryColorValue(groundOverlay, 'color', namespaces.kml);
-            if (defined(color)) {
-                geometry.material.alpha = color.alpha;
-            }
-            geometry.material.transparent = true;
+            geometry.material.color = queryColorValue(groundOverlay, 'color', namespaces.kml);
         } else {
             geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }

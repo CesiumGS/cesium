@@ -1,17 +1,21 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/Event',
         './createPropertyDescriptor',
         './Property'
     ], function(
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         Event,
         createPropertyDescriptor,
         Property) {
@@ -20,6 +24,7 @@ define([
     var defaultRepeat = new Cartesian2(1, 1);
     var defaultAlpha = 1.0;
     var defaultTransparent = false;
+    var defaultColor = Color.WHITE;
 
     /**
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
@@ -30,7 +35,6 @@ define([
      * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
      * @param {Property} [options.alpha=1.0] The alpha blending value of this layer, with 0.0 representing fully transparent and 1.0 representing fully opaque.
-     * @param {Property} [options.transparent=false] True if the image has transparency
      */
     function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -42,12 +46,19 @@ define([
         this._repeatSubscription = undefined;
         this._alpha = undefined;
         this._alphaSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
         this._transparent = undefined;
         this._transparentSubscription = undefined;
+
+        if (defined(options.alpha)) {
+            deprecationWarning('ImageMaterialProperty.alpha', 'ImageMaterialProperty.alpha was deprecated in Cesium 1.20.  It will be removed in 1.21.  Use ImageMaterialProperty.color.alpha instead.');
+        }
 
         this.image = options.image;
         this.repeat = options.repeat;
         this.alpha = options.alpha;
+        this.color = options.color;
         this.transparent = options.transparent;
     }
 
@@ -100,12 +111,19 @@ define([
          */
         alpha : createPropertyDescriptor('alpha'),
         /**
-         * Gets or sets the Boolean Property specifying whether or not the image has transparency
+         * Gets or sets the Color Property specifying the desired color applied to the image.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default 1.0
          */
-        transparent: createPropertyDescriptor('transparent')
+        color : createPropertyDescriptor('color'),
+        /**
+         * Gets or sets the Boolean Property specifying whether the image has transparency
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Property}
+         * @default 1.0
+         */
+        transparent : createPropertyDescriptor('transparent')
     });
 
     /**
@@ -132,8 +150,15 @@ define([
 
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
-        result.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
-        result.transparent = Property.getValueOrDefault(this._transparent, time, defaultTransparent);
+        var color = Property.getValueOrUndefined(this._color, time, result.color);
+        if (!defined(color)) {
+            color = Color.clone(defaultColor, result.color);
+            color.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
+        }
+        result.color = color;
+        if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
+            result.color.alpha = Math.min(0.99, result.color.alpha);
+        }
 
         return result;
     };
