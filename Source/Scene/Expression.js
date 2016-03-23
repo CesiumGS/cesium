@@ -55,8 +55,6 @@ define([
 
     defineProperties(Expression.prototype, {
 
-        // TODO: Expose AST?
-
     });
 
     /**
@@ -94,8 +92,6 @@ define([
         setEvaluateFunction(this);
     }
 
-    // TODO: Make fix to jsep to allow backslashes
-
     function removeBackslashes(expression) {
         return expression.replace(backslashRegex, backslashReplacement);
     }
@@ -105,9 +101,6 @@ define([
     }
 
     function replaceVariables(expression) {
-        // TODO: Allow variable names inside of member expressions, eg. ${foo[${bar}]}
-        // TODO: Allow for escaped variables in strings
-
         var exp = expression;
         var result = '';
         var i = exp.indexOf('${');
