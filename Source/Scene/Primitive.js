@@ -573,7 +573,6 @@ attribute vec3 ' + name + '2DLow;\n';
                 } else {
                     computeFunctions +=
                         functionName + '\n' +
-                        //language="glsl"
                         '{\n' +
                         '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
                         '}\n\n';
@@ -588,7 +587,6 @@ attribute vec3 ' + name + '2DLow;\n';
 
                 computeFunctions +=
                     functionName + '\n' +
-                    //language="glsl"
                     '{\n' +
                     '    return u_modifiedModelView * position;\n' +
                     '}\n\n';

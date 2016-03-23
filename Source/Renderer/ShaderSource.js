@@ -347,10 +347,9 @@ void main()\n\
 
     ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
         var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
-        var pickMain = pickColorQualifier + 
+        var pickMain = pickColorQualifier + ' vec4 czm_pickColor;\n' +
 //language=glsl                       
-' \
-vec4 czm_pickColor;\n\
+'\
 void main()\n\
 {\n\
     czm_old_main();\n\

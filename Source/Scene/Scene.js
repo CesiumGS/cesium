@@ -1274,7 +1274,6 @@ define([
         });
 
         var newMain =
-            //language="glsl"
             'void main() \n' +
             '{ \n' +
             '    czm_Debug_main(); \n';
