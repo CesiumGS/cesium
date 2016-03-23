@@ -115,7 +115,6 @@ void main()\n\
    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n\
 }\n';
 
-
         this._copyCommand = this._context.createViewportQuadCommand(fs, {
             uniformMap : uniformMap
         });
