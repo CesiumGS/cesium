@@ -83,23 +83,27 @@ define([
         }
 
         var vs =
-            'attribute vec3 position3DHigh;\n' +
-            'attribute vec3 position3DLow;\n' +
-            'attribute ' + glslDatatype + ' ' + attributeName + ';\n' +
-            'varying ' + glslDatatype + ' ' + varyingName + ';\n' +
-            'void main()\n' +
-            '{\n' +
-            'vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
-            varyingName + ' = ' +  attributeName + ';\n' +
-            'gl_Position = czm_modelViewProjectionRelativeToEye * p;\n' +
-            '}';
+//language="glsl"
+'\
+attribute vec3 position3DHigh;\n\
+attribute vec3 position3DLow;\n\
+attribute ' + glslDatatype + ' ' + attributeName + ';\n\
+varying ' + glslDatatype + ' ' + varyingName + ';\n\
+void main()\n\
+{\n\
+    vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n\
+    ' + varyingName + ' = ' +  attributeName + ';\n\
+    gl_Position = czm_modelViewProjectionRelativeToEye * p;\n\
+}';
         var fs =
-            'varying ' + glslDatatype + ' ' + varyingName + ';\n' +
-            getColor + '\n' +
-            'void main()\n' +
-            '{\n' +
-            'gl_FragColor = getColor();\n' +
-            '}';
+//language="glsl"
+'\
+varying ' + glslDatatype + ' ' + varyingName + ';\n\
+' + getColor + '\n\
+void main()\n\
+{\n\
+    gl_FragColor = getColor();\n\
+}';
 
         /**
          * This property is part of the {@link Appearance} interface, but is not

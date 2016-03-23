@@ -542,36 +542,42 @@ define([
                 // Use GPU RTE
                 if (!scene3DOnly) {
                     attributes +=
-                        'attribute vec3 ' + name + '2DHigh;\n' +
-                        'attribute vec3 ' + name + '2DLow;\n';
+//language="glsl"                        
+'\
+attribute vec3 ' + name + '2DHigh;\n\
+attribute vec3 ' + name + '2DLow;\n';
 
                     computeFunctions +=
                         functionName + '\n' +
-                        '{\n' +
-                        '    vec4 p;\n' +
-                        '    if (czm_morphTime == 1.0)\n' +
-                        '    {\n' +
-                        '        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                        '    }\n' +
-                        '    else if (czm_morphTime == 0.0)\n' +
-                        '    {\n' +
-                        '        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n' +
-                        '    }\n' +
-                        '    else\n' +
-                        '    {\n' +
-                        '        p = czm_columbusViewMorph(\n' +
-                        '                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n' +
-                        '                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n' +
-                        '                czm_morphTime);\n' +
-                        '    }\n' +
-                        '    return p;\n' +
-                        '}\n\n';
+//language="glsl"                        
+'\
+{\n\
+    vec4 p;\n\
+    if (czm_morphTime == 1.0)\n\
+    {\n\
+        p = czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n\
+    }\n\
+    else if (czm_morphTime == 0.0)\n\
+    {\n\
+        p = czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy);\n\
+    }\n\
+    else\n\
+    {\n\
+        p = czm_columbusViewMorph(\n\
+                czm_translateRelativeToEye(' + name + '2DHigh.zxy, ' + name + '2DLow.zxy),\n\
+                czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow),\n\
+                czm_morphTime);\n\
+    }\n\
+    return p;\n\
+}\n\n';
                 } else {
                     computeFunctions +=
                         functionName + '\n' +
-                        '{\n' +
-                        '    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n' +
-                        '}\n\n';
+//language="glsl"         
+'\
+{\n\
+    return czm_translateRelativeToEye(' + name + '3DHigh, ' + name + '3DLow);\n\
+}\n\n';
                 }
             } else {
                 // Use RTC
@@ -583,9 +589,11 @@ define([
 
                 computeFunctions +=
                     functionName + '\n' +
-                    '{\n' +
-                    '    return u_modifiedModelView * position;\n' +
-                    '}\n\n';
+//language="glsl"
+'\
+{\n\
+    return u_modifiedModelView * position;\n\
+}\n\n';
 
 
                 vertexShaderSource = vertexShaderSource.replace(/czm_modelViewRelativeToEye\s+\*\s+/g, '');
@@ -603,12 +611,14 @@ define([
 
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_show_main');
         var showMain =
-            'attribute float show;\n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_non_show_main(); \n' +
-            '    gl_Position *= show; \n' +
-            '}';
+//language="glsl"            
+'\
+attribute float show;\n\
+void main()\n\
+{\n\
+    czm_non_show_main();\n\
+    gl_Position *= show; \n\
+}';
 
         return renamedVS + '\n' + showMain;
     };
@@ -674,11 +684,13 @@ define([
         modifiedVS = modifiedVS.replace(/attribute\s+vec3\s+binormal;/g, '');
         modifiedVS = ShaderSource.replaceMain(modifiedVS, 'czm_non_compressed_main');
         var compressedMain =
-            'void main() \n' +
-            '{ \n' +
-            decode +
-            '    czm_non_compressed_main(); \n' +
-            '}';
+//language="glsl"
+'\
+void main() \n\
+{ \n\
+    ' + decode + '\
+    czm_non_compressed_main(); \n\
+}';
 
         return [attributeDecl, globalDecl, modifiedVS, compressedMain].join('\n');
     }

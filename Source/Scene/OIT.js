@@ -383,21 +383,27 @@ define([
     }
 
     var mrtShaderSource =
-        '    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n' +
-        '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);\n' +
-        '    gl_FragData[0] = vec4(Ci * wzi, ai);\n' +
-        '    gl_FragData[1] = vec4(ai * wzi);\n';
+//language="glsl"    
+'\
+    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n\
+    float ai = czm_gl_FragColor.a;\n\
+    float wzi = czm_alphaWeight(ai);\n\
+    gl_FragData[0] = vec4(Ci * wzi, ai);\n\
+    gl_FragData[1] = vec4(ai * wzi);\n';
 
     var colorShaderSource =
-        '    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n' +
-        '    float ai = czm_gl_FragColor.a;\n' +
-        '    float wzi = czm_alphaWeight(ai);\n' +
-        '    gl_FragColor = vec4(Ci, ai) * wzi;\n';
+//language="glsl"        
+'\
+    vec3 Ci = czm_gl_FragColor.rgb * czm_gl_FragColor.a;\n\
+    float ai = czm_gl_FragColor.a;\n\
+    float wzi = czm_alphaWeight(ai);\n\
+    gl_FragColor = vec4(Ci, ai) * wzi;\n';
 
     var alphaShaderSource =
-        '    float ai = czm_gl_FragColor.a;\n' +
-        '    gl_FragColor = vec4(ai);\n';
+//language="glsl"
+'\
+    float ai = czm_gl_FragColor.a;\n\
+    gl_FragColor = vec4(ai);\n';
 
     function getTranslucentShaderProgram(context, shaderProgram, cache, source) {
         var id = shaderProgram.id;
@@ -420,19 +426,25 @@ define([
 
             fs.sources.splice(0, 0,
                     (source.indexOf('gl_FragData') !== -1 ? '#extension GL_EXT_draw_buffers : enable \n' : '') +
-                    'vec4 czm_gl_FragColor;\n' +
-                    'bool czm_discard = false;\n');
+//language="glsl"
+'\
+vec4 czm_gl_FragColor;\n\
+bool czm_discard = false;\n'
+            );
 
             fs.sources.push(
-                    'void main()\n' +
-                    '{\n' +
-                    '    czm_translucent_main();\n' +
-                    '    if (czm_discard)\n' +
-                    '    {\n' +
-                    '        discard;\n' +
-                    '    }\n' +
-                    source +
-                    '}\n');
+//language="glsl"
+'\
+void main()\n\
+{\n\
+    czm_translucent_main();\n\
+    if (czm_discard)\n\
+    {\n\
+        discard;\n\
+    }\n\
+    ' + source + '\n\
+}\n'
+            );
 
             shader = ShaderProgram.fromCache({
                 context : context,
