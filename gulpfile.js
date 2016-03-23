@@ -318,16 +318,15 @@ gulp.task('deploy-s3', function(done) {
 
     if (argv.confirm) {
         // skip prompt for travis
-        return deployCesium(bucketName, uploadDirectory, cacheControl);
+        deployCesium(bucketName, uploadDirectory, cacheControl, done);
+        return;
     }
 
     // prompt for confirmation
     iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
         iface.close();
         if (answer === 'y') {
-            deployCesium(bucketName, uploadDirectory).then(function() {
-                done();
-            });
+            deployCesium(bucketName, uploadDirectory, cacheControl, done);
         } else {
             console.log('Deploy aborted by user.');
             done();
@@ -337,7 +336,7 @@ gulp.task('deploy-s3', function(done) {
 });
 
 // Deploy cesium to s3
-function deployCesium(bucketName, uploadDirectory, cacheControl) {
+function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
     var concurrencyLimit = 2000;
@@ -353,8 +352,12 @@ function deployCesium(bucketName, uploadDirectory, cacheControl) {
     var totalFiles = 0;
     var uploaded = 0;
     var skipped = 0;
+    var errors = [];
 
     return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+    .catch(function(error) {
+        errors.push(error);
+    })
     .then(function() {
         return globby([
             'Apps/**',
@@ -419,8 +422,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl) {
                     skipped++;
                     return undefined;
                 })
-                .catch(function() {
-                    return content;
+                .catch(function(error) {
+                    errors.push(error);
                 });
             })
             .then(function(content) {
@@ -443,7 +446,7 @@ function deployCesium(bucketName, uploadDirectory, cacheControl) {
                     uploaded++;
                 })
                 .catch(function(error) {
-                    console.log(error);
+                    errors.push(error);
                 });
             });
         }, {concurrency : concurrencyLimit});
@@ -465,7 +468,21 @@ function deployCesium(bucketName, uploadDirectory, cacheControl) {
         })
         .then(function() {
             console.log('Cleaned ' + existingBlobs.length + ' files.');
+        })
+        .catch(function(error) {
+            errors.push(error);
         });
+    }).then(function() {
+        if (errors.length === 0) {
+            done();
+            return;
+        }
+
+        console.log('Errors: ');
+        errors.map(function(e) {
+            console.log(e);
+        });
+        done(1);
     });
 }
 
@@ -507,9 +524,6 @@ function listAll(s3, bucketName, directory, files, marker) {
             // get next page of results
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
-    })
-    .catch(function(error) {
-        console.log(error);
     });
 }
 
