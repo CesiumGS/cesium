@@ -48,23 +48,13 @@
 
     var app = express();
     app.use(compression());
-    app.get('*.b3dm', function(req, res, next) {
-        res.header('Content-Encoding', 'gzip');
-        next();
-    });
-    app.get('*.pnts', function(req, res, next) {
-        res.header('Content-Encoding', 'gzip');
-        next();
-    });
-    app.get('*.i3dm', function(req, res, next) {
-        res.header('Content-Encoding', 'gzip');
-        next();
-    });
-    app.get('*.cmpt', function(req, res, next) {
-        res.header('Content-Encoding', 'gzip');
-        next();
-    });
-    app.use(express.static(__dirname));
+    app.use(express.static(__dirname, {
+        setHeaders : function(res, url) {
+            if (/(b3dm|pnts|i3dm|cmpt)$/.test(url)) {
+                res.header('Content-Encoding', 'gzip');
+            }
+        }
+    }));
 
     function getRemoteUrlFromParam(req) {
         var remoteUrl = req.params[0];

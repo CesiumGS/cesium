@@ -2800,17 +2800,29 @@ define([
     }
 
     var scratchPickCartesian2 = new Cartesian2();
-
+    var scratchRectCartesian = new Cartesian3();
+    var cartoArray = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+    function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
+        scratchPickCartesian2.x = x;
+        scratchPickCartesian2.y = y;
+        var r = camera.pickEllipsoid(scratchPickCartesian2, ellipsoid, scratchRectCartesian);
+        if (defined(r)) {
+            cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
+            return 1;
+        }
+        cartoArray[index] = ellipsoid.cartesianToCartographic(computedHorizonQuad[index], cartoArray[index]);
+        return 0;
+    }
     /**
      * Computes the approximate visible rectangle on the ellipsoid.
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+     * @param {Rectangle} [result] The rectangle in which to store the result
      *
      * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
      */
-    Camera.prototype.computeViewRectangle = function(ellipsoid) {
+    Camera.prototype.computeViewRectangle = function(ellipsoid, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
         var cullingVolume = this.frustum.computeCullingVolume(this.positionWC, this.directionWC, this.upWC);
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
         var visibility = cullingVolume.computeVisibility(boundingSphere);
@@ -2822,45 +2834,27 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
-        var that = this;
-        var computedHorizonQuad;
-        var cartographics = [];
         var successfulPickCount = 0;
-        function addToResult(x, y, index) {
-            scratchPickCartesian2.x = x;
-            scratchPickCartesian2.y = y;
-            var r = that.pickEllipsoid(scratchPickCartesian2, ellipsoid, new Cartesian3());
-            if (defined(r)) {
-                cartographics.push(ellipsoid.cartesianToCartographic(r));
-                ++successfulPickCount;
-            } else {
-                if (!defined(computedHorizonQuad)) {
-                    computedHorizonQuad = computeHorizonQuad(that, ellipsoid);
-                }
-                cartographics.push(ellipsoid.cartesianToCartographic(computedHorizonQuad[index]));
-            }
-        }
 
-        addToResult(0, 0, 0);
-        addToResult(0, height, 1);
-        addToResult(width, height, 2);
-        addToResult(width, 0, 3);
+        var computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
 
-        if (successfulPickCount === 0 || successfulPickCount === 1) {
+        successfulPickCount += addToResult(0, 0, 0, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(0, height, 1, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(width, height, 2, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(width, 0, 3, this, ellipsoid, computedHorizonQuad);
+
+        if (successfulPickCount < 2) {
             // If we have space non-globe in 3 or 4 corners then return the whole globe
             return Rectangle.MAX_VALUE;
         }
 
-        var i;
-        var point;
-        var cartographicsCount = cartographics.length;
+        result = Rectangle.fromCartographicArray(cartoArray, result);
 
         // Detect if we go over the poles
         var distance = 0;
-        var lastLon = cartographics[cartographicsCount-1].longitude;
-        for (i=0;i<cartographicsCount;++i) {
-            point = cartographics[i];
-            var lon = point.longitude;
+        var lastLon = cartoArray[3].longitude;
+        for (var i = 0; i < 4; ++i) {
+            var lon = cartoArray[i].longitude;
             var diff = Math.abs(lon - lastLon);
             if (diff > CesiumMath.PI) {
                 // Crossed the dateline
@@ -2872,22 +2866,11 @@ define([
             lastLon = lon;
         }
 
-        var result;
-        for(i=0;i<cartographicsCount;++i) {
-            point = cartographics[i];
-            if (!defined(result)) {
-                result = new Rectangle(point.longitude, point.latitude,
-                    point.longitude, point.latitude);
-            } else {
-                Rectangle.expand(result, point, result);
-            }
-        }
-
         // We are over one of the poles so adjust the rectangle accordingly
         if (CesiumMath.equalsEpsilon(Math.abs(distance), CesiumMath.TWO_PI, CesiumMath.EPSILON9)) {
             result.west = -CesiumMath.PI;
             result.east = CesiumMath.PI;
-            if (cartographics[0].latitude >= 0.0) {
+            if (cartoArray[0].latitude >= 0.0) {
                 result.north = CesiumMath.PI_OVER_TWO;
             } else {
                 result.south = -CesiumMath.PI_OVER_TWO;

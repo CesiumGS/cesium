@@ -665,6 +665,7 @@ define([
 
         /**
          * Returns true if the pickPosition function is supported.
+         * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly

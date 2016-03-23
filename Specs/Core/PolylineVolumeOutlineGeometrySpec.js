@@ -18,7 +18,7 @@ defineSuite([
     var shape;
 
     beforeAll(function() {
-        shape = [new Cartesian2(-10000, -10000), new Cartesian2(10000, -10000), new Cartesian2(10000, 10000), new Cartesian2(-10000, 10000)];
+        shape = [new Cartesian2(-100, -100), new Cartesian2(100, -100), new Cartesian2(100, 100), new Cartesian2(-100, 100)];
     });
 
     it('throws without polyline positions', function() {
@@ -40,7 +40,7 @@ defineSuite([
             polylinePositions: [new Cartesian3()],
             shapePositions: shape
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('createGeometry returnes undefined without 3 unique shape positions', function() {
@@ -48,7 +48,7 @@ defineSuite([
             polylinePositions: [Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             shapePositions: [Cartesian2.UNIT_X, Cartesian2.UNIT_X, Cartesian2.UNIT_X]
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('computes positions', function() {
@@ -61,8 +61,8 @@ defineSuite([
             cornerType: CornerType.MITERED
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 6 * 4);
-        expect(m.indices.length).toEqual(2 * 24 + 8);
+        expect(m.attributes.position.values.length).toEqual(24 * 3); // 6 polyline positions * 4 box positions
+        expect(m.indices.length).toEqual(28 * 2); // 4 lines * 5 positions + 4 lines * 2 end caps
     });
 
     it('computes positions, clockwise shape', function() {
@@ -75,8 +75,8 @@ defineSuite([
             cornerType: CornerType.MITERED
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 6 * 4);
-        expect(m.indices.length).toEqual(2 * 24 + 8);
+        expect(m.attributes.position.values.length).toEqual(24 * 3);
+        expect(m.indices.length).toEqual(28 * 2);
     });
 
     it('computes right turn', function() {
@@ -90,8 +90,8 @@ defineSuite([
             shapePositions: shape
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 5 * 4);
-        expect(m.indices.length).toEqual(2 * 24);
+        expect(m.attributes.position.values.length).toEqual(20 * 3); // (2 ends + 3 corner positions) * 4 box positions
+        expect(m.indices.length).toEqual(24 * 2); // 4 lines * 4 positions + 4 lines * 2 end caps
     });
 
     it('computes left turn', function() {
@@ -105,8 +105,8 @@ defineSuite([
             shapePositions: shape
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 5 * 4);
-        expect(m.indices.length).toEqual(2 * 24);
+        expect(m.attributes.position.values.length).toEqual(20 * 3);
+        expect(m.indices.length).toEqual(24 * 2);
     });
 
     it('computes with rounded corners', function() {
@@ -121,9 +121,11 @@ defineSuite([
             shapePositions: shape
         }));
 
-        var corners = 90/5*2;
-        expect(m.attributes.position.values.length).toEqual(3 * (corners * 4 + 7 * 4));
-        expect(m.indices.length).toEqual(2 * (corners * 4 + 6 * 4 + 8));
+        var corners = 36 * 4;
+        var numVertices = corners + 28; // corners + 7 positions * 4 for shape
+        var numLines = corners + 32; // corners + 6 segments * 4 lines per segment + 4 lines * 2 ends
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numLines * 2);
     });
 
     it('computes with beveled corners', function() {
@@ -138,8 +140,8 @@ defineSuite([
             shapePositions: shape
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 20 * 2);
-        expect(m.indices.length).toEqual(2 * 20 * 2 + 8);
+        expect(m.attributes.position.values.length).toEqual(40 * 3); // 10 positions * 4 for shape
+        expect(m.indices.length).toEqual(44 * 2); // 9 segments * 4 lines per segment + 4 lines * 2 ends
     });
 
     var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
