@@ -11,7 +11,6 @@ var readline = require('readline');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
-var async = require('async');
 var rimraf = require('rimraf');
 var stripComments = require('strip-comments');
 var mkdirp = require('mkdirp');
@@ -96,6 +95,7 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Specs/spec-main.js',
                            '!Specs/SpecRunner.js',
                            '!Specs/SpecList.js',
+                           '!Specs/karma.conf.js',
                            '!Apps/Sandcastle/Sandcastle-client.js',
                            '!Apps/Sandcastle/Sandcastle-header.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
@@ -122,7 +122,10 @@ gulp.task('buildApps', function() {
 });
 
 gulp.task('clean', function(done) {
-    async.forEach(filesToClean, rimraf, done);
+    filesToClean.forEach(function(file) {
+        rimraf.sync(file);
+    });
+    done();
 });
 
 gulp.task('requirejs', function(done) {
@@ -612,23 +615,23 @@ define(function() {\n\
     done();
 });
 
-gulp.task('sortRequires', function(done) {
+gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
     var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
     var filesChecked = 0;
 
+    var fsReadFile = Promise.promisify(fs.readFile);
+    var fsWriteFile = Promise.promisify(fs.writeFile);
+
     var files = globby.sync(filesToSortRequires);
-    async.forEach(files, function(file, callback) {
+    return Promise.map(files, function(file) {
         if (filesChecked > 0 && filesChecked % 50 === 0) {
             console.log('Sorted requires in ' + filesChecked + ' files');
         }
         ++filesChecked;
 
-        fs.readFile(file, function(err, contents) {
-            if (err) {
-                return callback(err);
-            }
+        fsReadFile(file).then(function(contents) {
 
             var result = requiresRegex.exec(contents);
 
@@ -735,9 +738,9 @@ gulp.task('sortRequires', function(done) {
                        ') {' +
                        result[6];
 
-            fs.writeFile(file, contents, callback);
+            return fsWriteFile(file, contents);
         });
-    }, done);
+    });
 });
 
 function combineCesium(debug, optimizer, combineOutput) {
