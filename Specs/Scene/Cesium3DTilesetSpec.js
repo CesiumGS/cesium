@@ -870,10 +870,6 @@ defineSuite([
     });
 
     it('applies show style to a tileset', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
@@ -888,10 +884,6 @@ defineSuite([
     });
 
     it('applies style with complex show expression to a tileset', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
@@ -922,10 +914,6 @@ defineSuite([
     });
 
     it('applies color style to a tileset', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var originalColor = scene.renderForSpecs();
 
@@ -955,10 +943,6 @@ defineSuite([
     });
 
     it('applies style when feature properties change', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
@@ -987,10 +971,6 @@ defineSuite([
     });
 
     it('applies style with complex color expression to a tileset', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // Each feature in the b3dm file has an id property from 0 to 99
             // ${id} >= 100 will always evaluate to false
@@ -1012,10 +992,6 @@ defineSuite([
     });
 
     it('applies conditional color style to a tileset', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // ${id} < 100 will always evaluate to true
             tileset.style = new Cesium3DTileStyle(tileset, {
@@ -1050,10 +1026,6 @@ defineSuite([
     });
 
     it('loads style from uri', function() {
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
-
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             // ${id} < 100 will always evaluate to true
             tileset.style = new Cesium3DTileStyle(tileset, styleUrl);
