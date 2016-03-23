@@ -1772,9 +1772,6 @@ defineSuite([
         var p = camera.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
-
-        p = camera.pickEllipsoid(Cartesian2.ZERO);
-        expect(p).toBeUndefined();
     });
 
     it('pick rotated map in 2D', function() {
