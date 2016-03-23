@@ -33,6 +33,7 @@ define([
     var actualPositionScratch = new Cartesian4(0, 0, 0, 1);
     var positionCC = new Cartesian4();
     var viewProjectionScratch = new Matrix4();
+    var scratchViewport = new BoundingRectangle();
 
     /**
      * Transforms a position in WGS84 coordinates to window coordinates.  This is commonly used to place an
@@ -64,7 +65,8 @@ define([
         //>>includeEnd('debug');
 
         // Transform for 3D, 2D, or Columbus view
-        var actualPosition = SceneTransforms.computeActualWgs84Position(scene.frameState, position, actualPositionScratch);
+        var frameState = scene.frameState;
+        var actualPosition = SceneTransforms.computeActualWgs84Position(frameState, position, actualPositionScratch);
 
         if (!defined(actualPosition)) {
             return undefined;
@@ -79,8 +81,17 @@ define([
             return undefined;
         }
 
-        result = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
-        result.y = scene.canvas.clientHeight - result.y;
+        // Assuming viewport takes up the entire canvas...
+        var canvas = scene.canvas;
+        var viewport = scratchViewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = canvas.clientWidth;
+        viewport.height = canvas.clientHeight;
+
+        result = SceneTransforms.clipToGLWindowCoordinates(viewport, positionCC, result);
+        result.y = canvas.clientHeight - result.y;
+
         return result;
     };
 
@@ -130,7 +141,10 @@ define([
             return undefined;
         }
 
-        return SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, result);
+        // Assuming viewport takes up the entire canvas...
+        var viewport = BoundingRectangle.clone(scene._passState.viewport, scratchViewport);
+
+        return SceneTransforms.clipToDrawingBufferCoordinates(viewport, positionCC, result);
     };
 
     var projectedPosition = new Cartesian3();
@@ -173,24 +187,17 @@ define([
 
     var positionNDC = new Cartesian3();
     var positionWC = new Cartesian3();
-    var viewport = new BoundingRectangle();
     var viewportTransform = new Matrix4();
 
     /**
      * @private
      */
-    SceneTransforms.clipToGLWindowCoordinates = function(scene, position, result) {
-        var canvas = scene.canvas;
-
+    SceneTransforms.clipToGLWindowCoordinates = function(viewport, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
-        // Assuming viewport takes up the entire canvas...
-        viewport.width = canvas.clientWidth;
-        viewport.height = canvas.clientHeight;
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-
         // Viewport transform to transform from clip coordinates to window coordinates
+        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian3(positionWC, result);
@@ -199,15 +206,12 @@ define([
     /**
      * @private
      */
-    SceneTransforms.clipToDrawingBufferCoordinates = function(scene, position, result) {
+    SceneTransforms.clipToDrawingBufferCoordinates = function(viewport, position, result) {
         // Perspective divide to transform from clip coordinates to normalized device coordinates
         Cartesian3.divideByScalar(position, position.w, positionNDC);
 
-        // Assuming viewport takes up the entire canvas...
-        BoundingRectangle.clone(scene._passState.viewport, viewport);
-        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
-
         // Viewport transform to transform from clip coordinates to drawing buffer coordinates
+        Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, viewportTransform);
         Matrix4.multiplyByPoint(viewportTransform, positionNDC, positionWC);
 
         return Cartesian2.fromCartesian3(positionWC, result);
