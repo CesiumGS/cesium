@@ -124,6 +124,8 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
+        this.castShadows = false;
+        this.receiveShadows = false;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -650,7 +652,7 @@ define([
         }
     };
 
-    function createTileUniformMap() {
+    function createTileUniformMap(frameState) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.initialColor;
@@ -671,7 +673,10 @@ define([
                 return this.tileRectangle;
             },
             u_modifiedModelView : function() {
-                return this.modifiedModelView;
+                var viewMatrix = frameState.context.uniformState.view;
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.center3D, centerEyeScratch);
+                Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
             },
             u_dayTextures : function() {
                 return this.dayTextures;
@@ -876,8 +881,6 @@ define([
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
 
-        var viewMatrix = frameState.camera.viewMatrix;
-
         var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
@@ -886,6 +889,9 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        var castShadows = shadowsEnabled && tileProvider.castShadows;
+        var receiveShadows = shadowsEnabled && tileProvider.receiveShadows;
 
         if (showReflectiveOcean) {
             --maxTextures;
@@ -956,9 +962,6 @@ define([
             }
         }
 
-        var centerEye = Matrix4.multiplyByPoint(viewMatrix, rtc, centerEyeScratch);
-        Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
-
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
         var imageryLen = tileImageryCollection.length;
@@ -988,7 +991,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap();
+                uniformMap = createTileUniformMap(frameState);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -1025,7 +1028,6 @@ define([
             uniformMap.southAndNorthLatitude.y = northLatitude;
             uniformMap.southMercatorYAndOneOverHeight.x = southMercatorY;
             uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
-            Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
 
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
@@ -1095,7 +1097,10 @@ define([
             uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, receiveShadows);
+            command.shadowCastProgram = tileProvider._surfaceShaderSet.getShadowCastProgram(frameState, surfaceTile, useWebMercatorProjection, castShadows);
+            command.castShadows = castShadows;
+            command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;

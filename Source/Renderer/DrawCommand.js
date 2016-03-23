@@ -98,7 +98,7 @@ define([
          * The number of instances to draw.
          *
          * @type {Number}
-         * @default 1
+         * @default 0
          */
         this.instanceCount = defaultValue(options.instanceCount, 0);
 
@@ -109,6 +109,31 @@ define([
          * @default undefined
          */
         this.shaderProgram = options.shaderProgram;
+
+        /**
+         * The shadow cast program to apply.
+         *
+         * @type {ShaderProgram}
+         * @default undefined
+         */
+        this.shadowCastProgram = options.shadowCastProgram;
+
+        /**
+         * Whether this command should cast shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.castShadows = defaultValue(options.castShadows, false);
+
+        /**
+         * Whether this command should receive shadows when shadowing is enabled.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        // TODO : not used right now, but keep if it proves useful
+        this.receiveShadows = defaultValue(options.receiveShadows, false);
 
         /**
          * An object with functions whose names match the uniforms in the shader program

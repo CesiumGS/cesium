@@ -1476,6 +1476,118 @@ define([
             getValue : function(uniformState) {
                 return uniformState.fogDensity;
             }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map depth texture.
+         *
+         * @alias czm_shadowMapTexture
+         * @glslUniform
+         */
+        czm_shadowMapTexture : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapTexture;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the cube map for point light shadows.
+         *
+         * @alias czm_shadowMapTextureCube
+         * @glslUniform
+         */
+        czm_shadowMapTextureCube : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_CUBE,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapTexture;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map matrix.
+         *
+         * @alias czm_shadowMapMatrix
+         * @glslUniform
+         */
+        czm_shadowMapMatrix : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_MAT4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.shadowMapMatrix;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map cascade splits.
+         *
+         * @alias czm_shadowMapCascadeSplits
+         * @glslUniform
+         */
+        czm_shadowMapCascadeSplits : new AutomaticUniform({
+            size : 2,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeSplits;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map cascade offsets.
+         *
+         * @alias czm_shadowMapCascadeOffsets
+         * @glslUniform
+         */
+        czm_shadowMapCascadeOffsets : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeOffsets;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map cascade scales.
+         *
+         * @alias czm_shadowMapCascadeScales
+         * @glslUniform
+         */
+        czm_shadowMapCascadeScales : new AutomaticUniform({
+            size : 4,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeScales;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the shadow map light direction in eye coordinates.
+         *
+         * @alias czm_shadowMapLightDirectionEC
+         * @glslUniform
+         */
+        czm_shadowMapLightDirectionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.lightDirectionEC;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that stores the point light's eye space position and radius for point light shadows.
+         *
+         * @alias czm_shadowMapLightPositionEC
+         * @glslUniform
+         */
+        czm_shadowMapLightPositionEC : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.lightPositionEC;
+            }
         })
     };
 

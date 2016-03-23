@@ -53,7 +53,8 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMapShader'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -108,7 +109,8 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode) {
+        SceneMode,
+        ShadowMapShader) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -542,6 +544,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
+            shadowCastPrograms : {},
             textures : {},
 
             samplers : {},
@@ -556,6 +559,17 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
+
+        // TODO : handle updating these properties at runtime
+        /**
+         * DOC_TBA
+         */
+        this.receiveShadows = true;
+
+        /**
+         * @DOC_TBA
+         */
+        this.castShadows = true;
     }
 
     defineProperties(Model.prototype, {
@@ -1461,7 +1475,8 @@ define([
         return shader;
     }
 
-    function createProgram(id, model, context) {
+    function createProgram(id, model, frameState) {
+        var context = frameState.context;
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[id];
@@ -1469,9 +1484,6 @@ define([
         var attributeLocations = createAttributeLocations(program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
-
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1482,6 +1494,29 @@ define([
                     attributeLocations[attrName] = attributesLength++;
                 }
             }
+        }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+
+        // Create shadow cast program
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        if (shadowsEnabled && model.castShadows) {
+            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS, frameState, 'v_positionEC');
+            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, frameState, false, 'v_positionEC');
+            model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : shadowCastVS,
+                fragmentShaderSource : shadowCastFS,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        // Modify draw program to receive shadows
+        if (shadowsEnabled && model.receiveShadows) {
+            drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS, frameState);
+            // TODO : assumes the shader has these varyings, which may not be true for some models
+            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC');
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
@@ -1509,7 +1544,7 @@ define([
         }
     }
 
-    function createPrograms(model, context) {
+    function createPrograms(model, frameState) {
         var loadResources = model._loadResources;
         var id;
 
@@ -1527,13 +1562,13 @@ define([
             // Create one program per frame
             if (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+                createProgram(id, model, frameState);
             }
         } else {
             // Create all loaded programs this frame
             while (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, context);
+                createProgram(id, model, frameState);
             }
         }
     }
@@ -2493,6 +2528,7 @@ define([
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
+        var rendererShadowCastPrograms = resources.shadowCastPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
@@ -2577,6 +2613,9 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
+                    shadowCastProgram : rendererShadowCastPrograms[technique.program],
+                    castShadows : model.castShadows,
+                    receiveShadows : model.receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -2733,7 +2772,7 @@ define([
             }
         } else {
             createBuffers(model, context); // using glTF bufferViews
-            createPrograms(model, context);
+            createPrograms(model, frameState);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
             createTextures(model, context);
@@ -3059,6 +3098,7 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
+        destroy(resources.shadowCastPrograms);
         destroy(resources.textures);
     }
 

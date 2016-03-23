@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shadow maps.">
+    <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar input[type=range] {
+        width : 70px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td id="lightHorizonLabel">Light Horizon</td>
+            <td>
+                <input id="lightHorizonRange" type="range" min="0" max="90" step="1.0" data-bind="value: lightHorizon, valueUpdate: 'input'">
+                <input id="lightHorizonText" type="text" size="2" data-bind="value: lightHorizon">
+            </td>
+        </tr>
+        <tr>
+            <td id="lightAngleLabel">Light Angle</td>
+            <td>
+                <input id="lightAngleRange" type="range" min="0" max="360" step="1.0" data-bind="value: lightAngle, valueUpdate: 'input'">
+                <input id="lightAngleText" type="text" size="2" data-bind="value: lightAngle">
+            </td>
+        </tr>
+        <tr>
+            <td id="distanceLabel">Distance Limit</td>
+            <td>
+                <input id="distanceRange" type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input'">
+                <input id="distanceText" type="text" size="2" data-bind="value: distance">
+            </td>
+        </tr>
+        <tr>
+            <td id="radiusLabel">Radius</td>
+            <td>
+                <input id="radiusRange" type="range" min="10.0" max="1000.0" step="1.0" data-bind="value: radius, valueUpdate: 'input'">
+                <input id="radiusText" type="text" size="2" data-bind="value: radius">
+            </td>
+        </tr>
+        <tr>
+            <td id="cascadesLabel">Cascades</td>
+            <td><select id="cascadesSelect" data-bind="options: cascadeOptions, value: cascades"/></td>
+        </tr>
+        <tr>
+            <td id="lightSourceLabel">Light Source</td>
+            <td><select id="lightSourceSelect" data-bind="options: lightSourceOptions, value: lightSource"/></td>
+        </tr>
+        <tr>
+            <td id="sizeLabel">Texture Size</td>
+            <td><select id="sizeSelect" data-bind="options: sizeOptions, value: size"/></td>
+        </tr>
+        <tr>
+            <td id="enabledLabel">Enabled</td>
+            <td><input id="enabledCheck" type="checkbox" data-bind="checked: shadows"/></td>
+        </tr>
+        <tr>
+            <td id="terrainCastLabel">Terrain Cast</td>
+            <td><input id="terrainCastCheck" type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
+            <td id="debugLabel">Show debug</td>
+            <td><input id="debugCheck" type="checkbox" data-bind="checked: debug"/></td>
+        </tr>
+        <tr>
+            <td id="freezeLabel">Freeze frame</td>
+            <td><input id="freezeCheck" type="checkbox" data-bind="checked: freeze"/></td>
+        </tr>
+        <tr>
+            <td id="cascadeColorsLabel">Cascade colors</td>
+            <td><input id="cascadeColorsCheck"type="checkbox" data-bind="checked: cascadeColors"/></td>
+        </tr>
+        <tr>
+            <td id="fitNearFarLabel">Fit near/far</td>
+            <td><input id="fitNearFarCheck" type="checkbox" data-bind="checked: fitNearFar"/></td>
+        </tr>
+        <tr>
+            <td id="softShadowsLabel">Soft shadows</td>
+            <td><input id="softShadowsCheck" type="checkbox" data-bind="checked: softShadows"/></td>
+        </tr>
+    </tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewModel = {
+    lightAngle : 0.0,
+    lightHorizon : 0.0,
+    distance : 1000.0,
+    radius : 200.0,
+    shadows : true,
+    terrainCast : false,
+    debug : true,
+    freeze : false,
+    cascadeColors : false,
+    fitNearFar : true,
+    softShadows : false,
+    cascadeOptions : [1, 4],
+    cascades : 4,
+    lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
+    lightSource : 'Point',
+    sizeOptions : [256, 512, 1024, 2048],
+    size : 1024,
+};
+
+var uiOptions = {
+    sliders : ['lightHorizon', 'lightAngle', 'distance', 'radius'],
+    selects : ['cascades', 'lightSource', 'size'],
+    checks : ['enabled', 'terrainCast', 'debug', 'freeze', 'cascadeColors', 'fitNearFar', 'softShadows'],
+    disable : {
+        'Freeform' : ['radius'],
+        'Sun' : ['lightHorizon', 'lightAngle', 'radius'],
+        'Fixed' : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'cascades', 'cascadeColors', 'fitNearFar'],
+        'Point' : ['lightHorizon', 'lightAngle', 'distance', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows']
+    }
+}
+    
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
+Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
+
+var offset = new Cesium.Cartesian3();
+
+function updateLightDirection() {
+    var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
+    var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
+    offset.z = Math.cos(lightHorizon);
+    offset.x = Math.sin(lightAngle) * (1.0 - offset.z);
+    offset.y = Math.cos(lightAngle) * (1.0 - offset.z);
+
+    freeformLightCamera.lookAt(center, offset);
+}
+
+function updateSettings() {
+    shadowMap._distance = Number(viewModel.distance);
+    shadowMap._radius = Number(viewModel.radius);
+    shadowMap._fitNearFar = viewModel.fitNearFar;
+    shadowMap.debugShow = viewModel.debug;
+    shadowMap.debugFreezeFrame = viewModel.freeze;
+    shadowMap.enabled = viewModel.shadows;
+    shadowMap.setSize(viewModel.size);
+
+    if (globeVisible) {
+        globe.castShadows = viewModel.terrainCast;
+    }
+}
+
+function updateShadows() {
+    var cascades = viewModel.cascades;
+    var lightSource = viewModel.lightSource;
+    var cascadeColors = viewModel.cascadeColors;
+
+    var lightCamera;
+    if (lightSource === 'Freeform') {
+        lightCamera = freeformLightCamera;
+    } else if (lightSource === 'Sun') {
+        lightCamera = sunCamera;
+    }
+
+    if (lightSource === 'Fixed') {
+        resetShadows({
+            context : context,
+            lightCamera : fixedLightCamera,
+            cascadesEnabled : false
+        });
+    } else if (lightSource === 'Point') {
+        resetShadows({
+            context : context,
+            lightCamera : pointLightCamera,
+            isPointLight : true
+        });
+    } else if (cascades === 4) {
+        resetShadows({
+            context : context,
+            lightCamera : lightCamera
+        });
+        shadowMap.debugVisualizeCascades = cascadeColors;
+    } else if (cascades === 1) {
+        resetShadows({
+            context : context,
+            lightCamera : lightCamera,
+            numberOfCascades : 1
+        });
+    }
+
+    updateSettings();
+    setupUI(lightSource);
+}
+
+function setupUI(lightSource) {
+    var setting;
+    uiOptions.sliders.forEach(function(setting) {
+        var label = document.getElementById(setting + 'Label');
+        var range = document.getElementById(setting + 'Range');
+        var text = document.getElementById(setting + 'Text');
+
+
+        if (uiOptions.disable[lightSource].indexOf(setting) > -1) {
+            label.style.color = 'gray';
+            range.disabled = true;
+            text.disabled = true;
+        }
+        else {
+            label.style.color = '';
+            range.disabled = false;
+            text.disabled = false;
+        }
+    });
+
+    uiOptions.selects.forEach(function(setting) {
+        var label = document.getElementById(setting + 'Label');
+        var text = document.getElementById(setting + 'Select');
+
+        if (uiOptions.disable[lightSource].indexOf(setting) > -1) {
+            label.style.color = 'gray';
+            text.disabled = true;
+        }
+        else {
+            label.style.color = '';
+            text.disabled = false;
+        }
+    });
+
+    uiOptions.checks.forEach(function(setting) {
+        var label = document.getElementById(setting + 'Label');
+        var check = document.getElementById(setting + 'Check');
+
+        if (uiOptions.disable[lightSource].indexOf(setting) > -1) {
+            label.style.color = 'gray';
+            check.disabled = true;
+        }
+        else {
+            label.style.color = '';
+            check.disabled = false;
+        }
+    });
+}
+
+var globeVisible = true;
+var terrainEnabled = true;
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    scene3DOnly : true,
+    infoBox : false,
+    selectionIndicator : false,
+    globe : globeVisible ? undefined : false,
+    skyAtmosphere : globeVisible ? undefined : false,
+    timeline : false
+});
+
+var terrainProvider;
+if (terrainEnabled) {
+    terrainProvider = new Cesium.CesiumTerrainProvider({
+        url : '//assets.agi.com/stk-terrain/world',
+        requestWaterMask : true,
+        requestVertexNormals : true
+    });
+} else {
+    terrainProvider = new Cesium.EllipsoidTerrainProvider();
+}
+
+if (globeVisible) {
+    viewer.terrainProvider = terrainProvider;
+}
+
+// Exton
+var centerLongitude = -1.31968;
+var centerLatitude = 0.698874;
+var offsetZ = 20.0;
+var frustumSize = 15;
+var frustumNear = 1.0;
+var frustumFar = 100.0;
+var tilt = 0.0;
+
+//// Everest
+//var centerLongitude = 1.517132688;
+//var centerLatitude = 0.4884844964;
+//var offsetZ = 50.0;
+//var frustumSize = 55.0;
+//var frustumNear = 1.0;
+//var frustumFar = 400.0;
+//var tilt = 30.0;
+
+var scene = viewer.scene;
+var context = scene.context;
+var camera = scene.camera;
+var globe = scene.globe;
+var shadowMap;
+var center;
+var height;
+
+scene.debugShowFramesPerSecond = true;
+
+var fixedLightCamera = new Cesium.Camera(scene);
+var freeformLightCamera = new Cesium.Camera(scene);
+var sunCamera = scene._sunCamera;
+var pointLightCamera = new Cesium.Camera(scene);
+
+// Get the height of the terrain at the given longitude/latitude, then create the scene.
+var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
+var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+Cesium.when(promise, function(updatedPositions) {
+    height = updatedPositions[0].height + 50.0;
+    createScene(height);
+});
+
+function createScene() {
+    center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+
+    var frustum = new Cesium.OrthographicFrustum();
+    frustum.left = -frustumSize;
+    frustum.right = frustumSize;
+    frustum.bottom = -frustumSize;
+    frustum.top = frustumSize;
+    frustum.near = frustumNear;
+    frustum.far = frustumFar;
+
+    fixedLightCamera.frustum = frustum;
+    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(tilt, tilt, offsetZ));
+
+    pointLightCamera.position = center;
+
+    camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
+
+    updateLightDirection();
+    updateShadows();
+}
+function resetShadows(shadowOptions) {
+    // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
+    // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
+    scene.primitives.removeAll();
+
+    // TODO : reset terrain shaders
+
+    scene.shadowMap.destroy();
+    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
+
+    shadowMap = scene.shadowMap;
+    shadowMap.enabled = true;
+    shadowMap.debugShow = true;
+
+    var ground = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height - 50.0);
+    var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+    var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
+    var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
+    var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
+
+    //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
+    createModel('../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf', center);
+    //createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
+    createBox(position3);
+    createBoxRTC(position2);
+    createSphere(position1);
+}
+
+function createModel(url, origin) {
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var model = scene.primitives.add(Cesium.Model.fromGltf({
+        url : url,
+        modelMatrix : modelMatrix
+    }));
+
+    model.readyPromise.then(function(model) {
+        // Play and loop all animations at half-speed
+        model.activeAnimations.addAll({
+            speedup : 0.5,
+            loop : Cesium.ModelAnimationLoop.REPEAT
+        });
+    }).otherwise(function(error){
+        window.alert(error);
+    });
+}
+
+function createBoxRTC(origin) {
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var boxGeometry = Cesium.BoxGeometry.createGeometry(Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
+    }));
+
+    var positions = boxGeometry.attributes.position.values;
+    var newPositions = new Float32Array(positions.length);
+    for (var i = 0; i < positions.length; ++i) {
+        newPositions[i] = positions[i];
+    }
+    boxGeometry.attributes.position.values = newPositions;
+    boxGeometry.attributes.position.componentDatatype = Cesium.ComponentDatatype.FLOAT;
+
+    Cesium.BoundingSphere.transform(boxGeometry.boundingSphere, modelMatrix, boxGeometry.boundingSphere);
+
+    var boxGeometryInstance = new Cesium.GeometryInstance({
+        geometry : boxGeometry,
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+        }
+    });
+
+    var box = new Cesium.Primitive({
+        geometryInstances : boxGeometryInstance,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        }),
+        asynchronous : false,
+        rtcCenter : boxGeometry.boundingSphere.center,
+        castShadows : true,
+        receiveShadows : true
+    });
+
+    scene.primitives.add(box);
+}
+
+function createBox(origin) {
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var box = new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : Cesium.BoxGeometry.fromDimensions({
+                dimensions : new Cesium.Cartesian3(0.5, 0.5, 0.5),
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.BLUE)
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        }),
+        asynchronous : false,
+        castShadows : true,
+        receiveShadows : true
+    });
+
+    scene.primitives.add(box);
+}
+
+function createSphere(origin) {
+    var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+
+    var sphere = new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.SphereGeometry({
+                radius : 2.0,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 0.0, 0.0, 0.5))
+            }
+        }),
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : true,
+            closed : true
+        }),
+        asynchronous : false,
+        castShadows : true,
+        receiveShadows : true
+    });
+
+    scene.primitives.add(sphere);
+}
+
+var canvas = viewer.canvas;
+canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+canvas.onclick = function() {
+    // To get key events
+    canvas.focus();
+};
+
+var handler = new Cesium.ScreenSpaceEventHandler(canvas);
+
+// Double click object to turn castShadows on/off
+handler.setInputAction(function(movement) {
+    var picked = scene.pick(movement.position);
+    if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
+        picked.primitive.castShadows = !picked.primitive.castShadows;
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+
+// Double middle click object to turn receiveShadows on/off
+handler.setInputAction(function(movement) {
+    var picked = scene.pick(movement.position);
+    if (Cesium.defined(picked)) {
+        picked.primitive.receiveShadows = !picked.primitive.receiveShadows;
+    }
+}, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
+
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

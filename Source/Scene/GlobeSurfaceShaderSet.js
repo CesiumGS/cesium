@@ -4,13 +4,15 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        '../Scene/ShadowMapShader'
     ], function(
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        SceneMode) {
+        SceneMode,
+        ShadowMapShader) {
     'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
@@ -31,6 +33,7 @@ define([
 
         this._shadersByTexturesFlags = [];
         this._pickShaderPrograms = [];
+        this._shadowCastPrograms = [];
     }
 
     function getPositionMode(sceneMode) {
@@ -65,7 +68,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, receiveShadows) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -90,7 +93,8 @@ define([
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
-                    (quantization << 14);
+                    (quantization << 14) |
+                    (receiveShadows << 15);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -156,6 +160,15 @@ define([
                 fs.defines.push('FOG');
             }
 
+            if (receiveShadows) {
+                // Output v_positionEC, and v_normalEC if it has vertex normals
+                if (hasVertexNormals) {
+                    vs.defines.push('ENABLE_VERTEX_LIGHTING');
+                } else {
+                    vs.defines.push('ENABLE_DAYNIGHT_SHADING');
+                }
+            }
+
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
     {\n\
@@ -186,6 +199,12 @@ define([
 
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
+
+            if (receiveShadows) {
+                var normalVarying = hasVertexNormals ? 'v_normalEC' : undefined;
+                vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1], frameState);
+                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, normalVarying, 'v_positionEC');
+            }
 
             var shader = ShaderProgram.fromCache({
                 context : frameState.context,
@@ -240,7 +259,51 @@ define([
         return pickShader;
     };
 
+    GlobeSurfaceShaderSet.prototype.getShadowCastProgram = function(frameState, surfaceTile, useWebMercatorProjection, castShadows) {
+        if (!castShadows) {
+            return undefined;
+        }
+
+        var quantization = 0;
+        var quantizationDefine = '';
+
+        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var quantizationMode = terrainEncoding.quantization;
+        if (quantizationMode === TerrainQuantization.BITS12) {
+            quantization = 1;
+            quantizationDefine = 'QUANTIZATION_BITS12';
+        }
+
+        var sceneMode = frameState.mode;
+        var flags = sceneMode | (useWebMercatorProjection << 2) | (quantization << 3);
+        var shadowCastShader = this._shadowCastPrograms[flags];
+
+        if (!defined(shadowCastShader)) {
+            var vs = this.baseVertexShaderSource.clone();
+            var fs = this.baseFragmentShaderSource.clone();
+
+            vs.defines.push(quantizationDefine);
+            vs.sources.push(getPositionMode(sceneMode));
+            vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
+
+            vs.sources[1] = ShadowMapShader.createShadowCastVertexShader(vs.sources[1], frameState, 'v_positionEC');
+            fs.sources[0] = ShadowMapShader.createShadowCastFragmentShader(fs.sources[0], frameState, true, 'v_positionEC');
+
+            shadowCastShader = this._shadowCastPrograms[flags] = ShaderProgram.fromCache({
+                context : frameState.context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
+                attributeLocations : terrainEncoding.getAttributeLocations()
+            });
+        }
+
+        return shadowCastShader;
+    };
+
     GlobeSurfaceShaderSet.prototype.destroy = function() {
+        var flags;
+        var shader;
+
         var shadersByTexturesFlags = this._shadersByTexturesFlags;
         for (var textureCount in shadersByTexturesFlags) {
             if (shadersByTexturesFlags.hasOwnProperty(textureCount)) {
@@ -249,14 +312,30 @@ define([
                     continue;
                 }
 
-                for (var flags in shadersByFlags) {
+                for (flags in shadersByFlags) {
                     if (shadersByFlags.hasOwnProperty(flags)) {
-                        var shader = shadersByFlags[flags];
+                        shader = shadersByFlags[flags];
                         if (defined(shader)) {
                             shader.shaderProgram.destroy();
                         }
                     }
                 }
+            }
+        }
+
+        var pickShaderPrograms = this._pickShaderPrograms;
+        for (flags in pickShaderPrograms) {
+            if (pickShaderPrograms.hasOwnProperty(flags)) {
+                shader = pickShaderPrograms[flags];
+                shader.destroy();
+            }
+        }
+
+        var shadowCastPrograms = this._shadowCastPrograms;
+        for (flags in shadowCastPrograms) {
+            if (shadowCastPrograms.hasOwnProperty(flags)) {
+                shader = shadowCastPrograms[flags];
+                shader.destroy();
             }
         }
 
