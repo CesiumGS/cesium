@@ -19,6 +19,7 @@ define([
 
     var defaultRepeat = new Cartesian2(1, 1);
     var defaultAlpha = 1.0;
+    var defaultTransparent = false;
 
     /**
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
@@ -28,6 +29,8 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
+     * @param {Property} [options.alpha=1.0] The alpha blending value of this layer, with 0.0 representing fully transparent and 1.0 representing fully opaque.
+     * @param {Property} [options.transparent=false] True if the image has transparency
      */
     function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -39,10 +42,13 @@ define([
         this._repeatSubscription = undefined;
         this._alpha = undefined;
         this._alphaSubscription = undefined;
+        this._transparent = undefined;
+        this._transparentSubscription = undefined;
 
         this.image = options.image;
         this.repeat = options.repeat;
         this.alpha = options.alpha;
+        this.transparent = options.transparent;
     }
 
     defineProperties(ImageMaterialProperty.prototype, {
@@ -92,7 +98,14 @@ define([
          * @type {Property}
          * @default 1.0
          */
-        alpha : createPropertyDescriptor('alpha')
+        alpha : createPropertyDescriptor('alpha'),
+        /**
+         * Gets or sets the Boolean Property specifying whether or not the image has transparency
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Property}
+         * @default 1.0
+         */
+        transparent: createPropertyDescriptor('transparent')
     });
 
     /**
@@ -120,6 +133,7 @@ define([
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
         result.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
+        result.transparent = Property.getValueOrDefault(this._transparent, time, defaultTransparent);
 
         return result;
     };
@@ -132,10 +146,11 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ImageMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof ImageMaterialProperty && //
-                Property.equals(this._image, other._image) && //
-                Property.equals(this._alpha, other._alpha) && //
+        return this === other ||
+               (other instanceof ImageMaterialProperty &&
+                Property.equals(this._image, other._image) &&
+                Property.equals(this._alpha, other._alpha) &&
+                Property.equals(this._transparent, other._transparent) &&
                 Property.equals(this._repeat, other._repeat));
     };
 

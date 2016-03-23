@@ -23,23 +23,27 @@ defineSuite([
         expect(result.image).toBeUndefined();
         expect(result.repeat).toEqual(new Cartesian2(1.0, 1.0));
         expect(result.alpha).toEqual(1.0);
+        expect(result.transparent).toEqual(false);
     });
 
     it('constructor sets options and allows raw assignment', function() {
         var options = {
             image : 'test.invalid',
             repeat : new Cartesian2(1, 2),
-            alpha : 0.5
+            alpha : 0.5,
+            transparent: true
         };
 
         var property = new ImageMaterialProperty(options);
         expect(property.image).toBeInstanceOf(ConstantProperty);
         expect(property.repeat).toBeInstanceOf(ConstantProperty);
         expect(property.alpha).toBeInstanceOf(ConstantProperty);
+        expect(property.transparent).toBeInstanceOf(ConstantProperty);
 
         expect(property.image.getValue()).toEqual(options.image);
         expect(property.repeat.getValue()).toEqual(options.repeat);
         expect(property.alpha.getValue()).toEqual(options.alpha);
+        expect(property.transparent.getValue()).toEqual(options.transparent);
     });
 
     it('works with constant values', function() {

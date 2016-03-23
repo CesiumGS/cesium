@@ -1030,7 +1030,8 @@ define([
             uniforms : {
                 image : Material.DefaultImageId,
                 repeat : new Cartesian2(1.0, 1.0),
-                alpha : 1.0
+                alpha : 1.0,
+                transparent: false
             },
             components : {
                 diffuse : 'texture2D(image, fract(repeat * materialInput.st)).rgb',
@@ -1038,7 +1039,7 @@ define([
             }
         },
         translucent : function(material) {
-            return material.uniforms.alpha < 1.0;
+            return material.uniforms.transparent || material.uniforms.alpha < 1.0;
         }
     });
 
