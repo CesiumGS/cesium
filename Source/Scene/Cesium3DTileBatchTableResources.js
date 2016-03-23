@@ -111,10 +111,7 @@ define([
             // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
             var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
-            for (var i = 0; i < byteLength; ++i) {
-                bytes[i] = 255;
-            }
-
+            bytes.fill(255);
             batchTableResources._batchValues = bytes;
         }
 
@@ -123,12 +120,10 @@ define([
 
     function getShowAlphaProperties(batchTableResources) {
         if (!defined(batchTableResources._showAlphaProperties)) {
+            // [Show = true, Alpha = 255]
             var byteLength = 2 * batchTableResources.featuresLength;
             var bytes = new Uint8Array(byteLength);
-            for (var i = 0; i < byteLength; ++i) {
-                bytes[i] = 255; // [Show = true, Alpha = 255]
-            }
-
+            bytes.fill(255);
             batchTableResources._showAlphaProperties = bytes;
         }
         return batchTableResources._showAlphaProperties;
