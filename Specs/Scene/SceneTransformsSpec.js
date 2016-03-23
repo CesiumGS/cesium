@@ -166,7 +166,7 @@ defineSuite([
 
         // Update scene state
         scene.morphTo2D(0);
-        scene.initializeFrame();
+        scene.renderForSpecs();
 
         var position = Cartesian3.fromDegrees(0,0);
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
