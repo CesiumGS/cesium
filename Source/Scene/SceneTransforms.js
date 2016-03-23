@@ -82,6 +82,9 @@ define([
     var scratchProjectedCartesian = new Cartesian3();
     var scratchCameraPosition = new Cartesian3();
 
+    /**
+     * @private
+     */
     SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates = function(scene, position, eyeOffset, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
