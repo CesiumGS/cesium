@@ -33,36 +33,36 @@
 <div id="toolbar">
     <table><tbody>
         <tr>
-            <td>Light Horizon</td>
+            <td data-bind="style: { color: lightHorizonEnabled ? '' : 'gray'}">Light Horizon</td>
             <td>
-                <input type="range" min="0" max="90" step="1.0" data-bind="value: lightHorizon, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: lightHorizon">
+                <input type="range" min="0" max="90" step="1.0" data-bind="value: lightHorizon, valueUpdate: 'input', enable: lightHorizonEnabled">
+                <input type="text" size="2" data-bind="value: lightHorizon, enable: lightHorizonEnabled">
             </td>
         </tr>
         <tr>
-            <td>Light Angle</td>
+            <td data-bind="style: { color: lightAngleEnabled ? '' : 'gray'}">Light Angle</td>
             <td>
-                <input type="range" min="0" max="360" step="1.0" data-bind="value: lightAngle, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: lightAngle">
+                <input type="range" min="0" max="360" step="1.0" data-bind="value: lightAngle, valueUpdate: 'input', enable: lightAngleEnabled">
+                <input type="text" size="2" data-bind="value: lightAngle, enable: lightAngleEnabled">
             </td>
         </tr>
         <tr>
-            <td>Distance Limit</td>
+            <td data-bind="style: { color: distanceEnabled ? '' : 'gray'}">Distance Limit</td>
             <td>
-                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: distance">
+                <input type="range" min="100.0" max="10000.0" step="1.0" data-bind="value: distance, valueUpdate: 'input', enable: distanceEnabled">
+                <input type="text" size="2" data-bind="value: distance, enable: distanceEnabled">
             </td>
         </tr>
         <tr>
-            <td>Radius</td>
+            <td data-bind="style: { color: radiusEnabled ? '' : 'gray'}">Radius</td>
             <td>
-                <input type="range" min="10.0" max="1000.0" step="1.0" data-bind="value: radius, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: radius">
+                <input type="range" min="10.0" max="1000.0" step="1.0" data-bind="value: radius, valueUpdate: 'input', enable: radiusEnabled">
+                <input type="text" size="2" data-bind="value: radius, enable: radiusEnabled">
             </td>
         </tr>
         <tr>
-            <td>Cascades</td>
-            <td><select data-bind="options: cascadeOptions, value: cascades"/></td>
+            <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">Cascades</td>
+            <td><select data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"/></td>
         </tr>
         <tr>
             <td>Light Source</td>
@@ -77,8 +77,8 @@
             <td><input type="checkbox" data-bind="checked: shadows"/></td>
         </tr>
         <tr>
-            <td>Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+            <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast, enable: terrainCastEnabled"/></td>
         </tr>
         <tr>
             <td>Show debug</td>
@@ -89,16 +89,16 @@
             <td><input type="checkbox" data-bind="checked: freeze"/></td>
         </tr>
         <tr>
-            <td>Cascade colors</td>
-            <td><input type="checkbox" data-bind="checked: cascadeColors"/></td>
+            <td data-bind="style: { color: cascadeColorsEnabled ? '' : 'gray'}">Cascade colors</td>
+            <td><input type="checkbox" data-bind="checked: cascadeColors, enable: cascadeColorsEnabled"/></td>
         </tr>
         <tr>
-            <td>Fit near/far</td>
-            <td><input type="checkbox" data-bind="checked: fitNearFar"/></td>
+            <td data-bind="style: { color: fitNearFarEnabled ? '' : 'gray'}">Fit near/far</td>
+            <td><input type="checkbox" data-bind="checked: fitNearFar, enable: fitNearFarEnabled"/></td>
         </tr>
         <tr>
-            <td>Soft shadows</td>
-            <td><input type="checkbox" data-bind="checked: softShadows"/></td>
+            <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">Soft shadows</td>
+            <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
         </tr>
     </tbody></table>
 </div>
@@ -109,22 +109,41 @@ function startup(Cesium) {
 
 var viewModel = {
     lightAngle : 0.0,
+    lightAngleEnabled : true,
     lightHorizon : 0.0,
+    lightHorizonEnabled : true,
     distance : 1000.0,
+    distanceEnabled : true,
     radius : 200.0,
+    radiusEnabled : true,
     shadows : true,
     terrainCast : false,
+    terrainCastEnabled : true,
     debug : true,
     freeze : false,
     cascadeColors : false,
+    cascadeColorsEnabled : true,
     fitNearFar : true,
+    fitNearFarEnabled : true,
     softShadows : false,
+    softShadowsEnabled : true,
     cascadeOptions : [1, 4],
     cascades : 4,
+    cascadesEnabled : true,
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024
+};
+
+var uiOptions = {
+    all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
+    disable : {
+        'Freeform' : ['radius'],
+        'Sun' : ['lightHorizon', 'lightAngle', 'radius'],
+        'Fixed' : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'cascades', 'cascadeColors', 'fitNearFar'],
+        'Point' : ['lightHorizon', 'lightAngle', 'distance', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows']
+    }
 };
     
 Cesium.knockout.track(viewModel);
@@ -215,6 +234,17 @@ function updateShadows() {
     }
 
     updateSettings();
+    updateUI();
+}
+
+function updateUI() {
+    uiOptions.all.forEach(function(setting) {
+        if (uiOptions.disable[viewModel.lightSource].indexOf(setting) > -1) {
+            viewModel[setting + 'Enabled'] = false;
+        } else {
+            viewModel[setting + 'Enabled'] = true;
+        }
+    });
 }
 
 var globeVisible = true;
