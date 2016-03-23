@@ -90,7 +90,7 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : '//cesiumjs.org/smallTerrain'
+                url : 'https://cesiumjs.org/smallTerrain'
             });
         });
 
@@ -515,7 +515,7 @@ defineSuite([
 
         it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = new CesiumTerrainProvider({
-                url : '//assets.agi.com/stk-terrain/world',
+                url : 'https://assets.agi.com/stk-terrain/world',
                 requestVertexNormals : true
             });
 
