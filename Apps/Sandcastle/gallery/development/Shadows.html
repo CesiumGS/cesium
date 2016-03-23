@@ -100,6 +100,10 @@
             <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">Soft shadows</td>
             <td><input type="checkbox" data-bind="checked: softShadows, enabled: softShadowsEnabled"/></td>
         </tr>
+        <tr>
+            <td>Soft shadows</td>
+            <td><input type="checkbox" data-bind="checked: softShadows"/></td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -131,7 +135,7 @@ var viewModel = {
     cascades : 4,
     cascadesEnabled : true,
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
-    lightSource : 'Point',
+    lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024,
 };
@@ -159,6 +163,7 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
@@ -194,6 +199,7 @@ function updateShadows() {
     var cascades = viewModel.cascades;
     var lightSource = viewModel.lightSource;
     var cascadeColors = viewModel.cascadeColors;
+    var softShadows = viewModel.softShadows;
 
     var lightCamera;
     if (lightSource === 'Freeform') {
@@ -206,25 +212,29 @@ function updateShadows() {
         resetShadows({
             context : context,
             lightCamera : fixedLightCamera,
-            cascadesEnabled : false
+            cascadesEnabled : false,
+            softShadows : softShadows
         });
     } else if (lightSource === 'Point') {
         resetShadows({
             context : context,
             lightCamera : pointLightCamera,
-            isPointLight : true
+            isPointLight : true,
+            softShadows : softShadows
         });
     } else if (cascades === 4) {
         resetShadows({
             context : context,
-            lightCamera : lightCamera
+            lightCamera : lightCamera,
+            softShadows : softShadows
         });
         shadowMap.debugVisualizeCascades = cascadeColors;
     } else if (cascades === 1) {
         resetShadows({
             context : context,
             lightCamera : lightCamera,
-            numberOfCascades : 1
+            numberOfCascades : 1,
+            softShadows : softShadows
         });
     }
 
@@ -332,12 +342,31 @@ function createScene() {
     updateLightDirection();
     updateShadows();
 }
+
+// TODO : this is a very hacky way to reset the globe shaders when shadow properties change
+function resetGlobe() {
+    globe._surfaceShaderSet._shadersByTexturesFlags = [];
+}
+
+if (globeVisible) {
+    var getShaderProgram = Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram;
+    Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram = function() {
+        var surfaceShader = arguments[1].surfaceShader;
+        if (Cesium.defined(surfaceShader)) {
+            surfaceShader.flags = 0;
+        }
+        return getShaderProgram.apply(globe._surfaceShaderSet, arguments);
+    };
+}
+
 function resetShadows(shadowOptions) {
     // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
     // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
     scene.primitives.removeAll();
 
-    // TODO : reset terrain shaders
+    if (globeVisible) {
+        resetGlobe();
+    }
 
     scene.shadowMap.destroy();
     scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
@@ -353,7 +382,7 @@ function resetShadows(shadowOptions) {
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
-    createModel('../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf', center);
+    createModel('../../SampleData/models/ShadowTester/Shadow_Tester.gltf', center);
     //createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
     createBox(position3);
     createBoxRTC(position2);
