@@ -1274,9 +1274,11 @@ define([
         });
 
         var newMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_Debug_main(); \n';
+//language="glsl"
+'\
+void main()\n\
+{\n\
+    czm_Debug_main(); \n';
 
         if (scene.debugShowCommands) {
             if (!defined(command._debugColor)) {

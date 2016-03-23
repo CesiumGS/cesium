@@ -106,12 +106,14 @@ define([
         };
 
         var fs =
-            'uniform sampler2D u_texture;\n' +
-            'varying vec2 v_textureCoordinates;\n' +
-            'void main()\n' +
-            '{\n' +
-            '    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n' +
-            '}\n';
+//language="glsl"
+'\
+uniform sampler2D u_texture;\n\
+varying vec2 v_textureCoordinates;\n\
+void main()\n\
+{\n\
+   gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n\
+}\n';
 
 
         this._copyCommand = this._context.createViewportQuadCommand(fs, {
