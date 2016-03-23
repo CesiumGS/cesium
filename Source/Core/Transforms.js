@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Cartesian4',
+        './Cartographic',
         './defaultValue',
         './defined',
         './DeveloperError',
@@ -23,6 +24,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         defaultValue,
         defined,
         DeveloperError,
@@ -816,6 +818,71 @@ define([
         result[6] = up.x;
         result[7] = up.y;
         result[8] = up.z;
+
+        return result;
+    };
+
+    var scratchCartographic = new Cartographic();
+    var scratchCartesian3Projection = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4Origin = new Cartesian4();
+    var scratchCartesian4NewOrigin = new Cartesian4();
+    var scratchCartesian4NewXAxis = new Cartesian4();
+    var scratchCartesian4NewYAxis = new Cartesian4();
+    var scratchCartesian4NewZAxis = new Cartesian4();
+
+    /**
+     * @private
+     */
+    Transforms.basisTo2D = function(projection, matrix, result) {
+        var ellipsoid = projection.ellipsoid;
+
+        var origin = Matrix4.getColumn(matrix, 3, scratchCartesian4Origin);
+        var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
+
+        var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
+        var newOrigin = scratchCartesian4NewOrigin;
+        newOrigin.x = projectedPosition.z;
+        newOrigin.y = projectedPosition.x;
+        newOrigin.z = projectedPosition.y;
+        newOrigin.w = 1.0;
+
+        var xAxis = Cartesian4.add(Matrix4.getColumn(matrix, 0, scratchCartesian3), origin, scratchCartesian3);
+        ellipsoid.cartesianToCartographic(xAxis, cartographic);
+
+        projection.project(cartographic, projectedPosition);
+        var newXAxis = scratchCartesian4NewXAxis;
+        newXAxis.x = projectedPosition.z;
+        newXAxis.y = projectedPosition.x;
+        newXAxis.z = projectedPosition.y;
+        newXAxis.w = 0.0;
+
+        Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
+
+        var yAxis = Cartesian4.add(Matrix4.getColumn(matrix, 1, scratchCartesian3), origin, scratchCartesian3);
+        ellipsoid.cartesianToCartographic(yAxis, cartographic);
+
+        projection.project(cartographic, projectedPosition);
+        var newYAxis = scratchCartesian4NewYAxis;
+        newYAxis.x = projectedPosition.z;
+        newYAxis.y = projectedPosition.x;
+        newYAxis.z = projectedPosition.y;
+        newYAxis.w = 0.0;
+
+        Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
+
+        var newZAxis = scratchCartesian4NewZAxis;
+        Cartesian3.cross(newXAxis, newYAxis, newZAxis);
+        Cartesian3.normalize(newZAxis, newZAxis);
+        Cartesian3.cross(newYAxis, newZAxis, newXAxis);
+        Cartesian3.normalize(newXAxis, newXAxis);
+        Cartesian3.cross(newZAxis, newXAxis, newYAxis);
+        Cartesian3.normalize(newYAxis, newYAxis);
+
+        Matrix4.setColumn(result, 0, newXAxis, result);
+        Matrix4.setColumn(result, 1, newYAxis, result);
+        Matrix4.setColumn(result, 2, newZAxis, result);
+        Matrix4.setColumn(result, 3, newOrigin, result);
 
         return result;
     };
