@@ -311,16 +311,16 @@ gulp.task('deploy-s3', function(done) {
     var bucketName = argv.b;
     var cacheControl = argv.c ? argv.c : 'max-age=3600';
 
-    var iface = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
     if (argv.confirm) {
         // skip prompt for travis
         deployCesium(bucketName, uploadDirectory, cacheControl, done);
         return;
     }
+
+    var iface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
 
     // prompt for confirmation
     iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
