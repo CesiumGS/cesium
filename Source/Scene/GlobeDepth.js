@@ -161,7 +161,7 @@ uniform sampler2D u_texture;\n\
 varying vec2 v_textureCoordinates;\n\
 void main()\n\
 {\n\
-    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\
+    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n\
 }\n';
             globeDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
                 uniformMap : {
