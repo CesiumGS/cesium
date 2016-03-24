@@ -2112,6 +2112,11 @@ define([
         var position = ray.origin;
         position.z = 0.0;
         var cart = projection.unproject(position);
+
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
+            return undefined;
+        }
+
         return projection.ellipsoid.cartographicToCartesian(cart, result);
     }
 

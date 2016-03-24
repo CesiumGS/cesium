@@ -1715,6 +1715,7 @@ define([
     var scratch2DViewportMaxCoord = new Cartesian3();
     var scratch2DViewportSavedPosition = new Cartesian3();
     var scratch2DViewportTransform = new Matrix4();
+    var scratch2DViewportCameraTransform = new Matrix4();
     var scratch2DViewportEyePoint = new Cartesian3();
     var scratch2DViewportWindowCoords = new Cartesian3();
 
@@ -1731,7 +1732,10 @@ define([
         projection.project(maxCartographic, maxCoord);
 
         var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
+        var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);
         var frustum = camera.frustum.clone();
+
+        camera._setTransform(Matrix4.IDENTITY);
 
         var viewportTransformation = Matrix4.computeViewportTransformation(viewport, 0.0, 1.0, scratch2DViewportTransform);
         var projectionMatrix = camera.frustum.projectionMatrix;
@@ -1788,6 +1792,7 @@ define([
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         }
 
+        camera._setTransform(transform);
         Cartesian3.clone(position, camera.position);
         camera.frustum = frustum.clone();
 
