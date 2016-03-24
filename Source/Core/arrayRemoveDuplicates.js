@@ -40,7 +40,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
         }
         //>>includeEnd('debug');
 
-        var lastToFirst = defaultValue(wrapAround, false);
+        wrapAround = defaultValue(wrapAround, false);
 
         var length = values.length;
         if (length < 2) {
@@ -50,7 +50,6 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
         var i;
         var v0;
         var v1;
-        var cleanedvalues;
 
         for (i = 1; i < length; ++i) {
             v0 = values[i - 1];
@@ -60,28 +59,28 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
             }
         }
 
-        if (i !== length) {
-            cleanedvalues = values.slice(0, i);
-            for (; i < length; ++i) {
-                // v0 is set by either the previous loop, or the previous clean point.
-                v1 = values[i];
-                if (!objectType.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
-                    cleanedvalues.push(objectType.clone(v1));
-                    v0 = v1;
-                }
+        if (i === length) {
+            if (wrapAround && objectType.equalsEpsilon(values[0], values[values.length - 1], removeDuplicatesEpsilon)) {
+                return values.slice(1);
+            }
+            return values;
+        }
+
+        var cleanedvalues = values.slice(0, i);
+        for (; i < length; ++i) {
+            // v0 is set by either the previous loop, or the previous clean point.
+            v1 = values[i];
+            if (!objectType.equalsEpsilon(v0, v1, removeDuplicatesEpsilon)) {
+                cleanedvalues.push(objectType.clone(v1));
+                v0 = v1;
             }
         }
 
-        if (lastToFirst) {
-            if (defined(cleanedvalues) && cleanedvalues.length > 1 && objectType.equalsEpsilon(cleanedvalues[0], cleanedvalues[cleanedvalues.length - 1], removeDuplicatesEpsilon)) {
-                cleanedvalues.shift();
-            }
-            else if (objectType.equalsEpsilon(values[0], values[values.length - 1], removeDuplicatesEpsilon)) {
-                cleanedvalues = values.slice(1);
-            }
+        if (wrapAround && cleanedvalues.length > 1 && objectType.equalsEpsilon(cleanedvalues[0], cleanedvalues[cleanedvalues.length - 1], removeDuplicatesEpsilon)) {
+            cleanedvalues.shift();
         }
 
-        return defined(cleanedvalues) ? cleanedvalues : values;
+        return cleanedvalues;
     }
 
     return arrayRemoveDuplicates;
