@@ -21,12 +21,14 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
      * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3);
      *
      * @example
-     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
+     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0)]
      * var values = [
-     *     {x:1.0, y:1.0, z:1.0},
-     *     {x:1.0, y:1.0, z:1.0},
-     *     {x:2.0, y:2.0, z:2.0}];
-     * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3);
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
+     *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
+     *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),];
+     * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3, true);
      */
     function arrayRemoveDuplicates(values, objectType, wrapAround) {
         //>>includeStart('debug', pragmas.debug);
