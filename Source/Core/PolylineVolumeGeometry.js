@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
@@ -17,12 +18,12 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './VertexFormat',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -40,7 +41,6 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
-        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         VertexFormat,
@@ -375,7 +375,7 @@ define([
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3);
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 
