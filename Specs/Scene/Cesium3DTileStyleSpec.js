@@ -67,8 +67,12 @@ defineSuite([
         var tileStyle = new Cesium3DTileStyle(styleUrl);
 
         return tileStyle.readyPromise.then(function(style) {
+            expect(style.style).toEqual({
+                show : '${id} < 100',
+                color : "color('red')"
+            });
             expect(style.show).toEqual(new Expression('${id} < 100'));
-            expect(style.color).toEqual(new Expression('color("red")'));
+            expect(style.color).toEqual(new Expression("color('red')"));
             expect(tileStyle.ready).toEqual(true);
         }).otherwise(function() {
             fail('should load style.json');
@@ -161,6 +165,15 @@ defineSuite([
             color : 1
         });
         expect(style.color).toEqual(undefined);
+    });
+
+    it ('throws on accessing style if not ready', function() {
+        var style = new Cesium3DTileStyle({});
+        style._ready = false;
+
+        expect(function() {
+            return style.style;
+        }).toThrowDeveloperError();
     });
 
     it ('throws on accessing color if not ready', function() {

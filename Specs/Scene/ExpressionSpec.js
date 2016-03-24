@@ -89,6 +89,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('gets expressions', function() {
+        var expressionString = "(regExp('^Chest').test(${County})) && (${YearBuilt} >= 1970)";
+        var expression = new Expression(expressionString);
+        expect(expression.expression).toEqual(expressionString);
+    });
+
     it('throws on invalid expressions', function() {
         expect(function() {
             return new Expression(false);

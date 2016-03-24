@@ -70,6 +70,8 @@ define([
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
      *      url : 'http://localhost:8002/tilesets/Seattle'
      * }));
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles specification}
      */
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -289,6 +291,8 @@ define([
          * @type {Object}
          * @readonly
          *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
          * @example
          * console.log('3D Tiles version: ' + tileset.asset.version);
          */
@@ -315,6 +319,8 @@ define([
          *
          * @type {Object}
          * @readonly
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
          *
          * @example
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
@@ -409,7 +415,9 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * The style, defined using the
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language},
+         * applied to each feature in the tileset.
          * <p>
          * Assign <code>undefined</code> to remove the style, which will restore the visual
          * appearance of the tileset to its default when no style was applied.
@@ -417,15 +425,32 @@ define([
          * <p>
          * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
          * event is raised, so code in <code>tileVisible</code> can manually set a feature's
-         * properties using {@link Cesium3DTileContentProvider#getFeature}.  When
+         * properties using {@link Cesium3DTileContent#getFeature}.  When
          * a new style is assigned any manually set properties are overwritten.
          * </p>
          *
          * @memberof Cesium3DTileset.prototype
          *
-         * @type {DOC_TBA}
+         * @type {Cesium3DTileStyle}
          *
          * @default undefined
+         *
+         * @example
+         * tileset.style = new Cesium.Cesium3DTileStyle({
+         *    color : {
+         *        conditions : {
+         *            '${Height} >= 100' : 'color("purple", 0.5)',
+         *            '${Height} >= 50' : 'color("red")',
+         *            'true' : 'color("blue")'
+         *        }
+         *    },
+         *    show : '${Height} > 0',
+         *    meta : {
+         *        description : '"Building id ${id} has height ${Height}."'
+         *    }
+         * });
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         style : {
             get : function() {
@@ -445,6 +470,15 @@ define([
             }
         }
     });
+
+    /**
+     * Marks the tileset's {@link Cesium3DTileset#style} as dirty, which forces all
+     * features to re-evaluate the style in the next frame each is visible.  Call
+     * this when a style changes.
+     */
+    Cesium3DTileset.prototype.makeStyleDirty = function() {
+        this._styleEngine.makeDirty();
+    };
 
     /**
      * Loads the main tileset.json or a tileset.json referenced from a tile.

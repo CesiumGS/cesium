@@ -2,13 +2,11 @@
 define([
        '../Core/Color',
        '../Core/defined',
-       '../Core/defineProperties',
-       '../Core/DeveloperError'
+       '../Core/defineProperties'
     ], function(
         Color,
         defined,
-        defineProperties,
-        DeveloperError) {
+        defineProperties) {
     'use strict';
 
     /**

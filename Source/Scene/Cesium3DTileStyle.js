@@ -29,14 +29,40 @@ define([
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 
     /**
-     * DOC_TBA
+     * <p>
+     * Evaluates an expression defined using the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
+     *
+     * @alias Cesium3DTileStyle
+     * @constructor
+     *
+     * @param {String|Object} [data] The url of a style or an object defining a style.
+     *
+     * @example
+     * tileset.style = new Cesium.Cesium3DTileStyle({
+     *     color : {
+     *         conditions : {
+     *             '${Height} >= 100' : 'color("purple", 0.5)',
+     *             '${Height} >= 50' : 'color("red")',
+     *             'true' : 'color("blue")'
+     *         }
+     *     },
+     *     show : '${Height} > 0',
+     *     meta : {
+     *         description : '"Building id ${id} has height ${Height}."'
+     *     }
+     * });
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(data) {
+        this._style = undefined;
+        this._ready = false;
+        this._readyPromise = when.defer();
         this._color = undefined;
         this._show = undefined;
         this._meta = undefined;
-        this._readyPromise = when.defer();
-        this._ready = false;
 
         var style = this;
         if (typeof data === 'string') {
@@ -53,6 +79,8 @@ define([
     }
 
     function setup(that, styleJson) {
+        that._style = clone(styleJson, true);
+
         styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
         var colorExpression = defaultValue(styleJson.color, DEFAULT_JSON_COLOR_EXPRESSION);
         var showExpression = defaultValue(styleJson.show, DEFAULT_JSON_BOOLEAN_EXPRESSION);
@@ -92,7 +120,40 @@ define([
 
     defineProperties(Cesium3DTileStyle.prototype, {
         /**
-         * DOC_TBA
+         * Gets the object defining the style using the
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {Object}
+         * @readonly
+         *
+         * @default undefined
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         */
+        style : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._style;
+            }
+        },
+
+        /**
+         * When <code>true</code>, the style is ready and its expressions can be evaluated.  When
+         * a style is constructed with an object, as opposed to a url, this is <code>true</code> immediately.
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
          */
         ready : {
             get : function() {
@@ -101,7 +162,12 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets the promise that will be resolved when the the style is ready and its expressions can be evaluated.
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {Promise.<Cesium3DTileStyle>}
+         * @readonly
          */
         readyPromise : {
             get : function() {
@@ -110,7 +176,33 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>show</code> property.
+         * <p>
+         * The expression must return or convert to a <code>Boolean</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     show : '(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)'
+         * });
+         * style.show.evaluate(feature); // returns true or false depending on the feature's properties
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override show expression with a custom function
+         * style.show = {
+         *     evaluate : function(feature) {
+         *         return true;
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         show : {
             get : function() {
@@ -119,6 +211,7 @@ define([
                     throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
+
                 return this._show;
             },
             set : function(value) {
@@ -127,7 +220,33 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets or sets the {@link StyleExpression} object used to evaluate the style's <code>color</code> property.
+         * <p>
+         * The expression must return a <code>Color</code>.
+         * </p>
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     color : '(${Temperature} > 90) ? color("red") : color("white")'
+         * });
+         * style.color.evaluateColor(feature, result); // returns a Cesium.Color object
+         *
+         * @example
+         * var style = new Cesium.Cesium3DTileStyle();
+         * // Override color expression with a custom function
+         * style.color = {
+         *     evaluateColor : function(feature, result) {
+         *         return Cesium.Color.clone(Cesium.Color.WHITE, result);
+         *     }
+         * };
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         color : {
             get : function() {
@@ -136,6 +255,7 @@ define([
                     throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
+
                 return this._color;
             },
             set : function(value) {
@@ -144,7 +264,24 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Gets or sets the object containing application-specific expression that can be explicitly
+         * evaluated, e.g., for display in a UI.
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @type {StyleExpression}
+         *
+         * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     meta : {
+         *         description : '"Building id ${id} has height ${Height}."'
+         *     }
+         * });
+         * style.meta.description.evaluate(feature); // returns a String with the substituted variables
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
          */
         meta : {
             get : function() {
@@ -153,6 +290,7 @@ define([
                     throw new DeveloperError('The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
                 }
                 //>>includeEnd('debug');
+
                 return this._meta;
             },
             set : function(value) {

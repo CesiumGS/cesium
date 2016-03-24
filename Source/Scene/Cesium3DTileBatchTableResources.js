@@ -120,9 +120,9 @@ define([
 
     function getShowAlphaProperties(batchTableResources) {
         if (!defined(batchTableResources._showAlphaProperties)) {
-            // [Show = true, Alpha = 255]
             var byteLength = 2 * batchTableResources.featuresLength;
             var bytes = new Uint8Array(byteLength);
+            // [Show = true, Alpha = 255]
             bytes.fill(255);
             batchTableResources._showAlphaProperties = bytes;
         }

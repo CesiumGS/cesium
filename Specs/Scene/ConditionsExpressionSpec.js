@@ -54,11 +54,7 @@ defineSuite([
 
     it('constructs', function() {
         var expression = new ConditionsExpression(jsonExp);
-        expect(expression._conditions).toEqual({
-            '${Height} > 100' : 'color("blue")',
-            '${Height} > 50' : 'color("red")',
-            'true' : 'color("green")'
-        });
+        expect(expression.conditionsExpression).toEqual(jsonExp);
     });
 
     it('constructs with expression', function() {

@@ -26,7 +26,28 @@ define([
     var scratchColor = new Color();
 
     /**
-     * DOC_TBA
+     * <p>
+     * Evaluates an expression defined using the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * </p>
+     * <p>
+     * Implements the {@link StyleExpression} interface.
+     * </p>
+     *
+     * @alias Expression
+     * @constructor
+     *
+     * @param {String} [expression] The expression defined using the 3D Tiles Styling language.
+     *
+     * @example
+     * var expression = new Cesium.Expression('(regExp("^Chest").test(${County})) && (${YearBuilt} >= 1970)');
+     * expression.evaluate(feature); // returns true or false depending on the feature's properties
+     *
+     * @example
+     * var expression = new Cesium.Expression('(${Temperature} > 90) ? color("red") : color("white")');
+     * expression.evaluateColor(feature, result); // returns a Cesium.Color object
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
      */
     function Expression(expression) {
         //>>includeStart('debug', pragmas.debug);
@@ -35,11 +56,12 @@ define([
         }
         //>>includeEnd('debug');
 
+        this._expression = expression;
         expression = replaceVariables(removeBackslashes(expression));
 
         // customize jsep operators
-        jsep.addBinaryOp("=~", 0);
-        jsep.addBinaryOp("!~", 0);
+        jsep.addBinaryOp('=~', 0);
+        jsep.addBinaryOp('!~', 0);
 
         var ast;
         try {
@@ -54,17 +76,33 @@ define([
     }
 
     defineProperties(Expression.prototype, {
-
+        /**
+         * Gets the expression defined in the 3D Tiles Styling language.
+         *
+         * @memberof Expression.prototype
+         *
+         * @type {String}
+         * @readonly
+         *
+         * @default undefined
+         */
+        expression : {
+            get : function() {
+                return this._expression;
+            }
+        }
     });
 
     /**
-     * Evaluates the result of an expression, using the values defined by a feature. If the result is of type
-     * <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding primitive type will be
-     * returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code> object will be returned. If
-     * the result is a <code>Color</code>, a Cesium <code>Color</code> object will be returned.
+     * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
+     * the expression in the
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
+     * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
+     * object will be returned. If the result is a <code>Color</code>, a {@link Color} object will be returned.
      *
-     * @param {Cesium3DTileFeature} feature The feature of which values are used to evaluate the expression.
-     * @returns {Boolean|Number|String|Color|RegExp} The result of the expression.
+     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
+     * @returns {Boolean|Number|String|Color|RegExp} The result of evaluating the expression.
      */
     Expression.prototype.evaluate = function(feature) {
         return this._runtimeAst.evaluate(feature);
@@ -73,7 +111,7 @@ define([
     /**
      * Evaluates the result of a Color expression, using the values defined by a feature.
      *
-     * @param {Cesium3DTileFeature} feature The feature of which values are used to evaluate the expression.
+     * @param {Cesium3DTileFeature} feature The feature who's properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */

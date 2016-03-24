@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
@@ -18,6 +19,7 @@ defineSuite([
     ], function(
         Cesium3DTileset,
         Cartesian3,
+        Color,
         defined,
         HeadingPitchRange,
         loadWithXhr,
@@ -1040,4 +1042,32 @@ defineSuite([
             });
         });
     });
+
+    it('applies custom style to a tileset', function() {
+        var style = new Cesium3DTileStyle();
+        style.show = {
+            evaluate : function(feature) {
+                return this._value;
+            },
+            _value : false
+        };
+        style.color = {
+            evaluateColor : function(feature, result) {
+                return Color.clone(Color.WHITE, result);
+            }
+        };
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = style;
+            expect(tileset.style).toBe(style);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            style.show._value = true;
+            tileset.makeStyleDirty();
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
 }, 'WebGL');
