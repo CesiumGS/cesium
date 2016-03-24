@@ -13,11 +13,13 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
      * @returns {Object[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
      *
      * @example
-     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
+     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0), (3.0, 3.0, 3.0), (1.0, 1.0, 1.0)]
      * var values = [
      *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
      *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
+     *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
+     *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
      * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3);
      *
      * @example
@@ -27,7 +29,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
      *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
      *     new Cesium.Cartesian3(2.0, 2.0, 2.0),
      *     new Cesium.Cartesian3(3.0, 3.0, 3.0),
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),];
+     *     new Cesium.Cartesian3(1.0, 1.0, 1.0)];
      * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3, true);
      */
     function arrayRemoveDuplicates(values, objectType, wrapAround) {
