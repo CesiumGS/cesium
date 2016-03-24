@@ -299,8 +299,6 @@ define([
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
-        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-
         var i;
         var j;
         var k;
