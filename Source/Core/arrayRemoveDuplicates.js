@@ -7,8 +7,8 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
     /**
      * Removes adjacent duplicate values in an array of values.
      *
-     * @param {Object[]} values The array of values. Objects in the array must support the equalsEpsilon(left, right, epsilon) method.
-     * @param {Type} objectType The object type to use when comparing values.
+     * @param {Object[]} values The array of values.
+     * @param {Type} objectType The object type to use when comparing values. The object type must support the equalsEpsilon(left, right, epsilon) method.
      * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
      * @returns {Object[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
      *
