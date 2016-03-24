@@ -26,7 +26,7 @@ script:
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc
   - echo -en 'travis_fold:end:script.cloc\\r'
-
+after_success:
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
   - if ! $TRAVIS_PULL_REQUEST ; then npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache' ; fi
   - echo -en 'travis_fold:end:script.deploy\\r'
