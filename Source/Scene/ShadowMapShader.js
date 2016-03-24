@@ -230,7 +230,6 @@ define([
 
                 (usesCubeMap ?
                 '    float visibility = getVisibility(directionWC, distance, -directionEC); \n' :
-
                 '    vec2 uv = directionToUV(directionWC); \n' +
                 '    float visibility = getVisibility(uv, distance, -directionEC); \n') +
 
@@ -243,9 +242,10 @@ define([
                 '    czm_shadow_main(); \n' +
                 '    vec4 positionEC = getPositionEC(); \n' +
                 '    float depth = -positionEC.z; \n' +
+                '    float maxDepth = czm_shadowMapCascadeSplits[1].w; \n' +
 
                 '    // Stop early if the eye depth exceeds the last cascade \n' +
-                '    if (depth > czm_shadowMapCascadeSplits[1].w) { \n' +
+                '    if (depth > maxDepth) { \n' +
                 '        return; \n' +
                 '    } \n' +
 
@@ -262,6 +262,10 @@ define([
 
                 '    // Get visibility \n' +
                 '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL); \n' +
+
+                '    // Fade out shadows that are far away \n' +
+                '    float fade = max((depth - maxDepth * 0.8) / (maxDepth * 0.2), 0.0); \n' +
+                '    visibility = mix(visibility, 1.0, fade); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
 
                 (debugVisualizeCascades ?

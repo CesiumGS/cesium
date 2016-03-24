@@ -2033,8 +2033,7 @@ define([
         updateAndClearFramebuffers(scene, passState, defaultValue(scene.backgroundColor, Color.BLACK));
         executeComputeCommands(scene);
 
-        if (shadowMap.enabled) {
-            // TODO : collect shadow map commands here
+        if (shadowMap.enabled && shadowMap.visible) {
             executeShadowMapCommands(scene);
         }
 
