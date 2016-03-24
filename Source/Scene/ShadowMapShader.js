@@ -228,10 +228,13 @@ define([
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
                 '    distance /= radius; \n' +
 
+                '    vec3 normalEC = getNormalEC(); \n' +
+                '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
+
                 (usesCubeMap ?
-                '    float visibility = getVisibility(directionWC, distance, -directionEC); \n' :
+                '    float visibility = getVisibility(directionWC, distance, nDotL); \n' :
                 '    vec2 uv = directionToUV(directionWC); \n' +
-                '    float visibility = getVisibility(uv, distance, -directionEC); \n') +
+                '    float visibility = getVisibility(uv, distance, nDotL); \n') +
 
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
