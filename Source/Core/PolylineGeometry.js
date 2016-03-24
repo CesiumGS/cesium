@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Color',
@@ -18,6 +19,7 @@ define([
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -297,11 +299,13 @@ define([
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
+        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+
         var i;
         var j;
         var k;
 
-        var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
+        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3);
 
         var positionsLength = positions.length;
         if (positionsLength < 2) {
@@ -310,7 +314,6 @@ define([
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
