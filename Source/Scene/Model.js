@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -60,6 +61,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         clone,
         combine,
         ComponentDatatype,
@@ -523,7 +525,6 @@ define([
         this._loadResources = undefined;
 
         this._mode = undefined;
-        this._projection = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
@@ -2781,7 +2782,7 @@ define([
     var scratchNodeStack = [];
     var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -2792,7 +2793,7 @@ define([
         var computedModelMatrix = model._computedModelMatrix;
 
         if (model._mode !== SceneMode.SCENE3D) {
-            computedModelMatrix = Transforms.basisTo2D(model._projection, computedModelMatrix, scratchComputedMatrixIn2D);
+            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
         }
 
         for (var i = 0; i < length; ++i) {
@@ -2984,6 +2985,7 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+    var scratchCartographic = new Cartographic();
 
     function getScale(model, frameState) {
         var scale = model.scale;
@@ -2999,6 +3001,13 @@ define([
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
+            }
+
+            if (model._mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
+                projection.project(cartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
             }
 
             var radius = model.boundingSphere.radius;
@@ -3104,7 +3113,6 @@ define([
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
-        this._projection = frameState.mapProjection;
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             // Use renderer resources from cache instead of loading/creating them?
@@ -3235,7 +3243,7 @@ define([
 
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
 
                 if (animated || justLoaded) {

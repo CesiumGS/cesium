@@ -847,7 +847,9 @@ define([
         newOrigin.z = projectedPosition.y;
         newOrigin.w = 1.0;
 
-        var xAxis = Cartesian4.add(Matrix4.getColumn(matrix, 0, scratchCartesian3), origin, scratchCartesian3);
+        var xAxis = Matrix4.getColumn(matrix, 0, scratchCartesian3);
+        var xScale = Cartesian3.magnitude(xAxis);
+        Cartesian4.add(xAxis, origin, xAxis);
         ellipsoid.cartesianToCartographic(xAxis, cartographic);
 
         projection.project(cartographic, projectedPosition);
@@ -859,7 +861,9 @@ define([
 
         Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
 
-        var yAxis = Cartesian4.add(Matrix4.getColumn(matrix, 1, scratchCartesian3), origin, scratchCartesian3);
+        var yAxis = Matrix4.getColumn(matrix, 1, scratchCartesian3);
+        var yScale = Cartesian3.magnitude(yAxis);
+        Cartesian4.add(yAxis, origin, yAxis);
         ellipsoid.cartesianToCartographic(yAxis, cartographic);
 
         projection.project(cartographic, projectedPosition);
@@ -871,6 +875,9 @@ define([
 
         Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
 
+        var zAxis = Matrix4.getColumn(matrix, 2, scratchCartesian3);
+        var zScale = Cartesian3.magnitude(zAxis);
+
         var newZAxis = scratchCartesian4NewZAxis;
         Cartesian3.cross(newXAxis, newYAxis, newZAxis);
         Cartesian3.normalize(newZAxis, newZAxis);
@@ -878,6 +885,10 @@ define([
         Cartesian3.normalize(newXAxis, newXAxis);
         Cartesian3.cross(newZAxis, newXAxis, newYAxis);
         Cartesian3.normalize(newYAxis, newYAxis);
+
+        Cartesian3.multiplyByScalar(newXAxis, xScale, newXAxis);
+        Cartesian3.multiplyByScalar(newYAxis, yScale, newYAxis);
+        Cartesian3.multiplyByScalar(newZAxis, zScale, newZAxis);
 
         Matrix4.setColumn(result, 0, newXAxis, result);
         Matrix4.setColumn(result, 1, newYAxis, result);
