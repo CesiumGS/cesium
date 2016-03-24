@@ -166,13 +166,16 @@ defineSuite([
 
         // Update scene state
         scene.morphTo2D(0);
-        scene.initializeFrame();
+        scene.renderForSpecs();
 
         var position = Cartesian3.fromDegrees(0,0);
-
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
-        expect(windowCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(windowCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+
+        expect(windowCoordinates.x).toBeGreaterThan(0.0);
+        expect(windowCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(windowCoordinates.x).toBeLessThan(1.0);
+        expect(windowCoordinates.y).toBeLessThan(1.0);
     });
 
     it('returns correct drawing buffer position in 2D', function() {
@@ -181,9 +184,12 @@ defineSuite([
         scene.renderForSpecs();
 
         var position = Cartesian3.fromDegrees(0,0);
-
         var drawingBufferCoordinates = SceneTransforms.wgs84ToDrawingBufferCoordinates(scene, position);
-        expect(drawingBufferCoordinates.x).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
-        expect(drawingBufferCoordinates.y).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+
+        expect(drawingBufferCoordinates.x).toBeGreaterThan(0.0);
+        expect(drawingBufferCoordinates.y).toBeGreaterThan(0.0);
+
+        expect(drawingBufferCoordinates.x).toBeLessThan(1.0);
+        expect(drawingBufferCoordinates.y).toBeLessThan(1.0);
     });
 }, 'WebGL');
