@@ -461,18 +461,18 @@ define([
     });
 
     function cloneAttribute(attribute) {
-        var clonedValue;
-        if(attribute.value.constructor === Array) {
-            clonedValue = attribute.value.slice(0);
+        var clonedValues;
+        if(isArray(attribute.values)) {
+            clonedValues = attribute.values.slice(0);
         }
         else {
-            clonedValue = new attribute.value.constructor(attribute.value);
+            clonedValues = new attribute.values.constructor(attribute.values);
         }
         return new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             normalize : attribute.normalize,
-            values : clonedValue
+            values : clonedValues
         });
     }
 
@@ -501,7 +501,7 @@ define([
 
     function cloneGeometryInstanceAttribute(attribute) {
         var clonedValue;
-        if(attribute.value.constructor === Array) {
+        if(isArray(attribute.value)) {
             clonedValue = attribute.value.slice(0);
         }
         else {
