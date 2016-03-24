@@ -314,6 +314,7 @@ define([
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;

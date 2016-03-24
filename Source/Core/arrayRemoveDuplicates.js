@@ -8,7 +8,7 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
      * Removes adjacent duplicate values in an array of values.
      *
      * @param {Object[]} values The array of values.
-     * @param {Type} objectType The object type to use when comparing values. The object type must support the equalsEpsilon(left, right, epsilon) method.
+     * @param {Object} objectType The object type to use when comparing values. The object type must support the equalsEpsilon(left, right, epsilon) method.
      * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
      * @returns {Object[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
      *
@@ -23,9 +23,9 @@ define(['./defaultValue', './defined', './DeveloperError', './Math'], function(d
      * @example
      * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
      * var values = [
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(1.0, 1.0, 1.0),
-     *     new Cesium.Cartesian3(2.0, 2.0, 2.0)];
+     *     {x:1.0, y:1.0, z:1.0},
+     *     {x:1.0, y:1.0, z:1.0},
+     *     {x:2.0, y:2.0, z:2.0}];
      * var nonDuplicatevalues = Cesium.PolylinePipeline.removeDuplicates(values, Cartesian3);
      */
     function arrayRemoveDuplicates(values, objectType, wrapAround) {
