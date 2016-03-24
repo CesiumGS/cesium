@@ -138,6 +138,13 @@ define([
         this.enabled = false;
         this.softShadows = defaultValue(options.softShadows, false);
 
+        // Bias tweaks
+        this._normalOffset = false;
+        this._normalOffsetScale = 0.0;
+        this._normalShading = false;
+        this._normalShadingSmooth = 0.0;
+        this._depthBias = 0.0;
+
         // Framebuffer resources
         this._depthAttachment = undefined;
         this._colorAttachment = undefined;
@@ -167,6 +174,7 @@ define([
         // Uniforms
         this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
         this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
+        this._cascadeScales = new Cartesian4();
 
         var numberOfPasses;
         if (this._isPointLight) {
@@ -224,7 +232,7 @@ define([
         shadowMap._renderState = RenderState.fromCache({
             cull : {
                 enabled : true, // TODO : need to handle objects that don't use back face culling, like walls
-                face : CullFace.FRONT
+                face : CullFace.BACK
             },
             depthTest : {
                 enabled : true
@@ -339,6 +347,12 @@ define([
         cascadeMatrices : {
             get : function() {
                 return this._cascadeMatrices;
+            }
+        },
+
+        cascadeScales : {
+            get : function() {
+                return this._cascadeScales;
             }
         },
 
@@ -819,6 +833,7 @@ define([
     var scratchSplitNear = new Array(4);
     var scratchSplitFar = new Array(4);
     var scratchFrustum = new PerspectiveFrustum();
+    var scratchCascadeScales = new Array(4);
 
     function computeCascades(shadowMap) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -857,6 +872,7 @@ define([
 
         var cascadeSubFrustum = sceneCamera.frustum.clone(scratchFrustum);
         var shadowViewProjection = shadowMapCamera.getViewProjection();
+        var cascadeScales = scratchCascadeScales;
 
         for (var j = 0; j < numberOfCascades; ++j) {
             // Find the bounding box of the camera sub-frustum in shadow map texture space
@@ -894,11 +910,15 @@ define([
             cascadeCamera.frustum.near = near + min.z * (far - near);
             cascadeCamera.frustum.far = near + max.z * (far - near);
 
+            cascadeScales[j] = 1.0 / (max.z - min.z);
+
             // Transforms from eye space to the cascade's texture space
             var cascadeMatrix = shadowMap._cascadeMatrices[j];
             Matrix4.multiply(cascadeCamera.getViewProjection(), sceneCamera.inverseViewMatrix, cascadeMatrix);
             Matrix4.multiply(shadowMap._passTextureOffsets[j], cascadeMatrix, cascadeMatrix);
         }
+
+        Cartesian4.unpack(cascadeScales, 0, shadowMap._cascadeScales);
     }
 
     var scratchLightView = new Matrix4();

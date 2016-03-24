@@ -100,6 +100,37 @@
             <td>Soft shadows</td>
             <td><input type="checkbox" data-bind="checked: softShadows"/></td>
         </tr>
+        <tr>
+            <td>Bias Tweaks</td>
+        </tr>
+        <tr>
+            <td>Polygon Offset</td>
+            <td>
+                <input type="checkbox" data-bind="checked: polygonOffset">
+                <input type="text" size="2" data-bind="value: polygonOffsetFactor">
+                <input type="text" size="2" data-bind="value: polygonOffsetUnits">
+            </td>
+        </tr>
+        <tr>
+            <td>Normal Offset</td>
+            <td>
+                <input type="checkbox" data-bind="checked: normalOffset">
+                <input type="text" size="2" data-bind="value: normalOffsetScale">
+            </td>
+        </tr>
+        <tr>
+            <td>Normal Shading</td>
+            <td>
+                <input type="checkbox" data-bind="checked: normalShading">
+                <input type="text" size="2" data-bind="value: normalShadingSmooth">
+            </td>
+        </tr>
+        <tr>
+            <td>Depth Bias</td>
+            <td>
+                <input type="text" size="2" data-bind="value: depthBias">
+            </td>
+        </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -124,9 +155,34 @@ var viewModel = {
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
-    size : 1024
+    size : 1024,
+
+    // Bias tweaks
+    polygonOffset : true,
+    polygonOffsetFactor : 1.1,
+    polygonOffsetUnits : 4.0,
+    normalOffset : false,
+    normalOffsetScale : 1.0,
+    normalShading : false,
+    normalShadingSmooth : 0.1,
+    depthBias : 0.00001
 };
-    
+
+viewModel.lightSource = 'Freeform';
+viewModel.lightHorizon = 71.0;
+viewModel.terrainCast = true;
+viewModel.distance = 10000.0;
+
+// These values work for terrain
+viewModel.polygonOffset = false;
+viewModel.polygonOffsetFactor = 1.1;
+viewModel.polygonOffsetUnits = 4.0;
+viewModel.normalOffset = true;
+viewModel.normalOffsetScale = 9.765;
+viewModel.normalShading = true;
+viewModel.normalShadingSmooth = 0.1;
+viewModel.depthBias = 0.005;
+
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
@@ -144,6 +200,16 @@ Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows)
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
+
+// Bias Tweaks
+Cesium.knockout.getObservable(viewModel, 'polygonOffset').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'polygonOffsetFactor').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'polygonOffsetUnits').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'normalOffset').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'normalOffsetScale').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'normalShading').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'normalShadingSmooth').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'depthBias').subscribe(updateShadows);
 
 var offset = new Cesium.Cartesian3();
 
@@ -169,6 +235,17 @@ function updateSettings() {
     if (globeVisible) {
         globe.castShadows = viewModel.terrainCast;
     }
+
+    // Bias tweaks
+    // TODO : updating renderState is not usually allowed, but okay for testing
+    shadowMap._renderState.polygonOffset.enabled = viewModel.polygonOffset;
+    shadowMap._renderState.polygonOffset.factor = viewModel.polygonOffsetFactor;
+    shadowMap._renderState.polygonOffset.units = viewModel.polygonOffsetUnits;
+    shadowMap._normalOffset = viewModel.normalOffset;
+    shadowMap._normalOffsetScale = viewModel.normalOffsetScale;
+    shadowMap._normalShading = viewModel.normalShading;
+    shadowMap._normalShadingSmooth = viewModel.normalShadingSmooth;
+    shadowMap._depthBias = viewModel.depthBias;
 }
 
 function updateShadows() {
@@ -244,14 +321,14 @@ if (globeVisible) {
     viewer.terrainProvider = terrainProvider;
 }
 
-// Exton
-var centerLongitude = -1.31968;
-var centerLatitude = 0.698874;
-var offsetZ = 20.0;
-var frustumSize = 15;
-var frustumNear = 1.0;
-var frustumFar = 100.0;
-var tilt = 0.0;
+//// Exton
+//var centerLongitude = -1.31968;
+//var centerLatitude = 0.698874;
+//var offsetZ = 20.0;
+//var frustumSize = 15;
+//var frustumNear = 1.0;
+//var frustumFar = 100.0;
+//var tilt = -30.0;
 
 //// Everest
 //var centerLongitude = 1.517132688;
@@ -261,6 +338,15 @@ var tilt = 0.0;
 //var frustumNear = 1.0;
 //var frustumFar = 400.0;
 //var tilt = 30.0;
+
+// Pinnacle
+var centerLongitude = -1.3324415110874286;
+var centerLatitude = 0.6954224325279967;
+var offsetZ = 236.6770689945084;
+var frustumSize = 55.0;
+var frustumNear = 1.0;
+var frustumFar = 400.0;
+var tilt = 30.0;
 
 var scene = viewer.scene;
 var context = scene.context;
@@ -346,7 +432,7 @@ function resetShadows(shadowOptions) {
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
     //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
-    createModel('../../SampleData/models/ShadowTester/Shadow_Tester.gltf', center);
+    //createModel('../../SampleData/models/ShadowTester/Shadow_Tester2.gltf', center);
     //createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
     createBox(position3);
     createBoxRTC(position2);

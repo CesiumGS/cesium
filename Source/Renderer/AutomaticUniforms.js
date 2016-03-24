@@ -1588,6 +1588,20 @@ define([
             getValue : function(uniformState) {
                 return uniformState.shadowMap.texelStepSize;
             }
+        }),
+        
+        /**
+         * An automatic GLSL uniform representing the shadow map cascade scales.
+         *
+         * @alias czm_shadowMapCascadeScales
+         * @glslUniform
+         */
+        czm_shadowMapCascadeScales : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.cascadeScales;
+            }
         })
     };
 
