@@ -116,6 +116,10 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    beforeEach(function() {
+        scene.morphTo3D(0.0);
+    });
+
     function addZoomTo(model) {
         model.zoomTo = function() {
             var camera = scene.camera;
@@ -209,6 +213,16 @@ defineSuite([
     });
 
     it('renders', function() {
+        verifyRender(texturedBoxModel);
+    });
+
+    it('renders in CV', function() {
+        scene.morphToColumbusView(0.0);
+        verifyRender(texturedBoxModel);
+    });
+
+    it('renders in 2D', function() {
+        scene.morphTo2D(0.0);
         verifyRender(texturedBoxModel);
     });
 
