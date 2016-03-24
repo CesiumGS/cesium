@@ -1,5 +1,14 @@
 /*global define*/
-define(['./defaultValue', './defined', './DeveloperError', './Math'], function(defaultValue, defined, DeveloperError, CesiumMath) {
+define([
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './Math'
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError,
+        CesiumMath) {
     'use strict';
 
     var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
