@@ -493,11 +493,18 @@ define([
     }
 
     function cloneGeometryInstanceAttribute(attribute) {
+        var clonedValue;
+        if(attribute.value.constructor === Array) {
+            clonedValue = attribute.value.slice(0);
+        }
+        else {
+            clonedValue = new attribute.value.constructor(attribute.value);
+        }
         return new GeometryInstanceAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             normalize : attribute.normalize,
-            value : new attribute.value.constructor(attribute.value)
+            value : clonedValue
         });
     }
 
