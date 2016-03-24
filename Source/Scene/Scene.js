@@ -1531,7 +1531,7 @@ define([
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
-        var useDepthPlane = environmentState.clearGlobeDepth;
+        var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
 
