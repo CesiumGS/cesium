@@ -835,6 +835,18 @@ define([
      * @private
      */
     Transforms.basisTo2D = function(projection, matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(projection)) {
+            throw new DeveloperError('projection is required.');
+        }
+        if (!defined(matrix)) {
+            throw new DeveloperError('matrix is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
+        //>>includeEnd('debug');
+
         var ellipsoid = projection.ellipsoid;
 
         var origin = Matrix4.getColumn(matrix, 3, scratchCartesian4Origin);
