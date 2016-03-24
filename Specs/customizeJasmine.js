@@ -1,11 +1,12 @@
 /*global define*/
 define([
-    'Source/ThirdParty/when',
-    'Specs/addDefaultMatchers',
-    'Specs/equalsMethodEqualityTester'
-], function (when,
-             addDefaultMatchers,
-             equalsMethodEqualityTester) {
+        'Source/ThirdParty/when',
+        'Specs/addDefaultMatchers',
+        'Specs/equalsMethodEqualityTester'
+    ], function(
+        when,
+        addDefaultMatchers,
+        equalsMethodEqualityTester) {
     "use strict";
 
     return function (env, includedCategory, excludedCategory, webglValidation, release) {

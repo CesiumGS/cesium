@@ -27,6 +27,7 @@ Change Log
 * Fixed a crash that would occur if you added and removed an `Entity` with a path without ever actually rendering it. [#3738](https://github.com/AnalyticalGraphicsInc/cesium/pull/3738)
 * Added a new sample to Sandcastle using the Pennsylvania terrain data as shown [here](http://cesiumjs.org/2016/03/15/New-Cesium-Terrain-Service-Covering-Pennsylvania/).
 * Added infinite horizontal scrolling in 2D.
+* Fixed issue causing parts of geometry and billboards/labels to be clipped. [#3748](https://github.com/AnalyticalGraphicsInc/cesium/issues/3748)
 * Added translucent and colored image support to KML ground overlays
 * Fixed bug where transparent image materials were drawn black
 
