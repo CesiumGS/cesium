@@ -399,28 +399,20 @@ function getStyleFunction(name) {
 }
 
 Sandcastle.addToolbarButton('Custom style', function() {
-    tileset.style = {
-        ready : true,
-        readyPromise : Cesium.when.defer().resolve(this), // TODO: which this is this?
-        show : {
-            evaluate : function(feature) {
-                tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
-                return Cesium.Math.nextRandomNumber() > 0.5;
-            }
-        },
-        color : {
-            evaluateColor : function(feature, result) {
-                if (!Cesium.defined(result)) {
-                    result = new Cesium.Color();
-                }
-
-                tileset.styleEngine.makeDirty(); // Force the style to be constantly evaluated
-                result = Cesium.Color.fromRandom();
-
-                return result;
-            }
+    var style = new Cesium.Cesium3DTileStyle();
+    style.show = {
+        evaluate : function(feature) {
+            tileset.makeStyleDirty(); // Force the style to be constantly evaluated
+            return Cesium.Math.nextRandomNumber() > 0.5;
         }
     };
+    style.color = {
+        evaluateColor : function(feature, result) {
+            tileset.makeStyleDirty(); // Force the style to be constantly evaluated
+            return Cesium.Color.fromRandom(undefined, result);
+        }
+    };
+    tileset.style = style;
 });
 
 Sandcastle.addToolbarButton('Remove style', function() {
