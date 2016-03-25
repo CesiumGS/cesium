@@ -335,23 +335,13 @@ gulp.task('deploy-s3', function(done) {
 
 });
 
-function getCredentials() {
-    return new Promise(function(resolve, reject) {
-        aws.config.getCredentials(function(error) {
-            if (error) {
-                reject(error);
-            } else {
-                resolve();
-            }
-        });
-    });
-}
-
 // Deploy cesium to s3
 function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
+    var getCredentials = Promise.promisify(aws.config.getCredentials, {context: aws.config});
     var concurrencyLimit = 2000;
+
     var s3 = new Promise.promisifyAll(new aws.S3({
         maxRetries : 10,
         retryDelayOptions : {
