@@ -7,7 +7,7 @@ before_script:
   - sh -e /etc/init.d/xvfb start
 script:
   - echo 'jsHint' && echo -en 'travis_fold:start:script.jsHint\\r'
-  - npm run jsHint --failTaskOnError
+  - npm run jsHint -- --failTaskOnError
   - echo -en 'travis_fold:end:script.jsHint\\r'
 
   - echo 'test non-webgl' && echo -en 'travis_fold:start:script.test\\r'
@@ -26,3 +26,5 @@ script:
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc
   - echo -en 'travis_fold:end:script.cloc\\r'
+after_success:
+  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'

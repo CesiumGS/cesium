@@ -153,7 +153,7 @@ define([
             var attribute = instanceAttributes[name];
             var componentDatatype = attribute.componentDatatype;
             var value = attribute.value;
-            var componentsPerAttribute = value.length;
+            var componentsPerAttribute = attribute.componentsPerAttribute;
 
             var buffer = ComponentDatatype.createTypedArray(componentDatatype, numberOfVertices * componentsPerAttribute);
             for (var k = 0; k < numberOfVertices; ++k) {
