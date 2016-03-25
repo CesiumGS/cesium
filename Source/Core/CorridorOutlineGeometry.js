@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -14,10 +15,10 @@ define([
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -32,7 +33,6 @@ define([
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        PolylinePipeline,
         PolygonPipeline,
         PrimitiveType) {
     'use strict';
@@ -470,7 +470,7 @@ define([
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3);
 
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;

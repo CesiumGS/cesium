@@ -30,6 +30,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sarah Chow](https://github.com/slchow)
    * [Brendan Flood](https://github.com/bflood-agi)
    * [Thomas Pedbereznak](https://github.com/TomPed)
+   * [Rob Taglang](https://github.com/lasalvavida)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -86,3 +87,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Sanuj Sharma](https://github.com/sanuj)
 * [Allen Korenevsky](https://github.com/theplatapi)
 * [Samy Beaudoux](https://github.com/vrittis)
+* [Mati Ostrovsky](https://github.com/mati-o)

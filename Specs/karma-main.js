@@ -51,9 +51,9 @@
         }
 
         require([
-                    'Specs/customizeJasmine'
-                ],
-                function(customizeJasmine) {
+        'Specs/customizeJasmine'
+    ], function(
+        customizeJasmine) {
 
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, release);
 

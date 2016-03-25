@@ -388,21 +388,13 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchMatrix4 = new Matrix4();
     var scratchCartesian4 = new Cartesian4();
 
+    // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
     PointPrimitive._computeScreenSpacePosition = function(modelMatrix, position, scene, result) {
-        // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
-        var camera = scene.camera;
-        var view = camera.viewMatrix;
-        var projection = camera.frustum.projectionMatrix;
-
-        // Model to eye coordinates
-        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
-        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
-
+        // Model to world coordinates
+        var positionWorld = Matrix4.multiplyByVector(modelMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
+        var positionWC = SceneTransforms.wgs84ToWindowCoordinates(scene, positionWorld, result);
         return positionWC;
     };
 
