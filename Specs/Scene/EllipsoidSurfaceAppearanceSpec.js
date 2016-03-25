@@ -33,18 +33,6 @@ defineSuite([
         scene.frameState.scene3DOnly = false;
 
         rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-        primitive = new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new RectangleGeometry({
-                    rectangle : rectangle,
-                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
-                }),
-                attributes : {
-                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
-                }
-            }),
-            asynchronous : false
-        });
     });
 
     beforeEach(function() {
@@ -52,8 +40,12 @@ defineSuite([
     });
 
     afterAll(function() {
-        primitive = primitive && primitive.destroy();
         scene.destroyForSpecs();
+    });
+
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
     });
 
     it('constructor', function() {
@@ -73,6 +65,18 @@ defineSuite([
     });
 
     it('renders', function() {
+        primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            }),
+            asynchronous : false
+        });
         primitive.appearance = new EllipsoidSurfaceAppearance();
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
