@@ -11,9 +11,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/createScene',
+        'Specs/createScene'
     ], function(
         DebugAppearance,
         ComponentDatatype,
@@ -26,8 +24,6 @@ defineSuite([
         ClearCommand,
         Appearance,
         Primitive,
-        createContext,
-        createFrameState,
         createScene) {
     'use strict';
 
