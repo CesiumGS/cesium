@@ -100,8 +100,21 @@
             <td data-bind="style: { color: softShadowsEnabled ? '' : 'gray'}">Soft shadows</td>
             <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
         </tr>
+        <tr>
+            <td>Location</td>
+            <td><select data-bind="options: locationOptions, value: location"/></td>
+        </tr>
+        <tr>
+            <td>Model</td>
+            <td><select data-bind="options: modelOptions, value: model"/></td>
+        </tr>
+        <tr>
+            <td>Model Position</td>
+            <td><select data-bind="options: modelPositionOptions, value: modelPosition"/></td>
+        </tr>
     </tbody></table>
 </div>
+
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -133,7 +146,13 @@ var viewModel = {
     lightSourceOptions : ['Freeform', 'Sun', 'Fixed', 'Point'],
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
-    size : 1024
+    size : 1024,
+    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester Point'],
+    model : 'Shadow Tester Point',
+    locationOptions : ['Exton', 'Everest', 'Pinnacle PA'],
+    location : 'Exton',
+    modelPositionOptions : ['Center', 'Ground'],
+    modelPosition : 'Center'
 };
 
 var uiOptions = {
@@ -143,9 +162,44 @@ var uiOptions = {
         'Sun' : ['lightHorizon', 'lightAngle', 'radius'],
         'Fixed' : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'cascades', 'cascadeColors', 'fitNearFar'],
         'Point' : ['lightHorizon', 'lightAngle', 'distance', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows']
+    },
+    modelUrls : {
+        'Wood Tower' : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
+        'Cesium Air' : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        'Shadow Tester' : '../../SampleData/models/ShadowTester/Shadow_Tester.gltf',
+        'Shadow Tester Point' : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf'
+    },
+    locations : {
+        'Exton' : {
+            'centerLongitude' : -1.31968,
+            'centerLatitude' : 0.698874,
+            'offsetZ' : 20.0,
+            'frustumSize' : 15,
+            'frustumNear' : 1.0,
+            'frustumFar' : 100.0,
+            'tilt' : 0.0
+        },
+        'Everest' : {
+            'centerLongitude' : 1.517132688,
+            'centerLatitude' : 0.4884844964,
+            'offsetZ' : 50.0,
+            'frustumSize' : 55.0,
+            'frustumNear' : 1.0,
+            'frustumFar' : 400.0,
+            'tilt' : 30.0
+        },
+        'Pinnacle PA' : {
+            'centerLongitude' : -1.3324415110874286,
+            'centerLatitude' : 0.6954224325279967,
+            'offsetZ' : 236.6770689945084,
+            'frustumSize' : 55.0,
+            'frustumNear' : 1.0,
+            'frustumFar' : 400.0,
+            'tilt' : 30.0
+        }
     }
 };
-    
+
 Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
@@ -163,10 +217,15 @@ Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows)
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
 var offset = new Cesium.Cartesian3();
 
 function updateLightDirection() {
+    var location = uiOptions.locations[viewModel.location];
+    var center = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
     var lightHorizon = Cesium.Math.toRadians(viewModel.lightHorizon);
     var lightAngle = Cesium.Math.toRadians(viewModel.lightAngle);
     offset.z = Math.cos(lightHorizon);
@@ -274,31 +333,11 @@ if (globeVisible) {
     viewer.terrainProvider = terrainProvider;
 }
 
-// Exton
-var centerLongitude = -1.31968;
-var centerLatitude = 0.698874;
-var offsetZ = 20.0;
-var frustumSize = 15;
-var frustumNear = 1.0;
-var frustumFar = 100.0;
-var tilt = 0.0;
-
-//// Everest
-//var centerLongitude = 1.517132688;
-//var centerLatitude = 0.4884844964;
-//var offsetZ = 50.0;
-//var frustumSize = 55.0;
-//var frustumNear = 1.0;
-//var frustumFar = 400.0;
-//var tilt = 30.0;
-
 var scene = viewer.scene;
 var context = scene.context;
 var camera = scene.camera;
 var globe = scene.globe;
 var shadowMap;
-var center;
-var height;
 
 scene.debugShowFramesPerSecond = true;
 
@@ -307,27 +346,33 @@ var freeformLightCamera = new Cesium.Camera(scene);
 var sunCamera = scene._sunCamera;
 var pointLightCamera = new Cesium.Camera(scene);
 
-// Get the height of the terrain at the given longitude/latitude, then create the scene.
-var positions = [new Cesium.Cartographic(centerLongitude, centerLatitude)];
-var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
-Cesium.when(promise, function(updatedPositions) {
-    height = updatedPositions[0].height + 50.0;
-    createScene(height);
-});
+updateLocation();
+
+function updateLocation() {
+    // Get the height of the terrain at the given longitude/latitude, then create the scene.
+    var location = uiOptions.locations[viewModel.location];
+    var positions = [new Cesium.Cartographic(location.centerLongitude, location.centerLatitude)];
+    var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+    Cesium.when(promise, function(updatedPositions) {
+        location.height = updatedPositions[0].height + 50.0;
+        createScene();
+    });
+}
 
 function createScene() {
-    center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
+    var location = uiOptions.locations[viewModel.location];
+    var center = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
 
     var frustum = new Cesium.OrthographicFrustum();
-    frustum.left = -frustumSize;
-    frustum.right = frustumSize;
-    frustum.bottom = -frustumSize;
-    frustum.top = frustumSize;
-    frustum.near = frustumNear;
-    frustum.far = frustumFar;
+    frustum.left = -location.frustumSize;
+    frustum.right = location.frustumSize;
+    frustum.bottom = -location.frustumSize;
+    frustum.top = location.frustumSize;
+    frustum.near = location.frustumNear;
+    frustum.far = location.frustumFar;
 
     fixedLightCamera.frustum = frustum;
-    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(tilt, tilt, offsetZ));
+    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
 
     pointLightCamera.position = center;
 
@@ -358,6 +403,11 @@ function resetShadows(shadowOptions) {
     // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
     scene.primitives.removeAll();
 
+    var location = uiOptions.locations[viewModel.location];
+    var centerLongitude = location.centerLongitude;
+    var centerLatitude = location.centerLatitude;
+    var height = location.height;
+
     if (globeVisible) {
         resetGlobe();
     }
@@ -369,27 +419,38 @@ function resetShadows(shadowOptions) {
     shadowMap.enabled = true;
     shadowMap.debugShow = true;
 
-    var ground = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height - 50.0);
-    var center = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
-    //createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', position3);
-    createModel('../../SampleData/models/ShadowTester/Shadow_Tester.gltf', center);
-    //createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', ground);
+    var model = createModel(uiOptions.modelUrls[viewModel.model], location, viewModel.modelPosition);
+    addModelToView(model);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);
 }
 
-function createModel(url, origin) {
+function createModel(url, location, position) {
+    var origin;
+    if (position === 'Ground') {
+        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height - 50.0);
+    }
+    else if (position === 'Center') {
+        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
+    }
+
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
-    var model = scene.primitives.add(Cesium.Model.fromGltf({
+    var model = Cesium.Model.fromGltf({
         url : url,
         modelMatrix : modelMatrix
-    }));
+    });
+
+    return model;
+}
+
+function addModelToView(model) {
+    model = scene.primitives.add(model);
 
     model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
