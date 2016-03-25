@@ -12,7 +12,6 @@ define([
         './GeometryAttribute',
         './Math',
         './pointInsideTriangle',
-        './PolylinePipeline',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -29,7 +28,6 @@ define([
         GeometryAttribute,
         CesiumMath,
         pointInsideTriangle,
-        PolylinePipeline,
         PrimitiveType,
         Queue,
         WindingOrder) {
@@ -705,26 +703,6 @@ define([
      * @private
      */
     var PolygonPipeline = {};
-
-    /**
-     * Cleans up a simple polygon by removing duplicate adjacent positions and making
-     * the first position not equal the last position.
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     */
-    PolygonPipeline.removeDuplicates = function(positions) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
-        //>>includeEnd('debug');
-
-        var cleanedPositions = PolylinePipeline.removeDuplicates(positions);
-        if (Cartesian3.equals(cleanedPositions[0], cleanedPositions[cleanedPositions.length - 1])) {
-            return cleanedPositions.slice(1);
-        }
-        return cleanedPositions;
-    };
 
     /**
      * @exception {DeveloperError} At least three positions are required.
