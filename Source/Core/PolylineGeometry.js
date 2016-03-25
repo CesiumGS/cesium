@@ -303,7 +303,7 @@ define([
         var j;
         var k;
 
-        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3);
+        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
 
         var positionsLength = positions.length;
         if (positionsLength < 2) {

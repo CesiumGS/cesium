@@ -62,7 +62,7 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3);
+        this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if (this._loop && this._actualPositions.length > 2) {
             if (this._actualPositions === this._positions) {
@@ -157,7 +157,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = arrayRemoveDuplicates(value, Cartesian3);
+                var positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
 
                 if (this._loop && positions.length > 2) {
                     if (positions === value) {
