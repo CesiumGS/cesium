@@ -2112,9 +2112,9 @@ define([
 
         scene.fog.update(frameState);
 
-        var shadowMap = scene.shadowMap;
-        us.update(frameState, shadowMap);
+        us.update(frameState);
 
+        var shadowMap = scene.shadowMap;
         if (shadowMap.enabled) {
             // Update the sun's direction
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);

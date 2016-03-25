@@ -910,9 +910,8 @@ define([
      * are set to the right value.
      *
      * @param {FrameState} frameState The frameState to synchronize with.
-     * @param {ShadowMap} [shadowMap] The shadow map.
      */
-    UniformState.prototype.update = function(frameState, shadowMap) {
+    UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
@@ -936,7 +935,7 @@ define([
 
         this._fogDensity = frameState.fog.density;
 
-        this.shadowMap = shadowMap;
+        this.shadowMap = frameState.shadowMap;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
