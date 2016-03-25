@@ -462,10 +462,9 @@ define([
 
     function cloneAttribute(attribute) {
         var clonedValues;
-        if(isArray(attribute.values)) {
+        if (isArray(attribute.values)) {
             clonedValues = attribute.values.slice(0);
-        }
-        else {
+        } else {
             clonedValues = new attribute.values.constructor(attribute.values);
         }
         return new GeometryAttribute({
@@ -501,10 +500,9 @@ define([
 
     function cloneGeometryInstanceAttribute(attribute) {
         var clonedValue;
-        if(isArray(attribute.value)) {
+        if (isArray(attribute.value)) {
             clonedValue = attribute.value.slice(0);
-        }
-        else {
+        } else {
             clonedValue = new attribute.value.constructor(attribute.value);
         }
         return new GeometryInstanceAttribute({
