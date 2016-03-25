@@ -14,7 +14,6 @@ defineSuite([
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/createScene',
-        'Specs/render'
     ], function(
         DebugAppearance,
         ComponentDatatype,
@@ -30,7 +29,6 @@ defineSuite([
         createContext,
         createFrameState,
         createScene,
-        render
 ) {
     'use strict';
 
