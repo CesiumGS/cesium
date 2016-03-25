@@ -28,7 +28,6 @@ defineSuite([
     'use strict';
 
     var scene;
-    var context;
     var primitive;
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
@@ -36,7 +35,6 @@ defineSuite([
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
         scene.frameState.scene3DOnly = false;
-        context = scene.context;
     });
 
     beforeEach(function() {

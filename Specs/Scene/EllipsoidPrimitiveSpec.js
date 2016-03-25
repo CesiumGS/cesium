@@ -18,15 +18,12 @@ defineSuite([
     'use strict';
 
     var scene;
-    var context;
     var ellipsoid;
-    var us;
 
     beforeAll(function() {
         scene = createScene();
         scene.primitives.destroyPrimitives = false;
         scene.frameState.scene3DOnly = false;
-        context = scene.context;
     });
 
     afterAll(function() {
