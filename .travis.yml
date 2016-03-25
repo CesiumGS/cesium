@@ -19,6 +19,12 @@ script:
   - npm run makeZipFile
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
+  - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
+  - npm run deploy-status-pending
+  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm run deploy-status-success
+  - echo -en 'travis_fold:end:script.deploy\\r'
+
   - echo 'test non-webgl release' && echo -en 'travis_fold:start:script test.release\\r'
   - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --release --suppressPassed
   - echo -en 'travis_fold:end:script test.release\\r'
@@ -26,5 +32,3 @@ script:
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc
   - echo -en 'travis_fold:end:script.cloc\\r'
-after_success:
-  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
