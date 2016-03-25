@@ -28,8 +28,7 @@ defineSuite([
         Primitive,
         createContext,
         createFrameState,
-        createScene,
-) {
+        createScene) {
     'use strict';
 
     var scene;
