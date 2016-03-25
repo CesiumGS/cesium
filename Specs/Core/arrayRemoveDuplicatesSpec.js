@@ -13,19 +13,19 @@ defineSuite([
 
     it('removeDuplicates returns positions if none removed', function() {
         var positions = [Cartesian3.ZERO];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toBe(positions);
     });
 
     it('removeDuplicates returns positions if none removed', function() {
         var positions = [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toBe(positions);
     });
 
     it('removeDuplicates wrapping returns positions if none removed', function() {
         var positions = [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y, Cartesian3.UNIT_Z];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3, true);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
         expect(noDuplicates).toBe(positions);
     });
 
@@ -42,7 +42,7 @@ defineSuite([
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(2.0, 2.0, 2.0),
             new Cartesian3(3.0, 3.0, 3.0)];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
@@ -59,7 +59,7 @@ defineSuite([
             {x:1.0, y:1.0, z:1.0},
             {x:2.0, y:2.0, z:2.0},
             {x:3.0, y:3.0, z:3.0}];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
@@ -77,13 +77,13 @@ defineSuite([
             new Spherical(2.0, 2.0, 1.0),
             new Spherical(3.0, 3.0, 1.0),
             new Spherical(3.0, 3.0, 2.0)];
-        var noDuplicates = arrayRemoveDuplicates(positions, Spherical);
+        var noDuplicates = arrayRemoveDuplicates(positions, Spherical.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
     it('removeDuplicates works with empty array', function() {
         var positions = [];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(positions);
     });
 
@@ -95,7 +95,7 @@ defineSuite([
         var expectedPositions = [
             new Cartesian3(1.0, 1.0, 1.0),
             new Cartesian3(1.0, 2.0, 3.0)];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
@@ -107,7 +107,7 @@ defineSuite([
         var expectedPositions = [
             new Cartesian3(0.0, 0.0, 1000000.0),
             new Cartesian3(0.0, 0.0, 3000000.0)];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
@@ -121,7 +121,7 @@ defineSuite([
         var expectedPositions = [
             new Cartesian3(0.0, 0.0, 1.0),
             new Cartesian3(0.0, 0.0, 1.0 + (2 * eightyPercentOfEpsilon))];
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
@@ -143,7 +143,7 @@ defineSuite([
                                  new Cartesian3(3.0, 3.0, 3.0),
                                  new Cartesian3(1.0, 1.0, 1.0)];
 
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3, true);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
 
         expect(noDuplicates).toEqual(expectedPositions);
     });
@@ -161,7 +161,7 @@ defineSuite([
                                  new Cartesian3(3.0, 3.0, 3.0),
                                  new Cartesian3(1.0, 1.0, 1.0)];
 
-        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3, true);
+        var noDuplicates = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon, true);
 
         expect(noDuplicates).toEqual(expectedPositions);
     });
