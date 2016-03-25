@@ -860,6 +860,18 @@ defineSuite([
         });
     });
 
+    it('Styles: supports external style maps with styleUrl', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <styleUrl>Data/KML/externalStyle.kml#testStyleMap</styleUrl>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+        });
+    });
+
     it('Styles: inline styles take precedance over shared styles', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Document>\
