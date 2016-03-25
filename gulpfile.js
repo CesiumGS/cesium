@@ -8,6 +8,7 @@ var child_process = require('child_process');
 var crypto = require('crypto');
 var zlib = require('zlib');
 var readline = require('readline');
+var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
@@ -35,6 +36,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -535,6 +537,39 @@ function listAll(s3, bucketName, directory, files, marker) {
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
     });
+}
+
+gulp.task('deploy-status-pending', function (done) {
+    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    setStatus('pending', deployUrl, 'Deploying build...', 'deployment', done);
+});
+
+gulp.task('deploy-status-success', function (done) {
+    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    setStatus('success', deployUrl, 'The build has been successfully deployed.', 'deployment', done);
+});
+
+function setStatus(state, targetUrl, description, context, done) {
+    // skip if the environment does not have the token
+    if (!process.env.TOKEN) {
+        done();
+        return;
+    }
+
+    request.post({
+         url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+         json: true,
+         headers: {
+             'Authorization': 'token ' + process.env.TOKEN,
+             'User-Agent': 'Cesium'
+         },
+         body: {
+             state: state,
+             target_url: targetUrl,
+             description: description,
+             context: context
+         }
+     }, done);
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);

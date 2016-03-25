@@ -20,7 +20,9 @@ script:
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
 
   - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
+  - npm run deploy-status-pending
   - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm run deploy-status-success
   - echo -en 'travis_fold:end:script.deploy\\r'
 
   - echo 'test non-webgl release' && echo -en 'travis_fold:start:script test.release\\r'
