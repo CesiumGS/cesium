@@ -818,7 +818,7 @@ define([
         //Google earth seems to always use the first external style only.
         var externalStyle = queryStringValue(placeMark, 'styleUrl', namespaces.kml);
         if (defined(externalStyle)) {
-            var id;
+            var id = externalStyle;
             if (externalStyle[0] !== '#' && externalStyle.indexOf('#') !== -1) {
                 var tokens = externalStyle.split('#');
                 var uri = tokens[0];
@@ -826,9 +826,8 @@ define([
                     uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
                 }
                 id = uri + '#' + tokens[1];
-            } else {
-                id = externalStyle;
             }
+            
             styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
