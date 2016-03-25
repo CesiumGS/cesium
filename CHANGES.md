@@ -21,6 +21,7 @@ TODO: this is not finished yet:
   * Removed `TileMapServiceImageryProvider`.  Use `createTileMapServiceImageryProvider` instead.
   * Removed `GroundPrimitive.geometryInstance`.  Use `GroundPrimitive.geometryInstances` instead.
   * Removed `definedNotNull`.  Use `defined` instead.
+  * Removed ability to rotate the map in 2D.
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
 * `GeoJsonDataSource` now handles CRS `urn:ogc:def:crs:EPSG::4326`
@@ -37,6 +38,8 @@ TODO: this is not finished yet:
 * Fix bug when upsampling exaggerated terrain where the terrain heights were exaggerated at twice the value. [#3607](https://github.com/AnalyticalGraphicsInc/cesium/issues/3607)
 * Fixed a crash that would occur if you added and removed an `Entity` with a path without ever actually rendering it. [#3738](https://github.com/AnalyticalGraphicsInc/cesium/pull/3738)
 * Added a new sample to Sandcastle using the Pennsylvania terrain data as shown [here](http://cesiumjs.org/2016/03/15/New-Cesium-Terrain-Service-Covering-Pennsylvania/).
+* Added infinite horizontal scrolling in 2D.
+* Fixed issue causing parts of geometry and billboards/labels to be clipped. [#3748](https://github.com/AnalyticalGraphicsInc/cesium/issues/3748)
 
 ### 1.19 - 2016-03-01
 
