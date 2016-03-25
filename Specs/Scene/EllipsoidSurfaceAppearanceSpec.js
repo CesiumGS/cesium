@@ -9,9 +9,7 @@ defineSuite([
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         EllipsoidSurfaceAppearance,
         ColorGeometryInstanceAttribute,
@@ -22,18 +20,17 @@ defineSuite([
         Appearance,
         Material,
         Primitive,
-        createContext,
-        createFrameState,
-        render) {
+        createScene) {
     'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var rectangle;
     var primitive;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        scene.frameState.scene3DOnly = false;
 
         rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
@@ -51,16 +48,12 @@ defineSuite([
     });
 
     beforeEach(function() {
-        frameState = createFrameState(context);
-
-        frameState.camera.setView({ destination : rectangle });
-        var us = context.uniformState;
-        us.update(frameState);
+        scene.camera.setView({ destination : rectangle });
     });
 
     afterAll(function() {
         primitive = primitive && primitive.destroy();
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     it('constructor', function() {
@@ -82,11 +75,10 @@ defineSuite([
     it('renders', function() {
         primitive.appearance = new EllipsoidSurfaceAppearance();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
 }, 'WebGL');
