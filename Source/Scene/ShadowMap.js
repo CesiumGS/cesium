@@ -154,10 +154,21 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.1,
+            normalOffsetScale : 0.2,
             normalShading : false,
             normalShadingSmooth : 0.1,
             depthBias : 0.00001
+        };
+
+        this._pointBias = {
+            polygonOffset : false,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : false,
+            normalOffsetScale : 0.0,
+            normalShading : true,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.001
         };
 
         // Framebuffer resources

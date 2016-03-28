@@ -192,9 +192,9 @@ var viewModel = {
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024,
-    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester Point'],
+    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester Point'],
     model : 'Shadow Tester',
-    locationOptions : ['Exton', 'Everest', 'Pinnacle PA'],
+    locationOptions : ['Exton', 'Everest', 'Pinnacle PA', 'Seneca Rocks', 'Half Dome'],
     location : 'Pinnacle PA',
     modelPositionOptions : ['Center', 'Ground'],
     modelPosition : 'Center',
@@ -215,11 +215,22 @@ var viewModel = {
             polygonOffset : true,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
-            normalOffset : false,
-            normalOffsetScale : 0.1,
+            normalOffset : true,
+            normalOffsetScale : 0.2,
             normalShading : false,
             normalShadingSmooth : 0.1,
             depthBias : 0.00001
+        }),
+        new BiasOptions({
+            type : 'point',
+            polygonOffset : false,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : false,
+            normalOffsetScale : 0.0,
+            normalShading : true,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.001
         })
     ],
     biasMode : Cesium.knockout.observable()
@@ -243,6 +254,8 @@ var uiOptions = {
         'Wood Tower' : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
         'Cesium Air' : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
         'Shadow Tester' : '../../SampleData/models/ShadowTester/Shadow_Tester.gltf',
+        'Shadow Tester 2' : '../../SampleData/models/ShadowTester/Shadow_Tester_2.gltf',
+        'Shadow Tester 3' : '../../SampleData/models/ShadowTester/Shadow_Tester_3.gltf',
         'Shadow Tester Point' : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf'
     },
     locations : {
@@ -267,6 +280,24 @@ var uiOptions = {
         'Pinnacle PA' : {
             'centerLongitude' : -1.3324415110874286,
             'centerLatitude' : 0.6954224325279967,
+            'offsetZ' : 236.6770689945084,
+            'frustumSize' : 55.0,
+            'frustumNear' : 1.0,
+            'frustumFar' : 400.0,
+            'tilt' : 30.0
+        },
+        'Seneca Rocks' : {
+            'centerLongitude' : -1.38519677,
+            'centerLatitude' : 0.67781497,
+            'offsetZ' : 236.6770689945084,
+            'frustumSize' : 55.0,
+            'frustumNear' : 1.0,
+            'frustumFar' : 400.0,
+            'tilt' : 30.0
+        },
+        'Half Dome' : {
+            'centerLongitude' : -2.0862479628,
+            'centerLatitude' : 0.6587902522,
             'offsetZ' : 236.6770689945084,
             'frustumSize' : 55.0,
             'frustumNear' : 1.0,

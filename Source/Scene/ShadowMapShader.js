@@ -89,7 +89,7 @@ define([
         var hasCascades = shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
-        var bias = isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias;
+        var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
         // Force the shader to use decimals to avoid compilation errors
         var depthBias = Number(bias.depthBias).toFixed(10);
