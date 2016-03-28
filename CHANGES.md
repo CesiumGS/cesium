@@ -8,6 +8,8 @@ Change Log
   * Removed `GroundPrimitive.geometryInstance`.  Use `GroundPrimitive.geometryInstances` instead.
   * Removed `definedNotNull`.  Use `defined` instead.
   * Removed ability to rotate the map in 2D.
+* Deprecated
+  * Deprecated `ImageryMaterialProperty.alpha`.  It will be removed in 1.21.  Use `ImageryMaterialProperty.color.alpha` instead.
 * Fixed `TimeIntervalCollection.removeInterval` bug that resulted in too many intervals being removed
 * `GroundPrimitive` throws a `DeveloperError` when passed an unsupported geometry type instead of crashing.
 * `GeoJsonDataSource` now handles CRS `urn:ogc:def:crs:EPSG::4326`
@@ -27,6 +29,8 @@ Change Log
 * Added a new sample to Sandcastle using the Pennsylvania terrain data as shown [here](http://cesiumjs.org/2016/03/15/New-Cesium-Terrain-Service-Covering-Pennsylvania/).
 * Added infinite horizontal scrolling in 2D.
 * Fixed issue causing parts of geometry and billboards/labels to be clipped. [#3748](https://github.com/AnalyticalGraphicsInc/cesium/issues/3748)
+* Added translucent and colored image support to KML ground overlays
+* Fixed bug where transparent image materials were drawn black
 
 ### 1.19 - 2016-03-01
 
