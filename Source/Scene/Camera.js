@@ -2558,12 +2558,16 @@ define([
 
         // Make sure camera doesn't zoom outside set limits
         if (defined(sscc)) {
-            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-
-            //Only change if we clamped the height
-            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
-            }
+                if (mode === SceneMode.SCENE2D && isRectangle) {
+			destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+		}  else {
+			destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+			
+			//Only change if we clamped the height
+			if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
+				destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+			}
+		}
         }
 
         newOptions.destination = destination;
