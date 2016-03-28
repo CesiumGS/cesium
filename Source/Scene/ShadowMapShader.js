@@ -78,22 +78,23 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName, isTerrain) {
         var hasNormalVarying = defined(normalVaryingName) && (fs.indexOf(normalVaryingName) > -1);
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
-        var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
-        var isPointLight = frameState.shadowMap.isPointLight;
-        var usesCubeMap = frameState.shadowMap.usesCubeMap;
-        var hasCascades = frameState.shadowMap.numberOfCascades > 1;
-        var debugVisualizeCascades = frameState.shadowMap.debugVisualizeCascades;
-        var softShadows = frameState.shadowMap.softShadows;
 
-        // Bias tweaks
-        var normalOffset = frameState.shadowMap._normalOffset;
-        var normalOffsetScale = frameState.shadowMap._normalOffsetScale;
-        var normalShading = frameState.shadowMap._normalShading;
-        var normalShadingSmooth = frameState.shadowMap._normalShadingSmooth;
-        var depthBias = frameState.shadowMap._depthBias;
+        var shadowMap = frameState.shadowMap;
+        var usesDepthTexture = shadowMap.usesDepthTexture;
+        var isPointLight = shadowMap.isPointLight;
+        var usesCubeMap = shadowMap.usesCubeMap;
+        var hasCascades = shadowMap.numberOfCascades > 1;
+        var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
+        var softShadows = shadowMap.softShadows;
+        var bias = isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias;
+
+        // Force the shader to use decimals to avoid compilation errors
+        var depthBias = Number(bias.depthBias).toFixed(10);
+        var normalShadingSmooth = Number(bias.normalShadingSmooth).toFixed(10);
+        var normalOffsetScale = Number(bias.normalOffsetScale).toFixed(10);
 
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
         fs +=
@@ -178,11 +179,11 @@ define([
             '    depth -= ' + depthBias + '; \n' +
             '    float visibility = depthCompare(uv, depth); \n') +
 
-            (normalShading && hasNormalVarying ?
+            (bias.normalShading && hasNormalVarying ?
             '    // If the normal is facing away from the light, then it is in shadow \n' +
-            (normalShadingSmooth > 0.0 ?
+            (bias.normalShadingSmooth > 0.0 ?
             '    float strength = clamp(nDotL / ' + normalShadingSmooth + ', 0.0, 1.0); \n' :
-            '    float strength = step(0.0, angle); \n') +
+            '    float strength = step(0.0, nDotL); \n') +
             '    visibility *= strength; \n' : '') +
 
             '    visibility = max(visibility, 0.3); \n' +
@@ -190,7 +191,7 @@ define([
             '} \n' +
             'void applyNormalOffset(inout vec4 positionEC, vec3 normalEC, float nDotL) \n' +
             '{ \n' +
-            (normalOffset && hasNormalVarying ?
+            (bias.normalOffset && hasNormalVarying ?
             '    // Offset the shadow position in the direction of the normal for perpendicular and back faces \n' +
             '    float normalOffsetScale = 1.0 - nDotL; \n' +
             '    vec3 offset = ' + normalOffsetScale + ' * normalOffsetScale * normalEC; \n' +

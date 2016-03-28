@@ -1516,7 +1516,7 @@ define([
         if (shadowsEnabled && model.receiveShadows) {
             drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS, frameState);
             // TODO : assumes the shader has these varyings, which may not be true for some models
-            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC');
+            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC', false);
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({

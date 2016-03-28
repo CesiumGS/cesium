@@ -138,12 +138,27 @@ define([
         this.enabled = false;
         this.softShadows = defaultValue(options.softShadows, false);
 
-        // Bias tweaks
-        this._normalOffset = false;
-        this._normalOffsetScale = 0.0;
-        this._normalShading = false;
-        this._normalShadingSmooth = 0.0;
-        this._depthBias = 0.0;
+        this._terrainBias = {
+            polygonOffset : false,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : true,
+            normalOffsetScale : 9.765,
+            normalShading : true,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.005
+        };
+
+        this._primitiveBias = {
+            polygonOffset : true,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : true,
+            normalOffsetScale : 0.1,
+            normalShading : false,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.00001
+        };
 
         // Framebuffer resources
         this._depthAttachment = undefined;
@@ -212,8 +227,10 @@ define([
             this._usesDepthTexture = false;
         }
 
-        // Create render state for shadow casters
-        createRenderState(this);
+        // Create render states for shadow casters
+        this._primitiveRenderState = undefined;
+        this._terrainRenderState = undefined;
+        createRenderStates(this);
 
         // For clearing the shadow map texture every frame
         this._clearCommand = new ClearCommand({
@@ -226,11 +243,8 @@ define([
         this.setSize(this._shadowMapSize);
     }
 
-    function createRenderState(shadowMap) {
-        // Enable the color mask if the shadow map is backed by a color texture, e.g. when depth textures aren't supported
-        var colorMask = !shadowMap._usesDepthTexture;
-
-        shadowMap._renderState = RenderState.fromCache({
+    function createRenderState(colorMask, bias) {
+        return RenderState.fromCache({
             cull : {
                 enabled : true, // TODO : need to handle objects that don't use back face culling, like walls
                 face : CullFace.BACK
@@ -246,12 +260,24 @@ define([
             },
             depthMask : true,
             polygonOffset : {
-                enabled : true,
-                factor : 1.1,
-                units : 4.0
+                enabled : bias.polygonOffset,
+                factor : bias.polygonOffsetFactor,
+                units : bias.polygonOffsetUnits
             }
         });
     }
+
+    function createRenderStates(shadowMap) {
+        // Enable the color mask if the shadow map is backed by a color texture, e.g. when depth textures aren't supported
+        var colorMask = !shadowMap._usesDepthTexture;
+        shadowMap._primitiveRenderState = createRenderState(colorMask, shadowMap._primitiveBias);
+        shadowMap._terrainRenderState = createRenderState(colorMask, shadowMap._terrainBias);
+    }
+
+    // For debug purposes only. Call this when polygonOffset values change.
+    ShadowMap.prototype._createRenderStates = function() {
+        createRenderStates(this);
+    };
 
     var scratchTexelStepSize = new Cartesian2();
 
@@ -283,6 +309,12 @@ define([
             }
         },
 
+        primitiveRenderState : {
+            get : function() {
+                return this._primitiveRenderState;
+            }
+        },
+
         /**
          * The render state used for rendering shadow casters into the shadow map.
          *
@@ -290,9 +322,9 @@ define([
          * @type {RenderState}
          * @readonly
          */
-        renderState : {
+        terrainRenderState : {
             get : function() {
-                return this._renderState;
+                return this._terrainRenderState;
             }
         },
 
@@ -527,7 +559,7 @@ define([
         // Attempt to make an FBO with only a depth texture. If it fails, fallback to a color texture.
         if (shadowMap._usesDepthTexture && (shadowMap._passFramebuffers[0].status !== WebGLConstants.FRAMEBUFFER_COMPLETE)) {
             shadowMap._usesDepthTexture = false;
-            createRenderState(shadowMap);
+            createRenderStates(shadowMap);
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
         }

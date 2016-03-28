@@ -113,34 +113,35 @@
             <td><select data-bind="options: modelPositionOptions, value: modelPosition"/></td>
         </tr>
         <tr>
-            <td>Bias Tweaks</td>
+            <td>Bias Mode</td>
+            <td><select data-bind="options: biasModes, optionsText : 'type', value: biasMode"/></td>
         </tr>
         <tr>
             <td>Polygon Offset</td>
             <td>
-                <input type="checkbox" data-bind="checked: polygonOffset">
-                <input type="text" size="2" data-bind="value: polygonOffsetFactor">
-                <input type="text" size="2" data-bind="value: polygonOffsetUnits">
+                <input type="checkbox" data-bind="checked: biasMode.polygonOffset">
+                <input type="text" size="2" data-bind="value: biasMode.polygonOffsetFactor">
+                <input type="text" size="2" data-bind="value: biasMode.polygonOffsetUnits">
             </td>
         </tr>
         <tr>
             <td>Normal Offset</td>
             <td>
-                <input type="checkbox" data-bind="checked: normalOffset">
-                <input type="text" size="2" data-bind="value: normalOffsetScale">
+                <input type="checkbox" data-bind="checked: biasMode.normalOffset">
+                <input type="text" size="2" data-bind="value: biasMode.normalOffsetScale">
             </td>
         </tr>
         <tr>
             <td>Normal Shading</td>
             <td>
-                <input type="checkbox" data-bind="checked: normalShading">
-                <input type="text" size="2" data-bind="value: normalShadingSmooth">
+                <input type="checkbox" data-bind="checked: biasMode.normalShading">
+                <input type="text" size="2" data-bind="value: biasMode.normalShadingSmooth">
             </td>
         </tr>
         <tr>
             <td>Depth Bias</td>
             <td>
-                <input type="text" size="2" data-bind="value: depthBias">
+                <input type="text" size="2" data-bind="value: biasMode.depthBias">
             </td>
         </tr>
     </tbody></table>
@@ -150,6 +151,19 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+
+
+function BiasOptions(options) {
+    this.type = options.type;
+    this.polygonOffset = Cesium.knockout.observable(options.polygonOffset);
+    this.polygonOffsetFactor = Cesium.knockout.observable(options.polygonOffsetFactor);
+    this.polygonOffsetUnits = Cesium.knockout.observable(options.polygonOffsetUnits);
+    this.normalOffset = Cesium.knockout.observable(options.normalOffset);
+    this.normalOffsetScale = Cesium.knockout.observable(options.normalOffsetScale);
+    this.normalShading = Cesium.knockout.observable(options.normalShading);
+    this.normalShadingSmooth = Cesium.knockout.observable(options.normalShadingSmooth);
+    this.depthBias = Cesium.knockout.observable(options.depthBias);
+}
 
 var viewModel = {
     lightAngle : 0.0,
@@ -161,7 +175,7 @@ var viewModel = {
     radius : 200.0,
     radiusEnabled : true,
     shadows : true,
-    terrainCast : false,
+    terrainCast : true,
     terrainCastEnabled : true,
     debug : true,
     freeze : false,
@@ -179,37 +193,43 @@ var viewModel = {
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024,
     modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester Point'],
-    model : 'Shadow Tester Point',
+    model : 'Shadow Tester',
     locationOptions : ['Exton', 'Everest', 'Pinnacle PA'],
-    location : 'Exton',
+    location : 'Pinnacle PA',
     modelPositionOptions : ['Center', 'Ground'],
     modelPosition : 'Center',
-
-    // Bias tweaks
-    polygonOffset : true,
-    polygonOffsetFactor : 1.1,
-    polygonOffsetUnits : 4.0,
-    normalOffset : false,
-    normalOffsetScale : 1.0,
-    normalShading : false,
-    normalShadingSmooth : 0.1,
-    depthBias : 0.00001
+    biasModes : [
+        new BiasOptions({
+            type : 'terrain',
+            polygonOffset : false,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : true,
+            normalOffsetScale : 9.765,
+            normalShading : true,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.005
+        }),
+        new BiasOptions({
+            type : 'primitive',
+            polygonOffset : true,
+            polygonOffsetFactor : 1.1,
+            polygonOffsetUnits : 4.0,
+            normalOffset : false,
+            normalOffsetScale : 0.1,
+            normalShading : false,
+            normalShadingSmooth : 0.1,
+            depthBias : 0.00001
+        })
+    ],
+    biasMode : Cesium.knockout.observable()
 };
 
+// Temp values for testing
 viewModel.lightSource = 'Freeform';
 viewModel.lightHorizon = 71.0;
 viewModel.terrainCast = true;
 viewModel.distance = 10000.0;
-
-// These values work for terrain
-viewModel.polygonOffset = false;
-viewModel.polygonOffsetFactor = 1.1;
-viewModel.polygonOffsetUnits = 4.0;
-viewModel.normalOffset = true;
-viewModel.normalOffsetScale = 9.765;
-viewModel.normalShading = true;
-viewModel.normalShadingSmooth = 0.1;
-viewModel.depthBias = 0.005;
 
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
@@ -277,15 +297,17 @@ Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
-// Bias Tweaks
-Cesium.knockout.getObservable(viewModel, 'polygonOffset').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'polygonOffsetFactor').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'polygonOffsetUnits').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'normalOffset').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'normalOffsetScale').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'normalShading').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'normalShadingSmooth').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'depthBias').subscribe(updateShadows);
+for (var i = 0; i < viewModel.biasModes.length; ++i) {
+    var biasMode = viewModel.biasModes[i];
+    biasMode.polygonOffset.subscribe(updateShadows);
+    biasMode.polygonOffsetFactor.subscribe(updateShadows);
+    biasMode.polygonOffsetUnits.subscribe(updateShadows);
+    biasMode.normalOffset.subscribe(updateShadows);
+    biasMode.normalOffsetScale.subscribe(updateShadows);
+    biasMode.normalShading.subscribe(updateShadows);
+    biasMode.normalShadingSmooth.subscribe(updateShadows);
+    biasMode.depthBias.subscribe(updateShadows);
+}
 
 var offset = new Cesium.Cartesian3();
 
@@ -313,17 +335,6 @@ function updateSettings() {
     if (globeVisible) {
         globe.castShadows = viewModel.terrainCast;
     }
-
-    // Bias tweaks
-    // TODO : updating renderState is not usually allowed, but okay for testing
-    shadowMap._renderState.polygonOffset.enabled = viewModel.polygonOffset;
-    shadowMap._renderState.polygonOffset.factor = viewModel.polygonOffsetFactor;
-    shadowMap._renderState.polygonOffset.units = viewModel.polygonOffsetUnits;
-    shadowMap._normalOffset = viewModel.normalOffset;
-    shadowMap._normalOffsetScale = viewModel.normalOffsetScale;
-    shadowMap._normalShading = viewModel.normalShading;
-    shadowMap._normalShadingSmooth = viewModel.normalShadingSmooth;
-    shadowMap._depthBias = viewModel.depthBias;
 }
 
 function updateShadows() {
@@ -368,6 +379,18 @@ function updateShadows() {
             softShadows : softShadows
         });
     }
+
+    // Update bias
+    var bias = shadowMap['_' + viewModel.biasMode.type + 'Bias'];
+    bias.polygonOffset = viewModel.biasMode.polygonOffset();
+    bias.polygonOffsetFactor = viewModel.biasMode.polygonOffsetFactor();
+    bias.polygonOffsetUnits = viewModel.biasMode.polygonOffsetUnits();
+    bias.normalOffset = viewModel.biasMode.normalOffset();
+    bias.normalOffsetScale = viewModel.biasMode.normalOffsetScale();
+    bias.normalShading = viewModel.biasMode.normalShading();
+    bias.normalShadingSmooth = viewModel.biasMode.normalShadingSmooth();
+    bias.depthBias = viewModel.biasMode.depthBias();
+    shadowMap._createRenderStates();
 
     updateSettings();
     updateUI();

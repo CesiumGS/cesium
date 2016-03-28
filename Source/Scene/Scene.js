@@ -1678,7 +1678,8 @@ define([
 
     function getShadowMapCommands(scene) {
         // TODO : temporary solution for testing
-        var shadowMapCommands = [];
+        var terrainCommands = [];
+        var primitiveCommands = [];
         var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
         for (var i = 0; i < numFrustums; ++i) {
@@ -1686,35 +1687,52 @@ define([
             var startPass = Pass.GLOBE;
             var endPass = Pass.TRANSLUCENT;
             for (var pass = startPass; pass <= endPass; ++pass) {
+                var shadowCommands = (pass === Pass.GLOBE) ? terrainCommands : primitiveCommands;
                 var commands = frustumCommands.commands[pass];
                 var length = frustumCommands.indices[pass];
                 for (var j = 0; j < length; ++j) {
                     var command = commands[j];
                     if (command.castShadows) {
-                        shadowMapCommands.push(command);
+                        shadowCommands.push(command);
                     }
                 }
             }
         }
-        return shadowMapCommands;
+        return [terrainCommands, primitiveCommands];
     }
 
     function executeShadowMapCommands(scene) {
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
-        var renderState = shadowMap.renderState;
 
         var commands = getShadowMapCommands(scene);
-        var numberOfCommands = commands.length;
+        var terrainCommands = commands[0];
+        var primitiveCommands = commands[1];
+
+        var j;
+        var command;
+
         var numberOfPasses = shadowMap.numberOfPasses;
         for (var i = 0; i < numberOfPasses; ++i) {
             uniformState.updateCamera(shadowMap.passCameras[i]);
             var passState = shadowMap.passStates[i];
             shadowMap.updatePass(context, i);
-            for (var j = 0; j < numberOfCommands; ++j) {
-                var command = commands[j];
-                executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
+
+            // Execute terrain commands
+            var terrainRenderState = shadowMap.terrainRenderState;
+            var numberOfTerrainCommands = terrainCommands.length;
+            for (j = 0; j < numberOfTerrainCommands; ++j) {
+                command = terrainCommands[j];
+                executeCommand(command, scene, context, passState, terrainRenderState, command.shadowCastProgram);
+            }
+
+            // Execute primitive commands
+            var primitiveRenderState = shadowMap.primitiveRenderState;
+            var numberOfPrimitiveCommands = primitiveCommands.length;
+            for (j = 0; j < numberOfPrimitiveCommands; ++j) {
+                command = primitiveCommands[j];
+                executeCommand(command, scene, context, passState, primitiveRenderState, command.shadowCastProgram);
             }
         }
     }
