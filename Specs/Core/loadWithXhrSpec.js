@@ -133,7 +133,7 @@ defineSuite([
             });
         });
 
-        it('can support 2xx HTTP status (other than 200)', function(){
+        xit('can support 2xx HTTP status (other than 200)', function(){
             return loadWithXhr({
                 method: 'POST',
                 url: 'http://jsonplaceholder.typicode.com/posts',
