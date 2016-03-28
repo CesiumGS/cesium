@@ -820,10 +820,16 @@ define([
         //Google earth seems to always use the first external style only.
         var externalStyle = queryStringValue(placeMark, 'styleUrl', namespaces.kml);
         if (defined(externalStyle)) {
-            //Google Earth ignores leading and trailing whitespace for styleUrls
-            //Without the below trim, some docs that load in Google Earth won't load
-            //in cesium.
             var id = externalStyle;
+            if (externalStyle[0] !== '#' && externalStyle.indexOf('#') !== -1) {
+                var tokens = externalStyle.split('#');
+                var uri = tokens[0];
+                if (defined(sourceUri)) {
+                    uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
+                }
+                id = uri + '#' + tokens[1];
+            }
+            
             styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
@@ -896,10 +902,14 @@ define([
 
                                 var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                                 if (defined(styleUrl)) {
-                                    var base = styleCollection.getById(styleUrl);
-                                    if (!defined(base)) {
-                                        base = styleCollection.getById('#' + styleUrl);
+                                    if (styleUrl[0] !== '#') {
+                                        styleUrl = '#' + styleUrl;
                                     }
+
+                                    if (isExternal && defined(sourceUri)) {
+                                        styleUrl = sourceUri + styleUrl;
+                                    }
+                                    var base = styleCollection.getById(styleUrl);
 
                                     if (defined(base)) {
                                         styleEntity.merge(base);

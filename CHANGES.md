@@ -34,6 +34,7 @@ TODO: this is not finished yet:
 * Fix issue where the `GroundPrimitive` volume was being clipped by the far plane. [#3706](https://github.com/AnalyticalGraphicsInc/cesium/issues/3706)
 * Fixed issue where `Camera.computeViewRectangle` was incorrect when crossing the international date line [#3717](https://github.com/AnalyticalGraphicsInc/cesium/issues/3717)
 * Added `Rectangle` result parameter to `Camera.computeViewRectangle`
+* Fixed issue in KML where StyleMaps from external documents fail to load.
 * Fixed a reentrancy bug in `EntityCollection.collectionChanged`. [#3739](https://github.com/AnalyticalGraphicsInc/cesium/pull/3739)
 * Fix bug when upsampling exaggerated terrain where the terrain heights were exaggerated at twice the value. [#3607](https://github.com/AnalyticalGraphicsInc/cesium/issues/3607)
 * Fixed a crash that would occur if you added and removed an `Entity` with a path without ever actually rendering it. [#3738](https://github.com/AnalyticalGraphicsInc/cesium/pull/3738)
