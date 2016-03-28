@@ -826,6 +826,10 @@ define([
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
         }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, this.position);
+        }
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1240,15 +1244,15 @@ define([
     };
 
     function clampMove2D(camera, position) {
-        var maxX = camera._maxCoord.x * camera.maximumTranslateFactor;
+        var maxX = camera._maxCoord.x;
         if (position.x > maxX) {
-            position.x = maxX;
+            position.x = position.x - maxX * 2.0;
         }
         if (position.x < -maxX) {
-            position.x = -maxX;
+            position.x = position.x + maxX * 2.0;
         }
 
-        var maxY = camera._maxCoord.y * camera.maximumTranslateFactor;
+        var maxY = camera._maxCoord.y;
         if (position.y > maxY) {
             position.y = maxY;
         }
@@ -1610,7 +1614,7 @@ define([
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
 
-        var maxRight = camera._maxCoord.x * camera.maximumZoomFactor;
+        var maxRight = camera._maxCoord.x;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;
@@ -2109,8 +2113,7 @@ define([
         position.z = 0.0;
         var cart = projection.unproject(position);
 
-        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
             return undefined;
         }
 
@@ -2299,63 +2302,6 @@ define([
         return Math.max(pixelSize.x, pixelSize.y);
     };
 
-    function createAnimation2D(camera, duration) {
-        var position = camera.position;
-        var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
-        var translateY = position.y < -camera._maxCoord.y || position.y > camera._maxCoord.y;
-        var animatePosition = translateX || translateY;
-
-        var frustum = camera.frustum;
-        var top = frustum.top;
-        var bottom = frustum.bottom;
-        var right = frustum.right;
-        var left = frustum.left;
-        var startFrustum = camera._max2Dfrustum;
-        var animateFrustum = right > camera._max2Dfrustum.right;
-
-        if (animatePosition || animateFrustum) {
-            var translatedPosition = Cartesian3.clone(position);
-
-            if (translatedPosition.x > camera._maxCoord.x) {
-                translatedPosition.x = camera._maxCoord.x;
-            } else if (translatedPosition.x < -camera._maxCoord.x) {
-                translatedPosition.x = -camera._maxCoord.x;
-            }
-
-            if (translatedPosition.y > camera._maxCoord.y) {
-                translatedPosition.y = camera._maxCoord.y;
-            } else if (translatedPosition.y < -camera._maxCoord.y) {
-                translatedPosition.y = -camera._maxCoord.y;
-            }
-
-            var update2D = function(value) {
-                if (animatePosition) {
-                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time, camera.position);
-                }
-                if (animateFrustum) {
-                    camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
-                    camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
-                    camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
-                    camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
-                }
-            };
-
-            return {
-                easingFunction : EasingFunction.EXPONENTIAL_OUT,
-                startObject : {
-                    time : 0.0
-                },
-                stopObject : {
-                    time : 1.0
-                },
-                duration : duration,
-                update : update2D
-            };
-        }
-
-        return undefined;
-    }
-
     function createAnimationTemplateCV(camera, position, center, maxX, maxY, duration) {
         var newPosition = Cartesian3.clone(position);
 
@@ -2442,9 +2388,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            return createAnimation2D(this, duration);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+        if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return createAnimationCV(this, duration);
         }
 
@@ -2453,6 +2397,7 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
+    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2553,16 +2498,26 @@ define([
         }
 
         var sscc = this._scene.screenSpaceCameraController;
-        var ellipsoid = this._scene.mapProjection.ellipsoid;
-        var destinationCartographic = Cartographic.fromCartesian(destination);
 
-        // Make sure camera doesn't zoom outside set limits
-        if (defined(sscc)) {
-            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+        if (defined(sscc) || mode === SceneMode.SCENE2D) {
+            var ellipsoid = this._scene.mapProjection.ellipsoid;
+            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
+            var height = destinationCartographic.height;
+
+            // Make sure camera doesn't zoom outside set limits
+            if (defined(sscc)) {
+                destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+            }
+
+            // The max height in 2D might be lower than the max height for sscc.
+            if (mode === SceneMode.SCENE2D) {
+                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
+                destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+            }
 
             //Only change if we clamped the height
-            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            if (destinationCartographic.height !== height) {
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
             }
         }
 

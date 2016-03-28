@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Color',
@@ -18,6 +19,7 @@ define([
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -301,7 +303,7 @@ define([
         var j;
         var k;
 
-        var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
+        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
 
         var positionsLength = positions.length;
         if (positionsLength < 2) {

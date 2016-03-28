@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
+        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -20,7 +22,9 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
+        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -475,7 +479,7 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -484,7 +488,7 @@ define([
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
