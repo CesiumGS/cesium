@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/MaterialAppearance',
+        'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/GeometryInstance',
@@ -10,11 +11,10 @@ defineSuite([
         'Scene/Appearance',
         'Scene/Material',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         MaterialAppearance,
+        Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
         GeometryInstance,
@@ -24,31 +24,27 @@ defineSuite([
         Appearance,
         Material,
         Primitive,
-        createContext,
-        createFrameState,
-        render) {
+        createScene
+) {
     'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var primitive;
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        scene.camera.setView({ destination : rectangle });
     });
 
-    beforeEach(function() {
-        frameState = createFrameState(context);
-
-        frameState.camera.setView({ destination : rectangle });
-        var us = context.uniformState;
-        us.update(frameState);
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && primitive.destroy();
     });
 
     afterAll(function() {
-        primitive = primitive && primitive.destroy();
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     function createPrimitive(vertexFormat) {
@@ -88,15 +84,14 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.BASIC,
             translucent : false,
-            closed : true,
-            material : Material.fromType(Material.DotType)
+            closed : true
         });
+        primitive.material = Material.fromType(Material.DotType)
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders textured', function() {
@@ -104,15 +99,14 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
             translucent : false,
-            closed : true,
-            material : Material.fromType(Material.ImageType)
+            closed : true
         });
+        primitive.material = Material.fromType(Material.ImageType);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders all', function() {
@@ -120,15 +114,14 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.ALL,
             translucent : false,
-            closed : true,
-            material : Material.fromType(Material.NormalMapType)
+            closed : true
         });
+        primitive.material = Material.fromType(Material.NormalMapType);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
 }, 'WebGL');
