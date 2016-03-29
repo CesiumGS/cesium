@@ -64,6 +64,12 @@ defineSuite([
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
 
+    // 1 tile with translucent features
+    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
+
+    // 1 tile with opaque and translucent features
+    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
     var originalMaximumRequests;
@@ -941,6 +947,51 @@ defineSuite([
             tileset.style = undefined;
             color = scene.renderForSpecs();
             expect(color).toEqual(originalColor);
+        });
+    });
+
+    function expectColorStyle(tileset) {
+        var originalColor = scene.renderForSpecs();
+        tileset.style = new Cesium3DTileStyle({color : 'color("blue")'});
+        var color = scene.renderForSpecs();
+
+        expect(color[0]).toEqual(0);
+        expect(color[1]).toEqual(0);
+        expect(color[2]).toBeGreaterThan(0);
+        expect(color[3]).toEqual(255);
+
+        // set color to transparent
+        tileset.style = new Cesium3DTileStyle({color : 'color("blue", 0.0)'});
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        tileset.style = new Cesium3DTileStyle({color : 'color("cyan")'});
+        color = scene.renderForSpecs();
+        expect(color[0]).toEqual(0);
+        expect(color[1]).toBeGreaterThan(0);
+        expect(color[2]).toBeGreaterThan(0);
+        expect(color[3]).toEqual(255);
+
+        // Remove style
+        tileset.style = undefined;
+        color = scene.renderForSpecs();
+        expect(color).toEqual(originalColor);
+    }
+
+    xit('applies color style to a tileset with translucent tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies color style to a tileset with translucent tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies color style to a tileset with translucent and opaque tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
+            expectColorStyle(tileset);
         });
     });
 
