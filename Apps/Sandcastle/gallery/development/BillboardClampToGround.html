@@ -35,7 +35,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
-    url : '//assets.agi.com/stk-terrain/world'
+    url : 'https://assets.agi.com/stk-terrain/world'
 });
 viewer.terrainProvider = cesiumTerrainProviderMeshes;
 viewer.scene.globe.depthTestAgainstTerrain = true;
