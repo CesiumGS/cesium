@@ -1620,6 +1620,8 @@ define([
             }
 
             geometry.material = href;
+            geometry.material.color = queryColorValue(groundOverlay, 'color', namespaces.kml);
+            geometry.material.transparent = true;
         } else {
             geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }
