@@ -1518,12 +1518,11 @@ defineSuite([
                                     1000000.0, 0.0, 0.0,
                                     1000000.0, 1000000.0, 0.0,
                                     1000000.0, 0.0, 1000000.0,
-                                    1000000.0, 0.0, 1000000.0,
-                                    1000000.0, 1000000.0, 0.0,
                                     1000000.0, 1000000.0, 1000000.0
                                 ])
                             })
                         },
+                        indices : new Uint16Array([0, 1, 2, 2, 1, 3]),
                         primitiveType : PrimitiveType.TRIANGLES
                     }),
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -1578,7 +1577,7 @@ defineSuite([
                     }),
                     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                         Cartesian3.fromDegrees(0,0)), new Cartesian3(0.0, 0.0, 10000.0), new Matrix4()),
-                    id : 'customWithIndices',
+                    id : 'customWithoutIndices',
                     attributes : {
                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
                     }
