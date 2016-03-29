@@ -38,6 +38,7 @@ scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;
 
 var tilesetUrl = '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/';
+var translucentUrl = '../../../Specs/Data/Cesium3DTiles/Tilesets/Translucent/';
 var batchedUrl = '../../../Specs/Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
 var instancedUrl = '../../../Specs/Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
 var compositeUrl = '../../../Specs/Data/Cesium3DTiles/Composite/Composite/';
@@ -309,6 +310,11 @@ Sandcastle.addToolbarMenu([ {
     text : 'Tileset',
     onselect : function() {
         loadTileset(tilesetUrl);
+    }
+}, {
+    text : 'Translucent',
+    onselect : function() {
+        loadTileset(translucentUrl);
     }
 }, {
     text : 'Batched',
