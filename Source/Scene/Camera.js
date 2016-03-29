@@ -2553,20 +2553,35 @@ define([
         }
 
         var sscc = this._scene.screenSpaceCameraController;
-        var ellipsoid = this._scene.mapProjection.ellipsoid;
-        var destinationCartographic = Cartographic.fromCartesian(destination);
+		
+        if (defined(sscc) || mode === SceneMode.SCENE2D) {
+            var ellipsoid = this._scene.mapProjection.ellipsoid;
+            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
+            var height = destinationCartographic.height;
 
-        // Make sure camera doesn't zoom outside set limits
-        if (defined(sscc)) {
-			if (mode !== SceneMode.SCENE3D && isRectangle) {
-				destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-			}  else {
-				destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-				
-				//Only change if we clamped the height
-				if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
-					destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            // Make sure camera doesn't zoom outside set limits
+            if (defined(sscc)) {
+				//The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
+				if (mode !== SceneMode.SCENE3D && isRectangle) {
+					destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+				} else {
+					destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);	
 				}
+			}
+			
+			// The max height in 2D might be lower than the max height for sscc.
+			if (mode === SceneMode.SCENE2D) {
+				var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
+				if (isRectangle) {
+					destination.z = Math.min(destination.z, maxHeight);
+				} else {
+					destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);					
+				}
+			}	
+			
+			//Only change if we clamped the height
+			if (destinationCartographic.height !== height) {
+				destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
 			}
         }
 
