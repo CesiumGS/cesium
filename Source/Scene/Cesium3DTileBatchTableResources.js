@@ -404,6 +404,7 @@ define([
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
                 newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
+                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec4 tile_featureColor; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -412,22 +413,19 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
                     '    gl_Position *= show; \n' +                         // Per-feature show/hide
-// TODO: this will not work when the model itself has translucent parts: they will be culled below as "opaque";
-//       instead, we could cull at the end of the fragment shader when we know the real alpha, or could pass
-//       a uniform flag so this only culls during the style's translucent pass
 // TODO: Translucent should still write depth for picking?  For example, we want to grab highlighted building that became translucent
 // TODO: Same TODOs below in getFragmentShaderCallback
-                    '    bool isTranslucent = (featureProperties.a != 1.0); \n' +
+                    '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
                     '    if (czm_pass == czm_passTranslucent) \n' +
                     '    { \n' +
-                    '        if (!isTranslucent) \n' +         // Do not render opaque features in the translucent pass
+                    '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
                     '        { \n' +
                     '            gl_Position *= 0.0; \n' +
                     '        } \n' +
                     '    } \n' +
                     '    else \n' +
                     '    { \n' +
-                    '        if (isTranslucent) \n' +         // Do not render translucent features in the opaque pass
+                    '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
                     '        { \n' +
                     '            gl_Position *= 0.0; \n' +
                     '        } \n' +
@@ -495,6 +493,7 @@ define([
             } else {
                 newMain =
                     'uniform sampler2D tile_batchTexture; \n' +
+                    'uniform bool tile_translucentCommand; \n' +
                     'varying vec2 tile_featureSt; \n' +
                     'void main() \n' +
                     '{ \n' +
@@ -502,19 +501,19 @@ define([
                     '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
                     '    } \n' +
-                    '    bool isTranslucent = (featureProperties.a != 1.0); \n' +
+                    '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
                     '    if (czm_pass == czm_passTranslucent) \n' +
                     '    { \n' +
-                    '        if (!isTranslucent) \n' +         // Do not render opaque features in the translucent pass
+                    '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
                     '        { \n' +
-                    '            discard; \n' +
+                    '            gl_Position *= 0.0; \n' +
                     '        } \n' +
                     '    } \n' +
                     '    else \n' +
                     '    { \n' +
-                    '        if (isTranslucent) \n' +         // Do not render translucent features in the opaque pass
+                    '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
                     '        { \n' +
-                    '            discard; \n' +
+                    '            gl_Position *= 0.0; \n' +
                     '        } \n' +
                     '    } \n' +
                     '    tile_main(); \n' +
@@ -666,67 +665,98 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var CommandsNeeded = {
+    var StyleCommandsNeeded = {
         ALL_OPAQUE : 0,
         ALL_TRANSLUCENT : 1,
         OPAQUE_AND_TRANSLUCENT : 2
     };
 
     Cesium3DTileBatchTableResources.prototype.getAddCommand = function() {
-        var commandsNeeded = getCommandsNeeded(this);
+        var styleCommandsNeeded = getStyleCommandsNeeded(this);
 
 // TODO: This function most likely will not get optimized.  Do something like this later in the render loop.
         return function(command) {
             var commandList = this.commandList;
 
-            // If the styling applied to the tile is all opaque, use the original commands.
-            //
-            // If the styling is all translucent, use new (cached) derived commands with a
-            // translucent render state.
-            //
-            // If the styling causes both opaque and translucent features in this tile,
-            // then use both sets of commands.
+            var derivedCommands = command.derivedCommands.tileset;
+            if (!defined(derivedCommands)) {
+                derivedCommands = {};
+                command.derivedCommands.tileset = derivedCommands;
 
-            if ((commandsNeeded === CommandsNeeded.ALL_OPAQUE) ||
-                (commandsNeeded === CommandsNeeded.OPAQUE_AND_TRANSLUCENT)) {
-                commandList.push(command);
+                derivedCommands.originalCommand = deriveCommand(command);
+                derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
+                derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
             }
 
-            if ((commandsNeeded === CommandsNeeded.ALL_TRANSLUCENT) ||
-                (commandsNeeded === CommandsNeeded.OPAQUE_AND_TRANSLUCENT)) {
-
-                var derivedCommands = command.derivedCommands.tileset;
-                if (!defined(derivedCommands)) {
-                    derivedCommands = {};
-                    command.derivedCommands.tileset = derivedCommands;
-
-// TODO: vector tiles, for example, will not always want two passes for translucency
-                    derivedCommands.back = deriveTranslucentCommand(command, CullFace.FRONT);
-                    derivedCommands.front = deriveTranslucentCommand(command, CullFace.BACK);
+            // If the command was originally opaque:
+            //    * If the styling applied to the tile is all opaque, use the original command
+            //      (with one additional uniform needed for the shader).
+            //    * If the styling is all translucent, use new (cached) derived commands (front
+            //      and back faces) with a translucent render state.
+            //    * If the styling causes both opaque and translucent features in this tile,
+            //      then use both sets of commands.
+// TODO: if the tile has multiple commands, we do not know what features are in what
+// commands so the third-case may be overkill.  Change this to a PERFORMANCE_IDEA?
+            if (command.pass !== Pass.TRANSLUCENT) {
+                if (styleCommandsNeeded === StyleCommandsNeeded.ALL_OPAQUE) {
+                    commandList.push(derivedCommands.originalCommand);
                 }
 
-                commandList.push(derivedCommands.back);
-                commandList.push(derivedCommands.front);
+                if (styleCommandsNeeded === StyleCommandsNeeded.ALL_TRANSLUCENT) {
+// TODO: vector tiles, for example, will not always want two passes for translucency.  Some primitives,
+// for example, those created from Cesium geometries, will also already return commands for two
+// passes if the command is originally translucent.  Same TODO below.
+                    commandList.push(derivedCommands.back);
+                    commandList.push(derivedCommands.front);
+                }
+
+                if (styleCommandsNeeded === StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT) {
+                    commandList.push(derivedCommands.originalCommand);
+                    commandList.push(derivedCommands.back);
+                    commandList.push(derivedCommands.front);
+                }
+            } else {
+                // Command was originally translucent so no need to derive new commands;
+                // as of now, a style can't change an originally translucent feature to
+                // opaque since the style's alpha is modulated, not a replacement.  When
+                // this changes, we need to derive new opaque commands here.
+                commandList.push(derivedCommands.originalCommand);
             }
         };
     };
 
-    function getCommandsNeeded(batchTableResources) {
+    function getStyleCommandsNeeded(batchTableResources) {
         var translucentFeaturesLength = batchTableResources._translucentFeaturesLength;
 
         if (translucentFeaturesLength === 0) {
-            return CommandsNeeded.ALL_OPAQUE;
+            return StyleCommandsNeeded.ALL_OPAQUE;
         } else if (translucentFeaturesLength === batchTableResources.featuresLength) {
-            return CommandsNeeded.ALL_TRANSLUCENT;
+            return StyleCommandsNeeded.ALL_TRANSLUCENT;
         }
 
-        return CommandsNeeded.OPAQUE_AND_TRANSLUCENT;
+        return StyleCommandsNeeded.OPAQUE_AND_TRANSLUCENT;
     }
 
     function deriveTranslucentCommand(command, cullFace) {
-        var derivedCommand = DrawCommand.shallowClone(command);
+        var derivedCommand = deriveCommand(command);
         derivedCommand.pass = Pass.TRANSLUCENT;
         derivedCommand.renderState = getTranslucentRenderState(command.renderState, cullFace);
+        return derivedCommand;
+    }
+
+    function deriveCommand(command) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+
+        // Add a uniform to indicate if the original command was translucent so
+        // the shader knows not to cull vertices that were originally transparent
+        // even though their style is opaque.
+        var translucentCommand = (derivedCommand.pass === Pass.TRANSLUCENT);
+
+        derivedCommand.uniformMap = defined(derivedCommand.uniformMap) ? derivedCommand.uniformMap : {};
+        derivedCommand.uniformMap.tile_translucentCommand = function() {
+            return translucentCommand;
+        };
+
         return derivedCommand;
     }
 
