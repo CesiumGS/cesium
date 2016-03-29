@@ -503,7 +503,7 @@ defineSuite([
                         Transforms.eastNorthUpToFixedFrame(geometry.boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height), new Matrix4());
                 scene.camera.lookAtTransform(transform, new Cartesian3(0.0, 0.0, geometry.boundingSphere.radius));
-               scene.camera.rotateDown(CesiumMath.PI);
+                scene.camera.rotateDown(CesiumMath.PI);
             }
             render3D(instance, afterView);
         });
@@ -1561,16 +1561,16 @@ defineSuite([
                     geometry : new Geometry({
                         attributes : {
                             position : new GeometryAttribute({
-                                 componentDatatype : ComponentDatatype.DOUBLE,
-                                 componentsPerAttribute : 3,
-                                 values : new Float64Array([
-                                     1000000.0, 0.0, 0.0,
-                                     1000000.0, 1000000.0, 0.0,
-                                     1000000.0, 0.0, 1000000.0,
-                                     1000000.0, 0.0, 1000000.0,
-                                     1000000.0, 1000000.0, 0.0,
-                                     1000000.0, 1000000.0, 1000000.0
-                                 ])
+                                componentDatatype : ComponentDatatype.DOUBLE,
+                                componentsPerAttribute : 3,
+                                values : new Float64Array([
+                                    1000000.0, 0.0, 0.0,
+                                    1000000.0, 1000000.0, 0.0,
+                                    1000000.0, 0.0, 1000000.0,
+                                    1000000.0, 0.0, 1000000.0,
+                                    1000000.0, 1000000.0, 0.0,
+                                    1000000.0, 1000000.0, 1000000.0
+                                ])
                             })
                         },
                         primitiveType : PrimitiveType.TRIANGLES

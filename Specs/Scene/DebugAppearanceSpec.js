@@ -320,7 +320,7 @@ defineSuite([
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
-                glslDatatype : 'vec3',
+                glslDatatype : 'vec3'
             }),
             asynchronous : false
         });
