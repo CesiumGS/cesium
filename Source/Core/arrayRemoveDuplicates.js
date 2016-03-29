@@ -45,13 +45,14 @@ define([
      */
     function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
         if (!defined(equalsEpsilon)) {
             throw new DeveloperError('equalsEpsilon is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(values)) {
+            return values;
+        }
 
         wrapAround = defaultValue(wrapAround, false);
 
