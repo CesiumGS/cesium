@@ -84,9 +84,9 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.BASIC,
             translucent : false,
-            closed : true
+            closed : true,
+            material : Material.fromType(Material.DotType)
         });
-        primitive.material = Material.fromType(Material.DotType)
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
@@ -99,9 +99,11 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
             translucent : false,
-            closed : true
+            closed : true,
+            material : Material.fromType(Material.ImageType, {
+                image : '../Data/images/Red16x16.png'
+            })
         });
-        primitive.material = Material.fromType(Material.ImageType);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
@@ -114,9 +116,11 @@ defineSuite([
         primitive.appearance = new MaterialAppearance({
             materialSupport : MaterialAppearance.MaterialSupport.ALL,
             translucent : false,
-            closed : true
+            closed : true,
+            material : Material.fromType(Material.EmissionMapType, {
+                image : '../Data/images/BlueAlpha.png'
+            })
         });
-        primitive.material = Material.fromType(Material.NormalMapType);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
