@@ -5,15 +5,14 @@ define([
     ], function(
         Tween,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Easing functions for use with {@link TweenCollection}.  These function are from
      * {@link https://github.com/sole/tween.js/|Tween.js} and Robert Penner.  See the
      * {@link http://sole.github.io/tween.js/examples/03_graphs.html|Tween.js graphs for each function}.
      *
-     * @namespace
-     * @alias EasingFunction
+     * @exports EasingFunction
      */
     var EasingFunction = {
         /**

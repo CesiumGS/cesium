@@ -43,7 +43,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
-    "use strict";
+    'use strict';
 
     var defaultResolution = 60.0;
     var defaultWidth = 1.0;
@@ -52,12 +52,12 @@ define([
     var subSampleCompositePropertyScratch = new TimeInterval();
     var subSampleIntervalPropertyScratch = new TimeInterval();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.polyline = undefined;
         this.index = undefined;
         this.updater = undefined;
-    };
+    }
 
     function subSampleSampledProperty(property, start, stop, times, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var r = startingIndex;
@@ -266,14 +266,13 @@ define([
     }
 
     var toFixedScratch = new Matrix3();
-    var PolylineUpdater = function(scene, referenceFrame) {
+    function PolylineUpdater(scene, referenceFrame) {
         this._unusedIndexes = [];
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
         scene.primitives.add(this._polylineCollection);
-    };
-
+    }
     PolylineUpdater.prototype.update = function(time) {
         if (this._referenceFrame === ReferenceFrame.INERTIAL) {
             var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
@@ -366,7 +365,7 @@ define([
         var resolution = Property.getValueOrDefault(pathGraphics._resolution, time, defaultResolution);
 
         polyline.show = true;
-        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions);
+        polyline.positions = subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.positions.slice());
         polyline.material = MaterialProperty.getValue(time, pathGraphics._material, polyline.material);
         polyline.width = Property.getValueOrDefault(pathGraphics._width, time, defaultWidth);
     };
@@ -394,7 +393,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var PathVisualizer = function(scene, entityCollection) {
+    function PathVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -412,7 +411,7 @@ define([
         this._items = new AssociativeArray();
 
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates all of the primitives created by this visualizer to match their
@@ -530,7 +529,9 @@ define([
             entity = removed[i];
             item = items.get(entity.id);
             if (defined(item)) {
-                item.updater.removeObject(item);
+                if (defined(item.updater)) {
+                    item.updater.removeObject(item);
+                }
                 items.remove(entity.id);
             }
         }

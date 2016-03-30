@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Color',
@@ -18,6 +19,7 @@ define([
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -35,7 +37,7 @@ define([
         PolylinePipeline,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchInterpolateColorsArray = [];
 
@@ -110,7 +112,7 @@ define([
      * });
      * var geometry = Cesium.PolylineGeometry.createGeometry(polyline);
      */
-    var PolylineGeometry = function(options) {
+    function PolylineGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
         var colors = options.colors;
@@ -147,13 +149,12 @@ define([
          * @type {Number}
          */
         this.packedLength = numComponents + Ellipsoid.packedLength + VertexFormat.packedLength + 4;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {PolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -218,6 +219,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolylineGeometry} [result] The object into which to store the result.
+     * @returns {PolylineGeometry} The modified result parameter or a new PolylineGeometry instance if one was not provided.
      */
     PolylineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -297,13 +299,11 @@ define([
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
-        var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-
         var i;
         var j;
         var k;
 
-        var positions = PolylinePipeline.removeDuplicates(polylineGeometry._positions);
+        var positions = arrayRemoveDuplicates(polylineGeometry._positions, Cartesian3.equalsEpsilon);
 
         var positionsLength = positions.length;
         if (positionsLength < 2) {
@@ -312,6 +312,7 @@ define([
 
         if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
@@ -370,10 +371,6 @@ define([
         var expandAndWidthIndex = 0;
         var stIndex = 0;
         var colorIndex = 0;
-
-        var segmentLength;
-        var segmentIndex = 0;
-        var count = 0;
         var position;
 
         for (j = 0; j < positionsLength; ++j) {

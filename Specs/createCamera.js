@@ -13,9 +13,9 @@ define([
         GeographicProjection,
         Matrix4,
         Camera) {
-    "use strict";
+    'use strict';
 
-    var MockScene = function(canvas) {
+    function MockScene(canvas) {
         canvas = defaultValue(canvas, {
             clientWidth: 512,
             clientHeight: 384
@@ -25,7 +25,7 @@ define([
         this.drawingBufferWidth = canvas.clientWidth * 2;
         this.drawingBufferHeight = canvas.clientHeight * 2;
         this.mapProjection = new GeographicProjection();
-    };
+    }
 
     function createCamera(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

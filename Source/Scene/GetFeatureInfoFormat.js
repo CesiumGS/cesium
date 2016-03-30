@@ -3,7 +3,6 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
@@ -11,11 +10,10 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        definedNotNull,
         DeveloperError,
         RuntimeError,
         ImageryLayerFeatureInfo) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
@@ -24,15 +22,15 @@ define([
      * @constructor
      *
      * @param {String} type The type of response to expect from a GetFeatureInfo request.  Valid
-     *        values are 'json', 'xml', or 'text'.
+     *        values are 'json', 'xml', 'html', or 'text'.
      * @param {String} [format] The info format to request from the WMS server.  This is usually a
      *        MIME type such as 'application/json' or text/xml'.  If this parameter is not specified, the provider will request 'json'
      *        using 'application/json', 'xml' using 'text/xml', 'html' using 'text/html', and 'text' using 'text/plain'.
-     * @param {Function} [options.callback] A function to invoke with the GetFeatureInfo response from the WMS server
+     * @param {Function} [callback] A function to invoke with the GetFeatureInfo response from the WMS server
      *        in order to produce an array of picked {@link ImageryLayerFeatureInfo} instances.  If this parameter is not specified,
      *        a default function for the type of response is used.
      */
-    var GetFeatureInfoFormat = function(type, format, callback) {
+    function GetFeatureInfoFormat(type, format, callback) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
@@ -78,7 +76,7 @@ define([
         }
 
         this.callback = callback;
-    };
+    }
 
     function geoJsonToFeatureInfo(json) {
         var result = [];
@@ -94,7 +92,7 @@ define([
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
             // If this is a point feature, use the coordinates of the point.
-            if (definedNotNull(feature.geometry) && feature.geometry.type === 'Point') {
+            if (defined(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
                 var latitude = feature.geometry.coordinates[1];
                 featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
@@ -125,6 +123,8 @@ define([
         } else if (documentElement.localName === 'ServiceExceptionReport') {
             // This looks like a WMS server error, so no features picked.
             throw new RuntimeError(new XMLSerializer().serializeToString(documentElement));
+        } else if (documentElement.localName === 'msGMLOutput') {
+                return msGmlToFeatureInfo(xml);
         } else {
             // Unknown response type, so just dump the XML itself into the description.
             return unknownXmlToFeatureInfo(xml);
@@ -164,28 +164,45 @@ define([
     }
 
     function esriXmlToFeatureInfo(xml) {
-        var result = [];
-
         var featureInfoResponse = xml.documentElement;
+        var result = [];
+        var properties;
 
-        var features = featureInfoResponse.getElementsByTagNameNS(esriWmsNamespace, 'FIELDS');
-        for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
-            var feature = features[featureIndex];
+        var features = featureInfoResponse.getElementsByTagNameNS('*', 'FIELDS');
+        if (features.length > 0) {
+            // Standard esri format
+            for (var featureIndex = 0; featureIndex < features.length; ++featureIndex) {
+                var feature = features[featureIndex];
 
-            var properties = {};
+                properties = {};
 
-            var propertyAttributes = feature.attributes;
-            for (var attributeIndex = 0; attributeIndex < propertyAttributes.length; ++attributeIndex) {
-                var attribute = propertyAttributes[attributeIndex];
-                properties[attribute.name] = attribute.value;
+                var propertyAttributes = feature.attributes;
+                for (var attributeIndex = 0; attributeIndex < propertyAttributes.length; ++attributeIndex) {
+                    var attribute = propertyAttributes[attributeIndex];
+                    properties[attribute.name] = attribute.value;
+                }
+
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(feature, properties));
             }
+        } else {
+            // Thredds format -- looks like esri, but instead of containing FIELDS, contains FeatureInfo element
+            var featureInfoElements = featureInfoResponse.getElementsByTagNameNS('*', 'FeatureInfo');
+            for (var featureInfoElementIndex = 0; featureInfoElementIndex < featureInfoElements.length; ++featureInfoElementIndex) {
+                var featureInfoElement = featureInfoElements[featureInfoElementIndex];
 
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = feature;
-            featureInfo.properties = properties;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
+                properties = {};
+
+                // node.children is not supported in IE9-11, so use childNodes and check that child.nodeType is an element
+                var featureInfoChildren = featureInfoElement.childNodes;
+                for (var childIndex = 0; childIndex < featureInfoChildren.length; ++childIndex) {
+                    var child = featureInfoChildren[childIndex];
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        properties[child.localName] = child.textContent;
+                    }
+                }
+
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(featureInfoElement, properties));
+            }
         }
 
         return result;
@@ -201,15 +218,38 @@ define([
             var featureMember = featureMembers[featureIndex];
 
             var properties = {};
-
             getGmlPropertiesRecursively(featureMember, properties);
+            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+        }
 
-            var featureInfo = new ImageryLayerFeatureInfo();
-            featureInfo.data = featureMember;
-            featureInfo.properties = properties;
-            featureInfo.configureNameFromProperties(properties);
-            featureInfo.configureDescriptionFromProperties(properties);
-            result.push(featureInfo);
+        return result;
+    }
+
+    // msGmlToFeatureInfo is similar to gmlToFeatureInfo, but assumes different XML structure
+    // eg. <msGMLOutput> <ABC_layer> <ABC_feature> <foo>bar</foo> ... </ABC_feature> </ABC_layer> </msGMLOutput>
+
+    function msGmlToFeatureInfo(xml) {
+        var result = [];
+
+        // Find the first child. Except for IE, this would work:
+        // var layer = xml.documentElement.children[0];
+        var layer;
+        var children = xml.documentElement.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].nodeType === Node.ELEMENT_NODE) {
+                layer = children[i];
+                break;
+            }
+        }
+
+        var featureMembers = layer.childNodes;
+        for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
+            var featureMember = featureMembers[featureIndex];
+            if (featureMember.nodeType === Node.ELEMENT_NODE) {
+                var properties = {};
+                getGmlPropertiesRecursively(featureMember, properties);
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            }
         }
 
         return result;
@@ -218,14 +258,14 @@ define([
     function getGmlPropertiesRecursively(gmlNode, properties) {
         var isSingleValue = true;
 
-        for (var i = 0; i < gmlNode.children.length; ++i) {
-            var child = gmlNode.children[i];
+        for (var i = 0; i < gmlNode.childNodes.length; ++i) {
+            var child = gmlNode.childNodes[i];
 
             if (child.nodeType === Node.ELEMENT_NODE) {
                 isSingleValue = false;
             }
 
-            if (child.localName === 'Point' || child.localName === 'LineString' || child.localName === 'Polygon') {
+            if (child.localName === 'Point' || child.localName === 'LineString' || child.localName === 'Polygon' || child.localName === 'boundedBy') {
                 continue;
             }
 
@@ -235,6 +275,15 @@ define([
         }
 
         return isSingleValue;
+    }
+
+    function imageryLayerFeatureInfoFromDataAndProperties(data, properties) {
+        var featureInfo = new ImageryLayerFeatureInfo();
+        featureInfo.data = data;
+        featureInfo.properties = properties;
+        featureInfo.configureNameFromProperties(properties);
+        featureInfo.configureDescriptionFromProperties(properties);
+        return featureInfo;
     }
 
     function unknownXmlToFeatureInfo(xml) {

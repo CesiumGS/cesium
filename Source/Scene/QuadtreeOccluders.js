@@ -7,7 +7,7 @@ define([
         Cartesian3,
         defineProperties,
         EllipsoidalOccluder) {
-    "use strict";
+    'use strict';
 
     /**
      * A set of occluders that can be used to test quadtree tiles for occlusion.
@@ -18,9 +18,9 @@ define([
      *
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that potentially occludes tiles.
      */
-    var QuadtreeOccluders = function(options) {
+    function QuadtreeOccluders(options) {
         this._ellipsoid = new EllipsoidalOccluder(options.ellipsoid, Cartesian3.ZERO);
-    };
+    }
 
     defineProperties(QuadtreeOccluders.prototype, {
         /**

@@ -3,8 +3,7 @@ defineSuite([
         'Core/RuntimeError'
     ], function(
         RuntimeError) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var name = 'RuntimeError';
     var testMessage = 'Testing';

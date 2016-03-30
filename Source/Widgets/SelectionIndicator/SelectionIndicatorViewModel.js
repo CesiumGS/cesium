@@ -17,7 +17,7 @@ define([
         EasingFunction,
         SceneTransforms,
         knockout) {
-    "use strict";
+    'use strict';
 
     var screenSpacePos = new Cartesian2();
     var offScreen = '-1000px';
@@ -31,7 +31,7 @@ define([
      * @param {Element} selectionIndicatorElement The element containing all elements that make up the selection indicator.
      * @param {Element} container The DOM element that contains the widget.
      */
-    var SelectionIndicatorViewModel = function(scene, selectionIndicatorElement, container) {
+    function SelectionIndicatorViewModel(scene, selectionIndicatorElement, container) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -101,7 +101,7 @@ define([
         this.computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
-    };
+    }
 
     /**
      * Updates the view of the selection indicator to match the position and content properties of the view model.

@@ -10,10 +10,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/ExtrapolationType',
+        '../Core/getAbsoluteUri',
         '../Core/getFilenameFromUri',
         '../Core/HermitePolynomialApproximation',
         '../Core/isArray',
@@ -35,7 +37,6 @@ define([
         '../Scene/VerticalOrigin',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './Rotation',
         './BillboardGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
@@ -52,6 +53,7 @@ define([
         './ImageMaterialProperty',
         './LabelGraphics',
         './ModelGraphics',
+        './NodeTransformationProperty',
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
@@ -59,8 +61,10 @@ define([
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
+        './PropertyBag',
         './RectangleGraphics',
         './ReferenceProperty',
+        './Rotation',
         './SampledPositionProperty',
         './SampledProperty',
         './StripeMaterialProperty',
@@ -79,10 +83,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
         ExtrapolationType,
+        getAbsoluteUri,
         getFilenameFromUri,
         HermitePolynomialApproximation,
         isArray,
@@ -104,7 +110,6 @@ define([
         VerticalOrigin,
         Uri,
         when,
-        Rotation,
         BillboardGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
@@ -121,6 +126,7 @@ define([
         ImageMaterialProperty,
         LabelGraphics,
         ModelGraphics,
+        NodeTransformationProperty,
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
@@ -128,8 +134,10 @@ define([
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
+        PropertyBag,
         RectangleGraphics,
         ReferenceProperty,
+        Rotation,
         SampledPositionProperty,
         SampledProperty,
         StripeMaterialProperty,
@@ -137,7 +145,7 @@ define([
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     var currentId;
 
@@ -180,22 +188,10 @@ define([
         return rgbaf;
     }
 
-    function unwrapImageInterval(czmlInterval, sourceUri) {
-        var result = defaultValue(czmlInterval.image, czmlInterval);
-        if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
-        }
-        return result;
-    }
-
     function unwrapUriInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.uri, czmlInterval);
         if (defined(sourceUri)) {
-            var baseUri = new Uri(document.location.href);
-            sourceUri = new Uri(sourceUri);
-            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+            result = getAbsoluteUri(result, getAbsoluteUri(sourceUri));
         }
         return result;
     }
@@ -606,7 +602,10 @@ define([
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
         if (!isReference) {
-            referenceFrame = defaultValue(ReferenceFrame[packetData.referenceFrame], undefined);
+            if (defined(packetData.referenceFrame)) {
+                referenceFrame = ReferenceFrame[packetData.referenceFrame];
+            }
+            referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
             unwrappedInterval = unwrapCartesianInterval(packetData);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
             isSampled = unwrappedIntervalLength > packedLength;
@@ -805,6 +804,12 @@ define([
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
             processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
+            if (defined(materialData.alpha)) {
+                deprecationWarning('image.alpha', 'The image.alpha property has been deprecated in Cesium 1.20.  It will be removed in 1.21.  Define alpha using image.color.rgba instead.');
+            }
+            processPacketData(Number, existingMaterial, 'alpha', materialData.alpha, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Boolean, existingMaterial, 'transparent', materialData.transparent, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
@@ -1015,6 +1020,7 @@ define([
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1176,7 +1182,67 @@ define([
         processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
+
+        var nodeTransformationsData = modelData.nodeTransformations;
+        if (defined(nodeTransformationsData)) {
+            if (isArray(nodeTransformationsData)) {
+                for (var i = 0, len = nodeTransformationsData.length; i < len; i++) {
+                    processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
+                }
+            } else {
+                processNodeTransformations(model, nodeTransformationsData, interval, sourceUri, entityCollection);
+            }
+        }
+    }
+
+    function processNodeTransformations(model, nodeTransformationsData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = nodeTransformationsData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var nodeTransformations = model.nodeTransformations;
+        var nodeNames = Object.keys(nodeTransformationsData);
+        for (var i = 0, len = nodeNames.length; i < len; ++i) {
+            var nodeName = nodeNames[i];
+
+            if (nodeName === 'interval') {
+                continue;
+            }
+
+            var nodeTransformationData = nodeTransformationsData[nodeName];
+
+            if (!defined(nodeTransformationData)) {
+                continue;
+            }
+
+            if (!defined(nodeTransformations)) {
+                model.nodeTransformations = nodeTransformations = new PropertyBag();
+            }
+
+            if (!nodeTransformations.hasProperty(nodeName)) {
+                nodeTransformations.addProperty(nodeName);
+            }
+
+            var nodeTransformation = nodeTransformations[nodeName];
+            if (!defined(nodeTransformation)) {
+                nodeTransformations[nodeName] = nodeTransformation = new NodeTransformationProperty();
+            }
+
+            processPacketData(Cartesian3, nodeTransformation, 'translation', nodeTransformationData.translation, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Quaternion, nodeTransformation, 'rotation', nodeTransformationData.rotation, combinedInterval, sourceUri, entityCollection);
+            processPacketData(Cartesian3, nodeTransformation, 'scale', nodeTransformationData.scale, combinedInterval, sourceUri, entityCollection);
+        }
     }
 
     function processPath(entity, packet, entityCollection, sourceUri) {
@@ -1471,7 +1537,7 @@ define([
         }).otherwise(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
-            window.console.log(error);
+            console.log(error);
             return when.reject(error);
         });
     }
@@ -1507,10 +1573,10 @@ define([
         return dataSource;
     }
 
-    var DocumentPacket = function() {
+    function DocumentPacket() {
         this.name = undefined;
         this.clock = undefined;
-    };
+    }
 
     /**
      * A {@link DataSource} which processes {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/CZML-Guide|CZML}.
@@ -1521,7 +1587,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=CZML.html|Cesium Sandcastle CZML Demo}
      */
-    var CzmlDataSource = function(name) {
+    function CzmlDataSource(name) {
         this._name = name;
         this._changed = new Event();
         this._error = new Event();
@@ -1530,8 +1596,8 @@ define([
         this._clock = undefined;
         this._documentPacket = new DocumentPacket();
         this._version = undefined;
-        this._entityCollection = new EntityCollection();
-    };
+        this._entityCollection = new EntityCollection(this);
+    }
 
     /**
      * Creates a Promise to a new instance loaded with the provided CZML data.
@@ -1616,6 +1682,19 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CzmlDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
             }
         }
     });

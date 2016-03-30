@@ -11,7 +11,7 @@ define([
         DeveloperError,
         Rectangle,
         QuadtreeTileLoadState) {
-    "use strict";
+    'use strict';
 
     /**
      * A single tile in a {@link QuadtreePrimitive}.
@@ -26,7 +26,7 @@ define([
      * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
      * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
      */
-    var QuadtreeTile = function QuadtreeTile(options) {
+    function QuadtreeTile(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -99,7 +99,7 @@ define([
          * @default undefined
          */
         this.data = undefined;
-    };
+    }
 
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.

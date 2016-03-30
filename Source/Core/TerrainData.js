@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile.  This type describes an
@@ -17,9 +17,9 @@ define([
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
-    var TerrainData = function TerrainData() {
+    function TerrainData() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainData.prototype, {
         /**

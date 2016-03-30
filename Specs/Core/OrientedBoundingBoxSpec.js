@@ -2,6 +2,7 @@
 defineSuite([
         'Core/OrientedBoundingBox',
         'Core/BoundingRectangle',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Ellipsoid',
@@ -9,12 +10,14 @@ defineSuite([
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
+        'Core/Occluder',
         'Core/Plane',
         'Core/Quaternion',
         'Core/Rectangle'
     ], function(
         OrientedBoundingBox,
         BoundingRectangle,
+        BoundingSphere,
         Cartesian3,
         Cartesian4,
         Ellipsoid,
@@ -22,11 +25,11 @@ defineSuite([
         Intersect,
         CesiumMath,
         Matrix3,
+        Occluder,
         Plane,
         Quaternion,
         Rectangle) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),
@@ -35,15 +38,6 @@ defineSuite([
         new Cartesian3(-2.0, 0.0, 0.0),
         new Cartesian3(0.0, -3.0, 0.0),
         new Cartesian3(0.0, 0.0, -4.0)
-    ];
-
-    var positions2 = [
-        new Cartesian3(4.0, 0.0, 0.0),
-        new Cartesian3(0.0, 3.0, 0.0),
-        new Cartesian3(0.0, 0.0, 2.0),
-        new Cartesian3(-4.0, 0.0, 0.0),
-        new Cartesian3(0.0, -3.0, 0.0),
-        new Cartesian3(0.0, 0.0, -2.0)
     ];
 
     function rotatePositions(positions, axis, angle) {
@@ -77,6 +71,75 @@ defineSuite([
         expect(box.halfAxes).toEqual(Matrix3.ZERO);
     });
 
+    it('fromPoints constructs empty box with undefined positions', function() {
+        var box = OrientedBoundingBox.fromPoints(undefined);
+        expect(box.halfAxes).toEqual(Matrix3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints constructs empty box with empty positions', function() {
+        var box = OrientedBoundingBox.fromPoints([]);
+        expect(box.halfAxes).toEqual(Matrix3.ZERO);
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints correct scale', function() {
+        var box = OrientedBoundingBox.fromPoints(positions);
+        expect(box.halfAxes).toEqual(Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)));
+        expect(box.center).toEqual(Cartesian3.ZERO);
+    });
+
+    it('fromPoints correct translation', function() {
+        var translation = new Cartesian3(10.0, -20.0, 30.0);
+        var points = translatePositions(positions, translation);
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqual(Matrix3.fromScale(new Cartesian3(2.0, 3.0, 4.0)));
+        expect(box.center).toEqual(translation);
+    });
+
+    it('fromPoints rotation about z', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(3.0, 2.0, 4.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation about y', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Y, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(4.0, 3.0, 2.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation about x', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_X, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(2.0, 4.0, 3.0), new Matrix3()), CesiumMath.EPSILON15);
+        expect(box.center).toEqualEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON15);
+    });
+
+    it('fromPoints rotation and translation', function() {
+        var result = rotatePositions(positions, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_FOUR);
+        var points = result.points;
+        var rotation = result.rotation;
+
+        var translation = new Cartesian3(-40.0, 20.0, -30.0);
+        points = translatePositions(points, translation);
+
+        var box = OrientedBoundingBox.fromPoints(points);
+        expect(box.halfAxes).toEqualEpsilon(Matrix3.multiplyByScale(rotation, new Cartesian3(3.0, 2.0, 4.0), new Matrix3()), CesiumMath.EPSILON14);
+        expect(box.center).toEqualEpsilon(translation, CesiumMath.EPSILON15);
+    });
+
     it('fromRectangle sets correct default ellipsoid', function() {
         var rectangle = new Rectangle(-0.9, -1.2, 0.5, 0.7);
         var box1 = OrientedBoundingBox.fromRectangle(rectangle, 0.0, 0.0);
@@ -84,7 +147,6 @@ defineSuite([
 
         expect(box1.center).toEqualEpsilon(box2.center, CesiumMath.EPSILON15);
 
-        var rotScale = Matrix3.ZERO;
         expect(box1.halfAxes).toEqualEpsilon(box2.halfAxes, CesiumMath.EPSILON15);
     });
 
@@ -449,6 +511,224 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('distanceSquaredTo', function() {
+        var r0 = Matrix3.fromRotationZ(CesiumMath.toRadians(-45.0));
+        var r1 = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
+
+        var rotation = Matrix3.multiply(r1, r0, r0);
+        var scale = new Cartesian3(2.0, 3.0, 4.0);
+        var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+        var center = new Cartesian3(4.0, 3.0, 2.0);
+
+        var obb = new OrientedBoundingBox(center, rotationScale);
+
+        var halfAxes = obb.halfAxes;
+        var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+        var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+        var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+        // from positive x direction
+        var cartesian = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+        Cartesian3.add(cartesian, center, cartesian);
+
+        var d = Cartesian3.distance(cartesian, center) - scale.x;
+        var expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from negative x direction
+        Cartesian3.multiplyByScalar(xAxis, -2.0, cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - scale.x;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from positive y direction
+        Cartesian3.multiplyByScalar(yAxis, 2.0, cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - scale.y;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from negative y direction
+        Cartesian3.multiplyByScalar(yAxis, -2.0, cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - scale.y;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from positive z direction
+        Cartesian3.multiplyByScalar(zAxis, 2.0, cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - scale.z;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from negative z direction
+        Cartesian3.multiplyByScalar(zAxis, -2.0, cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - scale.z;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
+        // from corner point
+        Cartesian3.add(xAxis, yAxis, cartesian);
+        Cartesian3.add(zAxis, cartesian, cartesian);
+
+        var cornerDistance = Cartesian3.magnitude(cartesian);
+        Cartesian3.add(cartesian, center, cartesian);
+
+        d = Cartesian3.distance(cartesian, center) - cornerDistance;
+        expected = d * d;
+        expect(obb.distanceSquaredTo(cartesian)).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('distanceSquaredTo throws without box', function() {
+        expect(function() {
+            OrientedBoundingBox.distanceSquaredTo(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('distanceSquaredTo throws without cartesian', function() {
+        expect(function() {
+            OrientedBoundingBox.distanceSquaredTo(new OrientedBoundingBox(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('computePlaneDistances', function() {
+        var r0 = Matrix3.fromRotationZ(CesiumMath.toRadians(-45.0));
+        var r1 = Matrix3.fromRotationY(CesiumMath.toRadians(45.0));
+
+        var rotation = Matrix3.multiply(r1, r0, r0);
+        var scale = new Cartesian3(2.0, 3.0, 4.0);
+        var rotationScale = Matrix3.multiplyByScale(rotation, scale, rotation);
+
+        var center = new Cartesian3(4.0, 3.0, 2.0);
+
+        var obb = new OrientedBoundingBox(center, rotationScale);
+
+        var halfAxes = obb.halfAxes;
+        var xAxis = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+        var yAxis = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+        var zAxis = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+        // from x direction
+        var position = Cartesian3.multiplyByScalar(xAxis, 2.0, new Cartesian3());
+        Cartesian3.add(position, center, position);
+
+        var direction = Cartesian3.negate(xAxis, new Cartesian3());
+        Cartesian3.normalize(direction, direction);
+
+        var d = Cartesian3.distance(position, center);
+        var expectedNear = d - scale.x;
+        var expectedFar = d + scale.x;
+
+        var distances = obb.computePlaneDistances(position, direction);
+        expect(distances.start).toEqualEpsilon(expectedNear, CesiumMath.EPSILON14);
+        expect(distances.stop).toEqualEpsilon(expectedFar, CesiumMath.EPSILON14);
+
+        // from y direction
+        Cartesian3.multiplyByScalar(yAxis, 2.0, position);
+        Cartesian3.add(position, center, position);
+
+        Cartesian3.negate(yAxis, direction);
+        Cartesian3.normalize(direction, direction);
+
+        d = Cartesian3.distance(position, center);
+        expectedNear = d - scale.y;
+        expectedFar = d + scale.y;
+
+        obb.computePlaneDistances(position, direction, distances);
+        expect(distances.start).toEqualEpsilon(expectedNear, CesiumMath.EPSILON14);
+        expect(distances.stop).toEqualEpsilon(expectedFar, CesiumMath.EPSILON14);
+
+        // from z direction
+        Cartesian3.multiplyByScalar(zAxis, 2.0, position);
+        Cartesian3.add(position, center, position);
+
+        Cartesian3.negate(zAxis, direction);
+        Cartesian3.normalize(direction, direction);
+
+        d = Cartesian3.distance(position, center);
+        expectedNear = d - scale.z;
+        expectedFar = d + scale.z;
+
+        obb.computePlaneDistances(position, direction, distances);
+        expect(distances.start).toEqualEpsilon(expectedNear, CesiumMath.EPSILON14);
+        expect(distances.stop).toEqualEpsilon(expectedFar, CesiumMath.EPSILON14);
+
+        // from corner point
+        Cartesian3.add(xAxis, yAxis, position);
+        Cartesian3.add(zAxis, position, position);
+
+        Cartesian3.negate(position, direction);
+        Cartesian3.normalize(direction, direction);
+
+        var cornerDistance = Cartesian3.magnitude(position);
+        Cartesian3.add(position, center, position);
+
+        d = Cartesian3.distance(position, center);
+        expectedNear = d - cornerDistance;
+        expectedFar = d + cornerDistance;
+
+        obb.computePlaneDistances(position, direction, distances);
+        expect(distances.start).toEqualEpsilon(expectedNear, CesiumMath.EPSILON14);
+        expect(distances.stop).toEqualEpsilon(expectedFar, CesiumMath.EPSILON14);
+    });
+
+    it('computePlaneDistances throws without a box', function() {
+        expect(function() {
+            OrientedBoundingBox.computePlaneDistances(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('computePlaneDistances throws without a position', function() {
+        expect(function() {
+            OrientedBoundingBox.computePlaneDistances(new OrientedBoundingBox(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('computePlaneDistances throws without a direction', function() {
+        expect(function() {
+            OrientedBoundingBox.computePlaneDistances(new OrientedBoundingBox(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded', function() {
+        var occluderSphere = new BoundingSphere(new Cartesian3(0, 0, -1.5), 0.5);
+        var occluder = new Occluder(occluderSphere, Cartesian3.ZERO);
+
+        var radius = 0.25 / Math.sqrt(2.0);
+        var halfAxes = Matrix3.multiplyByScale(Matrix3.IDENTITY, new Cartesian3(radius, radius, radius), new Matrix3());
+        var obb = new OrientedBoundingBox(new Cartesian3(0, 0, -2.75), halfAxes);
+        expect(obb.isOccluded(occluder)).toEqual(true);
+
+        occluderSphere = new BoundingSphere(new Cartesian3(0, 0, -2.75), 0.25);
+        occluder = new Occluder(occluderSphere, Cartesian3.ZERO);
+
+        radius = 0.5 / Math.sqrt(2.0);
+        halfAxes = Matrix3.multiplyByScale(Matrix3.IDENTITY, new Cartesian3(radius, radius, radius), new Matrix3());
+        obb = new OrientedBoundingBox(new Cartesian3(0, 0, -1.5), halfAxes);
+        expect(obb.isOccluded(occluder)).toEqual(false);
+    });
+
+    it('isOccluded throws without a box', function() {
+        expect(function() {
+            OrientedBoundingBox.isOccluded(undefined, new Occluder(new BoundingSphere(), new Cartesian3()));
+        }).toThrowDeveloperError();
+    });
+
+    it('isOccluded throws without a occluder', function() {
+        expect(function() {
+            OrientedBoundingBox.isOccluded(new OrientedBoundingBox(), undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('clone without a result parameter', function() {
         var box = new OrientedBoundingBox();
         var result = OrientedBoundingBox.clone(box);
@@ -471,7 +751,6 @@ defineSuite([
 
     it('clone undefined OBB with a result parameter', function() {
         var box = new OrientedBoundingBox();
-        var box2 = new OrientedBoundingBox();
         expect(OrientedBoundingBox.clone(undefined, box)).toBe(undefined);
     });
 

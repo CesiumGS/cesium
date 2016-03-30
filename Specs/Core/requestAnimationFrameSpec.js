@@ -7,8 +7,7 @@ defineSuite([
         requestAnimationFrame,
         cancelAnimationFrame,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('calls the callback', function() {
         var deferred = when.defer();

@@ -8,11 +8,14 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/PixelFormat',
+        './ContextLimits',
         './MipmapHint',
         './PixelDatatype',
+        './Sampler',
         './TextureMagnificationFilter',
         './TextureMinificationFilter',
-        './TextureWrap'
+        './TextureWrap',
+        './WebGLConstants'
     ], function(
         Cartesian2,
         defaultValue,
@@ -22,24 +25,54 @@ define([
         DeveloperError,
         CesiumMath,
         PixelFormat,
+        ContextLimits,
         MipmapHint,
         PixelDatatype,
+        Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
-        TextureWrap) {
-    "use strict";
-
-    /**
-     * @private
-     */
-    var Texture = function(context, options) {
+        TextureWrap,
+        WebGLConstants) {
+    'use strict';
+    
+    function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var width = options.width;
+        var height = options.height;
         var source = options.source;
-        var width = defined(source) ? source.width : options.width;
-        var height = defined(source) ? source.height : options.height;
+
+        if (defined(source)) {
+            if (!defined(width)) {
+                width = defaultValue(source.videoWidth, source.width);
+            }
+            if (!defined(height)) {
+                height = defaultValue(source.videoHeight, source.height);
+            }
+        }
+
         var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGBA);
         var pixelDatatype = defaultValue(options.pixelDatatype, PixelDatatype.UNSIGNED_BYTE);
+        var internalFormat = pixelFormat;
+
+        if (context.webgl2) {
+            if (pixelFormat === PixelFormat.DEPTH_STENCIL) {
+                internalFormat = WebGLConstants.DEPTH24_STENCIL8;
+            } else if (pixelFormat === PixelFormat.DEPTH_COMPONENT) {
+                if (pixelDatatype === PixelDatatype.UNSIGNED_SHORT) {
+                    internalFormat = WebGLConstants.DEPTH_COMPONENT16;
+                } else if (pixelDatatype === PixelDatatype.UNSIGNED_INT) {
+                    internalFormat = WebGLConstants.DEPTH_COMPONENT24;
+                }
+            }
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(width) || !defined(height)) {
@@ -50,16 +83,16 @@ define([
             throw new DeveloperError('Width must be greater than zero.');
         }
 
-        if (width > context._maximumTextureSize) {
-            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (width > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (height <= 0) {
             throw new DeveloperError('Height must be greater than zero.');
         }
 
-        if (height > context._maximumTextureSize) {
-            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + context._maximumTextureSize + ').  Check maximumTextureSize.');
+        if (height > ContextLimits.maximumTextureSize) {
+            throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
         if (!PixelFormat.validate(pixelFormat)) {
@@ -75,8 +108,8 @@ define([
             throw new DeveloperError('When options.pixelFormat is DEPTH_COMPONENT, options.pixelDatatype must be UNSIGNED_SHORT or UNSIGNED_INT.');
         }
 
-        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8_WEBGL)) {
-            throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8_WEBGL.');
+        if ((pixelFormat === PixelFormat.DEPTH_STENCIL) && (pixelDatatype !== PixelDatatype.UNSIGNED_INT_24_8)) {
+            throw new DeveloperError('When options.pixelFormat is DEPTH_STENCIL, options.pixelDatatype must be UNSIGNED_INT_24_8.');
         }
         //>>includeEnd('debug');
 
@@ -115,24 +148,24 @@ define([
 
             if (defined(source.arrayBufferView)) {
                 // Source: typed array
-                gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+                gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
             } else if (defined(source.framebuffer)) {
                 // Source: framebuffer
                 if (source.framebuffer !== context.defaultFramebuffer) {
                     source.framebuffer._bind();
                 }
 
-                gl.copyTexImage2D(textureTarget, 0, pixelFormat, source.xOffset, source.yOffset, width, height, 0);
+                gl.copyTexImage2D(textureTarget, 0, internalFormat, source.xOffset, source.yOffset, width, height, 0);
 
                 if (source.framebuffer !== context.defaultFramebuffer) {
                     source.framebuffer._unBind();
                 }
             } else {
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
-                gl.texImage2D(textureTarget, 0, pixelFormat, pixelFormat, pixelDatatype, source);
+                gl.texImage2D(textureTarget, 0, internalFormat, pixelFormat, pixelDatatype, source);
             }
         } else {
-            gl.texImage2D(textureTarget, 0, pixelFormat, width, height, 0, pixelFormat, pixelDatatype, null);
+            gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, null);
         }
         gl.bindTexture(textureTarget, null);
 
@@ -149,13 +182,112 @@ define([
         this._flipY = flipY;
         this._sampler = undefined;
 
-        this.sampler = undefined;
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
+    }
+
+    /**
+     * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
+     * the texture is the same width and height as the framebuffer and contains its contents.
+     *
+     * @param {Object} options Object with the following properties:
+     * @param {Context} options.context The context in which the Texture gets created.
+     * @param {PixelFormat} [options.pixelFormat=PixelFormat.RGB] The texture's internal pixel format.
+     * @param {Number} [options.framebufferXOffset=0] An offset in the x direction in the framebuffer where copying begins from.
+     * @param {Number} [options.framebufferYOffset=0] An offset in the y direction in the framebuffer where copying begins from.
+     * @param {Number} [options.width=canvas.clientWidth] The width of the texture in texels.
+     * @param {Number} [options.height=canvas.clientHeight] The height of the texture in texels.
+     * @param {Framebuffer} [options.framebuffer=defaultFramebuffer] The framebuffer from which to create the texture.  If this
+     *        parameter is not specified, the default framebuffer is used.
+     * @returns {Texture} A texture with contents from the framebuffer.
+     *
+     * @exception {DeveloperError} Invalid pixelFormat.
+     * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
+     * @exception {DeveloperError} framebufferXOffset must be greater than or equal to zero.
+     * @exception {DeveloperError} framebufferYOffset must be greater than or equal to zero.
+     * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
+     * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
+     *
+     *
+     * @example
+     * // Create a texture with the contents of the framebuffer.
+     * var t = Texture.fromFramebuffer({
+     *     context : context
+     * });
+     * 
+     * @see Sampler
+     * 
+     * @private
+     */
+    Texture.fromFramebuffer = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('options.context is required.');
+        }
+        //>>includeEnd('debug');
+
+        var context = options.context;
+        var gl = context._gl;
+
+        var pixelFormat = defaultValue(options.pixelFormat, PixelFormat.RGB);
+        var framebufferXOffset = defaultValue(options.framebufferXOffset, 0);
+        var framebufferYOffset = defaultValue(options.framebufferYOffset, 0);
+        var width = defaultValue(options.width, gl.drawingBufferWidth);
+        var height = defaultValue(options.height, gl.drawingBufferHeight);
+        var framebuffer = options.framebuffer;
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(options.context)) {
+            throw new DeveloperError('context is required.');
+        }
+
+        if (!PixelFormat.validate(pixelFormat)) {
+            throw new DeveloperError('Invalid pixelFormat.');
+        }
+
+        if (PixelFormat.isDepthFormat(pixelFormat)) {
+            throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.');
+        }
+
+        if (framebufferXOffset < 0) {
+            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
+        }
+
+        if (framebufferYOffset < 0) {
+            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
+        }
+
+        if (framebufferXOffset + width > gl.drawingBufferWidth) {
+            throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
+        }
+
+        if (framebufferYOffset + height > gl.drawingBufferHeight) {
+            throw new DeveloperError('framebufferYOffset + height must be less than or equal to drawingBufferHeight.');
+        }
+        //>>includeEnd('debug');
+
+        var texture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : pixelFormat,
+            source : {
+                framebuffer : defined(framebuffer) ? framebuffer : context.defaultFramebuffer,
+                xOffset : framebufferXOffset,
+                yOffset : framebufferYOffset,
+                width : width,
+                height : height
+            }
+        });
+
+        return texture;
     };
 
     defineProperties(Texture.prototype, {
         /**
          * The sampler to use when sampling this texture.
-         * Create a sampler by calling {@link Context#createSampler}.  If this
+         * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
          * coordinates in both directions, uses linear filtering for both magnification and minifcation,
          * and uses a maximum anisotropy of 1.0.
@@ -167,34 +299,19 @@ define([
                 return this._sampler;
             },
             set : function(sampler) {
-                var samplerDefined = true;
-                if (!defined(sampler)) {
-                    samplerDefined = false;
-                    var minFilter = TextureMinificationFilter.LINEAR;
-                    var magFilter = TextureMagnificationFilter.LINEAR;
-                    if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                        minFilter = TextureMinificationFilter.NEAREST;
-                        magFilter = TextureMagnificationFilter.NEAREST;
-                    }
+                var minificationFilter = sampler.minificationFilter;
+                var magnificationFilter = sampler.magnificationFilter;
 
-                    sampler = {
-                        wrapS : TextureWrap.CLAMP_TO_EDGE,
-                        wrapT : TextureWrap.CLAMP_TO_EDGE,
-                        minificationFilter : minFilter,
-                        magnificationFilter : magFilter,
-                        maximumAnisotropy : 1.0
-                    };
-                }
+                var mipmap =
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+                    (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
+                // float textures only support nearest filtering, so override the sampler's settings
                 if (this._pixelDatatype === PixelDatatype.FLOAT) {
-                    if (sampler.minificationFilter !== TextureMinificationFilter.NEAREST &&
-                            sampler.minificationFilter !== TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) {
-                        throw new DeveloperError('Only NEAREST and NEAREST_MIPMAP_NEAREST minification filters are supported for floating point textures.');
-                    }
-
-                    if (sampler.magnificationFilter !== TextureMagnificationFilter.NEAREST) {
-                        throw new DeveloperError('Only the NEAREST magnification filter is supported for floating point textures.');
-                    }
+                    minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
+                    magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
                 var gl = this._context._gl;
@@ -202,9 +319,8 @@ define([
 
                 gl.activeTexture(gl.TEXTURE0);
                 gl.bindTexture(target, this._texture);
-                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, sampler.minificationFilter);
-                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, sampler.magnificationFilter);
-
+                gl.texParameteri(target, gl.TEXTURE_MIN_FILTER, minificationFilter);
+                gl.texParameteri(target, gl.TEXTURE_MAG_FILTER, magnificationFilter);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_S, sampler.wrapS);
                 gl.texParameteri(target, gl.TEXTURE_WRAP_T, sampler.wrapT);
                 if (defined(this._textureFilterAnisotropic)) {
@@ -212,13 +328,7 @@ define([
                 }
                 gl.bindTexture(target, null);
 
-                this._sampler = !samplerDefined ? undefined : {
-                    wrapS : sampler.wrapS,
-                    wrapT : sampler.wrapT,
-                    minificationFilter : sampler.minificationFilter,
-                    magnificationFilter : sampler.magnificationFilter,
-                    maximumAnisotropy : sampler.maximumAnisotropy
-                };
+                this._sampler = sampler;
             }
         },
         pixelFormat : {

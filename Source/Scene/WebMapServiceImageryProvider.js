@@ -1,69 +1,33 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/combine',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
-        '../Core/Event',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/loadJson',
-        '../Core/loadText',
-        '../Core/loadWithXhr',
-        '../Core/loadXML',
-        '../Core/Math',
         '../Core/objectToQuery',
         '../Core/queryToObject',
-        '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
-        '../ThirdParty/when',
         './GetFeatureInfoFormat',
-        './ImageryLayerFeatureInfo',
-        './ImageryProvider'
+        './UrlTemplateImageryProvider'
     ], function(
-        Cartesian3,
-        Cartographic,
         combine,
-        Credit,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
-        Event,
         freezeObject,
         GeographicTilingScheme,
-        loadJson,
-        loadText,
-        loadWithXhr,
-        loadXML,
-        CesiumMath,
         objectToQuery,
         queryToObject,
-        Rectangle,
         WebMercatorTilingScheme,
         Uri,
-        when,
         GetFeatureInfoFormat,
-        ImageryLayerFeatureInfo,
-        ImageryProvider) {
-    "use strict";
-
-    function objectToLowercase(obj) {
-        var result = {};
-        for ( var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                result[key.toLowerCase()] = obj[key];
-            }
-        }
-        return result;
-    }
+        UrlTemplateImageryProvider) {
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
@@ -72,7 +36,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service.
+     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
      * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
      *        to pass to the WMS server in the GetMap URL.
@@ -82,7 +46,8 @@ define([
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
      *        without communicating with the server.  Set this property to false if you know your WMS server does not support
-     *        GetFeatureInfo or if you don't want this provider's features to be pickable.
+     *        GetFeatureInfo or if you don't want this provider's features to be pickable. Note that this can be dynamically
+     *        overridden by modifying the WebMapServiceImageryProvider#enablePickFeatures property.
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMS GetFeatureInfo requests.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -100,13 +65,16 @@ define([
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
+     * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
@@ -115,14 +83,14 @@ define([
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
-     *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+     *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });
      *
      * viewer.imageryLayers.addImageryProvider(provider);
      */
-    var WebMapServiceImageryProvider = function WebMapServiceImageryProvider(options) {
+    function WebMapServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -135,54 +103,85 @@ define([
         //>>includeEnd('debug');
 
         this._url = options.url;
-        this._tileDiscardPolicy = options.tileDiscardPolicy;
-        this._proxy = options.proxy;
         this._layers = options.layers;
-        this._enablePickFeatures = defaultValue(options.enablePickFeatures, true);
-        this._getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
-        if (defined(options.getFeatureInfoAsGeoJson) || defined(options.getFeatureInfoAsXml)) {
-            deprecationWarning('WebMapServiceImageryProvider.getFeatureInfo', 'The options.getFeatureInfoAsGeoJson and getFeatureInfoAsXml parameters to WebMapServiceImageryProvider were deprecated in Cesium 1.10 and will be removed in 1.13.  Use options.getFeatureInfoFormats instead.');
+        var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
 
-            //>>includeStart('debug', pragmas.debug);
-            if (defined(options.getFeatureInfoFormats)) {
-                throw new DeveloperError('options.getFeatureInfoFormats must not be specified if options.getFeatureInfoAsGeoJson or options.getFeatureInfoAsXml are specified.');
+        // Build the template URLs for tiles and pickFeatures.
+        var uri = new Uri(options.url);
+        var queryOptions = queryToObject(defaultValue(uri.query, ''));
+        var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
+        queryOptions = combine(parameters, queryOptions);
+
+        var pickFeaturesUri;
+        var pickFeaturesQueryOptions;
+
+        pickFeaturesUri = new Uri(options.url);
+        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
+        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
+
+        function setParameter(name, value) {
+            if (!defined(queryOptions[name])) {
+                queryOptions[name] = value;
             }
-            //>>includeEnd('debug');
 
-            this._getFeatureInfoFormats = [];
-            if (defaultValue(options.getFeatureInfoAsGeoJson, true)) {
-                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('json', 'application/json'));
-            }
-            if (defaultValue(options.getFeatureInfoAsXml, true)) {
-                this._getFeatureInfoFormats.push(new GetFeatureInfoFormat('xml', 'text/xml'));
+            if (defined(pickFeaturesQueryOptions) && !defined(pickFeaturesQueryOptions[name])) {
+                pickFeaturesQueryOptions[name] = value;
             }
         }
 
-        // Merge the parameters with the defaults, and make all parameter names lowercase
-        this._parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
-        this._getFeatureInfoParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
+        setParameter('layers', options.layers);
+        setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
+        setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
+        setParameter('width', '{width}');
+        setParameter('height', '{height}');
 
-        this._tileWidth = defaultValue(options.tileWidth, 256);
-        this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = options.maximumLevel; // undefined means no limit
+        uri.query = objectToQuery(queryOptions);
 
-        this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
+        // objectToQuery escapes the placeholders.  Undo that.
+        var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
-        this._rectangle = Rectangle.intersection(this._rectangle, this._tilingScheme.rectangle);
+        var pickFeaturesTemplateUrl;
+        if (defined(pickFeaturesQueryOptions)) {
+            if (!defined(pickFeaturesQueryOptions.query_layers)) {
+                pickFeaturesQueryOptions.query_layers = options.layers;
+            }
 
-        var credit = options.credit;
-        if (typeof credit === 'string') {
-            credit = new Credit(credit);
+            if (!defined(pickFeaturesQueryOptions.x)) {
+                pickFeaturesQueryOptions.x = '{i}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.y)) {
+                pickFeaturesQueryOptions.y = '{j}';
+            }
+
+            if (!defined(pickFeaturesQueryOptions.info_format)) {
+                pickFeaturesQueryOptions.info_format = '{format}';
+            }
+
+            pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
+            pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
         }
-        this._credit = credit;
 
-        this._errorEvent = new Event();
-
-        this._ready = true;
-    };
+        // Let UrlTemplateImageryProvider do the actual URL building.
+        this._tileProvider = new UrlTemplateImageryProvider({
+            url : templateUrl,
+            pickFeaturesUrl : pickFeaturesTemplateUrl,
+            tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
+            rectangle : options.rectangle,
+            tileWidth : options.tileWidth,
+            tileHeight : options.tileHeight,
+            minimumLevel : options.minimumLevel,
+            maximumLevel : options.maximumLevel,
+            proxy : options.proxy,
+            subdomains: options.subdomains,
+            tileDiscardPolicy : options.tileDiscardPolicy,
+            credit : options.credit,
+            getFeatureInfoFormats : getFeatureInfoFormats,
+            enablePickFeatures: options.enablePickFeatures
+        });
+    }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
         /**
@@ -205,7 +204,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._tileProvider.proxy;
             }
         },
 
@@ -230,13 +229,7 @@ define([
          */
         tileWidth : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileWidth must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileWidth;
+                return this._tileProvider.tileWidth;
             }
         },
 
@@ -249,13 +242,7 @@ define([
          */
         tileHeight : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileHeight must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileHeight;
+                return this._tileProvider.tileHeight;
             }
         },
 
@@ -268,13 +255,7 @@ define([
          */
         maximumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('maximumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._maximumLevel;
+                return this._tileProvider.maximumLevel;
             }
         },
 
@@ -287,13 +268,7 @@ define([
          */
         minimumLevel : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('minimumLevel must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._minimumLevel;
+                return this._tileProvider.minimumLevel;
             }
         },
 
@@ -306,13 +281,7 @@ define([
          */
         tilingScheme : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tilingScheme must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tilingScheme;
+                return this._tileProvider.tilingScheme;
             }
         },
 
@@ -325,13 +294,7 @@ define([
          */
         rectangle : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('rectangle must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._rectangle;
+                return this._tileProvider.rectangle;
             }
         },
 
@@ -346,13 +309,7 @@ define([
          */
         tileDiscardPolicy : {
             get : function() {
-                //>>includeStart('debug', pragmas.debug);
-                if (!this._ready) {
-                    throw new DeveloperError('tileDiscardPolicy must not be called before the imagery provider is ready.');
-                }
-                //>>includeEnd('debug');
-
-                return this._tileDiscardPolicy;
+                return this._tileProvider.tileDiscardPolicy;
             }
         },
 
@@ -366,7 +323,7 @@ define([
          */
         errorEvent : {
             get : function() {
-                return this._errorEvent;
+                return this._tileProvider.errorEvent;
             }
         },
 
@@ -378,7 +335,19 @@ define([
          */
         ready : {
             get : function() {
-                return this._ready;
+                return this._tileProvider.ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._tileProvider.readyPromise;
             }
         },
 
@@ -391,7 +360,7 @@ define([
          */
         credit : {
             get : function() {
-                return this._credit;
+                return this._tileProvider.credit;
             }
         },
 
@@ -407,7 +376,25 @@ define([
          */
         hasAlphaChannel : {
             get : function() {
-                return true;
+                return this._tileProvider.hasAlphaChannel;
+            }
+        },
+
+        /**
+         * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link WebMapServiceImageryProvider#pickFeatures} will
+         * invoke the <code>GetFeatureInfo</code> service on the WMS server and attempt to interpret the features included in the response.  If false,
+         * {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable
+         * features) without communicating with the server.  Set this property to false if you know your data
+         * source does not support picking features or if you don't want this provider's features to be pickable.
+         * @type {Boolean}
+         * @default true
+         */
+        enablePickFeatures : {
+            get : function() {
+                return this._tileProvider.enablePickFeatures;
+            },
+            set : function(enablePickFeatures)  {
+                this._tileProvider.enablePickFeatures = enablePickFeatures;
             }
         }
     });
@@ -423,7 +410,7 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        return undefined;
+        return this._tileProvider.getTileCredits(x, y, level);
     };
 
     /**
@@ -441,18 +428,8 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(this, url);
+        return this._tileProvider.requestImage(x, y, level);
     };
-
-    var cartographicScratch = new Cartographic();
-    var cartesian3Scratch = new Cartesian3();
 
     /**
      * Asynchronously determines what features, if any, are located at a given longitude and latitude within
@@ -470,70 +447,7 @@ define([
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!this._ready) {
-            throw new DeveloperError('pickFeatures must not be called before the imagery provider is ready.');
-        }
-        //>>includeEnd('debug');
-
-        if (!this._enablePickFeatures || this._getFeatureInfoFormats.length === 0) {
-            return undefined;
-        }
-
-        var rectangle = this._tilingScheme.tileXYToNativeRectangle(x, y, level);
-
-        var projected;
-        if (this._tilingScheme instanceof GeographicTilingScheme) {
-            projected = cartesian3Scratch;
-            projected.x = CesiumMath.toDegrees(longitude);
-            projected.y = CesiumMath.toDegrees(latitude);
-        } else {
-            var cartographic = cartographicScratch;
-            cartographic.longitude = longitude;
-            cartographic.latitude = latitude;
-
-            projected = this._tilingScheme.projection.project(cartographic, cartesian3Scratch);
-        }
-
-        var i = (this._tileWidth * (projected.x - rectangle.west) / rectangle.width) | 0;
-        var j = (this._tileHeight * (rectangle.north - projected.y) / rectangle.height) | 0;
-
-        var url;
-
-        var formatIndex = 0;
-
-        var that = this;
-
-        function handleResponse(format, data) {
-            return format.callback(data);
-        }
-
-        function doRequest() {
-            if (formatIndex >= that._getFeatureInfoFormats.length) {
-                // No valid formats, so no features picked.
-                return when([]);
-            }
-
-            var format = that._getFeatureInfoFormats[formatIndex];
-            var url = buildGetFeatureInfoUrl(that, format.format, x, y, level, i, j);
-
-            ++formatIndex;
-
-            if (format.type === 'json') {
-                return loadJson(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'xml') {
-                return loadXML(url).then(format.callback).otherwise(doRequest);
-            } else if (format.type === 'text' || format.type === 'html') {
-                return loadText(url).then(format.callback).otherwise(doRequest);
-            } else {
-                return loadWithXhr({
-                    url: url,
-                    responseType: format.format
-                }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
-            }
-        }
-
-        return doRequest();
+        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
     };
 
     /**
@@ -574,98 +488,14 @@ define([
         freezeObject(new GetFeatureInfoFormat('text', 'text/html'))
     ]);
 
-    function buildImageUrl(imageryProvider, x, y, level) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        queryOptions = combine(imageryProvider._parameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
+    function objectToLowercase(obj) {
+        var result = {};
+        for ( var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                result[key.toLowerCase()] = obj[key];
+            }
         }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
-    }
-
-    function buildGetFeatureInfoUrl(imageryProvider, infoFormat, x, y, level, i, j) {
-        var uri = new Uri(imageryProvider._url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-        queryOptions = combine(imageryProvider._getFeatureInfoParameters, queryOptions);
-
-        if (!defined(queryOptions.layers)) {
-            queryOptions.layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.query_layers)) {
-            queryOptions.query_layers = imageryProvider._layers;
-        }
-
-        if (!defined(queryOptions.srs)) {
-            queryOptions.srs = imageryProvider._tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326';
-        }
-
-        if (!defined(queryOptions.bbox)) {
-            var nativeRectangle = imageryProvider._tilingScheme.tileXYToNativeRectangle(x, y, level);
-            queryOptions.bbox = nativeRectangle.west + ',' + nativeRectangle.south + ',' + nativeRectangle.east + ',' + nativeRectangle.north;
-        }
-
-        if (!defined(queryOptions.x)) {
-            queryOptions.x = i;
-        }
-
-        if (!defined(queryOptions.y)) {
-            queryOptions.y = j;
-        }
-
-        if (!defined(queryOptions.width)) {
-            queryOptions.width = imageryProvider._tileWidth;
-        }
-
-        if (!defined(queryOptions.height)) {
-            queryOptions.height = imageryProvider._tileHeight;
-        }
-
-        if (!defined(queryOptions.info_format)) {
-            queryOptions.info_format = infoFormat;
-        }
-
-        uri.query = objectToQuery(queryOptions);
-
-        var url = uri.toString();
-
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return url;
+        return result;
     }
 
     return WebMapServiceImageryProvider;

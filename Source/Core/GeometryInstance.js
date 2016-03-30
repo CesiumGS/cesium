@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         Matrix4) {
-    "use strict";
+    'use strict';
 
     /**
      * Geometry instancing allows one {@link Geometry} object to be positions in several
@@ -26,23 +26,22 @@ define([
      * @param {Object} [options.id] A user-defined object to return when the instance is picked with {@link Scene#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
      * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
      *
-     * @see Geometry
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
-     * var geometry = new Cesium.BoxGeometry({
+     * var geometry = Cesium.BoxGeometry.fromDimensions({
      *   vertexFormat : Cesium.VertexFormat.POSITION_AND_NORMAL,
      *   dimensions : new Cesium.Cartesian3(1000000.0, 1000000.0, 500000.0)
-     * }),
+     * });
      * var instanceBottom = new Cesium.GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 1000000.0), new Cesium.Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
-     *   }
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *   },
      *   id : 'bottom'
      * });
      * var instanceTop = new Cesium.GeometryInstance({
@@ -50,12 +49,14 @@ define([
      *   modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
      *     Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cesium.Cartesian3(0.0, 0.0, 3000000.0), new Cesium.Matrix4()),
      *   attributes : {
-     *     color : new Cesium.ColorGeometryInstanceAttribute(Cesium.Color.AQUA)
-     *   }
+     *     color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.AQUA)
+     *   },
      *   id : 'top'
      * });
+     * 
+     * @see Geometry
      */
-    var GeometryInstance = function(options) {
+    function GeometryInstance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -122,7 +123,7 @@ define([
          * @private
          */
         this.eastHemisphereGeometry = undefined;
-    };
+    }
 
     return GeometryInstance;
 });

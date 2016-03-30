@@ -11,8 +11,7 @@ defineSuite([
         Camera,
         createScene,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -119,7 +118,7 @@ defineSuite([
 
         expect(spyListener.calls.count()).toBe(1);
 
-        viewModel.duration = 1.5;
+        viewModel.flightDuration = 1.5;
         viewModel.serachText = '2.0, 2.0';
         viewModel.search();
 

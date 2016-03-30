@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines the interface for visualizers. Visualizers are plug-ins to
@@ -21,9 +21,9 @@ define([
      * @see PointVisualizer
      * @see GeometryVisualizer
      */
-    var Visualizer = function() {
+    function Visualizer() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Updates the visualization to the provided time.

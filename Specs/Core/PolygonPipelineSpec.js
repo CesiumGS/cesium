@@ -13,47 +13,10 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         WindingOrder) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     beforeEach(function() {
         CesiumMath.setRandomNumberSeed(0.0);
-    });
-
-    it('removeDuplicates removes duplicate points', function() {
-        var positions = PolygonPipeline.removeDuplicates([
-                                                 new Cartesian3(1.0, 1.0, 1.0),
-                                                 new Cartesian3(2.0, 2.0, 2.0),
-                                                 new Cartesian3(2.0, 2.0, 2.0),
-                                                 new Cartesian3(3.0, 3.0, 3.0)
-                                                ]);
-
-        expect(positions).toEqual([
-                                        new Cartesian3(1.0, 1.0, 1.0),
-                                        new Cartesian3(2.0, 2.0, 2.0),
-                                        new Cartesian3(3.0, 3.0, 3.0)
-                                       ]);
-    });
-
-    it('removeDuplicates removes duplicate first and last points', function() {
-        var positions = PolygonPipeline.removeDuplicates([
-                                                 new Cartesian3(1.0, 1.0, 1.0),
-                                                 new Cartesian3(2.0, 2.0, 2.0),
-                                                 new Cartesian3(3.0, 3.0, 3.0),
-                                                 new Cartesian3(1.0, 1.0, 1.0)
-                                                ]);
-
-        expect(positions).toEqual([
-                                        new Cartesian3(2.0, 2.0, 2.0),
-                                        new Cartesian3(3.0, 3.0, 3.0),
-                                        new Cartesian3(1.0, 1.0, 1.0)
-                                       ]);
-    });
-
-    it('removeDuplicates throws without positions', function() {
-        expect(function() {
-            PolygonPipeline.removeDuplicates();
-        }).toThrowDeveloperError();
     });
 
     it('computeArea2D computes a positive area', function() {

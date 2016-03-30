@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
@@ -9,11 +10,13 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './Intersect',
-        './Plane',
-        './Rectangle',
+        './Interval',
         './Math',
-        './Matrix3'
+        './Matrix3',
+        './Plane',
+        './Rectangle'
     ], function(
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -23,11 +26,12 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         Intersect,
-        Plane,
-        Rectangle,
+        Interval,
         CesiumMath,
-        Matrix3) {
-    "use strict";
+        Matrix3,
+        Plane,
+        Rectangle) {
+    'use strict';
 
     /**
      * Creates an instance of an OrientedBoundingBox.
@@ -40,17 +44,18 @@ define([
      *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
      *                                          cube centered at the origin.
      *
-     * @see BoundingSphere
-     * @see BoundingRectangle
      *
      * @example
      * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
      * var center = new Cesium.Cartesian3(1.0, 0.0, 0.0);
-     * var halfAxes = Cesium.Matrix3.fromScale(new Cartesian3(1.0, 3.0, 2.0), new Matrix3());
+     * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+     * 
+     * @see BoundingSphere
+     * @see BoundingRectangle
      */
-    var OrientedBoundingBox = function(center, halfAxes) {
+    function OrientedBoundingBox(center, halfAxes) {
         /**
          * The center of the box.
          * @type {Cartesian3}
@@ -63,6 +68,114 @@ define([
          * @default {@link Matrix3.IDENTITY}
          */
         this.halfAxes = Matrix3.clone(defaultValue(halfAxes, Matrix3.ZERO));
+    }
+
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian3();
+    var scratchCartesian5 = new Cartesian3();
+    var scratchCovarianceResult = new Matrix3();
+    var scratchEigenResult = {
+        unitary : new Matrix3(),
+        diagonal : new Matrix3()
+    };
+
+    /**
+     * Computes an instance of an OrientedBoundingBox of the given positions.
+     * This is an implementation of Stefan Gottschalk's Collision Queries using Oriented Bounding Boxes solution (PHD thesis).
+     * Reference: http://gamma.cs.unc.edu/users/gottschalk/main.pdf
+     *
+     * @param {Cartesian3[]} positions List of {@link Cartesian3} points that the bounding box will enclose.
+     * @param {OrientedBoundingBox} [result] The object onto which to store the result.
+     * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
+     *
+     * @example
+     * // Compute an object oriented bounding box enclosing two points.
+     * var box = Cesium.OrientedBoundingBox.fromPoints([new Cesium.Cartesian3(2, 0, 0), new Cesium.Cartesian3(-2, 0, 0)]);
+     */
+    OrientedBoundingBox.fromPoints = function(positions, result) {
+        if (!defined(result)) {
+            result = new OrientedBoundingBox();
+        }
+
+        if (!defined(positions) || positions.length === 0) {
+            result.halfAxes = Matrix3.ZERO;
+            result.center = Cartesian3.ZERO;
+            return result;
+        }
+
+        var i;
+        var length = positions.length;
+
+        var meanPoint = Cartesian3.clone(positions[0], scratchCartesian1);
+        for (i = 1; i < length; i++) {
+            Cartesian3.add(meanPoint, positions[i], meanPoint);
+        }
+        var invLength = 1.0 / length;
+        Cartesian3.multiplyByScalar(meanPoint, invLength, meanPoint);
+
+        var exx = 0.0;
+        var exy = 0.0;
+        var exz = 0.0;
+        var eyy = 0.0;
+        var eyz = 0.0;
+        var ezz = 0.0;
+        var p;
+
+        for (i = 0; i < length; i++) {
+            p = Cartesian3.subtract(positions[i], meanPoint, scratchCartesian2);
+            exx += p.x * p.x;
+            exy += p.x * p.y;
+            exz += p.x * p.z;
+            eyy += p.y * p.y;
+            eyz += p.y * p.z;
+            ezz += p.z * p.z;
+        }
+
+        exx *= invLength;
+        exy *= invLength;
+        exz *= invLength;
+        eyy *= invLength;
+        eyz *= invLength;
+        ezz *= invLength;
+
+        var covarianceMatrix = scratchCovarianceResult;
+        covarianceMatrix[0] = exx;
+        covarianceMatrix[1] = exy;
+        covarianceMatrix[2] = exz;
+        covarianceMatrix[3] = exy;
+        covarianceMatrix[4] = eyy;
+        covarianceMatrix[5] = eyz;
+        covarianceMatrix[6] = exz;
+        covarianceMatrix[7] = eyz;
+        covarianceMatrix[8] = ezz;
+
+        var eigenDecomposition = Matrix3.computeEigenDecomposition(covarianceMatrix, scratchEigenResult);
+        var rotation = Matrix3.transpose(eigenDecomposition.unitary, result.halfAxes);
+
+        p = Cartesian3.subtract(positions[0], meanPoint, scratchCartesian2);
+        var tempPoint = Matrix3.multiplyByVector(rotation, p, scratchCartesian3);
+        var maxPoint = Cartesian3.clone(tempPoint, scratchCartesian4);
+        var minPoint = Cartesian3.clone(tempPoint, scratchCartesian5);
+
+        for (i = 1; i < length; i++) {
+            p = Cartesian3.subtract(positions[i], meanPoint, p);
+            Matrix3.multiplyByVector(rotation, p, tempPoint);
+            Cartesian3.minimumByComponent(minPoint, tempPoint, minPoint);
+            Cartesian3.maximumByComponent(maxPoint, tempPoint, maxPoint);
+        }
+
+        var center = Cartesian3.add(minPoint, maxPoint, scratchCartesian3);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
+        Matrix3.multiplyByVector(rotation, center, center);
+        Cartesian3.add(meanPoint, center, result.center);
+
+        var scale = Cartesian3.subtract(maxPoint, minPoint, scratchCartesian3);
+        Cartesian3.multiplyByScalar(scale, 0.5, scale);
+        Matrix3.multiplyByScale(result.halfAxes, scale, result.halfAxes);
+
+        return result;
     };
 
     var scratchOffset = new Cartesian3();
@@ -79,7 +192,7 @@ define([
      * @param {OrientedBoundingBox} [result] The object onto which to store the result.
      * @returns {OrientedBoundingBox} The modified result parameter or a new OrientedBoundingBox instance if one was not provided.
      */
-    var fromTangentPlaneExtents = function(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
+    function fromTangentPlaneExtents(tangentPlane, minimumX, maximumX, minimumY, maximumY, minimumZ, maximumZ, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(minimumX) ||
             !defined(maximumX) ||
@@ -116,7 +229,7 @@ define([
         Matrix3.multiplyByScale(halfAxes, scale, halfAxes);
 
         return result;
-    };
+    }
 
     var scratchRectangleCenterCartographic = new Cartographic();
     var scratchRectangleCenter = new Cartesian3();
@@ -276,6 +389,247 @@ define([
         return Intersect.INTERSECTING;
     };
 
+    var scratchCartesianU = new Cartesian3();
+    var scratchCartesianV = new Cartesian3();
+    var scratchCartesianW = new Cartesian3();
+    var scratchPPrime = new Cartesian3();
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {OrientedBoundingBox} box The box.
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return Cesium.OrientedBoundingBox.distanceSquaredTo(b, camera.positionWC) - Cesium.OrientedBoundingBox.distanceSquaredTo(a, camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.distanceSquaredTo = function(box, cartesian) {
+        // See Geometric Tools for Computer Graphics 10.4.2
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        if (!defined(cartesian)) {
+            throw new DeveloperError('cartesian is required.');
+        }
+        //>>includeEnd('debug');
+
+        var offset = Cartesian3.subtract(cartesian, box.center, scratchOffset);
+
+        var halfAxes = box.halfAxes;
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        var uHalf = Cartesian3.magnitude(u);
+        var vHalf = Cartesian3.magnitude(v);
+        var wHalf = Cartesian3.magnitude(w);
+
+        Cartesian3.normalize(u, u);
+        Cartesian3.normalize(v, v);
+        Cartesian3.normalize(w, w);
+
+        var pPrime = scratchPPrime;
+        pPrime.x = Cartesian3.dot(offset, u);
+        pPrime.y = Cartesian3.dot(offset, v);
+        pPrime.z = Cartesian3.dot(offset, w);
+
+        var distanceSquared = 0.0;
+        var d;
+
+        if (pPrime.x < -uHalf) {
+            d = pPrime.x + uHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.x > uHalf) {
+            d = pPrime.x - uHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.y < -vHalf) {
+            d = pPrime.y + vHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.y > vHalf) {
+            d = pPrime.y - vHalf;
+            distanceSquared += d * d;
+        }
+
+        if (pPrime.z < -wHalf) {
+            d = pPrime.z + wHalf;
+            distanceSquared += d * d;
+        } else if (pPrime.z > wHalf) {
+            d = pPrime.z - wHalf;
+            distanceSquared += d * d;
+        }
+
+        return distanceSquared;
+    };
+
+    var scratchCorner = new Cartesian3();
+    var scratchToCenter = new Cartesian3();
+
+    /**
+     * The distances calculated by the vector from the center of the bounding box to position projected onto direction.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding box.
+     *
+     * @param {OrientedBoundingBox} box The bounding box to calculate the distance to.
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Interval} [result] A Interval to store the nearest and farthest distances.
+     * @returns {Interval} The nearest and farthest distances on the bounding box from position in direction.
+     */
+    OrientedBoundingBox.computePlaneDistances = function(box, position, direction, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+
+        if (!defined(position)) {
+            throw new DeveloperError('position is required.');
+        }
+
+        if (!defined(direction)) {
+            throw new DeveloperError('direction is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Interval();
+        }
+
+        var minDist = Number.POSITIVE_INFINITY;
+        var maxDist = Number.NEGATIVE_INFINITY;
+
+        var center = box.center;
+        var halfAxes = box.halfAxes;
+
+        var u = Matrix3.getColumn(halfAxes, 0, scratchCartesianU);
+        var v = Matrix3.getColumn(halfAxes, 1, scratchCartesianV);
+        var w = Matrix3.getColumn(halfAxes, 2, scratchCartesianW);
+
+        // project first corner
+        var corner = Cartesian3.add(u, v, scratchCorner);
+        Cartesian3.add(corner, w, corner);
+        Cartesian3.add(corner, center, corner);
+
+        var toCenter = Cartesian3.subtract(corner, position, scratchToCenter);
+        var mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project second corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project third corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project fourth corner
+        Cartesian3.add(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project fifth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project sixth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.add(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project seventh corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.add(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        // project eighth corner
+        Cartesian3.subtract(center, u, corner);
+        Cartesian3.subtract(corner, v, corner);
+        Cartesian3.subtract(corner, w, corner);
+
+        Cartesian3.subtract(corner, position, toCenter);
+        mag = Cartesian3.dot(direction, toCenter);
+
+        minDist = Math.min(mag, minDist);
+        maxDist = Math.max(mag, maxDist);
+
+        result.start = minDist;
+        result.stop = maxDist;
+        return result;
+    };
+
+    var scratchBoundingSphere = new BoundingSphere();
+
+    /**
+     * Determines whether or not a bounding box is hidden from view by the occluder.
+     *
+     * @param {OrientedBoundingBox} box The bounding box surrounding the occludee object.
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the box is not visible; otherwise <code>false</code>.
+     */
+    OrientedBoundingBox.isOccluded = function(box, occluder) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(box)) {
+            throw new DeveloperError('box is required.');
+        }
+        if (!defined(occluder)) {
+            throw new DeveloperError('occluder is required.');
+        }
+        //>>includeEnd('debug');
+
+        var sphere = BoundingSphere.fromOrientedBoundingBox(box, scratchBoundingSphere);
+
+        return !occluder.isBoundingSphereVisible(sphere);
+    };
+
     /**
      * Determines which side of a plane the oriented bounding box is located.
      *
@@ -287,6 +641,47 @@ define([
      */
     OrientedBoundingBox.prototype.intersectPlane = function(plane) {
         return OrientedBoundingBox.intersectPlane(this, plane);
+    };
+
+    /**
+     * Computes the estimated distance squared from the closest point on a bounding box to a point.
+     *
+     * @param {Cartesian3} cartesian The point
+     * @returns {Number} The estimated distance squared from the bounding sphere to the point.
+     *
+     * @example
+     * // Sort bounding boxes from back to front
+     * boxes.sort(function(a, b) {
+     *     return b.distanceSquaredTo(camera.positionWC) - a.distanceSquaredTo(camera.positionWC);
+     * });
+     */
+    OrientedBoundingBox.prototype.distanceSquaredTo = function(cartesian) {
+        return OrientedBoundingBox.distanceSquaredTo(this, cartesian);
+    };
+
+    /**
+     * The distances calculated by the vector from the center of the bounding box to position projected onto direction.
+     * <br>
+     * If you imagine the infinite number of planes with normal direction, this computes the smallest distance to the
+     * closest and farthest planes from position that intersect the bounding box.
+     *
+     * @param {Cartesian3} position The position to calculate the distance from.
+     * @param {Cartesian3} direction The direction from position.
+     * @param {Interval} [result] A Interval to store the nearest and farthest distances.
+     * @returns {Interval} The nearest and farthest distances on the bounding box from position in direction.
+     */
+    OrientedBoundingBox.prototype.computePlaneDistances = function(position, direction, result) {
+        return OrientedBoundingBox.computePlaneDistances(this, position, direction, result);
+    };
+
+    /**
+     * Determines whether or not a bounding box is hidden from view by the occluder.
+     *
+     * @param {Occluder} occluder The occluder.
+     * @returns {Boolean} <code>true</code> if the sphere is not visible; otherwise <code>false</code>.
+     */
+    OrientedBoundingBox.prototype.isOccluded = function(occluder) {
+        return OrientedBoundingBox.isOccluded(this, occluder);
     };
 
     /**

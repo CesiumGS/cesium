@@ -11,8 +11,7 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('construct0', function() {
         var projection = new GeographicProjection();

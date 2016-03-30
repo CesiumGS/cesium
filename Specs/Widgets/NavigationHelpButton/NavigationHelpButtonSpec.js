@@ -7,8 +7,7 @@ defineSuite([
         NavigationHelpButton,
         FeatureDetection,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can create and destroy', function() {
         var container = document.createElement('span');

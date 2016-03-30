@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
@@ -17,9 +17,9 @@ define([
      * @see GeographicProjection
      * @see WebMercatorProjection
      */
-    var MapProjection = function() {
+    function MapProjection() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(MapProjection.prototype, {
         /**

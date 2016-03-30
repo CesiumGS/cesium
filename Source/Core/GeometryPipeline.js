@@ -53,13 +53,12 @@ define([
         Plane,
         PrimitiveType,
         Tipsify) {
-    "use strict";
+    'use strict';
 
     /**
      * Content pipeline functions for geometries.
      *
-     * @namespace
-     * @alias GeometryPipeline
+     * @exports GeometryPipeline
      *
      * @see Geometry
      */
@@ -184,7 +183,7 @@ define([
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
+     * var geometry = Cesium.GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0);
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         attributeName = defaultValue(attributeName, 'normal');
@@ -320,10 +319,11 @@ define([
      *
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
-     * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPreVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         //>>includeStart('debug', pragmas.debug);
@@ -406,12 +406,13 @@ define([
      *
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
-     * @see GeometryPipeline.reorderForPreVertexCache
-     * @see {@link http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
-     * by Sander, Nehab, and Barczak
      *
      * @example
      * geometry = Cesium.GeometryPipeline.reorderForPostVertexCache(geometry);
+     * 
+     * @see GeometryPipeline.reorderForPreVertexCache
+     * @see {@link http://gfx.cs.princ0eton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf|Fast Triangle Reordering for Vertex Locality and Reduced Overdraw}
+     * by Sander, Nehab, and Barczak
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         //>>includeStart('debug', pragmas.debug);
@@ -510,7 +511,7 @@ define([
         // If there's an index list and more than 64K attributes, it is possible that
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        if (defined(geometry.indices) && (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES)) {
+        if (defined(geometry.indices) && (numberOfVertices >= CesiumMath.SIXTY_FOUR_KILOBYTES)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
@@ -541,7 +542,7 @@ define([
                     newIndices.push(i);
                 }
 
-                if (currentIndex + indicesPerPrimitive > CesiumMath.SIXTY_FOUR_KILOBYTES) {
+                if (currentIndex + indicesPerPrimitive >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
@@ -765,8 +766,7 @@ define([
     var normalMatrix = new Matrix3();
 
     /**
-     * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
-     * to batch together several instances with {@link GeometryPipeline.combineInstances}.  This changes
+     * Transforms a geometry instance to world coordinates.  This changes
      * the instance's <code>modelMatrix</code> to {@link Matrix4.IDENTITY} and transforms the
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.
@@ -774,13 +774,8 @@ define([
      * @param {GeometryInstance} instance The geometry instance to modify.
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
      *
-     * @see GeometryPipeline.combineInstances
-     *
      * @example
-     * for (var i = 0; i < instances.length; ++i) {
-     *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
-     * }
-     * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * Cesium.GeometryPipeline.transformToWorldCoordinates(instance);
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         //>>includeStart('debug', pragmas.debug);
@@ -1005,7 +1000,7 @@ define([
      * <p>
      * This is used by {@link Primitive} to efficiently render a large amount of static data.
      * </p>
-     *
+     * 
      * @private
      *
      * @param {GeometryInstance[]} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
@@ -1015,13 +1010,14 @@ define([
      * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
-     * @see GeometryPipeline.transformToWorldCoordinates
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
      *   Cesium.GeometryPipeline.transformToWorldCoordinates(instances[i]);
      * }
      * var geometries = Cesium.GeometryPipeline.combineInstances(instances);
+     * 
+     * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combineInstances = function(instances) {
         //>>includeStart('debug', pragmas.debug);
@@ -2085,7 +2081,6 @@ define([
         var westGeometry = copyGeometryForSplit(geometry);
 
         var i;
-        var index;
         var length = indices.length;
 
         var westGeometryIndexMap = [];
@@ -2179,7 +2174,6 @@ define([
     var cartesian2Scratch1 = new Cartesian2();
 
     var cartesian3Scratch0 = new Cartesian3();
-    var cartesian3Scratch1 = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
     var cartesian3Scratch3 = new Cartesian3();
     var cartesian3Scratch4 = new Cartesian3();
@@ -2187,7 +2181,46 @@ define([
     var cartesian3Scratch6 = new Cartesian3();
 
     var cartesian4Scratch0 = new Cartesian4();
-    var cartesian4Scratch1 = new Cartesian4();
+
+    function updateAdjacencyAfterSplit(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var prevPositions = attributes.prevPosition.values;
+        var nextPositions = attributes.nextPosition.values;
+
+        var length = positions.length;
+        for (var j = 0; j < length; j += 3) {
+            var position = Cartesian3.unpack(positions, j, cartesian3Scratch0);
+            if (position.x > 0.0) {
+                continue;
+            }
+
+            var prevPosition = Cartesian3.unpack(prevPositions, j, cartesian3Scratch2);
+            if ((position.y < 0.0 && prevPosition.y > 0.0) || (position.y > 0.0 && prevPosition.y < 0.0)) {
+                if (j - 3 > 0) {
+                    prevPositions[j] = positions[j - 3];
+                    prevPositions[j + 1] = positions[j - 2];
+                    prevPositions[j + 2] = positions[j - 1];
+                } else {
+                    Cartesian3.pack(position, prevPositions, j);
+                }
+            }
+
+            var nextPosition = Cartesian3.unpack(nextPositions, j, cartesian3Scratch3);
+            if ((position.y < 0.0 && nextPosition.y > 0.0) || (position.y > 0.0 && nextPosition.y < 0.0)) {
+                if (j + 3 < length) {
+                    nextPositions[j] = positions[j + 3];
+                    nextPositions[j + 1] = positions[j + 4];
+                    nextPositions[j + 2] = positions[j + 5];
+                } else {
+                    Cartesian3.pack(position, nextPositions, j);
+                }
+            }
+        }
+    }
+
+    var offsetScalar = 5.0 * CesiumMath.EPSILON9;
+    var coplanarOffset = CesiumMath.EPSILON6;
 
     function splitLongitudePolyline(instance) {
         var geometry = instance.geometry;
@@ -2196,7 +2229,6 @@ define([
         var prevPositions = attributes.prevPosition.values;
         var nextPositions = attributes.nextPosition.values;
         var expandAndWidths = attributes.expandAndWidth.values;
-        var indices = geometry.indices;
 
         var texCoords = (defined(attributes.st)) ? attributes.st.values : undefined;
         var colors = (defined(attributes.color)) ? attributes.color.values : undefined;
@@ -2208,26 +2240,42 @@ define([
         var j;
         var index;
 
+        var intersectionFound = false;
+
         var length = positions.length / 3;
         for (i = 0; i < length; i += 4) {
             var i0 = i;
-            var i1 = i + 1;
             var i2 = i + 2;
-            var i3 = i + 3;
 
             var p0 = Cartesian3.fromArray(positions, i0 * 3, cartesian3Scratch0);
-            var p1 = Cartesian3.fromArray(positions, i1 * 3, cartesian3Scratch1);
             var p2 = Cartesian3.fromArray(positions, i2 * 3, cartesian3Scratch2);
-            var p3 = Cartesian3.fromArray(positions, i3 * 3, cartesian3Scratch3);
 
-            if (Math.abs(p0.y) < CesiumMath.EPSILON6) {
-                p0.y = CesiumMath.EPSILON6 * (p2.y < 0.0 ? -1.0 : 1.0);
-                p1.y = p0.y;
+            // Offset points that are close to the 180 longitude and change the previous/next point
+            // to be the same offset point so it can be projected to 2D. There is special handling in the
+            // shader for when position == prevPosition || position == nextPosition.
+            if (Math.abs(p0.y) < coplanarOffset) {
+                p0.y = coplanarOffset * (p2.y < 0.0 ? -1.0 : 1.0);
+                positions[i * 3 + 1] = p0.y;
+                positions[(i + 1) * 3 + 1] = p0.y;
+
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    prevPositions[j] = positions[i * 3];
+                    prevPositions[j + 1] = positions[i * 3 + 1];
+                    prevPositions[j + 2] = positions[i * 3 + 2];
+                }
             }
 
-            if (Math.abs(p2.y) < CesiumMath.EPSILON6) {
-                p2.y = CesiumMath.EPSILON6 * (p0.y < 0.0 ? -1.0 : 1.0);
-                p3.y = p2.y;
+            // Do the same but for when the line crosses 180 longitude in the opposite direction.
+            if (Math.abs(p2.y) < coplanarOffset) {
+                p2.y = coplanarOffset * (p0.y < 0.0 ? -1.0 : 1.0);
+                positions[(i + 2) * 3 + 1] = p2.y;
+                positions[(i + 3) * 3 + 1] = p2.y;
+
+                for (j = i0 * 3; j < i0 * 3 + 4 * 3; j += 3) {
+                    nextPositions[j] = positions[(i + 2) * 3];
+                    nextPositions[j + 1] = positions[(i + 2) * 3 + 1];
+                    nextPositions[j + 2] = positions[(i + 2) * 3 + 2];
+                }
             }
 
             var p0Attributes = eastGeometry.attributes;
@@ -2237,8 +2285,10 @@ define([
 
             var intersection = IntersectionTests.lineSegmentPlane(p0, p2, xzPlane, cartesian3Scratch4);
             if (defined(intersection)) {
+                intersectionFound = true;
+
                 // move point on the xz-plane slightly away from the plane
-                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9, cartesian3Scratch5);
+                var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, offsetScalar, cartesian3Scratch5);
                 if (p0.y < 0.0) {
                     Cartesian3.negate(offset, offset);
                     p0Attributes = westGeometry.attributes;
@@ -2248,33 +2298,33 @@ define([
                 }
 
                 var offsetPoint = Cartesian3.add(intersection, offset, cartesian3Scratch6);
-                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+                p0Attributes.position.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p0Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3], prevPositions[i0 * 3 + 1], prevPositions[i0 * 3 + 2]);
+                p0Attributes.prevPosition.values.push(prevPositions[i0 * 3 + 3], prevPositions[i0 * 3 + 4], prevPositions[i0 * 3 + 5]);
+                p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
+
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p0Attributes.nextPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
                 Cartesian3.negate(offset, offset);
                 Cartesian3.add(intersection, offset, offsetPoint);
                 p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
                 p2Attributes.position.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
-                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p3.x, p3.y, p3.z);
+                p2Attributes.position.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.prevPosition.values.push(prevPositions[j]);
-                }
-                p0Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                p2Attributes.prevPosition.values.push(p0.x, p0.y, p0.z, p0.x, p0.y, p0.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.prevPosition.values.push(prevPositions[j]);
-                }
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                p2Attributes.prevPosition.values.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
 
-                for (j = i0 * 3; j < i0 * 3 + 2 * 3; ++j) {
-                    p0Attributes.nextPosition.values.push(nextPositions[j]);
-                }
-                p0Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
                 p2Attributes.nextPosition.values.push(p2.x, p2.y, p2.z, p2.x, p2.y, p2.z);
-                for (j = i2 * 3; j < i2 * 3 + 2 * 3; ++j) {
-                    p2Attributes.nextPosition.values.push(nextPositions[j]);
-                }
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3], nextPositions[i2 * 3 + 1], nextPositions[i2 * 3 + 2]);
+                p2Attributes.nextPosition.values.push(nextPositions[i2 * 3 + 3], nextPositions[i2 * 3 + 4], nextPositions[i2 * 3 + 5]);
 
                 var ew0 = Cartesian2.fromArray(expandAndWidths, i0 * 2, cartesian2Scratch0);
                 var width = Math.abs(ew0.y);
@@ -2346,9 +2396,9 @@ define([
                 }
 
                 currentAttributes.position.values.push(p0.x, p0.y, p0.z);
-                currentAttributes.position.values.push(p1.x, p1.y, p1.z);
+                currentAttributes.position.values.push(p0.x, p0.y, p0.z);
                 currentAttributes.position.values.push(p2.x, p2.y, p2.z);
-                currentAttributes.position.values.push(p3.x, p3.y, p3.z);
+                currentAttributes.position.values.push(p2.x, p2.y, p2.z);
 
                 for (j = i * 3; j < i * 3 + 4 * 3; ++j) {
                     currentAttributes.prevPosition.values.push(prevPositions[j]);
@@ -2372,6 +2422,11 @@ define([
                 currentIndices.push(index, index + 2, index + 1);
                 currentIndices.push(index + 1, index + 2, index + 3);
             }
+        }
+
+        if (intersectionFound) {
+            updateAdjacencyAfterSplit(westGeometry);
+            updateAdjacencyAfterSplit(eastGeometry);
         }
 
         updateInstanceAfterSplit(instance, westGeometry, eastGeometry);

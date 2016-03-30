@@ -3,8 +3,7 @@ defineSuite([
         'Core/Tipsify'
     ], function(
         Tipsify) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can calculate the ACMR', function() {
         //Hexagon formed from 6 triangles, 7 vertices

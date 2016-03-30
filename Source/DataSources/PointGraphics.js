@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Event,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a graphical point located at the position of the containing {@link Entity}.
@@ -30,7 +30,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      */
-    var PointGraphics = function(options) {
+    function PointGraphics(options) {
         this._color = undefined;
         this._colorSubscription = undefined;
         this._pixelSize = undefined;
@@ -48,7 +48,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(PointGraphics.prototype, {
         /**

@@ -15,7 +15,7 @@ define([
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultGlowPower = 0.25;
@@ -29,7 +29,7 @@ define([
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
      * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
      */
-    var PolylineGlowMaterialProperty = function(options) {
+    function PolylineGlowMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -40,7 +40,7 @@ define([
 
         this.color = options.color;
         this.glowPower = options.glowPower;
-    };
+    }
 
     defineProperties(PolylineGlowMaterialProperty.prototype, {
         /**

@@ -1,38 +1,39 @@
 /*global defineSuite*/
 defineSuite([
-    'Scene/UrlTemplateImageryProvider',
-    'Core/DefaultProxy',
-    'Core/Ellipsoid',
-    'Core/GeographicTilingScheme',
-    'Core/loadImage',
-    'Core/Math',
-    'Core/Rectangle',
-    'Core/WebMercatorProjection',
-    'Core/WebMercatorTilingScheme',
-    'Scene/Imagery',
-    'Scene/ImageryLayer',
-    'Scene/ImageryProvider',
-    'Scene/ImageryState',
-    'Specs/pollToPromise',
-    'ThirdParty/when'
-], function(
-    UrlTemplateImageryProvider,
-    DefaultProxy,
-    Ellipsoid,
-    GeographicTilingScheme,
-    loadImage,
-    CesiumMath,
-    Rectangle,
-    WebMercatorProjection,
-    WebMercatorTilingScheme,
-    Imagery,
-    ImageryLayer,
-    ImageryProvider,
-    ImageryState,
-    pollToPromise,
-    when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        'Scene/UrlTemplateImageryProvider',
+        'Core/DefaultProxy',
+        'Core/Ellipsoid',
+        'Core/GeographicTilingScheme',
+        'Core/loadImage',
+        'Core/Math',
+        'Core/Rectangle',
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme',
+        'Scene/GetFeatureInfoFormat',
+        'Scene/Imagery',
+        'Scene/ImageryLayer',
+        'Scene/ImageryProvider',
+        'Scene/ImageryState',
+        'Specs/pollToPromise',
+        'ThirdParty/when'
+    ], function(
+        UrlTemplateImageryProvider,
+        DefaultProxy,
+        Ellipsoid,
+        GeographicTilingScheme,
+        loadImage,
+        CesiumMath,
+        Rectangle,
+        WebMercatorProjection,
+        WebMercatorTilingScheme,
+        GetFeatureInfoFormat,
+        Imagery,
+        ImageryLayer,
+        ImageryProvider,
+        ImageryState,
+        pollToPromise,
+        when) {
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -47,6 +48,17 @@ defineSuite([
             return new UrlTemplateImageryProvider({});
         }
         expect(createWithoutUrl).toThrowDeveloperError();
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new UrlTemplateImageryProvider({
+            url: 'made/up/tms/server/'
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {
@@ -146,7 +158,7 @@ defineSuite([
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.minimumLevel).toBe(0);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle).toEqualEpsilon(rectangle, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
@@ -223,17 +235,18 @@ defineSuite([
         });
     });
 
-    it('evaluation of pattern X Y reverseX reverseY Z', function() {
+    it('evaluation of pattern X Y reverseX reverseY Z reverseZ', function() {
         var provider = new UrlTemplateImageryProvider({
-            url: 'made/up/tms/server/{z}/{reverseY}/{y}/{reverseX}/{x}.PNG',
-            tilingScheme: new GeographicTilingScheme()
+            url: 'made/up/tms/server/{z}/{reverseZ}/{reverseY}/{y}/{reverseX}/{x}.PNG',
+            tilingScheme: new GeographicTilingScheme(),
+            maximumLevel: 6
         });
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                expect(url).toEqual('made/up/tms/server/2/2/1/4/3.PNG');
+                expect(url).toEqual('made/up/tms/server/2/3/2/1/4/3.PNG');
 
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -525,15 +538,159 @@ defineSuite([
         });
     });
 
-    it('pickFeatures returns undefined', function() {
-        var provider = new UrlTemplateImageryProvider({
-            url: 'foo/bar'
+    describe('pickFeatures', function() {
+        it('returns undefined when enablePickFeatures is false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
         });
 
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+        it('does not return undefined when enablePickFeatures is subsequently set to true', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: false
+            });
+
+            provider.enablePickFeatures = true;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).not.toBeUndefined();
+            });
         });
+
+        it('returns undefined when enablePickFeatures is initialized as true and set to false', function() {
+            var provider = new UrlTemplateImageryProvider({
+                url: 'foo/bar',
+                pickFeaturesUrl: 'foo/bar',
+                getFeatureInfoFormats: [
+                    new GetFeatureInfoFormat('json', 'application/json'),
+                    new GetFeatureInfoFormat('xml', 'text/xml')
+                ],
+                enablePickFeatures: true
+            });
+
+            provider.enablePickFeatures = false;
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
+            });
+        });
+    });
+
+    it('throws if tileWidth called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileWidth();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tileHeight called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileHeight();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if maximumLevel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.maximumLevel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if minimumLevel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.minimumLevel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tilingScheme called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tilingScheme();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if rectangle called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.rectangle();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tileDiscardPolicy called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileDiscardPolicy();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if credit called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.credit();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if hasAlphaChannel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.hasAlphaChannel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if getTileCredits called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.getTileCredits();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if requestImage called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.requestImage();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if pickFeatures called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.pickFeatures();
+        }).toThrowDeveloperError();
     });
 });

@@ -13,7 +13,7 @@ define([
         Event,
         TimeIntervalCollection,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} which is defined by a {@link TimeIntervalCollection}, where the
@@ -51,11 +51,11 @@ define([
      *     data : new Cesium.Cartesian2(85.0, 4.1)
      * }));
      */
-    var TimeIntervalCollectionProperty = function() {
+    function TimeIntervalCollectionProperty() {
         this._definitionChanged = new Event();
         this._intervals = new TimeIntervalCollection();
         this._intervals.changedEvent.addEventListener(TimeIntervalCollectionProperty.prototype._intervalsChanged, this);
-    };
+    }
 
     defineProperties(TimeIntervalCollectionProperty.prototype, {
         /**

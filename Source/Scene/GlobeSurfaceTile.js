@@ -11,6 +11,8 @@ define([
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Renderer/PixelDatatype',
+        '../Renderer/Sampler',
+        '../Renderer/Texture',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
@@ -18,6 +20,7 @@ define([
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
+        './TileBoundingBox',
         './TileTerrain'
     ], function(
         BoundingSphere,
@@ -31,6 +34,8 @@ define([
         PixelFormat,
         Rectangle,
         PixelDatatype,
+        Sampler,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
@@ -38,8 +43,9 @@ define([
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
+        TileBoundingBox,
         TileTerrain) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains additional information about a {@link QuadtreeTile} of the globe's surface, and
@@ -49,69 +55,13 @@ define([
      * @alias GlobeSurfaceTile
      * @private
      */
-    var GlobeSurfaceTile = function() {
+    function GlobeSurfaceTile() {
         /**
          * The {@link TileImagery} attached to this tile.
          * @type {TileImagery[]}
          * @default []
          */
         this.imagery = [];
-
-        /**
-         * The world coordinates of the southwest corner of the tile's rectangle.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.southwestCornerCartesian = new Cartesian3();
-
-        /**
-         * The world coordinates of the northeast corner of the tile's rectangle.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.northeastCornerCartesian = new Cartesian3();
-
-        /**
-         * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.westNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with southwestCornerCartesian, defines a plane at the southern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         * Because points of constant latitude do not necessary lie in a plane, positions below this
-         * plane are not necessarily inside the tile, but they are close.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.southNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.eastNormal = new Cartesian3();
-
-        /**
-         * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
-         * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
-         * Because points of constant latitude do not necessary lie in a plane, positions below this
-         * plane are not necessarily inside the tile, but they are close.
-         *
-         * @type {Cartesian3}
-         * @default Cartesian3()
-         */
-        this.northNormal = new Cartesian3();
 
         this.waterMaskTexture = undefined;
 
@@ -125,6 +75,7 @@ define([
         this.boundingSphere3D = new BoundingSphere();
         this.boundingSphere2D = new BoundingSphere();
         this.orientedBoundingBox = undefined;
+        this.tileBoundingBox = undefined;
         this.occludeePointInScaledSpace = new Cartesian3();
 
         this.loadedTerrain = undefined;
@@ -134,7 +85,7 @@ define([
         this.pickTerrain = undefined;
 
         this.surfaceShader = undefined;
-    };
+    }
 
     defineProperties(GlobeSurfaceTile.prototype, {
         /**
@@ -171,9 +122,8 @@ define([
         }
     });
 
-    function getPosition(tile, mode, projection, vertices, stride, index, result) {
-        Cartesian3.unpack(vertices, index * stride, result);
-        Cartesian3.add(tile.center, result, result);
+    function getPosition(encoding, mode, projection, vertices, index, result) {
+        encoding.decodePosition(vertices, index, result);
 
         if (defined(mode) && mode !== SceneMode.SCENE3D) {
             var ellipsoid = projection.ellipsoid;
@@ -202,8 +152,8 @@ define([
         }
 
         var vertices = mesh.vertices;
-        var stride = mesh.stride;
         var indices = mesh.indices;
+        var encoding = mesh.encoding;
 
         var length = indices.length;
         for (var i = 0; i < length; i += 3) {
@@ -211,9 +161,9 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            var v0 = getPosition(this, mode, projection, vertices, stride, i0, scratchV0);
-            var v1 = getPosition(this, mode, projection, vertices, stride, i1, scratchV1);
-            var v2 = getPosition(this, mode, projection, vertices, stride, i2, scratchV2);
+            var v0 = getPosition(encoding, mode, projection, vertices, i0, scratchV0);
+            var v1 = getPosition(encoding, mode, projection, vertices, i1, scratchV1);
+            var v2 = getPosition(encoding, mode, projection, vertices, i2, scratchV2);
 
             var intersection = IntersectionTests.rayTriangle(ray, v0, v1, v2, cullBackFaces, scratchResult);
             if (defined(intersection)) {
@@ -291,7 +241,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, context, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -303,7 +253,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, context, terrainProvider);
+            processTerrainStateMachine(tile, frameState, terrainProvider);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -341,7 +291,7 @@ define([
                 }
             }
 
-            var thisTileDoneLoading = tileImagery.processStateMachine(tile, context);
+            var thisTileDoneLoading = tileImagery.processStateMachine(tile, frameState);
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
@@ -365,12 +315,6 @@ define([
         }
     };
 
-    var cartesian3Scratch = new Cartesian3();
-    var cartesian3Scratch2 = new Cartesian3();
-    var westernMidpointScratch = new Cartesian3();
-    var easternMidpointScratch = new Cartesian3();
-    var cartographicScratch = new Cartographic();
-
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
         var surfaceTile = tile.data;
 
@@ -390,53 +334,16 @@ define([
                 layer._createTileImagerySkeletons(tile, terrainProvider);
             }
         }
-
-        var ellipsoid = tile.tilingScheme.ellipsoid;
-
-        // Compute tile rectangle boundaries for estimating the distance to the tile.
-        var rectangle = tile.rectangle;
-
-        ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle), surfaceTile.southwestCornerCartesian);
-        ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle), surfaceTile.northeastCornerCartesian);
-
-        // The middle latitude on the western edge.
-        cartographicScratch.longitude = rectangle.west;
-        cartographicScratch.latitude = (rectangle.south + rectangle.north) * 0.5;
-        cartographicScratch.height = 0.0;
-        var westernMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, westernMidpointScratch);
-
-        // Compute the normal of the plane on the western edge of the tile.
-        var westNormal = Cartesian3.cross(westernMidpointCartesian, Cartesian3.UNIT_Z, cartesian3Scratch);
-        Cartesian3.normalize(westNormal, surfaceTile.westNormal);
-
-        // The middle latitude on the eastern edge.
-        cartographicScratch.longitude = rectangle.east;
-        var easternMidpointCartesian = ellipsoid.cartographicToCartesian(cartographicScratch, easternMidpointScratch);
-
-        // Compute the normal of the plane on the eastern edge of the tile.
-        var eastNormal = Cartesian3.cross(Cartesian3.UNIT_Z, easternMidpointCartesian, cartesian3Scratch);
-        Cartesian3.normalize(eastNormal, surfaceTile.eastNormal);
-
-        // Compute the normal of the plane bounding the southern edge of the tile.
-        var southeastCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.southeast(rectangle), cartesian3Scratch2);
-        var westVector = Cartesian3.subtract(westernMidpointCartesian, easternMidpointCartesian, cartesian3Scratch);
-        var southNormal = Cartesian3.cross(southeastCornerNormal, westVector, cartesian3Scratch2);
-        Cartesian3.normalize(southNormal, surfaceTile.southNormal);
-
-        // Compute the normal of the plane bounding the northern edge of the tile.
-        var northwestCornerNormal = ellipsoid.geodeticSurfaceNormalCartographic(Rectangle.northwest(rectangle), cartesian3Scratch2);
-        var northNormal = Cartesian3.cross(westVector, northwestCornerNormal, cartesian3Scratch2);
-        Cartesian3.normalize(northNormal, surfaceTile.northNormal);
     }
 
-    function processTerrainStateMachine(tile, context, terrainProvider) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
         var upsampled = surfaceTile.upsampledTerrain;
         var suspendUpsampling = false;
 
         if (defined(loaded)) {
-            loaded.processLoadStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            loaded.processLoadStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -446,7 +353,7 @@ define([
 
                     // If there's a water mask included in the terrain data, create a
                     // texture for it.
-                    createWaterMaskTextureIfNeeded(context, surfaceTile);
+                    createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
 
                     propagateNewLoadedDataToChildren(tile);
                 }
@@ -469,7 +376,7 @@ define([
         }
 
         if (!suspendUpsampling && defined(upsampled)) {
-            upsampled.processUpsampleStateMachine(context, terrainProvider, tile.x, tile.y, tile.level);
+            upsampled.processUpsampleStateMachine(frameState, terrainProvider, tile.x, tile.y, tile.level);
 
             // Publish the terrain data on the tile as soon as it is available.
             // We'll potentially need it to upsample child tiles.
@@ -631,7 +538,8 @@ define([
         var data = context.cache.tile_waterMaskData;
 
         if (!defined(data)) {
-            var allWaterTexture = context.createTexture2D({
+            var allWaterTexture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
@@ -642,7 +550,7 @@ define([
             });
             allWaterTexture.referenceCount = 1;
 
-            var sampler = context.createSampler({
+            var sampler = new Sampler({
                 wrapS : TextureWrap.CLAMP_TO_EDGE,
                 wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
@@ -693,18 +601,19 @@ define([
             }
         } else {
             var textureSize = Math.sqrt(waterMaskLength);
-            texture = context.createTexture2D({
+            texture = new Texture({
+                context : context,
                 pixelFormat : PixelFormat.LUMINANCE,
                 pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
                 source : {
                     width : textureSize,
                     height : textureSize,
                     arrayBufferView : waterMask
-                }
+                },
+                sampler : waterMaskData.sampler
             });
 
             texture.referenceCount = 0;
-            texture.sampler = waterMaskData.sampler;
         }
 
         ++texture.referenceCount;

@@ -3,8 +3,7 @@ defineSuite([
         'Renderer/PassState'
     ], function(
         PassState) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('creates a pass state', function() {
         var context = {};

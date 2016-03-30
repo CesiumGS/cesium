@@ -21,7 +21,7 @@ define([
         GeoJsonDataSource,
         KmlDataSource,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -50,7 +50,7 @@ define([
      *     window.alert('Error processing ' + source + ':' + error);
      * });
      */
-    var viewerDragDropMixin = function(viewer, options) {
+    function viewerDragDropMixin(viewer, options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
@@ -212,7 +212,7 @@ define([
 
         //Specs need access to handleDrop
         viewer._handleDrop = handleDrop;
-    };
+    }
 
     function stop(event) {
         event.stopPropagation();
@@ -237,6 +237,7 @@ define([
     }
 
     function createOnLoadCallback(viewer, file, proxy) {
+        var scene = viewer.scene;
         return function(evt) {
             var fileName = file.name;
             try {
@@ -253,7 +254,9 @@ define([
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
                     loadPromise = KmlDataSource.load(file, {
                         sourceUri : fileName,
-                        proxy : proxy
+                        proxy : proxy,
+                        camera : scene.camera,
+                        canvas : scene.canvas
                     });
                 } else {
                     viewer.dropError.raiseEvent(viewer, fileName, 'Unrecognized file: ' + fileName);

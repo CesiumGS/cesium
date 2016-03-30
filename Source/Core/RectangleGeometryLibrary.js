@@ -17,7 +17,7 @@ define([
         CesiumMath,
         Matrix2,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -148,7 +148,7 @@ define([
 
             if (north < -CesiumMath.PI_OVER_TWO || north > CesiumMath.PI_OVER_TWO ||
                     south < -CesiumMath.PI_OVER_TWO || south > CesiumMath.PI_OVER_TWO) {
-                throw new DeveloperError('Rotated extent is invalid.');
+                throw new DeveloperError('Rotated rectangle is invalid.  It crosses over either the north or south pole.');
             }
 
             rectangle.north = north;

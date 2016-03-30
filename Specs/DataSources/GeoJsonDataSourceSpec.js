@@ -7,6 +7,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/PolygonHierarchy',
         'Core/RuntimeError',
+        'DataSources/CallbackProperty',
         'DataSources/EntityCollection',
         'ThirdParty/when'
     ], function(
@@ -17,10 +18,10 @@ defineSuite([
         JulianDate,
         PolygonHierarchy,
         RuntimeError,
+        CallbackProperty,
         EntityCollection,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
+    'use strict';
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -94,6 +95,28 @@ defineSuite([
             type : 'name',
             properties : {
                 name : 'EPSG:4326'
+            }
+        }
+    };
+
+    var pointNamedCrsOgc = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:OGC:1.3:CRS84'
+            }
+        }
+    };
+
+    var pointNamedCrsEpsg = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:EPSG::4326'
             }
         }
     };
@@ -247,6 +270,19 @@ defineSuite([
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('Works with null geometry', function() {
@@ -270,7 +306,7 @@ defineSuite([
         });
     });
 
-    it('Creates description from properties', function() {
+    it('Creates default description from properties', function() {
         var featureWithProperties = {
             type : 'Feature',
             geometry : point,
@@ -293,6 +329,88 @@ defineSuite([
             expect(description).toContain('dog');
             expect(description).toContain('cat');
             expect(description).toContain('liger');
+        });
+    });
+
+    it('Creates custom description string from properties', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat'
+            }
+        };
+
+        function testDescribe(properties) {
+            var desc = '';
+            for (var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    desc +=  key + ' = ' + value + '. ';
+                }
+            }
+            return desc;
+        }
+
+        var dataSource = new GeoJsonDataSource();
+        var options = {
+            describe: testDescribe
+        };
+        return dataSource.load(featureWithProperties, options).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeDefined();
+            var description = entity.description.getValue(time);
+            expect(description).toContain('prop1 = dog.');
+            expect(description).toContain('prop2 = cat.');
+        });
+    });
+
+    it('Creates custom description from properties, using a describeProperty', function() {
+        var featureWithProperties = {
+            type : 'Feature',
+            geometry : point,
+            properties : {
+                prop1 : 'dog',
+                prop2 : 'cat'
+            }
+        };
+
+        function testDescribe(properties) {
+            var desc = '';
+            for (var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    var value = properties[key];
+                    desc +=  key + ' = ' + value + '; ';
+                }
+            }
+            return desc;
+        }
+        function createDescriptionCallback(describe, properties, nameProperty) {
+            var description;
+            return function(time, result) {
+                if (!description) {
+                    description = describe(properties, nameProperty);
+                }
+                return description;
+            };
+        }
+        function testDescribeProperty(properties, nameProperty) {
+            return new CallbackProperty(createDescriptionCallback(testDescribe, properties, nameProperty), true);
+        }
+
+        var dataSource = new GeoJsonDataSource();
+        var options = {
+            describe: testDescribeProperty
+        };
+        return dataSource.load(featureWithProperties, options).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.description).toBeDefined();
+            var description = entity.description.getValue(time);
+            expect(description).toContain('prop1 = dog;');
+            expect(description).toContain('prop2 = cat;');
         });
     });
 
@@ -384,6 +502,23 @@ defineSuite([
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.properties).toBeUndefined();
+        });
+    });
+
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            expect(entityCollection.owner).toEqual(dataSource);
+        });
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(featureWithId).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.entityCollection).toEqual(entityCollection);
         });
     });
 
@@ -642,6 +777,24 @@ defineSuite([
     it('Works with named crs', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(pointNamedCrs).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs OGC:1.3:CRS84', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsOgc).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs EPSG::4326', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsEpsg).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));

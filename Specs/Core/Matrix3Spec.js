@@ -9,8 +9,7 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();
@@ -1126,5 +1125,18 @@ defineSuite([
         expect(function() {
             Matrix3.inverse(new Matrix3());
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix3 objects can be used as array like objects', function() {
+        var matrix = new Matrix3(
+                1, 4, 7,
+                2, 5, 8,
+                3, 6, 9);
+        expect(matrix.length).toEqual(9);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

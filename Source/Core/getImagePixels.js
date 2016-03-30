@@ -3,7 +3,7 @@ define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     var context2DsByWidthAndHeight = {};
 
@@ -16,7 +16,7 @@ define([
      * @param {Image} image The image to extract pixels from.
      * @returns {CanvasPixelArray} The pixels of the image.
      */
-    var getImagePixels = function(image, width, height) {
+    function getImagePixels(image, width, height) {
         if (!defined(width)) {
             width = image.width;
         }
@@ -42,7 +42,7 @@ define([
 
         context2d.drawImage(image, 0, 0, width, height);
         return context2d.getImageData(0, 0, width, height).data;
-    };
+    }
 
     return getImagePixels;
 });

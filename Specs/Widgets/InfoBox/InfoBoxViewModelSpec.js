@@ -5,8 +5,7 @@ defineSuite([
     ], function(
         InfoBoxViewModel,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor sets expected values', function() {
         var viewModel = new InfoBoxViewModel();

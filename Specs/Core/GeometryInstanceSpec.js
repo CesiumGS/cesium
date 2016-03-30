@@ -19,8 +19,7 @@ defineSuite([
         GeometryInstanceAttribute,
         Matrix4,
         PrimitiveType) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor', function() {
         var geometry = new Geometry({

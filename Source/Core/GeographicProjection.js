@@ -15,7 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     /**
      * A simple map projection where longitude and latitude are linearly mapped to X and Y by multiplying
@@ -30,11 +30,11 @@ define([
      *
      * @see WebMercatorProjection
      */
-    var GeographicProjection = function(ellipsoid) {
+    function GeographicProjection(ellipsoid) {
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         this._semimajorAxis = this._ellipsoid.maximumRadius;
         this._oneOverSemimajorAxis = 1.0 / this._semimajorAxis;
-    };
+    }
 
     defineProperties(GeographicProjection.prototype, {
         /**

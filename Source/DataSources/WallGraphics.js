@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a two dimensional wall defined as a line strip and optional maximum and minimum heights.
@@ -39,7 +39,7 @@ define([
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      */
-    var WallGraphics = function(options) {
+    function WallGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._material = undefined;
@@ -63,7 +63,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(WallGraphics.prototype, {
         /**

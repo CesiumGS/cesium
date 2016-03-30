@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describe an ellipsoid or sphere.  The center position and orientation are determined by the containing {@link Entity}.
@@ -37,7 +37,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
-    var EllipsoidGraphics = function(options) {
+    function EllipsoidGraphics(options) {
         this._show = undefined;
         this._showSubscription = undefined;
         this._radii = undefined;
@@ -61,7 +61,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(EllipsoidGraphics.prototype, {
         /**

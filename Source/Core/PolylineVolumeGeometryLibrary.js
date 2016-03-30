@@ -25,7 +25,7 @@ define([
         PolylinePipeline,
         Quaternion,
         Transforms) {
-    "use strict";
+    'use strict';
 
     var scratch2Array = [new Cartesian3(), new Cartesian3()];
     var scratchCartesian1 = new Cartesian3();
@@ -260,34 +260,6 @@ define([
         var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
 
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    };
-
-    function latLonEquals(c0, c1) {
-        return ((CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON6)));
-    }
-    var carto0 = new Cartographic();
-    var carto1 = new Cartographic();
-    PolylineVolumeGeometryLibrary.removeDuplicatesFromPositions = function(positions, ellipsoid) {
-        var length = positions.length;
-        if (length < 2) {
-            return positions.slice(0);
-        }
-
-        var cleanedPositions = [];
-        cleanedPositions.push(positions[0]);
-
-        for (var i = 1; i < length; ++i) {
-            var v0 = positions[i - 1];
-            var v1 = positions[i];
-            var c0 = ellipsoid.cartesianToCartographic(v0, carto0);
-            var c1 = ellipsoid.cartesianToCartographic(v1, carto1);
-
-            if (!latLonEquals(c0, c1)) {
-                cleanedPositions.push(v1); // Shallow copy!
-            }
-        }
-
-        return cleanedPositions;
     };
 
     var scratchForwardProjection = new Cartesian3();

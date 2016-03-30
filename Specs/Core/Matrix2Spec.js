@@ -7,8 +7,7 @@ defineSuite([
         Matrix2,
         Cartesian2,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();
@@ -803,5 +802,17 @@ defineSuite([
         expect(function() {
             Matrix2.abs(new Matrix2());
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix2 objects can be used as array like objects', function() {
+        var matrix = new Matrix2(
+                1, 3,
+                2, 4);
+        expect(matrix.length).toEqual(4);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

@@ -7,7 +7,7 @@ define([
         when,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -31,7 +31,7 @@ define([
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//assets.agi.com/stk-terrain/world'
+     *     url : 'https://assets.agi.com/stk-terrain/world'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
@@ -43,7 +43,7 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    var sampleTerrain = function(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
@@ -71,7 +71,7 @@ define([
         doSamplingWhenReady();
 
         return deferred.promise;
-    };
+    }
 
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;

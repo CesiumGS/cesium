@@ -17,8 +17,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var context;
 
@@ -38,15 +37,15 @@ defineSuite([
 
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
             near : 1.0,
             far : 20000000.0
         }));
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).toBeDefined();
         command.execute(context); // Not reliable enough across browsers to test pixels
 
@@ -61,15 +60,15 @@ defineSuite([
 
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
             near : 1.0,
             far : 20000000.0
         }));
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).toBeDefined();
         command.execute(context); // Not reliable enough across browsers to test pixels
 
@@ -82,15 +81,15 @@ defineSuite([
 
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
             near : 1.0,
             far : 20000000.0
         }));
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 
@@ -99,16 +98,16 @@ defineSuite([
 
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
             near : 1.0,
             far : 20000000.0
         }));
         frameState.mode = SceneMode.SCENE2D;
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 
@@ -117,16 +116,16 @@ defineSuite([
 
         var us = context.uniformState;
         var radii = Ellipsoid.WGS84.radii;
-        var frameState = createFrameState(createCamera({
+        var frameState = createFrameState(context, createCamera({
             offset : new Cartesian3(radii.x * 0.1, 0.0, 0.0),
             target : new Cartesian3(0.0, 0.0, radii.z * 1.005),
             near : 1.0,
             far : 20000000.0
         }));
         frameState.passes.render = false;
-        us.update(context, frameState);
+        us.update(frameState);
 
-        var command = s.update(context, frameState);
+        var command = s.update(frameState);
         expect(command).not.toBeDefined();
     });
 

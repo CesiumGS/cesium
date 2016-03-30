@@ -3,7 +3,7 @@ define([
         './defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents the closed interval [start, stop].
@@ -13,7 +13,7 @@ define([
      * @param {Number} [start=0.0] The beginning of the interval.
      * @param {Number} [stop=0.0] The end of the interval.
      */
-    var Interval = function(start, stop) {
+    function Interval(start, stop) {
         /**
          * The beginning of the interval.
          * @type {Number}
@@ -26,7 +26,7 @@ define([
          * @default 0.0
          */
         this.stop = defaultValue(stop, 0.0);
-    };
+    }
 
     return Interval;
 });

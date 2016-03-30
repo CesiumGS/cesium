@@ -3,8 +3,7 @@ defineSuite([
         'Core/LinearApproximation'
     ], function(
         LinearApproximation) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('should produce correct results', function() {
         var xTable = [2.0, 4.0];

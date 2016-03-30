@@ -61,7 +61,7 @@ define([
         Property,
         RectangleGraphics,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);
@@ -90,6 +90,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.id] A unique identifier for this object. If none is provided, a GUID is generated.
      * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
+     * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
      * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
      * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
      * @param {PositionProperty} [options.position] A Property specifying the entity position.
@@ -112,9 +113,9 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Special Data}
+     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
-    var Entity = function(options) {
+    function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var id = options.id;
@@ -172,9 +173,15 @@ define([
         this._wallSubscription = undefined;
         this._children = [];
 
+        /**
+         * Gets or sets the entity collection that this entity belongs to.
+         * @type {EntityCollection}
+         */
+        this.entityCollection = undefined;
+
         this.parent = options.parent;
         this.merge(options);
-    };
+    }
 
     function updateShow(entity, children, isShowing) {
         var length = children.length;
@@ -270,7 +277,7 @@ define([
          */
         isShowing : {
             get : function() {
-                return this._show && (!defined(this._parent) || this._parent.isShowing);
+                return this._show && (!defined(this.entityCollection) || this.entityCollection.show) && (!defined(this._parent) || this._parent.isShowing);
             }
         },
         /**
@@ -296,7 +303,9 @@ define([
                 }
 
                 this._parent = value;
-                value._children.push(this);
+                if (defined(value)) {
+                    value._children.push(this);
+                }
 
                 var isShowing = this.isShowing;
 
@@ -310,7 +319,7 @@ define([
         /**
          * Gets the names of all properties registered on this instance.
          * @memberof Entity.prototype
-         * @type {Event}
+         * @type {Array}
          */
         propertyNames : {
             get : function() {
@@ -438,7 +447,7 @@ define([
      * Given a time, returns true if this object should have data during that time.
      *
      * @param {JulianDate} time The time to check availability for.
-     * @returns true if the object should have data during the provided time, false otherwise.
+     * @returns {Boolean} true if the object should have data during the provided time, false otherwise.
      */
     Entity.prototype.isAvailable = function(time) {
         //>>includeStart('debug', pragmas.debug);
@@ -490,17 +499,18 @@ define([
      */
     Entity.prototype.removeProperty = function(propertyName) {
         var propertyNames = this._propertyNames;
+        var index = propertyNames.indexOf(propertyName);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(propertyName)) {
             throw new DeveloperError('propertyName is required.');
         }
-        if (propertyNames.indexOf(propertyName) === -1) {
+        if (index === -1) {
             throw new DeveloperError(propertyName + ' is not a registered property.');
         }
         //>>includeEnd('debug');
 
-        this._propertyNames.push(propertyName);
+        this._propertyNames.splice(index, 1);
         delete this[propertyName];
     };
 

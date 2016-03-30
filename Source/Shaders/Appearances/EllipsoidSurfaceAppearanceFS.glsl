@@ -6,7 +6,7 @@ void main()
 {
     czm_materialInput materialInput;
     
-	vec3 normalEC = normalize(czm_normal3D * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));
+    vec3 normalEC = normalize(czm_normal3D * czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0)));
 #ifdef FACE_FORWARD
     normalEC = faceforward(normalEC, vec3(0.0, 0.0, 1.0), -normalEC);
 #endif

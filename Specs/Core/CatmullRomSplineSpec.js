@@ -9,8 +9,7 @@ defineSuite([
         Cartesian3,
         HermiteSpline,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var points;
     var times;

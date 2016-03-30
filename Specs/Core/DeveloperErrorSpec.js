@@ -3,8 +3,7 @@ defineSuite([
         'Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var name = 'DeveloperError';
     var testMessage = 'Testing';

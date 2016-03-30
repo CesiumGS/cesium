@@ -15,7 +15,7 @@ define([
         PolylineColorAppearanceVS,
         PolylineCommon,
         Appearance) {
-    "use strict";
+    'use strict';
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
@@ -33,8 +33,6 @@ define([
      * @param {String} [options.vertexShaderSource] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource] Optional GLSL fragment shader source to override the default fragment shader.
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
-     *
-     *@demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Color.html|Cesium Sandcastle Polyline Color Appearance Demo}
      *
      * @example
      * // A solid white line segment
@@ -57,7 +55,7 @@ define([
      *   })
      * });
      */
-    var PolylineColorAppearance = function(options) {
+    function PolylineColorAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
@@ -92,7 +90,7 @@ define([
         // Non-derived members
 
         this._vertexFormat = vertexFormat;
-    };
+    }
 
     defineProperties(PolylineColorAppearance.prototype, {
         /**
@@ -193,7 +191,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     PolylineColorAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

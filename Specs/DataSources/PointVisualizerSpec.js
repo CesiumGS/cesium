@@ -23,8 +23,7 @@ defineSuite([
         EntityCollection,
         PointGraphics,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var visualizer;

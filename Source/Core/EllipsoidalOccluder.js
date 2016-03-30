@@ -15,7 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
@@ -40,7 +40,7 @@ define([
      *
      * @private
      */
-    var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
+    function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
@@ -56,7 +56,7 @@ define([
         if (defined(cameraPosition)) {
             this.cameraPosition = cameraPosition;
         }
-    };
+    }
 
     defineProperties(EllipsoidalOccluder.prototype, {
         /**
@@ -134,8 +134,10 @@ define([
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
         var vtDotVc = -Cartesian3.dot(vt, cv);
-        var isOccluded = vtDotVc > vhMagnitudeSquared &&
-                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared;
+        // If vhMagnitudeSquared < 0 then we are below the surface of the ellipsoid and
+        // in this case, set the culling plane to be on V.
+        var isOccluded = vhMagnitudeSquared < 0 ? vtDotVc > 0 : (vtDotVc > vhMagnitudeSquared &&
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared);
         return !isOccluded;
     };
 
@@ -230,6 +232,48 @@ define([
             positionScratch.z = vertices[i + 2] + center.z;
 
             var candidateMagnitude = computeMagnitude(ellipsoid, positionScratch, scaledSpaceDirectionToPoint);
+            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
+        }
+
+        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
+    };
+
+    /**
+     * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
+     * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
+     * is expressed in the ellipsoid-scaled space and is suitable for use with
+     * {@link EllipsoidalOccluder#isScaledSpacePointVisible}.
+     *
+     * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+     *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+     *                     the center of the bounding sphere computed from the positions.  The direction need not
+     *                     be normalized.
+     * @param {Cartesian3[]} points  The vertices from which to compute the horizon culling point.  The positions
+     *                   must be expressed in a reference frame centered at the ellipsoid and aligned with the
+     *                   ellipsoid's axes.
+     * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+     * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+     */
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromPoints = function(directionToPoint, points, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(directionToPoint)) {
+            throw new DeveloperError('directionToPoint is required');
+        }
+        if (!defined(points)) {
+            throw new DeveloperError('points is required');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        var ellipsoid = this._ellipsoid;
+        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint);
+        var resultMagnitude = 0.0;
+
+        for (var i = 0, len = points.length; i < len; ++i) {
+            var candidateMagnitude = computeMagnitude(ellipsoid, points[i], scaledSpaceDirectionToPoint);
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
         }
 

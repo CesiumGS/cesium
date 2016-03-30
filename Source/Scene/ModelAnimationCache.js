@@ -7,6 +7,7 @@ define([
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
+        '../Renderer/WebGLConstants',
         './getModelAccessor'
     ], function(
         Cartesian3,
@@ -16,15 +17,15 @@ define([
         Matrix4,
         Quaternion,
         QuaternionSpline,
+        WebGLConstants,
         getModelAccessor) {
-    "use strict";
-    /*global WebGLRenderingContext*/
+    'use strict';
 
     /**
      * @private
      */
-    var ModelAnimationCache = function() {
-    };
+    function ModelAnimationCache() {
+    }
 
     function getAccessorKey(model, accessor) {
         var gltf = model.gltf;
@@ -54,6 +55,8 @@ define([
             // Cache miss
             var loadResources = model._loadResources;
             var gltf = model.gltf;
+            var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
+
             var bufferViews = gltf.bufferViews;
 
             var bufferView = bufferViews[accessor.bufferView];
@@ -67,19 +70,24 @@ define([
             var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             var i;
 
-            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'SCALAR')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {
                 values = typedArray;
             }
-            else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
+            else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     values[i] = Cartesian3.fromArray(typedArray, 3 * i);
                 }
-            } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
+            } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
                 values = new Array(count);
                 for (i = 0; i < count; ++i) {
                     var byteOffset = 4 * i;
-                    values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
+                    if (hasAxisAngle) {
+                        values[i] = Quaternion.fromAxisAngle(Cartesian3.fromArray(typedArray, byteOffset, axisScratch), typedArray[byteOffset + 3]);
+                    }
+                    else {
+                        values[i] = Quaternion.unpack(typedArray, byteOffset);
+                    }
                 }
             }
             // GLTF_SPEC: Support more parameter types when glTF supports targeting materials. https://github.com/KhronosGroup/glTF/issues/142
@@ -101,10 +109,9 @@ define([
     }
 
  // GLTF_SPEC: https://github.com/KhronosGroup/glTF/issues/185
-    var ConstantSpline = function(value) {
+    function ConstantSpline(value) {
         this._value = value;
-    };
-
+    }
     ConstantSpline.prototype.evaluate = function(time, result) {
         return this._value;
     };
@@ -128,12 +135,12 @@ define([
                 var type = accessor.type;
 
                 if (sampler.interpolation === 'LINEAR') {
-                    if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC3')) {
+                    if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC3')) {
                         spline = new LinearSpline({
                             times : times,
                             points : controlPoints
                         });
-                    } else if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'VEC4')) {
+                    } else if ((componentType === WebGLConstants.FLOAT) && (type === 'VEC4')) {
                         spline = new QuaternionSpline({
                             times : times,
                             points : controlPoints
@@ -176,7 +183,7 @@ define([
             var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             matrices =  new Array(count);
 
-            if ((componentType === WebGLRenderingContext.FLOAT) && (type === 'MAT4')) {
+            if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
                 for (var i = 0; i < count; ++i) {
                     matrices[i] = Matrix4.fromArray(typedArray, 16 * i);
                 }

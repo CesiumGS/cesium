@@ -25,7 +25,7 @@ define([
         NearFarScalar,
         SceneMode,
         SceneTransforms) {
-    "use strict";
+    'use strict';
 
     /**
      * A graphical point positioned in the 3D scene, that is created
@@ -51,7 +51,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
-    var PointPrimitive = function(options, pointPrimitiveCollection) {
+    function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -79,7 +79,7 @@ define([
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
         this._index = -1; //Used only by PointPrimitiveCollection
-    };
+    }
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX = 0;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX = 1;
@@ -262,7 +262,7 @@ define([
          * <code>blue</code>, and <code>alpha</code> properties as shown in Example 1.  These components range from <code>0.0</code>
          * (no intensity) to <code>1.0</code> (full intensity).
          * @memberof PointPrimitive.prototype
-         * @param {Color}
+         * @type {Color}
          *
          * @example
          * // Example 1. Assign yellow.
@@ -294,7 +294,7 @@ define([
         /**
          * Gets or sets the outline color of the point.
          * @memberof PointPrimitive.prototype
-         * @param {Color}
+         * @type {Color}
          */
         outlineColor : {
             get : function() {
@@ -388,21 +388,13 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchMatrix4 = new Matrix4();
     var scratchCartesian4 = new Cartesian4();
 
+    // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
     PointPrimitive._computeScreenSpacePosition = function(modelMatrix, position, scene, result) {
-        // This function is basically a stripped-down JavaScript version of PointPrimitiveCollectionVS.glsl
-        var camera = scene.camera;
-        var view = camera.viewMatrix;
-        var projection = camera.frustum.projectionMatrix;
-
-        // Model to eye coordinates
-        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
-        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
-
+        // Model to world coordinates
+        var positionWorld = Matrix4.multiplyByVector(modelMatrix, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
+        var positionWC = SceneTransforms.wgs84ToWindowCoordinates(scene, positionWorld, result);
         return positionWC;
     };
 

@@ -2,32 +2,52 @@
 defineSuite([
         'Widgets/CesiumInspector/CesiumInspectorViewModel',
         'Core/defined',
+        'Core/GeometryInstance',
         'Core/Math',
         'Core/Rectangle',
+        'Core/RectangleGeometry',
         'Core/WebMercatorTilingScheme',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/GlobeSurfaceTile',
         'Scene/Material',
+        'Scene/Primitive',
         'Scene/QuadtreeTile',
-        'Scene/RectanglePrimitive',
         'Specs/createScene'
     ], function(
         CesiumInspectorViewModel,
         defined,
+        GeometryInstance,
         CesiumMath,
         Rectangle,
+        RectangleGeometry,
         WebMercatorTilingScheme,
+        EllipsoidSurfaceAppearance,
         Globe,
         GlobeSurfaceTile,
         Material,
+        Primitive,
         QuadtreeTile,
-        RectanglePrimitive,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var performanceContainer;
+
+    function createRectangle(rectangle, rotation) {
+        return new Primitive({
+            geometryInstances: new GeometryInstance({
+                geometry: new RectangleGeometry({
+                    rectangle: rectangle,
+                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    rotation: rotation
+                })
+            }),
+            appearance: new EllipsoidSurfaceAppearance({
+                aboveGround: false
+            })
+        });
+    }
 
     beforeAll(function() {
         scene = createScene();
@@ -94,16 +114,12 @@ defineSuite([
     });
 
     it ('primitive bounding sphere', function() {
-        var p = scene.primitives.add(new RectanglePrimitive({
-            rectangle : new Rectangle(
+        var p = scene.primitives.add(createRectangle(new Rectangle(
                     CesiumMath.toRadians(-110.0),
                     CesiumMath.toRadians(0.0),
                     CesiumMath.toRadians(-90.0),
                     CesiumMath.toRadians(20.0)),
-                rotation : CesiumMath.toRadians(45),
-                material : Material.fromType(Material.ColorType)
-            })
-        );
+                    CesiumMath.toRadians(45)));
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         scene.render();
         viewModel.primitive = p;
@@ -118,26 +134,18 @@ defineSuite([
     });
 
     it ('primitive filter', function() {
-        var p = scene.primitives.add(new RectanglePrimitive({
-            rectangle : new Rectangle(
-                    CesiumMath.toRadians(-110.0),
-                    CesiumMath.toRadians(0.0),
-                    CesiumMath.toRadians(-90.0),
-                    CesiumMath.toRadians(20.0)),
-                rotation : CesiumMath.toRadians(45),
-                material : Material.fromType(Material.ColorType)
-            })
-        );
+        var p = scene.primitives.add(createRectangle(new Rectangle(
+                CesiumMath.toRadians(-110.0),
+                CesiumMath.toRadians(0.0),
+                CesiumMath.toRadians(-90.0),
+                CesiumMath.toRadians(20.0)),
+                CesiumMath.toRadians(45)));
 
-        var q = scene.primitives.add(new RectanglePrimitive({
-            rectangle : new Rectangle(
-                    CesiumMath.toRadians(-10.0),
-                    CesiumMath.toRadians(0.0),
-                    CesiumMath.toRadians(-9.0),
-                    CesiumMath.toRadians(20.0)),
-                material : Material.fromType(Material.ColorType)
-            })
-        );
+        var q = scene.primitives.add(createRectangle(new Rectangle(
+                CesiumMath.toRadians(-10.0),
+                CesiumMath.toRadians(0.0),
+                CesiumMath.toRadians(-9.0),
+                CesiumMath.toRadians(20.0))));
 
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         scene.render();
@@ -154,16 +162,13 @@ defineSuite([
     });
 
     it ('primitive reference frame', function() {
-        var p = scene.primitives.add(new RectanglePrimitive({
-            rectangle : new Rectangle(
-                    CesiumMath.toRadians(-110.0),
-                    CesiumMath.toRadians(0.0),
-                    CesiumMath.toRadians(-90.0),
-                    CesiumMath.toRadians(20.0)),
-                rotation : CesiumMath.toRadians(45),
-                material : Material.fromType(Material.ColorType)
-            })
-        );
+        var p = scene.primitives.add(createRectangle(new Rectangle(
+                CesiumMath.toRadians(-110.0),
+                CesiumMath.toRadians(0.0),
+                CesiumMath.toRadians(-90.0),
+                CesiumMath.toRadians(20.0)),
+                CesiumMath.toRadians(45)));
+
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         scene.render();
         viewModel.primitive = p;

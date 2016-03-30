@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A policy for discarding tile images according to some criteria.  This type describes an
@@ -15,9 +15,9 @@ define([
      * @see DiscardMissingTileImagePolicy
      * @see NeverTileDiscardPolicy
      */
-    var TileDiscardPolicy = function(options) {
+    function TileDiscardPolicy(options) {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Determines if the discard policy is ready to process images.
@@ -31,8 +31,8 @@ define([
      * Given a tile image, decide whether to discard that image.
      * @function
      *
-     * @param {Image|Promise.<Image>} image An image, or a promise that will resolve to an image.
-     * @returns {Promise.<Boolean>} A promise that will resolve to true if the tile should be discarded.
+     * @param {Image} image An image to test.
+     * @returns {Boolean} True if the image should be discarded; otherwise, false.
      */
     TileDiscardPolicy.prototype.shouldDiscardImage = DeveloperError.throwInstantiationError;
 

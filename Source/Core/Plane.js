@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A plane in Hessian Normal Form defined by
@@ -34,7 +34,7 @@ define([
      * // The plane x=0
      * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
      */
-    var Plane = function(normal, distance) {
+    function Plane(normal, distance) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(normal))  {
             throw new DeveloperError('normal is required.');
@@ -61,7 +61,7 @@ define([
          * @type {Number}
          */
         this.distance = distance;
-    };
+    }
 
     /**
      * Creates a plane from a normal and a point on the plane.

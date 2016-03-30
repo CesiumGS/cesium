@@ -15,14 +15,14 @@
             "componentType": 5126,
             "count": 9,
             "max": [
-                -1.57813,
-                -1.405,
-                0.154949
+                -1.5781300067901611,
+                -1.4049999713897705,
+                0.154948994517
             ],
             "min": [
                 -1.59375,
-                -1.42063,
-                0.135418
+                -1.4206299781799316,
+                0.13541799783706665
             ],
             "type": "VEC3"
         },
@@ -38,9 +38,9 @@
                 0
             ],
             "min": [
-                -0.514496,
-                0.408248,
-                -0.816497
+                -0.5144960284233093,
+                0.40824800729751587,
+                -0.8164969682693481
             ],
             "type": "VEC3"
         },
@@ -51,22 +51,25 @@
             "componentType": 5126,
             "count": 9,
             "max": [
-                0.007992,
-                0.9995
+                0.007992000319063663,
+                0.9994999766349792
             ],
             "min": [
-                0.0005,
-                0.99458
+                0.0004999999655410647,
+                0.9945799708366394
             ],
             "type": "VEC2"
         }
     },
     "animations": {},
     "asset": {
-        "generator": "collada2gltf@f276333957743f3a823db04d202ce9abbbfe6a7f",
+        "generator": "collada2gltf@",
         "premultipliedAlpha": true,
-        "profile": "WebGL 1.0.2",
-        "version": 0.8
+        "profile": {
+            "api": "WebGL",
+            "version": "1.0.2"
+        },
+        "version": "1.0"
     },
     "bufferViews": {
         "bufferView_29": {
@@ -86,23 +89,23 @@
         "test-shader-optimize": {
             "byteLength": 308,
             "type": "arraybuffer",
-            "uri": "data:application/octet-stream;base64,AAABAAIAAwAEAAUABgAHAAgAAAAqAMq/Ctezv+OqEj4qAMq/NNe1vwSrCj4AAMy/NNe1v+OqEj4qAMq/Ctezv+OqEj4AAMy/NNe1v+OqEj4AAMy/Ctezv/OqHj4qAMq/CtezvwSrGj4qAMq/Ctezv+OqEj4AAMy/Ctezv/OqHj7iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb8DtgO/A7YDP02dL78DtgO/A7YDP02dL78DtgO/A7YDP02dL78AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAABnD7Q7Az5/P+HwAjw7338/bhIDOjvffz9nD7Q7Az5/P24SAzo7338/bhIDOsucfj9nD7Q7y5x+P2cPtDsDPn8/bhIDOsucfj8="
+            "uri": "data:application/octet-stream;base64,AAABAAIAAwAEAAUABgAHAAgAAQAqAMq/Ctezv+OqEj4qAMq/NNe1vwSrCj4AAMy/NNe1v+OqEj4qAMq/Ctezv+OqEj4AAMy/NNe1v+OqEj4AAMy/Ctezv/OqHj4qAMq/CtezvwSrGj4qAMq/Ctezv+OqEj4AAMy/Ctezv/OqHj7iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb/iBdG+4gXRPvIFUb8DtgO/A7YDP02dL78DtgO/A7YDP02dL78DtgO/A7YDP02dL78AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAABnD7Q7Az5/P+HwAjw7338/bhIDOjvffz9nD7Q7Az5/P24SAzo7338/bhIDOsucfj9nD7Q7y5x+P2cPtDsDPn8/bhIDOsucfj8="
         }
     },
     "images": {
         "file2": {
+            "name": "file2",
             "uri": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD//gATQ3JlYXRlZCB3aXRoIEdJTVD/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/wgARCAAEAAQDAREAAhEBAxEB/8QAFAABAAAAAAAAAAAAAAAAAAAACP/EABQBAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhADEAAAAVSf/8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABBQJ//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPwF//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPwF//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQAGPwJ//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPyF//9oADAMBAAIAAwAAABCf/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAwEBPxB//8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAgBAgEBPxB//8QAFBABAAAAAAAAAAAAAAAAAAAAAP/aAAgBAQABPxB//9k="
         }
     },
     "materials": {
         "terrain_detail-fx": {
-            "instanceTechnique": {
-                "technique": "technique0",
-                "values": {
-                    "emission": "texture_file2"
-                }
-            },
-            "name": "terrain_detail"
+            "name": "terrain_detail",
+            "technique": "technique0",
+            "values": {
+                "emission": "texture_file2",
+                "transparency": 0
+            }
         }
     },
     "meshes": {
@@ -117,7 +120,7 @@
                     },
                     "indices": "accessor_21",
                     "material": "terrain_detail-fx",
-                    "primitive": 4
+                    "mode": 4
                 }
             ]
         }
@@ -138,8 +141,8 @@
                 0,
                 1,
                 0,
-                -0.121097,
-                0.840109,
+                -0.12109699100255966,
+                0.8401089310646057,
                 0,
                 1
             ],
@@ -203,7 +206,7 @@
     "shaders": {
         "test-shader-optimize0FS": {
             "type": 35632,
-            "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Owp2YXJ5aW5nIHZlYzMgdl9ub3JtYWw7CnZhcnlpbmcgdmVjMiB2X3RleGNvb3JkMDsKdW5pZm9ybSBzYW1wbGVyMkQgdV9lbWlzc2lvbjsKdm9pZCBtYWluKHZvaWQpIHsKdmVjMyBub3JtYWwgPSBub3JtYWxpemUodl9ub3JtYWwpOwppZiAoZ2xfRnJvbnRGYWNpbmcgPT0gZmFsc2UpIG5vcm1hbCA9IC1ub3JtYWw7CnZlYzQgY29sb3IgPSB2ZWM0KDAuLCAwLiwgMC4sIDAuKTsKdmVjNCBkaWZmdXNlID0gdmVjNCgwLiwgMC4sIDAuLCAxLik7CnZlYzQgZW1pc3Npb247CmVtaXNzaW9uID0gdGV4dHVyZTJEKHVfZW1pc3Npb24sIHZfdGV4Y29vcmQwKTsKZGlmZnVzZS54eXogKj0gbWF4KGRvdChub3JtYWwsdmVjMygwLiwwLiwxLikpLCAwLik7CmNvbG9yLnh5eiArPSBkaWZmdXNlLnh5ejsKY29sb3IueHl6ICs9IGVtaXNzaW9uLnh5ejsKY29sb3IgPSB2ZWM0KGNvbG9yLnJnYiAqIGRpZmZ1c2UuYSwgZGlmZnVzZS5hKTsKZ2xfRnJhZ0NvbG9yID0gY29sb3I7Cn0K"
+            "uri": "data:text/plain;base64,cHJlY2lzaW9uIGhpZ2hwIGZsb2F0Owp2YXJ5aW5nIHZlYzMgdl9ub3JtYWw7CnZhcnlpbmcgdmVjMiB2X3RleGNvb3JkMDsKdW5pZm9ybSBzYW1wbGVyMkQgdV9lbWlzc2lvbjsKdW5pZm9ybSBmbG9hdCB1X3RyYW5zcGFyZW5jeTsKdm9pZCBtYWluKHZvaWQpIHsKdmVjMyBub3JtYWwgPSBub3JtYWxpemUodl9ub3JtYWwpOwppZiAoZ2xfRnJvbnRGYWNpbmcgPT0gZmFsc2UpIG5vcm1hbCA9IC1ub3JtYWw7CnZlYzQgY29sb3IgPSB2ZWM0KDAuLCAwLiwgMC4sIDAuKTsKdmVjNCBkaWZmdXNlID0gdmVjNCgwLiwgMC4sIDAuLCAxLik7CnZlYzQgZW1pc3Npb247CmVtaXNzaW9uID0gdGV4dHVyZTJEKHVfZW1pc3Npb24sIHZfdGV4Y29vcmQwKTsKZGlmZnVzZS54eXogKj0gbWF4KGRvdChub3JtYWwsdmVjMygwLiwwLiwxLikpLCAwLik7CmNvbG9yLnh5eiArPSBkaWZmdXNlLnh5ejsKY29sb3IueHl6ICs9IGVtaXNzaW9uLnh5ejsKY29sb3IgPSB2ZWM0KGNvbG9yLnJnYiAqIGRpZmZ1c2UuYSwgZGlmZnVzZS5hICogdV90cmFuc3BhcmVuY3kpOwpnbF9GcmFnQ29sb3IgPSBjb2xvcjsKfQo="
         },
         "test-shader-optimize0VS": {
             "type": 35633,
@@ -213,6 +216,11 @@
     "skins": {},
     "techniques": {
         "technique0": {
+            "attributes": {
+                "a_normal": "normal",
+                "a_position": "position",
+                "a_texcoord0": "texcoord0"
+            },
             "parameters": {
                 "emission": {
                     "type": 35678
@@ -240,49 +248,37 @@
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": 35664
+                },
+                "transparency": {
+                    "type": 5126
                 }
             },
-            "pass": "defaultPass",
-            "passes": {
-                "defaultPass": {
-                    "details": {
-                        "commonProfile": {
-                            "extras": {
-                                "doubleSided": true
-                            },
-                            "lightingModel": "Constant",
-                            "parameters": [
-                                "emission",
-                                "modelViewMatrix",
-                                "normalMatrix",
-                                "projectionMatrix"
-                            ],
-                            "texcoordBindings": {
-                                "emission": "TEXCOORD_0"
-                            }
-                        },
-                        "type": "COLLADA-1.4.1/commonProfile"
-                    },
-                    "instanceProgram": {
-                        "attributes": {
-                            "a_normal": "normal",
-                            "a_position": "position",
-                            "a_texcoord0": "texcoord0"
-                        },
-                        "program": "program_0",
-                        "uniforms": {
-                            "u_emission": "emission",
-                            "u_modelViewMatrix": "modelViewMatrix",
-                            "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix"
-                        }
-                    },
-                    "states": {
-                        "enable": [
-                            2929
-                        ]
-                    }
+            "program": "program_0",
+            "states": {
+                "enable": [
+                    2929,
+                    3042
+                ],
+                "functions": {
+                    "blendEquationSeparate": [
+                        32774,
+                        32774
+                    ],
+                    "blendFuncSeparate": [
+                        1,
+                        771,
+                        1,
+                        771
+                    ],
+                    "depthMask": false
                 }
+            },
+            "uniforms": {
+                "u_emission": "emission",
+                "u_modelViewMatrix": "modelViewMatrix",
+                "u_normalMatrix": "normalMatrix",
+                "u_projectionMatrix": "projectionMatrix",
+                "u_transparency": "transparency"
             }
         }
     },

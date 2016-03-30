@@ -19,8 +19,7 @@ defineSuite([
         Entity,
         createScene,
         MockDataSource) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var dataSourceCollection;
     var scene;
@@ -40,7 +39,7 @@ defineSuite([
         }
     });
 
-    var MockVisualizer = function(scene, entityCollection) {
+    function MockVisualizer(scene, entityCollection) {
         this.scene = scene;
         this.entityCollection = entityCollection;
         this.updatesCalled = 0;
@@ -49,11 +48,11 @@ defineSuite([
 
         this.getBoundingSphereResult = undefined;
         this.getBoundingSphereState = undefined;
-    };
-
+    }
     MockVisualizer.prototype.update = function(time) {
         this.lastUpdateTime = time;
         this.updatesCalled++;
+        return true;
     };
 
     MockVisualizer.prototype.getBoundingSphere = function(entity, result) {
@@ -69,9 +68,9 @@ defineSuite([
         this.destroyed = true;
     };
 
-    var visualizersCallback = function() {
+    function visualizersCallback() {
         return [new MockVisualizer()];
-    };
+    }
 
     it('constructor sets expected values', function() {
         display = new DataSourceDisplay({
@@ -206,7 +205,6 @@ defineSuite([
             dataSourceCollection : dataSourceCollection,
             scene : scene
         });
-        var entity = new Entity();
         var result = new BoundingSphere();
         expect(function() {
             display.getBoundingSphere(undefined, false, result);
@@ -281,6 +279,28 @@ defineSuite([
         expect(source1Visualizer.updatesCalled).toEqual(1);
         expect(source2Visualizer.lastUpdateTime).toEqual(Iso8601.MINIMUM_VALUE);
         expect(source2Visualizer.updatesCalled).toEqual(1);
+    });
+
+    it('ready is true when datasources are ready', function() {
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        expect(display.ready).toBe(false);
+
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(true);
+
+
+        spyOn(MockVisualizer.prototype, 'update').and.returnValue(false);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(false);
     });
 
     it('constructor throws if scene undefined', function() {

@@ -13,8 +13,7 @@ defineSuite([
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('throws without a center', function() {
         expect(function() {
@@ -28,15 +27,6 @@ defineSuite([
         expect(function() {
             return new CircleGeometry({
                 center : Cartesian3.fromDegrees(0,0)
-            });
-        }).toThrowDeveloperError();
-    });
-
-    it('throws with a negative radius', function() {
-        expect(function() {
-            return new CircleGeometry({
-                center : Cartesian3.fromDegrees(0,0),
-                radius : -1.0
             });
         }).toThrowDeveloperError();
     });
@@ -60,8 +50,10 @@ defineSuite([
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        var numVertices = 16; //rows of 1 + 4 + 6 + 4 + 1
+        var numTriangles = 22; //rows of 3 + 8 + 8 + 3
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -74,12 +66,14 @@ defineSuite([
             radius : 1.0
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 12);
-        expect(m.attributes.st.values.length).toEqual(2 * 12);
-        expect(m.attributes.normal.values.length).toEqual(3 * 12);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 12);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        var numVertices = 16;
+        var numTriangles = 22;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('computes positions extruded', function() {
@@ -92,8 +86,10 @@ defineSuite([
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
+        var numVertices = 48; // 16 top circle + 16 bottom circle + 8 top edge + 8 bottom edge
+        var numTriangles = 60; // 22 to fill each circle + 16 for edge wall
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute all vertex attributes extruded', function() {
@@ -106,12 +102,14 @@ defineSuite([
             extrudedHeight: 10000
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.st.values.length).toEqual(2 * (12 + 6) * 2);
-        expect(m.attributes.normal.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.tangent.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.attributes.binormal.values.length).toEqual(3 * (12 + 6) * 2);
-        expect(m.indices.length).toEqual(3 * (14 + 6) * 2);
+        var numVertices = 48;
+        var numTriangles = 60;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('compute texture coordinates with rotation', function() {
@@ -128,12 +126,29 @@ defineSuite([
         var st = m.attributes.st.values;
         var length = st.length;
 
-        expect(positions.length).toEqual(3 * 12);
-        expect(length).toEqual(2 * 12);
-        expect(m.indices.length).toEqual(3 * 14);
+        expect(positions.length).toEqual(3 * 16);
+        expect(length).toEqual(2 * 16);
+        expect(m.indices.length).toEqual(3 * 22);
 
         expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
         expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+    });
+
+    it('undefined is returned if radius is equal to or less than zero', function () {
+        var circle0 = new CircleGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : 0.0
+        });
+        var circle1 = new CircleGeometry({
+            center : Cartesian3.fromDegrees(-75.59777, 40.03883),
+            radius : -10.0
+        });
+
+        var geometry0 = CircleGeometry.createGeometry(circle0);
+        var geometry1 = CircleGeometry.createGeometry(circle1);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
     });
 
     var center = Cartesian3.fromDegrees(0,0);

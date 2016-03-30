@@ -43,7 +43,7 @@ define([
         dynamicGeometryGetBoundingSphere,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
@@ -52,14 +52,14 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var scratchColor = new Color();
 
-    var GeometryOptions = function(entity) {
+    function GeometryOptions(entity) {
         this.id = entity;
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.minimumHeights = undefined;
         this.maximumHeights = undefined;
         this.granularity = undefined;
-    };
+    }
 
     /**
      * A {@link GeometryUpdater} for walls.
@@ -70,7 +70,7 @@ define([
      * @param {Entity} entity The entity containing the geometry to be visualized.
      * @param {Scene} scene The scene where visualization is taking place.
      */
-    var WallGeometryUpdater = function(entity, scene) {
+    function WallGeometryUpdater(entity, scene) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(entity)) {
             throw new DeveloperError('entity is required');
@@ -95,7 +95,7 @@ define([
         this._outlineWidth = 1.0;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'wall', entity.wall, undefined);
-    };
+    }
 
     defineProperties(WallGeometryUpdater, {
         /**
@@ -495,14 +495,13 @@ define([
     /**
      * @private
      */
-    var DynamicGeometryUpdater = function(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, geometryUpdater) {
         this._primitives = primitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
-    };
-
+    }
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {

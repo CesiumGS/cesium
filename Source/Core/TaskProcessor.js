@@ -7,6 +7,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './getAbsoluteUri',
         './isCrossOriginUrl',
         './RuntimeError',
         'require'
@@ -18,10 +19,11 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getAbsoluteUri,
         isCrossOriginUrl,
         RuntimeError,
         require) {
-    "use strict";
+    'use strict';
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -139,8 +141,8 @@ define([
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else if (defined(require.toUrl)) {
-            var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
-            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
+            bootstrapMessage.loaderConfig.baseUrl =
+                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')
@@ -171,13 +173,13 @@ define([
      *                                        scheduleTask will not queue any more tasks, allowing
      *                                        work to be rescheduled in future frames.
      */
-    var TaskProcessor = function(workerName, maximumActiveTasks) {
+    function TaskProcessor(workerName, maximumActiveTasks) {
         this._workerName = workerName;
         this._maximumActiveTasks = defaultValue(maximumActiveTasks, 5);
         this._activeTasks = 0;
         this._deferreds = {};
         this._nextID = 0;
-    };
+    }
 
     var emptyTransferableObjectArray = [];
 

@@ -11,9 +11,12 @@ define([
         DeveloperError,
         CzmBuiltins,
         AutomaticUniforms) {
-    "use strict";
+    'use strict';
 
     function removeComments(source) {
+        // remove inline comments
+        source = source.replace(/\/\/.*/g, '');
+        // remove multiline comment block
         return source.replace(/\/\*\*[\s\S]*?\*\//gm, function(match) {
             // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
             var numberOfLines = match.match(/\n/gm).length;
@@ -179,20 +182,13 @@ define([
             return '\n';
         });
 
+        // Remove precision qualifier
+        combinedSources = combinedSources.replace(/precision\s(lowp|mediump|highp)\s(float|int);/, '');
+
         // Replace main() for picked if desired.
         var pickColorQualifier = shaderSource.pickColorQualifier;
         if (defined(pickColorQualifier)) {
-            combinedSources = combinedSources.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-            combinedSources += '\
-\n' + pickColorQualifier + ' vec4 czm_pickColor;\n\
-void main()\n\
-{\n\
-    czm_old_main();\n\
-    if (gl_FragColor.a == 0.0) {\n\
-        discard;\n\
-    }\n\
-    gl_FragColor = czm_pickColor;\n\
-}';
+            combinedSources = ShaderSource.createPickFragmentShaderSource(combinedSources, pickColorQualifier);
         }
 
         // combine into single string
@@ -264,7 +260,7 @@ void main()\n\
      *
      * @private
      */
-    var ShaderSource = function(options) {
+    function ShaderSource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var pickColorQualifier = options.pickColorQualifier;
 
@@ -278,8 +274,7 @@ void main()\n\
         this.sources = defined(options.sources) ? options.sources.slice(0) : [];
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
-    };
-
+    }
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,
@@ -287,6 +282,11 @@ void main()\n\
             pickColorQuantifier : this.pickColorQualifier,
             includeBuiltIns : this.includeBuiltIns
         });
+    };
+
+    ShaderSource.replaceMain = function(source, renamedMain) {
+        renamedMain = 'void ' + renamedMain + '()';
+        return source.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, renamedMain);
     };
 
     /**
@@ -327,6 +327,34 @@ void main()\n\
             }
         }
     }
+
+    ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
+        var pickMain = 'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
+    };
+
+    ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
+        var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
+        var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    if (gl_FragColor.a == 0.0) { \n' +
+            '       discard; \n' +
+            '    } \n' +
+            '    gl_FragColor = czm_pickColor; \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    };
 
     return ShaderSource;
 });

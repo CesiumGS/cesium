@@ -13,7 +13,7 @@ define([
         Event,
         EventHelper,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} whose value is an array whose items are the computed value
@@ -24,12 +24,12 @@ define([
      *
      * @param {Property[]} [value] An array of Property instances.
      */
-    var PropertyArray = function(value) {
+    function PropertyArray(value) {
         this._value = undefined;
         this._definitionChanged = new Event();
         this._eventHelper = new EventHelper();
         this.setValue(value);
-    };
+    }
 
     defineProperties(PropertyArray.prototype, {
         /**
@@ -74,9 +74,9 @@ define([
     /**
      * Gets the value of the property.
      *
-     * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Object[]} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @returns {Object[]} The modified result parameter, which is an array of values produced by evaluating each of the contained properties at the given time or a new instance if the result parameter was not supplied.
      */
     PropertyArray.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);

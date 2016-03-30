@@ -1,6 +1,8 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
+        './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -20,7 +22,9 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
+        Cartesian3,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -39,7 +43,7 @@ define([
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
     var createGeometryFromPositionsPositions = [];
     var createGeometryFromPositionsSubdivided = [];
 
@@ -50,7 +54,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.reverse();
+            positions = positions.slice().reverse();
         }
 
         var subdividedPositions;
@@ -119,7 +123,7 @@ define([
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
-            positions.reverse();
+            positions = positions.slice().reverse();
         }
 
         var subdividedPositions;
@@ -203,8 +207,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
-     * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight] The height of the polygon.
+     * @param {Number} [options.height=0.0] The distance in meters between the polygon and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the polygon's extruded face and the ellipsoid surface.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -212,8 +216,6 @@ define([
      *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon%20Outline.html|Cesium Sandcastle Polygon Outline Demo}
      *
      * @example
      * // 1. create a polygon outline from points
@@ -276,13 +278,13 @@ define([
      *       -75.0, 30.0,
      *       -70.0, 30.0,
      *       -68.0, 40.0
-     *     ]),
-     *     extrudedHeight: 300000
-     *   }
+     *     ])
+     *   },
+     *   extrudedHeight: 300000
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      */
-    var PolygonOutlineGeometry = function(options) {
+    function PolygonOutlineGeometry(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
@@ -296,8 +298,8 @@ define([
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
 
         var extrudedHeight = options.extrudedHeight;
-        var extrude = (defined(extrudedHeight) && (!CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6) || perPositionHeight));
-        if (extrude) {
+        var extrude = defined(extrudedHeight);
+        if (extrude && !perPositionHeight) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
             height = Math.max(h, height);
@@ -317,13 +319,12 @@ define([
          * @type {Number}
          */
         this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + 6;
-    };
+    }
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -363,6 +364,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {PolygonOutlineGeometry} [result] The object into which to store the result.
+     * @returns {PolygonOutlineGeometry} The modified result parameter or a new PolygonOutlineGeometry instance if one was not provided.
      */
     PolygonOutlineGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -406,14 +408,15 @@ define([
     /**
      * A description of a polygon outline from an array of positions.
      *
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
+     * @returns {PolygonOutlineGeometry}
      *
-     * @see PolygonGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
@@ -427,6 +430,8 @@ define([
      *   ])
      * });
      * var geometry = Cesium.PolygonOutlineGeometry.createGeometry(polygon);
+     *
+     * @see PolygonOutlineGeometry#createGeometry
      */
     PolygonOutlineGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -474,7 +479,7 @@ define([
         while (queue.length !== 0) {
             var outerNode = queue.dequeue();
             var outerRing = outerNode.positions;
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -483,7 +488,7 @@ define([
             // The outer polygon contains inner polygons
             for (i = 0; i < numChildren; i++) {
                 var hole = outerNode.holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
@@ -519,7 +524,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight);
-                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid, !perPositionHeight);
+                geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 geometries.push(geometry);
             }
         }

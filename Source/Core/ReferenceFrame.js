@@ -3,13 +3,12 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Constants for identifying well-known reference frames.
      *
-     * @namespace
-     * @alias ReferenceFrame
+     * @exports ReferenceFrame
      */
     var ReferenceFrame = {
         /**

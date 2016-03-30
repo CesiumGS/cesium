@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a polyline defined as the path made by an {@link Entity} as it moves over time.
@@ -31,7 +31,7 @@ define([
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
      * @param {Property} [options.resolution=60] A numeric Property specifying the width in pixels.
      */
-    var PathGraphics = function(options) {
+    function PathGraphics(options) {
         this._material = undefined;
         this._materialSubscription = undefined;
         this._show = undefined;
@@ -47,7 +47,7 @@ define([
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
-    };
+    }
 
     defineProperties(PathGraphics.prototype, {
         /**

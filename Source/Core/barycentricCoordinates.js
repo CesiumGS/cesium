@@ -9,7 +9,7 @@ define([
         Cartesian3,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -35,7 +35,7 @@ define([
      *   new Cesium.Cartesian3( 1.0, 0.0, 0.0),
      *   new Cesium.Cartesian3( 0.0, 1.0, 1.0));
      */
-    var barycentricCoordinates = function(point, p0, p1, p2, result) {
+    function barycentricCoordinates(point, p0, p1, p2, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(point) || !defined(p0) || !defined(p1) || !defined(p2)) {
             throw new DeveloperError('point, p0, p1, and p2 are required.');
@@ -78,7 +78,7 @@ define([
         result.z = (dot00 * dot12 - dot01 * dot02) * q;
         result.x = 1.0 - result.y - result.z;
         return result;
-    };
+    }
 
     return barycentricCoordinates;
 });

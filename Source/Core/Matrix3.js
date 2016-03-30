@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './freezeObject',
         './Math'
@@ -10,10 +11,11 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         freezeObject,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     /**
      * A 3x3 matrix, indexable as a column-major order array.
@@ -39,7 +41,7 @@ define([
      * @see Matrix2
      * @see Matrix4
      */
-    var Matrix3 = function(column0Row0, column1Row0, column2Row0,
+    function Matrix3(column0Row0, column1Row0, column2Row0,
                            column0Row1, column1Row1, column2Row1,
                            column0Row2, column1Row2, column2Row2) {
         this[0] = defaultValue(column0Row0, 0.0);
@@ -51,7 +53,7 @@ define([
         this[6] = defaultValue(column2Row0, 0.0);
         this[7] = defaultValue(column2Row1, 0.0);
         this[8] = defaultValue(column2Row2, 0.0);
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -96,6 +98,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {Matrix3} [result] The object into which to store the result.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
      */
     Matrix3.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -249,6 +252,7 @@ define([
      * Computes a 3x3 rotation matrix from the provided quaternion.
      *
      * @param {Quaternion} quaternion the quaternion to use.
+     * @param {Matrix3} [result] The object in which the result will be stored, if undefined a new instance will be created.
      * @returns {Matrix3} The 3x3 rotation matrix from this quaternion.
      */
     Matrix3.fromQuaternion = function(quaternion, result) {
@@ -969,12 +973,13 @@ define([
      * @param {Matrix3} result The object onto which to store the result.
      * @returns {Matrix3} The modified result parameter.
      *
-     * @see Matrix3.fromScale
-     * @see Matrix3.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromScale(scale), m);
      * Cesium.Matrix3.multiplyByScale(m, scale, m);
+     * 
+     * @see Matrix3.fromScale
+     * @see Matrix3.multiplyByUniformScale
      */
     Matrix3.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1475,6 +1480,20 @@ define([
      * @constant
      */
     Matrix3.COLUMN2ROW2 = 8;
+
+    defineProperties(Matrix3.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix3.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix3.packedLength;
+            }
+        }
+    });
 
     /**
      * Duplicates the provided Matrix3 instance.

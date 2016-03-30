@@ -5,7 +5,7 @@ define([
     ], function(
         defaultValue,
         Pass) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines a list of commands whose geometry are bound by near and far distances from the camera.
@@ -17,7 +17,7 @@ define([
      *
      * @private
      */
-    var FrustumCommands = function(near, far) {
+    function FrustumCommands(near, far) {
         this.near = defaultValue(near, 0.0);
         this.far = defaultValue(far, 0.0);
 
@@ -32,7 +32,7 @@ define([
 
         this.commands = commands;
         this.indices = indices;
-    };
+    }
 
     return FrustumCommands;
 });

@@ -1,20 +1,22 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
-        '../Core/Matrix4'
+        '../Core/Matrix4',
+        './WebGLConstants'
     ], function(
         Cartesian3,
-        Matrix4) {
-    "use strict";
+        Matrix4,
+        WebGLConstants) {
+    'use strict';
     /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
 
-    var AutomaticUniform = function(options) {
+    function AutomaticUniform(options) {
         this._size = options.size;
         this._datatype = options.datatype;
         this.getValue = options.getValue;
-    };
+    }
 
     // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
     if (typeof WebGLRenderingContext === 'undefined') {
@@ -22,23 +24,23 @@ define([
     }
 
     var datatypeToGlsl = {};
-    datatypeToGlsl[WebGLRenderingContext.FLOAT] = 'float';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC2] = 'vec2';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC3] = 'vec3';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_VEC4] = 'vec4';
-    datatypeToGlsl[WebGLRenderingContext.INT] = 'int';
-    datatypeToGlsl[WebGLRenderingContext.INT_VEC2] = 'ivec2';
-    datatypeToGlsl[WebGLRenderingContext.INT_VEC3] = 'ivec3';
-    datatypeToGlsl[WebGLRenderingContext.INT_VEC4] = 'ivec4';
-    datatypeToGlsl[WebGLRenderingContext.BOOL] = 'bool';
-    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC2] = 'bvec2';
-    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC3] = 'bvec3';
-    datatypeToGlsl[WebGLRenderingContext.BOOL_VEC4] = 'bvec4';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT2] = 'mat2';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT3] = 'mat3';
-    datatypeToGlsl[WebGLRenderingContext.FLOAT_MAT4] = 'mat4';
-    datatypeToGlsl[WebGLRenderingContext.SAMPLER_2D] = 'sampler2D';
-    datatypeToGlsl[WebGLRenderingContext.SAMPLER_CUBE] = 'samplerCube';
+    datatypeToGlsl[WebGLConstants.FLOAT] = 'float';
+    datatypeToGlsl[WebGLConstants.FLOAT_VEC2] = 'vec2';
+    datatypeToGlsl[WebGLConstants.FLOAT_VEC3] = 'vec3';
+    datatypeToGlsl[WebGLConstants.FLOAT_VEC4] = 'vec4';
+    datatypeToGlsl[WebGLConstants.INT] = 'int';
+    datatypeToGlsl[WebGLConstants.INT_VEC2] = 'ivec2';
+    datatypeToGlsl[WebGLConstants.INT_VEC3] = 'ivec3';
+    datatypeToGlsl[WebGLConstants.INT_VEC4] = 'ivec4';
+    datatypeToGlsl[WebGLConstants.BOOL] = 'bool';
+    datatypeToGlsl[WebGLConstants.BOOL_VEC2] = 'bvec2';
+    datatypeToGlsl[WebGLConstants.BOOL_VEC3] = 'bvec3';
+    datatypeToGlsl[WebGLConstants.BOOL_VEC4] = 'bvec4';
+    datatypeToGlsl[WebGLConstants.FLOAT_MAT2] = 'mat2';
+    datatypeToGlsl[WebGLConstants.FLOAT_MAT3] = 'mat3';
+    datatypeToGlsl[WebGLConstants.FLOAT_MAT4] = 'mat4';
+    datatypeToGlsl[WebGLConstants.SAMPLER_2D] = 'sampler2D';
+    datatypeToGlsl[WebGLConstants.SAMPLER_CUBE] = 'samplerCube';
 
     AutomaticUniform.prototype.getDeclaration = function(name) {
         var declaration = 'uniform ' + datatypeToGlsl[this._datatype] + ' ' + name;
@@ -65,7 +67,6 @@ define([
          * @alias czm_viewport
          * @glslUniform
          *
-         * @see Context#getViewport
          *
          * @example
          * // GLSL declaration
@@ -74,10 +75,12 @@ define([
          * // Scale the window coordinate components to [0, 1] by dividing
          * // by the viewport's width and height.
          * vec2 v = gl_FragCoord.xy / czm_viewport.zw;
+         * 
+         * @see Context#getViewport
          */
         czm_viewport : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC4,
+            datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
                 return uniformState.viewportCartesian4;
             }
@@ -98,10 +101,6 @@ define([
          * @alias czm_viewportOrthographic
          * @glslUniform
          *
-         * @see UniformState#viewportOrthographic
-         * @see czm_viewport
-         * @see czm_viewportTransformation
-         * @see BillboardCollection
          *
          * @example
          * // GLSL declaration
@@ -109,10 +108,15 @@ define([
          *
          * // Example
          * gl_Position = czm_viewportOrthographic * vec4(windowPosition, 0.0, 1.0);
+         * 
+         * @see UniformState#viewportOrthographic
+         * @see czm_viewport
+         * @see czm_viewportTransformation
+         * @see BillboardCollection
          */
         czm_viewportOrthographic : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewportOrthographic;
             }
@@ -136,11 +140,6 @@ define([
          * @alias czm_viewportTransformation
          * @glslUniform
          *
-         * @see UniformState#viewportTransformation
-         * @see czm_viewport
-         * @see czm_viewportOrthographic
-         * @see czm_modelToWindowCoordinates
-         * @see BillboardCollection
          *
          * @example
          * // GLSL declaration
@@ -151,10 +150,16 @@ define([
          * vec4 q = czm_modelViewProjection * positionMC;               // model to clip coordinates
          * q.xyz /= q.w;                                                // clip to normalized device coordinates (ndc)
          * q.xyz = (czm_viewportTransformation * vec4(q.xyz, 1.0)).xyz; // ndc to window coordinates
+         * 
+         * @see UniformState#viewportTransformation
+         * @see czm_viewport
+         * @see czm_viewportOrthographic
+         * @see czm_modelToWindowCoordinates
+         * @see BillboardCollection
          */
         czm_viewportTransformation : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewportTransformation;
             }
@@ -179,7 +184,7 @@ define([
          */
         czm_globeDepthTexture : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.SAMPLER_2D,
+            datatype : WebGLConstants.SAMPLER_2D,
             getValue : function(uniformState) {
                 return uniformState.globeDepthTexture;
             }
@@ -192,10 +197,6 @@ define([
          * @alias czm_model
          * @glslUniform
          *
-         * @see UniformState#model
-         * @see czm_inverseModel
-         * @see czm_modelView
-         * @see czm_modelViewProjection
          *
          * @example
          * // GLSL declaration
@@ -203,10 +204,15 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_model * modelPosition;
+         * 
+         * @see UniformState#model
+         * @see czm_inverseModel
+         * @see czm_modelView
+         * @see czm_modelViewProjection
          */
         czm_model : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.model;
             }
@@ -219,9 +225,6 @@ define([
          * @alias czm_inverseModel
          * @glslUniform
          *
-         * @see UniformState#inverseModel
-         * @see czm_model
-         * @see czm_inverseModelView
          *
          * @example
          * // GLSL declaration
@@ -229,10 +232,14 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModel * worldPosition;
+         * 
+         * @see UniformState#inverseModel
+         * @see czm_model
+         * @see czm_inverseModelView
          */
         czm_inverseModel : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModel;
             }
@@ -245,12 +252,6 @@ define([
          * @alias czm_view
          * @glslUniform
          *
-         * @see UniformState#view
-         * @see czm_viewRotation
-         * @see czm_modelView
-         * @see czm_viewProjection
-         * @see czm_modelViewProjection
-         * @see czm_inverseView
          *
          * @example
          * // GLSL declaration
@@ -258,10 +259,17 @@ define([
          *
          * // Example
          * vec4 eyePosition = czm_view * worldPosition;
+         * 
+         * @see UniformState#view
+         * @see czm_viewRotation
+         * @see czm_modelView
+         * @see czm_viewProjection
+         * @see czm_modelViewProjection
+         * @see czm_inverseView
          */
         czm_view : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.view;
             }
@@ -277,8 +285,6 @@ define([
          * @alias czm_view3D
          * @glslUniform
          *
-         * @see UniformState#view3D
-         * @see czm_view
          *
          * @example
          * // GLSL declaration
@@ -286,10 +292,13 @@ define([
          *
          * // Example
          * vec4 eyePosition3D = czm_view3D * worldPosition3D;
+         * 
+         * @see UniformState#view3D
+         * @see czm_view
          */
         czm_view3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.view3D;
             }
@@ -302,10 +311,6 @@ define([
          * @alias czm_viewRotation
          * @glslUniform
          *
-         * @see UniformState#viewRotation
-         * @see czm_view
-         * @see czm_inverseView
-         * @see czm_inverseViewRotation
          *
          * @example
          * // GLSL declaration
@@ -313,10 +318,15 @@ define([
          *
          * // Example
          * vec3 eyeVector = czm_viewRotation * worldVector;
+         * 
+         * @see UniformState#viewRotation
+         * @see czm_view
+         * @see czm_inverseView
+         * @see czm_inverseViewRotation
          */
         czm_viewRotation : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.viewRotation;
             }
@@ -332,8 +342,6 @@ define([
          * @alias czm_viewRotation3D
          * @glslUniform
          *
-         * @see UniformState#viewRotation3D
-         * @see czm_viewRotation
          *
          * @example
          * // GLSL declaration
@@ -341,10 +349,13 @@ define([
          *
          * // Example
          * vec3 eyeVector = czm_viewRotation3D * worldVector;
+         * 
+         * @see UniformState#viewRotation3D
+         * @see czm_viewRotation
          */
         czm_viewRotation3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.viewRotation3D;
             }
@@ -357,9 +368,6 @@ define([
          * @alias czm_inverseView
          * @glslUniform
          *
-         * @see UniformState#inverseView
-         * @see czm_view
-         * @see czm_inverseNormal
          *
          * @example
          * // GLSL declaration
@@ -367,10 +375,14 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseView * eyePosition;
+         * 
+         * @see UniformState#inverseView
+         * @see czm_view
+         * @see czm_inverseNormal
          */
         czm_inverseView : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseView;
             }
@@ -386,8 +398,6 @@ define([
          * @alias czm_inverseView3D
          * @glslUniform
          *
-         * @see UniformState#inverseView3D
-         * @see czm_inverseView
          *
          * @example
          * // GLSL declaration
@@ -395,10 +405,13 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseView3D * eyePosition;
+         * 
+         * @see UniformState#inverseView3D
+         * @see czm_inverseView
          */
         czm_inverseView3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseView3D;
             }
@@ -411,10 +424,6 @@ define([
          * @alias czm_inverseViewRotation
          * @glslUniform
          *
-         * @see UniformState#inverseView
-         * @see czm_view
-         * @see czm_viewRotation
-         * @see czm_inverseViewRotation
          *
          * @example
          * // GLSL declaration
@@ -422,10 +431,15 @@ define([
          *
          * // Example
          * vec4 worldVector = czm_inverseViewRotation * eyeVector;
+         * 
+         * @see UniformState#inverseView
+         * @see czm_view
+         * @see czm_viewRotation
+         * @see czm_inverseViewRotation
          */
         czm_inverseViewRotation : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseViewRotation;
             }
@@ -441,8 +455,6 @@ define([
          * @alias czm_inverseViewRotation3D
          * @glslUniform
          *
-         * @see UniformState#inverseView3D
-         * @see czm_inverseViewRotation
          *
          * @example
          * // GLSL declaration
@@ -450,10 +462,13 @@ define([
          *
          * // Example
          * vec4 worldVector = czm_inverseViewRotation3D * eyeVector;
+         * 
+         * @see UniformState#inverseView3D
+         * @see czm_inverseViewRotation
          */
         czm_inverseViewRotation3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseViewRotation3D;
             }
@@ -467,10 +482,6 @@ define([
          * @alias czm_projection
          * @glslUniform
          *
-         * @see UniformState#projection
-         * @see czm_viewProjection
-         * @see czm_modelViewProjection
-         * @see czm_infiniteProjection
          *
          * @example
          * // GLSL declaration
@@ -478,10 +489,15 @@ define([
          *
          * // Example
          * gl_Position = czm_projection * eyePosition;
+         * 
+         * @see UniformState#projection
+         * @see czm_viewProjection
+         * @see czm_modelViewProjection
+         * @see czm_infiniteProjection
          */
         czm_projection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.projection;
             }
@@ -495,8 +511,6 @@ define([
          * @alias czm_inverseProjection
          * @glslUniform
          *
-         * @see UniformState#inverseProjection
-         * @see czm_projection
          *
          * @example
          * // GLSL declaration
@@ -504,10 +518,13 @@ define([
          *
          * // Example
          * vec4 eyePosition = czm_inverseProjection * clipPosition;
+         * 
+         * @see UniformState#inverseProjection
+         * @see czm_projection
          */
         czm_inverseProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseProjection;
             }
@@ -518,7 +535,7 @@ define([
          */
         czm_inverseProjectionOIT : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseProjectionOIT;
             }
@@ -534,9 +551,6 @@ define([
          * @alias czm_infiniteProjection
          * @glslUniform
          *
-         * @see UniformState#infiniteProjection
-         * @see czm_projection
-         * @see czm_modelViewInfiniteProjection
          *
          * @example
          * // GLSL declaration
@@ -544,10 +558,14 @@ define([
          *
          * // Example
          * gl_Position = czm_infiniteProjection * eyePosition;
+         * 
+         * @see UniformState#infiniteProjection
+         * @see czm_projection
+         * @see czm_modelViewInfiniteProjection
          */
         czm_infiniteProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.infiniteProjection;
             }
@@ -563,11 +581,6 @@ define([
          * @alias czm_modelView
          * @glslUniform
          *
-         * @see UniformState#modelView
-         * @see czm_model
-         * @see czm_view
-         * @see czm_modelViewProjection
-         * @see czm_normal
          *
          * @example
          * // GLSL declaration
@@ -578,10 +591,16 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view * czm_model * modelPosition;
+         * 
+         * @see UniformState#modelView
+         * @see czm_model
+         * @see czm_view
+         * @see czm_modelViewProjection
+         * @see czm_normal
          */
         czm_modelView : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelView;
             }
@@ -600,8 +619,6 @@ define([
          * @alias czm_modelView3D
          * @glslUniform
          *
-         * @see UniformState#modelView3D
-         * @see czm_modelView
          *
          * @example
          * // GLSL declaration
@@ -612,10 +629,13 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * vec4 eyePosition = czm_view3D * czm_model * modelPosition;
+         * 
+         * @see UniformState#modelView3D
+         * @see czm_modelView
          */
         czm_modelView3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelView3D;
             }
@@ -649,7 +669,7 @@ define([
          */
         czm_modelViewRelativeToEye : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewRelativeToEye;
             }
@@ -662,8 +682,6 @@ define([
          * @alias czm_inverseModelView
          * @glslUniform
          *
-         * @see UniformState#inverseModelView
-         * @see czm_modelView
          *
          * @example
          * // GLSL declaration
@@ -671,10 +689,13 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelView * eyePosition;
+         * 
+         * @see UniformState#inverseModelView
+         * @see czm_modelView
          */
         czm_inverseModelView : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelView;
             }
@@ -690,9 +711,6 @@ define([
          * @alias czm_inverseModelView3D
          * @glslUniform
          *
-         * @see UniformState#inverseModelView
-         * @see czm_inverseModelView
-         * @see czm_modelView3D
          *
          * @example
          * // GLSL declaration
@@ -700,10 +718,14 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelView3D * eyePosition;
+         * 
+         * @see UniformState#inverseModelView
+         * @see czm_inverseModelView
+         * @see czm_modelView3D
          */
         czm_inverseModelView3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelView3D;
             }
@@ -717,11 +739,6 @@ define([
          * @alias czm_viewProjection
          * @glslUniform
          *
-         * @see UniformState#viewProjection
-         * @see czm_view
-         * @see czm_projection
-         * @see czm_modelViewProjection
-         * @see czm_inverseViewProjection
          *
          * @example
          * // GLSL declaration
@@ -732,10 +749,16 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
+         * 
+         * @see UniformState#viewProjection
+         * @see czm_view
+         * @see czm_projection
+         * @see czm_modelViewProjection
+         * @see czm_inverseViewProjection
          */
         czm_viewProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.viewProjection;
             }
@@ -749,8 +772,6 @@ define([
          * @alias czm_inverseViewProjection
          * @glslUniform
          *
-         * @see UniformState#inverseViewProjection
-         * @see czm_viewProjection
          *
          * @example
          * // GLSL declaration
@@ -758,10 +779,13 @@ define([
          *
          * // Example
          * vec4 worldPosition = czm_inverseViewProjection * clipPosition;
+         * 
+         * @see UniformState#inverseViewProjection
+         * @see czm_viewProjection
          */
         czm_inverseViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseViewProjection;
             }
@@ -775,14 +799,6 @@ define([
          * @alias czm_modelViewProjection
          * @glslUniform
          *
-         * @see UniformState#modelViewProjection
-         * @see czm_model
-         * @see czm_view
-         * @see czm_projection
-         * @see czm_modelView
-         * @see czm_viewProjection
-         * @see czm_modelViewInfiniteProjection
-         * @see czm_inverseModelViewProjection
          *
          * @example
          * // GLSL declaration
@@ -793,10 +809,19 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_projection * czm_view * czm_model * modelPosition;
+         * 
+         * @see UniformState#modelViewProjection
+         * @see czm_model
+         * @see czm_view
+         * @see czm_projection
+         * @see czm_modelView
+         * @see czm_viewProjection
+         * @see czm_modelViewInfiniteProjection
+         * @see czm_inverseModelViewProjection
          */
         czm_modelViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewProjection;
             }
@@ -810,8 +835,6 @@ define([
          * @alias czm_inverseModelViewProjection
          * @glslUniform
          *
-         * @see UniformState#modelViewProjection
-         * @see czm_modelViewProjection
          *
          * @example
          * // GLSL declaration
@@ -819,10 +842,13 @@ define([
          *
          * // Example
          * vec4 modelPosition = czm_inverseModelViewProjection * clipPosition;
+         * 
+         * @see UniformState#modelViewProjection
+         * @see czm_modelViewProjection
          */
         czm_inverseModelViewProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.inverseModelViewProjection;
             }
@@ -857,7 +883,7 @@ define([
          */
         czm_modelViewProjectionRelativeToEye : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewProjectionRelativeToEye;
             }
@@ -873,11 +899,6 @@ define([
          * @alias czm_modelViewInfiniteProjection
          * @glslUniform
          *
-         * @see UniformState#modelViewInfiniteProjection
-         * @see czm_model
-         * @see czm_view
-         * @see czm_infiniteProjection
-         * @see czm_modelViewProjection
          *
          * @example
          * // GLSL declaration
@@ -888,10 +909,16 @@ define([
          *
          * // The above is equivalent to, but more efficient than:
          * gl_Position = czm_infiniteProjection * czm_view * czm_model * modelPosition;
+         * 
+         * @see UniformState#modelViewInfiniteProjection
+         * @see czm_model
+         * @see czm_view
+         * @see czm_infiniteProjection
+         * @see czm_modelViewProjection
          */
         czm_modelViewInfiniteProjection : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT4,
+            datatype : WebGLConstants.FLOAT_MAT4,
             getValue : function(uniformState) {
                 return uniformState.modelViewInfiniteProjection;
             }
@@ -907,9 +934,6 @@ define([
          * @alias czm_normal
          * @glslUniform
          *
-         * @see UniformState#normal
-         * @see czm_inverseNormal
-         * @see czm_modelView
          *
          * @example
          * // GLSL declaration
@@ -917,10 +941,14 @@ define([
          *
          * // Example
          * vec3 eyeNormal = czm_normal * normal;
+         * 
+         * @see UniformState#normal
+         * @see czm_inverseNormal
+         * @see czm_modelView
          */
         czm_normal : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.normal;
             }
@@ -940,8 +968,6 @@ define([
          * @alias czm_normal3D
          * @glslUniform
          *
-         * @see UniformState#normal3D
-         * @see czm_normal
          *
          * @example
          * // GLSL declaration
@@ -949,10 +975,13 @@ define([
          *
          * // Example
          * vec3 eyeNormal = czm_normal3D * normal;
+         * 
+         * @see UniformState#normal3D
+         * @see czm_normal
          */
         czm_normal3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.normal3D;
             }
@@ -966,10 +995,6 @@ define([
          * @alias czm_inverseNormal
          * @glslUniform
          *
-         * @see UniformState#inverseNormal
-         * @see czm_normal
-         * @see czm_modelView
-         * @see czm_inverseView
          *
          * @example
          * // GLSL declaration
@@ -977,10 +1002,15 @@ define([
          *
          * // Example
          * vec3 normalMC = czm_inverseNormal * normalEC;
+         * 
+         * @see UniformState#inverseNormal
+         * @see czm_normal
+         * @see czm_modelView
+         * @see czm_inverseView
          */
         czm_inverseNormal : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseNormal;
             }
@@ -998,8 +1028,6 @@ define([
          * @alias czm_inverseNormal3D
          * @glslUniform
          *
-         * @see UniformState#inverseNormal3D
-         * @see czm_inverseNormal
          *
          * @example
          * // GLSL declaration
@@ -1007,10 +1035,13 @@ define([
          *
          * // Example
          * vec3 normalMC = czm_inverseNormal3D * normalEC;
+         * 
+         * @see UniformState#inverseNormal3D
+         * @see czm_inverseNormal
          */
         czm_inverseNormal3D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.inverseNormal3D;
             }
@@ -1027,7 +1058,7 @@ define([
          */
         czm_eyeHeight2D : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC2,
+            datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.eyeHeight2D;
             }
@@ -1041,8 +1072,6 @@ define([
          * @alias czm_entireFrustum
          * @glslUniform
          *
-         * @see UniformState#entireFrustum
-         * @see czm_currentFrustum
          *
          * @example
          * // GLSL declaration
@@ -1050,10 +1079,13 @@ define([
          *
          * // Example
          * float frustumLength = czm_entireFrustum.y - czm_entireFrustum.x;
+         * 
+         * @see UniformState#entireFrustum
+         * @see czm_currentFrustum
          */
         czm_entireFrustum : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC2,
+            datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.entireFrustum;
             }
@@ -1067,8 +1099,6 @@ define([
          * @alias czm_currentFrustum
          * @glslUniform
          *
-         * @see UniformState#currentFrustum
-         * @see czm_entireFrustum
          *
          * @example
          * // GLSL declaration
@@ -1076,12 +1106,30 @@ define([
          *
          * // Example
          * float frustumLength = czm_currentFrustum.y - czm_currentFrustum.x;
+         * 
+         * @see UniformState#currentFrustum
+         * @see czm_entireFrustum
          */
         czm_currentFrustum : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC2,
+            datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
                 return uniformState.currentFrustum;
+            }
+        }),
+
+        /**
+         * The distances to the frustum planes. The top, bottom, left and right distances are
+         * the x, y, z, and w components, respectively.
+         *
+         * @alias czm_frustumPlanes
+         * @glslUniform
+         */
+        czm_frustumPlanes : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC4,
+            getValue : function(uniformState) {
+                return uniformState.frustumPlanes;
             }
         }),
 
@@ -1091,17 +1139,18 @@ define([
          * @alias czm_sunPositionWC
          * @glslUniform
          *
-         * @see UniformState#sunPositionWC
-         * @see czm_sunPositionColumbusView
-         * @see czm_sunDirectionWC
          *
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunPositionWC;
+         * 
+         * @see UniformState#sunPositionWC
+         * @see czm_sunPositionColumbusView
+         * @see czm_sunDirectionWC
          */
         czm_sunPositionWC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunPositionWC;
             }
@@ -1113,16 +1162,17 @@ define([
          * @alias czm_sunPositionColumbusView
          * @glslUniform
          *
-         * @see UniformState#sunPositionColumbusView
-         * @see czm_sunPositionWC
          *
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunPositionColumbusView;
+         * 
+         * @see UniformState#sunPositionColumbusView
+         * @see czm_sunPositionWC
          */
         czm_sunPositionColumbusView : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunPositionColumbusView;
             }
@@ -1135,9 +1185,6 @@ define([
          * @alias czm_sunDirectionEC
          * @glslUniform
          *
-         * @see UniformState#sunDirectionEC
-         * @see czm_moonDirectionEC
-         * @see czm_sunDirectionWC
          *
          * @example
          * // GLSL declaration
@@ -1145,10 +1192,14 @@ define([
          *
          * // Example
          * float diffuse = max(dot(czm_sunDirectionEC, normalEC), 0.0);
+         * 
+         * @see UniformState#sunDirectionEC
+         * @see czm_moonDirectionEC
+         * @see czm_sunDirectionWC
          */
         czm_sunDirectionEC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunDirectionEC;
             }
@@ -1161,17 +1212,18 @@ define([
          * @alias czm_sunDirectionWC
          * @glslUniform
          *
-         * @see UniformState#sunDirectionWC
-         * @see czm_sunPositionWC
-         * @see czm_sunDirectionEC
          *
          * @example
          * // GLSL declaration
          * uniform vec3 czm_sunDirectionWC;
+         * 
+         * @see UniformState#sunDirectionWC
+         * @see czm_sunPositionWC
+         * @see czm_sunDirectionEC
          */
         czm_sunDirectionWC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.sunDirectionWC;
             }
@@ -1184,8 +1236,6 @@ define([
          * @alias czm_moonDirectionEC
          * @glslUniform
          *
-         * @see UniformState#moonDirectionEC
-         * @see czm_sunDirectionEC
          *
          * @example
          * // GLSL declaration
@@ -1193,10 +1243,13 @@ define([
          *
          * // Example
          * float diffuse = max(dot(czm_moonDirectionEC, normalEC), 0.0);
+         * 
+         * @see UniformState#moonDirectionEC
+         * @see czm_sunDirectionEC
          */
         czm_moonDirectionEC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.moonDirectionEC;
             }
@@ -1210,17 +1263,18 @@ define([
          * @alias czm_encodedCameraPositionMCHigh
          * @glslUniform
          *
-         * @see czm_encodedCameraPositionMCLow
-         * @see czm_modelViewRelativeToEye
-         * @see czm_modelViewProjectionRelativeToEye
          *
          * @example
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCHigh;
+         * 
+         * @see czm_encodedCameraPositionMCLow
+         * @see czm_modelViewRelativeToEye
+         * @see czm_modelViewProjectionRelativeToEye
          */
         czm_encodedCameraPositionMCHigh : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.encodedCameraPositionMCHigh;
             }
@@ -1234,17 +1288,18 @@ define([
          * @alias czm_encodedCameraPositionMCLow
          * @glslUniform
          *
-         * @see czm_encodedCameraPositionMCHigh
-         * @see czm_modelViewRelativeToEye
-         * @see czm_modelViewProjectionRelativeToEye
          *
          * @example
          * // GLSL declaration
          * uniform vec3 czm_encodedCameraPositionMCLow;
+         * 
+         * @see czm_encodedCameraPositionMCHigh
+         * @see czm_modelViewRelativeToEye
+         * @see czm_modelViewProjectionRelativeToEye
          */
         czm_encodedCameraPositionMCLow : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return uniformState.encodedCameraPositionMCLow;
             }
@@ -1262,7 +1317,7 @@ define([
          */
         czm_viewerPositionWC : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_VEC3,
+            datatype : WebGLConstants.FLOAT_VEC3,
             getValue : function(uniformState) {
                 return Matrix4.getTranslation(uniformState.inverseView, viewerPositionWCScratch);
             }
@@ -1281,7 +1336,7 @@ define([
          */
         czm_frameNumber : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT,
+            datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.frameNumber;
             }
@@ -1303,7 +1358,7 @@ define([
          */
         czm_morphTime : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT,
+            datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.morphTime;
             }
@@ -1316,10 +1371,6 @@ define([
          * @alias czm_sceneMode
          * @glslUniform
          *
-         * @see czm_sceneMode2D
-         * @see czm_sceneModeColumbusView
-         * @see czm_sceneMode3D
-         * @see czm_sceneModeMorphing
          *
          * @example
          * // GLSL declaration
@@ -1330,12 +1381,41 @@ define([
          * {
          *     eyeHeightSq = czm_eyeHeight2D.y;
          * }
+         * 
+         * @see czm_sceneMode2D
+         * @see czm_sceneModeColumbusView
+         * @see czm_sceneMode3D
+         * @see czm_sceneModeMorphing
          */
         czm_sceneMode : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT,
+            datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.frameState.mode;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform representing the current rendering pass.
+         *
+         * @alias czm_pass
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_pass;
+         *
+         * // Example
+         * if ((czm_pass == czm_passTranslucent) && isOpaque())
+         * {
+         *     gl_Position *= 0.0; // Cull opaque geometry in the translucent pass
+         * }
+         */
+        czm_pass : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.pass;
             }
         }),
 
@@ -1346,8 +1426,6 @@ define([
          * @alias czm_temeToPseudoFixed
          * @glslUniform
          *
-         * @see UniformState#temeToPseudoFixedMatrix
-         * @see Transforms.computeTemeToPseudoFixedMatrix
          *
          * @example
          * // GLSL declaration
@@ -1355,10 +1433,13 @@ define([
          *
          * // Example
          * vec3 pseudoFixed = czm_temeToPseudoFixed * teme;
+         * 
+         * @see UniformState#temeToPseudoFixedMatrix
+         * @see Transforms.computeTemeToPseudoFixedMatrix
          */
         czm_temeToPseudoFixed : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT_MAT3,
+            datatype : WebGLConstants.FLOAT_MAT3,
             getValue : function(uniformState) {
                 return uniformState.temeToPseudoFixedMatrix;
             }
@@ -1375,9 +1456,25 @@ define([
          */
         czm_resolutionScale : new AutomaticUniform({
             size : 1,
-            datatype : WebGLRenderingContext.FLOAT,
+            datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
                 return uniformState.resolutionScale;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
+         *
+         * @alias czm_fogDensity
+         * @glslUniform
+         *
+         * @see czm_fog
+         */
+        czm_fogDensity : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.fogDensity;
             }
         })
     };

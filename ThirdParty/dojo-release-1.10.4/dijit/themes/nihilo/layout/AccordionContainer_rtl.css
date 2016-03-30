@@ -1,0 +1,8 @@
+.dijitRtl .nihilo .dijitAccordionArrow {
+	background-position: 0 top;
+}
+
+.dijitRtl .nihilo .dijitAccordionTitleSelected .dijitAccordionArrow {
+	/* same rule as LTR mode, just listed to override previous rule in this file */
+	background-position: -15px top;
+}

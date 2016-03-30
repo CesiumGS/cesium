@@ -9,12 +9,12 @@ define([
         defined,
         DeveloperError,
         loadImage) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
      */
-    var loadImageFromTypedArray = function(uint8Array, format) {
+    function loadImageFromTypedArray(uint8Array, format) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(uint8Array)) {
             throw new DeveloperError('uint8Array is required.');
@@ -37,7 +37,7 @@ define([
             window.URL.revokeObjectURL(blobUrl);
             return when.reject(error);
         });
-    };
+    }
 
     return loadImageFromTypedArray;
 });

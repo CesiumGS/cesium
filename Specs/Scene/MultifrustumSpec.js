@@ -14,8 +14,12 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/RenderState',
+        'Renderer/Sampler',
+        'Renderer/ShaderProgram',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
+        'Renderer/VertexArray',
         'Scene/BillboardCollection',
         'Scene/BlendingState',
         'Scene/Pass',
@@ -37,16 +41,19 @@ defineSuite([
         Matrix4,
         BufferUsage,
         DrawCommand,
+        RenderState,
+        Sampler,
+        ShaderProgram,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        VertexArray,
         BillboardCollection,
         BlendingState,
         Pass,
         TextureAtlas,
         createScene,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var context;
@@ -104,7 +111,7 @@ defineSuite([
         });
 
         // ANGLE Workaround
-        atlas.texture.sampler = context.createSampler({
+        atlas.texture.sampler = new Sampler({
             minificationFilter : TextureMinificationFilter.NEAREST,
             magnificationFilter : TextureMagnificationFilter.NEAREST
         });
@@ -205,7 +212,7 @@ defineSuite([
         bounded = defaultValue(bounded, true);
         closestFrustum = defaultValue(closestFrustum, false);
 
-        var Primitive = function() {
+        function Primitive() {
             this._va = undefined;
             this._sp = undefined;
             this._rs = undefined;
@@ -222,9 +229,8 @@ defineSuite([
                     return that._modelMatrix;
                 }
             };
-        };
-
-        Primitive.prototype.update = function(context, frameState, commandList) {
+        }
+        Primitive.prototype.update = function(frameState) {
             if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
@@ -241,26 +247,33 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
-                var minimumCorner = Cartesian3.negate(maximumCorner, new Cartesian3());
+                var maximum = Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3());
+                var minimum = Cartesian3.negate(maximum, new Cartesian3());
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
-                    minimumCorner: minimumCorner,
-                    maximumCorner: maximumCorner
+                    minimum : minimum,
+                    maximum : maximum
                 }));
                 var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
-                this._va = context.createVertexArrayFromGeometry({
-                    geometry: geometry,
-                    attributeLocations: attributeLocations,
-                    bufferUsage: BufferUsage.STATIC_DRAW
+                this._va = VertexArray.fromGeometry({
+                    context : frameState.context,
+                    geometry : geometry,
+                    attributeLocations : attributeLocations,
+                    bufferUsage : BufferUsage.STATIC_DRAW
                 });
 
-                this._sp = context.createShaderProgram(vs, fs, attributeLocations);
-                this._rs = context.createRenderState({
+                this._sp = ShaderProgram.fromCache({
+                    context : frameState.context,
+                    vertexShaderSource : vs,
+                    fragmentShaderSource : fs,
+                    attributeLocations : attributeLocations
+                });
+
+                this._rs = RenderState.fromCache({
                     blending : BlendingState.ALPHA_BLEND
                 });
             }
 
-            commandList.push(new DrawCommand({
+            frameState.commandList.push(new DrawCommand({
                 renderState : this._rs,
                 shaderProgram : this._sp,
                 vertexArray : this._va,

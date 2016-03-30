@@ -19,6 +19,7 @@ defineSuite([
         'Scene/TerrainState',
         'Scene/TileImagery',
         'Specs/createContext',
+        'Specs/createFrameState',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -41,13 +42,13 @@ defineSuite([
         TerrainState,
         TileImagery,
         createContext,
+        createFrameState,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     describe('processStateMachine', function() {
-        var context;
+        var frameState;
         var alwaysDeferTerrainProvider;
         var alwaysFailTerrainProvider;
         var realTerrainProvider;
@@ -58,7 +59,7 @@ defineSuite([
         var imageryLayerCollection;
 
         beforeAll(function() {
-            context = createContext();
+            frameState = createFrameState(createContext());
 
             alwaysDeferTerrainProvider = {
                 requestTileGeometry : function(x, y, level) {
@@ -89,12 +90,12 @@ defineSuite([
             };
 
             realTerrainProvider = new CesiumTerrainProvider({
-                url : '//s3.amazonaws.com/cesiumjs/smallTerrain'
+                url : 'https://cesiumjs.org/smallTerrain'
             });
         });
 
         afterAll(function() {
-            context.destroyForSpecs();
+            frameState.context.destroyForSpecs();
         });
 
         beforeEach(function() {
@@ -124,12 +125,12 @@ defineSuite([
         });
 
         it('transitions to the LOADING state immediately', function() {
-            GlobeSurfaceTile.processStateMachine(rootTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+            GlobeSurfaceTile.processStateMachine(rootTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
             expect(rootTile.state).toBe(QuadtreeTileLoadState.LOADING);
         });
 
         it('creates loadedTerrain but not upsampledTerrain for root tiles', function() {
-            GlobeSurfaceTile.processStateMachine(rootTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+            GlobeSurfaceTile.processStateMachine(rootTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
             expect(rootTile.data.loadedTerrain).toBeDefined();
             expect(rootTile.data.upsampledTerrain).toBeUndefined();
         });
@@ -137,7 +138,7 @@ defineSuite([
         it('non-root tiles get neither loadedTerrain nor upsampledTerrain when their parent is not loaded nor upsampled', function() {
             var children = rootTile.children;
             for (var i = 0; i < children.length; ++i) {
-                GlobeSurfaceTile.processStateMachine(children[i], context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(children[i], frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                 expect(children[i].data.loadedTerrain).toBeUndefined();
                 expect(children[i].data.upsampledTerrain).toBeUndefined();
             }
@@ -145,12 +146,12 @@ defineSuite([
 
         it('once a root tile is loaded, its children get both loadedTerrain and upsampledTerrain', function() {
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
                 return rootTile.state === QuadtreeTileLoadState.DONE;
             }).then(function() {
                 var children = rootTile.children;
                 for (var i = 0; i < children.length; ++i) {
-                    GlobeSurfaceTile.processStateMachine(children[i], context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(children[i], frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                     expect(children[i].data.loadedTerrain).toBeDefined();
                     expect(children[i].data.upsampledTerrain).toBeDefined();
                 }
@@ -159,7 +160,7 @@ defineSuite([
 
         it('loaded terrainData is copied to the tile once it is available', function() {
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
                 expect(rootTile.data.terrainData).toBeDefined();
@@ -168,12 +169,12 @@ defineSuite([
 
         it('upsampled terrainData is copied to the tile once it is available', function() {
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
                 return pollToPromise(function() {
                     var childTile = rootTile.children[0];
-                    GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                     return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
                 }).then(function() {
                     expect(rootTile.children[0].data.terrainData).toBeDefined();
@@ -185,20 +186,20 @@ defineSuite([
             var childTile = rootTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
                 return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
             }).then(function() {
                 var upsampledTerrainData;
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                     return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
                 }).then(function() {
                     upsampledTerrainData = childTile.data.terrainData;
                     expect(upsampledTerrainData).toBeDefined();
 
                     return pollToPromise(function() {
-                        GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
+                        GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
                         return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
                     }).then(function() {
                         expect(childTile.data.terrainData).not.toBe(upsampledTerrainData);
@@ -212,18 +213,24 @@ defineSuite([
             var grandchildTile = childTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                       childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED &&
-                       grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
+            }).then(function() {
+                return pollToPromise(function() {
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                });
+            }).then(function() {
+                return pollToPromise(function() {
+                    GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                });
             }).then(function() {
                 var grandchildUpsampledTerrain = grandchildTile.data.upsampledTerrain;
                 expect(grandchildTile.data.loadedTerrain).toBeUndefined();
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
                     return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
                 }).then(function() {
                     expect(grandchildTile.data.upsampledTerrain).not.toBe(grandchildUpsampledTerrain);
@@ -238,22 +245,33 @@ defineSuite([
             var greatGrandchildTile = grandchildTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(greatGrandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                       childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED &&
-                       grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED &&
-                       greatGrandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
+            }).then(function() {
+                return pollToPromise(function() {
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                });
+            }).then(function() {
+                return pollToPromise(function() {
+                    GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                });
+            }).then(function() {
+                return pollToPromise(function() {
+                    GlobeSurfaceTile.processStateMachine(greatGrandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return greatGrandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                });
+            }).then(function() {
+               return pollToPromise(function() {
+                   GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
+                   return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED;
+               });
             }).then(function() {
                 var greatGrandchildUpsampledTerrain = grandchildTile.data.upsampledTerrain;
-
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
-                    GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                    return childTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                           grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                    GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                    return grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
                 }).then(function() {
                     expect(greatGrandchildTile.data.upsampledTerrain).toBeDefined();
                     expect(greatGrandchildTile.data.upsampledTerrain).not.toBe(greatGrandchildUpsampledTerrain);
@@ -265,8 +283,8 @@ defineSuite([
             var childTile = rootTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return rootTile.renderable && childTile.renderable;
             }).then(function() {
                 expect(childTile.data.waterMaskTexture).toBeDefined();
@@ -274,7 +292,7 @@ defineSuite([
                 var referenceCount = childWaterMaskTexture.referenceCount;
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
                     return childTile.state === QuadtreeTileLoadState.DONE;
                 }).then(function() {
                     expect(childTile.data.waterMaskTexture).toBeDefined();
@@ -288,8 +306,8 @@ defineSuite([
             var childTile = rootTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysFailTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysFailTerrainProvider, imageryLayerCollection);
                 return rootTile.renderable && childTile.renderable;
             }).then(function() {
                 expect(childTile.data.loadedTerrain).toBeUndefined();
@@ -302,23 +320,23 @@ defineSuite([
             var grandchildTile = childTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                       childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return defined(rootTile.data.terrainData) && defined(rootTile.data.terrainData._mesh) &&
+                       defined(childTile.data.terrainData);
             }).then(function() {
                 // Mark the grandchild as present even though the child is upsampled.
                 childTile.data.terrainData._childTileMask = 15;
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(grandchildTile, context, realTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, realTerrainProvider, imageryLayerCollection);
                     return grandchildTile.state === QuadtreeTileLoadState.DONE;
                 }).then(function() {
                     expect(grandchildTile.data.loadedTerrain).toBeUndefined();
                     expect(grandchildTile.data.upsampledTerrain).toBeUndefined();
 
                     return pollToPromise(function() {
-                        GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
+                        GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
                         return childTile.state === QuadtreeTileLoadState.DONE;
                     }).then(function() {
                         expect(grandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
@@ -335,26 +353,26 @@ defineSuite([
             var greatGrandchildTile = grandchildTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
-                return rootTile.data.loadedTerrain.state >= TerrainState.RECEIVED &&
-                       childTile.data.upsampledTerrain.state >= TerrainState.RECEIVED &&
-                       grandchildTile.data.upsampledTerrain.state >= TerrainState.RECEIVED;
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
+                return defined(rootTile.data.terrainData) && defined(rootTile.data.terrainData._mesh) &&
+                       defined(childTile.data.terrainData) && defined(childTile.data.terrainData._mesh) &&
+                       defined(grandchildTile.data.terrainData);
             }).then(function() {
                 // Mark the great-grandchild as present even though the grandchild is upsampled.
                 grandchildTile.data.terrainData._childTileMask = 15;
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(greatGrandchildTile, context, realTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(greatGrandchildTile, frameState, realTerrainProvider, imageryLayerCollection);
                     return greatGrandchildTile.state === QuadtreeTileLoadState.DONE;
                 }).then(function() {
                     expect(greatGrandchildTile.data.loadedTerrain).toBeUndefined();
                     expect(greatGrandchildTile.data.upsampledTerrain).toBeUndefined();
 
                     return pollToPromise(function() {
-                        GlobeSurfaceTile.processStateMachine(childTile, context, realTerrainProvider, imageryLayerCollection);
-                        GlobeSurfaceTile.processStateMachine(grandchildTile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                        GlobeSurfaceTile.processStateMachine(childTile, frameState, realTerrainProvider, imageryLayerCollection);
+                        GlobeSurfaceTile.processStateMachine(grandchildTile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                         return childTile.state === QuadtreeTileLoadState.DONE &&
                                !defined(grandchildTile.data.upsampledTerrain);
                     }).then(function() {
@@ -370,8 +388,8 @@ defineSuite([
             var childTile = rootTile.children[0];
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(rootTile, context, realTerrainProvider, imageryLayerCollection);
-                GlobeSurfaceTile.processStateMachine(childTile, context, alwaysFailTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(rootTile, frameState, realTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(childTile, frameState, alwaysFailTerrainProvider, imageryLayerCollection);
                 return rootTile.state >= QuadtreeTileLoadState.DONE &&
                        childTile.state >= QuadtreeTileLoadState.DONE;
             }).then(function() {
@@ -406,10 +424,10 @@ defineSuite([
 
             return pollToPromise(function() {
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
-                    GlobeSurfaceTile.processStateMachine(rootTile, context, allWaterTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(rootTile, frameState, allWaterTerrainProvider, imageryLayerCollection);
                     return false;
                 } else {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, allWaterTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, allWaterTerrainProvider, imageryLayerCollection);
                     return childTile.state === QuadtreeTileLoadState.DONE;
                 }
             }).then(function() {
@@ -444,10 +462,10 @@ defineSuite([
 
             return pollToPromise(function() {
                 if (rootTile.state !== QuadtreeTileLoadState.DONE) {
-                    GlobeSurfaceTile.processStateMachine(rootTile, context, allLandTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(rootTile, frameState, allLandTerrainProvider, imageryLayerCollection);
                     return false;
                 } else {
-                    GlobeSurfaceTile.processStateMachine(childTile, context, allLandTerrainProvider, imageryLayerCollection);
+                    GlobeSurfaceTile.processStateMachine(childTile, frameState, allLandTerrainProvider, imageryLayerCollection);
                     return childTile.state === QuadtreeTileLoadState.DONE;
                 }
             }).then(function() {
@@ -465,7 +483,7 @@ defineSuite([
 
             var imageryLayerCollection = new ImageryLayerCollection();
 
-            GlobeSurfaceTile.processStateMachine(tile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+            GlobeSurfaceTile.processStateMachine(tile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
 
             var layer = new ImageryLayer({
                 requestImage : function() {
@@ -478,26 +496,26 @@ defineSuite([
             expect(imagery.parent.state).toBe(ImageryState.UNLOADED);
 
             return pollToPromise(function() {
-                GlobeSurfaceTile.processStateMachine(tile, context, alwaysDeferTerrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(tile, frameState, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return imagery.parent.state !== ImageryState.UNLOADED;
             });
         });
     }, 'WebGL');
 
     describe('pick', function() {
-        var context;
+        var frameState;
 
         beforeAll(function() {
-            context = createContext();
+            frameState = createFrameState(createContext());
         });
 
         afterAll(function() {
-            context.destroyForSpecs();
+            frameState.context.destroyForSpecs();
         });
 
         it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = new CesiumTerrainProvider({
-                url : '//assets.agi.com/stk-terrain/world',
+                url : 'https://assets.agi.com/stk-terrain/world',
                 requestVertexNormals : true
             });
 
@@ -515,7 +533,7 @@ defineSuite([
                     return false;
                 }
 
-                GlobeSurfaceTile.processStateMachine(tile, context, terrainProvider, imageryLayerCollection);
+                GlobeSurfaceTile.processStateMachine(tile, frameState, terrainProvider, imageryLayerCollection);
                 return tile.state === QuadtreeTileLoadState.DONE;
             }).then(function() {
                 var ray = new Ray(
@@ -526,5 +544,5 @@ defineSuite([
                 expect(cartographic.height).toBeGreaterThan(-500.0);
             });
         });
-    });
+    }, 'WebGL');
 });

@@ -13,7 +13,7 @@ define([
         DeveloperError,
         Quaternion,
         Spline) {
-    "use strict";
+    'use strict';
 
     function computeInnerQuadrangles(points, firstInnerQuadrangle, lastInnerQuadrangle) {
         var length = points.length;
@@ -91,7 +91,7 @@ define([
      * @see CatmullRomSpline
      * @see LinearSpline
      */
-    var QuaternionSpline = function(options) {
+    function QuaternionSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var points = options.points;
@@ -119,7 +119,7 @@ define([
 
         this._evaluateFunction = createEvaluateFunction(this);
         this._lastTimeIndex = 0;
-    };
+    }
 
     defineProperties(QuaternionSpline.prototype, {
         /**

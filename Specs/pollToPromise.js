@@ -7,35 +7,44 @@ define([
         defaultValue,
         getTimestamp,
         when) {
-	'use strict';
+       'use strict';
 
-	var pollToPromise = function(f, options) {
-		options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+    function pollToPromise(f, options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-		var pollInterval = defaultValue(options.pollInterval, 1);
-		var timeout = defaultValue(options.timeout, 5000);
+        var pollInterval = defaultValue(options.pollInterval, 1);
+        var timeout = defaultValue(options.timeout, 5000);
 
-		var deferred = when.defer();
+        var deferred = when.defer();
 
-		var startTimestamp = getTimestamp();
-		var endTimestamp = startTimestamp + timeout;
+        var startTimestamp = getTimestamp();
+        var endTimestamp = startTimestamp + timeout;
 
-		function poller() {
-			if (f()) {
-				deferred.resolve();
-			} else {
-				if (getTimestamp() > endTimestamp) {
-					deferred.reject();
-				} else {
-					setTimeout(poller, pollInterval);
-				}
-			}
-		}
+        function poller() {
+            var result = false;
+            try {
+                result = f();
+            }
+            catch (e) {
+                deferred.reject(e);
+                return;
+            }
 
-		poller();
+            if (result) {
+                deferred.resolve();
+            } else {
+                if (getTimestamp() > endTimestamp) {
+                    deferred.reject();
+                } else {
+                    setTimeout(poller, pollInterval);
+                }
+            }
+        }
 
-		return deferred.promise;
-	};
+        poller();
 
-	return pollToPromise;
+        return deferred.promise;
+    }
+
+    return pollToPromise;
 });

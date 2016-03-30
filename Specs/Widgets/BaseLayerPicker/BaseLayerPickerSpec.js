@@ -11,13 +11,12 @@ defineSuite([
         FeatureDetection,
         ImageryLayerCollection,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
-    var MockGlobe = function(){
+    function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();
         this.terrainProvider = new EllipsoidTerrainProvider();
-    };
+    }
 
     it('can create and destroy', function() {
         var container = document.createElement('div');

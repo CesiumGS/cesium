@@ -11,9 +11,9 @@ define([
         Intersect,
         Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
-    function executeCommands(context, frameState, commands) {
+    function executeCommands(frameState, commands) {
         var commandsExecuted = 0;
         var cullingVolume = frameState.cullingVolume;
         var occluder;
@@ -32,16 +32,16 @@ define([
                 }
             }
 
-            command.execute(context);
+            command.execute(frameState.context);
             commandsExecuted++;
         }
 
         return commandsExecuted;
     }
 
-    function render(context, frameState, primitive, commands) {
-        commands = defaultValue(commands, []);
-        primitive.update(context, frameState, commands);
+    function render(frameState, primitive) {
+        frameState.commandList.length = 0;
+        primitive.update(frameState);
 
         var i;
         var renderCommands = new Array(Pass.NUMBER_OF_PASSES);
@@ -49,6 +49,7 @@ define([
             renderCommands[i] = [];
         }
 
+        var commands = frameState.commandList;
         var length = commands.length;
         for (i = 0; i < length; i++) {
             var command = commands[i];
@@ -58,7 +59,7 @@ define([
 
         var commandsExecuted = 0;
         for (i = 0; i < Pass.NUMBER_OF_PASSES; ++i) {
-            commandsExecuted += executeCommands(context, frameState, renderCommands[i]);
+            commandsExecuted += executeCommands(frameState, renderCommands[i]);
         }
 
         return commandsExecuted;

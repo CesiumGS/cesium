@@ -11,8 +11,7 @@ defineSuite([
         CesiumMath,
         SampledProperty,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('Interpolates towards the closest angle.', function() {
         var time1 = JulianDate.fromIso8601('2010-05-07T00:00:00');

@@ -27,7 +27,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     function rebindAllGlyphs(label) {
         if (!label._rebindAllGlyphs && !label._repositionAllGlyphs) {
@@ -60,7 +60,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
-    var Label = function(options, labelCollection) {
+    function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -101,7 +101,7 @@ define([
         this._mode = undefined;
 
         this._updateClamping();
-    };
+    }
 
     defineProperties(Label.prototype, {
         /**
@@ -702,11 +702,12 @@ define([
      * @param {Cartesian2} [result] The object onto which to store the result.
      * @returns {Cartesian2} The screen-space position of the label.
      *
-     * @see Label#eyeOffset
-     * @see Label#pixelOffset
      *
      * @example
      * console.log(l.computeScreenSpacePosition(scene).toString());
+     *
+     * @see Label#eyeOffset
+     * @see Label#pixelOffset
      */
     Label.prototype.computeScreenSpacePosition = function(scene, result) {
         //>>includeStart('debug', pragmas.debug);

@@ -7,6 +7,7 @@ defineSuite([
         'Core/Color',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/Rectangle',
         'Scene/OrthographicFrustum',
         'Specs/createScene'
     ], function(
@@ -17,10 +18,10 @@ defineSuite([
         Color,
         CesiumMath,
         NearFarScalar,
+        Rectangle,
         OrthographicFrustum,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var camera;
@@ -735,7 +736,7 @@ defineSuite([
         });
 
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var positions = [one.position, two.position];
         var expected = BoundingSphere.fromPoints(positions);
@@ -757,7 +758,7 @@ defineSuite([
         // Update scene state
         scene.morphToColumbusView(0);
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),
@@ -782,23 +783,15 @@ defineSuite([
             position : Cartesian3.fromDegrees(-50.0, 50.0)
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = maxRadii * Math.PI;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = 0.01 * maxRadii;
-        orthoFrustum.far = 60.0 * maxRadii;
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
-        // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
 
-        camera.frustum = orthoFrustum;
-
         scene.renderForSpecs();
-        var actual = scene._commandList[0].boundingVolume;
+        var actual = scene.frameState.commandList[0].boundingVolume;
 
         var projectedPositions = [
             projection.project(ellipsoid.cartesianToCartographic(one.position)),

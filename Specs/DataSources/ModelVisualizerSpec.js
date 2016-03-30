@@ -4,12 +4,15 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/JulianDate',
+        'Core/Matrix4',
+        'Core/Quaternion',
         'Core/Transforms',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'DataSources/NodeTransformationProperty',
         'Scene/Globe',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -18,17 +21,19 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         JulianDate,
+        Matrix4,
+        Quaternion,
         Transforms,
         BoundingSphereState,
         ConstantPositionProperty,
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        NodeTransformationProperty,
         Globe,
         createScene,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
 
@@ -112,6 +117,18 @@ defineSuite([
         model.minimumPixelSize = new ConstantProperty(24.0);
         model.uri = new ConstantProperty(boxUrl);
 
+        var translation = new Cartesian3(1.0, 2.0, 3.0);
+        var rotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        var scale = new Cartesian3(2.0, 2.0, 2.0);
+        var nodeTransforms = {
+            Mesh : new NodeTransformationProperty({
+                translation : new ConstantProperty(translation),
+                rotation : new ConstantProperty(rotation),
+                scale : new ConstantProperty(scale)
+            })
+        };
+        model.nodeTransformations = nodeTransforms;
+
         var testObject = entityCollection.getOrCreateEntity('test');
         testObject.position = new ConstantPositionProperty(Cartesian3.fromDegrees(1, 2, 3));
         testObject.model = model;
@@ -126,6 +143,20 @@ defineSuite([
         expect(primitive.scale).toEqual(2);
         expect(primitive.minimumPixelSize).toEqual(24.0);
         expect(primitive.modelMatrix).toEqual(Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(1, 2, 3), scene.globe.ellipsoid));
+
+        // wait till the model is loaded before we can check node transformations
+        return pollToPromise(function() {
+            scene.render();
+            return primitive.ready;
+        }).then(function() {
+            visualizer.update(time);
+
+            var node = primitive.getNode('Mesh');
+            expect(node).toBeDefined();
+
+            var transformationMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale);
+            expect(node.matrix).toEqual(transformationMatrix);
+        });
     });
 
     it('removing removes primitives.', function() {

@@ -19,8 +19,7 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

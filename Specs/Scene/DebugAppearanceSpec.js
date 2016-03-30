@@ -11,9 +11,7 @@ defineSuite([
         'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         DebugAppearance,
         ComponentDatatype,
@@ -26,27 +24,30 @@ defineSuite([
         ClearCommand,
         Appearance,
         Primitive,
-        createContext,
-        createFrameState,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        createScene) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
+    var primitive;
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
+        scene.frameState.scene3DOnly = false;
+    });
 
-        frameState.camera.viewRectangle(rectangle);
-        var us = context.uniformState;
-        us.update(context, frameState);
+    beforeEach(function() {
+        scene.camera.setView({ destination : rectangle });
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
+    });
+
+    afterEach(function() {
+        scene.primitives.removeAll();
+        primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
     });
 
     function createInstance(vertexFormat) {
@@ -181,7 +182,7 @@ defineSuite([
             position : true,
             normal : true
         });
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'normal'
@@ -190,13 +191,10 @@ defineSuite([
             compressVertices : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders binormal', function() {
@@ -205,7 +203,7 @@ defineSuite([
             normal : true,
             binormal : true
         });
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
@@ -214,13 +212,10 @@ defineSuite([
             compressVertices : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders tangent', function() {
@@ -229,7 +224,7 @@ defineSuite([
             normal : true,
             tangent : true
         });
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
@@ -238,13 +233,10 @@ defineSuite([
             compressVertices : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders st', function() {
@@ -252,7 +244,7 @@ defineSuite([
             position : true,
             st : true
         });
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : createInstance(vertexFormat),
             appearance : new DebugAppearance({
                 attributeName : 'st'
@@ -261,13 +253,10 @@ defineSuite([
             compressVertices : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders float', function() {
@@ -279,7 +268,7 @@ defineSuite([
                 value : [1.0]
             })
         };
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
@@ -288,13 +277,10 @@ defineSuite([
             asynchronous : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders vec2', function() {
@@ -306,7 +292,7 @@ defineSuite([
                 value : [1.0, 2.0]
             })
         };
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
@@ -315,13 +301,10 @@ defineSuite([
             asynchronous : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders vec3', function() {
@@ -333,7 +316,7 @@ defineSuite([
                 value : [1.0, 2.0, 3.0]
             })
         };
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
@@ -342,13 +325,10 @@ defineSuite([
             asynchronous : false
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders vec4', function() {
@@ -356,11 +336,11 @@ defineSuite([
         rectangleInstance.attributes = {
             debug : new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
+                componentsPerAttribute : 4,
                 value : [1.0, 2.0, 3.0, 4.0]
             })
         };
-        var primitive = new Primitive({
+        primitive = new Primitive({
             geometryInstances : rectangleInstance,
             appearance : new DebugAppearance({
                 attributeName : 'debug',
@@ -368,14 +348,10 @@ defineSuite([
             }),
             asynchronous : false
         });
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+        scene.primitives.add(primitive);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
 }, 'WebGL');

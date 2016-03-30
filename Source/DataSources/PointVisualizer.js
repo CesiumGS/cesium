@@ -21,7 +21,7 @@ define([
         PointPrimitiveCollection,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
@@ -34,14 +34,14 @@ define([
     var scaleByDistance = new NearFarScalar();
     var translucencyByDistance = new NearFarScalar();
 
-    var EntityData = function(entity) {
+    function EntityData(entity) {
         this.entity = entity;
         this.pointPrimitive = undefined;
         this.color = undefined;
         this.outlineColor = undefined;
         this.pixelSize = undefined;
         this.outlineWidth = undefined;
-    };
+    }
 
     /**
      * A {@link Visualizer} which maps {@link Entity#point} to a {@link PointPrimitive}.
@@ -51,7 +51,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var PointVisualizer = function(scene, entityCollection) {
+    function PointVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -69,7 +69,7 @@ define([
         this._pointPrimitiveCollection = undefined;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates the primitives created by this visualizer to match their

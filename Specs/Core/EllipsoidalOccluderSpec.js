@@ -17,8 +17,7 @@ defineSuite([
         CesiumMath,
         Ray,
         Rectangle) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
@@ -54,6 +53,15 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
         occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
+
+        var point = new Cartesian3(-7000000, 0.0, 0.0);
+        expect(occluder.isPointVisible(point)).toEqual(false);
+    });
+
+    it('reports not visible when point is directly behind ellipsoid and camera is inside the ellispoid', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var occluder = new EllipsoidalOccluder(ellipsoid);
+        occluder.cameraPosition = new Cartesian3(ellipsoid.minimumRadius - 100, 0.0, 0.0);
 
         var point = new Cartesian3(-7000000, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);
@@ -240,6 +248,41 @@ defineSuite([
 
             var result1 = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
             var result2 = ellipsoidalOccluder.computeHorizonCullingPointFromVertices(boundingSphere.center, vertices, 7, center);
+
+            expect(result1.x).toEqualEpsilon(result2.x, CesiumMath.EPSILON14);
+            expect(result1.y).toEqualEpsilon(result2.y, CesiumMath.EPSILON14);
+            expect(result1.z).toEqualEpsilon(result2.z, CesiumMath.EPSILON14);
+        });
+    });
+
+    describe('computeHorizonCullingPointFromPoints', function() {
+        it('requires directionToPointand points', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            ellipsoidalOccluder.computeHorizonCullingPointFromPoints(boundingSphere.center, positions);
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromPoints(undefined, positions);
+            }).toThrowDeveloperError();
+
+            expect(function() {
+                ellipsoidalOccluder.computeHorizonCullingPointFromPoints(boundingSphere.center, undefined);
+            }).toThrowDeveloperError();
+        });
+
+        it('produces same answers as computeHorizonCullingPoint', function() {
+            var ellipsoid = new Ellipsoid(12345.0, 12345.0, 12345.0);
+            var ellipsoidalOccluder = new EllipsoidalOccluder(ellipsoid);
+
+            var positions = [new Cartesian3(-12345.0, 12345.0, 12345.0), new Cartesian3(-12346.0, 12345.0, 12345.0), new Cartesian3(-12446.0, 12445.0, 12445.0)];
+            var boundingSphere = BoundingSphere.fromPoints(positions);
+
+            var result1 = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
+            var result2 = ellipsoidalOccluder.computeHorizonCullingPointFromPoints(boundingSphere.center, positions);
 
             expect(result1.x).toEqualEpsilon(result2.x, CesiumMath.EPSILON14);
             expect(result1.y).toEqualEpsilon(result2.y, CesiumMath.EPSILON14);

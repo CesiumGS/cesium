@@ -7,9 +7,10 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
-        '../../Core/jsonp',
+        '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -21,13 +22,14 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        jsonp,
+        loadJsonp,
         Matrix4,
         Rectangle,
+        SceneMode,
         knockout,
         when,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -36,7 +38,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -46,14 +48,14 @@ define([
      *        this widget without creating a separate key for your application.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
-    var GeocoderViewModel = function(options) {
+    function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(options.url, '//dev.virtualearth.net/');
+        this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
@@ -137,7 +139,7 @@ define([
                 this._flightDuration = value;
             }
         });
-    };
+    }
 
     defineProperties(GeocoderViewModel.prototype, {
         /**
@@ -201,21 +203,15 @@ define([
         }
     });
 
-    function updateCamera(viewModel, position) {
-        if (viewModel._flightDuration === 0) {
-            viewModel._scene.camera.setView({position: position});
-            viewModel._complete.raiseEvent();
-        } else {
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                complete: function() {
-                    viewModel._complete.raiseEvent();
-                },
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
-        }
+    function updateCamera(viewModel, destination) {
+        viewModel._scene.camera.flyTo({
+            destination : destination,
+            complete: function() {
+                viewModel._complete.raiseEvent();
+            },
+            duration : viewModel._flightDuration,
+            endTransform : Matrix4.IDENTITY
+        });
     }
 
     function geocode(viewModel) {
@@ -241,7 +237,7 @@ define([
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
                 query : query,
                 key : viewModel._key
@@ -275,16 +271,8 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-            var camera = viewModel._scene.camera;
-            var position = camera.getRectangleCameraCoordinates(rectangle);
-            if (!defined(position)) {
-                // This can happen during a scene mode transition.
-                return;
-            }
-
-            updateCamera(viewModel, position);
+            updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

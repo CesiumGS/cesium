@@ -19,7 +19,7 @@ define([
         SceneMode,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link SceneModePicker}.
@@ -29,7 +29,7 @@ define([
      * @param {Scene} scene The Scene to morph
      * @param {Number} [duration=2.0] The duration of scene morph animations, in seconds
      */
-    var SceneModePickerViewModel = function(scene, duration) {
+    function SceneModePickerViewModel(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -120,7 +120,7 @@ define([
 
         //Used by knockout
         this._sceneMode = SceneMode;
-    };
+    }
 
     defineProperties(SceneModePickerViewModel.prototype, {
         /**

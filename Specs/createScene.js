@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/Cartesian2',
         'Core/clone',
         'Core/defaultValue',
         'Core/defined',
@@ -8,6 +9,7 @@ define([
         'Specs/createCanvas',
         'Specs/destroyCanvas'
     ], function(
+        Cartesian2,
         clone,
         defaultValue,
         defined,
@@ -15,7 +17,7 @@ define([
         Scene,
         createCanvas,
         destroyCanvas) {
-    "use strict";
+    'use strict';
 
     function createScene(options) {
         options = defaultValue(options, {});
@@ -35,8 +37,7 @@ define([
 
         var scene = new Scene(options);
 
-        var parameters = queryToObject(window.location.search.substring(1));
-        if (defined(parameters.webglValidation)) {
+        if (window.webglValidation) {
             var context = scene.context;
             context.validateShaderProgram = true;
             context.validateFramebuffer = true;
@@ -55,6 +56,10 @@ define([
             scene.initializeFrame();
             scene.render(time);
             return scene.context.readPixels();
+        };
+
+        scene.pickForSpecs = function() {
+            return scene.pick(new Cartesian2(0, 0));
         };
 
         scene.rethrowRenderErrors = defaultValue(options.rethrowRenderErrors, true);

@@ -1,10 +1,16 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
-        '../Core/defined'
+        '../Core/defined',
+        '../Core/Quaternion',
+        '../Renderer/WebGLConstants'
     ], function(
+        Cartesian3,
         defaultValue,
-        defined) {
+        defined,
+        Quaternion,
+        WebGLConstants) {
     "use strict";
 
     function accessorDefaults(gltf) {
@@ -67,10 +73,17 @@ define([
         }
         var profile = asset.profile;
 
-        asset.premultipliedAlpha = defaultValue(gltf.asset.premultipliedAlpha, false);
+        asset.premultipliedAlpha = defaultValue(asset.premultipliedAlpha, false);
         profile.api = defaultValue(profile.api, 'WebGL');
         profile.version = defaultValue(profile.version, '1.0.2');
-        asset.version = defaultValue(gltf.version, '0.9');
+
+        if (defined(gltf.version)) {
+            asset.version = defaultValue(asset.version, gltf.version);
+            delete gltf.version;
+        }
+        if (typeof asset.version === 'number') {
+            asset.version = asset.version.toFixed(1).toString();
+        }
     }
 
     function bufferDefaults(gltf) {
@@ -106,10 +119,24 @@ define([
     }
 
     function lightDefaults(gltf) {
-        if (!defined(gltf.lights)) {
-            gltf.lights = {};
+        if (!defined(gltf.extensions)) {
+            gltf.extensions = {};
         }
-        var lights = gltf.lights;
+        var extensions = gltf.extensions;
+
+        if (!defined(extensions.KHR_materials_common)) {
+            extensions.KHR_materials_common = {};
+        }
+        var khrMaterialsCommon = extensions.KHR_materials_common;
+
+        if (defined(gltf.lights)) {
+            khrMaterialsCommon.lights = gltf.lights;
+            delete gltf.lights;
+        }
+        else if (!defined(khrMaterialsCommon.lights)) {
+            khrMaterialsCommon.lights = {};
+        }
+        var lights = khrMaterialsCommon.lights;
 
         for (var name in lights) {
             if (lights.hasOwnProperty(name)) {
@@ -173,9 +200,47 @@ define([
 
         for (var name in materials) {
             if (materials.hasOwnProperty(name)) {
-                var instanceTechnique = materials[name].instanceTechnique;
-                if (!defined(instanceTechnique.values)) {
-                    instanceTechnique.values = {};
+                var material = materials[name];
+                var instanceTechnique = material.instanceTechnique;
+                if (defined(instanceTechnique)) {
+                    material.technique = instanceTechnique.technique;
+                    material.values = instanceTechnique.values;
+
+                    delete material.instanceTechnique;
+                }
+
+                if (!defined(material.extensions)) {
+                    if (!defined(material.technique)) {
+                        delete material.values;
+                        material.extensions = {
+                            KHR_materials_common : {
+                                technique : 'CONSTANT',
+                                transparent: false,
+                                values : {
+                                    emission : {
+                                        type: WebGLConstants.FLOAT_VEC4,
+                                        value: [
+                                            0.5,
+                                            0.5,
+                                            0.5,
+                                            1
+                                        ]
+                                    }
+                                }
+                            }
+                        };
+
+                        if (!defined(gltf.extensionsUsed)) {
+                            gltf.extensionsUsed = [];
+                        }
+                        var extensionsUsed = gltf.extensionsUsed;
+                        if (extensionsUsed.indexOf('KHR_materials_common') === -1) {
+                            extensionsUsed.push('KHR_materials_common');
+                        }
+                    }
+                    else if (!defined(material.values)) {
+                        material.values = {};
+                    }
                 }
             }
         }
@@ -205,7 +270,7 @@ define([
                     }
 
                     // Backwards compatibility for glTF 0.8. primitive was renamed to mode.
-                    var defaultMode = defaultValue(primitive.primitive, WebGLRenderingContext.TRIANGLES);
+                    var defaultMode = defaultValue(primitive.primitive, WebGLConstants.TRIANGLES);
 
                     primitive.mode = defaultValue(primitive.mode, defaultMode);
                 }
@@ -218,7 +283,10 @@ define([
             gltf.nodes = {};
         }
         var nodes = gltf.nodes;
+        var hasAxisAngle = (parseFloat(gltf.asset.version) < 1.0);
 
+        var axis = new Cartesian3();
+        var quat = new Quaternion();
         for (var name in nodes) {
             if (nodes.hasOwnProperty(name)) {
                 var node = nodes[name];
@@ -227,9 +295,16 @@ define([
                     node.children = [];
                 }
 
+                if (hasAxisAngle && defined(node.rotation)) {
+                    var rotation = node.rotation;
+                    Cartesian3.fromArray(rotation, 0, axis);
+                    Quaternion.fromAxisAngle(axis, rotation[3], quat);
+                    node.rotation = [quat.x, quat.y, quat.z, quat.w];
+                }
+
                 if (!defined(node.matrix)) {
                     // Add default identity matrix if there is no matrix property and no TRS properties
-                    if (!(defined(node.translation) && defined(node.rotation) && defined(node.scale))) {
+                    if (!defined(node.translation) && !defined(node.rotation) && !defined(node.scale)) {
                         node.matrix = [
                             1.0, 0.0, 0.0, 0.0,
                             0.0, 1.0, 0.0, 0.0,
@@ -242,14 +317,21 @@ define([
                         }
 
                         if (!defined(node.rotation)) {
-                            // GLTF_SPEC: What is the default?  https://github.com/KhronosGroup/glTF/issues/197
-                            node.rotation = [1.0, 0.0, 0.0, 0.0];
+                            node.rotation = [0.0, 0.0, 0.0, 1.0];
                         }
 
                         if (!defined(node.scale)) {
                             node.scale = [1.0, 1.0, 1.0];
                         }
                     }
+                }
+
+                var instanceSkin = node.instanceSkin;
+                if (defined(instanceSkin)) {
+                    node.skeletons = instanceSkin.skeletons;
+                    node.skin = instanceSkin.skin;
+                    node.meshes = instanceSkin.meshes;
+                    delete node.instanceSkin;
                 }
             }
         }
@@ -280,10 +362,10 @@ define([
         for (var name in samplers) {
             if (samplers.hasOwnProperty(name)) {
                 var sampler = samplers[name];
-                sampler.magFilter = defaultValue(sampler.magFilter, WebGLRenderingContext.LINEAR);
-                sampler.minFilter = defaultValue(sampler.minFilter, WebGLRenderingContext.NEAREST_MIPMAP_LINEAR);
-                sampler.wrapS = defaultValue(sampler.wrapS, WebGLRenderingContext.REPEAT);
-                sampler.wrapT = defaultValue(sampler.wrapT, WebGLRenderingContext.REPEAT);
+                sampler.magFilter = defaultValue(sampler.magFilter, WebGLConstants.LINEAR);
+                sampler.minFilter = defaultValue(sampler.minFilter, WebGLConstants.NEAREST_MIPMAP_LINEAR);
+                sampler.wrapS = defaultValue(sampler.wrapS, WebGLConstants.REPEAT);
+                sampler.wrapT = defaultValue(sampler.wrapT, WebGLConstants.REPEAT);
             }
         }
     }
@@ -353,27 +435,43 @@ define([
                 if (!defined(technique.parameters)) {
                     technique.parameters = {};
                 }
+                var parameters = technique.parameters;
+                for (var parameterName in parameters) {
+                    var parameter = parameters[parameterName];
+                    parameter.node = defaultValue(parameter.node, parameter.source);
+                    parameter.source = undefined;
+                }
 
                 var passes = technique.passes;
-                for (var passName in passes) {
+                if (defined(passes)) {
+                    var passName = defaultValue(technique.pass, 'defaultPass');
                     if (passes.hasOwnProperty(passName)) {
                         var pass = passes[passName];
                         var instanceProgram = pass.instanceProgram;
 
-                        if (!defined(instanceProgram.attributes)) {
-                            instanceProgram.attributes = {};
-                        }
+                        technique.attributes = defaultValue(technique.attributes, instanceProgram.attributes);
+                        technique.program = defaultValue(technique.program, instanceProgram.program);
+                        technique.uniforms = defaultValue(technique.uniforms, instanceProgram.uniforms);
 
-                        if (!defined(instanceProgram.uniforms)) {
-                            instanceProgram.uniforms = {};
-                        }
-
-                        if (!defined(pass.states)) {
-                            pass.states = {};
-                        }
-                        statesDefaults(pass.states);
+                        technique.states = defaultValue(technique.states, pass.states);
                     }
+
+                    technique.passes = undefined;
+                    technique.pass = undefined;
                 }
+
+                if (!defined(technique.attributes)) {
+                    technique.attributes = {};
+                }
+
+                if (!defined(technique.uniforms)) {
+                    technique.uniforms = {};
+                }
+
+                if (!defined(technique.states)) {
+                    technique.states = {};
+                }
+                statesDefaults(technique.states);
             }
         }
     }
@@ -387,10 +485,10 @@ define([
         for (var name in textures) {
             if (textures.hasOwnProperty(name)) {
                 var texture = textures[name];
-                texture.format = defaultValue(texture.format, WebGLRenderingContext.RGBA);
+                texture.format = defaultValue(texture.format, WebGLConstants.RGBA);
                 texture.internalFormat = defaultValue(texture.internalFormat, texture.format);
-                texture.target = defaultValue(texture.target, WebGLRenderingContext.TEXTURE_2D);
-                texture.type = defaultValue(texture.type, WebGLRenderingContext.UNSIGNED_BYTE);
+                texture.target = defaultValue(texture.target, WebGLConstants.TEXTURE_2D);
+                texture.type = defaultValue(texture.type, WebGLConstants.UNSIGNED_BYTE);
             }
         }
     }
@@ -405,9 +503,12 @@ define([
             return undefined;
         }
 
-        if (!defined(gltf.allExtensions)) {
-            gltf.allExtensions = [];
+        if (defined(gltf.allExtensions)) {
+            gltf.extensionsUsed = gltf.allExtensions;
+            gltf.allExtensions = undefined;
         }
+        gltf.extensionsUsed = defaultValue(gltf.extensionsUsed, []);
+
         accessorDefaults(gltf);
         animationDefaults(gltf);
         assetDefaults(gltf);

@@ -23,58 +23,7 @@ define([
         SceneMode,
         knockout,
         createCommand) {
-    "use strict";
-
-    function viewHome(scene, duration) {
-        var mode = scene.mode;
-
-        if (defined(scene) && mode === SceneMode.MORPHING) {
-            scene.completeMorph();
-        }
-
-        if (mode === SceneMode.SCENE2D) {
-            scene.camera.flyTo({
-                destination : Rectangle.MAX_VALUE,
-                duration : duration,
-                endTransform : Matrix4.IDENTITY
-            });
-        } else if (mode === SceneMode.SCENE3D) {
-            var destination = scene.camera.getRectangleCameraCoordinates(Camera.DEFAULT_VIEW_RECTANGLE);
-
-            var mag = Cartesian3.magnitude(destination);
-            mag += mag * Camera.DEFAULT_VIEW_FACTOR;
-            Cartesian3.normalize(destination, destination);
-            Cartesian3.multiplyByScalar(destination, mag, destination);
-
-            scene.camera.flyTo({
-                destination : destination,
-                orientation : {
-                    heading : 0.0,
-                    pitch : -Math.PI * 0.5,
-                    roll : 0.0
-                },
-                duration : duration,
-                endTransform : Matrix4.IDENTITY
-            });
-        } else if (mode === SceneMode.COLUMBUS_VIEW) {
-            var maxRadii = scene.globe.ellipsoid.maximumRadius;
-            var position = new Cartesian3(0.0, -1.0, 1.0);
-            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
-            var pitch = -Math.acos(Cartesian3.normalize(position, new Cartesian3()).z);
-
-            scene.camera.flyTo({
-                destination : position,
-                duration : duration,
-                orientation : {
-                    heading : 0.0,
-                    pitch : pitch,
-                    roll : 0.0
-                },
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
-        }
-    }
+    'use strict';
 
     /**
      * The view model for {@link HomeButton}.
@@ -84,7 +33,7 @@ define([
      * @param {Scene} scene The scene instance to use.
      * @param {Number} [duration] The duration of the camera flight in seconds.
      */
-    var HomeButtonViewModel = function(scene, duration) {
+    function HomeButtonViewModel(scene, duration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -96,7 +45,7 @@ define([
 
         var that = this;
         this._command = createCommand(function() {
-            viewHome(that._scene, that._duration);
+            that._scene.camera.flyHome(that._duration);
         });
 
         /**
@@ -107,7 +56,7 @@ define([
         this.tooltip = 'View Home';
 
         knockout.track(this, ['tooltip']);
-    };
+    }
 
     defineProperties(HomeButtonViewModel.prototype, {
         /**

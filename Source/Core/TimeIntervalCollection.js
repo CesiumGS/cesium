@@ -17,7 +17,7 @@ define([
         Event,
         JulianDate,
         TimeInterval) {
-    "use strict";
+    'use strict';
 
     function compareIntervalStartTimes(left, right) {
         return JulianDate.compare(left.start, right.start);
@@ -30,7 +30,7 @@ define([
      *
      * @param {TimeInterval[]} [intervals] An array of intervals to add to the collection.
      */
-    var TimeIntervalCollection = function(intervals) {
+    function TimeIntervalCollection(intervals) {
         this._intervals = [];
         this._changedEvent = new Event();
 
@@ -40,7 +40,7 @@ define([
                 this.addInterval(intervals[i]);
             }
         }
-    };
+    }
 
     defineProperties(TimeIntervalCollection.prototype, {
         /**
@@ -193,7 +193,7 @@ define([
      * Finds and returns the interval that contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
-     * @returns The interval containing the specified date, <code>undefined</code> if no such interval exists.
+     * @returns {TimeInterval|undefined} The interval containing the specified date, <code>undefined</code> if no such interval exists.
      */
     TimeIntervalCollection.prototype.findIntervalContainingDate = function(date) {
         var index = this.indexOf(date);
@@ -204,7 +204,7 @@ define([
      * Finds and returns the data for the interval that contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
-     * @returns The data for the interval containing the specified date, or <code>undefined</code> if no such interval exists.
+     * @returns {Object} The data for the interval containing the specified date, or <code>undefined</code> if no such interval exists.
      */
     TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function(date) {
         var index = this.indexOf(date);
@@ -227,7 +227,7 @@ define([
      * Finds and returns the index of the interval in the collection that contains the specified date.
      *
      * @param {JulianDate} date The date to search for.
-     * @returns The index of the interval that contains the specified date, if no such interval exists,
+     * @returns {Number} The index of the interval that contains the specified date, if no such interval exists,
      * it returns a negative number which is the bitwise complement of the index of the next interval that
      * starts after the date, or if no interval starts after the specified date, the bitwise complement of
      * the length of the collection.
@@ -270,7 +270,7 @@ define([
      * @param {JulianDate} [options.stop] The stop time of the interval.
      * @param {Boolean} [options.isStartIncluded] <code>true</code> if <code>options.start</code> is included in the interval, <code>false</code> otherwise.
      * @param {Boolean} [options.isStopIncluded] <code>true</code> if <code>options.stop</code> is included in the interval, <code>false</code> otherwise.
-     * @returns The first interval in the collection that matches the specified parameters.
+     * @returns {TimeInterval} The first interval in the collection that matches the specified parameters.
      */
     TimeIntervalCollection.prototype.findInterval = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -525,10 +525,10 @@ define([
         }
 
         // Remove any intervals that are completely overlapped by the input interval.
-        while (index < intervals.length &&
-                JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
+        while (index < intervals.length && JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
             result = true;
             intervals.splice(index, 1);
+            indexInterval = intervals[index];
         }
 
         // Check for the case where the input interval ends on the same date
@@ -594,7 +594,7 @@ define([
      * @param {TimeIntervalCollection} other The collection to intersect with.
      * @param {TimeInterval~DataComparer} [dataComparer] A function which compares the data of the two intervals.  If omitted, reference equality is used.
      * @param {TimeInterval~MergeCallback} [mergeCallback] A function which merges the data of the two intervals. If omitted, the data from the left interval will be used.
-     * @returns A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
+     * @returns {TimeIntervalCollection} A new TimeIntervalCollection which is the intersection of this collection and the provided collection.
      */
     TimeIntervalCollection.prototype.intersect = function(other, dataComparer, mergeCallback) {
         //>>includeStart('debug', pragmas.debug);

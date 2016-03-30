@@ -5,8 +5,7 @@ define([
     ], function(
         defaultValue,
         defined) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     function createPackableSpecs(packable, instance, packedInstance, namePrefix) {
         namePrefix = defaultValue(namePrefix, '');

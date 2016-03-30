@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry or imagery on the surface of an ellipsoid.  At level-of-detail zero,
@@ -20,9 +20,9 @@ define([
      * @see WebMercatorTilingScheme
      * @see GeographicTilingScheme
      */
-    var TilingScheme = function TilingScheme(options) {
+    function TilingScheme(options) {
         throw new DeveloperError('This type should not be instantiated directly.  Instead, use WebMercatorTilingScheme or GeographicTilingScheme.');
-    };
+    }
 
     defineProperties(TilingScheme.prototype, {
         /**

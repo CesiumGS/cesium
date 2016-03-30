@@ -3,7 +3,7 @@ define([
         '../ThirdParty/knockout'
     ], function(
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * Subscribe to a Knockout observable ES5 property, and immediately fire
@@ -20,10 +20,10 @@ define([
      * @param {String} [event='change'] The name of the event to receive notification for.
      * @returns The subscription object from Knockout which can be used to dispose the subscription later.
      */
-    var subscribeAndEvaluate = function(owner, observablePropertyName, callback, target, event) {
+    function subscribeAndEvaluate(owner, observablePropertyName, callback, target, event) {
         callback.call(target, owner[observablePropertyName]);
         return knockout.getObservable(owner, observablePropertyName).subscribe(callback, target, event);
-    };
+    }
 
     return subscribeAndEvaluate;
 });

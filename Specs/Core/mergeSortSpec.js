@@ -7,8 +7,7 @@ defineSuite([
         mergeSort,
         BoundingSphere,
         Cartesian3) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('sorts', function() {
         var array = [0, 9, 1, 8, 2, 7, 3, 6, 4, 5];

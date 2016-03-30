@@ -15,7 +15,7 @@ define([
         EventHelper,
         JulianDate,
         knockout) {
-    "use strict";
+    'use strict';
 
     /**
      * A view model which exposes a {@link Clock} for user interfaces.
@@ -26,7 +26,7 @@ define([
      *
      * @see Clock
      */
-    var ClockViewModel = function(clock) {
+    function ClockViewModel(clock) {
         if (!defined(clock)) {
             clock = new Clock();
         }
@@ -190,7 +190,7 @@ define([
                 clock.shouldAnimate = value;
             }
         });
-    };
+    }
 
     defineProperties(ClockViewModel.prototype, {
         /**

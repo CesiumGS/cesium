@@ -7,8 +7,7 @@ defineSuite([
         barycentricCoordinates,
         Cartesian3,
         CesiumMath) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var p0 = new Cartesian3(-1.0, 0.0, 0.0);
     var p1 = new Cartesian3( 1.0, 0.0, 0.0);

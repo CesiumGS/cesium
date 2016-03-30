@@ -23,15 +23,13 @@ defineSuite([
         ConstantProperty,
         Entity,
         EntityCollection) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
-    var CollectionListener = function() {
+    function CollectionListener() {
         this.timesCalled = 0;
         this.added = [];
         this.removed = [];
-    };
-
+    }
     CollectionListener.prototype.onCollectionChanged = function(collection, added, removed) {
         this.timesCalled++;
         this.added = added.slice(0);
@@ -43,6 +41,13 @@ defineSuite([
         expect(composite.collectionChanged).toBeDefined();
         expect(composite.getCollectionsLength()).toEqual(0);
         expect(composite.values.length).toEqual(0);
+    });
+
+    it('constructor with owner', function() {
+        var composite = new CompositeEntityCollection();
+        var child = new CompositeEntityCollection(undefined, composite);
+
+        expect(child.owner).toEqual(composite);
     });
 
     it('addCollection/removeCollection works', function() {
@@ -648,6 +653,19 @@ defineSuite([
         // composite2 should use the position from the object in collection2
         expect(composite1.getById(id).position).toBe(entity1.position);
         expect(composite2.getById(id).position).toBe(entity2.position);
+    });
+
+    it('has entity with link to entity collection', function() {
+        var id = 'test';
+        var collection = new EntityCollection();
+        var entity = new Entity({
+            id : id
+        });
+        collection.add(entity);
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(collection);
+        var compositeEntity = composite.getCollection(0).values[0];
+        expect(compositeEntity.entityCollection).toEqual(collection);
     });
 
     it('suspend events suspends recompositing', function() {

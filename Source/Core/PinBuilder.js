@@ -13,7 +13,7 @@ define([
         DeveloperError,
         loadImage,
         writeTextToCanvas) {
-    "use strict";
+    'use strict';
 
     /**
      * A utility class for generating custom map pins as canvas elements.
@@ -28,9 +28,9 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
-    var PinBuilder = function() {
+    function PinBuilder() {
         this._cache = {};
-    };
+    }
 
     /**
      * Creates an empty pin of the specified color and size.

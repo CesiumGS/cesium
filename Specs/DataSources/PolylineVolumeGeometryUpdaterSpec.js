@@ -45,8 +45,7 @@ defineSuite([
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var time;
@@ -502,4 +501,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(PolylineVolumeGeometryUpdater, entity, entity.polylineVolume, function() {
         return scene;
     });
-});
+}, 'WebGL');

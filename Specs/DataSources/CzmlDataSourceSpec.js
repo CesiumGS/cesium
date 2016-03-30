@@ -19,6 +19,7 @@ defineSuite([
         'Core/ReferenceFrame',
         'Core/RuntimeError',
         'Core/TimeInterval',
+        'Core/TranslationRotationScale',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'Scene/HorizontalOrigin',
@@ -46,6 +47,7 @@ defineSuite([
         ReferenceFrame,
         RuntimeError,
         TimeInterval,
+        TranslationRotationScale,
         EntityCollection,
         ReferenceProperty,
         HorizontalOrigin,
@@ -53,8 +55,7 @@ defineSuite([
         VerticalOrigin,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,fail*/
+    'use strict';
 
     function makePacket(packet) {
         return [{
@@ -156,6 +157,19 @@ defineSuite([
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('name returns CZML defined name', function() {
@@ -548,7 +562,6 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         dataSource.load(clockPacket);
-        var entity = dataSource.entities.values[0];
 
         expect(dataSource.clock).toBeDefined();
         expect(dataSource.clock.startTime).toEqual(interval.start);
@@ -657,6 +670,22 @@ defineSuite([
 
         dataSource.load(makePacket(czml));
         entity = dataSource.entities.values[0];
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('uses FIXED as default if not specified in CZML', function() {
+        var epoch = JulianDate.now();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                epoch : JulianDate.toIso8601(epoch),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(makePacket(czml));
+        var entity = dataSource.entities.values[0];
         expect(entity.position.referenceFrame).toBe(ReferenceFrame.FIXED);
     });
 
@@ -1498,6 +1527,116 @@ defineSuite([
         expect(entity.polyline.show.getValue(invalidTime)).toBeUndefined();
     });
 
+    it('CZML adds data for infinite model.', function() {
+        var modelPacket = {
+            model : {
+                show : true,
+                scale : 3.0,
+                minimumPixelSize : 5.0,
+                gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                nodeTransformations : {
+                    Mesh : {
+                        scale : {
+                            cartesian : [1.0, 2.0, 3.0]
+                        },
+                        translation : {
+                            cartesian : [4.0, 5.0, 6.0]
+                        },
+                        rotation : {
+                            unitQuaternion : [0.0, 0.707, 0.0, 0.707]
+                        }
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(modelPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.model).toBeDefined();
+        expect(entity.model.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.model.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3.0);
+        expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
+        expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+
+        var nodeTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
+        expect(nodeTransform).toBeDefined();
+        expect(nodeTransform.scale).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(nodeTransform.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+
+        var expectedRotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        Quaternion.normalize(expectedRotation, expectedRotation);
+        expect(nodeTransform.rotation).toEqual(expectedRotation);
+
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRotation);
+    });
+
+    it('CZML adds data for constrained model.', function() {
+        var modelPacket = {
+            model : {
+                interval : '2000-01-01/2001-01-01',
+                show : true,
+                scale : 3.0,
+                minimumPixelSize : 5.0,
+                gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                nodeTransformations : {
+                    Mesh : {
+                        scale : {
+                            cartesian : [1.0, 2.0, 3.0]
+                        },
+                        translation : {
+                            cartesian : [4.0, 5.0, 6.0]
+                        },
+                        rotation : {
+                            unitQuaternion : [0.0, 0.707, 0.0, 0.707]
+                        }
+                    }
+                }
+            }
+        };
+
+        var validTime = TimeInterval.fromIso8601({
+            iso8601 : modelPacket.model.interval
+        }).start;
+        var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(modelPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.model).toBeDefined();
+        expect(entity.model.show.getValue(validTime)).toEqual(true);
+        expect(entity.model.scale.getValue(validTime)).toEqual(3.0);
+        expect(entity.model.minimumPixelSize.getValue(validTime)).toEqual(5.0);
+        expect(entity.model.uri.getValue(validTime)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+
+        var nodeTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
+        expect(nodeTransform).toBeDefined();
+        expect(nodeTransform.scale).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(nodeTransform.translation).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+
+        var expectedRotation = new Quaternion(0.0, 0.707, 0.0, 0.707);
+        Quaternion.normalize(expectedRotation, expectedRotation);
+        expect(nodeTransform.rotation).toEqual(expectedRotation);
+
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(validTime)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(validTime)).toEqual(expectedRotation);
+
+        expect(entity.model.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.scale.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.minimumPixelSize.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.uri.getValue(invalidTime)).toBeUndefined();
+
+        expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new TranslationRotationScale());
+        expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.nodeTransformations.Mesh.translation.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.nodeTransformations.Mesh.rotation.getValue(invalidTime)).toBeUndefined();
+    });
+
     it('processCzml deletes an existing object.', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(makePacket(staticCzml));
@@ -1794,6 +1933,21 @@ defineSuite([
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
+    it('Has entity collection with link to data source', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(nameCzml);
+        var entityCollection = dataSource.entities;
+        expect(entityCollection.owner).toEqual(dataSource);
+    });
+
+    it('Has entity with link to entity collection', function() {
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(staticCzml));
+        var entityCollection = dataSource.entities;
+        var entity = entityCollection.values[0];
+        expect(entity.entityCollection).toEqual(entityCollection);
+    });
+
     it('Can use constant reference properties', function() {
         var time = JulianDate.now();
         var packets = [{
@@ -1893,8 +2047,6 @@ defineSuite([
     });
 
     it('Can use interval reference properties for positions', function() {
-        var time = JulianDate.now();
-
         var packets = [{
             id : 'document',
             version : '1.0'
@@ -1983,7 +2135,6 @@ defineSuite([
     });
 
     it('Polyline glow.', function() {
-        var time = JulianDate.now();
         var packet = {
             id : 'polylineGlow',
             polyline : {

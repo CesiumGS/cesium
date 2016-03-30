@@ -17,7 +17,7 @@ define([
         ConstantProperty,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
@@ -27,12 +27,12 @@ define([
      * @alias ColorMaterialProperty
      * @constructor
      */
-    var ColorMaterialProperty = function(color) {
+    function ColorMaterialProperty(color) {
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
         this.color = color;
-    };
+    }
 
     defineProperties(ColorMaterialProperty.prototype, {
         /**

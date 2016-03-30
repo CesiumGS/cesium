@@ -7,8 +7,7 @@ defineSuite([
         DrawCommand,
         PrimitiveType,
         Pass) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructs', function() {
         var c = new DrawCommand();
@@ -19,6 +18,7 @@ defineSuite([
         expect(c.vertexArray).toBeUndefined();
         expect(c.count).toBeUndefined();
         expect(c.offset).toEqual(0);
+        expect(c.instanceCount).toEqual(0);
         expect(c.shaderProgram).toBeUndefined();
         expect(c.uniformMap).toBeUndefined();
         expect(c.renderState).toBeUndefined();
@@ -49,6 +49,7 @@ defineSuite([
             vertexArray : vertexArray,
             count : 3,
             offset : 3,
+            instanceCount : 2,
             shaderProgram : shaderProgram,
             uniformMap : uniformMap,
             renderState : renderState,
@@ -66,6 +67,7 @@ defineSuite([
         expect(c.vertexArray).toBe(vertexArray);
         expect(c.count).toEqual(3);
         expect(c.offset).toEqual(3);
+        expect(c.instanceCount).toEqual(2);
         expect(c.shaderProgram).toBe(shaderProgram);
         expect(c.uniformMap).toBe(uniformMap);
         expect(c.renderState).toBe(renderState);

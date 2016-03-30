@@ -15,8 +15,7 @@ defineSuite([
         CesiumMath,
         Matrix3,
         OrientedBoundingBox) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor defaults to WGS84', function() {
         var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0, 0);

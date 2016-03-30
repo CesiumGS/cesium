@@ -9,6 +9,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/loadImage',
         '../Core/Rectangle',
+        '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
@@ -21,9 +22,10 @@ define([
         GeographicTilingScheme,
         loadImage,
         Rectangle,
+        RuntimeError,
         TileProviderError,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides a single, top-level imagery tile.  The single image is assumed to use a
@@ -42,13 +44,13 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
-     * @see OpenStreetMapImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
-    var SingleTileImageryProvider = function(options) {
+    function SingleTileImageryProvider(options) {
         options = defaultValue(options, {});
         var url = options.url;
 
@@ -80,6 +82,7 @@ define([
         this._errorEvent = new Event();
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
         var imageUrl = url;
         if (defined(proxy)) {
@@ -100,6 +103,7 @@ define([
             that._tileWidth = image.width;
             that._tileHeight = image.height;
             that._ready = true;
+            that._readyPromise.resolve(true);
             TileProviderError.handleSuccess(that._errorEvent);
         }
 
@@ -113,6 +117,7 @@ define([
                     0, 0, 0,
                     doRequest,
                     e);
+            that._readyPromise.reject(new RuntimeError(message));
         }
 
         function doRequest() {
@@ -120,8 +125,7 @@ define([
         }
 
         doRequest();
-    };
-
+    }
 
     defineProperties(SingleTileImageryProvider.prototype, {
         /**
@@ -300,6 +304,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof SingleTileImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

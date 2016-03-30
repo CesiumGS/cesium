@@ -11,7 +11,7 @@ define([
         defineProperties,
         DeveloperError,
         Appearance) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a vertex attribute by displaying it as a color for debugging.
@@ -41,7 +41,7 @@ define([
      *   })
      * });
      */
-    var DebugAppearance = function(options) {
+    function DebugAppearance(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var attributeName = options.attributeName;
 
@@ -56,7 +56,7 @@ define([
         var getColor;
 
         // Well-known normalized vector attributes in VertexFormat
-        if ((attributeName === 'normal') || (attributeName === 'binormal') | (attributeName === 'tangent')) {
+        if ((attributeName === 'normal') || (attributeName === 'binormal') || (attributeName === 'tangent')) {
             getColor = 'vec4 getColor() { return vec4((' + varyingName + ' + vec3(1.0)) * 0.5, 1.0); }\n';
         } else {
             // All other attributes, both well-known and custom
@@ -129,7 +129,7 @@ define([
 
         this._attributeName = attributeName;
         this._glslDatatype = glslDatatype;
-    };
+    }
 
     defineProperties(DebugAppearance.prototype, {
         /**
@@ -227,7 +227,7 @@ define([
      *
      * @function
      *
-     * @returns String The full GLSL fragment shader source.
+     * @returns {String} The full GLSL fragment shader source.
      */
     DebugAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

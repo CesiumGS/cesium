@@ -45,8 +45,7 @@ defineSuite([
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = JulianDate.now();
     var scene;
@@ -595,4 +594,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
         return scene;
     });
-});
+}, 'WebGL');

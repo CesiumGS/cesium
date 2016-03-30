@@ -43,8 +43,7 @@ defineSuite([
         PrimitiveType,
         Tipsify,
         VertexFormat) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
@@ -492,11 +491,11 @@ defineSuite([
 
         expect(geometries.length).toEqual(2);
 
-        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(geometries[0].indices.length).toEqual(indices.length - 2); // One line is not copied (0, 1)
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 12); // Four vertices are not copied
+        expect(geometries[0].indices.length).toEqual(indices.length - 4); // Two lines are not copied
 
-        expect(geometries[1].attributes.position.values.length).toEqual(6);
-        expect(geometries[1].indices.length).toEqual(2);
+        expect(geometries[1].attributes.position.values.length).toEqual(9);
+        expect(geometries[1].indices.length).toEqual(4);
     });
 
     it('fitToUnsignedShortIndices creates two point geometries', function() {
@@ -525,11 +524,11 @@ defineSuite([
 
         expect(geometries.length).toEqual(2);
 
-        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 3); // One vertex is not copied
-        expect(geometries[0].indices.length).toEqual(indices.length - 1); // One point is not copied
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied
+        expect(geometries[0].indices.length).toEqual(indices.length - 2); // Two points are not copied
 
-        expect(geometries[1].attributes.position.values.length).toEqual(3);
-        expect(geometries[1].indices.length).toEqual(1);
+        expect(geometries[1].attributes.position.values.length).toEqual(6);
+        expect(geometries[1].indices.length).toEqual(2);
     });
 
     it('fitToUnsignedShortIndices throws without a geometry', function() {
@@ -695,9 +694,6 @@ defineSuite([
     });
 
     it('projectTo2D throws when trying to project a point close to the origin', function() {
-        var p1 = new Cartesian3(100000, 200000, 300000);
-        var p2 = new Cartesian3(400000, 500000, 600000);
-
         var geometry = {};
         geometry.attributes = {};
         geometry.attributes.position = {
@@ -1643,8 +1639,8 @@ defineSuite([
                 normal : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
@@ -1652,8 +1648,8 @@ defineSuite([
 
         var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
@@ -1683,8 +1679,8 @@ defineSuite([
             vertexFormat : new VertexFormat({
                 position : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).not.toBeDefined();
         geometry = GeometryPipeline.compressVertices(geometry);
@@ -1697,8 +1693,8 @@ defineSuite([
                 position : true,
                 normal : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         var originalNormals = Array.prototype.slice.call(geometry.attributes.normal.values);
@@ -1721,8 +1717,8 @@ defineSuite([
                 position : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.st).toBeDefined();
         var originalST = Array.prototype.slice.call(geometry.attributes.st.values);
@@ -1751,8 +1747,8 @@ defineSuite([
                 normal : true,
                 st : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.st).toBeDefined();
@@ -1782,8 +1778,8 @@ defineSuite([
                 tangent : true,
                 binormal : true
             }),
-            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
-            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+            maximum : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimum : new Cartesian3(-250000.0, -250000.0, -250000.0)
         }));
         expect(geometry.attributes.normal).toBeDefined();
         expect(geometry.attributes.tangent).toBeDefined();
@@ -2582,140 +2578,279 @@ defineSuite([
         expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
     });
 
-    it('splitLongitude subdivides wide line crossing the international date line', function() {
-        var instance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
-                    }),
-                    nextPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
-                    }),
-                    prevPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0])
-                    }),
-                    expandAndWidth : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
-                    })
-                },
-                indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-                primitiveType : PrimitiveType.TRIANGLES,
-                geometryType : GeometryType.POLYLINES
-            })
+    describe('splitLongitude polylines', function() {
+        it('subdivides wide line crossing the international date line', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            expect(instance.geometry).not.toBeDefined();
+
+            expect(instance.westHemisphereGeometry).toBeDefined();
+            expect(instance.westHemisphereGeometry.indices).toBeDefined();
+            expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
+            expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
+            expect(instance.westHemisphereGeometry.attributes.position.values.length).toEqual(4 * 3);
+            expect(instance.westHemisphereGeometry.attributes.nextPosition).toBeDefined();
+            expect(instance.westHemisphereGeometry.attributes.nextPosition.values.length).toEqual(4 * 3);
+            expect(instance.westHemisphereGeometry.attributes.prevPosition).toBeDefined();
+            expect(instance.westHemisphereGeometry.attributes.prevPosition.values.length).toEqual(4 * 3);
+            expect(instance.westHemisphereGeometry.attributes.expandAndWidth).toBeDefined();
+            expect(instance.westHemisphereGeometry.attributes.expandAndWidth.values.length).toEqual(4 * 2);
+
+            expect(instance.eastHemisphereGeometry).toBeDefined();
+            expect(instance.eastHemisphereGeometry.indices).toBeDefined();
+            expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
+            expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
+            expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(4 * 3);
+            expect(instance.eastHemisphereGeometry.attributes.nextPosition).toBeDefined();
+            expect(instance.eastHemisphereGeometry.attributes.nextPosition.values.length).toEqual(4 * 3);
+            expect(instance.eastHemisphereGeometry.attributes.prevPosition).toBeDefined();
+            expect(instance.eastHemisphereGeometry.attributes.prevPosition.values.length).toEqual(4 * 3);
+            expect(instance.eastHemisphereGeometry.attributes.expandAndWidth).toBeDefined();
+            expect(instance.eastHemisphereGeometry.attributes.expandAndWidth.values.length).toEqual(4 * 2);
         });
-        GeometryPipeline.splitLongitude(instance);
-        expect(instance.geometry).not.toBeDefined();
 
-        expect(instance.westHemisphereGeometry).toBeDefined();
-        expect(instance.westHemisphereGeometry.indices).toBeDefined();
-        expect(instance.westHemisphereGeometry.indices.length).toEqual(6);
-        expect(instance.westHemisphereGeometry.attributes.position).toBeDefined();
-        expect(instance.westHemisphereGeometry.attributes.position.values.length).toEqual(4 * 3);
-        expect(instance.westHemisphereGeometry.attributes.nextPosition).toBeDefined();
-        expect(instance.westHemisphereGeometry.attributes.nextPosition.values.length).toEqual(4 * 3);
-        expect(instance.westHemisphereGeometry.attributes.prevPosition).toBeDefined();
-        expect(instance.westHemisphereGeometry.attributes.prevPosition.values.length).toEqual(4 * 3);
-        expect(instance.westHemisphereGeometry.attributes.expandAndWidth).toBeDefined();
-        expect(instance.westHemisphereGeometry.attributes.expandAndWidth.values.length).toEqual(4 * 2);
+        it('returns offset wide line with first point on the IDL and the second is east', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            var geometry = instance.geometry;
 
-        expect(instance.eastHemisphereGeometry).toBeDefined();
-        expect(instance.eastHemisphereGeometry.indices).toBeDefined();
-        expect(instance.eastHemisphereGeometry.indices.length).toEqual(6);
-        expect(instance.eastHemisphereGeometry.attributes.position).toBeDefined();
-        expect(instance.eastHemisphereGeometry.attributes.position.values.length).toEqual(4 * 3);
-        expect(instance.eastHemisphereGeometry.attributes.nextPosition).toBeDefined();
-        expect(instance.eastHemisphereGeometry.attributes.nextPosition.values.length).toEqual(4 * 3);
-        expect(instance.eastHemisphereGeometry.attributes.prevPosition).toBeDefined();
-        expect(instance.eastHemisphereGeometry.attributes.prevPosition.values.length).toEqual(4 * 3);
-        expect(instance.eastHemisphereGeometry.attributes.expandAndWidth).toBeDefined();
-        expect(instance.eastHemisphereGeometry.attributes.expandAndWidth.values.length).toEqual(4 * 2);
-    });
+            expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-    it('splitLongitude returns offset wide line that touches the international date line', function() {
-        var instance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
-                    }),
-                    nextPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
-                    }),
-                    prevPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
-                    }),
-                    expandAndWidth : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
-                    })
-                },
-                indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-                primitiveType : PrimitiveType.TRIANGLES,
-                geometryType : GeometryType.POLYLINES
-            })
+            var positions = geometry.attributes.position.values;
+            var nextPositions = geometry.attributes.nextPosition.values;
+            var prevPositions = geometry.attributes.prevPosition.values;
+
+            expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+            expect(prevPositions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
+            expect(nextPositions).toEqual([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0]);
         });
-        GeometryPipeline.splitLongitude(instance);
-        var geometry = instance.geometry;
 
-        expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+        it('returns offset wide line with first point on the IDL and the second is west', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -2.0, 0.0, -1.0, -2.0, 0.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            var geometry = instance.geometry;
 
-        var positions = geometry.attributes.position.values;
-        expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
-    });
+            expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
 
-    it('splitLongitude returns the same points if the wide line doesn\'t cross the international date line', function() {
-        var instance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
-                    }),
-                    nextPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
-                    }),
-                    prevPosition : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
-                    }),
-                    expandAndWidth : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 2,
-                        values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
-                    })
-                },
-                indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
-                primitiveType : PrimitiveType.TRIANGLES,
-                geometryType : GeometryType.POLYLINES
-            })
+            var positions = geometry.attributes.position.values;
+            var nextPositions = geometry.attributes.nextPosition.values;
+            var prevPositions = geometry.attributes.prevPosition.values;
+
+            expect(positions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0]);
+            expect(prevPositions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
+            expect(nextPositions).toEqual([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -2.0, 0.0, -1.0, -2.0, 0.0]);
         });
-        GeometryPipeline.splitLongitude(instance);
-        var geometry = instance.geometry;
 
-        expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+        it('returns offset wide line with first point is east and the second is on the IDL', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-2.0, 2.0, 2.0, -1.0, 2.0, 2.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            var geometry = instance.geometry;
 
-        var positions = geometry.attributes.position.values;
-        expect(positions).toEqual([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+            expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+
+            var positions = geometry.attributes.position.values;
+            var nextPositions = geometry.attributes.nextPosition.values;
+            var prevPositions = geometry.attributes.prevPosition.values;
+
+            expect(positions).toEqual([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
+            expect(nextPositions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0, -1.0, CesiumMath.EPSILON6, 0.0]);
+            expect(prevPositions).toEqual([-2.0, 2.0, 2.0, -1.0, 2.0, 2.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+        });
+
+        it('returns offset wide line with first point is west and the second is on the IDL', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-2.0, -2.0, 2.0, -1.0, -2.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            var geometry = instance.geometry;
+
+            expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+
+            var positions = geometry.attributes.position.values;
+            var nextPositions = geometry.attributes.nextPosition.values;
+            var prevPositions = geometry.attributes.prevPosition.values;
+
+            expect(positions).toEqual([-1.0, -1.0, 2.0, -1.0, -1.0, 2.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
+            expect(nextPositions).toEqual([-1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0, -1.0, -CesiumMath.EPSILON6, 0.0]);
+            expect(prevPositions).toEqual([-2.0, -2.0, 2.0, -1.0, -2.0, 2.0, -1.0, -1.0, 2.0, -1.0, -1.0, 2.0]);
+        });
+
+        it('returns the same points if the wide line doesn\'t cross the international date line', function() {
+            var instance = new GeometryInstance({
+                geometry : new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0])
+                        }),
+                        nextPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, 1.0, 2.0, -1.0, 1.0, 2.0, -1.0, 2.0, 3.0, -1.0, 2.0, 3.0])
+                        }),
+                        prevPosition : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : new Float64Array([-1.0, -2.0, -1.0, -1.0, -2.0, -1.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                        }),
+                        expandAndWidth : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.FLOAT,
+                            componentsPerAttribute : 2,
+                            values : new Float32Array([-1.0, 5.0, 1.0, 5.0, -1.0, -5.0, 1.0, -5.0])
+                        })
+                    },
+                    indices : new Uint16Array([0, 2, 1, 1, 2, 3]),
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    geometryType : GeometryType.POLYLINES
+                })
+            });
+            GeometryPipeline.splitLongitude(instance);
+            var geometry = instance.geometry;
+
+            expect(geometry.indices).toEqual([0, 2, 1, 1, 2, 3]);
+
+            var positions = geometry.attributes.position.values;
+            expect(positions).toEqual([-1.0, 1.0, 0.0, -1.0, 1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 1.0, 2.0]);
+        });
     });
 
     it('splitLongitude throws when geometry is undefined', function() {

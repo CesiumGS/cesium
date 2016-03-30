@@ -11,6 +11,9 @@ define([
         '../Core/loadImage',
         '../Core/PixelFormat',
         '../Core/RuntimeError',
+        '../Renderer/Framebuffer',
+        '../Renderer/RenderState',
+        '../Renderer/Texture',
         '../ThirdParty/when'
     ], function(
         BoundingRectangle,
@@ -24,8 +27,11 @@ define([
         loadImage,
         PixelFormat,
         RuntimeError,
+        Framebuffer,
+        RenderState,
+        Texture,
         when) {
-    "use strict";
+    'use strict';
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
@@ -59,7 +65,7 @@ define([
      *
      * @private
      */
-    var TextureAtlas = function(options) {
+    function TextureAtlas(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
         var initialSize = defaultValue(options.initialSize, defaultInitialSize);
@@ -84,13 +90,34 @@ define([
         this._idHash = {};
 
         // Create initial texture and root.
-        this._texture = this._context.createTexture2D({
+        this._texture = new Texture({
+            context : this._context,
             width : initialSize.x,
             height : initialSize.y,
             pixelFormat : this._pixelFormat
         });
         this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
-    };
+
+        var that = this;
+        var uniformMap = {
+            u_texture : function() {
+                return that._texture;
+            }
+        };
+
+        var fs =
+            'uniform sampler2D u_texture;\n' +
+            'varying vec2 v_textureCoordinates;\n' +
+            'void main()\n' +
+            '{\n' +
+            '    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n' +
+            '}\n';
+
+
+        this._copyCommand = this._context.createViewportQuadCommand(fs, {
+            uniformMap : uniformMap
+        });
+    }
 
     defineProperties(TextureAtlas.prototype, {
         /**
@@ -159,6 +186,7 @@ define([
 
     // Builds a larger texture and copies the old texture into the new one.
     function resizeAtlas(textureAtlas, image) {
+        var context = textureAtlas._context;
         var numImages = textureAtlas.numberOfImages;
         var scalingFactor = 2.0;
         if (numImages > 0) {
@@ -188,27 +216,42 @@ define([
             }
 
             // Copy larger texture.
-            var newTexture = textureAtlas._context.createTexture2D({
+            var newTexture = new Texture({
+                context : textureAtlas._context,
                 width : atlasWidth,
                 height : atlasHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
 
-            // Copy old texture into new using an fbo.
-            var framebuffer = textureAtlas._context.createFramebuffer({
-                colorTextures : [textureAtlas._texture]
+            var framebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [newTexture],
+                destroyAttachments : false
             });
+
+            var command = textureAtlas._copyCommand;
+            var renderState = {
+                viewport : new BoundingRectangle(0, 0, oldAtlasWidth, oldAtlasHeight)
+            };
+            command.renderState = RenderState.fromCache(renderState);
+
+            // Copy by rendering a viewport quad, instead of using Texture.copyFromFramebuffer,
+            // to workaround a Chrome 45 issue, https://github.com/AnalyticalGraphicsInc/cesium/issues/2997
             framebuffer._bind();
-            newTexture.copyFromFramebuffer(0, 0, 0, 0, oldAtlasWidth, oldAtlasHeight);
+            command.execute(textureAtlas._context);
             framebuffer._unBind();
             framebuffer.destroy();
             textureAtlas._texture = newTexture;
+
+            RenderState.removeFromCache(renderState);
+            command.renderState = undefined;
         } else {
             // First image exceeds initialSize
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
-            textureAtlas._texture = textureAtlas._context.createTexture2D({
+            textureAtlas._texture = new Texture({
+                context : textureAtlas._context,
                 width : initialWidth,
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
@@ -433,10 +476,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see TextureAtlas#isDestroyed
      *
      * @example
      * atlas = atlas && atlas.destroy();
+     * 
+     * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {
         this._texture = this._texture && this._texture.destroy();

@@ -5,57 +5,44 @@ defineSuite([
         'Core/Color',
         'Core/loadImage',
         'Renderer/ClearCommand',
+        'Renderer/Texture',
         'Scene/Material',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/pollToPromise',
-        'Specs/render'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         ViewportQuad,
         BoundingRectangle,
         Color,
         loadImage,
         ClearCommand,
+        Texture,
         Material,
-        createCamera,
-        createContext,
-        createFrameState,
-        pollToPromise,
-        render) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+        createScene,
+        pollToPromise) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var viewportQuad;
-    var us;
     var testImage;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState();
-
+        scene = createScene();
         return loadImage('./Data/Images/Red16x16.png').then(function(image) {
             testImage = image;
         });
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
         viewportQuad = new ViewportQuad();
         viewportQuad.rectangle = new BoundingRectangle(0, 0, 2, 2);
-
-        us = context.uniformState;
-        us.update(context, createFrameState(createCamera()));
     });
 
     afterEach(function() {
-        viewportQuad = viewportQuad && viewportQuad.destroy();
-        us = undefined;
+        scene.primitives.removeAll();
     });
 
     it('constructs with a rectangle', function() {
@@ -75,41 +62,40 @@ defineSuite([
             new Color(1.0, 1.0, 1.0, 1.0));
     });
 
-    it('throws when rendered with without a rectangle', function() {
+    it('throws when rendered without a rectangle', function() {
         viewportQuad.rectangle = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            render(context, frameState, viewportQuad);
+            scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
-    it('throws when rendered with without a material', function() {
+    it('throws when rendered without a material', function() {
         viewportQuad.material = undefined;
+        scene.primitives.add(viewportQuad);
 
         expect(function() {
-            render(context, frameState, viewportQuad);
+            scene.renderForSpecs();
         }).toThrowDeveloperError();
     });
 
     it('does not render when show is false', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
         viewportQuad.show = false;
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('renders material', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, viewportQuad);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(viewportQuad);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders user created texture', function() {
-        var texture = context.createTexture2D({
+        var texture = new Texture({
+            context : scene.context,
             source : testImage
         });
 
@@ -119,11 +105,9 @@ defineSuite([
         pollToPromise(function() {
             return viewportQuad.material._loadedImages.length !== 0;
         }).then(function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-            render(context, frameState, viewportQuad);
-            expect(context.readPixels()).toEqual([255, 0, 0, 255]);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            scene.primitives.add(viewportQuad);
+            expect(scene.renderForSpecs()).toEqual([255, 0, 0, 255]);
         });
     });
 

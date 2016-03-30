@@ -5,15 +5,17 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        '../Core/GeographicTilingScheme'
+        '../Core/GeographicTilingScheme',
+        '../ThirdParty/when'
     ], function(
         Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        GeographicTilingScheme) {
-    "use strict";
+        GeographicTilingScheme,
+        when) {
+    'use strict';
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
     var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
@@ -40,7 +42,7 @@ define([
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
      */
-    var GridImageryProvider = function GridImageryProvider(options) {
+    function GridImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
@@ -60,7 +62,9 @@ define([
 
         // We only need a single canvas since all tiles will be the same
         this._canvas = this._createGridCanvas();
-    };
+
+        this._readyPromise = when.resolve(true);
+    }
 
     defineProperties(GridImageryProvider.prototype, {
         /**
@@ -191,6 +195,18 @@ define([
         ready : {
             get : function() {
                 return true;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof GridImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
             }
         },
 

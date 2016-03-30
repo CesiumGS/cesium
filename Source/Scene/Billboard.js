@@ -37,7 +37,7 @@ define([
         SceneMode,
         SceneTransforms,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
@@ -70,7 +70,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
-    var Billboard = function(options, billboardCollection) {
+    function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -103,6 +103,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -151,7 +152,7 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
-    };
+    }
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
     var POSITION_INDEX = Billboard.POSITION_INDEX = 1;
@@ -568,7 +569,7 @@ define([
          * <code>blue</code>, and <code>alpha</code> properties as shown in Example 1.  These components range from <code>0.0</code>
          * (no intensity) to <code>1.0</code> (full intensity).
          * @memberof Billboard.prototype
-         * @param {Color}
+         * @type {Color}
          *
          * @example
          * // Example 1. Assign yellow.
@@ -633,7 +634,7 @@ define([
          * @example
          * // Example 2.
          * // Have the billboard point east.
-         * billboard.alignedAxis = Cartesian3.UNIT_Z;
+         * billboard.alignedAxis = Cesium.Cartesian3.UNIT_Z;
          * billboard.rotation = -Cesium.Math.PI_OVER_TWO;
          *
          * @example
@@ -690,6 +691,25 @@ define([
                 if (this._height !== value) {
                     this._height = value;
                     makeDirty(this, IMAGE_INDEX_INDEX);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets if the billboard size is in meters or pixels. <code>true</code> to size the billboard in meters;
+         * otherwise, the size is in pixels.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        sizeInMeters : {
+            get : function() {
+                return this._sizeInMeters;
+            },
+            set : function(value) {
+                if (this._sizeInMeters !== value) {
+                    this._sizeInMeters = value;
+                    makeDirty(this, COLOR_INDEX);
                 }
             }
         },
@@ -861,7 +881,7 @@ define([
             owner._removeCallbackFunc();
         }
 
-        var updateFunction = function(clampedPosition) {
+        function updateFunction(clampedPosition) {
             if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
                 if (owner._mode === SceneMode.SCENE3D) {
                     var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
@@ -872,8 +892,7 @@ define([
                 }
             }
             owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
-        };
-
+        }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
         var height = globe.getHeight(position);
@@ -930,7 +949,6 @@ define([
             that._imageIndexPromise = undefined;
             makeDirty(that, IMAGE_INDEX_INDEX);
         }).otherwise(function(error) {
-            /*global console*/
             console.error('Error loading image for billboard: ' + error);
             that._imageIndexPromise = undefined;
         });
@@ -1065,30 +1083,17 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchMatrix4 = new Matrix4();
-    var scratchCartesian4 = new Cartesian4();
-    var scrachEyeOffset = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
+    var scratchCartesian3 = new Cartesian3();
     var scratchComputePixelOffset = new Cartesian2();
 
+    // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
-        // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-        var camera = scene.camera;
-        var view = camera.viewMatrix;
-        var projection = camera.frustum.projectionMatrix;
+        // Model to world coordinates
+        var positionWorld = Matrix4.multiplyByPoint(modelMatrix, position, scratchCartesian3);
 
-        // Model to eye coordinates
-        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
-        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
-
-        // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC, scrachEyeOffset), scrachEyeOffset);
-        positionEC.x += eyeOffset.x + zEyeOffset.x;
-        positionEC.y += eyeOffset.y + zEyeOffset.y;
-        positionEC.z += zEyeOffset.z;
-
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
+        // World to window coordinates
+        var positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, positionWorld, eyeOffset, result);
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
@@ -1113,11 +1118,11 @@ define([
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      *
-     * @see Billboard#eyeOffset
-     * @see Billboard#pixelOffset
-     *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
+     *
+     * @see Billboard#eyeOffset
+     * @see Billboard#pixelOffset
      */
     Billboard.prototype.computeScreenSpacePosition = function(scene, result) {
         var billboardCollection = this._billboardCollection;

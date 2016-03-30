@@ -27,8 +27,7 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -57,11 +56,46 @@ defineSuite([
         expect(constructWithoutChannel).toThrowDeveloperError();
     });
 
+    it('resolves readyPromise', function() {
+        var path = '';
+        var url = 'http://example.invalid';
+        var channel = 1234;
+
+        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : url,
+            channel : channel,
+            path : path
+        });
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('rejects readyPromise on error', function() {
+        var url = 'invalid.localhost';
+        var provider = new GoogleEarthImageryProvider({
+            url : url,
+            channel : 1234
+        });
+
+        return provider.readyPromise.then(function () {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(provider.ready).toBe(false);
+            expect(e.message).toContain(url);
+        });
+    });
+
     it('returns valid value for hasAlphaChannel', function() {
         var path = '';
         var url = 'http://example.invalid';
         var channel = 1234;
-        var version = 1;
 
         loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, method, data, headers, deferred);
