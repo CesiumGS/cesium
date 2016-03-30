@@ -67,7 +67,7 @@ defineSuite([
         // update until the load queue is empty.
         return pollToPromise(function() {
             globe._surface._debug.enableDebugOutput = true;
-            scene.render();
+            scene.renderForSpecs();
             return globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0;
         });
     }
