@@ -222,6 +222,7 @@ define([
                 '    vec4 positionEC = getPositionEC(); \n' +
                 '    vec3 directionEC = positionEC.xyz - czm_shadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
+                '    directionEC = normalize(directionEC); \n' +
                 '    float radius = czm_shadowMapLightPositionEC.w; \n' +
                 '    // Stop early if the fragment is beyond the point light radius \n' +
                 '    if (distance > radius) { \n' +
@@ -256,7 +257,7 @@ define([
                 '    shadowPosition /= shadowPosition.w; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.0)))) { \n' +
+                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.001)))) { \n' +
                 '        return; \n' +
                 '    } \n' +
 
@@ -312,7 +313,7 @@ define([
                 '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.0)))) { \n' +
+                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.001)))) { \n' +
                 '        return; \n' +
                 '    } \n' +
 

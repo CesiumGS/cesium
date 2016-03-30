@@ -1714,6 +1714,7 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
+        var isPointLight = shadowMap.isPointLight;
 
         var commands = getShadowMapCommands(scene);
         var terrainCommands = commands[0];
@@ -1729,7 +1730,7 @@ define([
             shadowMap.updatePass(context, i);
 
             // Execute terrain commands
-            var terrainRenderState = shadowMap.terrainRenderState;
+            var terrainRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.terrainRenderState;
             var numberOfTerrainCommands = terrainCommands.length;
             for (j = 0; j < numberOfTerrainCommands; ++j) {
                 command = terrainCommands[j];
@@ -1737,7 +1738,7 @@ define([
             }
 
             // Execute primitive commands
-            var primitiveRenderState = shadowMap.primitiveRenderState;
+            var primitiveRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
             var numberOfPrimitiveCommands = primitiveCommands.length;
             for (j = 0; j < numberOfPrimitiveCommands; ++j) {
                 command = primitiveCommands[j];

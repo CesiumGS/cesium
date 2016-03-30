@@ -249,6 +249,7 @@ define([
         // Create render states for shadow casters
         this._primitiveRenderState = undefined;
         this._terrainRenderState = undefined;
+        this._pointRenderState = undefined;
         createRenderStates(this);
 
         // For clearing the shadow map texture every frame
@@ -291,6 +292,7 @@ define([
         var colorMask = !shadowMap._usesDepthTexture;
         shadowMap._primitiveRenderState = createRenderState(colorMask, shadowMap._primitiveBias);
         shadowMap._terrainRenderState = createRenderState(colorMask, shadowMap._terrainBias);
+        shadowMap._pointRenderState = createRenderState(colorMask, shadowMap._pointBias);
     }
 
     // For debug purposes only. Call this when polygonOffset values change.
@@ -328,6 +330,13 @@ define([
             }
         },
 
+        /**
+         * The render state used for rendering shadow casters into the shadow map.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {RenderState}
+         * @readonly
+         */
         primitiveRenderState : {
             get : function() {
                 return this._primitiveRenderState;
@@ -344,6 +353,19 @@ define([
         terrainRenderState : {
             get : function() {
                 return this._terrainRenderState;
+            }
+        },
+
+        /**
+         * The render state used for rendering shadow casters into the shadow map.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {RenderState}
+         * @readonly
+         */
+        pointRenderState : {
+            get : function() {
+                return this._pointRenderState;
             }
         },
 
