@@ -31,9 +31,11 @@ defineSuite([
     var scene;
     var primitive;
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
+    var backgroundColor = [255, 0, 0, 255];
 
     beforeAll(function() {
         scene = createScene();
+        Color.unpack(backgroundColor, 0, scene.backgroundColor);
         scene.primitives.destroyPrimitives = false;
         scene.camera.setView({ destination : rectangle });
     });
@@ -88,10 +90,10 @@ defineSuite([
             material : Material.fromType(Material.DotType)
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
     it('renders textured', function() {
@@ -105,10 +107,10 @@ defineSuite([
             })
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
     it('renders all', function() {
@@ -117,15 +119,13 @@ defineSuite([
             materialSupport : MaterialAppearance.MaterialSupport.ALL,
             translucent : false,
             closed : true,
-            material : Material.fromType(Material.EmissionMapType, {
-                image : '../Data/images/BlueAlpha.png'
-            })
+            material : Material.fromType(Material.NormalMapType)
         });
 
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
 
         scene.primitives.add(primitive);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
 }, 'WebGL');
