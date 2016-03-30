@@ -85,6 +85,7 @@ define([
         var shadowMap = frameState.shadowMap;
         var usesDepthTexture = shadowMap.usesDepthTexture;
         var isPointLight = shadowMap.isPointLight;
+        var isSpotLight = shadowMap._isSpotLight;
         var usesCubeMap = shadowMap.usesCubeMap;
         var hasCascades = shadowMap.numberOfCascades > 1;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
@@ -237,6 +238,29 @@ define([
                 '    vec2 uv = directionToUV(directionWC); \n' +
                 '    float visibility = getVisibility(uv, distance, nDotL); \n') +
 
+                '    gl_FragColor.rgb *= visibility; \n' +
+                '} \n';
+        } else if (isSpotLight) {
+            fs +=
+                'void main() \n' +
+                '{ \n' +
+                '    czm_shadow_main(); \n' +
+                '    vec4 positionEC = getPositionEC(); \n' +
+                '    vec3 directionEC = normalize(positionEC.xyz - czm_shadowMapLightPositionEC.xyz); \n' +
+                '    vec3 normalEC = getNormalEC(); \n' +
+                '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
+                '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
+
+                '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
+                '    // Spot light uses a perspective projection, so perform the perspective divide \n' +
+                '    shadowPosition /= shadowPosition.w; \n' +
+
+                '    // Stop early if the fragment is not in the shadow bounds \n' +
+                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.0)))) { \n' +
+                '        return; \n' +
+                '    } \n' +
+
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
         } else if (hasCascades) {

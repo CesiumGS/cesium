@@ -198,6 +198,15 @@ define([
         this._distance = 1000.0;
         this._visible = true;
 
+        this._isSpotLight = false;
+        if (this._cascadesEnabled) {
+            // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
+            this._lightCamera.frustum = new OrthographicFrustum();
+        } else if (defined(this._lightCamera.frustum.fov)) {
+            // If the light camera uses a perspective frustum, then the light source is a spot light
+            this._isSpotLight = true;
+        }
+
         // Uniforms
         this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
         this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
@@ -850,7 +859,7 @@ define([
     function ShadowMapCamera() {
         this.viewMatrix = new Matrix4();
         this.inverseViewMatrix = new Matrix4();
-        this.frustum = new OrthographicFrustum();
+        this.frustum = undefined;
         this.positionWC = new Cartesian3();
         this.directionWC = new Cartesian3();
         this.upWC = new Cartesian3();
@@ -861,7 +870,7 @@ define([
     ShadowMapCamera.prototype.clone = function(camera) {
         Matrix4.clone(camera.viewMatrix, this.viewMatrix);
         Matrix4.clone(camera.inverseViewMatrix, this.inverseViewMatrix);
-        camera.frustum.clone(this.frustum);
+        this.frustum = camera.frustum.clone(this.frustum);
         Cartesian3.clone(camera.positionWC, this.positionWC);
         Cartesian3.clone(camera.directionWC, this.directionWC);
         Cartesian3.clone(camera.upWC, this.upWC);
@@ -1071,7 +1080,7 @@ define([
     function computeOmnidirectional(shadowMap) {
         // All sides share the same frustum
         var frustum = new PerspectiveFrustum();
-        frustum.fov = CesiumMath.PI / 2.0;
+        frustum.fov = CesiumMath.PI_OVER_TWO;
         frustum.near = 1.0;
         frustum.far = shadowMap._radius;
         frustum.aspectRatio = 1.0;
