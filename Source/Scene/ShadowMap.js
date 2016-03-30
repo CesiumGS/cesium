@@ -196,7 +196,6 @@ define([
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
         this._distance = 1000.0;
-        this._visible = true;
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -439,11 +438,6 @@ define([
                 scratchTexelStepSize.x = 1.0 / this._textureSize.x;
                 scratchTexelStepSize.y = 1.0 / this._textureSize.y;
                 return scratchTexelStepSize;
-            }
-        },
-        visible : {
-            get : function() {
-                return this._visible;
             }
         }
     });
@@ -1126,7 +1120,7 @@ define([
         if (shadowMap._fitNearFar) {
             // shadowFar can be very large, so limit to shadowMap._distance
             near = frameState.shadowNear;
-            far = Math.min(frameState.shadowFar, shadowMap._distance);
+            far = Math.max(Math.min(frameState.shadowFar, shadowMap._distance), near);
         } else {
             near = camera.frustum.near;
             far = shadowMap._distance;
@@ -1142,12 +1136,6 @@ define([
 
         updateFramebuffer(this, frameState.context);
         updateCameras(this, frameState);
-
-        // Don't update shadow map if the near plane is further away than the shadow map's distance
-        this._visible = this._sceneCamera.frustum.near < this._distance;
-        if (!this._visible) {
-            return;
-        }
 
         if (this._isPointLight && lightMoved) {
             computeOmnidirectional(this);

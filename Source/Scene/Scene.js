@@ -1762,7 +1762,7 @@ define([
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
 
-            if (scene.shadowMap.enabled && scene.shadowMap.visible) {
+            if (scene.shadowMap.enabled) {
                 executeShadowMapCommands(scene);
             }
 
@@ -1913,7 +1913,7 @@ define([
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
 
-            if (scene.shadowMap.enabled && scene.shadowMap.visible) {
+            if (scene.shadowMap.enabled) {
                 executeShadowMapCommands(scene);
             }
         }
