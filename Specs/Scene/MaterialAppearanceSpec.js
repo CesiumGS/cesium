@@ -24,14 +24,13 @@ defineSuite([
         Appearance,
         Material,
         Primitive,
-        createScene
-) {
+        createScene) {
     'use strict';
 
     var scene;
     var primitive;
     var rectangle = Rectangle.fromDegrees(-10.0, -10.0, 10.0, 10.0);
-    var backgroundColor = [255, 0, 0, 255];
+    var backgroundColor = [0, 0, 255, 255];
 
     beforeAll(function() {
         scene = createScene();
