@@ -91,7 +91,8 @@ define([
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
-
+        var exponentialShadows = shadowMap._exponentialShadows;
+        
         // Force the shader to use decimals to avoid compilation errors
         var depthBias = Number(bias.depthBias).toFixed(10);
         var normalShadingSmooth = Number(bias.normalShadingSmooth).toFixed(10);
@@ -113,9 +114,9 @@ define([
             '           czm_shadowMapCascadeMatrices[2] * weights.z + \n' +
             '           czm_shadowMapCascadeMatrices[3] * weights.w; \n' +
             '} \n' +
-            'float getCascadeScale(vec4 weights) \n' +
+            'float getCascadeDistance(vec4 weights) \n' +
             '{ \n' +
-            '    return dot(czm_shadowMapCascadeScales, weights); \n' +
+            '    return dot(czm_shadowMapCascadeDistances, weights); \n' +
             '} \n' +
             'vec4 getCascadeColor(vec4 weights) \n' +
             '{ \n' +
@@ -153,10 +154,17 @@ define([
             '{ \n' +
             '    return step(depth, sampleTexture(uv)); \n' +
             '} \n' +
-            
             (isPointLight && usesCubeMap ?
-            'float getVisibility(vec3 uv, float depth, float nDotL)' :
-            'float getVisibility(vec2 uv, float depth, float nDotL)') +
+            'float exponentialCompare(vec3 uv, float depth, float shadowDistance) \n' :
+            'float exponentialCompare(vec2 uv, float depth, float shadowDistance) \n') +
+            '{ \n' +
+            '    float shadowDepth = sampleTexture(uv); \n' +
+            '    float darknessFactor = 10.0 * shadowDistance; \n' +
+            '    return clamp(exp(darknessFactor * (shadowDepth - depth)), 0.0, 1.1); \n' +
+            '} \n' +
+            (isPointLight && usesCubeMap ?
+            'float getVisibility(vec3 uv, float depth, float nDotL, float shadowDistance)' :
+            'float getVisibility(vec2 uv, float depth, float nDotL, float shadowDistance)') +
             '{ \n' +
 
             (softShadows && !isPointLight ?
@@ -178,8 +186,9 @@ define([
             '    ) * (1.0 / 9.0); \n' :
 
             '    depth -= ' + depthBias + '; \n' +
-            '    float visibility = depthCompare(uv, depth); \n') +
-
+            (exponentialShadows ?
+            '    float visibility = exponentialCompare(uv, depth, shadowDistance); \n' :
+            '    float visibility = depthCompare(uv, depth); \n')) +
             (bias.normalShading && hasNormalVarying ?
             '    // If the normal is facing away from the light, then it is in shadow \n' +
             (bias.normalShadingSmooth > 0.0 ?
@@ -235,9 +244,9 @@ define([
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
 
                 (usesCubeMap ?
-                '    float visibility = getVisibility(directionWC, distance, nDotL); \n' :
+                '    float visibility = getVisibility(directionWC, distance, nDotL, radius); \n' :
                 '    vec2 uv = directionToUV(directionWC); \n' +
-                '    float visibility = getVisibility(uv, distance, nDotL); \n') +
+                '    float visibility = getVisibility(uv, distance, nDotL, radius); \n') +
 
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
@@ -261,7 +270,7 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL); \n' +
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
         } else if (hasCascades) {
@@ -280,6 +289,7 @@ define([
 
                 '    // Get the cascade based on the eye-space depth \n' +
                 '    vec4 weights = getCascadeWeights(depth); \n' +
+                '    float shadowDistance = getCascadeDistance(weights); \n' +
 
                 '    // Apply normal offset \n' +
                 '    vec3 normalEC = getNormalEC(); \n' +
@@ -290,7 +300,7 @@ define([
                 '    vec4 shadowPosition = getCascadeMatrix(weights) * positionEC; \n' +
 
                 '    // Get visibility \n' +
-                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL); \n' +
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowDistance); \n' +
 
                 '    // Fade out shadows that are far away \n' +
                 '    float fade = max((depth - maxDepth * 0.8) / (maxDepth * 0.2), 0.0); \n' +
@@ -317,7 +327,7 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL); \n' +
+                '    float visibility = getVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n' +
                 '    gl_FragColor.rgb *= visibility; \n' +
                 '} \n';
         }

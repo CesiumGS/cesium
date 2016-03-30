@@ -137,13 +137,14 @@ define([
 
         this.enabled = false;
         this.softShadows = defaultValue(options.softShadows, false);
+        this._exponentialShadows = true;
 
         this._terrainBias = {
-            polygonOffset : false,
+            polygonOffset : true,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 9.765,
+            normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.005
@@ -154,10 +155,10 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.2,
-            normalShading : false,
+            normalOffsetScale : 0.05,
+            normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.00001
+            depthBias : 0.0001
         };
 
         this._pointBias = {
@@ -180,6 +181,7 @@ define([
         this._shadowMapTexture = undefined;
         this._lightDirectionEC = new Cartesian3();
         this._lightPositionEC = new Cartesian4();
+        this._distance = 0.0;
 
         this._shadowMapSize = defaultValue(options.size, 1024);
         this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
@@ -195,7 +197,7 @@ define([
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-        this._distance = 1000.0;
+        this._maximumDistance = 1000.0;
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -209,7 +211,7 @@ define([
         // Uniforms
         this._cascadeSplits = [new Cartesian4(), new Cartesian4()];
         this._cascadeMatrices = [new Matrix4(), new Matrix4(), new Matrix4(), new Matrix4()];
-        this._cascadeScales = new Cartesian4();
+        this._cascadeDistances = new Cartesian4();
 
         var numberOfPasses;
         if (this._isPointLight) {
@@ -424,9 +426,15 @@ define([
             }
         },
 
-        cascadeScales : {
+        cascadeDistances : {
             get : function() {
-                return this._cascadeScales;
+                return this._cascadeDistances;
+            }
+        },
+
+        distance : {
+            get : function() {
+                return this._distance;
             }
         },
 
@@ -907,7 +915,7 @@ define([
     var scratchSplitNear = new Array(4);
     var scratchSplitFar = new Array(4);
     var scratchFrustum = new PerspectiveFrustum();
-    var scratchCascadeScales = new Array(4);
+    var scratchCascadeDistances = new Array(4);
 
     function computeCascades(shadowMap) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -934,8 +942,15 @@ define([
             splitsFar[i] = split;
             splitsNear[i + 1] = split;
         }
+
+        var cascadeDistances = scratchCascadeDistances;
+        for (var m = 0; m < numberOfCascades; ++m) {
+            cascadeDistances[m] = splitsFar[m] - splitsNear[m];
+        }
+
         Cartesian4.unpack(splitsNear, 0, shadowMap._cascadeSplits[0]);
         Cartesian4.unpack(splitsFar, 0, shadowMap._cascadeSplits[1]);
+        Cartesian4.unpack(cascadeDistances, 0, shadowMap._cascadeDistances);
 
         var left = shadowMapCamera.frustum.left;
         var right = shadowMapCamera.frustum.right;
@@ -946,7 +961,6 @@ define([
 
         var cascadeSubFrustum = sceneCamera.frustum.clone(scratchFrustum);
         var shadowViewProjection = shadowMapCamera.getViewProjection();
-        var cascadeScales = scratchCascadeScales;
 
         for (var j = 0; j < numberOfCascades; ++j) {
             // Find the bounding box of the camera sub-frustum in shadow map texture space
@@ -984,15 +998,11 @@ define([
             cascadeCamera.frustum.near = near + min.z * (far - near);
             cascadeCamera.frustum.far = near + max.z * (far - near);
 
-            cascadeScales[j] = 1.0 / (max.z - min.z);
-
             // Transforms from eye space to the cascade's texture space
             var cascadeMatrix = shadowMap._cascadeMatrices[j];
             Matrix4.multiply(cascadeCamera.getViewProjection(), sceneCamera.inverseViewMatrix, cascadeMatrix);
             Matrix4.multiply(shadowMap._passTextureOffsets[j], cascadeMatrix, cascadeMatrix);
         }
-
-        Cartesian4.unpack(cascadeScales, 0, shadowMap._cascadeScales);
     }
 
     var scratchLightView = new Matrix4();
@@ -1140,17 +1150,18 @@ define([
         var near;
         var far;
         if (shadowMap._fitNearFar) {
-            // shadowFar can be very large, so limit to shadowMap._distance
+            // shadowFar can be very large, so limit to shadowMap._maximumDistance
             near = frameState.shadowNear;
-            far = Math.max(Math.min(frameState.shadowFar, shadowMap._distance), near);
+            far = Math.max(Math.min(frameState.shadowFar, shadowMap._maximumDistance), near + 0.01);
         } else {
             near = camera.frustum.near;
-            far = shadowMap._distance;
+            far = shadowMap._maximumDistance;
         }
 
         shadowMap._sceneCamera = Camera.clone(camera, shadowMap._sceneCamera);
         shadowMap._sceneCamera.frustum.near = near;
         shadowMap._sceneCamera.frustum.far = far;
+        shadowMap._distance = far - near;
     }
 
     ShadowMap.prototype.update = function(frameState) {
@@ -1173,10 +1184,7 @@ define([
 
         if (this._numberOfPasses === 1) {
             this._passCameras[0].clone(this._shadowMapCamera);
-        }
-
-        // Transforms from eye space to shadow texture space
-        if (!this._isPointLight && this._numberOfCascades <= 1) {
+            // Transforms from eye space to shadow texture space
             var inverseView = this._sceneCamera.inverseViewMatrix;
             Matrix4.multiply(this._shadowMapCamera.getViewProjection(), inverseView, this._shadowMapMatrix);
         }

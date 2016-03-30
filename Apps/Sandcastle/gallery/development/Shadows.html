@@ -101,6 +101,10 @@
             <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
         </tr>
         <tr>
+            <td>Exponential Shadows</td>
+            <td><input type="checkbox" data-bind="checked: exponentialShadows"/></td>
+        </tr>
+        <tr>
             <td>Location</td>
             <td><select data-bind="options: locationOptions, value: location"/></td>
         </tr>
@@ -185,6 +189,7 @@ var viewModel = {
     fitNearFarEnabled : true,
     softShadows : false,
     softShadowsEnabled : true,
+    exponentialShadows : false,
     cascadeOptions : [1, 4],
     cascades : 4,
     cascadesEnabled : true,
@@ -201,11 +206,11 @@ var viewModel = {
     biasModes : [
         new BiasOptions({
             type : 'terrain',
-            polygonOffset : false,
+            polygonOffset : true,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 9.765,
+            normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.005
@@ -216,10 +221,10 @@ var viewModel = {
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.2,
-            normalShading : false,
+            normalOffsetScale : 0.05,
+            normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.00001
+            depthBias : 0.0001
         }),
         new BiasOptions({
             type : 'point',
@@ -237,7 +242,7 @@ var viewModel = {
 };
 
 // Temp values for testing
-viewModel.lightSource = 'Spot';
+viewModel.lightSource = 'Freeform';
 viewModel.lightHorizon = 71.0;
 viewModel.terrainCast = true;
 viewModel.distance = 10000.0;
@@ -323,6 +328,7 @@ Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'exponentialShadows').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
@@ -357,7 +363,7 @@ function updateLightDirection() {
 }
 
 function updateSettings() {
-    shadowMap._distance = Number(viewModel.distance);
+    shadowMap._maximumDistance = Number(viewModel.distance);
     shadowMap._radius = Number(viewModel.radius);
     shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.debugShow = viewModel.debug;
@@ -375,6 +381,7 @@ function updateShadows() {
     var lightSource = viewModel.lightSource;
     var cascadeColors = viewModel.cascadeColors;
     var softShadows = viewModel.softShadows;
+    var exponentialShadows = viewModel.exponentialShadows;
 
     var lightCamera;
     if (lightSource === 'Freeform') {
@@ -420,16 +427,21 @@ function updateShadows() {
         });
     }
 
-    // Update bias
-    var bias = shadowMap['_' + viewModel.biasMode.type + 'Bias'];
-    bias.polygonOffset = viewModel.biasMode.polygonOffset();
-    bias.polygonOffsetFactor = viewModel.biasMode.polygonOffsetFactor();
-    bias.polygonOffsetUnits = viewModel.biasMode.polygonOffsetUnits();
-    bias.normalOffset = viewModel.biasMode.normalOffset();
-    bias.normalOffsetScale = viewModel.biasMode.normalOffsetScale();
-    bias.normalShading = viewModel.biasMode.normalShading();
-    bias.normalShadingSmooth = viewModel.biasMode.normalShadingSmooth();
-    bias.depthBias = viewModel.biasMode.depthBias();
+    shadowMap._exponentialShadows = exponentialShadows;
+
+    // Update biases
+    for (var i = 0; i < viewModel.biasModes.length; ++i) {
+        var biasMode = viewModel.biasModes[i];
+        var bias = shadowMap['_' + biasMode.type + 'Bias'];
+        bias.polygonOffset = biasMode.polygonOffset();
+        bias.polygonOffsetFactor = biasMode.polygonOffsetFactor();
+        bias.polygonOffsetUnits = biasMode.polygonOffsetUnits();
+        bias.normalOffset = biasMode.normalOffset();
+        bias.normalOffsetScale = biasMode.normalOffsetScale();
+        bias.normalShading = biasMode.normalShading();
+        bias.normalShadingSmooth = biasMode.normalShadingSmooth();
+        bias.depthBias = biasMode.depthBias();
+    }
     shadowMap._createRenderStates();
 
     updateSettings();
