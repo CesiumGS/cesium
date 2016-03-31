@@ -424,10 +424,13 @@ defineSuite([
     it('can change baseColor', function() {
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.globe.baseColor = Color.RED;
+        scene.fog.enabled = false;
         switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
 
         return updateUntilDone(scene.globe).then(function() {
-            expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+            var result = scene.renderForSpecs();
+            expect(result).not.toEqual([0, 0, 0, 255]);
+            expect(result).toEqual([255, 0, 0, 255]);
         });
     });
 
