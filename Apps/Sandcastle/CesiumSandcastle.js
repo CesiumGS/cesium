@@ -834,6 +834,38 @@ require({
         }
     }
 
+    registry.byId('buttonShare').on('click', function() {
+        var data = {
+            public : true,
+            files : {
+                'sandcastle.js' : {
+                    content : jsEditor.getValue()
+                }
+            }
+        };
+        return Cesium.loadWithXhr({
+            url : 'https://api.github.com/gists',
+            data : JSON.stringify(data),
+            method : 'POST'
+        }).then(function(content) {
+            document.getElementById("gitsLinkShare").value = JSON.parse(content).id;
+        }).otherwise(function(error) {
+            console.log(error);
+        });
+    });
+
+    registry.byId('buttonImport').on('click', function() {
+        var id = document.getElementById("gitsLink").value;
+        return Cesium.loadJsonp('https://api.github.com/gists/' + id)
+            .then(function(data) {
+                var files = data.data.files;
+                console.log();
+                jsEditor.setValue(files[Object.keys(files)[0]].content);
+            }).otherwise(function(error) {
+                console.log(error);
+            });
+    });
+
     registry.byId('buttonNew').on('click', function() {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');

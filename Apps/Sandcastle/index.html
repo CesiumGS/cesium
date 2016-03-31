@@ -37,6 +37,27 @@
     <div id="appLayout" data-dojo-type="dijit.layout.BorderContainer" data-dojo-props="design: 'headline', gutters: true, liveSplitters: true">
         <div id="toolbar" data-dojo-type="dijit.Toolbar" data-dojo-props="region: 'top'">
             <div class="cesiumTitle"><a href="http://cesiumjs.org/" target="_blank"><img src="./images/Cesium_Logo_Color_Overlay.png" style="width: 118px"/></a></div>
+            <div id="buttonShare" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconMail', showLabel: true">
+                <span>Share</span>
+                <div id="dropDownShare" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    <div>Gist Id:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="gitsLinkShare"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonImportDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'dijitIconFolderOpen', showLabel: true">
+                <span>Import Gist</span>
+                <div id="dropDownImport" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    <div>Gist Id:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="gitsLink"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                    <div id="buttonImport" data-dojo-type="dijit.form.Button">Import</div>
+                </div>
+            </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonNew" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconFile', showLabel: true">
                 New
             </div>
