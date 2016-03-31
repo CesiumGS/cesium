@@ -418,10 +418,69 @@ defineSuite([
         });
     });
 
+    it('renders translucent style', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var resources = tileset._root.content.batchTableResources;
+
+            var opaqueColor = expectRender(tileset);
+
+            // Render transparent
+            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
+            var translucentColor = expectRender(tileset);
+            expect(translucentColor).not.toEqual(opaqueColor);
+
+            // Render restored to opaque
+            resources.setAllColor(Color.WHITE);
+            var restoredOpaque = expectRender(tileset);
+            expect(restoredOpaque).toEqual(opaqueColor);
+
+            // Generate both translucent and opaque commands
+            resources.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
+            expectRender(tileset);
+
+            // Fully transparent
+            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        });
+    });
+
+    it('renders translucent style when vertex texture fetch is not supported', function() {
+        // Disable VTF
+        var maximumVertexTextureImageUnits = ContextLimits.maximumVertexTextureImageUnits;
+        ContextLimits._maximumVertexTextureImageUnits = 0;
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var resources = tileset._root.content.batchTableResources;
+
+            var opaqueColor = expectRender(tileset);
+
+            // Render transparent
+            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
+            var translucentColor = expectRender(tileset);
+            expect(translucentColor).not.toEqual(opaqueColor);
+
+            // Render restored to opaque
+            resources.setAllColor(Color.WHITE);
+            var restoredOpaque = expectRender(tileset);
+            expect(restoredOpaque).toEqual(opaqueColor);
+
+            // Generate both translucent and opaque commands
+            resources.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
+            expectRender(tileset);
+
+            // Fully transparent
+            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // Re-enable VTF
+            ContextLimits._maximumVertexTextureImageUnits = maximumVertexTextureImageUnits;
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content._batchTableResources;
+            var resources = content.batchTableResources;
             expect(resources.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
             expect(resources.isDestroyed()).toEqual(true);

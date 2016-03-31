@@ -2,6 +2,7 @@
 defineSuite([
         'Scene/Cesium3DTileset',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
@@ -9,6 +10,7 @@ defineSuite([
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTileStyle',
         'Scene/CullingVolume',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene',
@@ -17,6 +19,7 @@ defineSuite([
     ], function(
         Cesium3DTileset,
         Cartesian3,
+        Color,
         defined,
         HeadingPitchRange,
         loadWithXhr,
@@ -24,6 +27,7 @@ defineSuite([
         Cesium3DTile,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
+        Cesium3DTileStyle,
         CullingVolume,
         Cesium3DTilesTester,
         createScene,
@@ -54,6 +58,19 @@ defineSuite([
     // tiles2.json: root with b3dm content, three children with b3dm content, one child points to tiles3.json
     // tiles3.json: root with b3dm content
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+
+    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
+
+    // 1 tile with translucent features
+    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
+
+    // 1 tile with opaque and translucent features
+    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+
+    var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
     var originalMaximumRequests;
 
@@ -857,6 +874,250 @@ defineSuite([
                 expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
                 expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
             });
+        });
+    });
+
+    it('applies show style to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            var hideStyle = new Cesium3DTileStyle({show : 'false'});
+            tileset.style = hideStyle;
+            expect(tileset.style).toBe(hideStyle);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle({show : 'true'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
+    it('applies style with complex show expression to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            // Each feature in the b3dm file has an id property from 0 to 99
+            // ${id} >= 100 will always evaluate to false
+            tileset.style = new Cesium3DTileStyle({show : '${id} >= 50 * 2'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle({show : '${id} < 200 / 2'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
+    it('applies show style to a tileset with a composite tile', function() {
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+
+        return Cesium3DTilesTester.loadTileset(scene, compositeUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = new Cesium3DTileStyle({show : 'false'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle({show : 'true'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
+    it('applies color style to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var originalColor = scene.renderForSpecs();
+
+            tileset.style = new Cesium3DTileStyle({color : 'color("blue")'});
+            var color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+
+            // set color to transparent
+            tileset.style = new Cesium3DTileStyle({color : 'color("blue", 0.0)'});
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            tileset.style = new Cesium3DTileStyle({color : 'color("cyan")'});
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toBeGreaterThan(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+
+            // Remove style
+            tileset.style = undefined;
+            color = scene.renderForSpecs();
+            expect(color).toEqual(originalColor);
+        });
+    });
+
+    function expectColorStyle(tileset) {
+        var originalColor = scene.renderForSpecs();
+        tileset.style = new Cesium3DTileStyle({color : 'color("blue")'});
+        var color = scene.renderForSpecs();
+
+        expect(color[0]).toEqual(0);
+        expect(color[1]).toEqual(0);
+        expect(color[2]).toBeGreaterThan(0);
+        expect(color[3]).toEqual(255);
+
+        // set color to transparent
+        tileset.style = new Cesium3DTileStyle({color : 'color("blue", 0.0)'});
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        tileset.style = new Cesium3DTileStyle({color : 'color("cyan")'});
+        color = scene.renderForSpecs();
+        expect(color[0]).toEqual(0);
+        expect(color[1]).toBeGreaterThan(0);
+        expect(color[2]).toBeGreaterThan(0);
+        expect(color[3]).toEqual(255);
+
+        // Remove style
+        tileset.style = undefined;
+        color = scene.renderForSpecs();
+        expect(color).toEqual(originalColor);
+    }
+
+    xit('applies color style to a tileset with translucent tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies color style to a tileset with translucent tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies color style to a tileset with translucent and opaque tiles', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
+            expectColorStyle(tileset);
+        });
+    });
+
+    it('applies style when feature properties change', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            // Initially, all feature ids are less than 100
+            tileset.style = new Cesium3DTileStyle({show : '${id} < 100'});
+            expect(scene.renderForSpecs()).toEqual(showColor);
+
+            // Change feature ids so the show expression will evaluate to false
+            var content = tileset._root.content;
+            var length = content.featuresLength;
+            var i;
+            var feature;
+            for (i = 0; i < length; ++i) {
+                feature = content.getFeature(i);
+                feature.setProperty('id', feature.getProperty('id') + 100);
+            }
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            // Change ids back
+            for (i = 0; i < length; ++i) {
+                feature = content.getFeature(i);
+                feature.setProperty('id', feature.getProperty('id') - 100);
+            }
+            expect(scene.renderForSpecs()).toEqual(showColor);
+        });
+    });
+
+    it('applies style with complex color expression to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            // Each feature in the b3dm file has an id property from 0 to 99
+            // ${id} >= 100 will always evaluate to false
+            tileset.style = new Cesium3DTileStyle({color : '(${id} >= 50 * 2) ? color("red") : color("blue")'});
+            var color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle({color : '(${id} < 50 * 2) ? color("red") : color("blue")'});
+            color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+        });
+    });
+
+    it('applies conditional color style to a tileset', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : {
+                        '${id} < 100' : 'color("red")',
+                        'true' : 'color("blue")'
+                    }
+                }
+            });
+            var color = scene.renderForSpecs();
+            expect(color[0]).toBeGreaterThan(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toEqual(0);
+            expect(color[3]).toEqual(255);
+
+            // ${id}>= 100 will always evaluate to false
+            tileset.style = new Cesium3DTileStyle({
+                color : {
+                    conditions : {
+                        '${id} >= 100' : 'color("red")',
+                        'true' : 'color("blue")'
+                    }
+                }
+            });
+            color = scene.renderForSpecs();
+            expect(color[0]).toEqual(0);
+            expect(color[1]).toEqual(0);
+            expect(color[2]).toBeGreaterThan(0);
+            expect(color[3]).toEqual(255);
+        });
+    });
+
+    it('loads style from uri', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            // ${id} < 100 will always evaluate to true
+            tileset.style = new Cesium3DTileStyle(styleUrl);
+            return tileset.style.readyPromise.then(function(style) {
+                var color = scene.renderForSpecs();
+                expect(color[0]).toBeGreaterThan(0);
+                expect(color[1]).toEqual(0);
+                expect(color[2]).toEqual(0);
+                expect(color[3]).toEqual(255);
+            }).otherwise(function(error) {
+                expect(error).not.toBeDefined();
+            });
+        });
+    });
+
+    it('applies custom style to a tileset', function() {
+        var style = new Cesium3DTileStyle();
+        style.show = {
+            evaluate : function(feature) {
+                return this._value;
+            },
+            _value : false
+        };
+        style.color = {
+            evaluateColor : function(feature, result) {
+                return Color.clone(Color.WHITE, result);
+            }
+        };
+
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            var showColor = scene.renderForSpecs();
+
+            tileset.style = style;
+            expect(tileset.style).toBe(style);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+            style.show._value = true;
+            tileset.makeStyleDirty();
+            expect(scene.renderForSpecs()).toEqual(showColor);
         });
     });
 

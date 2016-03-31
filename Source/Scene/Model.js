@@ -3558,7 +3558,6 @@ define([
         // and then have them visible immediately when show is set to true.
         if (show && !this._ignoreCommands) {
             // PERFORMANCE_IDEA: This is terrible
-            var commandList = frameState.commandList;
             var passes = frameState.passes;
             var nodeCommands = this._nodeCommands;
             var length = nodeCommands.length;
@@ -3569,7 +3568,7 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
+                        frameState.addCommand(nc.command);
                     }
                 }
             }
@@ -3578,7 +3577,7 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.pickCommand);
+                        frameState.addCommand(nc.pickCommand);
                     }
                 }
             }

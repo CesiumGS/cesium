@@ -275,8 +275,28 @@ define([
          * Marks if the tile is selected this frame.
          *
          * @type {Boolean}
+         *
+         * @private
          */
         this.selected = false;
+
+        /**
+         * The last frame number the tile was visible in.
+         *
+         * @type {Number}
+         *
+         * @private
+         */
+        this.lastFrameNumber = 0;
+
+        /**
+         * The time when a style was last applied to this tile.
+         *
+         * @type {Number}
+         *
+         * @private
+         */
+        this.lastStyleTime = 0;
 
         this._debugBoundingVolume = undefined;
         this._debugContentBoundingVolume = undefined;
@@ -369,7 +389,7 @@ define([
          * @readonly
          */
         contentUnloaded : {
-            get : function () {
+            get : function() {
                 return this._content.state === Cesium3DTileContentState.UNLOADED;
             }
         }

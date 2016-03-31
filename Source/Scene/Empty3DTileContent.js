@@ -23,23 +23,17 @@ define([
      */
     function Empty3DTileContent() {
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = undefined;
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.contentReadyToProcessPromise = when.defer();
+        this.readyPromise = when.defer();
+        this.batchTableResources = undefined;
+        this.featurePropertiesDirty = false;
 
         // Transition into the PROCESSING state.
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
-        this.readyPromise = when.defer();
 
         // Transition into the READY state.
         this.state = Cesium3DTileContentState.READY;

@@ -54,22 +54,15 @@ define([
         this._tile = tile;
 
         /**
-         * Part of the {@link Cesium3DTileContent} interface.
+         * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.contentReadyToProcessPromise = when.defer();
-
-        /**
-         * Part of the {@link Cesium3DTileContent} interface.
-         */
         this.readyPromise = when.defer();
+        this.batchTableResources = undefined;
+        this.featurePropertiesDirty = false;
 
         this._featuresLength = 0;
-        this._batchTableResources = undefined;
         this._features = undefined;
     }
 
@@ -99,7 +92,7 @@ define([
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
-                features[i] = new Cesium3DTileFeature(tileset, content._batchTableResources, i);
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
             }
             content._features = features;
         }
@@ -109,7 +102,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this._batchTableResources.hasProperty(name);
+        return this.batchTableResources.hasProperty(name);
     };
 
     /**
@@ -189,7 +182,7 @@ define([
         byteOffset += sizeOfUint32;
 
         var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
-        this._batchTableResources = batchTableResources;
+        this.batchTableResources = batchTableResources;
 
         var batchTableByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
@@ -243,18 +236,25 @@ define([
      */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
-        this._batchTableResources.setAllColor(color);
+        this.batchTableResources.setAllColor(color);
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
+        var oldAddCommand = frameState.addCommand;
+        if (frameState.passes.render) {
+            frameState.addCommand = this.batchTableResources.getAddCommand();
+        }
+
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this._batchTableResources.update(tileset, frameState);
+        this.batchTableResources.update(tileset, frameState);
         this._model.update(frameState);
+
+        frameState.addCommand = oldAddCommand;
    };
 
     /**
@@ -269,7 +269,7 @@ define([
      */
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this._batchTableResources = this._batchTableResources && this._batchTableResources.destroy();
+        this.batchTableResources = this.batchTableResources && this.batchTableResources.destroy();
 
         return destroyObject(this);
     };

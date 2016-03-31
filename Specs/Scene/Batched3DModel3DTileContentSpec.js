@@ -19,6 +19,8 @@ defineSuite([
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
+    var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
 
     beforeAll(function() {
         scene = createScene();
@@ -72,6 +74,18 @@ defineSuite([
 
     it('renders without batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with all features translucent', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with a mix of opaque and translucent features', function() {
+        return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });

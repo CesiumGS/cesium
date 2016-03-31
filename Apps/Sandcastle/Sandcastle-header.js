@@ -70,6 +70,7 @@
                 option.value = options[i].value;
                 menu.appendChild(option);
             }
+            return menu;
         },
         reset : function() {
         }

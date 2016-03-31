@@ -19,12 +19,12 @@ define([
      * @alias Cesium3DTileContent
      * @constructor
      *
-     * @see {@link Batched3DModel3DTileContent}
-     * @see {@link Instanced3DModel3DTileContent}
-     * @see {@link Points3DTileContent}
-     * @see {@link Composite3DTileContent}
-     * @see {@link Tileset3DTileContent}
-     * @see {@link Empty3DTileContent}
+     * @see Batched3DModel3DTileContent
+     * @see Instanced3DModel3DTileContent
+     * @see Points3DTileContent
+     * @see Composite3DTileContent
+     * @see Tileset3DTileContent
+     * @see Empty3DTileContent
      */
     function Cesium3DTileContent(tileset, tile, url) {
         // Private members are not exposed in the public Cesium API, but derived classes
@@ -63,6 +63,26 @@ define([
          * @private
          */
         this.readyPromise = undefined;
+
+        /**
+         * Gets the batch table texture for this tile.
+         *
+         * @type {Cesium3DTileBatchTableResources}
+         * @readonly
+         *
+         * @private
+         */
+        this.batchTableResources = undefined;
+
+        /**
+         * Gets or sets if any feature's property changed.  Used to
+         * optimized applying a style when a feature's property changed.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.featurePropertiesDirty = false;
     }
 
     defineProperties(Cesium3DTileContent.prototype, {

@@ -20,6 +20,7 @@ define([
         '../ThirdParty/when',
         './Cesium3DTile',
         './Cesium3DTileRefine',
+        './Cesium3DTileStyleEngine',
         './CullingVolume',
         './SceneMode'
     ], function(
@@ -43,6 +44,7 @@ define([
         when,
         Cesium3DTile,
         Cesium3DTileRefine,
+        Cesium3DTileStyleEngine,
         CullingVolume,
         SceneMode) {
     'use strict';
@@ -68,6 +70,8 @@ define([
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
      *      url : 'http://localhost:8002/tilesets/Seattle'
      * }));
+     *
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles specification}
      */
     function Cesium3DTileset(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -103,6 +107,7 @@ define([
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
         this._processingQueue = [];
         this._selectedTiles = [];
+        this._selectedTilesToStyle = [];
 
         /**
          * Determines if the tileset will be shown.
@@ -120,6 +125,8 @@ define([
          * @default 16
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
+
+        this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -232,7 +239,8 @@ define([
         // reapplied).
 
         /**
-         * This event fires once for each visible tile in a frame.  This can be used to style a tileset.
+         * This event fires once for each visible tile in a frame.  This can be used to manually
+         * style a tileset.
          * <p>
          * The visible {@link Cesium3DTile} is passed to the event listener.
          * </p>
@@ -283,6 +291,8 @@ define([
          * @type {Object}
          * @readonly
          *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
          * @example
          * console.log('3D Tiles version: ' + tileset.asset.version);
          */
@@ -310,12 +320,14 @@ define([
          * @type {Object}
          * @readonly
          *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         *
          * @example
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
          * console.log('Minimum building height: ' + tileset.properties.height.minimum);
          *
-         * {@see Cesium3DTileFeature#getProperty}
-         * {@see Cesium3DTileFeature#setProperty}
+         * @see {Cesium3DTileFeature#getProperty}
+         * @see {Cesium3DTileFeature#setProperty}
          */
         properties : {
             get : function() {
@@ -400,8 +412,73 @@ define([
             get : function() {
                 return this._baseUrl;
             }
+        },
+
+        /**
+         * The style, defined using the
+         * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language},
+         * applied to each feature in the tileset.
+         * <p>
+         * Assign <code>undefined</code> to remove the style, which will restore the visual
+         * appearance of the tileset to its default when no style was applied.
+         * </p>
+         * <p>
+         * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
+         * event is raised, so code in <code>tileVisible</code> can manually set a feature's
+         * properties using {@link Cesium3DTileContent#getFeature}.  When
+         * a new style is assigned any manually set properties are overwritten.
+         * </p>
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Cesium3DTileStyle}
+         *
+         * @default undefined
+         *
+         * @example
+         * tileset.style = new Cesium.Cesium3DTileStyle({
+         *    color : {
+         *        conditions : {
+         *            '${Height} >= 100' : 'color("purple", 0.5)',
+         *            '${Height} >= 50' : 'color("red")',
+         *            'true' : 'color("blue")'
+         *        }
+         *    },
+         *    show : '${Height} > 0',
+         *    meta : {
+         *        description : '"Building id ${id} has height ${Height}."'
+         *    }
+         * });
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        style : {
+            get : function() {
+                return this._styleEngine.style;
+            },
+            set : function(value) {
+                this._styleEngine.style = value;
+            }
+        },
+
+        /**
+         * @private
+         */
+        styleEngine : {
+            get : function() {
+                return this._styleEngine;
+            }
         }
     });
+
+    /**
+     * Marks the tileset's {@link Cesium3DTileset#style} as dirty, which forces all
+     * features to re-evaluate the style in the next frame each is visible.  Call
+     * this when a style changes.
+     */
+    Cesium3DTileset.prototype.makeStyleDirty = function() {
+        this._styleEngine.makeDirty();
+    };
 
     /**
      * Loads the main tileset.json or a tileset.json referenced from a tile.
@@ -557,12 +634,24 @@ define([
         }
     }
 
-    function selectTile(selectedTiles, tile, fullyVisible, frameState) {
+    function selectTile(tileset, tile, fullyVisible, frameState) {
         // There may also be a tight box around just the tile's contents, e.g., for a city, we may be
         // zoomed into a neighborhood and can cull the skyscrapers in the root node.
         if (tile.contentReady && (fullyVisible || (tile.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE))) {
-            selectedTiles.push(tile);
+            tileset._selectedTiles.push(tile);
             tile.selected = true;
+
+            var tileContent = tile.content;
+            if (tileContent.featurePropertiesDirty) {
+                // A feature's property in this tile changed, the tile needs to be re-styled.
+                tileContent.featurePropertiesDirty = false;
+                tile.lastStyleTime = 0; // Force applying the style to this tile
+                tileset._selectedTilesToStyle.push(tile);
+            }  else if ((tile.lastFrameNumber !== frameState.frameNumber - 1)) {
+                // Tile is newly visible; it is visible this frame, but was not visible last frame.
+                tileset._selectedTilesToStyle.push(tile);
+            }
+            tile.lastFrameNumber = frameState.frameNumber;
         }
     }
 
@@ -577,8 +666,8 @@ define([
         var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
         var cullingVolume = frameState.cullingVolume;
 
-        var selectedTiles = tileset._selectedTiles;
-        selectedTiles.length = 0;
+        tileset._selectedTiles.length = 0;
+        tileset._selectedTilesToStyle.length = 0;
 
         scratchRefiningTiles.length = 0;
 
@@ -644,7 +733,7 @@ define([
             if (additiveRefinement) {
                 // With additive refinement, the tile is rendered
                 // regardless of if its SSE is sufficient.
-                selectTile(selectedTiles, t, fullyVisible, frameState);
+                selectTile(tileset, t, fullyVisible, frameState);
 
 // TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
@@ -692,7 +781,7 @@ define([
                 if ((sse <= maximumScreenSpaceError) || (childrenLength === 0)) {
                     // This tile meets the SSE so add its commands.
                     // Select tile if it's a leaf (childrenLength === 0)
-                    selectTile(selectedTiles, t, fullyVisible, frameState);
+                    selectTile(tileset, t, fullyVisible, frameState);
                 } else {
                     // Tile does not meet SSE.
 
@@ -713,7 +802,7 @@ define([
 
                     if (!allChildrenLoaded) {
                         // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
-                        selectTile(selectedTiles, t, fullyVisible, frameState);
+                        selectTile(tileset, t, fullyVisible, frameState);
 
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
@@ -767,7 +856,7 @@ define([
             }
             if (!refinable) {
                 var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
-                selectTile(tileset._selectedTiles, refiningTile, fullyVisible, frameState);
+                selectTile(tileset, refiningTile, fullyVisible, frameState);
                 for (j = 0; j < descendantsLength; ++j) {
                     descendant = refiningTile.descendantsWithContent[j];
                     descendant.selected = false;
@@ -819,17 +908,24 @@ define([
         var stats = tileset._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
+
+        var styleStats = tileset._styleEngine.statistics;
+        styleStats.numberOfTilesStyled = 0;
+        styleStats.numberOfFeaturesStyled = 0;
     }
 
     function showStats(tileset, isPick) {
         var stats = tileset._statistics;
+        var styleStats = tileset._styleEngine.statistics;
 
         if (tileset.debugShowStatistics && (
             stats.lastVisited !== stats.visited ||
             stats.lastNumberOfCommands !== stats.numberOfCommands ||
             stats.lastSelected !== tileset._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
-            stats.lastNumberProcessing !== stats.numberProcessing)) {
+            stats.lastNumberProcessing !== stats.numberProcessing ||
+            styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
+            styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -843,7 +939,9 @@ define([
                 // multiple frustums.
                 ', Commands: ' + stats.numberOfCommands +
                 ', Requests: ' + stats.numberOfPendingRequests +
-                ', Processing: ' + stats.numberProcessing;
+                ', Processing: ' + stats.numberProcessing +
+                ', Tiles styled: ' + styleStats.numberOfTilesStyled +
+                ', Features styled: ' + styleStats.numberOfFeaturesStyled;
 
             /*global console*/
             console.log(s);
@@ -854,23 +952,30 @@ define([
         stats.lastSelected = tileset._selectedTiles.length;
         stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
         stats.lastNumberProcessing = stats.numberProcessing;
+        styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
+        styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
     }
 
     function updateTiles(tileset, frameState) {
+        tileset._styleEngine.applyStyle(tileset, frameState);
+
         var commandList = frameState.commandList;
-        var numberOfCommands = commandList.length;
+        var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
         var length = selectedTiles.length;
         var tileVisible = tileset.tileVisible;
         for (var i = 0; i < length; ++i) {
             var tile = selectedTiles[i];
             if (tile.selected) {
+                // Raise visible event before update in case the visible event
+                // makes changes that update needs to apply to WebGL resources
                 tileVisible.raiseEvent(tile);
                 tile.update(tileset, frameState);
             }
         }
 
-        tileset._statistics.numberOfCommands = (commandList.length - numberOfCommands);
+        // Number of commands added by each update above
+        tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
     }
 
     ///////////////////////////////////////////////////////////////////////////
