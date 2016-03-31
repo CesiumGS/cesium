@@ -93,11 +93,6 @@ define([
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
         var exponentialShadows = shadowMap._exponentialShadows;
-        
-        // Force the shader to use decimals to avoid compilation errors
-        var depthBias = Number(bias.depthBias).toFixed(10);
-        var normalShadingSmooth = Number(bias.normalShadingSmooth).toFixed(10);
-        var normalOffsetScale = Number(bias.normalOffsetScale).toFixed(10);
 
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
 
@@ -136,12 +131,13 @@ define([
             '    return normalize(' + normalVaryingName + '); \n' +
             '} \n' +
 
+            'uniform float u_shadowNormalOffsetScale;\n' +
             'void applyNormalOffset(inout vec4 positionEC, vec3 normalEC, float nDotL) \n' +
             '{ \n' +
             (bias.normalOffset && hasNormalVarying ?
             '    // Offset the shadow position in the direction of the normal for perpendicular and back faces \n' +
             '    float normalOffsetScale = 1.0 - nDotL; \n' +
-            '    vec3 offset = ' + normalOffsetScale + ' * normalOffsetScale * normalEC; \n' +
+            '    vec3 offset = u_shadowNormalOffsetScale * normalOffsetScale * normalEC; \n' +
             '    positionEC.xyz += offset; \n' : '') +
             '} \n';
 
@@ -149,8 +145,6 @@ define([
             'void main() \n' +
             '{ \n' +
             '    czm_shadow_main(); \n' +
-            '    float depthBias = ' + depthBias + '; \n' +
-            '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
             '    vec4 positionEC = getPositionEC(); \n' +
             '    vec3 normalEC = getNormalEC(); \n';
 
@@ -170,9 +164,9 @@ define([
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
 
                 (usesCubeMap ?
-                '    float visibility = czm_shadowVisibility(directionWC, distance, depthBias, nDotL, normalShadingSmooth, radius); \n' :
+                '    float visibility = czm_shadowVisibility(directionWC, distance, nDotL, radius); \n' :
                 '    vec2 uv = czm_cubeMapToUV(directionWC); \n' +
-                '    float visibility = czm_shadowVisibility(uv, distance, depthBias, nDotL, normalShadingSmooth, radius); \n');
+                '    float visibility = czm_shadowVisibility(uv, distance, nDotL, radius); \n');
         } else if (isSpotLight) {
             fs +=
                 '    vec3 directionEC = normalize(positionEC.xyz - czm_shadowMapLightPositionEC.xyz); \n' +
@@ -188,7 +182,7 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n';
         } else if (hasCascades) {
             fs +=
                 '    float depth = -positionEC.z; \n' +
@@ -211,7 +205,7 @@ define([
                 '    vec4 shadowPosition = czm_cascadeMatrix(weights) * positionEC; \n' +
 
                 '    // Get visibility \n' +
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, shadowDistance); \n' +
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowDistance); \n' +
 
                 '    // Fade out shadows that are far away \n' +
                 '    float fade = max((depth - maxDepth * 0.8) / (maxDepth * 0.2), 0.0); \n' +
@@ -231,7 +225,7 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n';
         }
 
         fs +=

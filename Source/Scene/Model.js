@@ -2518,7 +2518,8 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, frameState) {
+        var context = frameState.context;
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2591,6 +2592,12 @@ define([
                 // Allow callback to modify the uniformMap
                 if (defined(model._uniformMapLoaded)) {
                     uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
+                }
+
+                // Modify uniform state to receive shadows
+                var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+                if (shadowsEnabled && model.receiveShadows) {
+                    uniformMap = frameState.shadowMap.combineUniforms(uniformMap, false);
                 }
 
                 var rs = rendererRenderStates[material.technique];
@@ -2674,7 +2681,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, frameState) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2732,7 +2739,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, frameState);
                 }
 
                 var children = gltfNode.children;
@@ -2791,7 +2798,7 @@ define([
         }
 
         createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createRuntimeNodes(model, frameState); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////

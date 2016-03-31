@@ -650,7 +650,7 @@ define([
         }
     };
 
-    function createTileUniformMap(frameState) {
+    function createTileUniformMap(frameState, tileProvider) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.initialColor;
@@ -755,6 +755,13 @@ define([
             minMaxHeight : new Cartesian2(),
             scaleAndBias : new Matrix4()
         };
+
+        // Modify uniform state to receive shadows
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        var receiveShadows = shadowsEnabled && tileProvider.receiveShadows;
+        if (shadowsEnabled && receiveShadows) {
+            uniformMap = frameState.shadowMap.combineUniforms(uniformMap, true);
+        }
 
         return uniformMap;
     }
@@ -989,7 +996,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap(frameState);
+                uniformMap = createTileUniformMap(frameState, tileProvider);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);

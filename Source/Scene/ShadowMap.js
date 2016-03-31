@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -54,6 +55,7 @@ define([
         Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -1199,6 +1201,25 @@ define([
             this._clearCommand.framebuffer = this._passFramebuffers[pass];
             this._clearCommand.execute(context, this._clearPassState);
         }
+    };
+
+    ShadowMap.prototype.combineUniforms = function(uniforms, isTerrain) {
+        var isPointLight = this.isPointLight;
+        var bias = isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
+
+        var mapUniforms = {
+            u_shadowDepthBias : function() {
+                return bias.depthBias;
+            },
+            u_shadowNormalShadingSmooth : function() {
+                return bias.normalShadingSmooth;
+            },
+            u_shadowNormalOffsetScale : function() {
+                return bias.normalOffsetScale;
+            }
+        };
+
+        return combine(uniforms, mapUniforms);
     };
 
     ShadowMap.prototype.isDestroyed = function() {
