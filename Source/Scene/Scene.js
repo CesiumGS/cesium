@@ -1752,7 +1752,6 @@ define([
 
         var viewport = passState.viewport;
 
-        var uniformState = context.uniformState;
         var frameState = scene._frameState;
         var camera = frameState.camera;
         var mode = frameState.mode;

@@ -143,21 +143,6 @@ define([
             '    float normalOffsetScale = 1.0 - nDotL; \n' +
             '    vec3 offset = ' + normalOffsetScale + ' * normalOffsetScale * normalEC; \n' +
             '    positionEC.xyz += offset; \n' : '') +
-            '} \n' +
-            'vec2 directionToUV(vec3 d) { \n' +
-            ' \n' +
-            '    vec3 abs = abs(d); \n' +
-            '    float max = max(max(abs.x, abs.y), abs.z); // Get the largest component \n' +
-            '    vec3 weights = step(max, abs); // 1.0 for the largest component, 0.0 for the others \n' +
-            '    float sign = dot(weights, sign(d)) * 0.5 + 0.5; // 0 or 1 \n' +
-            '    float sc = mix(dot(weights, vec3(d.z, d.x, -d.x)), dot(weights, vec3(-d.z, d.x, d.x)), sign); \n' +
-            '    float tc = mix(dot(weights, vec3(-d.y, -d.z, -d.y)), dot(weights, vec3(-d.y, d.z, -d.y)), sign); \n' +
-            '    vec2 uv = (vec2(sc, tc) / max) * 0.5 + 0.5; \n' +
-            '    float offsetX = dot(weights, vec3(0.0, 1.0, 2.0)); \n' +
-            '    float offsetY = sign; \n' +
-            '    uv.x = (uv.x + offsetX) / 3.0; \n' +
-            '    uv.y = (uv.y + offsetY) / 2.0; \n' +
-            '    return uv; \n' +
             '} \n';
 
         if (isPointLight) {
@@ -184,7 +169,7 @@ define([
 
                 (usesCubeMap ?
                 '    float visibility = czm_shadowVisibility(directionWC, distance, depthBias, nDotL, normalShadingSmooth, radius); \n' :
-                '    vec2 uv = directionToUV(directionWC); \n' +
+                '    vec2 uv = czm_cubeMapToUV(directionWC); \n' +
                 '    float visibility = czm_shadowVisibility(uv, distance, depthBias, nDotL, normalShadingSmooth, radius); \n') +
 
                 '    gl_FragColor.rgb *= visibility; \n' +
