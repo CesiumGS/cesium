@@ -145,12 +145,14 @@ define([
             // Loading stats
             numberOfPendingRequests : 0,
             numberProcessing : 0,
+            numberReady : 0, // Number of tiles with content loaded
 
             lastSelected : -1,
             lastVisited : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
-            lastNumberProcessing : -1
+            lastNumberProcessing : -1,
+            lastNumberReady : -1
         };
 
         /**
@@ -883,6 +885,7 @@ define([
                 // Remove from processing queue
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
+                ++tileset._statistics.numberReady;
             } else {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
@@ -924,6 +927,7 @@ define([
             stats.lastSelected !== tileset._selectedTiles.length ||
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing ||
+            stats.lastNumberReady !== stats.numberReady ||
             styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
             styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
 
@@ -940,6 +944,7 @@ define([
                 ', Commands: ' + stats.numberOfCommands +
                 ', Requests: ' + stats.numberOfPendingRequests +
                 ', Processing: ' + stats.numberProcessing +
+                ', Ready: ' + stats.numberReady +
                 ', Tiles styled: ' + styleStats.numberOfTilesStyled +
                 ', Features styled: ' + styleStats.numberOfFeaturesStyled;
 
@@ -952,6 +957,7 @@ define([
         stats.lastSelected = tileset._selectedTiles.length;
         stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
         stats.lastNumberProcessing = stats.numberProcessing;
+        stats.lastNumberReady = stats.numberReady;
         styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
         styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
     }
