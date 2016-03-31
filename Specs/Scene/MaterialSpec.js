@@ -501,7 +501,8 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 1.0)
         });
 
-        renderMaterial(material1);
+        var pixel = renderMaterial(material1);
+        expect(pixel).toEqual([0, 255, 0, 255]);
     });
 
     it('create multiple materials from the same type', function() {
@@ -515,8 +516,10 @@ defineSuite([
 
         expect(material1.shaderSource).toEqual(material2.shaderSource);
 
-        renderMaterial(material2);
-        renderMaterial(material1, true);
+        var pixel = renderMaterial(material2);
+        expect(pixel).toEqual([255, 0, 0, 255]);
+        pixel = renderMaterial(material1, true);
+        expect(pixel).toEqual([0, 255, 0, 255]);
     });
 
     it('create material with sub-materials of the same type', function() {
@@ -542,7 +545,8 @@ defineSuite([
             }
         });
 
-        renderMaterial(material);
+        var pixel = renderMaterial(material);
+        expect(pixel).toEqual([0, 255, 255, 255]);
     });
 
     it('throws with source and components in same template', function () {
