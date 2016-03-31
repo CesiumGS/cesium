@@ -279,7 +279,7 @@ define([
      */
     PolylineVolumeOutlineGeometry.createGeometry = function(polylineVolumeOutlineGeometry) {
         var positions = polylineVolumeOutlineGeometry._positions;
-        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var shape2D = polylineVolumeOutlineGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

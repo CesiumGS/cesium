@@ -218,7 +218,7 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3, true);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -228,7 +228,7 @@ define([
             var i;
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3, true);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }

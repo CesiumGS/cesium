@@ -93,6 +93,8 @@
     "test-release": "gulp test --release",
     "generateStubs": "gulp generateStubs",
     "sortRequires": "gulp sortRequires",
-    "deploy-s3": "gulp deploy-s3"
+    "deploy-s3": "gulp deploy-s3",
+    "deploy-status": "gulp deploy-status",
+    "deploy-set-version": "gulp deploy-set-version"
   }
 }
