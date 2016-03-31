@@ -5,17 +5,15 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Math',
-        'Renderer/ClearCommand',
         'Scene/Material',
         'Scene/SceneMode',
-        'Specs/createScene',
+        'Specs/createScene'
     ], function(
         PolylineCollection,
         BoundingSphere,
         Cartesian3,
         Color,
         CesiumMath,
-        ClearCommand,
         Material,
         SceneMode,
         createScene) {
