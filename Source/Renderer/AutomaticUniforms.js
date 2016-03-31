@@ -1591,16 +1591,30 @@ define([
         }),
         
         /**
-         * An automatic GLSL uniform representing the shadow map cascade scales.
+         * An automatic GLSL uniform representing the shadow map cascade distances.
          *
-         * @alias czm_shadowMapCascadeScales
+         * @alias czm_shadowMapCascadeDistances
          * @glslUniform
          */
-        czm_shadowMapCascadeScales : new AutomaticUniform({
+        czm_shadowMapCascadeDistances : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
-                return uniformState.shadowMap.cascadeScales;
+                return uniformState.shadowMap.cascadeDistances;
+            }
+        }),
+        
+        /**
+         * An automatic GLSL uniform representing the shadow map distance.
+         *
+         * @alias czm_shadowMapDistance
+         * @glslUniform
+         */
+        czm_shadowMapDistance : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.shadowMap.distance;
             }
         })
     };
