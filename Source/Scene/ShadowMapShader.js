@@ -145,14 +145,17 @@ define([
             '    positionEC.xyz += offset; \n' : '') +
             '} \n';
 
+        fs +=
+            'void main() \n' +
+            '{ \n' +
+            '    czm_shadow_main(); \n' +
+            '    float depthBias = ' + depthBias + '; \n' +
+            '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
+            '    vec4 positionEC = getPositionEC(); \n' +
+            '    vec3 normalEC = getNormalEC(); \n';
+
         if (isPointLight) {
             fs +=
-                'void main() \n' +
-                '{ \n' +
-                '    czm_shadow_main(); \n' +
-                '    float depthBias = ' + depthBias + '; \n' +
-                '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
-                '    vec4 positionEC = getPositionEC(); \n' +
                 '    vec3 directionEC = positionEC.xyz - czm_shadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
                 '    directionEC = normalize(directionEC); \n' +
@@ -164,26 +167,15 @@ define([
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
                 '    distance /= radius; \n' +
 
-                '    vec3 normalEC = getNormalEC(); \n' +
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
 
                 (usesCubeMap ?
                 '    float visibility = czm_shadowVisibility(directionWC, distance, depthBias, nDotL, normalShadingSmooth, radius); \n' :
                 '    vec2 uv = czm_cubeMapToUV(directionWC); \n' +
-                '    float visibility = czm_shadowVisibility(uv, distance, depthBias, nDotL, normalShadingSmooth, radius); \n') +
-
-                '    gl_FragColor.rgb *= visibility; \n' +
-                '} \n';
+                '    float visibility = czm_shadowVisibility(uv, distance, depthBias, nDotL, normalShadingSmooth, radius); \n');
         } else if (isSpotLight) {
             fs +=
-                'void main() \n' +
-                '{ \n' +
-                '    czm_shadow_main(); \n' +
-                '    float depthBias = ' + depthBias + '; \n' +
-                '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
-                '    vec4 positionEC = getPositionEC(); \n' +
                 '    vec3 directionEC = normalize(positionEC.xyz - czm_shadowMapLightPositionEC.xyz); \n' +
-                '    vec3 normalEC = getNormalEC(); \n' +
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
 
@@ -196,17 +188,9 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n' +
-                '    gl_FragColor.rgb *= visibility; \n' +
-                '} \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n';
         } else if (hasCascades) {
             fs +=
-                'void main() \n' +
-                '{ \n' +
-                '    czm_shadow_main(); \n' +
-                '    float depthBias = ' + depthBias + '; \n' +
-                '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
-                '    vec4 positionEC = getPositionEC(); \n' +
                 '    float depth = -positionEC.z; \n' +
                 '    float maxDepth = czm_shadowMapCascadeSplits[1].w; \n' +
 
@@ -220,7 +204,6 @@ define([
                 '    float shadowDistance = czm_cascadeDistance(weights); \n' +
 
                 '    // Apply normal offset \n' +
-                '    vec3 normalEC = getNormalEC(); \n' +
                 '    float nDotL = clamp(dot(normalEC, czm_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
 
@@ -233,21 +216,12 @@ define([
                 '    // Fade out shadows that are far away \n' +
                 '    float fade = max((depth - maxDepth * 0.8) / (maxDepth * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
-                '    gl_FragColor.rgb *= visibility; \n' +
 
                 (debugVisualizeCascades ?
                 '    // Draw cascade colors for debugging \n' +
-                '    gl_FragColor *= czm_cascadeColor(weights); \n' : '') +
-                '} \n';
+                '    visibility = czm_cascadeColor(weights); \n' : '');
         } else {
             fs +=
-                'void main() \n' +
-                '{ \n' +
-                '    czm_shadow_main(); \n' +
-                '    float depthBias = ' + depthBias + '; \n' +
-                '    float normalShadingSmooth = ' + normalShadingSmooth + '; \n' +
-                '    vec4 positionEC = getPositionEC(); \n' +
-                '    vec3 normalEC = getNormalEC(); \n' +
                 '    float nDotL = clamp(dot(normalEC, czm_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
                 '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
@@ -257,10 +231,12 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n' +
-                '    gl_FragColor.rgb *= visibility; \n' +
-                '} \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, czm_shadowMapDistance); \n';
         }
+
+        fs +=
+            '    gl_FragColor.rgb *= visibility; \n' +
+            '} \n';
 
         return fs;
     };
