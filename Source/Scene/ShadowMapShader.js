@@ -39,10 +39,11 @@ define([
         positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
         var isPointLight = frameState.shadowMap.isPointLight;
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
-
         if (opaque) {
-            fs = 'void main() \n' +
-                 '{ \n';
+            fs =
+                'varying vec3 ' + positionVaryingName + ';\n' +
+                'void main() \n' +
+                '{ \n';
         } else {
             fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
             fs +=
