@@ -19,8 +19,7 @@ defineSuite([
         'Scene/QuadtreeTile',
         'Scene/SingleTileImageryProvider',
         'Scene/WebMapServiceImageryProvider',
-        'Specs/createContext',
-        'Specs/createFrameState',
+        'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
         ImageryLayer,
@@ -42,23 +41,20 @@ defineSuite([
         QuadtreeTile,
         SingleTileImageryProvider,
         WebMapServiceImageryProvider,
-        createContext,
-        createFrameState,
+        createScene,
         pollToPromise) {
     'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var computeEngine;
 
     beforeAll(function() {
-        context = createContext();
-        frameState = createFrameState(context);
-        computeEngine = new ComputeEngine(context);
+        scene = createScene();
+        computeEngine = new ComputeEngine(scene.frameState.context);
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
         computeEngine.destroy();
     });
 
@@ -67,7 +63,7 @@ defineSuite([
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
 
-        frameState.commandList.length = 0;
+        scene.frameState.commandList.length = 0;
     });
 
     function CustomDiscardPolicy() {
@@ -112,7 +108,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.frameState.context, imagery);
                 expect(imagery.state).toEqual(ImageryState.INVALID);
                 imagery.releaseReference();
             });
@@ -174,15 +170,15 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.frameState.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
                     var textureBeforeReprojection = imagery.texture;
-                    layer._reprojectTexture(frameState, imagery);
-                    layer.queueReprojectionCommands(frameState);
-                    frameState.commandList[0].execute(computeEngine);
+                    layer._reprojectTexture(scene.frameState, imagery);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    scene.frameState.commandList[0].execute(computeEngine);
 
                     return pollToPromise(function() {
                         return imagery.state === ImageryState.READY;
@@ -209,15 +205,15 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(context, imagery);
+                layer._createTexture(scene.frameState.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
                 }).then(function() {
-                    layer._reprojectTexture(frameState, imagery);
+                    layer._reprojectTexture(scene.frameState, imagery);
                     layer.cancelReprojections();
-                    layer.queueReprojectionCommands(frameState);
-                    expect(frameState.commandList.length).toEqual(0);
+                    layer.queueReprojectionCommands(scene.frameState);
+                    expect(scene.frameState.commandList.length).toEqual(0);
                 });
             });
         });
