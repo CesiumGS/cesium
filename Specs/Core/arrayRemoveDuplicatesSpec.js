@@ -125,10 +125,9 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
-    it('removeDuplicates throws without positions', function() {
-        expect(function() {
-            arrayRemoveDuplicates();
-        }).toThrowDeveloperError();
+    it('removeDuplicates returns undefined', function() {
+        var noDuplicates = arrayRemoveDuplicates(undefined, Cartesian3.equalsEpsilon);
+        expect(noDuplicates).toBe(undefined);
     });
 
     it('removeDuplicates wrapping removes duplicate first and last points', function() {

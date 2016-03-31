@@ -16,7 +16,7 @@ define([
     /**
      * Removes adjacent duplicate values in an array of values.
      *
-     * @param {Object[]} values The array of values.
+     * @param {Object[]} [values] The array of values.
      * @param {Function} equalsEpsilon Function to compare values with an epsilon. Boolean equalsEpsilon(left, right, epsilon).
      * @param {Boolean} [wrapAround=false] Compare the last value in the array against the first value.
      * @returns {Object[]|undefined} A new array of values with no adjacent duplicate values or the input array if no duplicates were found.
@@ -45,13 +45,14 @@ define([
      */
     function arrayRemoveDuplicates(values, equalsEpsilon, wrapAround) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
         if (!defined(equalsEpsilon)) {
             throw new DeveloperError('equalsEpsilon is required.');
         }
         //>>includeEnd('debug');
+
+        if (!defined(values)) {
+            return undefined;
+        }
 
         wrapAround = defaultValue(wrapAround, false);
 
