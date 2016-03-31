@@ -169,7 +169,7 @@ define([
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.001
+            depthBias : 0.01
         };
 
         // Framebuffer resources
