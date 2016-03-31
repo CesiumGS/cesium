@@ -1025,10 +1025,11 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function raiseLoadProgressEvent(tileset, frameState) {
-        var numberOfPendingRequests = tileset._statistics.numberOfPendingRequests;
-        var numberProcessing = tileset._statistics.numberProcessing;
-        var lastNumberOfPendingRequest = tileset._statistics.lastNumberOfPendingRequests;
-        var lastNumberProcessing = tileset._statistics.lastNumberProcessing;
+        var stats = tileset._statistics;
+        var numberOfPendingRequests = stats.numberOfPendingRequests;
+        var numberProcessing = stats.numberProcessing;
+        var lastNumberOfPendingRequest = stats.lastColor.numberOfPendingRequests;
+        var lastNumberProcessing = stats.lastColor.numberProcessing;
 
         if ((numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberProcessing !== lastNumberProcessing)) {
             frameState.afterRender.push(function() {
