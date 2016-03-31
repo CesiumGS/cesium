@@ -6,7 +6,6 @@ defineSuite([
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
-        'Renderer/ClearCommand',
         'Scene/Appearance',
         'Scene/Primitive',
         'Specs/createScene'
@@ -17,7 +16,6 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         PolylineGeometry,
-        ClearCommand,
         Appearance,
         Primitive,
         createScene) {
