@@ -146,13 +146,15 @@ define([
             numberOfPendingRequests : 0,
             numberProcessing : 0,
             numberReady : 0, // Number of tiles with content loaded
+            numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
 
             lastSelected : -1,
             lastVisited : -1,
             lastNumberOfCommands : -1,
             lastNumberOfPendingRequests : -1,
             lastNumberProcessing : -1,
-            lastNumberReady : -1
+            lastNumberReady : -1,
+            lastNumberTotal : -1
         };
 
         /**
@@ -500,6 +502,8 @@ define([
                 throw new DeveloperError('The tileset must be 3D Tiles version 0.0.  See https://github.com/AnalyticalGraphicsInc/3d-tiles#spec-status');
             }
 
+            var stats = that._statistics;
+
             // Append the version to the baseUrl
             var versionQuery = '?v=' + defaultValue(tilesetJson.asset.tilesetVersion, '0.0');
             that._baseUrl = joinUrls(that._baseUrl, versionQuery);
@@ -516,6 +520,7 @@ define([
                 parentTile.children.push(rootTile);
                 ++parentTile.numberOfChildrenWithoutContent;
             }
+            ++stats.numberTotal;
 
             var refiningTiles = [];
 
@@ -536,6 +541,7 @@ define([
                         var childHeader = children[k];
                         var childTile = new Cesium3DTile(that, baseUrl, childHeader, tile3D);
                         tile3D.children.push(childTile);
+                        ++stats.numberTotal;
                         stack.push({
                             header : childHeader,
                             cesium3DTile : childTile
@@ -928,6 +934,7 @@ define([
             stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
             stats.lastNumberProcessing !== stats.numberProcessing ||
             stats.lastNumberReady !== stats.numberReady ||
+            stats.lastNumberTotal !== stats.numberTotal ||
             styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
             styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
 
@@ -945,6 +952,9 @@ define([
                 ', Requests: ' + stats.numberOfPendingRequests +
                 ', Processing: ' + stats.numberProcessing +
                 ', Ready: ' + stats.numberReady +
+                // Total number of tiles includes tiles without content, so "Ready" may never reach
+                // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
+                ', Total: ' + stats.numberTotal +
                 ', Tiles styled: ' + styleStats.numberOfTilesStyled +
                 ', Features styled: ' + styleStats.numberOfFeaturesStyled;
 
@@ -958,6 +968,7 @@ define([
         stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
         stats.lastNumberProcessing = stats.numberProcessing;
         stats.lastNumberReady = stats.numberReady;
+        stats.lastNumberTotal = stats.numberTotal;
         styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
         styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
     }
