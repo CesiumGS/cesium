@@ -61,6 +61,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
+     * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
@@ -138,6 +139,18 @@ define([
          * @default false
          */
         this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * Determines if rendering statistics for picking are output to the console.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowPickStatistics = defaultValue(options.debugShowPickStatistics, false);
+
         this._statistics = {
             // Rendering stats
             visited : 0,
@@ -147,14 +160,12 @@ define([
             numberProcessing : 0,
             numberReady : 0, // Number of tiles with content loaded
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
+            // Styling stats
+            numberOfTilesStyled : 0,
+            numberOfFeaturesStyled : 0,
 
-            lastSelected : -1,
-            lastVisited : -1,
-            lastNumberOfCommands : -1,
-            lastNumberOfPendingRequests : -1,
-            lastNumberProcessing : -1,
-            lastNumberReady : -1,
-            lastNumberTotal : -1
+            lastColor : new Cesium3DTilesetStatistics(),
+            lastPick : new Cesium3DTilesetStatistics()
         };
 
         /**
@@ -281,6 +292,18 @@ define([
             that._readyPromise.reject(error);
         });
     }
+
+    function Cesium3DTilesetStatistics() {
+        this.selected = -1;
+        this.visited = -1;
+        this.numberOfCommands = -1;
+        this.numberOfPendingRequests = -1;
+        this.numberProcessing = -1;
+        this.numberReady = -1;
+        this.numberTotal = -1;
+        this.numberOfTilesStyled = -1;
+        this.numberOfFeaturesStyled = -1;
+    };
 
     defineProperties(Cesium3DTileset.prototype, {
         /**
@@ -917,31 +940,41 @@ define([
         var stats = tileset._statistics;
         stats.visited = 0;
         stats.numberOfCommands = 0;
-
-        var styleStats = tileset._styleEngine.statistics;
-        styleStats.numberOfTilesStyled = 0;
-        styleStats.numberOfFeaturesStyled = 0;
+        stats.numberOfTilesStyled = 0;
+        stats.numberOfFeaturesStyled = 0;
     }
 
     function showStats(tileset, isPick) {
         var stats = tileset._statistics;
-        var styleStats = tileset._styleEngine.statistics;
+        var last = isPick ? stats.lastPick : stats.lastColor;
 
-        if (tileset.debugShowStatistics && (
-            stats.lastVisited !== stats.visited ||
-            stats.lastNumberOfCommands !== stats.numberOfCommands ||
-            stats.lastSelected !== tileset._selectedTiles.length ||
-            stats.lastNumberOfPendingRequests !== stats.numberOfPendingRequests ||
-            stats.lastNumberProcessing !== stats.numberProcessing ||
-            stats.lastNumberReady !== stats.numberReady ||
-            stats.lastNumberTotal !== stats.numberTotal ||
-            styleStats.lastNumberOfTilesStyled !== styleStats.numberOfTilesStyled ||
-            styleStats.lastNumberOfFeaturesStyled !== styleStats.numberOfFeaturesStyled)) {
+        if (((tileset.debugShowStatistics && !isPick) ||
+             (tileset.debugShowPickStatistics && isPick)) &&
+            (last.visited !== stats.visited ||
+             last.numberOfCommands !== stats.numberOfCommands ||
+             last.selected !== tileset._selectedTiles.length ||
+             last.numberOfPendingRequests !== stats.numberOfPendingRequests ||
+             last.numberProcessing !== stats.numberProcessing ||
+             last.numberReady !== stats.numberReady ||
+             last.numberTotal !== stats.numberTotal ||
+             last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
+             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled)) {
+
+            last.visited = stats.visited;
+            last.numberOfCommands = stats.numberOfCommands;
+            last.selected = tileset._selectedTiles.length;
+            last.numberOfPendingRequests = stats.numberOfPendingRequests;
+            last.numberProcessing = stats.numberProcessing;
+            last.numberReady = stats.numberReady;
+            last.numberTotal = stats.numberTotal;
+            last.numberOfTilesStyled = stats.numberOfTilesStyled;
+            last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
             var s = isPick ? '[Pick ]: ' : '[Color]: ';
             s +=
+                // --- Rendering stats
                 'Visited: ' + stats.visited +
                 // Number of commands returned is likely to be higher than the number of tiles selected
                 // because of tiles that create multiple commands.
@@ -949,28 +982,22 @@ define([
                 // Number of commands executed is likely to be higher because of commands overlapping
                 // multiple frustums.
                 ', Commands: ' + stats.numberOfCommands +
-                ', Requests: ' + stats.numberOfPendingRequests +
+
+                // --- Cache/loading stats
+                ' | Requests: ' + stats.numberOfPendingRequests +
                 ', Processing: ' + stats.numberProcessing +
                 ', Ready: ' + stats.numberReady +
                 // Total number of tiles includes tiles without content, so "Ready" may never reach
                 // "Total."  Total also will increase when a tile with a tileset.json content is loaded.
                 ', Total: ' + stats.numberTotal +
-                ', Tiles styled: ' + styleStats.numberOfTilesStyled +
-                ', Features styled: ' + styleStats.numberOfFeaturesStyled;
+
+                // --- Styling stats
+                ' | Tiles styled: ' + stats.numberOfTilesStyled +
+                ', Features styled: ' + stats.numberOfFeaturesStyled;
 
             /*global console*/
             console.log(s);
         }
-
-        stats.lastVisited = stats.visited;
-        stats.lastNumberOfCommands = stats.numberOfCommands;
-        stats.lastSelected = tileset._selectedTiles.length;
-        stats.lastNumberOfPendingRequests = stats.numberOfPendingRequests;
-        stats.lastNumberProcessing = stats.numberProcessing;
-        stats.lastNumberReady = stats.numberReady;
-        stats.lastNumberTotal = stats.numberTotal;
-        styleStats.lastNumberOfTilesStyled = styleStats.numberOfTilesStyled;
-        styleStats.lastNumberOfFeaturesStyled = styleStats.numberOfFeaturesStyled;
     }
 
     function updateTiles(tileset, frameState) {

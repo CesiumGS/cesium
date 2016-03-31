@@ -677,8 +677,24 @@ defineSuite([
         spyOn(console, 'log');
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            scene.renderForSpecs();
+            expect(console.log).not.toHaveBeenCalled();
+
             tileset.debugShowStatistics = true;
             scene.renderForSpecs();
+            expect(console.log).toHaveBeenCalled();
+        });
+    });
+
+    it('debugShowPickStatistics', function() {
+        spyOn(console, 'log');
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            scene.pickForSpecs();
+            expect(console.log).not.toHaveBeenCalled();
+
+            tileset.debugShowPickStatistics = true;
+            scene.pickForSpecs();
             expect(console.log).toHaveBeenCalled();
         });
     });
