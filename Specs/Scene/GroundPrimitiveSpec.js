@@ -565,7 +565,7 @@ defineSuite([
         });
 
         var frameState = scene.frameState;
-
+        frameState.afterRender.length = 0;
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
@@ -600,7 +600,7 @@ defineSuite([
         });
 
         var frameState = scene.frameState;
-
+        frameState.afterRender.length = 0;
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
