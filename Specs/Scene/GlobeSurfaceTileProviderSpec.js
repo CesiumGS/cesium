@@ -416,7 +416,7 @@ defineSuite([
 
                 expect(scene.renderForSpecs()).not.toEqual(result);
 
-                scene.fog =  oldFog;
+                scene.fog = oldFog;
             });
         });
     });
