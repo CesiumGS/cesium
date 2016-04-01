@@ -5,9 +5,6 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/createCanvas',
-        'Specs/createFrameState',
         'Specs/createScene'
     ], function(
         Sun,
@@ -15,25 +12,25 @@ defineSuite([
         CesiumMath,
         Matrix4,
         SceneMode,
-        createCamera,
-        createCanvas,
-        createFrameState,
         createScene) {
     'use strict';
 
     var scene;
 
     beforeAll(function() {
-        scene = createScene({
-            canvas : createCanvas({
-                width : 5,
-                height : 5
-            })
-        });
+        scene = createScene();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.mode = SceneMode.SCENE3D;
+    });
+
+    afterEach(function() {
+        scene.sun = undefined;
     });
 
     function viewSun(camera, uniformState) {
@@ -42,82 +39,52 @@ defineSuite([
     }
 
     it('draws in 3D', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.sun = new Sun();
-        scene.renderForSpecs();
+        scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('draws in Columbus view', function() {
-        scene.sun = new Sun();
-
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.mode = SceneMode.COLUMBUS_VIEW;
-        scene.renderForSpecs();
+        scene.sun = new Sun();
+        scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render when show is false', function() {
-        var sun = new Sun();
-        sun.show = false;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.sun = new Sun();
+        scene.render();
+        scene.sun.show = false;
 
-        var context = scene.context;
-        var frameState = createFrameState(context, createCamera({
-            near : 1.0,
-            far : 1.0e10
-        }));
-        var us = context.uniformState;
-        us.update(frameState);
-        viewSun(frameState.camera, us);
-        us.update(frameState);
-
-        scene._frameState = frameState;
-        var command = sun.update(scene);
-        expect(command).not.toBeDefined();
-
-        sun.destroy();
+        viewSun(scene.camera, scene.context.uniformState);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('does not render in 2D', function() {
-        var sun = new Sun();
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.mode = SceneMode.SCENE2D;
+        scene.sun = new Sun();
+        scene.render();
 
-        var context = scene.context;
-        var frameState = createFrameState(context, createCamera({
-            near : 1.0,
-            far : 1.0e10
-        }));
-        frameState.mode = SceneMode.SCENE2D;
-        var us = context.uniformState;
-        us.update(frameState);
-        viewSun(frameState.camera, us);
-        us.update(frameState);
-        scene._frameState = frameState;
-        var command = sun.update(scene);
-        expect(command).not.toBeDefined();
-
-        sun.destroy();
+        viewSun(scene.camera, scene.context.uniformState);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('does not render without a render pass', function() {
-        var sun = new Sun();
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.frameState.passes.render = false;
+        scene.sun = new Sun();
+        scene.render();
 
-        var context = scene.context;
-        var frameState = createFrameState(context, createCamera({
-            near : 1.0,
-            far : 1.0e10
-        }));
-        frameState.passes.render = false;
-        var us = context.uniformState;
-        us.update(frameState);
-        viewSun(frameState.camera, us);
-        us.update(frameState);
-        scene._frameState = frameState;
-        var command = sun.update(scene);
-        expect(command).not.toBeDefined();
-
-        sun.destroy();
+        viewSun(scene.camera, scene.context.uniformState);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('can set glow factor', function() {
@@ -129,12 +96,13 @@ defineSuite([
     });
 
     it('draws without lens flare', function() {
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.sun = new Sun();
         scene.sun.glowFactor = 0.0;
         scene.renderForSpecs();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('isDestroyed', function() {
