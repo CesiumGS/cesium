@@ -8,6 +8,7 @@ var child_process = require('child_process');
 var crypto = require('crypto');
 var zlib = require('zlib');
 var readline = require('readline');
+var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
@@ -35,6 +36,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -375,7 +377,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 'logo.png',
                 'package.json',
                 'server.js',
-                'web.config'
+                'web.config',
+                '*.zip',
+                '*.tgz'
             ], {
                 dot : true, // include hidden files
                 nodir : true // only directory files
@@ -458,21 +462,29 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
         .then(function() {
             console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
             if (existingBlobs.length === 0) {
-               return;
+                return;
             }
 
-            console.log('Cleaning up old files...');
-            return s3.deleteObjectsAsync({
-                Bucket : bucketName,
-                Delete : {
-                    Objects : existingBlobs.map(function(file) {
-                        return {Key : file};
-                    })
+            var objectToDelete = [];
+            existingBlobs.forEach(function(file) {
+                //Don't delete generate zip files.
+                if (!/\.(zip|tgz)$/.test(file)) {
+                    objectToDelete.push({Key : file});
                 }
-            })
-            .then(function() {
-                console.log('Cleaned ' + existingBlobs.length + ' files.');
             });
+
+            if (objectToDelete.length > 0) {
+                console.log('Cleaning up old files...');
+                return s3.deleteObjectsAsync({
+                                                 Bucket : bucketName,
+                                                 Delete : {
+                                                     Objects : objectToDelete
+                                                 }
+                                             })
+                    .then(function() {
+                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                    });
+            }
         })
         .catch(function(error) {
             errors.push(error);
@@ -535,6 +547,52 @@ function listAll(s3, bucketName, directory, files, marker) {
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
     });
+}
+
+gulp.task('deploy-set-version', function() {
+    var version = yargs.argv.version;
+    if (version) {
+        packageJson.version += '-' + version;
+        fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
+    }
+});
+
+gulp.task('deploy-status', function() {
+    var status = yargs.argv.status;
+    var message = yargs.argv.message;
+
+    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
+    var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+
+    return Promise.join(
+        setStatus(status, deployUrl, message, 'deployment'),
+        setStatus(status, zipUrl, message, 'zip file'),
+        setStatus(status, npmUrl, message, 'npm package')
+    );
+});
+
+function setStatus(state, targetUrl, description, context) {
+    // skip if the environment does not have the token
+    if (!process.env.TOKEN) {
+        return;
+    }
+
+    var requestPost = Promise.promisify(request.post);
+    return requestPost({
+         url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+         json: true,
+         headers: {
+             'Authorization': 'token ' + process.env.TOKEN,
+             'User-Agent': 'Cesium'
+         },
+         body: {
+             state: state,
+             target_url: targetUrl,
+             description: description,
+             context: context
+         }
+     });
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
