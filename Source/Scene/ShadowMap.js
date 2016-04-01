@@ -137,7 +137,7 @@ define([
 
         this.enabled = false;
         this.softShadows = defaultValue(options.softShadows, false);
-        this._exponentialShadows = true;
+        this._exponentialShadows = false;
 
         this._terrainBias = {
             polygonOffset : true,

@@ -194,7 +194,7 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.castShadows = true;
+        this.castShadows = false;
 
         /**
          * Determines whether the globe will receive shadows when shadow mapping is enabled.

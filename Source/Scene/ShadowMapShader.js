@@ -134,7 +134,9 @@ define([
             '} \n' +
             'vec3 getNormalEC() \n' +
             '{ \n' +
-            '    return normalize(' + normalVaryingName + '); \n' +
+            (hasNormalVarying ?
+            '    return normalize(' + normalVaryingName + '); \n' :
+            '    return vec3(1.0); \n') +
             '} \n' +
 
             (isPointLight && usesCubeMap ?
