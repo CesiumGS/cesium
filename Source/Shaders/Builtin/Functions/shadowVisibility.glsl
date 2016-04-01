@@ -1,6 +1,7 @@
 
 uniform float u_shadowDepthBias;
 uniform float u_shadowNormalShadingSmooth;
+uniform vec2 u_shadowMapTexelStepSize;
 
 float czm_private_shadowVisibility(float visibility) {
 #ifdef USE_NORMAL_SHADING
@@ -27,10 +28,10 @@ float czm_shadowVisibility(vec2 uv, float depth, float nDotL, float shadowDistan
 {
 #ifdef USE_SOFT_SHADOWS
     float radius = 1.0;
-                float dx0 = -czm_shadowMapTexelStepSize.x * radius;
-                float dy0 = -czm_shadowMapTexelStepSize.y * radius;
-                float dx1 = czm_shadowMapTexelStepSize.x * radius;
-                float dy1 = czm_shadowMapTexelStepSize.y * radius;
+                float dx0 = -u_shadowMapTexelStepSize.x * radius;
+                float dy0 = -u_shadowMapTexelStepSize.y * radius;
+                float dx1 = u_shadowMapTexelStepSize.x * radius;
+                float dy1 = u_shadowMapTexelStepSize.y * radius;
                 float visibility = (
                     czm_shadowDepthCompare(uv, depth, shadowDistance) +
                     czm_shadowDepthCompare(uv + vec2(dx0, dy0), depth, shadowDistance) +

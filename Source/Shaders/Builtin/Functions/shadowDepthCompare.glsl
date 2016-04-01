@@ -1,15 +1,18 @@
 
+uniform sampler2D u_shadowMapTexture;
+uniform samplerCube u_shadowMapTextureCube;
+
 float czm_sampleShadowMap(vec3 d)
 {
-    return czm_unpackDepth(textureCube(czm_shadowMapTextureCube, d));
+    return czm_unpackDepth(textureCube(u_shadowMapTextureCube, d));
 }
 
 float czm_sampleShadowMap(vec2 uv)
 {
 #ifdef USE_SHADOW_DEPTH_TEXTURE
-    return texture2D(czm_shadowMapTexture, uv).r;
+    return texture2D(u_shadowMapTexture, uv).r;
 #else
-    return czm_unpackDepth(texture2D(czm_shadowMapTexture, uv));
+    return czm_unpackDepth(texture2D(u_shadowMapTexture, uv));
 #endif
 }
 

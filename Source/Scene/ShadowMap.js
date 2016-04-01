@@ -1207,6 +1207,7 @@ define([
         var isPointLight = this.isPointLight;
         var bias = isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
 
+        var that = this;
         var mapUniforms = {
             u_shadowDepthBias : function() {
                 return bias.depthBias;
@@ -1216,6 +1217,36 @@ define([
             },
             u_shadowNormalOffsetScale : function() {
                 return bias.normalOffsetScale;
+            },
+            u_shadowMapTexture :function() {
+                return that.shadowMapTexture;
+            },
+            u_shadowMapTextureCube : function() {
+                return that.shadowMapTexture;
+            },
+            u_shadowMapMatrix : function() {
+                return that.shadowMapMatrix;
+            },
+            u_shadowMapCascadeSplits : function() {
+                return that.cascadeSplits;
+            },
+            u_shadowMapCascadeMatrices : function() {
+                return that.cascadeMatrices;
+            },
+            u_shadowMapLightDirectionEC : function() {
+                return that.lightDirectionEC;
+            },
+            u_shadowMapLightPositionEC : function() {
+                return that.lightPositionEC;
+            },
+            u_shadowMapTexelStepSize : function() {
+                return that.texelStepSize;
+            },
+            u_shadowMapCascadeDistances : function() {
+                return that.cascadeDistances;
+            },
+            u_shadowMapDistance : function() {
+                return that.distance;
             }
         };
 

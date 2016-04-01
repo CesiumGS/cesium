@@ -1195,7 +1195,7 @@ define([
 
         // Update uniforms for shadow maps.
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (shadowsEnabled && primitive._receiveShadows) {
+        if (shadowsEnabled && (primitive._receiveShadows || primitive._castShadows)) {
             uniforms = frameState.shadowMap.combineUniforms(uniforms, false);
         }
 

@@ -2596,7 +2596,7 @@ define([
 
                 // Modify uniform state to receive shadows
                 var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-                if (shadowsEnabled && model.receiveShadows) {
+                if (shadowsEnabled && (model.receiveShadows || model.castShadows)) {
                     uniformMap = frameState.shadowMap.combineUniforms(uniformMap, false);
                 }
 

@@ -39,13 +39,16 @@ define([
         positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
         var isPointLight = frameState.shadowMap.isPointLight;
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
+
+        fs = 'uniform vec4 u_shadowMapLightPositionEC; \n';
+
         if (opaque) {
-            fs =
+            fs +=
                 'varying vec3 ' + positionVaryingName + ';\n' +
                 'void main() \n' +
                 '{ \n';
         } else {
-            fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
+            fs += ShaderSource.replaceMain(fs, 'czm_shadow_main');
             fs +=
                 'void main() \n' +
                 '{ \n' +
@@ -58,7 +61,7 @@ define([
         if (isPointLight) {
             fs +=
                 'float distance = length(' + positionVaryingName + '); \n' +
-                'distance /= czm_shadowMapLightPositionEC.w; // radius \n' +
+                'distance /= u_shadowMapLightPositionEC.w; // radius \n' +
                 'gl_FragColor = czm_packDepth(distance); \n';
         } else if (usesDepthTexture) {
             fs += 'gl_FragColor = vec4(1.0); \n';
@@ -120,6 +123,10 @@ define([
         fs += '\n\n';
 
         fs +=
+            'uniform mat4 u_shadowMapMatrix; \n' +
+            'uniform vec3 u_shadowMapLightDirectionEC; \n' +
+            'uniform vec4 u_shadowMapLightPositionEC; \n' +
+            'uniform float u_shadowMapDistance; \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +
             (hasPositionVarying ?
@@ -150,10 +157,10 @@ define([
 
         if (isPointLight) {
             fs +=
-                '    vec3 directionEC = positionEC.xyz - czm_shadowMapLightPositionEC.xyz; \n' +
+                '    vec3 directionEC = positionEC.xyz - u_shadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
                 '    directionEC = normalize(directionEC); \n' +
-                '    float radius = czm_shadowMapLightPositionEC.w; \n' +
+                '    float radius = u_shadowMapLightPositionEC.w; \n' +
                 '    // Stop early if the fragment is beyond the point light radius \n' +
                 '    if (distance > radius) { \n' +
                 '        return; \n' +
@@ -169,11 +176,11 @@ define([
                 '    float visibility = czm_shadowVisibility(uv, distance, nDotL, radius); \n');
         } else if (isSpotLight) {
             fs +=
-                '    vec3 directionEC = normalize(positionEC.xyz - czm_shadowMapLightPositionEC.xyz); \n' +
+                '    vec3 directionEC = normalize(positionEC.xyz - u_shadowMapLightPositionEC.xyz); \n' +
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
 
-                '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
+                '    vec4 shadowPosition = u_shadowMapMatrix * positionEC; \n' +
                 '    // Spot light uses a perspective projection, so perform the perspective divide \n' +
                 '    shadowPosition /= shadowPosition.w; \n' +
 
@@ -182,11 +189,11 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, u_shadowMapDistance); \n';
         } else if (hasCascades) {
             fs +=
                 '    float depth = -positionEC.z; \n' +
-                '    float maxDepth = czm_shadowMapCascadeSplits[1].w; \n' +
+                '    float maxDepth = u_shadowMapCascadeSplits[1].w; \n' +
 
                 '    // Stop early if the eye depth exceeds the last cascade \n' +
                 '    if (depth > maxDepth) { \n' +
@@ -198,7 +205,7 @@ define([
                 '    float shadowDistance = czm_cascadeDistance(weights); \n' +
 
                 '    // Apply normal offset \n' +
-                '    float nDotL = clamp(dot(normalEC, czm_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
+                '    float nDotL = clamp(dot(normalEC, u_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
 
                 '    // Transform position into the cascade \n' +
@@ -216,16 +223,16 @@ define([
                 '    visibility = czm_cascadeColor(weights); \n' : '');
         } else {
             fs +=
-                '    float nDotL = clamp(dot(normalEC, czm_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
+                '    float nDotL = clamp(dot(normalEC, u_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
-                '    vec4 shadowPosition = czm_shadowMapMatrix * positionEC; \n' +
+                '    vec4 shadowPosition = u_shadowMapMatrix * positionEC; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
                 '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.001)))) { \n' +
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, czm_shadowMapDistance); \n';
+                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, u_shadowMapDistance); \n';
         }
 
         fs +=
