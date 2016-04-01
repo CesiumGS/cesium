@@ -50,7 +50,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        computeEngine = new ComputeEngine(scene.frameState.context);
+        computeEngine = new ComputeEngine(scene.context);
     });
 
     afterAll(function() {
@@ -108,7 +108,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(scene.frameState.context, imagery);
+                layer._createTexture(scene.context, imagery);
                 expect(imagery.state).toEqual(ImageryState.INVALID);
                 imagery.releaseReference();
             });
@@ -170,7 +170,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(scene.frameState.context, imagery);
+                layer._createTexture(scene.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
@@ -205,7 +205,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                layer._createTexture(scene.frameState.context, imagery);
+                layer._createTexture(scene.context, imagery);
 
                 return pollToPromise(function() {
                     return imagery.state === ImageryState.TEXTURE_LOADED;
