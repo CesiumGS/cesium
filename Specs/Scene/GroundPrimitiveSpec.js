@@ -25,7 +25,6 @@ defineSuite([
         'Scene/Primitive',
         'Scene/SceneMode',
         'Specs/BadGeometry',
-        'Specs/createFrameState',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -54,7 +53,6 @@ defineSuite([
         Primitive,
         SceneMode,
         BadGeometry,
-        createFrameState,
         createScene,
         pollToPromise) {
     'use strict';
@@ -258,7 +256,8 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
 
         primitive.update(frameState);
         expect(frameState.commandList.length).toEqual(0);
@@ -274,7 +273,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         frameState.commandList.length = 0;
         primitive.update(frameState);
@@ -301,7 +300,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.passes.render = false;
         frameState.passes.pick = false;
 
@@ -565,8 +564,8 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
-
+        var frameState = scene.frameState;
+        frameState.afterRender.length = 0;
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
@@ -600,8 +599,8 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
-
+        var frameState = scene.frameState;
+        frameState.afterRender.length = 0;
         return pollToPromise(function() {
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
@@ -719,7 +718,7 @@ defineSuite([
             allowPicking : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         return pollToPromise(function() {
             primitive.update(frameState);
@@ -794,7 +793,7 @@ defineSuite([
             geometryInstances : rectangleInstance
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         return pollToPromise(function() {
             primitive.update(frameState);
@@ -812,7 +811,7 @@ defineSuite([
             geometryInstances : rectangleInstance
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         primitive.update(frameState);
 
         primitive.destroy();
