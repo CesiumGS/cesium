@@ -667,6 +667,21 @@ require({
         }
     }
 
+    var queryObject = {};
+    var gistId = ioQuery.queryToObject(window.location.search.substring(1)).id;
+    if (window.location.search) {
+        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+        if (defined(gistId)) {
+            queryObject.gistId = gistId;
+        }
+    } else {
+        queryObject.src = 'Hello World.html';
+        queryObject.label = 'Showcases';
+        if (defined(gistId)) {
+            queryObject.gistId = gistId;
+        }
+    }
+
     function loadFromGallery(demo) {
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
@@ -692,7 +707,16 @@ require({
 
             var scriptCode = scriptMatch[1];
             demoJs = scriptCode.replace(/\s/g, '');
-            jsEditor.setValue(scriptCode);
+
+            Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
+                .then(function(data) {
+                    var files = data.data.files;
+                    jsEditor.setValue(files[Object.keys(files)[0]].content);
+                }).otherwise(function() {
+                    jsEditor.setValue(scriptCode);
+                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+                });
+
             jsEditor.clearHistory();
 
             var htmlText = '';
@@ -848,21 +872,23 @@ require({
             data : JSON.stringify(data),
             method : 'POST'
         }).then(function(content) {
-            document.getElementById("gitsLinkShare").value = JSON.parse(content).id;
+            var getUrl = window.location;
+            var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+            var shareUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&id=';
+            document.getElementById('gistLinkShare').value = shareUrl + JSON.parse(content).id;
         }).otherwise(function(error) {
-            console.log(error);
+            appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
         });
     });
 
     registry.byId('buttonImport').on('click', function() {
-        var id = document.getElementById("gitsLink").value;
+        var id = document.getElementById("gistId").value;
         return Cesium.loadJsonp('https://api.github.com/gists/' + id)
             .then(function(data) {
                 var files = data.data.files;
-                console.log();
                 jsEditor.setValue(files[Object.keys(files)[0]].content);
-            }).otherwise(function(error) {
-                console.log(error);
+            }).otherwise(function() {
+                appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '.', true);
             });
     });
 
@@ -976,14 +1002,6 @@ require({
         this.originalResize(changeSize, resultSize);
     };
 
-    var queryObject = {};
-    if (window.location.search) {
-        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
-    } else {
-        queryObject.src = 'Hello World.html';
-        queryObject.label = 'Showcases';
-    }
-
     function requestDemo(name) {
         return xhr.get({
             url : 'gallery/' + name + '.html',
@@ -1020,7 +1038,11 @@ require({
             if (defined(queryObject.src)) {
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
-                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+                        if (defined(queryObject.gistId)) {
+                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&id=' + queryObject.gistId);
+                        } else {
+                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+                        }
                         document.title = demo.name + ' - Cesium Sandcastle';
                     });
                 }
@@ -1097,6 +1119,7 @@ require({
             newDemo = demo;
         }
         demoLink.onclick = function(e) {
+            delete queryObject.gistId;
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {

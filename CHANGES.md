@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.20 - 2016-05-02
+
+* Added ability to import and export Sandcastle example using Gists
+
 ### 1.20 - 2016-04-01
 
 * Breaking changes
