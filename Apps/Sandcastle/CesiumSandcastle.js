@@ -889,7 +889,9 @@ require({
                 jsEditor.setValue(files[Object.keys(files)[0]].content);
                 CodeMirror.commands.runCesium(jsEditor);
             }).otherwise(function() {
-                appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '.', true);
+                if (id !== '') {
+                    appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '.', true);
+                }
             });
     });
 
