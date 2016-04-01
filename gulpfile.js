@@ -888,7 +888,7 @@ function createExorcistTransform(name) {
     return transform(function () { return exorcist('wwwroot/build/Workers/' + name + '.map'); });
 }
 
-gulp.task('terria-prepare-cesium', ['build', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper', 'terria-build-workers']);
+gulp.task('terria-prepare-cesium', ['build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper', 'terria-build-workers']);
 
 gulp.task('terria-copy-cesium-assets', function() {
     return gulp.src([
