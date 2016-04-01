@@ -876,7 +876,7 @@ require({
             var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
             var shareUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&id=';
             document.getElementById('gistLinkShare').value = shareUrl + JSON.parse(content).id;
-        }).otherwise(function(error) {
+        }).otherwise(function() {
             appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
         });
     });
@@ -887,6 +887,7 @@ require({
             .then(function(data) {
                 var files = data.data.files;
                 jsEditor.setValue(files[Object.keys(files)[0]].content);
+                CodeMirror.commands.runCesium(jsEditor);
             }).otherwise(function() {
                 appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '.', true);
             });
