@@ -30,15 +30,29 @@ define([
     };
 
     function fireChangedEvent(collection) {
+        if (collection._firing) {
+            collection._refire = true;
+            return;
+        }
+
         if (collection._suspendCount === 0) {
             var added = collection._addedEntities;
             var removed = collection._removedEntities;
             var changed = collection._changedEntities;
             if (changed.length !== 0 || added.length !== 0 || removed.length !== 0) {
-                collection._collectionChanged.raiseEvent(collection, added.values, removed.values, changed.values);
-                added.removeAll();
-                removed.removeAll();
-                changed.removeAll();
+                collection._firing = true;
+                do {
+                    collection._refire = false;
+                    var addedArray = added.values.slice(0);
+                    var removedArray = removed.values.slice(0);
+                    var changedArray = changed.values.slice(0);
+
+                    added.removeAll();
+                    removed.removeAll();
+                    changed.removeAll();
+                    collection._collectionChanged.raiseEvent(collection, addedArray, removedArray, changedArray);
+                } while (collection._refire);
+                collection._firing = false;
             }
         }
     }
@@ -60,6 +74,8 @@ define([
         this._collectionChanged = new Event();
         this._id = createGuid();
         this._show = true;
+        this._firing = false;
+        this._refire  = false;
     }
 
     /**

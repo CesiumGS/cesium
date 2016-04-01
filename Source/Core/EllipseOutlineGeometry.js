@@ -67,9 +67,6 @@ define([
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
     function computeExtrudedEllipse(options) {
-        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
-        numberOfVerticalLines = Math.max(numberOfVerticalLines, 0);
-
         var center = options.center;
         var ellipsoid = options.ellipsoid;
         var semiMajorAxis = options.semiMajorAxis;
@@ -93,6 +90,9 @@ define([
         positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
+        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+        numberOfVerticalLines = CesiumMath.clamp(numberOfVerticalLines, 0, length/2);
+
         var indices = IndexDatatype.createTypedArray(length, length * 2 + numberOfVerticalLines * 2);
 
         length /= 2;
@@ -109,11 +109,8 @@ define([
         if (numberOfVerticalLines > 0) {
             var numSideLines = Math.min(numberOfVerticalLines, length);
             numSide = Math.round(length / numSideLines);
-        }
 
-
-        var maxI = Math.min(numSide * numberOfVerticalLines, length);
-        if (numberOfVerticalLines > 0) {
+            var maxI = Math.min(numSide * numberOfVerticalLines, length);
             for (i = 0; i < maxI; i += numSide) {
                 indices[index++] = i;
                 indices[index++] = i + length;
