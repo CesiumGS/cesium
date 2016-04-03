@@ -224,10 +224,12 @@ define([
 
             // pass through fragment shader. only depth is rendered for the globe on a pick pass
             var fs =
-                'void main()\n' +
-                '{\n' +
-                '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
-                '}\n';
+//language="glsl"
+'\
+void main()\n\
+{\n\
+    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n\
+}\n';
 
             pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
                 context : frameState.context,

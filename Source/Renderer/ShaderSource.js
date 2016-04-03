@@ -201,7 +201,9 @@ define([
         }
 
         if (isFragmentShader) {
-            result += '\
+            result +=
+//language="glsl"                
+'\
 #ifdef GL_FRAGMENT_PRECISION_HIGH\n\
     precision highp float;\n\
 #else\n\
@@ -330,28 +332,32 @@ define([
 
     ShaderSource.createPickVertexShaderSource = function(vertexShaderSource) {
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
-        var pickMain = 'attribute vec4 pickColor; \n' +
-            'varying vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    czm_pickColor = pickColor; \n' +
-            '}';
-
+        var pickMain = 
+//language=glsl            
+'\
+attribute vec4 pickColor;\n\
+varying vec4 czm_pickColor;\n\
+void main()\n\
+{\n\
+    czm_old_main();\n\
+    czm_pickColor = pickColor;\n\
+}';
         return renamedVS + '\n' + pickMain;
     };
 
     ShaderSource.createPickFragmentShaderSource = function(fragmentShaderSource, pickColorQualifier) {
         var renamedFS = ShaderSource.replaceMain(fragmentShaderSource, 'czm_old_main');
-        var pickMain = pickColorQualifier + ' vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    if (gl_FragColor.a == 0.0) { \n' +
-            '       discard; \n' +
-            '    } \n' +
-            '    gl_FragColor = czm_pickColor; \n' +
-            '}';
+        var pickMain = pickColorQualifier + ' vec4 czm_pickColor;\n' +
+//language=glsl                       
+'\
+void main()\n\
+{\n\
+    czm_old_main();\n\
+    if (gl_FragColor.a == 0.0) {\n\
+        discard;\n\
+    }\n\
+    gl_FragColor = czm_pickColor;\n\
+}';
 
         return renamedFS + '\n' + pickMain;
     };
