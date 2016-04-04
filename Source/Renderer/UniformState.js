@@ -149,8 +149,6 @@ define([
         this._resolutionScale = 1.0;
 
         this._fogDensity = undefined;
-
-        this.shadowMap = undefined;
     }
 
     defineProperties(UniformState.prototype, {
@@ -934,8 +932,6 @@ define([
         setSunAndMoonDirections(this, frameState);
 
         this._fogDensity = frameState.fog.density;
-
-        this.shadowMap = frameState.shadowMap;
 
         this._frameState = frameState;
         this._temeToPseudoFixed = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, this._temeToPseudoFixed);
