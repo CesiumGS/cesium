@@ -687,6 +687,23 @@ defineSuite([
         });
     });
 
+    it('GroundOverlay: Sets rectangle image material', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <color>7F0000FF</color>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+            </Icon>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
+            expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127/255));
+        });
+    });
+
     it('GroundOverlay: Sets rectangle color material', function() {
         var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -835,6 +852,18 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+        });
+    });
+
+    it('Styles: supports external style maps with styleUrl', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <styleUrl>Data/KML/externalStyle.kml#testStyleMap</styleUrl>\
             </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
@@ -3305,7 +3334,7 @@ defineSuite([
 			expect(polyline.width.getValue()).toEqual(10);
 		});
 	});
-	
+
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\

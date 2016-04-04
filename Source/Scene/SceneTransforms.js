@@ -126,7 +126,7 @@ define([
             var projectionMatrix = camera.frustum.projectionMatrix;
 
             var x = camera.positionWC.y;
-            var eyePoint = Cartesian3.fromElements(Math.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x);
+            var eyePoint = Cartesian3.fromElements(CesiumMath.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x);
             var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
             if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= canvas.clientWidth) {

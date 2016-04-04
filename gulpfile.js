@@ -8,6 +8,7 @@ var child_process = require('child_process');
 var crypto = require('crypto');
 var zlib = require('zlib');
 var readline = require('readline');
+var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
@@ -35,6 +36,7 @@ if (/\.0$/.test(version)) {
 }
 
 var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
 
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
@@ -314,16 +316,16 @@ gulp.task('deploy-s3', function(done) {
     var bucketName = argv.b;
     var cacheControl = argv.c ? argv.c : 'max-age=3600';
 
-    var iface = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
-
     if (argv.confirm) {
         // skip prompt for travis
         deployCesium(bucketName, uploadDirectory, cacheControl, done);
         return;
     }
+
+    var iface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
 
     // prompt for confirmation
     iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
@@ -342,6 +344,7 @@ gulp.task('deploy-s3', function(done) {
 function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var readFile = Promise.promisify(fs.readFile);
     var gzip = Promise.promisify(zlib.gzip);
+    var getCredentials = Promise.promisify(aws.config.getCredentials, {context: aws.config});
     var concurrencyLimit = 2000;
 
     var s3 = new Promise.promisifyAll(new aws.S3({
@@ -357,134 +360,151 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
     var skipped = 0;
     var errors = [];
 
-    return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+    return getCredentials()
     .then(function() {
-        return globby([
-            'Apps/**',
-            'Build/**',
-            'Source/**',
-            'Specs/**',
-            'ThirdParty/**',
-            '*.md',
-            'favicon.ico',
-            'gulpfile.js',
-            'index.html',
-            'logo.png',
-            'package.json',
-            'server.js',
-            'web.config'
-        ], {
-            dot : true, // include hidden files
-            nodir : true // only directory files
-        });
-    })
-    .then(function(files) {
-        return Promise.map(files, function(file) {
-            var blobName = uploadDirectory + '/' + file;
-            var mimeLookup = getMimeType(blobName);
-            var contentType = mimeLookup.type;
-            var compress = mimeLookup.compress;
-            var contentEncoding = compress ? 'gzip' : undefined;
-            var etag;
+        return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+        .then(function() {
+            return globby([
+                'Apps/**',
+                'Build/**',
+                'Source/**',
+                'Specs/**',
+                'ThirdParty/**',
+                '*.md',
+                'favicon.ico',
+                'gulpfile.js',
+                'index.html',
+                'logo.png',
+                'package.json',
+                'server.js',
+                'web.config',
+                '*.zip',
+                '*.tgz'
+            ], {
+                dot : true, // include hidden files
+                nodir : true // only directory files
+            });
+        })
+        .then(function(files) {
+            return Promise.map(files, function(file) {
+                var blobName = uploadDirectory + '/' + file;
+                var mimeLookup = getMimeType(blobName);
+                var contentType = mimeLookup.type;
+                var compress = mimeLookup.compress;
+                var contentEncoding = compress ? 'gzip' : undefined;
+                var etag;
 
-            totalFiles++;
+                totalFiles++;
 
-            return readFile(file)
-            .then(function(content) {
-                return compress ? gzip(content) : content;
-            })
-            .then(function(content) {
-                // compute hash and etag
-                var hash = crypto.createHash('md5').update(content).digest('hex');
-                etag = crypto.createHash('md5').update(content).digest('base64');
-
-                var index = existingBlobs.indexOf(blobName);
-                if (index <= -1) {
-                    return content;
-                }
-
-                // remove files as we find them on disk
-                existingBlobs.splice(index, 1);
-
-                // get file info
-                return s3.headObjectAsync({
-                    Bucket : bucketName,
-                    Key : blobName
+                return readFile(file)
+                .then(function(content) {
+                    return compress ? gzip(content) : content;
                 })
-                .then(function(data) {
-                    if (data.ETag !== ('"' + hash + '"') ||
-                        data.CacheControl !== cacheControl ||
-                        data.ContentType !== contentType ||
-                        data.ContentEncoding !== contentEncoding) {
+                .then(function(content) {
+                    // compute hash and etag
+                    var hash = crypto.createHash('md5').update(content).digest('hex');
+                    etag = crypto.createHash('md5').update(content).digest('base64');
+
+                    var index = existingBlobs.indexOf(blobName);
+                    if (index <= -1) {
                         return content;
                     }
 
-                    // We don't need to upload this file again
-                    skipped++;
-                    return undefined;
+                    // remove files as we find them on disk
+                    existingBlobs.splice(index, 1);
+
+                    // get file info
+                    return s3.headObjectAsync({
+                        Bucket : bucketName,
+                        Key : blobName
+                    })
+                    .then(function(data) {
+                        if (data.ETag !== ('"' + hash + '"') ||
+                            data.CacheControl !== cacheControl ||
+                            data.ContentType !== contentType ||
+                            data.ContentEncoding !== contentEncoding) {
+                            return content;
+                        }
+
+                        // We don't need to upload this file again
+                        skipped++;
+                        return undefined;
+                    })
+                    .catch(function(error) {
+                        errors.push(error);
+                    });
                 })
-                .catch(function(error) {
-                    errors.push(error);
+                .then(function(content) {
+                    if (!content) {
+                        return;
+                    }
+
+                    console.log('Uploading ' + blobName + '...');
+                    var params = {
+                        Bucket : bucketName,
+                        Key : blobName,
+                        Body : content,
+                        ContentMD5 : etag,
+                        ContentType : contentType,
+                        ContentEncoding : contentEncoding,
+                        CacheControl : cacheControl
+                    };
+
+                    return s3.putObjectAsync(params).then(function() {
+                        uploaded++;
+                    })
+                    .catch(function(error) {
+                        errors.push(error);
+                    });
                 });
-            })
-            .then(function(content) {
-                if (!content) {
-                    return;
-                }
-
-                console.log('Uploading ' + blobName + '...');
-                var params = {
-                    Bucket : bucketName,
-                    Key : blobName,
-                    Body : content,
-                    ContentMD5 : etag,
-                    ContentType : contentType,
-                    ContentEncoding : contentEncoding,
-                    CacheControl : cacheControl
-                };
-
-                return s3.putObjectAsync(params).then(function() {
-                    uploaded++;
-                })
-                .catch(function(error) {
-                    errors.push(error);
-                });
-            });
-        }, {concurrency : concurrencyLimit});
-    })
-    .then(function() {
-        console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
-        if (existingBlobs.length === 0) {
-           return;
-        }
-
-        console.log('Cleaning up old files...');
-        return s3.deleteObjectsAsync({
-            Bucket : bucketName,
-            Delete : {
-                Objects : existingBlobs.map(function(file) {
-                    return {Key : file};
-                })
-            }
+            }, {concurrency : concurrencyLimit});
         })
         .then(function() {
-            console.log('Cleaned ' + existingBlobs.length + ' files.');
+            console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
+            if (existingBlobs.length === 0) {
+                return;
+            }
+
+            var objectToDelete = [];
+            existingBlobs.forEach(function(file) {
+                //Don't delete generate zip files.
+                if (!/\.(zip|tgz)$/.test(file)) {
+                    objectToDelete.push({Key : file});
+                }
+            });
+
+            if (objectToDelete.length > 0) {
+                console.log('Cleaning up old files...');
+                return s3.deleteObjectsAsync({
+                                                 Bucket : bucketName,
+                                                 Delete : {
+                                                     Objects : objectToDelete
+                                                 }
+                                             })
+                    .then(function() {
+                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                    });
+            }
+        })
+        .catch(function(error) {
+            errors.push(error);
+        })
+        .then(function() {
+            if (errors.length === 0) {
+                done();
+                return;
+            }
+
+            console.log('Errors: ');
+            errors.map(function(e) {
+                console.log(e);
+            });
+            done(1);
         });
     })
     .catch(function(error) {
-        errors.push(error);
-    })
-    .then(function() {
-        if (errors.length === 0) {
-            done();
-            return;
-        }
-
-        console.log('Errors: ');
-        errors.map(function(e) {
-            console.log(e);
-        });
-        done(1);
+        console.log('Error: Could not load S3 credentials.');
+        done();
     });
 }
 
@@ -527,6 +547,52 @@ function listAll(s3, bucketName, directory, files, marker) {
             return listAll(s3, bucketName, directory, files, files[files.length - 1]);
         }
     });
+}
+
+gulp.task('deploy-set-version', function() {
+    var version = yargs.argv.version;
+    if (version) {
+        packageJson.version += '-' + version;
+        fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
+    }
+});
+
+gulp.task('deploy-status', function() {
+    var status = yargs.argv.status;
+    var message = yargs.argv.message;
+
+    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
+    var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+
+    return Promise.join(
+        setStatus(status, deployUrl, message, 'deployment'),
+        setStatus(status, zipUrl, message, 'zip file'),
+        setStatus(status, npmUrl, message, 'npm package')
+    );
+});
+
+function setStatus(state, targetUrl, description, context) {
+    // skip if the environment does not have the token
+    if (!process.env.TOKEN) {
+        return;
+    }
+
+    var requestPost = Promise.promisify(request.post);
+    return requestPost({
+         url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+         json: true,
+         headers: {
+             'Authorization': 'token ' + process.env.TOKEN,
+             'User-Agent': 'Cesium'
+         },
+         body: {
+             state: state,
+             target_url: targetUrl,
+             description: description,
+             context: context
+         }
+     });
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
