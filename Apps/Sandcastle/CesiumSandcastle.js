@@ -160,6 +160,7 @@ require({
     var demoHtml = '';
     var demoJs = '';
     var previousCode = '';
+    var runGist = false;
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -513,6 +514,21 @@ require({
     });
 
     function getScriptFromEditor(addExtraLine) {
+        if (!runGist && defined(queryObject.gistId)) {
+            return 'function startup(Cesium) {\n' +
+                   '    \'use strict\';\n' +
+                   '//Sandcastle_Begin\n' +
+                   (addExtraLine ? '\n' : '') +
+                   'var viewer = new Cesium.Viewer(\'cesiumContainer\');' +
+                   '//Sandcastle_End\n' +
+                   '    Sandcastle.finishedLoading();\n' +
+                   '}\n' +
+                   'if (typeof Cesium !== "undefined") {\n' +
+                   '    startup(Cesium);\n' +
+                   '} else if (typeof require === "function") {\n' +
+                   '    require(["Cesium"], startup);\n' +
+                   '}\n';
+        }
         return 'function startup(Cesium) {\n' +
                '    \'use strict\';\n' +
                '//Sandcastle_Begin\n' +
@@ -713,10 +729,12 @@ require({
                 Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
                     .then(function(data) {
                         var files = data.data.files;
-                        jsEditor.setValue(files[Object.keys(files)[0]].content);
+                        var code = files[Object.keys(files)[0]].content;
+                        jsEditor.setValue(code);
+                        demoJs = code.replace(/\s/g, '');
                         window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
                     }).otherwise(function() {
-                        appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value, true);
+                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                     });
             } else {
                 jsEditor.setValue(scriptCode);
@@ -901,17 +919,19 @@ require({
 
         return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
             .then(function(data) {
+                var files = data.data.files;
+                var code = files[Object.keys(files)[0]].content;
                 var demo = {
                     name : 'Import Gist',
                     description : 'Code imported from a Gist'
                 };
-                var files = data.data.files;
-                jsEditor.setValue(files[Object.keys(files)[0]].content);
+                jsEditor.setValue(code);
+                demoJs = code.replace(/\s/g, '');
                 queryObject.gistId = gistId;
                 window.history.replaceState(demo, demo.name, '?src=Hello%20World.html&label=Showcases&gist=' + queryObject.gistId);
             }).otherwise(function() {
                 if (gistId !== '') {
-                    appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '. If you are imputing a url be sure it is in this form: https://gist.github.com/username/id', true);
+                    appendConsole('consoleError', 'No such Gist exists: ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
                 }
             });
     });
@@ -941,6 +961,7 @@ require({
     });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
+        runGist = true;
         CodeMirror.commands.runCesium(jsEditor);
     });
 
