@@ -159,6 +159,7 @@ require({
     var newDemo;
     var demoHtml = '';
     var demoJs = '';
+    var previousCode = '';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -668,7 +669,7 @@ require({
     }
 
     var queryObject = {};
-    var gistId = ioQuery.queryToObject(window.location.search.substring(1)).id;
+    var gistId = ioQuery.queryToObject(window.location.search.substring(1)).gist;
     if (window.location.search) {
         queryObject = ioQuery.queryToObject(window.location.search.substring(1));
         if (defined(gistId)) {
@@ -708,15 +709,19 @@ require({
             var scriptCode = scriptMatch[1];
             demoJs = scriptCode.replace(/\s/g, '');
 
-            Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
-                .then(function(data) {
-                    var files = data.data.files;
-                    jsEditor.setValue(files[Object.keys(files)[0]].content);
-                }).otherwise(function() {
-                    jsEditor.setValue(scriptCode);
-                    window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
-                });
-
+            if (defined(queryObject.gistId)) {
+                Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
+                    .then(function(data) {
+                        var files = data.data.files;
+                        jsEditor.setValue(files[Object.keys(files)[0]].content);
+                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                    }).otherwise(function() {
+                        appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value, true);
+                    });
+            } else {
+                jsEditor.setValue(scriptCode);
+                window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+            }
             jsEditor.clearHistory();
 
             var htmlText = '';
@@ -859,11 +864,16 @@ require({
     }
 
     registry.byId('buttonShare').on('click', function() {
+        var code = jsEditor.getValue();
+        if (code === previousCode) {
+            return;
+        }
+        previousCode = code;
         var data = {
             public : true,
             files : {
-                'sandcastle.js' : {
-                    content : jsEditor.getValue()
+                'Cesium-Sandcastle.js' : {
+                    content : code
                 }
             }
         };
@@ -872,25 +882,36 @@ require({
             data : JSON.stringify(data),
             method : 'POST'
         }).then(function(content) {
+            var textBox = document.getElementById('gistLinkShare');
             var getUrl = window.location;
             var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
-            var shareUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&id=';
-            document.getElementById('gistLinkShare').value = shareUrl + JSON.parse(content).id;
+            textBox.value = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
+            textBox.select();
         }).otherwise(function() {
             appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
         });
     });
 
     registry.byId('buttonImport').on('click', function() {
-        var id = document.getElementById("gistId").value;
-        return Cesium.loadJsonp('https://api.github.com/gists/' + id)
+        gistId = document.getElementById("gistId").value;
+        if (gistId.indexOf('/') !== -1) {
+            var index = gistId.lastIndexOf('/');
+            gistId = gistId.substring(index + 1);
+        }
+
+        return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
             .then(function(data) {
+                var demo = {
+                    name : 'Import Gist',
+                    description : 'Code imported from a Gist'
+                };
                 var files = data.data.files;
                 jsEditor.setValue(files[Object.keys(files)[0]].content);
-                CodeMirror.commands.runCesium(jsEditor);
+                queryObject.gistId = gistId;
+                window.history.replaceState(demo, demo.name, '?src=Hello%20World.html&label=Showcases&gist=' + queryObject.gistId);
             }).otherwise(function() {
-                if (id !== '') {
-                    appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '.', true);
+                if (gistId !== '') {
+                    appendConsole('consoleError', 'No such Gist with the given Id: ' + document.getElementById('gistId').value + '. If you are imputing a url be sure it is in this form: https://gist.github.com/username/id', true);
                 }
             });
     });
@@ -1042,7 +1063,7 @@ require({
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
                         if (defined(queryObject.gistId)) {
-                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&id=' + queryObject.gistId);
+                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
                         } else {
                             window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                         }
