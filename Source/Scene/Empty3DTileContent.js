@@ -85,6 +85,12 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Empty3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 

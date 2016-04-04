@@ -95,6 +95,12 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
+    Tileset3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    };
+
+    /**
+     * Part of the {@link Cesium3DTileContent} interface.
+     */
     Tileset3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
