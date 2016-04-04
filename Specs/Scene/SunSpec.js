@@ -1,14 +1,20 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Sun',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/Ellipsoid',
         'Core/Math',
         'Core/Matrix4',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         Sun,
+        BoundingSphere,
         Cartesian3,
+        Color,
+        Ellipsoid,
         CesiumMath,
         Matrix4,
         SceneMode,
@@ -16,6 +22,7 @@ defineSuite([
     'use strict';
 
     var scene;
+    var backgroundColor = [255, 0, 0, 255];
 
     beforeAll(function() {
         scene = createScene();
@@ -27,6 +34,7 @@ defineSuite([
 
     beforeEach(function() {
         scene.mode = SceneMode.SCENE3D;
+        scene.backgroundColor = Color.unpack(backgroundColor);
     });
 
     afterEach(function() {
@@ -35,56 +43,48 @@ defineSuite([
 
     function viewSun(camera, uniformState) {
         var sunPosition = uniformState.sunPositionWC;
-        camera.lookAt(sunPosition, Cartesian3.multiplyByScalar(Cartesian3.normalize(sunPosition, new Cartesian3()), CesiumMath.SOLAR_RADIUS + 100.0, new Cartesian3()));
+        var bounds = new BoundingSphere(sunPosition, CesiumMath.SOLAR_RADIUS);
+        camera.viewBoundingSphere(bounds);
     }
 
     it('draws in 3D', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.sun = new Sun();
+        scene.sun.glowFactor = 100;
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
     it('draws in Columbus view', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.mode = SceneMode.COLUMBUS_VIEW;
         scene.sun = new Sun();
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
     it('does not render when show is false', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.sun = new Sun();
         scene.render();
         scene.sun.show = false;
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
     });
 
     it('does not render in 2D', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.mode = SceneMode.SCENE2D;
         scene.sun = new Sun();
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-    });
-
-    it('does not render without a render pass', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
-        scene.frameState.passes.render = false;
-        scene.sun = new Sun();
-        scene.render();
-
-        viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
     });
 
     it('can set glow factor', function() {
@@ -96,13 +96,13 @@ defineSuite([
     });
 
     it('draws without lens flare', function() {
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.sun = new Sun();
         scene.sun.glowFactor = 0.0;
         scene.renderForSpecs();
 
         viewSun(scene.camera, scene.context.uniformState);
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
     });
 
     it('isDestroyed', function() {
