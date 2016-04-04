@@ -29,7 +29,7 @@ defineSuite([
 
     afterAll(function() {
         scene.destroyForSpecs();
-    })
+    });
 
     it('throws when options.rectangle is undefined', function() {
         expect(function(){
