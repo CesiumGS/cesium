@@ -77,6 +77,15 @@ defineSuite([
         expect(command).not.toBeDefined();
     });
 
+    it('does not render without a color pass', function() {
+        var s = new SkyAtmosphere();
+
+        scene.frameState.passes.render = false;
+
+        var command = s.update(scene.frameState);
+        expect(command).not.toBeDefined();
+    });
+
     it('gets ellipsoid', function() {
         var s = new SkyAtmosphere(Ellipsoid.UNIT_SPHERE);
         expect(s.ellipsoid).toEqual(Ellipsoid.UNIT_SPHERE);

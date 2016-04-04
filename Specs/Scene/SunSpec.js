@@ -26,6 +26,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.backgroundColor = Color.unpack(backgroundColor);
     });
 
     afterAll(function() {
@@ -34,7 +35,6 @@ defineSuite([
 
     beforeEach(function() {
         scene.mode = SceneMode.SCENE3D;
-        scene.backgroundColor = Color.unpack(backgroundColor);
     });
 
     afterEach(function() {
@@ -85,6 +85,17 @@ defineSuite([
 
         viewSun(scene.camera, scene.context.uniformState);
         expect(scene.renderForSpecs()).toEqual(backgroundColor);
+    });
+
+    it('does not render without a render pass', function() {
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        scene.sun = new Sun();
+        scene.render();
+
+        viewSun(scene.camera, scene.context.uniformState);
+        scene.frameState.passes.render = false;
+        scene.sun.update(scene);
+        expect(scene.context.readPixels()).toEqual(backgroundColor);
     });
 
     it('can set glow factor', function() {
