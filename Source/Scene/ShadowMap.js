@@ -147,7 +147,7 @@ define([
             normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.005
+            depthBias : 0.0
         };
 
         this._primitiveBias = {
@@ -1044,7 +1044,7 @@ define([
 
         // TODO : This is just an estimate, should take scene geometry into account
         // 2. Set bounding box back to include objects in the light's view
-        max.z += 10.0; // Note: in light space, a positive number is behind the camera
+        max.z += 100.0; // Note: in light space, a positive number is behind the camera
 
         // 3. Adjust light view matrix so that it is centered on the bounding volume
         var translation = scratchTranslation;
