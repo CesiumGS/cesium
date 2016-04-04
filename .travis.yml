@@ -6,6 +6,11 @@ before_script:
   - export DISPLAY=:99.0
   - sh -e /etc/init.d/xvfb start
 script:
+  - echo 'deployPending' && echo -en 'travis_fold:start:script.deployPending\\r'
+  - npm run deploy-set-version -- --version $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
+  - npm run deploy-status -- --status pending --message 'Waiting for build'
+  - echo -en 'travis_fold:end:script.deployPending\\r'
+
   - echo 'jsHint' && echo -en 'travis_fold:start:script.jsHint\\r'
   - npm run jsHint -- --failTaskOnError
   - echo -en 'travis_fold:end:script.jsHint\\r'
@@ -17,7 +22,13 @@ script:
   - echo 'makeZipFile' && echo -en 'travis_fold:start:script.makeZipFile\\r'
   - npm run clean
   - npm run makeZipFile
+  - npm pack
   - echo -en 'travis_fold:end:script.makeZipFile\\r'
+
+  - echo 'deploy' && echo -en 'travis_fold:start:script.deploy\\r'
+  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm run deploy-status -- --status success --message Deployed
+  - echo -en 'travis_fold:end:script.deploy\\r'
 
   - echo 'test non-webgl release' && echo -en 'travis_fold:start:script test.release\\r'
   - npm run test -- --exclude WebGL --browsers Electron --failTaskOnError --release --suppressPassed
@@ -26,5 +37,3 @@ script:
   - echo 'cloc' && echo -en 'travis_fold:start:script.cloc\\r'
   - npm run cloc
   - echo -en 'travis_fold:end:script.cloc\\r'
-after_success:
-  - npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'

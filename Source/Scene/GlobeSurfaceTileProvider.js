@@ -503,6 +503,7 @@ define([
     };
 
     var modifiedModelViewScratch = new Matrix4();
+    var modifiedModelViewProjectionScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian3();
@@ -675,6 +676,14 @@ define([
                 var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.center3D, centerEyeScratch);
                 Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
+            },
+            u_modifiedModelViewProjection : function() {
+                var viewMatrix = frameState.context.uniformState.view;
+                var projectionMatrix = frameState.context.uniformState.projection;
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.center3D, centerEyeScratch);
+                Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewProjectionScratch);
+                Matrix4.multiply(projectionMatrix, modifiedModelViewProjectionScratch, modifiedModelViewProjectionScratch);
+                return modifiedModelViewProjectionScratch;
             },
             u_dayTextures : function() {
                 return this.dayTextures;
