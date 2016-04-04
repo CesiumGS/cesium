@@ -275,7 +275,10 @@ define([
         viewMatrix[15] = 1.0;
 
         Matrix4.multiply(viewMatrix, camera._actualInvTransform, camera._viewMatrix);
-        Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
+
+        // Camera vectors may not be orthonormal when the camera clamps to the terrain
+        // so apply inverse instead of inverseTransformation
+        Matrix4.inverse(camera._viewMatrix, camera._invViewMatrix);
     }
 
     var scratchCartographic = new Cartographic();
