@@ -93,11 +93,12 @@ define([
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
         var exponentialShadows = shadowMap._exponentialShadows;
-        
+
         // Force the shader to use decimals to avoid compilation errors
         var depthBias = Number(bias.depthBias).toFixed(10);
         var normalShadingSmooth = Number(bias.normalShadingSmooth).toFixed(10);
         var normalOffsetScale = Number(bias.normalOffsetScale).toFixed(10);
+        var maximumDistance = Number(shadowMap._maximumDistance).toFixed(10);
 
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
 
@@ -133,7 +134,9 @@ define([
             '} \n' +
             'vec3 getNormalEC() \n' +
             '{ \n' +
-            '    return normalize(' + normalVaryingName + '); \n' +
+            (hasNormalVarying ?
+            '    return normalize(' + normalVaryingName + '); \n' :
+            '    return vec3(1.0); \n') +
             '} \n' +
 
             'void applyNormalOffset(inout vec4 positionEC, vec3 normalEC, float nDotL) \n' +
@@ -214,7 +217,7 @@ define([
                 '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, depthBias, nDotL, normalShadingSmooth, shadowDistance); \n' +
 
                 '    // Fade out shadows that are far away \n' +
-                '    float fade = max((depth - maxDepth * 0.8) / (maxDepth * 0.2), 0.0); \n' +
+                '    float fade = max((depth - ' + maximumDistance + ' * 0.8) / (' + maximumDistance + ' * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
 
                 (debugVisualizeCascades ?

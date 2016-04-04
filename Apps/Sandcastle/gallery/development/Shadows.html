@@ -197,7 +197,7 @@ var viewModel = {
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024,
-    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester Point'],
+    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester 4', 'Shadow Tester Point'],
     model : 'Shadow Tester',
     locationOptions : ['Exton', 'Everest', 'Pinnacle PA', 'Seneca Rocks', 'Half Dome'],
     location : 'Pinnacle PA',
@@ -244,9 +244,13 @@ var viewModel = {
 // Temp values for testing
 viewModel.lightSource = 'Freeform';
 viewModel.lightHorizon = 71.0;
-viewModel.terrainCast = true;
+viewModel.lightAngle = 40.0;
+viewModel.terrainCast = false;
 viewModel.distance = 10000.0;
 viewModel.location = 'Exton';
+viewModel.model = 'Shadow Tester 4';
+viewModel.biasModes[0].depthBias(0.0);
+viewModel.modelPosition = 'Ground';
 
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
@@ -263,6 +267,7 @@ var uiOptions = {
         'Shadow Tester' : '../../SampleData/models/ShadowTester/Shadow_Tester.gltf',
         'Shadow Tester 2' : '../../SampleData/models/ShadowTester/Shadow_Tester_2.gltf',
         'Shadow Tester 3' : '../../SampleData/models/ShadowTester/Shadow_Tester_3.gltf',
+        'Shadow Tester 4' : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf',
         'Shadow Tester Point' : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf'
     },
     locations : {
@@ -459,7 +464,7 @@ function updateUI() {
 }
 
 var globeVisible = true;
-var terrainEnabled = true;
+var terrainEnabled = false;
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true,
