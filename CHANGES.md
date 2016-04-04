@@ -8,7 +8,7 @@ Change Log
 * Deprecated
   *
 * Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
-* Added ability to import and export Sandcastle example using Gists
+* Added ability to import and export Sandcastle example using GitHub Gists. [#3795](https://github.com/AnalyticalGraphicsInc/cesium/pull/3795)
 
 ### 1.20 - 2016-04-01
 
