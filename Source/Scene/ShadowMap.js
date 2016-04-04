@@ -688,7 +688,8 @@ define([
     function createDebugShadowViewCommand(shadowMap, context) {
         var fs;
         if (shadowMap._isPointLight && shadowMap._usesCubeMap) {
-            fs = 'varying vec2 v_textureCoordinates; \n' +
+            fs = 'uniform samplerCube u_shadowMapTextureCube; \n' +
+                 'varying vec2 v_textureCoordinates; \n' +
                  'void main() \n' +
                  '{ \n' +
                  '    vec2 uv = v_textureCoordinates; \n' +
@@ -728,23 +729,30 @@ define([
                  '        } \n' +
                  '    } \n' +
                  ' \n' +
-                 '    float shadow = czm_unpackDepth(textureCube(czm_shadowMapTextureCube, dir)); \n' +
+                 '    float shadow = czm_unpackDepth(textureCube(u_shadowMapTextureCube, dir)); \n' +
                  '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                  '} \n';
         } else {
-            fs = 'varying vec2 v_textureCoordinates; \n' +
+            fs = 'uniform sampler2D u_shadowMapTexture; \n' +
+                 'varying vec2 v_textureCoordinates; \n' +
                  'void main() \n' +
                  '{ \n' +
 
                  (shadowMap._usesDepthTexture ?
-                 '    float shadow = texture2D(czm_shadowMapTexture, v_textureCoordinates).r; \n' :
-                 '    float shadow = czm_unpackDepth(texture2D(czm_shadowMapTexture, v_textureCoordinates)); \n') +
+                 '    float shadow = texture2D(u_shadowMapTexture, v_textureCoordinates).r; \n' :
+                 '    float shadow = czm_unpackDepth(texture2D(u_shadowMapTexture, v_textureCoordinates)); \n') +
 
                  '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                  '} \n';
         }
 
-        var drawCommand = context.createViewportQuadCommand(fs);
+        var drawCommand = context.createViewportQuadCommand(fs, {
+            uniformMap : {
+                u_shadowMapTexture : function() {
+                    return shadowMap.shadowMapTexture;
+                }
+            }
+        });
         drawCommand.pass = Pass.OVERLAY;
         return drawCommand;
     }

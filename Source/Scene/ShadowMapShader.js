@@ -40,15 +40,13 @@ define([
         var isPointLight = frameState.shadowMap.isPointLight;
         var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
 
-        fs = 'uniform vec4 u_shadowMapLightPositionEC; \n';
-
         if (opaque) {
-            fs +=
+            fs =
                 'varying vec3 ' + positionVaryingName + ';\n' +
                 'void main() \n' +
                 '{ \n';
         } else {
-            fs += ShaderSource.replaceMain(fs, 'czm_shadow_main');
+            fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
             fs +=
                 'void main() \n' +
                 '{ \n' +
@@ -69,7 +67,9 @@ define([
             fs += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
         }
 
-        fs += '}';
+        fs += '} \n';
+
+        fs += 'uniform vec4 u_shadowMapLightPositionEC; \n';
 
         if (isPointLight && !hasPositionVarying) {
             fs = 'varying vec3 v_positionEC; \n' + fs;
