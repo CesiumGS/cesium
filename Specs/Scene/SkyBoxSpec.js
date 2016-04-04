@@ -109,10 +109,11 @@ defineSuite([
         });
 
         scene.frameState.passes.render = false;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         scene.skyBox = skyBox;
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        var command = skyBox.update(scene.frameState);
+        expect(command).not.toBeDefined();
     });
 
     it('gets constructor options', function() {

@@ -88,14 +88,13 @@ defineSuite([
     });
 
     it('does not render without a render pass', function() {
-        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.sun = new Sun();
         scene.render();
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        scene.sun.update(scene);
-        expect(scene.context.readPixels()).toEqual(backgroundColor);
+        var command = scene.sun.update(scene);
+        expect(command).not.toBeDefined();
     });
 
     it('can set glow factor', function() {
