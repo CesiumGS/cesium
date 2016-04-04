@@ -1,5 +1,5 @@
 
-float czm_private_shadowVisibility(float visibility, float normalShadingSmooth) {
+float czm_private_shadowVisibility(float visibility, float nDotL, float normalShadingSmooth) {
 #ifdef USE_NORMAL_SHADING
 #ifdef USE_NORMAL_SHADING_SMOOTH
     float strength = clamp(nDotL / normalShadingSmooth, 0.0, 1.0);
@@ -17,7 +17,7 @@ float czm_shadowVisibility(vec3 uv, float depth, float depthBias, float nDotL, f
 {
     depth -= depthBias;
     float visibility = czm_shadowDepthCompare(uv, depth, shadowDistance);
-    return czm_private_shadowVisibility(visibility, normalShadingSmooth);
+    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth);
 }
 
 float czm_shadowVisibility(vec2 uv, float depth, float depthBias, float nDotL, float normalShadingSmooth, float shadowDistance)
@@ -44,5 +44,5 @@ float czm_shadowVisibility(vec2 uv, float depth, float depthBias, float nDotL, f
     float visibility = czm_shadowDepthCompare(uv, depth, shadowDistance);
 #endif
 
-    return czm_private_shadowVisibility(visibility, normalShadingSmooth);
+    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth);
 }
