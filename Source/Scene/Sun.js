@@ -302,11 +302,11 @@ define([
         positionEC.w = 1;
 
         var positionCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, positionCC, scratchPositionWC);
+        var positionWC = SceneTransforms.clipToDrawingBufferCoordinates(scene._passState.viewport, positionCC, scratchPositionWC);
 
         positionEC.x = CesiumMath.SOLAR_RADIUS;
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
-        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(scene, limbCC, scratchLimbWC);
+        var limbWC = SceneTransforms.clipToDrawingBufferCoordinates(scene._passState.viewport, limbCC, scratchLimbWC);
 
         this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
