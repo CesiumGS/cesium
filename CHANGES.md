@@ -1,8 +1,13 @@
 Change Log
 ==========
 
-### 1.20 - 2016-05-02
+### 1.21 - 2016-05-02
 
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
 * Added ability to import and export Sandcastle example using Gists
 
 ### 1.20 - 2016-04-01

@@ -1741,7 +1741,7 @@ define([
         var projectionMatrix = camera.frustum.projectionMatrix;
 
         var x = camera.positionWC.y;
-        var eyePoint = Cartesian3.fromElements(Math.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x, scratch2DViewportEyePoint);
+        var eyePoint = Cartesian3.fromElements(CesiumMath.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x, scratch2DViewportEyePoint);
         var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint, scratch2DViewportWindowCoords);
 
         windowCoordinates.x = Math.floor(windowCoordinates.x);
