@@ -111,7 +111,7 @@ define([
         if (softShadows && !isPointLight) {
             defines.push('USE_SOFT_SHADOWS');
         }
-        
+
         if (bias.normalShading && hasNormalVarying) {
             defines.push('USE_NORMAL_SHADING');
             if (bias.normalShadingSmooth > 0.0) {

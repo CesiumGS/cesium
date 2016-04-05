@@ -1511,8 +1511,7 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-
-
+        
         // Modify draw program to receive shadows
         var shadowDefines = [];
         if (shadowsEnabled && model.receiveShadows) {
