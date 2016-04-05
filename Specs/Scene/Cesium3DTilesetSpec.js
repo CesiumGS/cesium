@@ -603,7 +603,7 @@ defineSuite([
             // Set view so that root's content is requested
             viewRootOnly();
             scene.renderForSpecs();
-            return root.contentReadyPromise.then(function() {
+            return root.content.readyPromise.then(function() {
                 // Root has one child now, the root of the external tileset
                 expect(root.children.length).toEqual(1);
 
@@ -639,7 +639,7 @@ defineSuite([
             viewRootOnly();
             scene.renderForSpecs();
 
-            return tileset._root.contentReadyPromise;
+            return tileset._root.content.readyPromise;
         }).then(function() {
             //Make sure tileset2.json was requested with query parameters and version
             var queryParamsWithVersion = queryParams + '&v=0.0';
@@ -760,7 +760,7 @@ defineSuite([
             viewRootOnly();
             scene.renderForSpecs(); // Request root
             expect(tileset._statistics.numberOfPendingRequests).toEqual(1);
-            return tileset._root.contentReadyToProcessPromise.then(function() {
+            return tileset._root.content.contentReadyToProcessPromise.then(function() {
                 scene.pickForSpecs();
                 expect(spy).not.toHaveBeenCalled();
                 scene.renderForSpecs();
@@ -864,13 +864,9 @@ defineSuite([
             expect(stats.numberOfPendingRequests).toEqual(1);
             scene.primitives.remove(tileset);
 
-            return root.contentReadyPromise.then(function(root) {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                // Expect the root to not have added any children from the external tileset.json
-                expect(root.children.length).toEqual(0);
-                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
-            });
+            expect(root.content).not.toBeDefined();
+            // Expect the root to not have added any children from the external tileset.json
+            expect(root.children.length).toEqual(0);
         });
     });
 
@@ -884,12 +880,7 @@ defineSuite([
             scene.renderForSpecs(); // Request root
             scene.primitives.remove(tileset);
 
-            return root.contentReadyPromise.then(function(root) {
-                fail('should not resolve');
-            }).otherwise(function(error) {
-                expect(content.state).toEqual(Cesium3DTileContentState.FAILED);
-                expect(RequestScheduler.getNumberOfAvailableRequests()).toEqual(RequestScheduler.maximumRequests);
-            });
+            expect(root.content).not.toBeDefined();
         });
     });
 

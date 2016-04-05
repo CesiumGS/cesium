@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DoublyLinkedList',
         '../Core/Event',
         '../Core/getBaseUri',
         '../Core/getExtensionFromUri',
@@ -29,6 +30,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        DoublyLinkedList,
         Event,
         getBaseUri,
         getExtensionFromUri,
@@ -48,6 +50,15 @@ define([
         CullingVolume,
         SceneMode) {
     'use strict';
+
+// TODO: unload events
+// TODO: unit tests
+// TODO: test with replacement refinement
+// TODO: Refactor TileReplacementQueue to use DoublyLinkedList?
+// TODO: track stats for cache trashing
+// TODO: good default for maximumNumberOfLoadedTiles
+// TODO: More precise size than number of tiles?  Count composite tiles as more?  Include geometry/texture cost with each tile?
+// TODO: unload sub-trees from tiles with tileset.json content
 
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},
@@ -110,6 +121,13 @@ define([
         this._selectedTiles = [];
         this._selectedTilesToStyle = [];
 
+        var replacementList = new DoublyLinkedList();
+
+        // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
+        // (sentinel, tail] -> tiles that were selected this frame
+        this._replacementList = replacementList; // Tiles with content loaded.  For cache management
+        this._replacementSentinel  = replacementList.add();
+
         /**
          * Determines if the tileset will be shown.
          *
@@ -127,6 +145,22 @@ define([
          */
         this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
 
+        /**
+         * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
+         * <p>
+         * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
+         * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
+         * for the current view than the number of tiles loaded will exceed
+         * <code>maximumNumberOfLoadedTiles</code>.  For example, if the maximum is 128 tiles, but
+         * 150 tiles are needed to meet the screen-space error, then 150 tiles may be loaded.  When
+         * these tiles go out of view, they will be unloaded.
+         * </p>
+         *
+         * @type {Number}
+         * @default 256
+         */
+        this.maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
+
         this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
@@ -139,6 +173,7 @@ define([
          * @default false
          */
         this.debugShowStatistics = defaultValue(options.debugShowStatistics, false);
+        this._debugShowStatistics = false;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -150,6 +185,7 @@ define([
          * @default false
          */
         this.debugShowPickStatistics = defaultValue(options.debugShowPickStatistics, false);
+        this._debugShowPickStatistics = false;
 
         this._statistics = {
             // Rendering stats
@@ -660,8 +696,8 @@ define([
             ++stats.numberOfPendingRequests;
 
             var removeFunction = removeFromProcessingQueue(tileset, tile);
-            when(tile.contentReadyToProcessPromise).then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
-            when(tile.contentReadyPromise).then(removeFunction).otherwise(removeFunction);
+            when(tile.content.contentReadyToProcessPromise).then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
+            when(tile.content.readyPromise).then(removeFunction).otherwise(removeFunction);
         }
     }
 
@@ -678,11 +714,19 @@ define([
                 tileContent.featurePropertiesDirty = false;
                 tile.lastStyleTime = 0; // Force applying the style to this tile
                 tileset._selectedTilesToStyle.push(tile);
-            }  else if ((tile.lastFrameNumber !== frameState.frameNumber - 1)) {
-                // Tile is newly visible; it is visible this frame, but was not visible last frame.
+            }  else if ((tile.lastSelectedFrameNumber !== frameState.frameNumber - 1)) {
+                // Tile is newly selected; it is selected this frame, but was not selected last frame.
                 tileset._selectedTilesToStyle.push(tile);
             }
-            tile.lastFrameNumber = frameState.frameNumber;
+            tile.lastSelectedFrameNumber = frameState.frameNumber;
+        }
+    }
+
+    function touch(tileset, tile, frameState) {
+        var node = tile.replacementNode;
+        if (defined(node)) {
+            tile.lastTouchedFrameNumber = frameState.frameNumber;
+            tileset._replacementList.splice(tileset._replacementSentinel, node);
         }
     }
 
@@ -701,6 +745,12 @@ define([
         tileset._selectedTilesToStyle.length = 0;
 
         scratchRefiningTiles.length = 0;
+
+        // Move sentinel node to the tail so, at the start of the frame, all tiles
+        // may be potentially replaced.  Tiles are moved to the right of the sentinel
+        // when they are selected so they will not be replaced.
+        var replacementList = tileset._replacementList;
+        tileset._replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
         var root = tileset._root;
         root.distanceToCamera = root.distanceToTile(frameState);
@@ -733,6 +783,8 @@ define([
                 continue;
             }
             var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
+
+            touch(tileset, t, frameState);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, frameState);
@@ -915,6 +967,7 @@ define([
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
                 ++tileset._statistics.numberReady;
+                tile.replacementNode = tileset._replacementList.add(tile);
             } else {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
@@ -948,8 +1001,11 @@ define([
         var stats = tileset._statistics;
         var last = isPick ? stats.lastPick : stats.lastColor;
 
-        if (((tileset.debugShowStatistics && !isPick) ||
-             (tileset.debugShowPickStatistics && isPick)) &&
+        var outputStats = (tileset.debugShowStatistics && !isPick) || (tileset.debugShowPickStatistics && isPick);
+        var showStatsThisFrame =
+            ((tileset._debugShowStatistics !== tileset.debugShowStatistics) ||
+             (tileset._debugShowPickStatistics !== tileset.debugShowPickStatistics));
+        var statsChanged =
             (last.visited !== stats.visited ||
              last.numberOfCommands !== stats.numberOfCommands ||
              last.selected !== tileset._selectedTiles.length ||
@@ -958,17 +1014,14 @@ define([
              last.numberReady !== stats.numberReady ||
              last.numberTotal !== stats.numberTotal ||
              last.numberOfTilesStyled !== stats.numberOfTilesStyled ||
-             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled)) {
+             last.numberOfFeaturesStyled !== stats.numberOfFeaturesStyled);
 
-            last.visited = stats.visited;
-            last.numberOfCommands = stats.numberOfCommands;
-            last.selected = tileset._selectedTiles.length;
-            last.numberOfPendingRequests = stats.numberOfPendingRequests;
-            last.numberProcessing = stats.numberProcessing;
-            last.numberReady = stats.numberReady;
-            last.numberTotal = stats.numberTotal;
-            last.numberOfTilesStyled = stats.numberOfTilesStyled;
-            last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
+        if (outputStats && (showStatsThisFrame || statsChanged)) {
+            // The shadowed properties are used to ensure that when a show stats properties
+            // is set to true, it outputs the stats on the next frame even if they didn't
+            // change from the previous frame.
+            tileset._debugShowStatistics = tileset.debugShowStatistics;
+            tileset._debugShowPickStatistics = tileset.debugShowPickStatistics;
 
             // Since the pick pass uses a smaller frustum around the pixel of interest,
             // the stats will be different than the normal render pass.
@@ -998,6 +1051,16 @@ define([
             /*global console*/
             console.log(s);
         }
+
+        last.visited = stats.visited;
+        last.numberOfCommands = stats.numberOfCommands;
+        last.selected = tileset._selectedTiles.length;
+        last.numberOfPendingRequests = stats.numberOfPendingRequests;
+        last.numberProcessing = stats.numberProcessing;
+        last.numberReady = stats.numberReady;
+        last.numberTotal = stats.numberTotal;
+        last.numberOfTilesStyled = stats.numberOfTilesStyled;
+        last.numberOfFeaturesStyled = stats.numberOfFeaturesStyled;
     }
 
     function updateTiles(tileset, frameState) {
@@ -1020,6 +1083,32 @@ define([
 
         // Number of commands added by each update above
         tileset._statistics.numberOfCommands = (commandList.length - numberOfInitialCommands);
+    }
+
+    function unloadTiles(tileset, frameState) {
+        var stats = tileset._statistics;
+        var frameNumber = frameState.frameNumber;
+        var maximumNumberOfLoadedTiles = tileset.maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
+        var replacementList = tileset._replacementList;
+
+// TODO: explore proactively clearing the cache - automatically or provide a function for the user.
+// TODO: could check last n frames using lastTouchedFrameNumber
+
+        // Traverse the list only to the sentinel since tiles/nodes to the
+        // right of the sentinel were used this frame.
+        //
+        // The sub-list to the left of the sentinel is ordered from LRU to MRU.
+        var sentinel = tileset._replacementSentinel;
+        var node = replacementList.head;
+        while ((node !== sentinel) && (replacementList.length > maximumNumberOfLoadedTiles)) {
+            node.item.unloadContent();
+
+            var currentNode = node;
+            node = node.next;
+            replacementList.remove(currentNode);
+
+            --stats.numberReady;
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1067,8 +1156,13 @@ define([
         if (outOfCore) {
             processTiles(this, frameState);
         }
+
         selectTiles(this, frameState, outOfCore);
         updateTiles(this, frameState);
+
+        if (outOfCore) {
+            unloadTiles(this, frameState);
+        }
 
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,
