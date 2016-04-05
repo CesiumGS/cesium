@@ -869,7 +869,7 @@ define([
     };
 
     function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defaultValue(drawCommand.renderState, context._defaultRenderState);
+        var rs = defaultValue(drawCommand._renderState, context._defaultRenderState);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
@@ -883,16 +883,16 @@ define([
 
         applyRenderState(context, rs, passState, false);
 
-        var sp = drawCommand.shaderProgram;
+        var sp = drawCommand._shaderProgram;
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
     }
 
     function continueDraw(context, drawCommand) {
-        var primitiveType = drawCommand.primitiveType;
-        var va = drawCommand.vertexArray;
-        var offset = drawCommand.offset;
-        var count = drawCommand.count;
+        var primitiveType = drawCommand._primitiveType;
+        var va = drawCommand._vertexArray;
+        var offset = drawCommand._offset;
+        var count = drawCommand._count;
         var instanceCount = drawCommand.instanceCount;
 
         //>>includeStart('debug', pragmas.debug);
@@ -921,8 +921,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        context._us.model = defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY);
-        drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
+        context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
+        drawCommand._shaderProgram._setUniforms(drawCommand._uniformMap, context._us, context.validateShaderProgram);
 
         va._bind();
         var indexBuffer = va.indexBuffer;
@@ -953,14 +953,14 @@ define([
             throw new DeveloperError('drawCommand is required.');
         }
 
-        if (!defined(drawCommand.shaderProgram)) {
+        if (!defined(drawCommand._shaderProgram)) {
             throw new DeveloperError('drawCommand.shaderProgram is required.');
         }
         //>>includeEnd('debug');
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
-        var framebuffer = defaultValue(drawCommand.framebuffer, passState.framebuffer);
+        var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
 
         beginDraw(this, framebuffer, drawCommand, passState);
         continueDraw(this, drawCommand);
@@ -1098,7 +1098,6 @@ define([
      *
      * @param {Color} pickColor The pick color.
      * @returns {Object} The object associated with the pick color, or undefined if no object is associated with that color.
-     *
      *
      * @example
      * var object = context.getObjectByPickColor(pickColor);

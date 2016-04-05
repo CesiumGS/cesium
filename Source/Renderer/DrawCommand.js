@@ -408,24 +408,25 @@ define([
             result = new DrawCommand();
         }
 
-        result.boundingVolume = command.boundingVolume;
-        result.orientedBoundingBox = command.orientedBoundingBox;
-        result.cull = command.cull;
-        result.modelMatrix = command.modelMatrix;
-        result.primitiveType = command.primitiveType;
-        result.vertexArray = command.vertexArray;
-        result.count = command.count;
-        result.offset = command.offset;
-        result.instanceCount = command.instanceCount;
-        result.shaderProgram = command.shaderProgram;
-        result.uniformMap = command.uniformMap;
-        result.renderState = command.renderState;
-        result.framebuffer = command.framebuffer;
-        result.pass = command.pass;
-        result.executeInClosestFrustum = command.executeInClosestFrustum;
-        result.owner = command.owner;
-        result.debugShowBoundingVolume = command.debugShowBoundingVolume;
-        result.debugOverlappingFrustums = command.debugOverlappingFrustums;
+        result._boundingVolume = command._boundingVolume;
+        result._orientedBoundingBox = command._orientedBoundingBox;
+        result._cull = command._cull;
+        result._modelMatrix = command._modelMatrix;
+        result._primitiveType = command._primitiveType;
+        result._vertexArray = command._vertexArray;
+        result._count = command._count;
+        result._offset = command._offset;
+        result._instanceCount = command._instanceCount;
+        result._shaderProgram = command._shaderProgram;
+        result._uniformMap = command._uniformMap;
+        result._renderState = command._renderState;
+        result._framebuffer = command._framebuffer;
+        result._pass = command._pass;
+        result._executeInClosestFrustum = command._executeInClosestFrustum;
+        result._owner = command._owner;
+        result._debugShowBoundingVolume = command._debugShowBoundingVolume;
+        result._debugOverlappingFrustums = command._debugOverlappingFrustums;
+        result._dirty = true;
 
         return result;
     };
