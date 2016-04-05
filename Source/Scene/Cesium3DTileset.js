@@ -56,6 +56,7 @@ define([
 // TODO: test with replacement refinement
 // TODO: Refactor TileReplacementQueue to use DoublyLinkedList?
 // TODO: track stats for cache trashing
+// TODO: research strategies for proactive cache trimming: number of seconds/frame a tile was not selected, how far out of view a tile is, etc.
 // TODO: good default for maximumNumberOfLoadedTiles
 // TODO: More precise size than number of tiles?  Count composite tiles as more?  Include geometry/texture cost with each tile?
 // TODO: unload sub-trees from tiles with tileset.json content
@@ -127,6 +128,7 @@ define([
         // (sentinel, tail] -> tiles that were selected this frame
         this._replacementList = replacementList; // Tiles with content loaded.  For cache management
         this._replacementSentinel  = replacementList.add();
+        this._trimTiles = false;
 
         /**
          * Determines if the tileset will be shown.
@@ -147,6 +149,9 @@ define([
 
         /**
          * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
+         * <p>
+         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
+         * </p>
          * <p>
          * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
          * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
@@ -1086,13 +1091,12 @@ define([
     }
 
     function unloadTiles(tileset, frameState) {
+        var trimTiles = tileset._trimTiles;
+        tileset._trimTiles = false;
+
         var stats = tileset._statistics;
-        var frameNumber = frameState.frameNumber;
         var maximumNumberOfLoadedTiles = tileset.maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
-
-// TODO: explore proactively clearing the cache - automatically or provide a function for the user.
-// TODO: could check last n frames using lastTouchedFrameNumber
 
         // Traverse the list only to the sentinel since tiles/nodes to the
         // right of the sentinel were used this frame.
@@ -1100,7 +1104,7 @@ define([
         // The sub-list to the left of the sentinel is ordered from LRU to MRU.
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
-        while ((node !== sentinel) && (replacementList.length > maximumNumberOfLoadedTiles)) {
+        while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
             node.item.unloadContent();
 
             var currentNode = node;
@@ -1110,6 +1114,20 @@ define([
             --stats.numberReady;
         }
     }
+
+    /**
+     * Unloads all tiles that weren't selected the previous frame.  This can be used to
+     * explicitly manage the tile cache and reduce the total number of tiles loaded below
+     * {@link Cesium3DTileset#maximumNumberOfLoadedTiles}.
+     * <p>
+     * Tile unloads occur at the next frame to keep all the WebGL delete calls
+     * within the render loop.
+     * </p>
+     */
+    Cesium3DTileset.prototype.trimLoadedTiles = function() {
+        // Defer to next frame so WebGL delete calls happen inside the render loop
+        this._trimTiles = true;
+    };
 
     ///////////////////////////////////////////////////////////////////////////
 
