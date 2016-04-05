@@ -253,7 +253,7 @@ define([
     function updateViewMatrix(camera) {
         Matrix4.computeView(camera._direction, camera._up, camera._right, camera._position, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
-        Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
+        Matrix4.inverse(camera._viewMatrix, camera._invViewMatrix);
     }
 
     var scratchCartographic = new Cartographic();
