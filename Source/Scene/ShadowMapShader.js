@@ -222,7 +222,7 @@ define([
 
                 (debugVisualizeCascades ?
                 '    // Draw cascade colors for debugging \n' +
-                '    visibility = czm_cascadeColor(weights); \n' : '');
+                '    gl_FragColor *= czm_cascadeColor(weights); \n' : '');
         } else {
             fs +=
                 '    float nDotL = clamp(dot(normalEC, czm_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
