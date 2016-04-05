@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingRectangle',
+        '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -22,6 +23,7 @@ define([
         '../Core/PixelFormat',
         '../Core/PolylineGeometry',
         '../Core/PrimitiveType',
+        '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
         '../Renderer/CubeMap',
@@ -48,6 +50,7 @@ define([
         './Primitive'
     ], function(
         BoundingRectangle,
+        BoundingSphere,
         BoxOutlineGeometry,
         Cartesian2,
         Cartesian3,
@@ -69,6 +72,7 @@ define([
         PixelFormat,
         PolylineGeometry,
         PrimitiveType,
+        Quaternion,
         SphereOutlineGeometry,
         ClearCommand,
         CubeMap,
@@ -235,9 +239,10 @@ define([
 
         this.debugShow = false;
         this.debugFreezeFrame = false;
+        this._debugFreezeFrame = false;
         this.debugVisualizeCascades = false;
         this._debugLightFrustum = undefined;
-        this._debugPointLight = undefined;
+        this._debugLightFrustumMatrix = new Matrix4();
         this._debugCameraFrustum = undefined;
         this._debugCascadeFrustums = new Array(this._numberOfCascades);
         this._debugShadowViewCommand = undefined;
@@ -791,26 +796,7 @@ define([
         scratchFrustumCorners[i] = new Cartesian4();
     }
 
-    function createDebugFrustum(color) {
-        return new Primitive({
-            geometryInstances : new GeometryInstance({
-                geometry : new BoxOutlineGeometry({
-                    minimum : new Cartesian3(0, 0, 0),
-                    maximum : new Cartesian3(1, 1, 1)
-                }),
-                attributes : {
-                    color : ColorGeometryInstanceAttribute.fromColor(color)
-                }
-            }),
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                flat : true
-            }),
-            asynchronous : false
-        });
-    }
-
-    function createDebugSphere(color) {
+    function createDebugPointLight(modelMatrix, color) {
         var box = new GeometryInstance({
             geometry : new BoxOutlineGeometry({
                 minimum : new Cartesian3(-0.5, -0.5, -0.5),
@@ -836,47 +822,108 @@ define([
                 translucent : false,
                 flat : true
             }),
-            asynchronous : false
+            asynchronous : false,
+            modelMatrix : modelMatrix
         });
     }
 
+    function createDebugFrustum(camera, color) {
+        var view = camera.viewMatrix;
+        var projection = camera.frustum.projectionMatrix;
+        var viewProjection = Matrix4.multiply(projection, view, scratchMatrix);
+        var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
+
+        var positions = new Float64Array(8 * 3);
+        for (var i = 0; i < 8; ++i) {
+            var corner = Cartesian4.clone(frustumCornersNDC[i], scratchFrustumCorners[i]);
+            Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
+            Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
+            positions[i * 3 + 0] = corner.x;
+            positions[i * 3 + 1] = corner.y;
+            positions[i * 3 + 2] = corner.z;
+        }
+        
+        var attributes = new GeometryAttributes();
+        attributes.position = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : positions
+        });
+
+        var indices = new Uint16Array([0,1,1,2,2,3,3,0,0,4,4,7,7,3,7,6,6,2,2,1,1,5,5,4,5,6]);
+        var geometry = new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : new BoundingSphere.fromVertices(positions)
+        });
+
+        var debugFrustum = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : geometry,
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(color)
+                }
+            }),
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
+        
+        return debugFrustum;
+    }
+    
     var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
-    var scratchScale = new Matrix4();
+    var scratchScale = new Cartesian3();
 
     function applyDebugSettings(shadowMap, frameState) {
         updateDebugShadowViewCommand(shadowMap, frameState);
 
-        // Only show cascades in freeze frame mode.
-        if (shadowMap._cascadesEnabled && !shadowMap.debugFreezeFrame) {
-            return;
+        // Recreate camera and cascade debug primitives when entering freeze frame mode
+        if (shadowMap.debugFreezeFrame && !shadowMap._debugFreezeFrame) {
+            shadowMap._debugCameraFrustum = shadowMap._debugCameraFrustum && shadowMap._debugCameraFrustum.destroy();
+            shadowMap._debugCameraFrustum = createDebugFrustum(shadowMap._sceneCamera, Color.CYAN);
+            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
+                shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] && shadowMap._debugCascadeFrustums[i].destroy();
+                shadowMap._debugCascadeFrustums[i] = createDebugFrustum(shadowMap._passCameras[i], debugCascadeColors[i]);
+            }
         }
 
-        if (shadowMap._isPointLight) {
-            var debugPointLight = shadowMap._debugPointLight;
-            if (!defined(debugPointLight)) {
-                debugPointLight = shadowMap._debugPointLight = createDebugSphere(Color.YELLOW);
-            }
+        shadowMap._debugFreezeFrame = shadowMap.debugFreezeFrame;
 
-            var scale = Matrix4.fromUniformScale(shadowMap._radius * 2.0, scratchScale);
-            var translation = Matrix4.fromTranslation(shadowMap._shadowMapCamera.positionWC, scratchMatrix);
-            Matrix4.multiply(translation, scale, debugPointLight.modelMatrix);
-            debugPointLight.update(frameState);
-        } else {
-            var debugLightFrustum = shadowMap._debugLightFrustum;
-            if (!defined(debugLightFrustum)) {
-                debugLightFrustum = shadowMap._debugLightFrustum = createDebugFrustum(Color.YELLOW);
+        // Draw camera and cascades in freeze frame mode
+        if (shadowMap.debugFreezeFrame) {
+            shadowMap._debugCameraFrustum.update(frameState);
+            for (var j = 0; j < shadowMap._numberOfCascades; ++j) {
+                shadowMap._debugCascadeFrustums[j].update(frameState);
             }
-            Matrix4.inverse(shadowMap._shadowMapCamera.getViewProjection(), debugLightFrustum.modelMatrix);
-            debugLightFrustum.update(frameState);
+        }
 
-            for (var i = 0; i < shadowMap._numberOfCascades; ++i) {
-                var debugCascadeFrustum = shadowMap._debugCascadeFrustums[i];
-                if (!defined(debugCascadeFrustum)) {
-                    debugCascadeFrustum = shadowMap._debugCascadeFrustums[i] = createDebugFrustum(debugCascadeColors[i]);
+        if (!shadowMap._cascadesEnabled) {
+            // Create light debug primitive
+            if (shadowMap._isPointLight) {
+                var translation = shadowMap._shadowMapCamera.positionWC;
+                var rotation = Quaternion.IDENTITY;
+                var uniformScale = shadowMap._radius * 2.0;
+                var scale = Cartesian3.fromElements(uniformScale, uniformScale, uniformScale, scratchScale);
+                var modelMatrix = Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, scratchMatrix);
+                if (!defined(shadowMap._debugLightFrustum) || !Matrix4.equals(modelMatrix, shadowMap._debugLightFrustumMatrix)) {
+                    shadowMap._debugLightFrustum = shadowMap._debugLightFrustum && shadowMap._debugLightFrustum.destroy();
+                    shadowMap._debugLightFrustum = createDebugPointLight(modelMatrix, Color.YELLOW);
+                    Matrix4.clone(modelMatrix, shadowMap._debugLightFrustumMatrix);
                 }
-                Matrix4.inverse(shadowMap._passCameras[i].getViewProjection(), debugCascadeFrustum.modelMatrix);
-                debugCascadeFrustum.update(frameState);
+            } else {
+                var matrix = shadowMap._shadowMapCamera.getViewProjection();
+                if (!defined(shadowMap._debugLightFrustum) || !Matrix4.equals(matrix, shadowMap._debugLightFrustumMatrix)) {
+                    shadowMap._debugLightFrustum = createDebugFrustum(shadowMap._shadowMapCamera, Color.YELLOW);
+                    Matrix4.clone(matrix, shadowMap._debugLightFrustumMatrix);
+                }
             }
+
+            // Draw light
+            shadowMap._debugLightFrustum.update(frameState);
         }
     }
 
@@ -1209,7 +1256,6 @@ define([
         destroyFramebuffer(this);
 
         this._debugLightFrustum = this._debugLightFrustum && this._debugLightFrustum.destroy();
-        this._debugPointLight = this._debugPointLight && this._debugPointLight.destroy();
         this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         this._debugShadowViewCommand = this._debugShadowViewCommand && this._debugShadowViewCommand.shaderProgram && this._debugShadowViewCommand.shaderProgram.destroy();
 
