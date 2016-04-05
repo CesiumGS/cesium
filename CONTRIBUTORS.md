@@ -31,6 +31,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Brendan Flood](https://github.com/bflood-agi)
    * [Thomas Pedbereznak](https://github.com/TomPed)
    * [Rob Taglang](https://github.com/lasalvavida)
+   * [Todd Smith] (https://github.com/tsmith717)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)

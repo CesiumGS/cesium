@@ -47,7 +47,7 @@ npm start
 
 Then browse to [http://localhost:8080/](http://localhost:8080/).
 
-By default, the server only allows connections from your local machine.  Too allow connections from other machines, pass
+By default, the server only allows connections from your local machine.  To allow connections from other machines, pass
 the `--public` option to npm. Note the extra `--` is intentional and required by npm.
 
 ```
