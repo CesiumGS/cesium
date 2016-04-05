@@ -203,7 +203,7 @@ define([
             if (receiveShadows) {
                 var normalVarying = hasVertexNormals ? 'v_normalEC' : undefined;
                 vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1], frameState);
-                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, normalVarying, 'v_positionEC', true);
+                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, normalVarying, 'v_positionEC', true, fs.defines);
             }
 
             var shader = ShaderProgram.fromCache({
