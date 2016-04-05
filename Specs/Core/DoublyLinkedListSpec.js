@@ -1,5 +1,5 @@
 /*global defineSuite*/
-fdefineSuite([
+defineSuite([
         'Core/DoublyLinkedList'
     ], function(
     DoublyLinkedList) {
