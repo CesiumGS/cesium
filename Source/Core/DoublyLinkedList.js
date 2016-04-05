@@ -105,7 +105,7 @@ define([
 
         nextNode.next = oldNodeNext;
         nextNode.previous = node;
-    }
+    };
     
     return DoublyLinkedList;
 });

@@ -344,7 +344,7 @@ define([
         this.numberTotal = -1;
         this.numberOfTilesStyled = -1;
         this.numberOfFeaturesStyled = -1;
-    };
+    }
 
     defineProperties(Cesium3DTileset.prototype, {
         /**

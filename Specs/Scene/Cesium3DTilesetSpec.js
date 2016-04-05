@@ -874,7 +874,6 @@ defineSuite([
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             var root = tileset._root;
-            var content = root.content;
 
             viewRootOnly();
             scene.renderForSpecs(); // Request root
