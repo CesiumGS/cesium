@@ -280,17 +280,6 @@ define([
         this.lastSelectedFrameNumber = 0;
 
         /**
-         * The last frame number the tile was visited during tile selection.  A tile may be touched,
-         * but not selected because, for example, it is a parent using replacement refinement and
-         * its children are selected.  A selected tile will always be touched.
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.lastTouchedFrameNumber = 0;
-
-        /**
          * The time when a style was last applied to this tile.
          *
          * @type {Number}
@@ -441,7 +430,6 @@ define([
         this.parentPlaneMask = 0;
         this.selected = false;
         this.lastSelectedFrameNumber = 0;
-        this.lastTouchedFrameNumber = 0;
         this.lastStyleTime = 0;
 
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();

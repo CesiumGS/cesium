@@ -727,10 +727,9 @@ define([
         }
     }
 
-    function touch(tileset, tile, frameState) {
+    function touch(tileset, tile) {
         var node = tile.replacementNode;
         if (defined(node)) {
-            tile.lastTouchedFrameNumber = frameState.frameNumber;
             tileset._replacementList.splice(tileset._replacementSentinel, node);
         }
     }
@@ -789,7 +788,7 @@ define([
             }
             var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
-            touch(tileset, t, frameState);
+            touch(tileset, t);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, frameState);
