@@ -868,8 +868,8 @@ define([
         gl.clear(bitmask);
     };
 
-    function beginDraw(context, framebuffer, drawCommand, passState, renderState, shaderProgram) {
-        var rs = defaultValue(defaultValue(renderState, drawCommand.renderState), context._defaultRenderState);
+    function beginDraw(context, framebuffer, drawCommand, passState) {
+        var rs = defaultValue(drawCommand.renderState, context._defaultRenderState);
 
         //>>includeStart('debug', pragmas.debug);
         if (defined(framebuffer) && rs.depthTest) {
@@ -883,12 +883,12 @@ define([
 
         applyRenderState(context, rs, passState, false);
 
-        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
+        var sp = drawCommand.shaderProgram;
         sp._bind();
         context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
     }
 
-    function continueDraw(context, drawCommand, shaderProgram) {
+    function continueDraw(context, drawCommand) {
         var primitiveType = drawCommand.primitiveType;
         var va = drawCommand.vertexArray;
         var offset = drawCommand.offset;
@@ -922,8 +922,7 @@ define([
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand.modelMatrix, Matrix4.IDENTITY);
-        var sp = defaultValue(shaderProgram, drawCommand.shaderProgram);
-        sp._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
+        drawCommand.shaderProgram._setUniforms(drawCommand.uniformMap, context._us, context.validateShaderProgram);
 
         va._bind();
         var indexBuffer = va.indexBuffer;
@@ -948,7 +947,7 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState, renderState, shaderProgram) {
+    Context.prototype.draw = function(drawCommand, passState) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawCommand)) {
             throw new DeveloperError('drawCommand is required.');
@@ -963,8 +962,8 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand.framebuffer, passState.framebuffer);
 
-        beginDraw(this, framebuffer, drawCommand, passState, renderState, shaderProgram);
-        continueDraw(this, drawCommand, shaderProgram);
+        beginDraw(this, framebuffer, drawCommand, passState);
+        continueDraw(this, drawCommand);
     };
 
     Context.prototype.endFrame = function() {
