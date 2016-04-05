@@ -52,7 +52,9 @@ function loadTileset(url) {
     reset();
 
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url
+        url : url,
+        debugShowStatistics : true,
+        maximumNumberOfLoadedTiles : 3
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
@@ -103,7 +105,7 @@ function loadTileset(url) {
                 return;
             }
 
-            console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
+            //console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
         });
 
         addExpressionUI();
@@ -372,6 +374,10 @@ Sandcastle.addToolbarButton('SSE++', function() {
 Sandcastle.addToolbarButton('SSE--', function() {
     tileset.maximumScreenSpaceError = Math.max(tileset.maximumScreenSpaceError - 1, 0);
     console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
+});
+
+Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
+    tileset.trimLoadedTiles();
 });
 
 // Styling ////////////////////////////////////////////////////////////////////
