@@ -39,6 +39,7 @@ Change Log
 * Fixed issue causing parts of geometry and billboards/labels to be clipped. [#3748](https://github.com/AnalyticalGraphicsInc/cesium/issues/3748)
 * Fixed bug where transparent image materials were drawn black.
 * Fixed `Color.fromCssColorString` from reusing the input `result` alpha value in some cases.
+* Fixed issue where `Camera.flyTo` does not go to the rectangle. [#3688](https://github.com/AnalyticalGraphicsInc/cesium/issues/3688)
 
 ### 1.19 - 2016-03-01
 
