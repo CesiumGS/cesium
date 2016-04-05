@@ -16,6 +16,14 @@ TODO: these are still private:
 TODO: this is not finished yet:
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 
+### 1.21 - 2016-05-02
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
+
 ### 1.20 - 2016-04-01
 
 * Breaking changes
