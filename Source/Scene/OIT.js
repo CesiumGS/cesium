@@ -520,7 +520,7 @@ define([
         for (j = 0; j < length; ++j) {
             command = commands[j];
             derivedCommand = command.derivedCommands.oit.translucentCommand;
-            executeFunction(derivedCommand, scene, context, passState, undefined, undefined, debugFramebuffer);
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = oit._alphaFBO;
@@ -528,7 +528,7 @@ define([
         for (j = 0; j < length; ++j) {
             command = commands[j];
             derivedCommand = command.derivedCommands.oit.alphaCommand;
-            executeFunction(derivedCommand, scene, context, passState, undefined, undefined, debugFramebuffer);
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;
@@ -548,7 +548,7 @@ define([
         for (var j = 0; j < length; ++j) {
             var command = commands[j];
             var derivedCommand = command.derivedCommands.oit.translucentCommand;
-            executeFunction(derivedCommand, scene, context, passState, undefined, undefined, debugFramebuffer);
+            executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         passState.framebuffer = framebuffer;

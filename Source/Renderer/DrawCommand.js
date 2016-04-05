@@ -222,7 +222,6 @@ define([
         result.owner = command.owner;
         result.debugShowBoundingVolume = command.debugShowBoundingVolume;
         result.debugOverlappingFrustums = command.debugOverlappingFrustums;
-        result.oit = command.oit;
 
         return result;
     };
