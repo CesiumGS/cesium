@@ -469,34 +469,59 @@ define([
             oit = derivedCommands.oit = {};
         }
 
-        if (command.shaderProgram.id === oit.shaderProgramId) {
-            return;
-        }
-
         if (this._translucentMRTSupport) {
-            if (!defined(oit.translucentCommand)) {
-                oit.translucentCommand = DrawCommand.shallowClone(command);
-            } else {
-                oit.translucentCommand.shaderProgram.destroy();
+            var translucentSader;
+            var translucentRenderState;
+            if (defined(oit.translucentCommand)) {
+                translucentSader = oit.translucentCommand.shaderProgram;
+                translucentRenderState = oit.translucentCommand.renderState;
             }
 
-            oit.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
-            oit.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
-            oit.shaderProgramId = command.shaderProgram.id;
+            oit.translucentCommand = DrawCommand.shallowClone(command, oit.translucentCommand);
+
+            if (!defined(translucentSader) || oit.shaderProgramId !== command.shaderProgram.id) {
+                if (defined(translucentSader)) {
+                    translucentSader.destroy();
+                }
+                oit.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
+                oit.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
+                oit.shaderProgramId = command.shaderProgram.id;
+            } else {
+                oit.translucentCommand.shaderProgram = translucentSader;
+                oit.translucentCommand.renderState = translucentRenderState;
+            }
         } else {
-            if (!defined(oit.translucentCommand)) {
-                oit.translucentCommand = DrawCommand.shallowClone(command);
-                oit.alphaCommand = DrawCommand.shallowClone(command);
-            } else {
-                oit.translucentCommand.shaderProgram.destroy();
-                oit.alphaCommand.shaderProgram.destroy();
+            var colorShader;
+            var colorRenderState;
+            var alphaShader;
+            var alphaRenderState;
+            if (defined(oit.translucentCommand)) {
+                colorShader = oit.translucentCommand.shaderProgram;
+                colorRenderState = oit.translucentCommand.renderState;
+                alphaShader = oit.alphaCommand.shaderProgram;
+                alphaRenderState = oit.alphaCommand.renderState;
             }
 
-            oit.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
-            oit.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
-            oit.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
-            oit.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
-            oit.shaderProgramId = command.shaderProgram.id;
+            oit.translucentCommand = DrawCommand.shallowClone(command, oit.translucentCommand);
+            oit.alphaCommand = DrawCommand.shallowClone(command, oit.alphaCommand);
+
+            if (!defined(colorShader) || oit.shaderProgramId !== command.shaderProgram.id) {
+                if (defined(colorShader)) {
+                    colorShader.destroy();
+                    alphaShader.destroy();
+                }
+
+                oit.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
+                oit.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
+                oit.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);
+                oit.alphaCommand.renderState = getTranslucentAlphaRenderState(this, context, command.renderState);
+                oit.shaderProgramId = command.shaderProgram.id;
+            } else {
+                oit.translucentCommand.shaderProgram = colorShader;
+                oit.translucentCommand.renderState = colorRenderState;
+                oit.alphaCommand.shaderProgram = alphaShader;
+                oit.alphaCommand.renderState = alphaRenderState;
+            }
         }
     };
 

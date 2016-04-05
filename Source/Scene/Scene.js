@@ -1107,10 +1107,14 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        var oit = scene._oit;
-        if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-            oit.createDerivedCommands(command, scene._context);
+        if (command._dirty) {
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                oit.createDerivedCommands(command, scene._context);
+            }
         }
+
+        command._dirty = false;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1321,16 +1325,10 @@ define([
     }
 
     function executeDebugCommand(command, scene, passState) {
-        if (defined(command.shaderProgram)) {
-            var debugCommand = command.derivedCommands.debugFrustumCommand;
-            if (!defined(debugCommand)) {
-                // Replace shader for frustum visualization
-                debugCommand = DrawCommand.shallowClone(command);
-                debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
-                command.derivedCommands.debugFrustumCommand = debugCommand;
-            }
-            debugCommand.execute(scene.context, passState);
-        }
+        var debugCommand = DrawCommand.shallowClone(command);
+        debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
+        debugCommand.execute(scene.context, passState);
+        debugCommand.shaderProgram.destroy();
     }
 
     var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
