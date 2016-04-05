@@ -82,7 +82,7 @@ define([
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName, isTerrain) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName, isTerrain, defines) {
         var hasNormalVarying = defined(normalVaryingName) && (fs.indexOf(normalVaryingName) > -1);
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
 
@@ -102,24 +102,24 @@ define([
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
 
         if (isPointLight && usesCubeMap) {
-            fs += '#define USE_CUBE_MAP_SHADOW \n';
+            defines.push('USE_CUBE_MAP_SHADOW');
         } else if (usesDepthTexture) {
-            fs += '#define USE_SHADOW_DEPTH_TEXTURE \n';
+            defines.push('USE_SHADOW_DEPTH_TEXTURE');
         }
 
         if (softShadows && !isPointLight) {
-            fs += '#define USE_SOFT_SHADOWS \n';
+            defines.push('USE_SOFT_SHADOWS');
         }
 
         if (bias.normalShading && hasNormalVarying) {
-            fs += '#define USE_NORMAL_SHADING \n';
+            defines.push('USE_NORMAL_SHADING');
             if (bias.normalShadingSmooth > 0.0) {
-                fs += '#define USE_NORMAL_SHADING_SMOOTH \n';
+                defines.push('USE_NORMAL_SHADING_SMOOTH');
             }
         }
 
         if (exponentialShadows) {
-            fs += '#define USE_EXPONENTIAL_SHADOW_MAPS \n';
+            defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
 
         fs += '\n\n';
@@ -224,7 +224,7 @@ define([
 
                 (debugVisualizeCascades ?
                 '    // Draw cascade colors for debugging \n' +
-                '    visibility = czm_cascadeColor(weights); \n' : '');
+                '    gl_FragColor *= czm_cascadeColor(weights); \n' : '');
         } else {
             fs +=
                 '    float nDotL = clamp(dot(normalEC, u_shadowMapLightDirectionEC), 0.0, 1.0); \n' +

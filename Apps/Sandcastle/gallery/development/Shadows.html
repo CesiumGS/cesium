@@ -73,8 +73,16 @@
             <td><select data-bind="options: sizeOptions, value: size"/></td>
         </tr>
         <tr>
-            <td>Enabled</td>
+            <td>Shadows Enabled</td>
             <td><input type="checkbox" data-bind="checked: shadows"/></td>
+        </tr>
+        <tr>
+            <td>Terrain Enabled</td>
+            <td><input type="checkbox" data-bind="checked: terrain"/></td>
+        </tr>
+        <tr>
+            <td>Show Globe</td>
+            <td><input type="checkbox" data-bind="checked: globe"/></td>
         </tr>
         <tr>
             <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
@@ -179,6 +187,8 @@ var viewModel = {
     radius : 200.0,
     radiusEnabled : true,
     shadows : true,
+    terrain : true,
+    globe : true,
     terrainCast : true,
     terrainCastEnabled : true,
     debug : true,
@@ -213,7 +223,7 @@ var viewModel = {
             normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.005
+            depthBias : 0.0
         }),
         new BiasOptions({
             type : 'primitive',
@@ -245,11 +255,9 @@ var viewModel = {
 viewModel.lightSource = 'Freeform';
 viewModel.lightHorizon = 71.0;
 viewModel.lightAngle = 40.0;
-viewModel.terrainCast = false;
 viewModel.distance = 10000.0;
-viewModel.location = 'Exton';
+viewModel.location = 'Pinnacle PA';
 viewModel.model = 'Shadow Tester 4';
-viewModel.biasModes[0].depthBias(0.0);
 viewModel.modelPosition = 'Ground';
 
 var uiOptions = {
@@ -329,6 +337,8 @@ Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateTerrain);
+Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
@@ -376,9 +386,9 @@ function updateSettings() {
     shadowMap.enabled = viewModel.shadows;
     shadowMap.setSize(viewModel.size);
 
-    if (globeVisible) {
-        globe.castShadows = viewModel.terrainCast;
-    }
+    globe.castShadows = viewModel.terrainCast;
+    globe.show = viewModel.globe;
+    scene.skyAtmosphere.show = viewModel.globe;
 }
 
 function updateShadows() {
@@ -447,6 +457,8 @@ function updateShadows() {
         bias.normalShadingSmooth = biasMode.normalShadingSmooth();
         bias.depthBias = biasMode.depthBias();
     }
+
+    // Update render states for when polygon offset values change
     shadowMap._createRenderStates();
 
     updateSettings();
@@ -463,32 +475,12 @@ function updateUI() {
     });
 }
 
-var globeVisible = true;
-var terrainEnabled = false;
-
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly : true,
     infoBox : false,
     selectionIndicator : false,
-    globe : globeVisible ? undefined : false,
-    skyAtmosphere : globeVisible ? undefined : false,
     timeline : false
 });
-
-var terrainProvider;
-if (terrainEnabled) {
-    terrainProvider = new Cesium.CesiumTerrainProvider({
-        url : '//assets.agi.com/stk-terrain/world',
-        requestWaterMask : true,
-        requestVertexNormals : true
-    });
-} else {
-    terrainProvider = new Cesium.EllipsoidTerrainProvider();
-}
-
-if (globeVisible) {
-    viewer.terrainProvider = terrainProvider;
-}
 
 var scene = viewer.scene;
 var context = scene.context;
@@ -504,13 +496,26 @@ var sunCamera = scene._sunCamera;
 var pointLightCamera = new Cesium.Camera(scene);
 var spotLightCamera = new Cesium.Camera(scene);
 
-updateLocation();
+var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
+
+updateTerrain();
+
+function updateTerrain() {
+    scene.terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
+    updateLocation();
+}
 
 function updateLocation() {
     // Get the height of the terrain at the given longitude/latitude, then create the scene.
     var location = uiOptions.locations[viewModel.location];
     var positions = [new Cesium.Cartographic(location.centerLongitude, location.centerLatitude)];
-    var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
+    var promise = Cesium.sampleTerrain(scene.terrainProvider, 11, positions);
     Cesium.when(promise, function(updatedPositions) {
         location.height = updatedPositions[0].height + 50.0;
         createScene();
@@ -551,16 +556,14 @@ function resetGlobe() {
     globe._surfaceShaderSet._shadersByTexturesFlags = [];
 }
 
-if (globeVisible) {
-    var getShaderProgram = Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram;
-    Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram = function() {
-        var surfaceShader = arguments[1].surfaceShader;
-        if (Cesium.defined(surfaceShader)) {
-            surfaceShader.flags = 0;
-        }
-        return getShaderProgram.apply(globe._surfaceShaderSet, arguments);
-    };
-}
+var getShaderProgram = Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram;
+Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram = function() {
+    var surfaceShader = arguments[1].surfaceShader;
+    if (Cesium.defined(surfaceShader)) {
+        surfaceShader.flags = 0;
+    }
+    return getShaderProgram.apply(globe._surfaceShaderSet, arguments);
+};
 
 function resetShadows(shadowOptions) {
     // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
@@ -572,9 +575,7 @@ function resetShadows(shadowOptions) {
     var centerLatitude = location.centerLatitude;
     var height = location.height;
 
-    if (globeVisible) {
-        resetGlobe();
-    }
+    resetGlobe();
 
     scene.shadowMap.destroy();
     scene.shadowMap = new Cesium.ShadowMap(shadowOptions);

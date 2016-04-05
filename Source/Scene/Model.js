@@ -1511,18 +1511,22 @@ define([
                 attributeLocations : attributeLocations
             });
         }
-
+        
         // Modify draw program to receive shadows
+        var shadowDefines = [];
         if (shadowsEnabled && model.receiveShadows) {
             drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS, frameState);
             // TODO : assumes the shader has these varyings, which may not be true for some models
-            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC', false);
+            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC', false, shadowDefines);
         }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
-            fragmentShaderSource : drawFS,
+            fragmentShaderSource : new ShaderSource({
+                sources : [drawFS],
+                defines : shadowDefines
+            }),
             attributeLocations : attributeLocations
         });
 

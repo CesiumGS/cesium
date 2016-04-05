@@ -1155,16 +1155,20 @@ define([
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
         // Modify program to receive shadows
+        var shadowDefines = [];
         if (shadowsEnabled && primitive._receiveShadows) {
             vs = ShadowMapShader.createShadowReceiveVertexShader(vs, frameState);
-            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC', 'v_positionEC', false);
+            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC', 'v_positionEC', false, shadowDefines);
         }
 
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : primitive._sp,
             vertexShaderSource : vs,
-            fragmentShaderSource : fs,
+            fragmentShaderSource : new ShaderSource({
+                sources : [fs],
+                defines : shadowDefines
+            }),
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);
