@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/PrimitiveType'
     ], function(
         defaultValue,
+        defined,
         PrimitiveType) {
     'use strict';
 
@@ -184,11 +186,46 @@ define([
          */
         this.debugOverlappingFrustums = 0;
 
+// TODO: how to invalidate this?  Get/set for properties above?  Make some of them (e.g., vertex array) readonly?
         /**
          * @private
          */
-        this.oit = undefined;
+        this.derivedCommands = {};
     }
+
+    /**
+     * @private
+     */
+    DrawCommand.shallowClone = function(command, result) {
+        if (!defined(command)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            result = new DrawCommand();
+        }
+
+        result.boundingVolume = command.boundingVolume;
+        result.orientedBoundingBox = command.orientedBoundingBox;
+        result.cull = command.cull;
+        result.modelMatrix = command.modelMatrix;
+        result.primitiveType = command.primitiveType;
+        result.vertexArray = command.vertexArray;
+        result.count = command.count;
+        result.offset = command.offset;
+        result.instanceCount = command.instanceCount;
+        result.shaderProgram = command.shaderProgram;
+        result.uniformMap = command.uniformMap;
+        result.renderState = command.renderState;
+        result.framebuffer = command.framebuffer;
+        result.pass = command.pass;
+        result.executeInClosestFrustum = command.executeInClosestFrustum;
+        result.owner = command.owner;
+        result.debugShowBoundingVolume = command.debugShowBoundingVolume;
+        result.debugOverlappingFrustums = command.debugOverlappingFrustums;
+        result.oit = command.oit;
+
+        return result;
+    };
 
     /**
      * Executes the draw command.

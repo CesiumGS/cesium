@@ -1105,6 +1105,11 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
+        var oit = scene._oit;
+        if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+            oit.createDerivedCommands(command, scene._context);
+        }
+
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
 
