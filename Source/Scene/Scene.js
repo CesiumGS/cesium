@@ -34,6 +34,7 @@ define([
         '../Renderer/ComputeEngine',
         '../Renderer/Context',
         '../Renderer/ContextLimits',
+        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -98,6 +99,7 @@ define([
         ComputeEngine,
         Context,
         ContextLimits,
+        DrawCommand,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -1105,6 +1107,15 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
+        if (command._dirty) {
+            command._dirty = false;
+            
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                oit.createDerivedCommands(command, scene._context);
+            }
+        }
+
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
 
@@ -1313,13 +1324,11 @@ define([
         });
     }
 
-    function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
-        if (defined(command.shaderProgram) || defined(shaderProgram)) {
-            // Replace shader for frustum visualization
-            var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene.context, passState, renderState, sp);
-            sp.destroy();
-        }
+    function executeDebugCommand(command, scene, passState) {
+        var debugCommand = DrawCommand.shallowClone(command);
+        debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
+        debugCommand.execute(scene.context, passState);
+        debugCommand.shaderProgram.destroy();
     }
 
     var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -1328,15 +1337,15 @@ define([
                                       0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
-    function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
+    function executeCommand(command, scene, context, passState, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, passState, renderState, shaderProgram);
+            executeDebugCommand(command, scene, passState);
         } else {
-            command.execute(context, passState, renderState, shaderProgram);
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
