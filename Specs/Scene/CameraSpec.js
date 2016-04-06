@@ -131,6 +131,24 @@ defineSuite([
         expect(expected).toEqual(camera.inverseTransform);
     });
 
+    it('Computes orthonormal direction, up, and right vectors', function() {
+        camera.direction = new Cartesian3(-0.32297853365047874, 0.9461560708446421, 0.021761351171635013);
+        camera.up = new Cartesian3(0.9327219113001013, 0.31839266745173644, -2.9874778345595487e-10);
+        camera.right = new Cartesian3(0.0069286549295528715, -0.020297288960790985, 0.9853344956450351);
+
+        expect(Cartesian3.magnitude(camera.right)).not.toEqualEpsilon(1.0, CesiumMath.EPSILON8);
+        expect(Cartesian3.magnitude(camera.up)).not.toEqualEpsilon(1.0, CesiumMath.EPSILON8);
+
+        // Trigger updateMembers which normalizes the axes
+        var viewMatrix = camera.viewMatrix;
+        expect(Cartesian3.magnitude(camera.right)).toEqualEpsilon(1.0, CesiumMath.EPSILON8);
+        expect(Cartesian3.magnitude(camera.up)).toEqualEpsilon(1.0, CesiumMath.EPSILON8);
+
+        var inverseAffine = Matrix4.inverseTransformation(viewMatrix, new Matrix4());
+        var inverse = Matrix4.inverse(viewMatrix, new Matrix4());
+        expect(inverseAffine).toEqualEpsilon(inverse, CesiumMath.EPSILON8);
+    });
+
     it('get heading is undefined when morphing', function() {
         camera._mode = SceneMode.MORPHING;
         expect(camera.heading).not.toBeDefined();
