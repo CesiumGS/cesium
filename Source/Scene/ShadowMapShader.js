@@ -128,6 +128,9 @@ define([
             'uniform vec3 u_shadowMapLightDirectionEC; \n' +
             'uniform vec4 u_shadowMapLightPositionEC; \n' +
             'uniform vec3 u_shadowMapNormalOffsetScaleDistanceAndMaxDistance; \n' +
+            'uniform vec4 u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth; \n' +
+            'uniform sampler2D u_shadowMapTexture; \n' +
+            'uniform samplerCube u_shadowMapTextureCube; \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +
             (hasPositionVarying ?
@@ -157,8 +160,14 @@ define([
             '    czm_shadow_main(); \n' +
             '    vec4 positionEC = getPositionEC(); \n' +
             '    vec3 normalEC = getNormalEC(); \n' +
-            '    float shadowMapDistance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.y; \n' +
             '    float shadowMapMaximumDistance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.z; \n';
+
+        fs +=
+            '    czm_shadowParameters shadowParameters; \n' +
+            '    shadowParameters.texelStepSize = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.xy; \n' +
+            '    shadowParameters.depthBias = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.z; \n' +
+            '    shadowParameters.normalShadingSmooth = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.w; \n' +
+            '    shadowParameters.distance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.y; \n';
 
         if (isPointLight) {
             fs +=
@@ -171,14 +180,17 @@ define([
                 '        return; \n' +
                 '    } \n' +
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
-                '    distance /= radius; \n' +
 
-                '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
+                '    shadowParameters.depth = distance / radius; \n' +
+                '    shadowParameters.nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
+                '    shadowParameters.distance = radius; \n' +
+
 
                 (usesCubeMap ?
-                '    float visibility = czm_shadowVisibility(directionWC, distance, nDotL, radius); \n' :
-                '    vec2 uv = czm_cubeMapToUV(directionWC); \n' +
-                '    float visibility = czm_shadowVisibility(uv, distance, nDotL, radius); \n');
+                '    shadowParameters.texCoords = directionWC; \n' +
+                '    float visibility = czm_shadowVisibility(u_shadowMapTextureCube, shadowParameters); \n' :
+                '    shadowParameters.texCoords = czm_cubeMapToUV(directionWC); \n' +
+                '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n');
         } else if (isSpotLight) {
             fs +=
                 '    vec3 directionEC = normalize(positionEC.xyz - u_shadowMapLightPositionEC.xyz); \n' +
@@ -194,7 +206,11 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowMapDistance); \n';
+                '    shadowParameters.texCoords = shadowPosition.xy; \n' +
+                '    shadowParameters.depth = shadowPosition.z; \n' +
+                '    shadowParameters.nDotL = nDotL; \n' +
+
+                '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n';
         } else if (hasCascades) {
             fs +=
                 '    float depth = -positionEC.z; \n' +
@@ -217,7 +233,10 @@ define([
                 '    vec4 shadowPosition = czm_cascadeMatrix(weights) * positionEC; \n' +
 
                 '    // Get visibility \n' +
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowDistance); \n' +
+                '    shadowParameters.texCoords = shadowPosition.xy; \n' +
+                '    shadowParameters.depth = shadowPosition.z; \n' +
+                '    shadowParameters.nDotL = nDotL; \n' +
+                '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n' +
 
                 '    // Fade out shadows that are far away \n' +
                 '    float fade = max((depth - shadowMapMaximumDistance * 0.8) / (shadowMapMaximumDistance * 0.2), 0.0); \n' +
@@ -237,7 +256,10 @@ define([
                 '        return; \n' +
                 '    } \n' +
 
-                '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowMapDistance); \n';
+                '    shadowParameters.texCoords = shadowPosition.xy; \n' +
+                '    shadowParameters.depth = shadowPosition.z; \n' +
+                '    shadowParameters.nDotL = nDotL; \n' +
+                '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n';
         }
 
         fs +=
