@@ -119,17 +119,3 @@ The 16 x 16px icons in these sprites are action and object type images which can
 .dijitRtl .dijitDisabled .dijitIconError {
 	background-image: url('images/commonIconsObjActDisabled_rtl.png'); /* Contains both object and action icons as a sprite image for the disabled state. These would be used by buttons and menus.   */
 }
-
-.gitHubIcon {
-	background-image: url('../../../../gitHub16px.png');
-	width: 16px;
-	height: 16px;
-	text-align: center;
-}
-
-.shareIcon {
-	background-image: url('../../../../share16px.png');
-	width: 16px;
-	height: 16px;
-	text-align: center;
-}
