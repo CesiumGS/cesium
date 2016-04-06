@@ -767,9 +767,7 @@ define([
 
         // Modify uniform state to receive shadows
         var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        var receiveShadows = shadowsEnabled && tileProvider.receiveShadows;
-        var castShadows = shadowsEnabled && tileProvider.castShadows;
-        if (shadowsEnabled && (receiveShadows || castShadows)) {
+        if (shadowsEnabled && (tileProvider.receiveShadows || tileProvider.castShadows)) {
             uniformMap = frameState.shadowMap.combineUniforms(uniformMap, true);
         }
 

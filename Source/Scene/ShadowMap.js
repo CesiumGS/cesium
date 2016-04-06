@@ -1302,6 +1302,9 @@ define([
             },
             u_shadowMapDistance : function() {
                 return that.distance;
+            },
+            u_shadowMapMaximumDistance : function() {
+                return that._maximumDistance;
             }
         };
 

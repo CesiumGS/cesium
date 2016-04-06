@@ -97,8 +97,6 @@ define([
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
         var exponentialShadows = shadowMap._exponentialShadows;
 
-        var maximumDistance = Number(shadowMap._maximumDistance).toFixed(10);
-
         fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
 
         if (isPointLight && usesCubeMap) {
@@ -129,6 +127,7 @@ define([
             'uniform vec3 u_shadowMapLightDirectionEC; \n' +
             'uniform vec4 u_shadowMapLightPositionEC; \n' +
             'uniform float u_shadowMapDistance; \n' +
+            'uniform float u_shadowMapMaximumDistance; \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +
             (hasPositionVarying ?
@@ -219,7 +218,7 @@ define([
                 '    float visibility = czm_shadowVisibility(shadowPosition.xy, shadowPosition.z, nDotL, shadowDistance); \n' +
 
                 '    // Fade out shadows that are far away \n' +
-                '    float fade = max((depth - ' + maximumDistance + ' * 0.8) / (' + maximumDistance + ' * 0.2), 0.0); \n' +
+                '    float fade = max((depth - u_shadowMapMaximumDistance * 0.8) / (u_shadowMapMaximumDistance * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
 
                 (debugVisualizeCascades ?
