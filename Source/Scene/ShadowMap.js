@@ -1267,15 +1267,6 @@ define([
 
         var that = this;
         var mapUniforms = {
-            u_shadowDepthBias : function() {
-                return bias.depthBias;
-            },
-            u_shadowNormalShadingSmooth : function() {
-                return bias.normalShadingSmooth;
-            },
-            u_shadowNormalOffsetScale : function() {
-                return bias.normalOffsetScale;
-            },
             u_shadowMapTexture :function() {
                 return that.shadowMapTexture;
             },
@@ -1297,17 +1288,14 @@ define([
             u_shadowMapLightPositionEC : function() {
                 return that.lightPositionEC;
             },
-            u_shadowMapTexelStepSize : function() {
-                return that.texelStepSize;
-            },
             u_shadowMapCascadeDistances : function() {
                 return that.cascadeDistances;
             },
-            u_shadowMapDistance : function() {
-                return that.distance;
+            u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth : function() {
+                return new Cartesian4(that.texelStepSize.x, that.texelStepSize.y, bias.depthBias, bias.normalShadingSmooth);
             },
-            u_shadowMapMaximumDistance : function() {
-                return that._maximumDistance;
+            u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
+                return new Cartesian3(bias.normalOffsetScale, that.distance, that._maximumDistance);
             }
         };
 
