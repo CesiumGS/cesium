@@ -51,9 +51,6 @@ define([
         SceneMode) {
     'use strict';
 
-// TODO: unit tests
-// TODO: test with replacement refinement
-
 // TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
 // lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
 // values wll be gown), we need to expose an event like loadProgress for when content is unloaded.
@@ -63,9 +60,9 @@ define([
 // reapplied).
 
 // TODO: Refactor TileReplacementQueue to use DoublyLinkedList?
+// TODO: good default for maximumNumberOfLoadedTiles
 // TODO: track stats for cache trashing
 // TODO: research strategies for proactive cache trimming: number of seconds/frame a tile was not selected, how far out of view a tile is, etc.
-// TODO: good default for maximumNumberOfLoadedTiles
 // TODO: More precise size than number of tiles?  Count composite tiles as more?  Include geometry/texture cost with each tile?
 // TODO: unload sub-trees from tiles with tileset.json content
 // TODO: vertex/texture cache across tiles
@@ -147,34 +144,8 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        /**
-         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
-         * values will provide better performance but lower visual quality.
-         *
-         * @type {Number}
-         * @default 16
-         */
-        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
-
-        /**
-         * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
-         * <p>
-         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
-         * </p>
-         * <p>
-         * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
-         * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
-         * for the current view than the number of tiles loaded will exceed
-         * <code>maximumNumberOfLoadedTiles</code>.  For example, if the maximum is 128 tiles, but
-         * 150 tiles are needed to meet the screen-space error, then 150 tiles may be loaded.  When
-         * these tiles go out of view, they will be unloaded.
-         * </p>
-         *
-         * @type {Number}
-         * @default 256
-         */
-        this.maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
-
+        this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
+        this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
         /**
@@ -555,6 +526,68 @@ define([
         },
 
         /**
+         * The maximum screen-space error used to drive level-of-detail refinement.  Higher
+         * values will provide better performance but lower visual quality.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Number}
+         * @default 16
+         *
+         * @exception {DeveloperError} <code>maximumScreenSpaceError</code> must be greater than or equal to zero.
+         */
+        maximumScreenSpaceError : {
+            get : function() {
+                return this._maximumScreenSpaceError;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (value < 0) {
+                    throw new DeveloperError('maximumScreenSpaceError must be greater than or equal to zero');
+                }
+                //>>includeEnd('debug');
+
+                this._maximumScreenSpaceError = value;
+            }
+        },
+
+        /**
+         * The maximum number of tiles to load.  Tiles not in view are unloaded to enforce this.
+         * <p>
+         * If decreasing this value results in unloading tiles, the tiles are unloaded the next frame.
+         * </p>
+         * <p>
+         * If more tiles than <code>maximumNumberOfLoadedTiles</code> are needed
+         * to meet the desired screen-space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
+         * for the current view than the number of tiles loaded will exceed
+         * <code>maximumNumberOfLoadedTiles</code>.  For example, if the maximum is 128 tiles, but
+         * 150 tiles are needed to meet the screen-space error, then 150 tiles may be loaded.  When
+         * these tiles go out of view, they will be unloaded.
+         * </p>
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {Number}
+         * @default 256
+         *
+         * @exception {DeveloperError} <code>maximumNumberOfLoadedTiles</code> must be greater than or equal to zero.
+         */
+        maximumNumberOfLoadedTiles : {
+            get : function() {
+                return this._maximumNumberOfLoadedTiles;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (value < 0) {
+                    throw new DeveloperError('maximumNumberOfLoadedTiles must be greater than or equal to zero');
+                }
+                //>>includeEnd('debug');
+
+                this._maximumNumberOfLoadedTiles = value;
+            }
+        },
+
+        /**
          * @private
          */
         styleEngine : {
@@ -767,7 +800,7 @@ define([
             return;
         }
 
-        var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         var cullingVolume = frameState.cullingVolume;
 
         tileset._selectedTiles.length = 0;
@@ -996,7 +1029,11 @@ define([
                 tileset._processingQueue.splice(index, 1);
                 --tileset._statistics.numberProcessing;
                 ++tileset._statistics.numberReady;
-                tile.replacementNode = tileset._replacementList.add(tile);
+                if (tile.hasContent) {
+                    // RESEARCH_IDEA: ability to unload tiles (without content) for an
+                    // external tileset when all the tiles are unloaded.
+                    tile.replacementNode = tileset._replacementList.add(tile);
+                }
             } else {
                 // Not in processing queue
                 // For example, when a url request fails and the ready promise is rejected
@@ -1119,7 +1156,7 @@ define([
         tileset._trimTiles = false;
 
         var stats = tileset._statistics;
-        var maximumNumberOfLoadedTiles = tileset.maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
+        var maximumNumberOfLoadedTiles = tileset._maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
         var tileUnload = tileset.tileUnload;
 
