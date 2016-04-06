@@ -9,6 +9,7 @@ Change Log
   *
 * Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
 * Added ability to import and export Sandcastle example using GitHub Gists. [#3795](https://github.com/AnalyticalGraphicsInc/cesium/pull/3795)
+* Fixed issue where `Camera.flyTo` does not go to the rectangle. [#3688](https://github.com/AnalyticalGraphicsInc/cesium/issues/3688)
 
 ### 1.20 - 2016-04-01
 

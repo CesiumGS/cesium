@@ -2367,6 +2367,69 @@ defineSuite([
         expect(rect).not.toBeDefined();
     });
 
+    it('flyTo rectangle in 2D', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        camera._mode = SceneMode.SCENE2D;
+
+        var frustum = new OrthographicFrustum();
+        frustum.left = -10.0;
+        frustum.right = 10.0;
+        frustum.bottom = -10.0;
+        frustum.top = 10.0;
+        frustum.near = 1.0;
+        frustum.far = 21.0;
+        camera.frustum = frustum;
+
+        var west = 0.3323436621771766;
+        var south = 0.8292930502744068;
+        var east = 0.3325710961342694;
+        var north = 0.8297059734014236;
+        var rectangle = new Rectangle(west, south, east, north);
+
+        var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+        camera.flyTo({destination : rectangle});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
+    it('flyTo rectangle in CV', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        camera._mode = SceneMode.COLUMBUS_VIEW;
+
+        var west = 0.3323436621771766;
+        var south = 0.8292930502744068;
+        var east = 0.3325710961342694;
+        var north = 0.8297059734014236;
+        var rectangle = new Rectangle(west, south, east, north);
+
+        var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+        camera.flyTo({destination : rectangle});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
+    it('flyTo rectangle in 3D', function() {
+        var tweenSpy = spyOn(CameraFlightPath, 'createTween');
+        spyOn(scene.tweens, 'add');
+
+        camera._mode = SceneMode.SCENE3D;
+
+        var west = 0.3323436621771766;
+        var south = 0.8292930502744068;
+        var east = 0.3325710961342694;
+        var north = 0.8297059734014236;
+        var rectangle = new Rectangle(west, south, east, north);
+
+        var expectedDestination = camera.getRectangleCameraCoordinates(rectangle);
+        camera.flyTo({destination : rectangle});
+
+        expect(tweenSpy.calls.mostRecent().args[1].destination.equalsEpsilon(expectedDestination, 0.1)).toBe(true);
+    });
+
     it('flyTo does not zoom closer than minimumZoomDistance', function() {
         var tweenSpy = spyOn(CameraFlightPath, 'createTween');
         spyOn(scene.tweens, 'add');
