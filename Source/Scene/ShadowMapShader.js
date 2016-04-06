@@ -69,10 +69,11 @@ define([
 
         fs += '} \n';
 
-        fs += 'uniform vec4 u_shadowMapLightPositionEC; \n';
-
-        if (isPointLight && !hasPositionVarying) {
-            fs = 'varying vec3 v_positionEC; \n' + fs;
+        if (isPointLight) {
+            if (!hasPositionVarying) {
+                fs = 'varying vec3 v_positionEC; \n' + fs;
+            }
+            fs = 'uniform vec4 u_shadowMapLightPositionEC; \n' + fs;
         }
 
         return fs;

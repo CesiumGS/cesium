@@ -755,6 +755,9 @@ define([
             uniformMap : {
                 u_shadowMapTexture : function() {
                     return shadowMap.shadowMapTexture;
+                },
+                u_shadowMapTextureCube : function() {
+                    return shadowMap.shadowMapTexture;
                 }
             }
         });
