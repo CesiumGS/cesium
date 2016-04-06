@@ -7,7 +7,8 @@ define([
         '../Core/Event',
         './createPropertyDescriptor',
         './NodeTransformationProperty',
-        './PropertyBag'
+        './PropertyBag',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -16,7 +17,8 @@ define([
         Event,
         createPropertyDescriptor,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        when) {
     'use strict';
 
     function createNodeTransformationProperty(value) {
@@ -69,6 +71,8 @@ define([
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
         this._definitionChanged = new Event();
+        this._readyPromise = when.defer();
+        this._ready = false;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }

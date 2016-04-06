@@ -1,83 +1,204 @@
 /*global define*/
 define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Scene/Model',
-        '../Scene/ModelAnimationLoop',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        BoundingSphere,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Matrix4,
-        Model,
-        ModelAnimationLoop,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+    '../Core/AssociativeArray',
+    '../Core/BoundingSphere',
+    '../Core/defined',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/Matrix4',
+    '../Scene/Model',
+    '../Scene/ModelAnimationLoop',
+    './BoundingSphereState',
+    './Property'
+], function (
+    AssociativeArray,
+    BoundingSphere,
+    defined,
+    destroyObject,
+    DeveloperError,
+    Matrix4,
+    Model,
+    ModelAnimationLoop,
+    BoundingSphereState,
+    Property) {
+        'use strict';
 
-    var defaultScale = 1.0;
-    var defaultMinimumPixelSize = 0.0;
-    var defaultIncrementallyLoadTextures = true;
+        var defaultScale = 1.0;
+        var defaultMinimumPixelSize = 0.0;
+        var defaultIncrementallyLoadTextures = true;
 
-    var modelMatrixScratch = new Matrix4();
-    var nodeMatrixScratch = new Matrix4();
+        var modelMatrixScratch = new Matrix4();
+        var nodeMatrixScratch = new Matrix4();
 
-    /**
-     * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
-     * @alias ModelVisualizer
-     * @constructor
-     *
-     * @param {Scene} scene The scene the primitives will be rendered in.
-     * @param {EntityCollection} entityCollection The entityCollection to visualize.
-     */
-    function ModelVisualizer(scene, entityCollection) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        /**
+         * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
+         * @alias ModelVisualizer
+         * @constructor
+         *
+         * @param {Scene} scene The scene the primitives will be rendered in.
+         * @param {EntityCollection} entityCollection The entityCollection to visualize.
+         */
+        function ModelVisualizer(scene, entityCollection) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(scene)) {
+                throw new DeveloperError('scene is required.');
+            }
+            if (!defined(entityCollection)) {
+                throw new DeveloperError('entityCollection is required.');
+            }
+            //>>includeEnd('debug');
+
+            entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
+
+            this._scene = scene;
+            this._primitives = scene.primitives;
+            this._entityCollection = entityCollection;
+            this._modelHash = {};
+            this._entitiesToVisualize = new AssociativeArray();
+            this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
         }
-        if (!defined(entityCollection)) {
-            throw new DeveloperError('entityCollection is required.');
+
+        /**
+         * Updates models created this visualizer to match their
+         * Entity counterpart at the given time.
+         *
+         * @param {JulianDate} time The time to update to.
+         * @returns {Boolean} This function always returns true.
+         */
+        ModelVisualizer.prototype.update = function (time) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(time)) {
+                throw new DeveloperError('time is required.');
+            }
+            //>>includeEnd('debug');
+
+            var entities = this._entitiesToVisualize.values;
+            var modelHash = this._modelHash;
+            var primitives = this._primitives;
+
+            for (var i = 0, len = entities.length; i < len; i++) {
+                updateModel(entities[i], modelHash, time, primitives);
+            }
+            return true;
+        };
+
+        /**
+         * Returns true if this object was destroyed; otherwise, false.
+         *
+         * @returns {Boolean} True if this object was destroyed; otherwise, false.
+         */
+        ModelVisualizer.prototype.isDestroyed = function () {
+            return false;
+        };
+
+        /**
+         * Removes and destroys all primitives created by this instance.
+         */
+        ModelVisualizer.prototype.destroy = function () {
+            this._entityCollection.collectionChanged.removeEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
+            var entities = this._entitiesToVisualize.values;
+            var modelHash = this._modelHash;
+            var primitives = this._primitives;
+            for (var i = entities.length - 1; i > -1; i--) {
+                removeModel(this, entities[i], modelHash, primitives);
+            }
+            return destroyObject(this);
+        };
+
+        /**
+         * Computes a bounding sphere which encloses the visualization produced for the specified entity.
+         * The bounding sphere is in the fixed frame of the scene's globe.
+         *
+         * @param {Entity} entity The entity whose bounding sphere to compute.
+         * @param {BoundingSphere} result The bounding sphere onto which to store the result.
+         * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
+         *                       BoundingSphereState.PENDING if the result is still being computed, or
+         *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
+         * @private
+         */
+        ModelVisualizer.prototype.getBoundingSphere = function (entity, result) {
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(entity)) {
+                throw new DeveloperError('entity is required.');
+            }
+            if (!defined(result)) {
+                throw new DeveloperError('result is required.');
+            }
+            //>>includeEnd('debug');
+
+            var modelData = this._modelHash[entity.id];
+            if (!defined(modelData)) {
+                return BoundingSphereState.FAILED;
+            }
+
+            var model = modelData.modelPrimitive;
+            if (!defined(model) || !model.show) {
+                return BoundingSphereState.FAILED;
+            }
+
+            if (!model.ready) {
+                return BoundingSphereState.PENDING;
+            }
+
+            BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+            return BoundingSphereState.DONE;
+        };
+
+        /**
+         * @private
+         */
+        ModelVisualizer.prototype._onCollectionChanged = function (entityCollection, added, removed, changed) {
+            var i;
+            var entity;
+            var entities = this._entitiesToVisualize;
+            var modelHash = this._modelHash;
+            var primitives = this._primitives;
+
+            for (i = added.length - 1; i > -1; i--) {
+                entity = added[i];
+                if (defined(entity._model) && defined(entity._position)) {
+                    entities.set(entity.id, entity);
+                }
+            }
+
+            for (i = changed.length - 1; i > -1; i--) {
+                entity = changed[i];
+                if (defined(entity._model) && defined(entity._position)) {
+                    clearNodeTransformationsScratch(entity, modelHash);
+                    entities.set(entity.id, entity);
+                } else {
+                    removeModel(this, entity, modelHash, primitives);
+                    entities.remove(entity.id);
+                }
+            }
+
+            for (i = removed.length - 1; i > -1; i--) {
+                entity = removed[i];
+                removeModel(this, entity, modelHash, primitives);
+                entities.remove(entity.id);
+            }
+        };
+
+        function removeModel(visualizer, entity, modelHash, primitives) {
+            var modelData = modelHash[entity.id];
+            if (defined(modelData)) {
+                primitives.removeAndDestroy(modelData.modelPrimitive);
+                delete modelHash[entity.id];
+            }
         }
-        //>>includeEnd('debug');
 
-        entityCollection.collectionChanged.addEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
-
-        this._scene = scene;
-        this._primitives = scene.primitives;
-        this._entityCollection = entityCollection;
-        this._modelHash = {};
-        this._entitiesToVisualize = new AssociativeArray();
-        this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    }
-
-    /**
-     * Updates models created this visualizer to match their
-     * Entity counterpart at the given time.
-     *
-     * @param {JulianDate} time The time to update to.
-     * @returns {Boolean} This function always returns true.
-     */
-    ModelVisualizer.prototype.update = function(time) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
+        function clearNodeTransformationsScratch(entity, modelHash) {
+            var modelData = modelHash[entity.id];
+            if (defined(modelData)) {
+                modelData.nodeTransformationsScratch = {};
+            }
         }
-        //>>includeEnd('debug');
 
-        var entities = this._entitiesToVisualize.values;
-        var modelHash = this._modelHash;
-        var primitives = this._primitives;
+        function onModelError(error) {
+            console.log(error);
+        }
 
-        for (var i = 0, len = entities.length; i < len; i++) {
-            var entity = entities[i];
+        function updateModel(entity, modelHash, time, primitives) {
             var modelGraphics = entity._model;
 
             var uri;
@@ -95,7 +216,7 @@ define([
                 if (defined(modelData)) {
                     modelData.modelPrimitive.show = false;
                 }
-                continue;
+                return;
             }
 
             var model = defined(modelData) ? modelData.modelPrimitive : undefined;
@@ -105,21 +226,28 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri,
-                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
+                    url: uri,
+                    incrementallyLoadTextures: Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
-                model.readyPromise.otherwise(onModelError);
+                model.readyPromise.then(function (model) {
+                    entity._model._ready = true;
+                    entity._model._readyPromise.resolve(model);
+                }, function (error) {
+                    entity._model._ready = false;
+                    entity._model._readyPromise.resolve(model);
+                    onModelError(error);
+                });
 
                 model.id = entity;
                 primitives.add(model);
 
                 modelData = {
-                    modelPrimitive : model,
-                    uri : uri,
-                    animationsRunning : false,
-                    nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {}
+                    modelPrimitive: model,
+                    uri: uri,
+                    animationsRunning: false,
+                    nodeTransformationsScratch: {},
+                    originalNodeMatrixHash: {}
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -135,7 +263,7 @@ define([
                 if (modelData.animationsRunning !== runAnimations) {
                     if (runAnimations) {
                         model.activeAnimations.addAll({
-                            loop : ModelAnimationLoop.REPEAT
+                            loop: ModelAnimationLoop.REPEAT
                         });
                     } else {
                         model.activeAnimations.removeAll();
@@ -174,124 +302,5 @@ define([
             }
         }
 
-        return true;
-    };
-
-    /**
-     * Returns true if this object was destroyed; otherwise, false.
-     *
-     * @returns {Boolean} True if this object was destroyed; otherwise, false.
-     */
-    ModelVisualizer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Removes and destroys all primitives created by this instance.
-     */
-    ModelVisualizer.prototype.destroy = function() {
-        this._entityCollection.collectionChanged.removeEventListener(ModelVisualizer.prototype._onCollectionChanged, this);
-        var entities = this._entitiesToVisualize.values;
-        var modelHash = this._modelHash;
-        var primitives = this._primitives;
-        for (var i = entities.length - 1; i > -1; i--) {
-            removeModel(this, entities[i], modelHash, primitives);
-        }
-        return destroyObject(this);
-    };
-
-    /**
-     * Computes a bounding sphere which encloses the visualization produced for the specified entity.
-     * The bounding sphere is in the fixed frame of the scene's globe.
-     *
-     * @param {Entity} entity The entity whose bounding sphere to compute.
-     * @param {BoundingSphere} result The bounding sphere onto which to store the result.
-     * @returns {BoundingSphereState} BoundingSphereState.DONE if the result contains the bounding sphere,
-     *                       BoundingSphereState.PENDING if the result is still being computed, or
-     *                       BoundingSphereState.FAILED if the entity has no visualization in the current scene.
-     * @private
-     */
-    ModelVisualizer.prototype.getBoundingSphere = function(entity, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(entity)) {
-            throw new DeveloperError('entity is required.');
-        }
-        if (!defined(result)) {
-            throw new DeveloperError('result is required.');
-        }
-        //>>includeEnd('debug');
-
-        var modelData = this._modelHash[entity.id];
-        if (!defined(modelData)) {
-            return BoundingSphereState.FAILED;
-        }
-
-        var model = modelData.modelPrimitive;
-        if (!defined(model) || !model.show) {
-            return BoundingSphereState.FAILED;
-        }
-
-        if (!model.ready) {
-            return BoundingSphereState.PENDING;
-        }
-
-        BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
-        return BoundingSphereState.DONE;
-    };
-
-    /**
-     * @private
-     */
-    ModelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
-        var i;
-        var entity;
-        var entities = this._entitiesToVisualize;
-        var modelHash = this._modelHash;
-        var primitives = this._primitives;
-
-        for (i = added.length - 1; i > -1; i--) {
-            entity = added[i];
-            if (defined(entity._model) && defined(entity._position)) {
-                entities.set(entity.id, entity);
-            }
-        }
-
-        for (i = changed.length - 1; i > -1; i--) {
-            entity = changed[i];
-            if (defined(entity._model) && defined(entity._position)) {
-                clearNodeTransformationsScratch(entity, modelHash);
-                entities.set(entity.id, entity);
-            } else {
-                removeModel(this, entity, modelHash, primitives);
-                entities.remove(entity.id);
-            }
-        }
-
-        for (i = removed.length - 1; i > -1; i--) {
-            entity = removed[i];
-            removeModel(this, entity, modelHash, primitives);
-            entities.remove(entity.id);
-        }
-    };
-
-    function removeModel(visualizer, entity, modelHash, primitives) {
-        var modelData = modelHash[entity.id];
-        if (defined(modelData)) {
-            primitives.removeAndDestroy(modelData.modelPrimitive);
-            delete modelHash[entity.id];
-        }
-    }
-
-    function clearNodeTransformationsScratch(entity, modelHash) {
-        var modelData = modelHash[entity.id];
-        if (defined(modelData)) {
-            modelData.nodeTransformationsScratch = {};
-        }
-    }
-
-    function onModelError(error) {
-        console.error(error);
-    }
-
-    return ModelVisualizer;
-});
+        return ModelVisualizer;
+    });
