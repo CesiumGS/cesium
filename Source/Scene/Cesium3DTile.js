@@ -235,7 +235,10 @@ define([
         this.hasTilesetContent = hasTilesetContent;
 
         /**
-         * DOC_TBA
+         * The corresponding node in the cache replacement list.
+         *
+         * @type {DoublyLinkedList}
+         * @readonly
          *
          * @private
          */
