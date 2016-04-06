@@ -161,6 +161,7 @@ require({
     var demoJs = '';
     var previousCode = '';
     var runGist = false;
+    var gistCode;
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -704,6 +705,9 @@ require({
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
 
+        if (name === 'Gist Import') {
+            return;
+        }
         return requestDemo(demo.name).then(function(value) {
             demo.code = value;
 
@@ -732,13 +736,12 @@ require({
                         var code = files[Object.keys(files)[0]].content;
                         jsEditor.setValue(code);
                         demoJs = code.replace(/\s/g, '');
-                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                        gistCode = code;
                     }).otherwise(function() {
-                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
-                    });
+                        appendConsole('consoleError', 'Error importing Gist this could be due to too many request, try again in an hour.', true);
+                });
             } else {
                 jsEditor.setValue(scriptCode);
-                window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
             }
             jsEditor.clearHistory();
 
@@ -1048,6 +1051,10 @@ require({
     };
 
     function requestDemo(name) {
+        if (name === 'Gist Import') {
+            jsEditor.setValue(gistCode);
+            return;
+        }
         return xhr.get({
             url : 'gallery/' + name + '.html',
             handleAs : 'text',
@@ -1081,10 +1088,15 @@ require({
 
             // Select the demo to load upon opening based on the query parameter.
             if (defined(queryObject.src)) {
+                var gistDemo = {
+                    name : 'Gist Import',
+                    code : demo.code,
+                    description: 'Code imported from GitHub Gist'
+                };
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
                         if (defined(queryObject.gistId)) {
-                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                            window.history.replaceState(gistDemo, gistDemo.name, '?src=Hello World.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
                         } else {
                             window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                         }
