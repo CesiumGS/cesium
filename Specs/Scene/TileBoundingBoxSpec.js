@@ -8,7 +8,7 @@ defineSuite([
         'Core/Math',
         'Core/Rectangle',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createFrameState'
     ], function(
         TileBoundingBox,
         Cartesian2,
@@ -18,17 +18,15 @@ defineSuite([
         CesiumMath,
         Rectangle,
         SceneMode,
-        createScene) {
+        createFrameState) {
     'use strict';
 
-    var scene;
+    var frameState;
+    var camera;
 
-    beforeAll(function() {
-        scene = createScene();
-    });
-
-    afterAll(function() {
-        scene.destroyForSpecs();
+    beforeEach(function() {
+        frameState = createFrameState();
+        camera = frameState.camera;
     });
 
     it('throws when options.rectangle is undefined', function() {
@@ -51,28 +49,28 @@ defineSuite([
         });
 
         // Inside rectangle, above height
-        scene.camera.position = Cartesian3.fromRadians(0.0, 0.0, 20.0);
-        expect(tile.distanceToCamera(scene.frameState)).toEqualEpsilon(10.0, CesiumMath.EPSILON3);
+        camera.position = Cartesian3.fromRadians(0.0, 0.0, 20.0);
+        expect(tile.distanceToCamera(frameState)).toEqualEpsilon(10.0, CesiumMath.EPSILON3);
 
         // Inside rectangle, below height
-        scene.camera.position = Cartesian3.fromRadians(0.0, 0.0, 5.0);
-        expect(tile.distanceToCamera(scene.frameState)).toEqual(0.0);
+        camera.position = Cartesian3.fromRadians(0.0, 0.0, 5.0);
+        expect(tile.distanceToCamera(frameState)).toEqual(0.0);
 
         // From southwest
-        scene.camera.position = Cartesian3.fromRadians(west - offset, south - offset, 0.0);
+        camera.position = Cartesian3.fromRadians(west - offset, south - offset, 0.0);
         var southwestPosition = Cartesian3.fromRadians(west, south);
-        var expectedDistance = Cartesian3.distance(scene.camera.position, southwestPosition);
-        expect(tile.distanceToCamera(scene.frameState)).toEqualEpsilon(expectedDistance, CesiumMath.EPSILON1);
+        var expectedDistance = Cartesian3.distance(camera.position, southwestPosition);
+        expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, CesiumMath.EPSILON1);
 
         // From northeast
-        scene.camera.position = Cartesian3.fromRadians(east + offset, north + offset, 0.0);
+        camera.position = Cartesian3.fromRadians(east + offset, north + offset, 0.0);
         var northeastPosition = Cartesian3.fromRadians(east, north);
-        expectedDistance = Cartesian3.distance(scene.camera.position, northeastPosition);
-        expect(tile.distanceToCamera(scene.frameState)).toEqualEpsilon(expectedDistance, CesiumMath.EPSILON1);
+        expectedDistance = Cartesian3.distance(camera.position, northeastPosition);
+        expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, CesiumMath.EPSILON1);
     });
 
     it('distanceToCamera in 2D', function() {
-        scene.mode = SceneMode.SCENE2D;
+        frameState.mode = SceneMode.SCENE2D;
 
         var offset = 0.0001;
         var west = -0.001;
@@ -87,19 +85,19 @@ defineSuite([
         });
 
         // Inside rectangle
-        scene.camera.position = Cartesian3.fromRadians(0.0, 0.0, 0.0);
-        expect(tile.distanceToCamera(scene.frameState)).toEqualEpsilon(Ellipsoid.WGS84.radii.x, 10.0);
+        camera.position = Cartesian3.fromRadians(0.0, 0.0, 0.0);
+        expect(tile.distanceToCamera(frameState)).toEqual(Ellipsoid.WGS84.radii.x);
 
         // From southwest
         var southwest3D = new Cartographic(west, south, 0.0);
-        var southwest2D = scene.frameState.mapProjection.project(southwest3D);
+        var southwest2D = frameState.mapProjection.project(southwest3D);
         var position3D = new Cartographic(west - offset, south - offset, 0.0);
-        var position2D = scene.frameState.mapProjection.project(position3D);
+        var position2D = frameState.mapProjection.project(position3D);
         var distance2D = Cartesian2.distance(southwest2D, position2D);
         var height = Ellipsoid.WGS84.radii.x;
         var expectedDistance = Math.sqrt(distance2D * distance2D + height * height);
 
-        scene.camera.position = Cartesian3.fromRadians(position3D.longitude, position3D.latitude);
-        expect(tile.distanceToCamera(scene.frameState)).toEqualEpsilon(expectedDistance, 10.0);
+        camera.position = Cartesian3.fromRadians(position3D.longitude, position3D.latitude);
+        expect(tile.distanceToCamera(frameState)).toEqualEpsilon(expectedDistance, 10.0);
     });
 });

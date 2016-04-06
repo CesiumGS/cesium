@@ -1,7 +1,6 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Material',
-        'Scene/MaterialAppearance',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -15,13 +14,13 @@ defineSuite([
         'Core/RectangleGeometry',
         'Renderer/ClearCommand',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
-        'Specs/pollToPromise',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Specs/pollToPromise'
     ], function(
         Material,
-        MaterialAppearance,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
@@ -35,10 +34,11 @@ defineSuite([
         RectangleGeometry,
         ClearCommand,
         EllipsoidSurfaceAppearance,
+        MaterialAppearance,
         PolylineCollection,
         Primitive,
-        pollToPromise,
-        createScene) {
+        createScene,
+        pollToPromise) {
     'use strict';
 
     var scene;
