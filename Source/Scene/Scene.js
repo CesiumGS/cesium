@@ -1108,13 +1108,13 @@ define([
         }
 
         if (command._dirty) {
+            command._dirty = false;
+            
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
                 oit.createDerivedCommands(command, scene._context);
             }
         }
-
-        command._dirty = false;
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
