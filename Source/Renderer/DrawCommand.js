@@ -39,7 +39,6 @@ define([
         this._debugOverlappingFrustums = 0;
         this._dirty = true;
 
-// TODO: how to invalidate this?  Get/set for properties above?  Make some of them (e.g., vertex array) readonly?
         /**
          * @private
          */
