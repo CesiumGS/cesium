@@ -108,6 +108,10 @@ function loadTileset(url) {
             //console.log('Loading: requests: ' + numberOfPendingRequests + ', processing: ' + numberProcessing);
         });
 
+        tileset.tileUnload.addEventListener(function(tile) {
+            //console.log('Tile unloaded.')
+        });
+
         addExpressionUI();
     });
 }
