@@ -51,22 +51,6 @@ define([
         SceneMode) {
     'use strict';
 
-// TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
-// lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
-// values wll be gown), we need to expose an event like loadProgress for when content is unloaded.
-//
-// We might also want to keep a separate data structure - or flag - so we know what property
-// values changed (other than those derived from declarative styling, which can easily be
-// reapplied).
-
-// TODO: Refactor TileReplacementQueue to use DoublyLinkedList?
-// TODO: good default for maximumNumberOfLoadedTiles
-// TODO: track stats for cache trashing
-// TODO: research strategies for proactive cache trimming: number of seconds/frame a tile was not selected, how far out of view a tile is, etc.
-// TODO: More precise size than number of tiles?  Count composite tiles as more?  Include geometry/texture cost with each tile?
-// TODO: unload sub-trees from tiles with tileset.json content
-// TODO: vertex/texture cache across tiles
-
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},
      * used for streaming massive heterogeneous 3D geospatial datasets.
