@@ -51,15 +51,24 @@ define([
         SceneMode) {
     'use strict';
 
-// TODO: unload events
 // TODO: unit tests
 // TODO: test with replacement refinement
+
+// TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
+// lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
+// values wll be gown), we need to expose an event like loadProgress for when content is unloaded.
+//
+// We might also want to keep a separate data structure - or flag - so we know what property
+// values changed (other than those derived from declarative styling, which can easily be
+// reapplied).
+
 // TODO: Refactor TileReplacementQueue to use DoublyLinkedList?
 // TODO: track stats for cache trashing
 // TODO: research strategies for proactive cache trimming: number of seconds/frame a tile was not selected, how far out of view a tile is, etc.
 // TODO: good default for maximumNumberOfLoadedTiles
 // TODO: More precise size than number of tiles?  Count composite tiles as more?  Include geometry/texture cost with each tile?
 // TODO: unload sub-trees from tiles with tileset.json content
+// TODO: vertex/texture cache across tiles
 
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles tileset},
@@ -286,13 +295,29 @@ define([
          */
         this.loadProgress = new Event();
 
-        // TODO: since the show/color/setProperty values set with Cesium3DTileFeature only have the
-        // lifetime of the tile's content (e.g., if the content is unloaded, then reloaded later, the
-        // values wll be gown), we need to expose an event like loadProgress for when content is unloaded.
-        //
-        // We might also want to keep a separate data structure - or flag - so we know what property
-        // values changed (other than those derived from declarative styling, which can easily be
-        // reapplied).
+        /**
+         * The event fired to indicate that a tile's content was unloaded from the cache.
+         * <p>
+         * The unloaded {@link Cesium3DTile} is passed to the event listener.
+         * </p>
+         * <p>
+         * This event is immediately before the tile's content is unloaded while the frame is being
+         * rendered so that the event listener has access to the tile's content.  Do not create
+         * or modify Cesium entities or primitives during the event listener.
+         * </p>
+         *
+         * @type {Event}
+         * @default new Event()
+         *
+         * @example
+         * tileset.tileUnload.addEventListener(function(tile) {
+         *     console.log('A tile was unloaded from the cache.');
+         * });
+         *
+         * @see Cesium3DTileset#maximumNumberOfLoadedTiles
+         * @see Cesium3DTileset#trimLoadedTiles
+         */
+        this.tileUnload = new Event();
 
         /**
          * This event fires once for each visible tile in a frame.  This can be used to manually
@@ -1096,6 +1121,7 @@ define([
         var stats = tileset._statistics;
         var maximumNumberOfLoadedTiles = tileset.maximumNumberOfLoadedTiles + 1; // + 1 to account for sentinel
         var replacementList = tileset._replacementList;
+        var tileUnload = tileset.tileUnload;
 
         // Traverse the list only to the sentinel since tiles/nodes to the
         // right of the sentinel were used this frame.
@@ -1104,7 +1130,10 @@ define([
         var sentinel = tileset._replacementSentinel;
         var node = replacementList.head;
         while ((node !== sentinel) && ((replacementList.length > maximumNumberOfLoadedTiles) || trimTiles)) {
-            node.item.unloadContent();
+            var tile = node.item;
+
+            tileUnload.raiseEvent(tile);
+            tile.unloadContent();
 
             var currentNode = node;
             node = node.next;
