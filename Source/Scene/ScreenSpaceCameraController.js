@@ -970,8 +970,6 @@ define([
             Matrix3.multiplyByVector(rotation, camera.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.cross(camera.right, camera.direction, camera.up);
-            Cartesian3.normalize(camera.up, camera.up);
-            Cartesian3.normalize(camera.right, camera.right);
 
             camera._setTransform(oldTransform);
         }
@@ -1603,8 +1601,6 @@ define([
             Matrix3.multiplyByVector(rotation, camera.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.cross(camera.right, camera.direction, camera.up);
-            Cartesian3.normalize(camera.up, camera.up);
-            Cartesian3.normalize(camera.right, camera.right);
 
             camera._setTransform(oldTransform);
         }
@@ -1756,8 +1752,6 @@ define([
                 Cartesian3.normalize(camera.direction, camera.direction);
                 Cartesian3.cross(camera.direction, camera.up, camera.right);
                 Cartesian3.cross(camera.right, camera.direction, camera.up);
-                Cartesian3.normalize(camera.up, camera.up);
-                Cartesian3.normalize(camera.right, camera.right);
             }
         }
     }
