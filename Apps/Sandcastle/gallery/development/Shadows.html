@@ -337,7 +337,7 @@ Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateTerrain);
+Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateLocation);
 Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
@@ -504,18 +504,18 @@ var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
 
 var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
-updateTerrain();
+var imageryProvider = new Cesium.BingMapsImageryProvider({
+    url : 'https://dev.virtualearth.net'
+});
 
-function updateTerrain() {
-    scene.terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
-    updateLocation();
-}
+updateLocation();
 
 function updateLocation() {
     // Get the height of the terrain at the given longitude/latitude, then create the scene.
     var location = uiOptions.locations[viewModel.location];
     var positions = [new Cesium.Cartographic(location.centerLongitude, location.centerLatitude)];
-    var promise = Cesium.sampleTerrain(scene.terrainProvider, 11, positions);
+    var terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
+    var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
     Cesium.when(promise, function(updatedPositions) {
         location.height = updatedPositions[0].height + 50.0;
         createScene();
@@ -551,19 +551,11 @@ function createScene() {
     updateShadows();
 }
 
-// TODO : this is a very hacky way to reset the globe shaders when shadow properties change
 function resetGlobe() {
-    globe._surfaceShaderSet._shadersByTexturesFlags = [];
+    globe = scene.globe = new Cesium.Globe();
+    globe.imageryLayers.addImageryProvider(imageryProvider);
+    globe.terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
 }
-
-var getShaderProgram = Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram;
-Cesium.GlobeSurfaceShaderSet.prototype.getShaderProgram = function() {
-    var surfaceShader = arguments[1].surfaceShader;
-    if (Cesium.defined(surfaceShader)) {
-        surfaceShader.flags = 0;
-    }
-    return getShaderProgram.apply(globe._surfaceShaderSet, arguments);
-};
 
 function resetShadows(shadowOptions) {
     // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
