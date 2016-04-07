@@ -705,7 +705,9 @@ require({
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
 
-        if (name === 'Gist Import') {
+        if (demo.name === 'Gist Import') {
+            jsEditor.setValue(gistCode);
+            document.title = 'Gist Import - Cesium Sandcastle';
             return;
         }
         return requestDemo(demo.name).then(function(value) {
@@ -1051,10 +1053,6 @@ require({
     };
 
     function requestDemo(name) {
-        if (name === 'Gist Import') {
-            jsEditor.setValue(gistCode);
-            return;
-        }
         return xhr.get({
             url : 'gallery/' + name + '.html',
             handleAs : 'text',
@@ -1095,8 +1093,10 @@ require({
                 };
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
+                        document.title = demo.name + ' - Cesium Sandcastle';
                         if (defined(queryObject.gistId)) {
                             window.history.replaceState(gistDemo, gistDemo.name, '?src=Hello World.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                            document.title = 'Gist Import - Cesium Sandcastle';
                         } else {
                             window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                         }
