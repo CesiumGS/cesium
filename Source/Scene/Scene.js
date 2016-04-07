@@ -1685,29 +1685,75 @@ define([
         }
     }
 
-    function getShadowMapCommands(scene) {
-        // TODO : temporary solution for testing
+    function getTerrainShadowCommands(scene) {
+        // TODO : Temporary for testing. Globe.update doesn't work with orthographic frustums currently
         var terrainCommands = [];
-        var primitiveCommands = [];
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            var frustumCommands = frustumCommandsList[i];
-            var startPass = Pass.GLOBE;
-            var endPass = Pass.TRANSLUCENT;
-            for (var pass = startPass; pass <= endPass; ++pass) {
-                var shadowCommands = (pass === Pass.GLOBE) ? terrainCommands : primitiveCommands;
-                var commands = frustumCommands.commands[pass];
-                var length = frustumCommands.indices[pass];
-                for (var j = 0; j < length; ++j) {
-                    var command = commands[j];
-                    if (command.castShadows) {
-                        shadowCommands.push(command);
+        var commandList = scene.frameState.commandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            if (command.castShadows && command.pass === Pass.GLOBE) {
+                terrainCommands.push(command);
+            }
+        }
+
+        return terrainCommands;
+    }
+
+    function insertShadowCommands(commandList, insertAll, shadowMap, shadowPassCommands) {
+        var shadowVolume = shadowMap.shadowMapCullingVolume;
+        var passVolumes = shadowMap.passCullingVolumes;
+
+        var isPointLight = shadowMap.isPointLight;
+        var center = shadowMap.pointLightPosition;
+        var radius = shadowMap.pointLightRadius;
+
+        var numberOfCascades = shadowMap.numberOfCascades;
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            // Don't insert globe commands with the rest of the scene commands since they are handled separately
+            if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
+                if (isPointLight) {
+                    if (defined(command.boundingVolume)) {
+                        var distance = command.boundingVolume.distanceSquaredTo(center);
+                        if (distance < radius * radius) {
+                            for (var k = 0; k < 6; ++k) {
+                                shadowPassCommands[k].push(command);
+                            }
+                        }
+                    }
+                } else {
+                    if (isVisible(command, shadowVolume)) {
+                        if (numberOfCascades <= 1) {
+                            shadowPassCommands[0].push(command);
+                        } else {
+                            var wasVisible = false;
+                            // Loop over cascades from largest to smallest
+                            for (var j = numberOfCascades - 1; j >= 0; --j) {
+                                var cascadeVolume = passVolumes[j];
+                                if (isVisible(command, cascadeVolume)) {
+                                    shadowPassCommands[j].push(command);
+                                    wasVisible = true;
+                                } else if (wasVisible) {
+                                    // If it was visible in the previous cascade but now isn't
+                                    // then there is no need to check any more cascades
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        return [terrainCommands, primitiveCommands];
+    }
+
+    function resetShadowCommands(passCommands) {
+        var length = passCommands.length;
+        for (var i = 0; i < length; ++i) {
+            passCommands[i].length = 0;
+        }
     }
 
     function executeShadowMapCommands(scene) {
@@ -1715,34 +1761,34 @@ define([
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
         var isPointLight = shadowMap.isPointLight;
+        var renderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
 
-        var commands = getShadowMapCommands(scene);
-        var terrainCommands = commands[0];
-        var primitiveCommands = commands[1];
+        var shadowPassCommands = shadowMap.passCommands;
+        resetShadowCommands(shadowPassCommands);
 
-        var j;
-        var command;
+        // Insert the scene commands into the shadow map passes
+        var sceneCommands = scene.frameState.commandList;
+        insertShadowCommands(sceneCommands, false, shadowMap, shadowPassCommands);
+        var terrainCommands = getTerrainShadowCommands(scene);
+        insertShadowCommands(terrainCommands, true, shadowMap, shadowPassCommands);
 
         var numberOfPasses = shadowMap.numberOfPasses;
+
+        // TODO : testing only
+        for (var k = 0; k < numberOfPasses; ++k) {
+            console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
+        }
+
         for (var i = 0; i < numberOfPasses; ++i) {
             uniformState.updateCamera(shadowMap.passCameras[i]);
             var passState = shadowMap.passStates[i];
             shadowMap.updatePass(context, i);
 
-            // Execute terrain commands
-            var terrainRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.terrainRenderState;
-            var numberOfTerrainCommands = terrainCommands.length;
-            for (j = 0; j < numberOfTerrainCommands; ++j) {
-                command = terrainCommands[j];
-                executeCommand(command, scene, context, passState, terrainRenderState, command.shadowCastProgram);
-            }
-
-            // Execute primitive commands
-            var primitiveRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
-            var numberOfPrimitiveCommands = primitiveCommands.length;
-            for (j = 0; j < numberOfPrimitiveCommands; ++j) {
-                command = primitiveCommands[j];
-                executeCommand(command, scene, context, passState, primitiveRenderState, command.shadowCastProgram);
+            var passCommands = shadowPassCommands[i];
+            var numberOfCommands = passCommands.length;
+            for (var j = 0; j < numberOfCommands; ++j) {
+                var command = passCommands[j];
+                executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
             }
         }
     }
