@@ -1708,7 +1708,7 @@ define([
         var center = shadowMap.pointLightPosition;
         var radius = shadowMap.pointLightRadius;
 
-        var numberOfCascades = shadowMap.numberOfCascades;
+        var numberOfPasses = shadowMap.numberOfPasses;
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1719,19 +1719,19 @@ define([
                     if (defined(command.boundingVolume)) {
                         var distance = command.boundingVolume.distanceSquaredTo(center);
                         if (distance < radius * radius) {
-                            for (var k = 0; k < 6; ++k) {
+                            for (var k = 0; k < numberOfPasses; ++k) {
                                 shadowPassCommands[k].push(command);
                             }
                         }
                     }
                 } else {
                     if (isVisible(command, shadowVolume)) {
-                        if (numberOfCascades <= 1) {
+                        if (numberOfPasses <= 1) {
                             shadowPassCommands[0].push(command);
                         } else {
                             var wasVisible = false;
                             // Loop over cascades from largest to smallest
-                            for (var j = numberOfCascades - 1; j >= 0; --j) {
+                            for (var j = numberOfPasses - 1; j >= 0; --j) {
                                 var cascadeVolume = passVolumes[j];
                                 if (isVisible(command, cascadeVolume)) {
                                     shadowPassCommands[j].push(command);
