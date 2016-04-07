@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.21 - 2016-05-02
+
+* Added `Entity.readyPromise` and `Entity.ready` promises that resolve when the entity is ready.
+
+
 ### 1.20 - 2016-04-01
 
 * Breaking changes

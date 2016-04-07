@@ -6,7 +6,8 @@ defineSuite([
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag'
+        'DataSources/PropertyBag',
+        'ThirdParty/when'
     ], function(
         ModelGraphics,
         Cartesian3,
@@ -14,7 +15,8 @@ defineSuite([
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        when) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -45,6 +47,7 @@ defineSuite([
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
+        expect(model.ready).toEqual(false);
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
@@ -53,7 +56,7 @@ defineSuite([
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
-
+        
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
         var expectedNodeTransformations = options.nodeTransformations;
 
