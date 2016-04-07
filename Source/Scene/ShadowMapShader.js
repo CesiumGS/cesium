@@ -159,8 +159,7 @@ define([
             '{ \n' +
             '    czm_shadow_main(); \n' +
             '    vec4 positionEC = getPositionEC(); \n' +
-            '    vec3 normalEC = getNormalEC(); \n' +
-            '    float shadowMapMaximumDistance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.z; \n';
+            '    vec3 normalEC = getNormalEC(); \n';
 
         fs +=
             '    czm_shadowParameters shadowParameters; \n' +
@@ -239,6 +238,7 @@ define([
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n' +
 
                 '    // Fade out shadows that are far away \n' +
+                '    float shadowMapMaximumDistance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.z; \n' +
                 '    float fade = max((depth - shadowMapMaximumDistance * 0.8) / (shadowMapMaximumDistance * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
 
