@@ -17,7 +17,7 @@ define([
 
     ShadowMapShader.createShadowCastVertexShader = function(vs, frameState, positionVaryingName) {
         var hasPositionVarying = defined(positionVaryingName) && (vs.indexOf(positionVaryingName) > -1);
-        var isPointLight = frameState.shadowMap.isPointLight;
+        var isPointLight = frameState.shadowMap._isPointLight;
 
         if (isPointLight && !hasPositionVarying) {
             vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
@@ -37,8 +37,8 @@ define([
         // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
         positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
-        var isPointLight = frameState.shadowMap.isPointLight;
-        var usesDepthTexture = frameState.shadowMap.usesDepthTexture;
+        var isPointLight = frameState.shadowMap._isPointLight;
+        var usesDepthTexture = frameState.shadowMap._usesDepthTexture;
 
         if (opaque) {
             fs =
@@ -88,11 +88,11 @@ define([
         var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
 
         var shadowMap = frameState.shadowMap;
-        var usesDepthTexture = shadowMap.usesDepthTexture;
-        var isPointLight = shadowMap.isPointLight;
+        var usesDepthTexture = shadowMap._usesDepthTexture;
+        var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
-        var usesCubeMap = shadowMap.usesCubeMap;
-        var hasCascades = shadowMap.numberOfCascades > 1;
+        var usesCubeMap = shadowMap._usesCubeMap;
+        var hasCascades = shadowMap._numberOfCascades > 1;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);

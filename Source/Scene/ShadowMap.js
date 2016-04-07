@@ -309,38 +309,9 @@ define([
         createRenderStates(this);
     };
 
-    var scratchTexelStepSize = new Cartesian2();
-
     defineProperties(ShadowMap.prototype, {
         /**
-         * The shadow map texture used in shadow receive programs.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Texture}
-         * @readonly
-         */
-        shadowMapTexture : {
-            get : function() {
-                return this._shadowMapTexture;
-            }
-        },
-
-        /**
-         * The shadow map matrix used in shadow receive programs.
-         * Transforms from eye space to shadow texture space.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Matrix4}
-         * @readonly
-         */
-        shadowMapMatrix : {
-            get : function() {
-                return this._shadowMapMatrix;
-            }
-        },
-
-        /**
-         * The render state used for rendering shadow casters into the shadow map.
+         * The primitive render state used for rendering shadow casters into the shadow map.
          *
          * @memberof ShadowMap.prototype
          * @type {RenderState}
@@ -353,7 +324,7 @@ define([
         },
 
         /**
-         * The render state used for rendering shadow casters into the shadow map.
+         * The terrain render state used for rendering shadow casters into the shadow map.
          *
          * @memberof ShadowMap.prototype
          * @type {RenderState}
@@ -366,7 +337,7 @@ define([
         },
 
         /**
-         * The render state used for rendering shadow casters into the shadow map.
+         * The point render state used for rendering shadow casters into the shadow map.
          *
          * @memberof ShadowMap.prototype
          * @type {RenderState}
@@ -375,19 +346,6 @@ define([
         pointRenderState : {
             get : function() {
                 return this._pointRenderState;
-            }
-        },
-
-        /**
-         * The clear command used for clearing the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {ClearCommand}
-         * @readonly
-         */
-        clearCommand : {
-            get : function() {
-                return this._clearCommand;
             }
         },
 
@@ -404,77 +362,42 @@ define([
             }
         },
 
+        /**
+         * The pass states.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {PassState[]}
+         * @readonly
+         */
         passStates : {
             get : function() {
                 return this._passStates;
             }
         },
+
+        /**
+         * The pass cameras.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {ShadowMapCamera[]}
+         * @readonly
+         */
         passCameras : {
             get : function() {
                 return this._passCameras;
             }
         },
 
-        numberOfCascades : {
-            get : function() {
-                return this._numberOfCascades;
-            }
-        },
-
-        cascadeSplits : {
-            get : function() {
-                return this._cascadeSplits;
-            }
-        },
-
-        cascadeMatrices : {
-            get : function() {
-                return this._cascadeMatrices;
-            }
-        },
-
-        cascadeDistances : {
-            get : function() {
-                return this._cascadeDistances;
-            }
-        },
-
-        distance : {
-            get : function() {
-                return this._distance;
-            }
-        },
-
-        lightDirectionEC : {
-            get : function() {
-                return this._lightDirectionEC;
-            }
-        },
-        lightPositionEC : {
-            get : function() {
-                return this._lightPositionEC;
-            }
-        },
+        /**
+         * Whether the light source is a point light.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @readonly
+         */
         isPointLight : {
             get : function() {
                 return this._isPointLight;
-            }
-        },
-        usesCubeMap : {
-            get : function() {
-                return this._usesCubeMap;
-            }
-        },
-        usesDepthTexture : {
-            get : function() {
-                return this._usesDepthTexture;
-            }
-        },
-        texelStepSize : {
-            get : function() {
-                scratchTexelStepSize.x = 1.0 / this._textureSize.x;
-                scratchTexelStepSize.y = 1.0 / this._textureSize.y;
-                return scratchTexelStepSize;
             }
         }
     });
@@ -754,10 +677,10 @@ define([
         var drawCommand = context.createViewportQuadCommand(fs, {
             uniformMap : {
                 u_shadowMapTexture : function() {
-                    return shadowMap.shadowMapTexture;
+                    return shadowMap._shadowMapTexture;
                 },
                 u_shadowMapTextureCube : function() {
-                    return shadowMap.shadowMapTexture;
+                    return shadowMap._shadowMapTexture;
                 }
             }
         });
@@ -1261,41 +1184,46 @@ define([
         }
     };
 
+    var scratchTexelStepSize = new Cartesian2();
+
     ShadowMap.prototype.combineUniforms = function(uniforms, isTerrain) {
-        var isPointLight = this.isPointLight;
-        var bias = isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
+        var bias = this._isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
 
         var that = this;
         var mapUniforms = {
             u_shadowMapTexture :function() {
-                return that.shadowMapTexture;
+                return that._shadowMapTexture;
             },
             u_shadowMapTextureCube : function() {
-                return that.shadowMapTexture;
+                return that._shadowMapTexture;
             },
             u_shadowMapMatrix : function() {
-                return that.shadowMapMatrix;
+                return that._shadowMapMatrix;
             },
             u_shadowMapCascadeSplits : function() {
-                return that.cascadeSplits;
+                return that._cascadeSplits;
             },
             u_shadowMapCascadeMatrices : function() {
-                return that.cascadeMatrices;
+                return that._cascadeMatrices;
             },
             u_shadowMapLightDirectionEC : function() {
-                return that.lightDirectionEC;
+                return that._lightDirectionEC;
             },
             u_shadowMapLightPositionEC : function() {
-                return that.lightPositionEC;
+                return that._lightPositionEC;
             },
             u_shadowMapCascadeDistances : function() {
-                return that.cascadeDistances;
+                return that._cascadeDistances;
             },
             u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth : function() {
-                return new Cartesian4(that.texelStepSize.x, that.texelStepSize.y, bias.depthBias, bias.normalShadingSmooth);
+                var texelStepSize = scratchTexelStepSize;
+                texelStepSize.x = 1.0 / that._textureSize.x;
+                texelStepSize.y = 1.0 / that._textureSize.y;
+
+                return new Cartesian4(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth);
             },
             u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return new Cartesian3(bias.normalOffsetScale, that.distance, that._maximumDistance);
+                return new Cartesian3(bias.normalOffsetScale, that._distance, that._maximumDistance);
             }
         };
 
