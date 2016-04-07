@@ -116,7 +116,7 @@ define([
 
         // [head, sentinel) -> tiles that weren't selected this frame and may be replaced
         // (sentinel, tail] -> tiles that were selected this frame
-        this._replacementList = replacementList; // Tiles with content loaded.  For cache management
+        this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
         this._replacementSentinel  = replacementList.add();
         this._trimTiles = false;
 
@@ -256,7 +256,7 @@ define([
          * The unloaded {@link Cesium3DTile} is passed to the event listener.
          * </p>
          * <p>
-         * This event is immediately before the tile's content is unloaded while the frame is being
+         * This event is fired immediately before the tile's content is unloaded while the frame is being
          * rendered so that the event listener has access to the tile's content.  Do not create
          * or modify Cesium entities or primitives during the event listener.
          * </p>

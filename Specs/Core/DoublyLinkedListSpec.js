@@ -2,7 +2,7 @@
 defineSuite([
         'Core/DoublyLinkedList'
     ], function(
-    DoublyLinkedList) {
+        DoublyLinkedList) {
     'use strict';
 
     it('constructs', function() {
@@ -103,7 +103,7 @@ defineSuite([
         var list = new DoublyLinkedList();
         var node = list.add(1);
         var node2 = list.add(2);
-        var node3 = list.add(2);
+        var node3 = list.add(3);
 
         list.remove(node2);
 
