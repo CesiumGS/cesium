@@ -923,17 +923,10 @@ require({
         }
 
         return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
-            .then(function(data) {
-                var files = data.data.files;
-                var code = files[Object.keys(files)[0]].content;
-                var demo = {
-                    name : 'Import Gist',
-                    description : 'Code imported from a Gist'
-                };
-                jsEditor.setValue(code);
-                demoJs = code.replace(/\s/g, '');
-                queryObject.gistId = gistId;
-                window.history.replaceState(demo, demo.name, '?src=Hello%20World.html&label=Showcases&gist=' + queryObject.gistId);
+            .then(function() {
+                var getUrl = window.location;
+                var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+                location.href = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
             }).otherwise(function() {
                 if (gistId !== '') {
                     appendConsole('consoleError', 'No such Gist exists: ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
