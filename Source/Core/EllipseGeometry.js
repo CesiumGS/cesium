@@ -819,7 +819,7 @@ define([
             return;
         }
 
-        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
+        ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeocentricSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
