@@ -1197,6 +1197,12 @@ define([
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
 
+        // Update uniforms for shadow maps.
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
+        if (shadowsEnabled && (primitive._receiveShadows || primitive._castShadows)) {
+            uniforms = frameState.shadowMap.combineUniforms(uniforms, false);
+        }
+
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {
                 var viewMatrix = frameState.context.uniformState.view;
