@@ -1136,6 +1136,11 @@ define([
             }
         }
 
+        // TODO
+        if (command.pass !== Pass.TRANSLUCENT && command.receiveShadows && defined(command.derivedCommands.shadowReceiveCommand)) {
+            command = command.derivedCommands.shadowReceiveCommand;
+        }
+
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
 
@@ -1729,7 +1734,6 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
-        var isPointLight = shadowMap.isPointLight;
 
         var commands = getShadowMapCommands(scene);
         var terrainCommands = commands[0];

@@ -651,7 +651,7 @@ define([
         }
     };
 
-    function createTileUniformMap(frameState, tileProvider) {
+    function createTileUniformMap(frameState) {
         var uniformMap = {
             u_initialColor : function() {
                 return this.initialColor;
@@ -764,12 +764,6 @@ define([
             minMaxHeight : new Cartesian2(),
             scaleAndBias : new Matrix4()
         };
-
-        // Modify uniform state to receive shadows
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (shadowsEnabled && (tileProvider.receiveShadows || tileProvider.castShadows)) {
-            uniformMap = frameState.shadowMap.combineUniforms(uniformMap, true);
-        }
 
         return uniformMap;
     }
@@ -1004,7 +998,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap(frameState, tileProvider);
+                uniformMap = createTileUniformMap(frameState);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -1110,7 +1104,7 @@ define([
             uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, receiveShadows);
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

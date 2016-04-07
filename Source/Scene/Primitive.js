@@ -1139,21 +1139,12 @@ define([
         }
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
-        // Modify program to receive shadows
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        var shadowDefines = [];
-        if (shadowsEnabled && primitive._receiveShadows) {
-            vs = ShadowMapShader.createShadowReceiveVertexShader(vs, frameState);
-            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC', 'v_positionEC', false, shadowDefines);
-        }
-
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : primitive._sp,
             vertexShaderSource : vs,
             fragmentShaderSource : new ShaderSource({
-                sources : [fs],
-                defines : shadowDefines
+                sources : [fs]
             }),
             attributeLocations : attributeLocations
         });
@@ -1182,12 +1173,6 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
-
-        // Update uniforms for shadow maps.
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (shadowsEnabled && (primitive._receiveShadows || primitive._castShadows)) {
-            uniforms = frameState.shadowMap.combineUniforms(uniforms, false);
-        }
 
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {

@@ -15,19 +15,45 @@ define([
     function ShadowMapShader() {
     }
 
-    ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, positionVaryingName) {
-        positionVaryingName = defaultValue(positionVaryingName, 'v_positionEC');
+    function findVarying(shaderSource, names) {
+        var sources = shaderSource.sources;
 
-        var sources = vs.sources.slice(0);
+        var namesLength = names.length;
+        for (var i = 0; i < namesLength; ++i) {
+            var name = names[i];
 
-        var hasPositionVarying = false;
-        var length = sources.length;
-        for (var i = 0; i < length; ++i) {
-            if (sources[i].indexOf(positionVaryingName) !== -1) {
-                hasPositionVarying = true;
-                break;
+            var sourcesLength = sources.length;
+            for (var j = 0; j < sourcesLength; ++j) {
+                if (sources[j].indexOf(name) !== -1) {
+                    return name;
+                }
             }
         }
+
+        return undefined;
+    }
+
+    var normalVaryingNames = ['v_normalEC', 'v_normal'];
+
+    function findNormalVarying(shaderSource) {
+        return findVarying(shaderSource, normalVaryingNames);
+    }
+
+    var positionVaryingNames = ['v_positionEC'];
+
+    function findPositionVarying(shaderSource) {
+        return findVarying(shaderSource, positionVaryingNames);
+    }
+
+    ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight) {
+
+        var defines = vs.defines.slice(0);
+        var sources = vs.sources.slice(0);
+
+        defines.push('ENABLE_DAYNIGHT_SHADING'); // TODO
+
+        var positionVaryingName = findPositionVarying(vs);
+        var hasPositionVarying = defined(positionVaryingName);
 
         if (isPointLight && !hasPositionVarying) {
             for (var j = 0; j < length; ++j) {
@@ -45,25 +71,22 @@ define([
         }
 
         return new ShaderSource({
-            defines : vs.defines.slice(0),
+            defines : defines,
             sources : sources
         });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque, positionVaryingName) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque) {
         // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
 
-        positionVaryingName = defaultValue(positionVaryingName, 'v_positionEC');
-
+        var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
-        var hasPositionVarying = false;
+        var positionVaryingName = findPositionVarying(fs);
+        var hasPositionVarying = defined(positionVaryingName);
+
         var length = sources.length;
         for (var i = 0; i < length; ++i) {
-            if (sources[i].indexOf(positionVaryingName) !== -1) {
-                hasPositionVarying = true;
-            }
-
             sources[i] = ShaderSource.replaceMain(sources[i], 'czm_shadow_cast_main');
         }
 
@@ -111,20 +134,22 @@ define([
         sources.push(fsSource);
 
         return new ShaderSource({
-            defines : fs.defines.slice(0),
+            defines : defines,
             sources : sources
         });
     };
 
-    ShadowMapShader.createShadowReceiveVertexShader = function(vs, frameState) {
+    ShadowMapShader.createShadowReceiveVertexShader = function(vs) {
         return vs;
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, frameState, normalVaryingName, positionVaryingName, isTerrain, defines) {
-        var hasNormalVarying = defined(normalVaryingName) && (fs.indexOf(normalVaryingName) > -1);
-        var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain) {
+        var normalVaryingName = findNormalVarying(fs);
+        var hasNormalVarying = false;//defined(normalVaryingName);
 
-        var shadowMap = frameState.shadowMap;
+        var positionVaryingName = findPositionVarying(fs);
+        var hasPositionVarying = defined(positionVaryingName);
+
         var usesDepthTexture = shadowMap._usesDepthTexture;
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
@@ -135,7 +160,13 @@ define([
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
         var exponentialShadows = shadowMap._exponentialShadows;
 
-        fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
+        var defines = fs.defines.slice(0);
+        var sources = fs.sources.slice(0);
+
+        var length = sources.length;
+        for (var i = 0; i < length; ++i) {
+            sources[i] = ShaderSource.replaceMain(sources[i], 'czm_shadow_receive_main');
+        }
 
         if (isPointLight && usesCubeMap) {
             defines.push('USE_CUBE_MAP_SHADOW');
@@ -158,9 +189,7 @@ define([
             defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
 
-        fs += '\n\n';
-
-        fs +=
+        var fsSource =
             'uniform mat4 u_shadowMapMatrix; \n' +
             'uniform vec3 u_shadowMapLightDirectionEC; \n' +
             'uniform vec4 u_shadowMapLightPositionEC; \n' +
@@ -191,14 +220,14 @@ define([
             '    positionEC.xyz += offset; \n' : '') +
             '} \n';
 
-        fs +=
+        fsSource +=
             'void main() \n' +
             '{ \n' +
-            '    czm_shadow_main(); \n' +
+            '    czm_shadow_receive_main(); \n' +
             '    vec4 positionEC = getPositionEC(); \n' +
             '    vec3 normalEC = getNormalEC(); \n';
 
-        fs +=
+        fsSource +=
             '    czm_shadowParameters shadowParameters; \n' +
             '    shadowParameters.texelStepSize = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.xy; \n' +
             '    shadowParameters.depthBias = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.z; \n' +
@@ -206,7 +235,7 @@ define([
             '    shadowParameters.distance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.y; \n';
 
         if (isPointLight) {
-            fs +=
+            fsSource +=
                 '    vec3 directionEC = positionEC.xyz - u_shadowMapLightPositionEC.xyz; \n' +
                 '    float distance = length(directionEC); \n' +
                 '    directionEC = normalize(directionEC); \n' +
@@ -228,7 +257,7 @@ define([
                 '    shadowParameters.texCoords = czm_cubeMapToUV(directionWC); \n' +
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n');
         } else if (isSpotLight) {
-            fs +=
+            fsSource +=
                 '    vec3 directionEC = normalize(positionEC.xyz - u_shadowMapLightPositionEC.xyz); \n' +
                 '    float nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
@@ -248,7 +277,7 @@ define([
 
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n';
         } else if (hasCascades) {
-            fs +=
+            fsSource +=
                 '    float depth = -positionEC.z; \n' +
                 '    float maxDepth = u_shadowMapCascadeSplits[1].w; \n' +
 
@@ -283,7 +312,7 @@ define([
                 '    // Draw cascade colors for debugging \n' +
                 '    gl_FragColor *= czm_cascadeColor(weights); \n' : '');
         } else {
-            fs +=
+            fsSource +=
                 '    float nDotL = clamp(dot(normalEC, u_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
                 '    applyNormalOffset(positionEC, normalEC, nDotL); \n' +
                 '    vec4 shadowPosition = u_shadowMapMatrix * positionEC; \n' +
@@ -299,11 +328,16 @@ define([
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n';
         }
 
-        fs +=
+        fsSource +=
             '    gl_FragColor.rgb *= visibility; \n' +
             '} \n';
 
-        return fs;
+        sources.push(fsSource);
+
+        return new ShaderSource({
+            defines : defines,
+            sources : sources
+        });
     };
 
     return ShadowMapShader;

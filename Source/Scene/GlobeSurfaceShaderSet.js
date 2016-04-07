@@ -68,7 +68,7 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, receiveShadows) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog) {
         var quantization = 0;
         var quantizationDefine = '';
 
@@ -93,8 +93,7 @@ define([
                     (hasVertexNormals << 11) |
                     (useWebMercatorProjection << 12) |
                     (enableFog << 13) |
-                    (quantization << 14) |
-                    (receiveShadows << 15);
+                    (quantization << 14);
 
         var surfaceShader = surfaceTile.surfaceShader;
         if (defined(surfaceShader) &&
@@ -160,15 +159,6 @@ define([
                 fs.defines.push('FOG');
             }
 
-            if (receiveShadows) {
-                // Output v_positionEC, and v_normalEC if it has vertex normals
-                if (hasVertexNormals) {
-                    vs.defines.push('ENABLE_VERTEX_LIGHTING');
-                } else {
-                    vs.defines.push('ENABLE_DAYNIGHT_SHADING');
-                }
-            }
-
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
     {\n\
@@ -199,12 +189,6 @@ define([
 
             vs.sources.push(getPositionMode(sceneMode));
             vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
-
-            if (receiveShadows) {
-                var normalVarying = hasVertexNormals ? 'v_normalEC' : undefined;
-                vs.sources[1] = ShadowMapShader.createShadowReceiveVertexShader(vs.sources[1], frameState);
-                fs.sources[0] = ShadowMapShader.createShadowReceiveFragmentShader(fs.sources[0], frameState, normalVarying, 'v_positionEC', true, fs.defines);
-            }
 
             var shader = ShaderProgram.fromCache({
                 context : frameState.context,

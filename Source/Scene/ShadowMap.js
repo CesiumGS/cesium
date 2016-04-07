@@ -1233,7 +1233,7 @@ define([
             }
         };
 
-        return combine(uniforms, mapUniforms);
+        return combine(uniforms, mapUniforms, false);
     };
     
     ShadowMap.prototype.createDerivedCommands = function(command, context) {
@@ -1243,8 +1243,11 @@ define([
         var useDepthTexture = this._usesDepthTexture;
         
         var shaderProgram = command.shaderProgram;
-        var castVS = ShadowMapShader.createShadowCastVertexShader(shaderProgram.vertexShaderSource, isPointLight);
-        var castFS = ShadowMapShader.createShadowCastFragmentShader(shaderProgram.fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+        var vertexShaderSource = shaderProgram.vertexShaderSource;
+        var fragmentShaderSource = shaderProgram.fragmentShaderSource;
+        
+        var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight);
+        var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
 
         var castShaderProgram = ShaderProgram.fromCache({
              context : context,
@@ -1267,6 +1270,23 @@ define([
         castCommand.uniformMap = castUniforms;
 
         command.derivedCommands.shadowCastCommand = castCommand;
+        
+        var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource);
+        var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain);
+
+        var receiveShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : receiveVS,
+            fragmentShaderSource : receiveFS
+        });
+
+        var receiveUniforms = this.combineUniforms(command.uniformMap, isTerrain);
+
+        var receiveCommand = DrawCommand.shallowClone(command);
+        receiveCommand.shaderProgram = receiveShaderProgram;
+        receiveCommand.uniformMap = receiveUniforms;
+
+        command.derivedCommands.shadowReceiveCommand = receiveCommand;
     };
 
     ShadowMap.prototype.isDestroyed = function() {

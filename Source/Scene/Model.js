@@ -1474,8 +1474,7 @@ define([
         return shader;
     }
 
-    function createProgram(id, model, frameState) {
-        var context = frameState.context;
+    function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[id];
@@ -1497,22 +1496,12 @@ define([
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
-        
-        // Modify draw program to receive shadows
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        var shadowDefines = [];
-        if (shadowsEnabled && model.receiveShadows) {
-            drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS, frameState);
-            // TODO : assumes the shader has these varyings, which may not be true for some models
-            drawFS = ShadowMapShader.createShadowReceiveFragmentShader(drawFS, frameState, 'v_normal', 'v_positionEC', false, shadowDefines);
-        }
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
             fragmentShaderSource : new ShaderSource({
-                sources : [drawFS],
-                defines : shadowDefines
+                sources : [drawFS]
             }),
             attributeLocations : attributeLocations
         });
@@ -1535,7 +1524,7 @@ define([
         }
     }
 
-    function createPrograms(model, frameState) {
+    function createPrograms(model, context) {
         var loadResources = model._loadResources;
         var id;
 
@@ -1553,13 +1542,13 @@ define([
             // Create one program per frame
             if (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, frameState);
+                createProgram(id, model, context);
             }
         } else {
             // Create all loaded programs this frame
             while (loadResources.programsToCreate.length > 0) {
                 id = loadResources.programsToCreate.dequeue();
-                createProgram(id, model, frameState);
+                createProgram(id, model, context);
             }
         }
     }
@@ -2509,8 +2498,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, frameState) {
-        var context = frameState.context;
+    function createCommand(model, gltfNode, runtimeNode, context) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2582,12 +2570,6 @@ define([
                 // Allow callback to modify the uniformMap
                 if (defined(model._uniformMapLoaded)) {
                     uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
-                }
-
-                // Modify uniform state to receive shadows
-                var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-                if (shadowsEnabled && (model.receiveShadows || model.castShadows)) {
-                    uniformMap = frameState.shadowMap.combineUniforms(uniformMap, false);
                 }
 
                 var rs = rendererRenderStates[material.technique];
@@ -2670,7 +2652,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, frameState) {
+    function createRuntimeNodes(model, context) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2728,7 +2710,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, frameState);
+                    createCommand(model, gltfNode, runtimeNode, context);
                 }
 
                 var children = gltfNode.children;
@@ -2768,7 +2750,7 @@ define([
             }
         } else {
             createBuffers(model, context); // using glTF bufferViews
-            createPrograms(model, frameState);
+            createPrograms(model, context);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
             createTextures(model, context);
@@ -2787,7 +2769,7 @@ define([
         }
 
         createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, frameState); // using glTF scene
+        createRuntimeNodes(model, context); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
