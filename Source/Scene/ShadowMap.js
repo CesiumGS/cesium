@@ -1185,6 +1185,8 @@ define([
     };
 
     var scratchTexelStepSize = new Cartesian2();
+    var scratchUniformCartesian3 = new Cartesian3();
+    var scratchUniformCartesian4 = new Cartesian4();
 
     ShadowMap.prototype.combineUniforms = function(uniforms, isTerrain) {
         var bias = this._isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
@@ -1220,10 +1222,10 @@ define([
                 texelStepSize.x = 1.0 / that._textureSize.x;
                 texelStepSize.y = 1.0 / that._textureSize.y;
 
-                return new Cartesian4(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth);
+                return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian4);
             },
             u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return new Cartesian3(bias.normalOffsetScale, that._distance, that._maximumDistance);
+                return Cartesian3.fromElements(bias.normalOffsetScale, that._distance, that._maximumDistance, scratchUniformCartesian3);
             }
         };
 
