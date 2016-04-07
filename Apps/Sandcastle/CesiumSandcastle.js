@@ -1086,14 +1086,13 @@ require({
                 };
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
-                        document.title = demo.name + ' - Cesium Sandcastle';
                         if (defined(queryObject.gistId)) {
                             window.history.replaceState(gistDemo, gistDemo.name, '?src=Hello World.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
                             document.title = 'Gist Import - Cesium Sandcastle';
                         } else {
                             window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+                            document.title = demo.name + ' - Cesium Sandcastle';
                         }
-                        document.title = demo.name + ' - Cesium Sandcastle';
                     });
                 }
             }
@@ -1169,10 +1168,10 @@ require({
             newDemo = demo;
         }
         demoLink.onclick = function(e) {
-            delete queryObject.gistId;
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
+                delete queryObject.gistId;
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
