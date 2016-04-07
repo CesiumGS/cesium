@@ -1124,9 +1124,15 @@ define([
         if (command._dirty) {
             command._dirty = false;
             
+            var context = scene._context;
+            
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                oit.createDerivedCommands(command, scene._context);
+                oit.createDerivedCommands(command, context);
+            }
+
+            if (defined(scene.shadowMap)) {
+                scene.shadowMap.createDerivedCommands(command, context);
             }
         }
 
@@ -1739,19 +1745,17 @@ define([
             shadowMap.updatePass(context, i);
 
             // Execute terrain commands
-            var terrainRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.terrainRenderState;
             var numberOfTerrainCommands = terrainCommands.length;
             for (j = 0; j < numberOfTerrainCommands; ++j) {
                 command = terrainCommands[j];
-                executeCommand(command, scene, context, passState, terrainRenderState, command.shadowCastProgram);
+                executeCommand(command.derivedCommands.shadowCastCommand, scene, context, passState);
             }
 
             // Execute primitive commands
-            var primitiveRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
             var numberOfPrimitiveCommands = primitiveCommands.length;
             for (j = 0; j < numberOfPrimitiveCommands; ++j) {
                 command = primitiveCommands[j];
-                executeCommand(command, scene, context, passState, primitiveRenderState, command.shadowCastProgram);
+                executeCommand(command.derivedCommands.shadowCastCommand, scene, context, passState);
             }
         }
     }

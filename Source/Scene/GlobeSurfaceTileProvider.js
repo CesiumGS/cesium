@@ -1111,7 +1111,6 @@ define([
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog, receiveShadows);
-            command.shadowCastProgram = tileProvider._surfaceShaderSet.getShadowCastProgram(frameState, surfaceTile, useWebMercatorProjection, castShadows);
             command.castShadows = castShadows;
             command.receiveShadows = receiveShadows;
             command.renderState = renderState;

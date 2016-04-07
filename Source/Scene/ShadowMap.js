@@ -28,6 +28,7 @@ define([
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
         '../Renderer/CubeMap',
+        '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
@@ -48,7 +49,8 @@ define([
         './Pass',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
-        './Primitive'
+        './Primitive',
+        './ShadowMapShader'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -78,6 +80,7 @@ define([
         SphereOutlineGeometry,
         ClearCommand,
         CubeMap,
+        DrawCommand,
         Framebuffer,
         PassState,
         PixelDatatype,
@@ -98,7 +101,8 @@ define([
         Pass,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
-        Primitive) {
+        Primitive,
+        ShadowMapShader) {
     'use strict';
 
     /**
@@ -1230,6 +1234,39 @@ define([
         };
 
         return combine(uniforms, mapUniforms);
+    };
+    
+    ShadowMap.prototype.createDerivedCommands = function(command, context) {
+        var isTerrain = command.pass === Pass.GLOBE;
+        var isOpaque = command.pass !== Pass.TRANSLUCENT;
+        var isPointLight = this._isPointLight;
+        var useDepthTexture = this._usesDepthTexture;
+        
+        var shaderProgram = command.shaderProgram;
+        var castVS = ShadowMapShader.createShadowCastVertexShader(shaderProgram.vertexShaderSource, isPointLight);
+        var castFS = ShadowMapShader.createShadowCastFragmentShader(shaderProgram.fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+
+        var castShaderProgram = ShaderProgram.fromCache({
+             context : context,
+             vertexShaderSource : castVS,
+             fragmentShaderSource : castFS
+        });
+
+        var castRenderState = this._primitiveRenderState;
+        if (isPointLight) {
+            castRenderState = this._pointRenderState;
+        } else if (isTerrain) {
+            castRenderState = this._terrainRenderState;
+        }
+
+        var castUniforms = this.combineUniforms(command.uniformMap, isTerrain);
+
+        var castCommand = DrawCommand.shallowClone(command);
+        castCommand.shaderProgram = castShaderProgram;
+        castCommand.renderState = castRenderState;
+        castCommand.uniformMap = castUniforms;
+
+        command.derivedCommands.shadowCastCommand = castCommand;
     };
 
     ShadowMap.prototype.isDestroyed = function() {

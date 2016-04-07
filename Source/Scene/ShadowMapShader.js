@@ -15,68 +15,105 @@ define([
     function ShadowMapShader() {
     }
 
-    ShadowMapShader.createShadowCastVertexShader = function(vs, frameState, positionVaryingName) {
-        var hasPositionVarying = defined(positionVaryingName) && (vs.indexOf(positionVaryingName) > -1);
-        var isPointLight = frameState.shadowMap._isPointLight;
+    ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, positionVaryingName) {
+        positionVaryingName = defaultValue(positionVaryingName, 'v_positionEC');
+
+        var sources = vs.sources.slice(0);
+
+        var hasPositionVarying = false;
+        var length = sources.length;
+        for (var i = 0; i < length; ++i) {
+            if (sources[i].indexOf(positionVaryingName) !== -1) {
+                hasPositionVarying = true;
+                break;
+            }
+        }
 
         if (isPointLight && !hasPositionVarying) {
-            vs = ShaderSource.replaceMain(vs, 'czm_shadow_main');
-            vs +=
+            for (var j = 0; j < length; ++j) {
+                sources[j] = ShaderSource.replaceMain(sources[j], 'czm_shadow_cast_main');
+            }
+
+            var shadowVS =
                 'varying vec3 v_positionEC; \n' +
                 'void main() \n' +
                 '{ \n' +
-                '    czm_shadow_main(); \n' +
+                '    czm_shadow_cast_main(); \n' +
                 '    v_positionEC = (czm_inverseProjection * gl_Position).xyz; \n' +
                 '}';
+            sources.push(shadowVS);
         }
 
-        return vs;
+        return new ShaderSource({
+            defines : vs.defines.slice(0),
+            sources : sources
+        });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, frameState, opaque, positionVaryingName) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque, positionVaryingName) {
         // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
-        var hasPositionVarying = defined(positionVaryingName) && (fs.indexOf(positionVaryingName) > -1);
-        positionVaryingName = hasPositionVarying ? positionVaryingName : 'v_positionEC';
-        var isPointLight = frameState.shadowMap._isPointLight;
-        var usesDepthTexture = frameState.shadowMap._usesDepthTexture;
+
+        positionVaryingName = defaultValue(positionVaryingName, 'v_positionEC');
+
+        var sources = fs.sources.slice(0);
+
+        var hasPositionVarying = false;
+        var length = sources.length;
+        for (var i = 0; i < length; ++i) {
+            if (sources[i].indexOf(positionVaryingName) !== -1) {
+                hasPositionVarying = true;
+            }
+
+            sources[i] = ShaderSource.replaceMain(sources[i], 'czm_shadow_cast_main');
+        }
+
+        var fsSource = '';
 
         if (opaque) {
-            fs =
-                'varying vec3 ' + positionVaryingName + ';\n' +
+            if (!hasPositionVarying) {
+                fsSource +=
+                    'varying vec3 ' + positionVaryingName + ';\n';
+            }
+
+            fsSource +=
                 'void main() \n' +
                 '{ \n';
         } else {
-            fs = ShaderSource.replaceMain(fs, 'czm_shadow_main');
-            fs +=
+            fsSource +=
                 'void main() \n' +
                 '{ \n' +
-                '    czm_shadow_main(); \n' +
+                '    czm_shadow_cast_main(); \n' +
                 '    if (gl_FragColor.a == 0.0) { \n' +
                 '       discard; \n' +
                 '    } \n';
         }
 
         if (isPointLight) {
-            fs +=
+            fsSource +=
                 'float distance = length(' + positionVaryingName + '); \n' +
                 'distance /= u_shadowMapLightPositionEC.w; // radius \n' +
                 'gl_FragColor = czm_packDepth(distance); \n';
-        } else if (usesDepthTexture) {
-            fs += 'gl_FragColor = vec4(1.0); \n';
+        } else if (useDepthTexture) {
+            fsSource += 'gl_FragColor = vec4(1.0); \n';
         } else {
-            fs += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
+            fsSource += 'gl_FragColor = czm_packDepth(gl_FragCoord.z); \n';
         }
 
-        fs += '} \n';
+        fsSource += '} \n';
 
         if (isPointLight) {
             if (!hasPositionVarying) {
-                fs = 'varying vec3 v_positionEC; \n' + fs;
+                fsSource = 'varying vec3 v_positionEC; \n' + fsSource;
             }
-            fs = 'uniform vec4 u_shadowMapLightPositionEC; \n' + fs;
+            fsSource = 'uniform vec4 u_shadowMapLightPositionEC; \n' + fsSource;
         }
 
-        return fs;
+        sources.push(fsSource);
+
+        return new ShaderSource({
+            defines : fs.defines.slice(0),
+            sources : sources
+        });
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs, frameState) {

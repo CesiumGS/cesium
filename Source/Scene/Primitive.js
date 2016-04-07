@@ -339,8 +339,6 @@ define([
         this._pickSP = undefined;
         this._pickIds = [];
 
-        this._shadowCastSP = undefined;
-
         this._colorCommands = [];
         this._pickCommands = [];
 
@@ -1122,19 +1120,6 @@ define([
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
-        // Create shadow cast program
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive._castShadows) {
-            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs, frameState, 'v_positionEC');
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState, false, 'v_positionEC');
-            primitive._shadowCastSP = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : shadowCastVS,
-                fragmentShaderSource : shadowCastFS,
-                attributeLocations : attributeLocations
-            });
-        }
-
         // Create pick program
         if (primitive.allowPicking) {
             primitive._pickSP = ShaderProgram.replaceCache({
@@ -1155,6 +1140,7 @@ define([
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
         // Modify program to receive shadows
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
         var shadowDefines = [];
         if (shadowsEnabled && primitive._receiveShadows) {
             vs = ShadowMapShader.createShadowReceiveVertexShader(vs, frameState);
@@ -1235,7 +1221,6 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
-                colorCommand.shadowCastProgram = primitive._shadowCastSP;
                 colorCommand.castShadows = primitive._castShadows;
                 colorCommand.receiveShadows = primitive._receiveShadows;
                 colorCommand.uniformMap = uniforms;
@@ -1254,7 +1239,6 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
-            colorCommand.shadowCastProgram = primitive._shadowCastSP;
             colorCommand.castShadows = primitive._castShadows;
             colorCommand.receiveShadows = primitive._receiveShadows;
             colorCommand.uniformMap = uniforms;
@@ -1661,7 +1645,6 @@ define([
 
         this._sp = this._sp && this._sp.destroy();
         this._pickSP = this._pickSP && this._pickSP.destroy();
-        this._shadowCastSP = this._shadowCastSP && this._shadowCastSP.destroy();
 
         var va = this._va;
         length = va.length;

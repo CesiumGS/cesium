@@ -544,7 +544,6 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            shadowCastPrograms : {},
             textures : {},
 
             samplers : {},
@@ -1498,21 +1497,9 @@ define([
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
-
-        // Create shadow cast program
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (shadowsEnabled && model.castShadows) {
-            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(drawVS, frameState, 'v_positionEC');
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(drawFS, frameState, false, 'v_positionEC');
-            model._rendererResources.shadowCastPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : shadowCastVS,
-                fragmentShaderSource : shadowCastFS,
-                attributeLocations : attributeLocations
-            });
-        }
         
         // Modify draw program to receive shadows
+        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
         var shadowDefines = [];
         if (shadowsEnabled && model.receiveShadows) {
             drawVS = ShadowMapShader.createShadowReceiveVertexShader(drawVS, frameState);
@@ -2533,7 +2520,6 @@ define([
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
-        var rendererShadowCastPrograms = resources.shadowCastPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
@@ -2624,7 +2610,6 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
-                    shadowCastProgram : rendererShadowCastPrograms[technique.program],
                     castShadows : model.castShadows,
                     receiveShadows : model.receiveShadows,
                     uniformMap : uniformMap,
@@ -3109,7 +3094,6 @@ define([
         destroy(resources.vertexArrays);
         destroy(resources.programs);
         destroy(resources.pickPrograms);
-        destroy(resources.shadowCastPrograms);
         destroy(resources.textures);
     }
 
