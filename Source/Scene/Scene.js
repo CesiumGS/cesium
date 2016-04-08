@@ -1391,7 +1391,7 @@ define([
             executeDebugCommand(command, scene, passState);
         } else if (command.receiveShadows) {
             // TODO
-            command.derivedCommands.shadowReceiveCommand.execute(context, passState);
+            command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -1757,14 +1757,14 @@ define([
             var numberOfTerrainCommands = terrainCommands.length;
             for (j = 0; j < numberOfTerrainCommands; ++j) {
                 command = terrainCommands[j];
-                executeCommand(command.derivedCommands.shadowCastCommand, scene, context, passState);
+                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
 
             // Execute primitive commands
             var numberOfPrimitiveCommands = primitiveCommands.length;
             for (j = 0; j < numberOfPrimitiveCommands; ++j) {
                 command = primitiveCommands[j];
-                executeCommand(command.derivedCommands.shadowCastCommand, scene, context, passState);
+                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
         }
     }

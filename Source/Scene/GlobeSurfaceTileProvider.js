@@ -654,115 +654,119 @@ define([
     function createTileUniformMap(frameState) {
         var uniformMap = {
             u_initialColor : function() {
-                return this.initialColor;
+                return this.properties.initialColor;
             },
             u_zoomedOutOceanSpecularIntensity : function() {
-                return this.zoomedOutOceanSpecularIntensity;
+                return this.properties.zoomedOutOceanSpecularIntensity;
             },
             u_oceanNormalMap : function() {
-                return this.oceanNormalMap;
+                return this.properties.oceanNormalMap;
             },
             u_lightingFadeDistance : function() {
-                return this.lightingFadeDistance;
+                return this.properties.lightingFadeDistance;
             },
             u_center3D : function() {
-                return this.center3D;
+                return this.properties.center3D;
             },
             u_tileRectangle : function() {
-                return this.tileRectangle;
+                return this.properties.tileRectangle;
             },
             u_modifiedModelView : function() {
                 var viewMatrix = frameState.context.uniformState.view;
-                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.center3D, centerEyeScratch);
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.center3D, centerEyeScratch);
                 Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
             },
             u_modifiedModelViewProjection : function() {
                 var viewMatrix = frameState.context.uniformState.view;
                 var projectionMatrix = frameState.context.uniformState.projection;
-                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.center3D, centerEyeScratch);
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.center3D, centerEyeScratch);
                 Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewProjectionScratch);
                 Matrix4.multiply(projectionMatrix, modifiedModelViewProjectionScratch, modifiedModelViewProjectionScratch);
                 return modifiedModelViewProjectionScratch;
             },
             u_dayTextures : function() {
-                return this.dayTextures;
+                return this.properties.dayTextures;
             },
             u_dayTextureTranslationAndScale : function() {
-                return this.dayTextureTranslationAndScale;
+                return this.properties.dayTextureTranslationAndScale;
             },
             u_dayTextureTexCoordsRectangle : function() {
-                return this.dayTextureTexCoordsRectangle;
+                return this.properties.dayTextureTexCoordsRectangle;
             },
             u_dayTextureAlpha : function() {
-                return this.dayTextureAlpha;
+                return this.properties.dayTextureAlpha;
             },
             u_dayTextureBrightness : function() {
-                return this.dayTextureBrightness;
+                return this.properties.dayTextureBrightness;
             },
             u_dayTextureContrast : function() {
-                return this.dayTextureContrast;
+                return this.properties.dayTextureContrast;
             },
             u_dayTextureHue : function() {
-                return this.dayTextureHue;
+                return this.properties.dayTextureHue;
             },
             u_dayTextureSaturation : function() {
-                return this.dayTextureSaturation;
+                return this.properties.dayTextureSaturation;
             },
             u_dayTextureOneOverGamma : function() {
-                return this.dayTextureOneOverGamma;
+                return this.properties.dayTextureOneOverGamma;
             },
             u_dayIntensity : function() {
-                return this.dayIntensity;
+                return this.properties.dayIntensity;
             },
             u_southAndNorthLatitude : function() {
-                return this.southAndNorthLatitude;
+                return this.properties.southAndNorthLatitude;
             },
             u_southMercatorYAndOneOverHeight : function() {
-                return this.southMercatorYAndOneOverHeight;
+                return this.properties.southMercatorYAndOneOverHeight;
             },
             u_waterMask : function() {
-                return this.waterMask;
+                return this.properties.waterMask;
             },
             u_waterMaskTranslationAndScale : function() {
-                return this.waterMaskTranslationAndScale;
+                return this.properties.waterMaskTranslationAndScale;
             },
             u_minMaxHeight : function() {
-                return this.minMaxHeight;
+                return this.properties.minMaxHeight;
             },
             u_scaleAndBias : function() {
-                return this.scaleAndBias;
+                return this.properties.scaleAndBias;
             },
 
 
-            initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
-            zoomedOutOceanSpecularIntensity : 0.5,
-            oceanNormalMap : undefined,
-            lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
+            // make a separate object so that changes to the properties are seen on
+            // derived commands that combine another uniform map with this one.
+            properties : {
+                initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
+                zoomedOutOceanSpecularIntensity : 0.5,
+                oceanNormalMap : undefined,
+                lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
 
-            center3D : undefined,
-            modifiedModelView : new Matrix4(),
-            tileRectangle : new Cartesian4(),
+                center3D : undefined,
+                modifiedModelView : new Matrix4(),
+                tileRectangle : new Cartesian4(),
 
-            dayTextures : [],
-            dayTextureTranslationAndScale : [],
-            dayTextureTexCoordsRectangle : [],
-            dayTextureAlpha : [],
-            dayTextureBrightness : [],
-            dayTextureContrast : [],
-            dayTextureHue : [],
-            dayTextureSaturation : [],
-            dayTextureOneOverGamma : [],
-            dayIntensity : 0.0,
+                dayTextures : [],
+                dayTextureTranslationAndScale : [],
+                dayTextureTexCoordsRectangle : [],
+                dayTextureAlpha : [],
+                dayTextureBrightness : [],
+                dayTextureContrast : [],
+                dayTextureHue : [],
+                dayTextureSaturation : [],
+                dayTextureOneOverGamma : [],
+                dayIntensity : 0.0,
 
-            southAndNorthLatitude : new Cartesian2(),
-            southMercatorYAndOneOverHeight : new Cartesian2(),
+                southAndNorthLatitude : new Cartesian2(),
+                southMercatorYAndOneOverHeight : new Cartesian2(),
 
-            waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4(),
+                waterMask : undefined,
+                waterMaskTranslationAndScale : new Cartesian4(),
 
-            minMaxHeight : new Cartesian2(),
-            scaleAndBias : new Matrix4()
+                minMaxHeight : new Cartesian2(),
+                scaleAndBias : new Matrix4()
+            }
         };
 
         return uniformMap;
@@ -1022,19 +1026,20 @@ define([
                 }
             }
 
-            Cartesian4.clone(initialColor, uniformMap.initialColor);
-            uniformMap.oceanNormalMap = oceanNormalMap;
-            uniformMap.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
-            uniformMap.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
-            uniformMap.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
+            var uniformMapProperties = uniformMap.properties;
+            Cartesian4.clone(initialColor, uniformMapProperties.initialColor);
+            uniformMapProperties.oceanNormalMap = oceanNormalMap;
+            uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
+            uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
+            uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            uniformMap.center3D = surfaceTile.center;
+            uniformMapProperties.center3D = surfaceTile.center;
 
-            Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
-            uniformMap.southAndNorthLatitude.x = southLatitude;
-            uniformMap.southAndNorthLatitude.y = northLatitude;
-            uniformMap.southMercatorYAndOneOverHeight.x = southMercatorY;
-            uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
+            Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);
+            uniformMapProperties.southAndNorthLatitude.x = southLatitude;
+            uniformMapProperties.southAndNorthLatitude.y = northLatitude;
+            uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
+            uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
@@ -1061,27 +1066,27 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
-                uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
-                uniformMap.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
+                uniformMapProperties.dayTextures[numberOfDayTextures] = imagery.texture;
+                uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
+                uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
 
-                uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
-                applyAlpha = applyAlpha || uniformMap.dayTextureAlpha[numberOfDayTextures] !== 1.0;
+                uniformMapProperties.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                applyAlpha = applyAlpha || uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;
 
-                uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
-                applyBrightness = applyBrightness || uniformMap.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+                uniformMapProperties.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                applyBrightness = applyBrightness || uniformMapProperties.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
-                uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
-                applyContrast = applyContrast || uniformMap.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+                uniformMapProperties.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                applyContrast = applyContrast || uniformMapProperties.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
-                uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
-                applyHue = applyHue || uniformMap.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+                uniformMapProperties.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
+                applyHue = applyHue || uniformMapProperties.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
 
-                uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
-                applySaturation = applySaturation || uniformMap.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+                uniformMapProperties.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
+                applySaturation = applySaturation || uniformMapProperties.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
-                uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
-                applyGamma = applyGamma || uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
+                uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                applyGamma = applyGamma || uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                 if (defined(imagery.credits)) {
                     var creditDisplay = frameState.creditDisplay;
@@ -1096,13 +1101,13 @@ define([
 
             // trim texture array to the used length so we don't end up using old textures
             // which might get destroyed eventually
-            uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.waterMask = waterMaskTexture;
-            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+            uniformMapProperties.dayTextures.length = numberOfDayTextures;
+            uniformMapProperties.waterMask = waterMaskTexture;
+            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMapProperties.waterMaskTranslationAndScale);
 
-            uniformMap.minMaxHeight.x = encoding.minimumHeight;
-            uniformMap.minMaxHeight.y = encoding.maximumHeight;
-            Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
+            uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
+            uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
+            Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.castShadows = castShadows;

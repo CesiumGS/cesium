@@ -85,11 +85,11 @@ define([
          */
         orientedBoundingBox : {
             get : function() {
-                return this._orientedBoundingVolume;
+                return this._orientedBoundingBox;
             },
             set : function(value) {
-                if (this._orientedBoundingVolume !== value) {
-                    this._orientedBoundingVolume = value;
+                if (this._orientedBoundingBox !== value) {
+                    this._orientedBoundingBox = value;
                     this._dirty = true;
                 }
             }

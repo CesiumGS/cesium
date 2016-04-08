@@ -470,24 +470,24 @@ define([
         }
 
         if (this._translucentMRTSupport) {
-            var translucentSader;
+            var translucentShader;
             var translucentRenderState;
             if (defined(oit.translucentCommand)) {
-                translucentSader = oit.translucentCommand.shaderProgram;
+                translucentShader = oit.translucentCommand.shaderProgram;
                 translucentRenderState = oit.translucentCommand.renderState;
             }
 
             oit.translucentCommand = DrawCommand.shallowClone(command, oit.translucentCommand);
 
-            if (!defined(translucentSader) || oit.shaderProgramId !== command.shaderProgram.id) {
-                if (defined(translucentSader)) {
-                    translucentSader.destroy();
+            if (!defined(translucentShader) || oit.shaderProgramId !== command.shaderProgram.id) {
+                if (defined(translucentShader)) {
+                    translucentShader.destroy();
                 }
                 oit.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
                 oit.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
                 oit.shaderProgramId = command.shaderProgram.id;
             } else {
-                oit.translucentCommand.shaderProgram = translucentSader;
+                oit.translucentCommand.shaderProgram = translucentShader;
                 oit.translucentCommand.renderState = translucentRenderState;
             }
         } else {

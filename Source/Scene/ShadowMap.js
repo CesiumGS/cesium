@@ -1237,58 +1237,97 @@ define([
     };
     
     ShadowMap.prototype.createDerivedCommands = function(command, context) {
+        var derivedCommands = command.derivedCommands;
+        var shadows = derivedCommands.shadows;
+
+        if (!defined(shadows)) {
+            shadows = derivedCommands.shadows = {};
+        }
+
+        var shaderProgram = command.shaderProgram;
+        var vertexShaderSource = shaderProgram.vertexShaderSource;
+        var fragmentShaderSource = shaderProgram.fragmentShaderSource;
+
         var isTerrain = command.pass === Pass.GLOBE;
         var isOpaque = command.pass !== Pass.TRANSLUCENT;
         var isPointLight = this._isPointLight;
         var useDepthTexture = this._usesDepthTexture;
-        
-        var shaderProgram = command.shaderProgram;
-        var vertexShaderSource = shaderProgram.vertexShaderSource;
-        var fragmentShaderSource = shaderProgram.fragmentShaderSource;
-        
-        var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight);
-        var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
 
-        var castShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : castVS,
-            fragmentShaderSource : castFS,
-            attributeLocations : shaderProgram._attributeLocations
-        });
+        if (command.castShadows) {
+            var castShader;
+            var castRenderState;
+            var castUniformMap;
+            if (defined(shadows.castCommand)) {
+                castShader = shadows.castCommand.shaderProgram;
+                castRenderState = shadows.castCommand.renderState;
+                castUniformMap = shadows.castCommand.uniformMap;
+            }
 
-        var castRenderState = this._primitiveRenderState;
-        if (isPointLight) {
-            castRenderState = this._pointRenderState;
-        } else if (isTerrain) {
-            castRenderState = this._terrainRenderState;
+            shadows.castCommand = DrawCommand.shallowClone(command, shadows.castCommand);
+
+            if (!defined(castShader) || shadows.castShaderProgramId !== command.shaderProgram.id) {
+                if (defined(castShader)) {
+                    castShader.destroy();
+                }
+
+                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+
+                castShader = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : castVS,
+                    fragmentShaderSource : castFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
+
+                castRenderState = this._primitiveRenderState;
+                if (isPointLight) {
+                    castRenderState = this._pointRenderState;
+                } else if (isTerrain) {
+                    castRenderState = this._terrainRenderState;
+                }
+
+                castUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
+            }
+
+            shadows.castCommand.shaderProgram = castShader;
+            shadows.castCommand.renderState = castRenderState;
+            shadows.castCommand.uniformMap = castUniformMap;
+            shadows.castShaderProgramId = command.shaderProgram.id;
         }
 
-        var castUniforms = this.combineUniforms(command.uniformMap, isTerrain);
+        if (command.receiveShadows) {
+            var receiveShader;
+            var receiveUniformMap;
+            if (defined(shadows.receiveCommand)) {
+                receiveShader = shadows.receiveCommand.shaderProgram;
+                receiveUniformMap = shadows.receiveCommand.uniformMap;
+            }
 
-        var castCommand = DrawCommand.shallowClone(command);
-        castCommand.shaderProgram = castShaderProgram;
-        castCommand.renderState = castRenderState;
-        castCommand.uniformMap = castUniforms;
+            shadows.receiveCommand = DrawCommand.shallowClone(command, shadows.receiveCommand);
 
-        command.derivedCommands.shadowCastCommand = castCommand;
-        
-        var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource);
-        var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain);
+            if (!defined(receiveShader) || shadows.receiveShaderProgramId !== command.shaderProgram.id) {
+                if (defined(receiveShader)) {
+                    receiveShader.destroy();
+                }
 
-        var receiveShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : receiveVS,
-            fragmentShaderSource : receiveFS,
-            attributeLocations : shaderProgram._attributeLocations
-        });
+                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain);
 
-        var receiveUniforms = this.combineUniforms(command.uniformMap, isTerrain);
+                receiveShader = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : receiveVS,
+                    fragmentShaderSource : receiveFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
 
-        var receiveCommand = DrawCommand.shallowClone(command);
-        receiveCommand.shaderProgram = receiveShaderProgram;
-        receiveCommand.uniformMap = receiveUniforms;
+                receiveUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
+            }
 
-        command.derivedCommands.shadowReceiveCommand = receiveCommand;
+            shadows.receiveCommand.shaderProgram = receiveShader;
+            shadows.receiveCommand.uniformMap = receiveUniformMap;
+            shadows.receiveShaderProgramId = command.shaderProgram.id;
+        }
     };
 
     ShadowMap.prototype.isDestroyed = function() {
