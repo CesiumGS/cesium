@@ -140,7 +140,17 @@ define([
     };
 
     ShadowMapShader.createShadowReceiveVertexShader = function(vs) {
-        return vs;
+        var defines = vs.defines.slice(0);
+        var sources = vs.sources.slice(0);
+
+        // TODO
+        //defines.push('ENABLE_VERTEX_LIGHTING');
+        defines.push('ENABLE_DAYNIGHT_SHADING');
+
+        return new ShaderSource({
+            defines : defines,
+            sources : sources
+        });
     };
 
     ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain) {
@@ -188,6 +198,10 @@ define([
         if (exponentialShadows) {
             defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
+
+        // TODO
+        //defines.push('ENABLE_VERTEX_LIGHTING');
+        defines.push('ENABLE_DAYNIGHT_SHADING');
 
         var fsSource =
             'uniform mat4 u_shadowMapMatrix; \n' +
