@@ -42,6 +42,8 @@ define([
         this.imageIndex = imageIndex;
     }
 
+    var defaultInitialSize = new Cartesian2(16.0, 16.0);
+
     /**
      * A TextureAtlas stores multiple images in one square texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
@@ -66,6 +68,7 @@ define([
     function TextureAtlas(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
+        var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.context)) {
@@ -73,6 +76,9 @@ define([
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
+        }
+        if (initialSize.x < 1 || initialSize.y < 1) {
+            throw new DeveloperError('initialSize must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -82,6 +88,7 @@ define([
         this._textureCoordinates = [];
         this._guid = createGuid();
         this._idHash = {};
+        this._initialSize = initialSize;
 
         this._root = undefined;
     }
@@ -213,6 +220,12 @@ define([
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
+            if(initialWidth < textureAtlas._initialSize.x) {
+                initialWidth = textureAtlas._initialSize.x;
+            }
+            if(initialHeight < textureAtlas._initialSize.y) {
+                initialHeight = textureAtlas._initialSize.y;
+            }
             textureAtlas._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
         }
     }
