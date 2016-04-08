@@ -42,8 +42,6 @@ define([
         this.imageIndex = imageIndex;
     }
 
-    var defaultInitialSize = new Cartesian2(16.0, 16.0);
-
     /**
      * A TextureAtlas stores multiple images in one square texture and keeps
      * track of the texture coordinates for each image. TextureAtlas is dynamic,
@@ -68,7 +66,6 @@ define([
     function TextureAtlas(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var borderWidthInPixels = defaultValue(options.borderWidthInPixels, 1.0);
-        var initialSize = defaultValue(options.initialSize, defaultInitialSize);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.context)) {
@@ -76,9 +73,6 @@ define([
         }
         if (borderWidthInPixels < 0) {
             throw new DeveloperError('borderWidthInPixels must be greater than or equal to zero.');
-        }
-        if (initialSize.x < 1 || initialSize.y < 1) {
-            throw new DeveloperError('initialSize must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -89,34 +83,7 @@ define([
         this._guid = createGuid();
         this._idHash = {};
 
-        // Create initial texture and root.
-        this._texture = new Texture({
-            context : this._context,
-            width : initialSize.x,
-            height : initialSize.y,
-            pixelFormat : this._pixelFormat
-        });
-        this._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialSize.x, initialSize.y));
-
-        var that = this;
-        var uniformMap = {
-            u_texture : function() {
-                return that._texture;
-            }
-        };
-
-        var fs =
-            'uniform sampler2D u_texture;\n' +
-            'varying vec2 v_textureCoordinates;\n' +
-            'void main()\n' +
-            '{\n' +
-            '    gl_FragColor = texture2D(u_texture, v_textureCoordinates);\n' +
-            '}\n';
-
-
-        this._copyCommand = this._context.createViewportQuadCommand(fs, {
-            uniformMap : uniformMap
-        });
+        this._root = undefined;
     }
 
     defineProperties(TextureAtlas.prototype, {
@@ -202,7 +169,6 @@ define([
             var nodeBottomHalf = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, oldAtlasHeight), textureAtlas._root, nodeBottomRight);
             var nodeTopHalf = new TextureAtlasNode(new Cartesian2(0.0, oldAtlasHeight + textureAtlas._borderWidthInPixels), new Cartesian2(atlasWidth, atlasHeight));
             var nodeMain = new TextureAtlasNode(new Cartesian2(), new Cartesian2(atlasWidth, atlasHeight), nodeBottomHalf, nodeTopHalf);
-            textureAtlas._root = nodeMain;
 
             // Resize texture coordinates.
             for (var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
@@ -225,26 +191,17 @@ define([
 
             var framebuffer = new Framebuffer({
                 context : context,
-                colorTextures : [newTexture],
+                colorTextures : [textureAtlas._texture],
                 destroyAttachments : false
             });
 
-            var command = textureAtlas._copyCommand;
-            var renderState = {
-                viewport : new BoundingRectangle(0, 0, oldAtlasWidth, oldAtlasHeight)
-            };
-            command.renderState = RenderState.fromCache(renderState);
-
-            // Copy by rendering a viewport quad, instead of using Texture.copyFromFramebuffer,
-            // to workaround a Chrome 45 issue, https://github.com/AnalyticalGraphicsInc/cesium/issues/2997
             framebuffer._bind();
-            command.execute(textureAtlas._context);
+            newTexture.copyFromFramebuffer(0, 0, 0, 0, atlasWidth, atlasHeight);
             framebuffer._unBind();
             framebuffer.destroy();
+            textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
             textureAtlas._texture = newTexture;
-
-            RenderState.removeFromCache(renderState);
-            command.renderState = undefined;
+            textureAtlas._root = nodeMain;
         } else {
             // First image exceeds initialSize
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
