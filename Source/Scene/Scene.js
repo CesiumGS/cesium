@@ -1125,23 +1125,21 @@ define([
             command._dirty = false;
             
             var context = scene._context;
-            
-            var oit = scene._oit;
-            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                oit.createDerivedCommands(command, context);
-            }
+            var derivedCommands = command.derivedCommands;
 
             if (defined(scene.shadowMap)) {
-                scene.shadowMap.createDerivedCommands(command, context);
+                derivedCommands.shadows = scene.shadowMap.createDerivedCommands(command, context, derivedCommands.shadows);
+            }
+
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                if (command.receiveShadows) {
+                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
             }
         }
-
-        // TODO
-        /*
-        if (command.pass !== Pass.TRANSLUCENT && command.receiveShadows && defined(command.derivedCommands.shadowReceiveCommand)) {
-            command = command.derivedCommands.shadowReceiveCommand;
-        }
-        */
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1389,7 +1387,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (command.receiveShadows) {
+        } else if (command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
             // TODO
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {

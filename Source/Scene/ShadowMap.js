@@ -1236,12 +1236,9 @@ define([
         return combine(uniforms, mapUniforms, false);
     };
     
-    ShadowMap.prototype.createDerivedCommands = function(command, context) {
-        var derivedCommands = command.derivedCommands;
-        var shadows = derivedCommands.shadows;
-
-        if (!defined(shadows)) {
-            shadows = derivedCommands.shadows = {};
+    ShadowMap.prototype.createDerivedCommands = function(command, context, result) {
+        if (!defined(result)) {
+            result = {};
         }
 
         var shaderProgram = command.shaderProgram;
@@ -1257,15 +1254,15 @@ define([
             var castShader;
             var castRenderState;
             var castUniformMap;
-            if (defined(shadows.castCommand)) {
-                castShader = shadows.castCommand.shaderProgram;
-                castRenderState = shadows.castCommand.renderState;
-                castUniformMap = shadows.castCommand.uniformMap;
+            if (defined(result.castCommand)) {
+                castShader = result.castCommand.shaderProgram;
+                castRenderState = result.castCommand.renderState;
+                castUniformMap = result.castCommand.uniformMap;
             }
 
-            shadows.castCommand = DrawCommand.shallowClone(command, shadows.castCommand);
+            result.castCommand = DrawCommand.shallowClone(command, result.castCommand);
 
-            if (!defined(castShader) || shadows.castShaderProgramId !== command.shaderProgram.id) {
+            if (!defined(castShader) || result.castShaderProgramId !== command.shaderProgram.id) {
                 if (defined(castShader)) {
                     castShader.destroy();
                 }
@@ -1290,23 +1287,23 @@ define([
                 castUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
             }
 
-            shadows.castCommand.shaderProgram = castShader;
-            shadows.castCommand.renderState = castRenderState;
-            shadows.castCommand.uniformMap = castUniformMap;
-            shadows.castShaderProgramId = command.shaderProgram.id;
+            result.castCommand.shaderProgram = castShader;
+            result.castCommand.renderState = castRenderState;
+            result.castCommand.uniformMap = castUniformMap;
+            result.castShaderProgramId = command.shaderProgram.id;
         }
 
         if (command.receiveShadows) {
             var receiveShader;
             var receiveUniformMap;
-            if (defined(shadows.receiveCommand)) {
-                receiveShader = shadows.receiveCommand.shaderProgram;
-                receiveUniformMap = shadows.receiveCommand.uniformMap;
+            if (defined(result.receiveCommand)) {
+                receiveShader = result.receiveCommand.shaderProgram;
+                receiveUniformMap = result.receiveCommand.uniformMap;
             }
 
-            shadows.receiveCommand = DrawCommand.shallowClone(command, shadows.receiveCommand);
+            result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
 
-            if (!defined(receiveShader) || shadows.receiveShaderProgramId !== command.shaderProgram.id) {
+            if (!defined(receiveShader) || result.receiveShaderProgramId !== command.shaderProgram.id) {
                 if (defined(receiveShader)) {
                     receiveShader.destroy();
                 }
@@ -1324,10 +1321,12 @@ define([
                 receiveUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
             }
 
-            shadows.receiveCommand.shaderProgram = receiveShader;
-            shadows.receiveCommand.uniformMap = receiveUniformMap;
-            shadows.receiveShaderProgramId = command.shaderProgram.id;
+            result.receiveCommand.shaderProgram = receiveShader;
+            result.receiveCommand.uniformMap = receiveUniformMap;
+            result.receiveShaderProgramId = command.shaderProgram.id;
         }
+
+        return result;
     };
 
     ShadowMap.prototype.isDestroyed = function() {
