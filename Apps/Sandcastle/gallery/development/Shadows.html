@@ -252,14 +252,15 @@ var viewModel = {
 };
 
 // Temp values for testing
-viewModel.lightSource = 'Freeform';
+viewModel.lightSource = 'Spot';
 viewModel.lightHorizon = 71.0;
 viewModel.lightAngle = 40.0;
 viewModel.distance = 10000.0;
-viewModel.location = 'Exton';
-viewModel.model = 'Shadow Tester 4';
+viewModel.location = 'Pinnacle PA';
+viewModel.model = 'Shadow Tester';
 viewModel.modelPosition = 'Center';
-viewModel.terrain = false;
+viewModel.terrain = true;
+viewModel.terrainCast = true;
 
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
@@ -541,7 +542,7 @@ function createScene() {
     spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
     spotLightCamera.frustum.aspectRatio = 1.0;
     spotLightCamera.frustum.near = 1.0;
-    spotLightCamera.frustum.far = 200.0;
+    spotLightCamera.frustum.far = 500.0;
     spotLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
 
     pointLightCamera.position = center;

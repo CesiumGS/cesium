@@ -315,10 +315,23 @@ define([
 
     defineProperties(ShadowMap.prototype, {
         /**
-         * The culling volume of the shadow frustum.
+         * The camera representing the shadow volume.
          *
          * @memberof ShadowMap.prototype
          * @type {ShadowMapCamera}
+         * @readonly
+         */
+        shadowMapCamera : {
+            get : function() {
+                return this._shadowMapCamera;
+            }
+        },
+
+        /**
+         * The culling volume of the shadow frustum.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {CullingVolume}
          * @readonly
          */
         shadowMapCullingVolume : {
