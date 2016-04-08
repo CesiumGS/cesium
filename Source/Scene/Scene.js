@@ -1137,9 +1137,11 @@ define([
         }
 
         // TODO
+        /*
         if (command.pass !== Pass.TRANSLUCENT && command.receiveShadows && defined(command.derivedCommands.shadowReceiveCommand)) {
             command = command.derivedCommands.shadowReceiveCommand;
         }
+        */
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;

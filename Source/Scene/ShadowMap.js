@@ -1250,9 +1250,10 @@ define([
         var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
 
         var castShaderProgram = ShaderProgram.fromCache({
-             context : context,
-             vertexShaderSource : castVS,
-             fragmentShaderSource : castFS
+            context : context,
+            vertexShaderSource : castVS,
+            fragmentShaderSource : castFS,
+            attributeLocations : shaderProgram._attributeLocations
         });
 
         var castRenderState = this._primitiveRenderState;
@@ -1277,7 +1278,8 @@ define([
         var receiveShaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : receiveVS,
-            fragmentShaderSource : receiveFS
+            fragmentShaderSource : receiveFS,
+            attributeLocations : shaderProgram._attributeLocations
         });
 
         var receiveUniforms = this.combineUniforms(command.uniformMap, isTerrain);
