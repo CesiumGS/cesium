@@ -38,6 +38,10 @@ require({
         'dojo/query',
         'dojo/when',
         'Sandcastle/LinkButton',
+        "dijit/Dialog",
+        "dijit/form/Form",
+        "dijit/form/TextArea",
+        "dijit/form/Button",
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
@@ -45,12 +49,10 @@ require({
         'CodeMirror/mode/css/css',
         'CodeMirror/mode/xml/xml',
         'CodeMirror/mode/htmlmixed/htmlmixed',
-        'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
-        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -79,6 +81,10 @@ require({
         query,
         when,
         LinkButton,
+        Dialog,
+        Form,
+        TextArea,
+        Button,
         Cesium) {
     'use strict';
 
@@ -162,6 +168,7 @@ require({
     var previousCode = '';
     var runGist = false;
     var gistCode;
+    var sandcastleUrl = '';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -734,11 +741,15 @@ require({
             if (defined(queryObject.gistId)) {
                 Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
                     .then(function(data) {
+                        var getUrl = window.location;
+                        var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
                         var files = data.data.files;
                         var code = files[Object.keys(files)[0]].content;
                         jsEditor.setValue(code);
                         demoJs = code.replace(/\s/g, '');
                         gistCode = code;
+                        previousCode = code;
+                        sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
                     }).otherwise(function() {
                         appendConsole('consoleError', 'Error importing Gist this could be due to too many request, try again in an hour.', true);
                 });
@@ -887,32 +898,51 @@ require({
     }
 
     registry.byId('buttonShare').on('click', function() {
-        var code = jsEditor.getValue();
-        if (code === previousCode) {
-            return;
-        }
-        previousCode = code;
-        var data = {
-            public : true,
-            files : {
-                'Cesium-Sandcastle.js' : {
-                    content : code
+        var form = new Form();
+        var box = new TextArea({
+            readOnly : true,
+            value : 'Click "Get Link" and copy the link to share. (If you edit your example you must get new link here).',
+            selectOnClick : true
+        }).placeAt(form.containerNode);
+        var button = new Button({
+            label: 'Get Link',
+            onClick : function() {
+                var code = jsEditor.getValue();
+                if (code === previousCode) {
+                    box.set('value', 'You have not made any changes to your previous example. Here is the url: ' + sandcastleUrl);
+                    return;
                 }
+                button.disabled = true;
+                previousCode = code;
+                var data = {
+                    public : true,
+                    files : {
+                        'Cesium-Sandcastle.js' : {
+                            content : code
+                        }
+                    }
+                };
+                return Cesium.loadWithXhr({
+                    url : 'https://api.github.com/gists',
+                    data : JSON.stringify(data),
+                    method : 'POST'
+                }).then(function(content) {
+                    var getUrl = window.location;
+                    var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
+                    sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
+                    box.set('value', sandcastleUrl);
+                    button.disabled = false;
+                }).otherwise(function() {
+                    appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
+                });
             }
-        };
-        return Cesium.loadWithXhr({
-            url : 'https://api.github.com/gists',
-            data : JSON.stringify(data),
-            method : 'POST'
-        }).then(function(content) {
-            var textBox = document.getElementById('gistLinkShare');
-            var getUrl = window.location;
-            var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
-            textBox.value = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
-            textBox.select();
-        }).otherwise(function() {
-            appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
+        }).placeAt(form.containerNode);
+        var dialog = new Dialog({
+            content: form,
+            title: "Share",
+            style: "width: 300px;"
         });
+        dialog.show();
     });
 
     registry.byId('buttonImport').on('click', function() {
