@@ -1685,7 +1685,34 @@ define([
         }
     }
 
-    function getTerrainShadowCommands(scene) {
+    function getTerrainShadowCommands(scene, shadowMap) {
+        var frameState = scene.frameState;
+
+        var sceneCommandList = frameState.commandList;
+        var sceneCamera = frameState.camera;
+        var sceneCullingVolume = frameState.cullingVolume;
+
+        var terrainCommands = []; // TODO : avoid allocation
+
+        // Update frame state to render from the light camera
+        frameState.commandList = terrainCommands;
+        frameState.camera = shadowMap.shadowMapCamera;
+        frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
+
+        // Collect terrain commands from the light's POV
+        if (scene._globe && scene._globe.castShadows) {
+            scene._globe.update(frameState);
+        }
+
+        // Revert back to original frame state
+        frameState.commandList = sceneCommandList;
+        frameState.camera = sceneCamera;
+        frameState.cullingVolume = sceneCullingVolume;
+
+        return terrainCommands;
+    }
+    
+    function getTerrainShadowCommands(scene, shadowMap) {
         // TODO : Temporary for testing. Globe.update doesn't work with orthographic frustums currently
         var terrainCommands = [];
         var commandList = scene.frameState.commandList;
@@ -1769,15 +1796,10 @@ define([
         // Insert the scene commands into the shadow map passes
         var sceneCommands = scene.frameState.commandList;
         insertShadowCommands(sceneCommands, false, shadowMap, shadowPassCommands);
-        var terrainCommands = getTerrainShadowCommands(scene);
+        var terrainCommands = getTerrainShadowCommands(scene, shadowMap);
         insertShadowCommands(terrainCommands, true, shadowMap, shadowPassCommands);
 
         var numberOfPasses = shadowMap.numberOfPasses;
-
-        // TODO : testing only
-        for (var k = 0; k < numberOfPasses; ++k) {
-            console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
-        }
 
         for (var i = 0; i < numberOfPasses; ++i) {
             uniformState.updateCamera(shadowMap.passCameras[i]);
