@@ -900,9 +900,8 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        var castShadows = shadowsEnabled && tileProvider.castShadows;
-        var receiveShadows = shadowsEnabled && tileProvider.receiveShadows;
+        var castShadows = tileProvider.castShadows;
+        var receiveShadows = tileProvider.receiveShadows;
 
         if (showReflectiveOcean) {
             --maxTextures;

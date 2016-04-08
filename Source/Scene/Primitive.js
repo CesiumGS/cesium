@@ -293,7 +293,6 @@ define([
          * @default false
          */
         this.castShadows = defaultValue(options.castShadows, false);
-        this._castShadows = this.castShadows;
 
         /**
          * Determines whether this primitive will receive shadows when shadow mapping is enabled.
@@ -303,7 +302,6 @@ define([
          * @default false
          */
         this.receiveShadows = defaultValue(options.receiveShadows, false);
-        this._receiveShadows = this.receiveShadows;
 
         this._sceneShadowsEnabled = true;
 
@@ -1206,8 +1204,8 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
-                colorCommand.castShadows = primitive._castShadows;
-                colorCommand.receiveShadows = primitive._receiveShadows;
+                colorCommand.castShadows = primitive.castShadows;
+                colorCommand.receiveShadows = primitive.receiveShadows;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1224,8 +1222,8 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
-            colorCommand.castShadows = primitive._castShadows;
-            colorCommand.receiveShadows = primitive._receiveShadows;
+            colorCommand.castShadows = primitive.castShadows;
+            colorCommand.receiveShadows = primitive.receiveShadows;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
@@ -1424,16 +1422,6 @@ define([
         } else if (this._material !== material ) {
             this._material = material;
             createSP = true;
-        }
-
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if ((this._sceneShadowsEnabled !== shadowsEnabled) ||
-            (this._castShadows !== this.castShadows) ||
-            (this._receiveShadows !== this.receiveShadows)) {
-                this._sceneShadowsEnabled = shadowsEnabled;
-                this._castShadows = this.castShadows;
-                this._receiveShadows = this.receiveShadows;
-                createSP = true;
         }
 
         var translucent = this._appearance.isTranslucent();
