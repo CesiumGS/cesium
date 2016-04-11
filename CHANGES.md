@@ -7,6 +7,16 @@ Change Log
 * Added `Model.castShadows` and `Model.receiveShadows`.
 * Added `Matrix4.computeView`
 
+### 1.21 - 2016-05-02
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
+* Fixed issue where `Camera.flyTo` does not go to the rectangle. [#3688](https://github.com/AnalyticalGraphicsInc/cesium/issues/3688)
+* Fixed issue causing the fog to go dark and the atmosphere to flicker when the camera clips the globe. [#3178](https://github.com/AnalyticalGraphicsInc/cesium/issues/3178)
+
 ### 1.20 - 2016-04-01
 
 * Breaking changes

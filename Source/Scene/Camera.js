@@ -400,18 +400,21 @@ define([
         var direction = camera._direction;
         var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
+            Cartesian3.normalize(camera.direction, camera.direction);
             direction = Cartesian3.clone(camera.direction, camera._direction);
         }
 
         var up = camera._up;
         var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
+            Cartesian3.normalize(camera.up, camera.up);
             up = Cartesian3.clone(camera.up, camera._up);
         }
 
         var right = camera._right;
         var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
+            Cartesian3.normalize(camera.right, camera.right);
             right = Cartesian3.clone(camera.right, camera._right);
         }
 
@@ -469,9 +472,6 @@ define([
             var det = Cartesian3.dot(direction, Cartesian3.cross(up, right, scratchCartesian));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
-                direction = Cartesian3.normalize(direction, camera._direction);
-                Cartesian3.clone(direction, camera.direction);
-
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = Cartesian3.dot(up, direction) * invUpMag;
                 var w0 = Cartesian3.multiplyByScalar(direction, scalar, scratchCartesian);
@@ -2484,13 +2484,22 @@ define([
 
             // Make sure camera doesn't zoom outside set limits
             if (defined(sscc)) {
-                destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                //The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
+                if (mode !== SceneMode.SCENE3D && isRectangle) {
+                    destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                } else {
+                    destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                }
             }
 
             // The max height in 2D might be lower than the max height for sscc.
             if (mode === SceneMode.SCENE2D) {
                 var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-                destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+                if (isRectangle) {
+                    destination.z = Math.min(destination.z, maxHeight);
+                } else {
+                    destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+                }
             }
 
             //Only change if we clamped the height
