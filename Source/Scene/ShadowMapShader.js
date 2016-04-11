@@ -45,12 +45,35 @@ define([
         return findVarying(shaderSource, positionVaryingNames);
     }
 
-    ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight) {
+    function terrainHasPositionVarying(defines) {
+        var length = defines.length;
+        for (var i = 0; i < length; ++i) {
+            var define = defines[i];
+            if (define.indexOf('ENABLE_VERTEX_LIGHTING') !== -1 || define.indexOf('ENABLE_DAYNIGHT_SHADING') !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
 
+    function terrainHasNormalVarying(defines) {
+        var length = defines.length;
+        for (var i = 0; i < length; ++i) {
+            var define = defines[i];
+            if (define.indexOf('ENABLE_VERTEX_LIGHTING') !== -1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, isTerrain) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        defines.push('ENABLE_DAYNIGHT_SHADING'); // TODO
+        if (isTerrain && !terrainHasPositionVarying(defines)) {
+            defines.push('ENABLE_DAYNIGHT_SHADING');
+        }
 
         var positionVaryingName = findPositionVarying(vs);
         var hasPositionVarying = defined(positionVaryingName);
@@ -76,14 +99,16 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque) {
-        // TODO : is there an easy way to tell if a model or primitive is opaque before going here?
-
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque, isTerrain) {
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
         var positionVaryingName = findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
+
+        if (isTerrain && !terrainHasPositionVarying(defines)) {
+            defines.push('ENABLE_DAYNIGHT_SHADING');
+        }
 
         var length = sources.length;
         for (var i = 0; i < length; ++i) {
@@ -139,13 +164,13 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowReceiveVertexShader = function(vs) {
+    ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        // TODO
-        //defines.push('ENABLE_VERTEX_LIGHTING');
-        defines.push('ENABLE_DAYNIGHT_SHADING');
+        if (isTerrain && !terrainHasPositionVarying(defines)) {
+            defines.push('ENABLE_DAYNIGHT_SHADING');
+        }
 
         return new ShaderSource({
             defines : defines,
@@ -155,7 +180,7 @@ define([
 
     ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain) {
         var normalVaryingName = findNormalVarying(fs);
-        var hasNormalVarying = false;//defined(normalVaryingName);
+        var hasNormalVarying = defined(normalVaryingName);
 
         var positionVaryingName = findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
@@ -172,6 +197,13 @@ define([
 
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
+
+        if (isTerrain) {
+            if (!terrainHasPositionVarying(defines)) {
+                defines.push('ENABLE_DAYNIGHT_SHADING');
+            }
+            hasNormalVarying = hasNormalVarying && terrainHasNormalVarying(defines);
+        }
 
         var length = sources.length;
         for (var i = 0; i < length; ++i) {
@@ -198,10 +230,6 @@ define([
         if (exponentialShadows) {
             defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
-
-        // TODO
-        //defines.push('ENABLE_VERTEX_LIGHTING');
-        defines.push('ENABLE_DAYNIGHT_SHADING');
 
         var fsSource =
             'uniform mat4 u_shadowMapMatrix; \n' +

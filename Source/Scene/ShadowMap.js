@@ -782,7 +782,7 @@ define([
             positions[i * 3 + 1] = corner.y;
             positions[i * 3 + 2] = corner.z;
         }
-        
+
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -811,10 +811,10 @@ define([
             }),
             asynchronous : false
         });
-        
+
         return debugFrustum;
     }
-    
+
     var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
     var scratchScale = new Cartesian3();
 
@@ -1235,7 +1235,7 @@ define([
 
         return combine(uniforms, mapUniforms, false);
     };
-    
+
     ShadowMap.prototype.createDerivedCommands = function(command, context, result) {
         if (!defined(result)) {
             result = {};
@@ -1267,8 +1267,8 @@ define([
                     castShader.destroy();
                 }
 
-                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight);
-                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque, isTerrain);
 
                 castShader = ShaderProgram.fromCache({
                     context : context,
@@ -1308,7 +1308,7 @@ define([
                     receiveShader.destroy();
                 }
 
-                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource);
+                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain);
                 var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain);
 
                 receiveShader = ShaderProgram.fromCache({
