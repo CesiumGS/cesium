@@ -82,13 +82,11 @@ define([
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
      * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
      *   childTileMask : childTileMask,
-     *   structure : structure,
      *   waterMask : waterMask
      * });
      * 
