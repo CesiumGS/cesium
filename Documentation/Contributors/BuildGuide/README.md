@@ -117,9 +117,28 @@ You can also access the build of any branch of cesium by going to the [Cesium Br
 
 Additional set up is required for deployment if you do not have commit access to Cesium.
 
+### Configure a Different S3 Bucket
+
+It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+
+* In `travis.yml`, edit the following line:
+
+```
+- npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+```
+
+* Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
+* In `gulpfile.js`, edit the following line:
+
+```
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+```
+
+* Edit the URL to match the URL of the S3 bucket specified in `travis.yml`
+
 ### Configure S3 Credentials
 
-To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the cesium-dev bucket.
+To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
 
 * Go to [travis.org](https://travis-ci.org/) and select your fork of Cesium
 * Go to "More Options">"Settings"
