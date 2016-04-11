@@ -699,6 +699,7 @@ require({
 
         if (demo.name === 'Gist Import') {
             jsEditor.setValue(gistCode);
+            htmlEditor.setValue('<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>');
             document.title = 'Gist Import - Cesium Sandcastle';
             CodeMirror.commands.runCesium(jsEditor);
             return;
@@ -885,53 +886,38 @@ require({
         }
     }
 
-    registry.byId('buttonShare').on('click', function() {
-        var form = new Form();
-        var box = new TextArea({
-            readOnly : true,
-            value : 'Click "Get Link" and copy the link to share. (If you edit your example you must get new link here).',
-            selectOnClick : true
-        }).placeAt(form.containerNode);
-        var button = new Button({
-            label: 'Get Link',
-            onClick : function() {
-                var code = jsEditor.getValue();
-                if (code === previousCode) {
-                    box.set('value', 'You have not made any changes to your previous example. Here is the url: ' + sandcastleUrl);
-                    return;
+    registry.byId('buttonShareDrop').on('click', function() {
+        var textArea = document.getElementById('link');
+        textArea.value = '\n\n';
+        var code = jsEditor.getValue();
+        if (code === previousCode) {
+            textArea.value = sandcastleUrl;
+            textArea.select();
+            return;
+        }
+        previousCode = code;
+        var data = {
+            public : true,
+            files : {
+                'Cesium-Sandcastle.js' : {
+                    content : code
                 }
-                button.disabled = true;
-                previousCode = code;
-                var data = {
-                    public : true,
-                    files : {
-                        'Cesium-Sandcastle.js' : {
-                            content : code
-                        }
-                    }
-                };
-                return Cesium.loadWithXhr({
-                    url : 'https://api.github.com/gists',
-                    data : JSON.stringify(data),
-                    method : 'POST'
-                }).then(function(content) {
-                    var getUrl = window.location;
-                    var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
-                    sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
-                    box.set('value', sandcastleUrl);
-                    button.disabled = false;
-                }).otherwise(function(error) {
-                    appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
-                    console.log(error);
-                });
             }
-        }).placeAt(form.containerNode);
-        var dialog = new Dialog({
-            content: form,
-            title: "Share",
-            style: "width: 300px;"
+        };
+        return Cesium.loadWithXhr({
+            url : 'https://api.github.com/gists',
+            data : JSON.stringify(data),
+            method : 'POST'
+        }).then(function(content) {
+            var getUrl = window.location;
+            var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
+            sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
+            textArea.value = sandcastleUrl;
+            textArea.select();
+        }).otherwise(function(error) {
+            appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
+            console.log(error);
         });
-        dialog.show();
     });
 
     registry.byId('buttonImport').on('click', function() {
