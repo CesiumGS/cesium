@@ -309,7 +309,7 @@ define([
                 '    shadowPosition /= shadowPosition.w; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.001)))) { \n' +
+                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) { \n' +
                 '        return; \n' +
                 '    } \n' +
 
@@ -360,7 +360,7 @@ define([
                 '    vec4 shadowPosition = u_shadowMapMatrix * positionEC; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition, vec4(0.0))) || any(greaterThan(shadowPosition, vec4(1.001)))) { \n' +
+                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) { \n' +
                 '        return; \n' +
                 '    } \n' +
 

@@ -1123,7 +1123,7 @@ define([
 
         if (command._dirty) {
             command._dirty = false;
-            
+
             var context = scene._context;
             var derivedCommands = command.derivedCommands;
 
@@ -1708,29 +1708,102 @@ define([
         }
     }
 
-    function getShadowMapCommands(scene) {
-        // TODO : temporary solution for testing
-        var terrainCommands = [];
-        var primitiveCommands = [];
-        var frustumCommandsList = scene._frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-        for (var i = 0; i < numFrustums; ++i) {
-            var frustumCommands = frustumCommandsList[i];
-            var startPass = Pass.GLOBE;
-            var endPass = Pass.TRANSLUCENT;
-            for (var pass = startPass; pass <= endPass; ++pass) {
-                var shadowCommands = (pass === Pass.GLOBE) ? terrainCommands : primitiveCommands;
-                var commands = frustumCommands.commands[pass];
-                var length = frustumCommands.indices[pass];
-                for (var j = 0; j < length; ++j) {
-                    var command = commands[j];
-                    if (command.castShadows) {
-                        shadowCommands.push(command);
+    function getTerrainShadowCommands(scene, shadowMap) {
+        var frameState = scene.frameState;
+
+        var sceneCommandList = frameState.commandList;
+        var sceneCamera = frameState.camera;
+        var sceneCullingVolume = frameState.cullingVolume;
+
+        var terrainCommands = []; // TODO : avoid allocation
+
+        // Update frame state to render from the light camera
+        frameState.commandList = terrainCommands;
+        frameState.camera = shadowMap.shadowMapCamera;
+        frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
+
+        // Collect terrain commands from the light's POV
+        if (scene._globe && scene._globe.castShadows) {
+            scene._globe.update(frameState);
+        }
+
+        // Revert back to original frame state
+        frameState.commandList = sceneCommandList;
+        frameState.camera = sceneCamera;
+        frameState.cullingVolume = sceneCullingVolume;
+
+        return terrainCommands;
+    }
+
+    // function getTerrainShadowCommands(scene, shadowMap) {
+    //     // TODO : Temporary for testing. Globe.update doesn't work with orthographic frustums currently
+    //     var terrainCommands = [];
+    //     var commandList = scene.frameState.commandList;
+    //     var length = commandList.length;
+    //     for (var i = 0; i < length; ++i) {
+    //         var command = commandList[i];
+    //         if (command.castShadows && command.pass === Pass.GLOBE) {
+    //             terrainCommands.push(command);
+    //         }
+    //     }
+    //
+    //     return terrainCommands;
+    // }
+
+    function insertShadowCommands(commandList, insertAll, shadowMap, shadowPassCommands) {
+        var shadowVolume = shadowMap.shadowMapCullingVolume;
+        var passVolumes = shadowMap.passCullingVolumes;
+
+        var isPointLight = shadowMap.isPointLight;
+        var center = shadowMap.pointLightPosition;
+        var radius = shadowMap.pointLightRadius;
+
+        var numberOfPasses = shadowMap.numberOfPasses;
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            // Don't insert globe commands with the rest of the scene commands since they are handled separately
+            if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
+                if (isPointLight) {
+                    if (defined(command.boundingVolume)) {
+                        var distance = command.boundingVolume.distanceSquaredTo(center);
+                        if (distance < radius * radius) {
+                            for (var k = 0; k < numberOfPasses; ++k) {
+                                shadowPassCommands[k].push(command);
+                            }
+                        }
+                    }
+                } else {
+                    if (isVisible(command, shadowVolume)) {
+                        if (numberOfPasses <= 1) {
+                            shadowPassCommands[0].push(command);
+                        } else {
+                            var wasVisible = false;
+                            // Loop over cascades from largest to smallest
+                            for (var j = numberOfPasses - 1; j >= 0; --j) {
+                                var cascadeVolume = passVolumes[j];
+                                if (isVisible(command, cascadeVolume)) {
+                                    shadowPassCommands[j].push(command);
+                                    wasVisible = true;
+                                } else if (wasVisible) {
+                                    // If it was visible in the previous cascade but now isn't
+                                    // then there is no need to check any more cascades
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        return [terrainCommands, primitiveCommands];
+    }
+
+    function resetShadowCommands(passCommands) {
+        var length = passCommands.length;
+        for (var i = 0; i < length; ++i) {
+            passCommands[i].length = 0;
+        }
     }
 
     function executeShadowMapCommands(scene) {
@@ -1738,30 +1811,31 @@ define([
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
 
-        var commands = getShadowMapCommands(scene);
-        var terrainCommands = commands[0];
-        var primitiveCommands = commands[1];
+        var shadowPassCommands = shadowMap.passCommands;
+        resetShadowCommands(shadowPassCommands);
 
-        var j;
-        var command;
+        // Insert the scene commands into the shadow map passes
+        var sceneCommands = scene.frameState.commandList;
+        insertShadowCommands(sceneCommands, false, shadowMap, shadowPassCommands);
+        var terrainCommands = getTerrainShadowCommands(scene, shadowMap);
+        insertShadowCommands(terrainCommands, true, shadowMap, shadowPassCommands);
 
         var numberOfPasses = shadowMap.numberOfPasses;
+
+        // // TODO : testing only
+        // for (var k = 0; k < numberOfPasses; ++k) {
+        //     console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
+        // }
+
         for (var i = 0; i < numberOfPasses; ++i) {
             uniformState.updateCamera(shadowMap.passCameras[i]);
             var passState = shadowMap.passStates[i];
             shadowMap.updatePass(context, i);
 
-            // Execute terrain commands
-            var numberOfTerrainCommands = terrainCommands.length;
-            for (j = 0; j < numberOfTerrainCommands; ++j) {
-                command = terrainCommands[j];
-                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
-            }
-
-            // Execute primitive commands
-            var numberOfPrimitiveCommands = primitiveCommands.length;
-            for (j = 0; j < numberOfPrimitiveCommands; ++j) {
-                command = primitiveCommands[j];
+            var passCommands = shadowPassCommands[i];
+            var numberOfCommands = passCommands.length;
+            for (var j = 0; j < numberOfCommands; ++j) {
+                var command = passCommands[j];
                 executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
         }

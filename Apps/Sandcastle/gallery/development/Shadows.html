@@ -252,13 +252,15 @@ var viewModel = {
 };
 
 // Temp values for testing
-viewModel.lightSource = 'Freeform';
+viewModel.lightSource = 'Spot';
 viewModel.lightHorizon = 71.0;
 viewModel.lightAngle = 40.0;
 viewModel.distance = 10000.0;
 viewModel.location = 'Pinnacle PA';
-viewModel.model = 'Shadow Tester 4';
-viewModel.modelPosition = 'Ground';
+viewModel.model = 'Shadow Tester';
+viewModel.modelPosition = 'Center';
+viewModel.terrain = true;
+viewModel.terrainCast = true;
 
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
@@ -540,7 +542,7 @@ function createScene() {
     spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
     spotLightCamera.frustum.aspectRatio = 1.0;
     spotLightCamera.frustum.near = 1.0;
-    spotLightCamera.frustum.far = 200.0;
+    spotLightCamera.frustum.far = 500.0;
     spotLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
 
     pointLightCamera.position = center;
@@ -580,34 +582,40 @@ function resetShadows(shadowOptions) {
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
 
-    var model = createModel(uiOptions.modelUrls[viewModel.model], location, viewModel.modelPosition);
-    addModelToView(model);
+    var modelHeight;
+    if (viewModel.modelPosition === 'Ground') {
+        modelHeight = height - 50.0;
+    } else if (viewModel.modelPosition === 'Center') {
+        modelHeight = height;
+    }
+
+    var modelPosition = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, modelHeight);
+
+    createModel(uiOptions.modelUrls[viewModel.model], modelPosition);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);
+
+    // Add a grid of models
+    var spacing = 0.00002;
+    var gridSize = 10;
+    for (var i = 0; i < gridSize * gridSize; ++i) {
+        var x = i % gridSize;
+        var y = Math.floor(i / gridSize);
+        var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
+        var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
+        var position = Cesium.Cartesian3.fromRadians(longitude, latitude, modelHeight);
+        createModel(uiOptions.modelUrls['Shadow Tester'], position);
+    }
 }
 
-function createModel(url, location, position) {
-    var origin;
-    if (position === 'Ground') {
-        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height - 50.0);
-    }
-    else if (position === 'Center') {
-        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
-    }
-
+function createModel(url, origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
-    var model = Cesium.Model.fromGltf({
+    var model = scene.primitives.add(Cesium.Model.fromGltf({
         url : url,
         modelMatrix : modelMatrix
-    });
-
-    return model;
-}
-
-function addModelToView(model) {
-    model = scene.primitives.add(model);
+    }));
 
     model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
@@ -618,6 +626,8 @@ function addModelToView(model) {
     }).otherwise(function(error){
         window.alert(error);
     });
+
+    return model;
 }
 
 function createBoxRTC(origin) {
