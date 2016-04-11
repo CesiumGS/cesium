@@ -522,21 +522,6 @@ require({
     });
 
     function getScriptFromEditor(addExtraLine) {
-        if (!runGist && defined(queryObject.gistId)) {
-            return 'function startup(Cesium) {\n' +
-                   '    \'use strict\';\n' +
-                   '//Sandcastle_Begin\n' +
-                   (addExtraLine ? '\n' : '') +
-                   'var viewer = new Cesium.Viewer(\'cesiumContainer\');' +
-                   '//Sandcastle_End\n' +
-                   '    Sandcastle.finishedLoading();\n' +
-                   '}\n' +
-                   'if (typeof Cesium !== "undefined") {\n' +
-                   '    startup(Cesium);\n' +
-                   '} else if (typeof require === "function") {\n' +
-                   '    require(["Cesium"], startup);\n' +
-                   '}\n';
-        }
         return 'function startup(Cesium) {\n' +
                '    \'use strict\';\n' +
                '//Sandcastle_Begin\n' +
@@ -715,6 +700,7 @@ require({
         if (demo.name === 'Gist Import') {
             jsEditor.setValue(gistCode);
             document.title = 'Gist Import - Cesium Sandcastle';
+            CodeMirror.commands.runCesium(jsEditor);
             return;
         }
         return requestDemo(demo.name).then(function(value) {
@@ -750,8 +736,10 @@ require({
                         gistCode = code;
                         previousCode = code;
                         sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
-                    }).otherwise(function() {
+                        clearRun();
+                    }).otherwise(function(error) {
                         appendConsole('consoleError', 'Error importing Gist this could be due to too many request, try again in an hour.', true);
+                        console.log(error);
                 });
             } else {
                 jsEditor.setValue(scriptCode);
@@ -932,8 +920,9 @@ require({
                     sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
                     box.set('value', sandcastleUrl);
                     button.disabled = false;
-                }).otherwise(function() {
+                }).otherwise(function(error) {
                     appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
+                    console.log(error);
                 });
             }
         }).placeAt(form.containerNode);
@@ -957,9 +946,10 @@ require({
                 var getUrl = window.location;
                 var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
                 location.href = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
-            }).otherwise(function() {
+            }).otherwise(function(error) {
                 if (gistId !== '') {
                     appendConsole('consoleError', 'No such Gist exists: ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
+                    console.log(error);
                 }
             });
     });
