@@ -133,42 +133,7 @@ define([
      *      -70.0, 30.0,
      *      -68.0, 40.0
      * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
-     * 
-     * @see BoxGeometry.createGeometry
-     */
-    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
-        if (!defined(boundingBox)) {
-            throw new DeveloperError('boundingBox is required.');
-        }
-
-        return new BoxGeometry({
-            minimum: boundingBox.minimum,
-            maximum: boundingBox.maximum
-        });
-    };
-
-    /**
-     * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
-     *
-     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
-     * @returns {BoxGeometry}
-     *
-     *
-     * 
-     * @example
-     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
-     *      -72.0, 40.0,
-     *      -70.0, 35.0,
-     *      -75.0, 30.0,
-     *      -70.0, 30.0,
-     *      -68.0, 40.0
-     * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
+     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
      * 
      * @see BoxGeometry.createGeometry
      */
