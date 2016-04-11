@@ -237,7 +237,7 @@ define([
         /**
          * The corresponding node in the cache replacement list.
          *
-         * @type {DoublyLinkedList}
+         * @type {DoublyLinkedListNode}
          * @readonly
          *
          * @private

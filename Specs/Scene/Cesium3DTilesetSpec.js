@@ -1292,15 +1292,14 @@ defineSuite([
             expect(stats.numberReady).toEqual(5); // Root + four grandchildren (does not include empty children)
 
             // Zoom out so only root tile is needed to meet SSE.  This unloads
-            // two of the four children so three tiles are still loaded (the
-            // root and two children) since the max number of loaded tiles is three.
+            // all grandchildren since the max number of loaded tiles is one.
             viewRootOnly();
             scene.renderForSpecs();
 
             expect(stats.numberOfCommands).toEqual(1);
             expect(stats.numberReady).toEqual(1);
 
-            // Zoom back in so the two children are re-requested.
+            // Zoom back in so the four children are re-requested.
             viewAllTiles();
 
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
