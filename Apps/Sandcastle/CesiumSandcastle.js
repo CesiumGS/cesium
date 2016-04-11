@@ -739,7 +739,7 @@ require({
                         sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
                         clearRun();
                     }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Error importing Gist this could be due to too many request, try again in an hour.', true);
+                        appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many request, try again in an hour.', true);
                         console.log(error);
                 });
             } else {
@@ -915,7 +915,7 @@ require({
             textArea.value = sandcastleUrl;
             textArea.select();
         }).otherwise(function(error) {
-            appendConsole('consoleError', 'Unable to create ' + document.getElementById('gistId').value + '.', true);
+            appendConsole('consoleError', 'Unable to POST to GitHub API.', true);
             console.log(error);
         });
     });
@@ -934,7 +934,7 @@ require({
                 location.href = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
             }).otherwise(function(error) {
                 if (gistId !== '') {
-                    appendConsole('consoleError', 'No such Gist exists: ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
+                    appendConsole('consoleError', 'Can\'t GET Gist : ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
                     console.log(error);
                 }
             });
