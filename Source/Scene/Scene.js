@@ -1734,6 +1734,7 @@ define([
         var isPointLight = shadowMap.isPointLight;
         var center = shadowMap.pointLightPosition;
         var radius = shadowMap.pointLightRadius;
+        var radiusSquared = radius * radius;
 
         var numberOfPasses = shadowMap.numberOfPasses;
 
@@ -1745,7 +1746,7 @@ define([
                 if (isPointLight) {
                     if (defined(command.boundingVolume)) {
                         var distance = command.boundingVolume.distanceSquaredTo(center);
-                        if (distance < radius * radius) {
+                        if (distance < radiusSquared) {
                             for (var k = 0; k < numberOfPasses; ++k) {
                                 shadowPassCommands[k].push(command);
                             }
