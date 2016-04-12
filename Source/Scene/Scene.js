@@ -1708,6 +1708,7 @@ define([
         }
     }
 
+    /*
     function getTerrainShadowCommands(scene, shadowMap) {
         var frameState = scene.frameState;
 
@@ -1734,21 +1735,22 @@ define([
 
         return terrainCommands;
     }
+    */
 
-    // function getTerrainShadowCommands(scene, shadowMap) {
-    //     // TODO : Temporary for testing. Globe.update doesn't work with orthographic frustums currently
-    //     var terrainCommands = [];
-    //     var commandList = scene.frameState.commandList;
-    //     var length = commandList.length;
-    //     for (var i = 0; i < length; ++i) {
-    //         var command = commandList[i];
-    //         if (command.castShadows && command.pass === Pass.GLOBE) {
-    //             terrainCommands.push(command);
-    //         }
-    //     }
-    //
-    //     return terrainCommands;
-    // }
+    function getTerrainShadowCommands(scene, shadowMap) {
+        // TODO : Temporary for testing. Globe.update doesn't work with orthographic frustums currently
+        var terrainCommands = [];
+        var commandList = scene.frameState.commandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            if (command.castShadows && command.pass === Pass.GLOBE) {
+                terrainCommands.push(command);
+            }
+        }
+
+        return terrainCommands;
+    }
 
     function insertShadowCommands(commandList, insertAll, shadowMap, shadowPassCommands) {
         var shadowVolume = shadowMap.shadowMapCullingVolume;
