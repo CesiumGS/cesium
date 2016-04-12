@@ -1249,6 +1249,11 @@ define([
         var isPointLight = this._isPointLight;
         var useDepthTexture = this._usesDepthTexture;
 
+        var hasTerrainNormal = false;
+        if (isTerrain) {
+            hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+        }
+
         if (command.castShadows) {
             var castShader;
             var castRenderState;
@@ -1267,7 +1272,7 @@ define([
                 }
 
                 var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
-                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque, isTerrain);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
 
                 castShader = ShaderProgram.fromCache({
                     context : context,
@@ -1307,8 +1312,8 @@ define([
                     receiveShader.destroy();
                 }
 
-                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain);
+                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain, hasTerrainNormal);
 
                 receiveShader = ShaderProgram.fromCache({
                     context : context,
