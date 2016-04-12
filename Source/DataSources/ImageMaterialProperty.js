@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/Event',
         './createPropertyDescriptor',
         './Property'
@@ -15,7 +14,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         Event,
         createPropertyDescriptor,
         Property) {
@@ -51,14 +49,8 @@ define([
         this._colorSubscription = undefined;
         this._transparent = undefined;
         this._transparentSubscription = undefined;
-
-        if (defined(options.alpha)) {
-            deprecationWarning('ImageMaterialProperty.alpha', 'ImageMaterialProperty.alpha was deprecated in Cesium 1.20.  It will be removed in 1.21.  Use ImageMaterialProperty.color.alpha instead.');
-        }
-
         this.image = options.image;
         this.repeat = options.repeat;
-        this.alpha = options.alpha;
         this.color = options.color;
         this.transparent = options.transparent;
     }
@@ -104,14 +96,6 @@ define([
          * @default new Cartesian2(1, 1)
          */
         repeat : createPropertyDescriptor('repeat'),
-        /**
-         * Gets or sets the Number Property specifying the desired opacity of the overall image.
-         * @memberof ImageMaterialProperty.prototype
-         * @type {Property}
-         * @default 1.0
-         * @deprecated
-         */
-        alpha : createPropertyDescriptor('alpha'),
         /**
          * Gets or sets the Color Property specifying the desired color applied to the image.
          * @memberof ImageMaterialProperty.prototype
