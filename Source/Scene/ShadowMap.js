@@ -647,10 +647,10 @@ define([
         }
     }
 
-    function clearFramebuffer(shadowMap, context, pass) {
-        pass = defaultValue(pass, 0);
-        if ((shadowMap._isPointLight && shadowMap._usesCubeMap) || (pass === 0)) {
-            shadowMap._clearCommand.framebuffer = shadowMap._passFramebuffers[pass];
+    function clearFramebuffer(shadowMap, context, shadowPass) {
+        shadowPass = defaultValue(shadowPass, 0);
+        if ((shadowMap._isPointLight && shadowMap._usesCubeMap) || (shadowPass === 0)) {
+            shadowMap._clearCommand.framebuffer = shadowMap._passFramebuffers[shadowPass];
             shadowMap._clearCommand.execute(context, shadowMap._clearPassState);
         }
     }
@@ -1390,8 +1390,8 @@ define([
         }
     };
 
-    ShadowMap.prototype.updatePass = function(context, pass) {
-        clearFramebuffer(this, context, pass);
+    ShadowMap.prototype.updatePass = function(context, shadowPass) {
+        clearFramebuffer(this, context, shadowPass);
     };
 
     var scratchTexelStepSize = new Cartesian2();
