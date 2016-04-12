@@ -16,14 +16,6 @@ define([
         this._style = undefined;      // The style provided by the user
         this._styleDirty = false;     // true when the style is reassigned
         this._lastStyleTime = 0;      // The "time" when the last style was assigned
-
-        this.statistics = {
-            numberOfTilesStyled : 0,
-            numberOfFeaturesStyled : 0,
-
-            lastNumberOfTilesStyled : -1,
-            lastNumberOfFeaturesStyled : -1
-        };
     }
 
     defineProperties(Cesium3DTileStyleEngine.prototype, {
@@ -64,7 +56,7 @@ define([
         }
 
         var lastStyleTime = this._lastStyleTime;
-        var stats = this.statistics;
+        var stats = tileset._statistics;
 
         // If a new style was assigned, loop through all the visible tiles; otherwise, loop through
         // only the tiles that are newly visible, i.e., they are visible this frame, but were not
@@ -82,7 +74,7 @@ define([
                 //   2) this tile is now visible, but it wasn't visible when the style was first assigned
                 if (tile.lastStyleTime !== lastStyleTime) {
                     tile.lastStyleTime = lastStyleTime;
-                    styleCompositeContent(this, tile.content);
+                    styleCompositeContent(this, tile.content, stats);
 
                     ++stats.numberOfTilesStyled;
                 }
@@ -90,27 +82,27 @@ define([
         }
     };
 
-    function styleCompositeContent(styleEngine, content) {
+    function styleCompositeContent(styleEngine, content, stats) {
         var innerContents = content.innerContents;
         if (defined(innerContents)) {
             var length = innerContents.length;
             for (var i = 0; i < length; ++i) {
                 // Recurse for composites of composites
-                styleCompositeContent(styleEngine, innerContents[i]);
+                styleCompositeContent(styleEngine, innerContents[i], stats);
             }
         } else {
             // Not a composite tile
-            styleContent(styleEngine, content);
+            styleContent(styleEngine, content, stats);
         }
     }
 
     var scratchColor = new Color();
 
-    function styleContent(styleEngine, content) {
+    function styleContent(styleEngine, content, stats) {
         var length = content.featuresLength;
         var style = styleEngine._style;
 
-        styleEngine.statistics.numberOfFeaturesStyled += length;
+        stats.numberOfFeaturesStyled += length;
 
         if (!defined(style)) {
             clearStyle(content);

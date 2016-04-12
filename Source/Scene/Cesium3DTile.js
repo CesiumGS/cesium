@@ -166,20 +166,10 @@ define([
          */
         this.numberOfChildrenWithoutContent = defined(header.children) ? header.children.length : 0;
 
-        /**
-         * Gets the promise that will be resolved when the tile's content is ready to render.
-         *
-         * @type {Promise.<Cesium3DTile>}
-         * @readonly
-         *
-         * @private
-         */
-        this.contentReadyPromise = when.defer();
-
-        var content;
         var hasContent;
         var hasTilesetContent;
         var requestServer;
+        var createContent;
 
         if (defined(contentHeader)) {
             var contentUrl = contentHeader.url;
@@ -202,14 +192,23 @@ define([
             }
             //>>includeEnd('debug');
 
-            content = contentFactory(tileset, this, url);
+            var that = this;
+            createContent = function() {
+                return contentFactory(tileset, that, url);
+            };
         } else {
-            content = new Empty3DTileContent();
             hasContent = false;
             hasTilesetContent = false;
+
+            createContent = function() {
+                return new Empty3DTileContent();
+            };
         }
 
-        this._content = content;
+        this._createContent = createContent;
+        this._content = createContent();
+        addContentReadyPromise(this);
+
         this._requestServer = requestServer;
 
         /**
@@ -235,21 +234,15 @@ define([
          */
         this.hasTilesetContent = hasTilesetContent;
 
-        var that = this;
-
-        // Content enters the READY state
-        when(content.readyPromise).then(function(content) {
-            if (defined(that.parent)) {
-                --that.parent.numberOfChildrenWithoutContent;
-            }
-
-            that.contentReadyPromise.resolve(that);
-        }).otherwise(function(error) {
-            // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
-            // and therefore that.parent will never refine.  If this becomes an issue, failed
-            // requests can be reissued.
-            that.contentReadyPromise.reject(error);
-        });
+        /**
+         * The corresponding node in the cache replacement list.
+         *
+         * @type {DoublyLinkedListNode}
+         * @readonly
+         *
+         * @private
+         */
+        this.replacementNode = undefined;
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
 
@@ -281,13 +274,13 @@ define([
         this.selected = false;
 
         /**
-         * The last frame number the tile was visible in.
+         * The last frame number the tile was selected in.
          *
          * @type {Number}
          *
          * @private
          */
-        this.lastFrameNumber = 0;
+        this.lastSelectedFrameNumber = 0;
 
         /**
          * The time when a style was last applied to this tile.
@@ -337,24 +330,6 @@ define([
         },
 
         /**
-         * Gets the promise that will be resolved when the tile's content is ready to process.
-         * This happens after the content is downloaded but before the content is ready
-         * to render.
-         *
-         * @memberof Cesium3DTile.prototype
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        contentReadyToProcessPromise : {
-            get : function() {
-                return this._content.contentReadyToProcessPromise;
-            }
-        },
-
-        /**
          * @readonly
          * @private
          */
@@ -395,6 +370,19 @@ define([
         }
     });
 
+    function addContentReadyPromise(tile) {
+        // Content enters the READY state
+        when(tile._content.readyPromise).then(function(content) {
+            if (defined(tile.parent)) {
+                --tile.parent.numberOfChildrenWithoutContent;
+            }
+        }).otherwise(function(error) {
+            // In this case, that.parent.numberOfChildrenWithoutContent will never reach zero
+            // and therefore that.parent will never refine.  If this becomes an issue, failed
+            // requests can be reissued.
+        });
+    }
+
     /**
      * Requests the tile's content.
      * <p>
@@ -421,6 +409,34 @@ define([
             return true;
         }
         return this._requestServer.hasAvailableRequests();
+    };
+
+    /**
+     * Unloads the tile's content and returns the tile's state to the state of when
+     * it was first created, before its content were loaded.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.unloadContent = function() {
+        if (defined(this.parent)) {
+            ++this.parent.numberOfChildrenWithoutContent;
+        }
+
+        this._content = this._content && this._content.destroy();
+        this._content = this._createContent();
+        addContentReadyPromise(this);
+
+        this.replacementNode = undefined;
+
+        // Restore properties set per frame to their defaults
+        this.distanceToCamera = 0;
+        this.parentPlaneMask = 0;
+        this.selected = false;
+        this.lastSelectedFrameNumber = 0;
+        this.lastStyleTime = 0;
+
+        this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
+        this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
     };
 
     /**

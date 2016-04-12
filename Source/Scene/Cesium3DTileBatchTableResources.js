@@ -506,14 +506,14 @@ define([
                     '    { \n' +
                     '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
                     '        { \n' +
-                    '            gl_Position *= 0.0; \n' +
+                    '            discard; \n' +
                     '        } \n' +
                     '    } \n' +
                     '    else \n' +
                     '    { \n' +
                     '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
                     '        { \n' +
-                    '            gl_Position *= 0.0; \n' +
+                    '            discard; \n' +
                     '        } \n' +
                     '    } \n' +
                     '    tile_main(); \n' +
