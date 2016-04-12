@@ -43,8 +43,6 @@ define([
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
-        this._alpha = undefined;
-        this._alphaSubscription = undefined;
         this._color = undefined;
         this._colorSubscription = undefined;
         this._transparent = undefined;
@@ -139,7 +137,6 @@ define([
         var color = Property.getValueOrUndefined(this._color, time, result.color);
         if (!defined(color)) {
             color = Color.clone(defaultColor, result.color);
-            color.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
         }
         result.color = color;
         if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
