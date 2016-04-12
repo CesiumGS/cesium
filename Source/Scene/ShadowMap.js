@@ -1181,8 +1181,8 @@ define([
         // 5. Update the shadow map camera
         Matrix4.clone(lightView, shadowMapCamera.viewMatrix);
         Matrix4.inverse(lightView, shadowMapCamera.inverseViewMatrix);
-        frameState.mapProjection.ellipsoid.cartesianToCartographic(shadowMapCamera.positionWC, shadowMapCamera.positionCartographic);
         Matrix4.getTranslation(shadowMapCamera.inverseViewMatrix, shadowMapCamera.positionWC);
+        frameState.mapProjection.ellipsoid.cartesianToCartographic(shadowMapCamera.positionWC, shadowMapCamera.positionCartographic);
         Cartesian3.clone(lightDir, shadowMapCamera.directionWC);
         Cartesian3.clone(lightUp, shadowMapCamera.upWC);
         Cartesian3.clone(lightRight, shadowMapCamera.rightWC);
@@ -1215,7 +1215,7 @@ define([
         new Cartesian3(1, 0, 0)
     ];
 
-    function computeOmnidirectional(shadowMap) {
+    function computeOmnidirectional(shadowMap, frameState) {
         // All sides share the same frustum
         var frustum = new PerspectiveFrustum();
         frustum.fov = CesiumMath.PI_OVER_TWO;
@@ -1226,6 +1226,7 @@ define([
         for (var i = 0; i < 6; ++i) {
             var camera = shadowMap._passCameras[i];
             camera.positionWC = shadowMap._shadowMapCamera.positionWC;
+            camera.positionCartographic = frameState.mapProjection.ellipsoid.cartesianToCartographic(camera.positionWC, camera.positionCartographic);
             camera.directionWC = directions[i];
             camera.upWC = ups[i];
             camera.rightWC = rights[i];
@@ -1357,7 +1358,7 @@ define([
             updateFramebuffer(this, frameState.context);
 
             if (this._isPointLight) {
-                computeOmnidirectional(this);
+                computeOmnidirectional(this, frameState);
             }
 
             if (this._cascadesEnabled) {
