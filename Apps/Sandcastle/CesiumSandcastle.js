@@ -38,6 +38,10 @@ require({
         'dojo/query',
         'dojo/when',
         'Sandcastle/LinkButton',
+        "dijit/Dialog",
+        "dijit/form/Form",
+        "dijit/form/TextArea",
+        "dijit/form/Button",
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
@@ -45,12 +49,10 @@ require({
         'CodeMirror/mode/css/css',
         'CodeMirror/mode/xml/xml',
         'CodeMirror/mode/htmlmixed/htmlmixed',
-        'dijit/form/Button',
         'dijit/form/DropDownButton',
         'dijit/form/ToggleButton',
         'dijit/form/DropDownButton',
         'dijit/form/TextBox',
-        'dijit/form/Textarea',
         'dijit/Menu',
         'dijit/MenuBar',
         'dijit/PopupMenuBarItem',
@@ -79,6 +81,10 @@ require({
         query,
         when,
         LinkButton,
+        Dialog,
+        Form,
+        TextArea,
+        Button,
         Cesium) {
     'use strict';
 
@@ -159,6 +165,10 @@ require({
     var newDemo;
     var demoHtml = '';
     var demoJs = '';
+    var previousCode = '';
+    var runGist = false;
+    var gistCode;
+    var sandcastleUrl = '';
 
     var galleryErrorMsg = document.createElement('span');
     galleryErrorMsg.className = 'galleryError';
@@ -667,11 +677,33 @@ require({
         }
     }
 
+    var queryObject = {};
+    var gistId = ioQuery.queryToObject(window.location.search.substring(1)).gist;
+    if (window.location.search) {
+        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
+        if (defined(gistId)) {
+            queryObject.gistId = gistId;
+        }
+    } else {
+        queryObject.src = 'Hello World.html';
+        queryObject.label = 'Showcases';
+        if (defined(gistId)) {
+            queryObject.gistId = gistId;
+        }
+    }
+
     function loadFromGallery(demo) {
         document.getElementById('saveAsFile').download = demo.name + '.html';
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
 
+        if (demo.name === 'Gist Import') {
+            jsEditor.setValue(gistCode);
+            htmlEditor.setValue('<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>');
+            document.title = 'Gist Import - Cesium Sandcastle';
+            CodeMirror.commands.runCesium(jsEditor);
+            return;
+        }
         return requestDemo(demo.name).then(function(value) {
             demo.code = value;
 
@@ -692,7 +724,27 @@ require({
 
             var scriptCode = scriptMatch[1];
             demoJs = scriptCode.replace(/\s/g, '');
-            jsEditor.setValue(scriptCode);
+
+            if (defined(queryObject.gistId)) {
+                Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
+                    .then(function(data) {
+                        var getUrl = window.location;
+                        var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
+                        var files = data.data.files;
+                        var code = files[Object.keys(files)[0]].content;
+                        jsEditor.setValue(code);
+                        demoJs = code.replace(/\s/g, '');
+                        gistCode = code;
+                        previousCode = code;
+                        sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+                        clearRun();
+                    }).otherwise(function(error) {
+                        appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many request, try again in an hour.', true);
+                        console.log(error);
+                });
+            } else {
+                jsEditor.setValue(scriptCode);
+            }
             jsEditor.clearHistory();
 
             var htmlText = '';
@@ -834,6 +886,60 @@ require({
         }
     }
 
+    registry.byId('buttonShareDrop').on('click', function() {
+        var textArea = document.getElementById('link');
+        textArea.value = '\n\n';
+        var code = jsEditor.getValue();
+        if (code === previousCode) {
+            textArea.value = sandcastleUrl;
+            textArea.select();
+            return;
+        }
+        previousCode = code;
+        var data = {
+            public : true,
+            files : {
+                'Cesium-Sandcastle.js' : {
+                    content : code
+                }
+            }
+        };
+        return Cesium.loadWithXhr({
+            url : 'https://api.github.com/gists',
+            data : JSON.stringify(data),
+            method : 'POST'
+        }).then(function(content) {
+            var getUrl = window.location;
+            var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
+            sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
+            textArea.value = sandcastleUrl;
+            textArea.select();
+        }).otherwise(function(error) {
+            appendConsole('consoleError', 'Unable to POST to GitHub API.', true);
+            console.log(error);
+        });
+    });
+
+    registry.byId('buttonImport').on('click', function() {
+        gistId = document.getElementById("gistId").value;
+        if (gistId.indexOf('/') !== -1) {
+            var index = gistId.lastIndexOf('/');
+            gistId = gistId.substring(index + 1);
+        }
+
+        return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
+            .then(function() {
+                var getUrl = window.location;
+                var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
+                location.href = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+            }).otherwise(function(error) {
+                if (gistId !== '') {
+                    appendConsole('consoleError', 'Can\'t GET Gist : ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
+                    console.log(error);
+                }
+            });
+    });
+
     registry.byId('buttonNew').on('click', function() {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
         var jsText = (jsEditor.getValue()).replace(/\s/g, '');
@@ -859,6 +965,7 @@ require({
     });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
+        runGist = true;
         CodeMirror.commands.runCesium(jsEditor);
     });
 
@@ -944,14 +1051,6 @@ require({
         this.originalResize(changeSize, resultSize);
     };
 
-    var queryObject = {};
-    if (window.location.search) {
-        queryObject = ioQuery.queryToObject(window.location.search.substring(1));
-    } else {
-        queryObject.src = 'Hello World.html';
-        queryObject.label = 'Showcases';
-    }
-
     function requestDemo(name) {
         return xhr.get({
             url : 'gallery/' + name + '.html',
@@ -986,10 +1085,20 @@ require({
 
             // Select the demo to load upon opening based on the query parameter.
             if (defined(queryObject.src)) {
+                var gistDemo = {
+                    name : 'Gist Import',
+                    code : demo.code,
+                    description: 'Code imported from GitHub Gist'
+                };
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
-                        window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
-                        document.title = demo.name + ' - Cesium Sandcastle';
+                        if (defined(queryObject.gistId)) {
+                            window.history.replaceState(gistDemo, gistDemo.name, '?src=Hello World.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                            document.title = 'Gist Import - Cesium Sandcastle';
+                        } else {
+                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
+                            document.title = demo.name + ' - Cesium Sandcastle';
+                        }
                     });
                 }
             }
@@ -1068,6 +1177,7 @@ require({
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
+                delete queryObject.gistId;
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
