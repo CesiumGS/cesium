@@ -79,6 +79,7 @@ define([
         var hasPositionVarying = defined(positionVaryingName);
 
         if (isPointLight && !hasPositionVarying) {
+            var length = sources.length;
             for (var j = 0; j < length; ++j) {
                 sources[j] = ShaderSource.replaceMain(sources[j], 'czm_shadow_cast_main');
             }
@@ -105,6 +106,9 @@ define([
 
         var positionVaryingName = findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
+        if (!hasPositionVarying) {
+            positionVaryingName = 'v_positionEC';
+        }
 
         if (isTerrain && !terrainHasPositionVarying(defines)) {
             defines.push('ENABLE_DAYNIGHT_SHADING');
@@ -117,12 +121,14 @@ define([
 
         var fsSource = '';
 
-        if (opaque) {
+        if (isPointLight) {
             if (!hasPositionVarying) {
-                fsSource +=
-                    'varying vec3 ' + positionVaryingName + ';\n';
+                fsSource += 'varying vec3 v_positionEC; \n';
             }
+            fsSource += 'uniform vec4 u_shadowMapLightPositionEC; \n';
+        }
 
+        if (opaque) {
             fsSource +=
                 'void main() \n' +
                 '{ \n';
@@ -148,13 +154,6 @@ define([
         }
 
         fsSource += '} \n';
-
-        if (isPointLight) {
-            if (!hasPositionVarying) {
-                fsSource = 'varying vec3 v_positionEC; \n' + fsSource;
-            }
-            fsSource = 'uniform vec4 u_shadowMapLightPositionEC; \n' + fsSource;
-        }
 
         sources.push(fsSource);
 
