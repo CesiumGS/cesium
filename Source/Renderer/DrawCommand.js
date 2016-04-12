@@ -37,6 +37,8 @@ define([
         this._owner = options.owner;
         this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugOverlappingFrustums = 0;
+        this._castShadows = defaultValue(options.castShadows, false);
+        this._receiveShadows = defaultValue(options.receiveShadows, false); // TODO : not used right now, but keep if it proves useful
         this._dirty = true;
 
         /**
@@ -83,11 +85,11 @@ define([
          */
         orientedBoundingBox : {
             get : function() {
-                return this._orientedBoundingVolume;
+                return this._orientedBoundingBox;
             },
             set : function(value) {
-                if (this._orientedBoundingVolume !== value) {
-                    this._orientedBoundingVolume = value;
+                if (this._orientedBoundingBox !== value) {
+                    this._orientedBoundingBox = value;
                     this._dirty = true;
                 }
             }
@@ -242,20 +244,22 @@ define([
         },
 
         /**
-         * The shadow cast program to apply.
-         *
-         * @type {ShaderProgram}
-         * @default undefined
-         */
-        this.shadowCastProgram = options.shadowCastProgram;
-
-        /**
          * Whether this command should cast shadows when shadowing is enabled.
          *
          * @type {Boolean}
          * @default false
          */
-        this.castShadows = defaultValue(options.castShadows, false);
+        castShadows : {
+            get : function() {
+                return this._castShadows;
+            },
+            set : function(value) {
+                if (this._castShadows !== value) {
+                    this._castShadows = value;
+                    this._dirty = true;
+                }
+            }
+        },
 
         /**
          * Whether this command should receive shadows when shadowing is enabled.
@@ -263,8 +267,17 @@ define([
          * @type {Boolean}
          * @default false
          */
-        // TODO : not used right now, but keep if it proves useful
-        this.receiveShadows = defaultValue(options.receiveShadows, false);
+        receiveShadows : {
+            get : function() {
+                return this._receiveShadows;
+            },
+            set : function(value) {
+                if (this._receiveShadows !== value) {
+                    this._receiveShadows = value;
+                    this._dirty = true;
+                }
+            }
+        },
 
         /**
          * An object with functions whose names match the uniforms in the shader program
@@ -418,7 +431,7 @@ define([
                     this._dirty = true;
                 }
             }
-        },
+        }
     });
 
     /**

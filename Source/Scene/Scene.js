@@ -1124,9 +1124,20 @@ define([
         if (command._dirty) {
             command._dirty = false;
             
+            var context = scene._context;
+            var derivedCommands = command.derivedCommands;
+
+            if (defined(scene.shadowMap)) {
+                derivedCommands.shadows = scene.shadowMap.createDerivedCommands(command, context, derivedCommands.shadows);
+            }
+
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                oit.createDerivedCommands(command, scene._context);
+                if (command.receiveShadows) {
+                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
             }
         }
 
@@ -1376,6 +1387,8 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
+        } else if (scene.shadowMap.enabled && command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
+            command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -1723,7 +1736,6 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
-        var isPointLight = shadowMap.isPointLight;
 
         var commands = getShadowMapCommands(scene);
         var terrainCommands = commands[0];
@@ -1739,19 +1751,17 @@ define([
             shadowMap.updatePass(context, i);
 
             // Execute terrain commands
-            var terrainRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.terrainRenderState;
             var numberOfTerrainCommands = terrainCommands.length;
             for (j = 0; j < numberOfTerrainCommands; ++j) {
                 command = terrainCommands[j];
-                executeCommand(command, scene, context, passState, terrainRenderState, command.shadowCastProgram);
+                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
 
             // Execute primitive commands
-            var primitiveRenderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
             var numberOfPrimitiveCommands = primitiveCommands.length;
             for (j = 0; j < numberOfPrimitiveCommands; ++j) {
                 command = primitiveCommands[j];
-                executeCommand(command, scene, context, passState, primitiveRenderState, command.shadowCastProgram);
+                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
         }
     }

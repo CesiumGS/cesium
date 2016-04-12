@@ -121,12 +121,12 @@ void main()
 
     v_textureCoordinates = textureCoordinates;
 
-#if defined(ENABLE_VERTEX_LIGHTING)
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     v_normalMC = czm_octDecode(encodedNormal);
     v_normalEC = czm_normal3D * v_normalMC;
-#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION)
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
