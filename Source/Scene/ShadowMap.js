@@ -1192,49 +1192,48 @@ define([
     var scratchUniformCartesian3 = new Cartesian3();
     var scratchUniformCartesian4 = new Cartesian4();
 
-    ShadowMap.prototype.combineUniforms = function(uniforms, isTerrain) {
-        var bias = this._isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
+    function combineUniforms(shadowMap, uniforms, isTerrain) {
+        var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
-        var that = this;
         var mapUniforms = {
             u_shadowMapTexture :function() {
-                return that._shadowMapTexture;
+                return shadowMap._shadowMapTexture;
             },
             u_shadowMapTextureCube : function() {
-                return that._shadowMapTexture;
+                return shadowMap._shadowMapTexture;
             },
             u_shadowMapMatrix : function() {
-                return that._shadowMapMatrix;
+                return shadowMap._shadowMapMatrix;
             },
             u_shadowMapCascadeSplits : function() {
-                return that._cascadeSplits;
+                return shadowMap._cascadeSplits;
             },
             u_shadowMapCascadeMatrices : function() {
-                return that._cascadeMatrices;
+                return shadowMap._cascadeMatrices;
             },
             u_shadowMapLightDirectionEC : function() {
-                return that._lightDirectionEC;
+                return shadowMap._lightDirectionEC;
             },
             u_shadowMapLightPositionEC : function() {
-                return that._lightPositionEC;
+                return shadowMap._lightPositionEC;
             },
             u_shadowMapCascadeDistances : function() {
-                return that._cascadeDistances;
+                return shadowMap._cascadeDistances;
             },
             u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth : function() {
                 var texelStepSize = scratchTexelStepSize;
-                texelStepSize.x = 1.0 / that._textureSize.x;
-                texelStepSize.y = 1.0 / that._textureSize.y;
+                texelStepSize.x = 1.0 / shadowMap._textureSize.x;
+                texelStepSize.y = 1.0 / shadowMap._textureSize.y;
 
                 return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian4);
             },
             u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return Cartesian3.fromElements(bias.normalOffsetScale, that._distance, that._maximumDistance, scratchUniformCartesian3);
+                return Cartesian3.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, scratchUniformCartesian3);
             }
         };
 
         return combine(uniforms, mapUniforms, false);
-    };
+    }
 
     ShadowMap.prototype.createDerivedCommands = function(command, context, result) {
         if (!defined(result)) {
@@ -1284,7 +1283,7 @@ define([
                     castRenderState = this._terrainRenderState;
                 }
 
-                castUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
+                castUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
             }
 
             result.castCommand.shaderProgram = castShader;
@@ -1318,7 +1317,7 @@ define([
                     attributeLocations : shaderProgram._attributeLocations
                 });
 
-                receiveUniformMap = this.combineUniforms(command.uniformMap, isTerrain);
+                receiveUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
             }
 
             result.receiveCommand.shaderProgram = receiveShader;
