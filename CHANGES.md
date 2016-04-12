@@ -10,9 +10,6 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
-TODO: these are still private:
-* Added `vertexShaderLoaded`, `fragmentShaderLoaded`, `uniformMapLoaded`, `pickVertexShaderLoaded`, `pickFragmentShaderLoaded`, and `pickUniformMapLoaded` callbacks to the `Model` constructor and `Model.fromGltf`.
-
 TODO: this is not finished yet:
 * Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
 

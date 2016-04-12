@@ -202,7 +202,7 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
 
         // PERFORMANCE_IDEA: patch the shader on demand, e.g., the first time show/color changes.
-        // The pitch shader still needs to be patched.
+        // The pick shader still needs to be patched.
         var model = new Model({
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles

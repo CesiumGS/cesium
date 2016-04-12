@@ -834,7 +834,7 @@ define([
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, frameState);
-// TODO: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
+            // PERFORMANCE_IDEA: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
             var childrenLength = children.length;
@@ -864,7 +864,6 @@ define([
                 // regardless of if its SSE is sufficient.
                 selectTile(tileset, t, fullyVisible, frameState);
 
-// TODO: experiment with prefetching children
                 if (sse > maximumScreenSpaceError) {
                     // Tile does not meet SSE. Refine them in front-to-back order.
 
@@ -877,8 +876,6 @@ define([
 
                         // Sort children by distance for (1) request ordering, and (2) early-z
                         children.sort(sortChildrenByDistanceToCamera);
-// TODO: is pixel size better?
-// TODO: consider priority queue instead of explicit sort, which would no longer be DFS.
 
                         // With additive refinement, we only request children that are visible, compared
                         // to replacement refinement where we need all children.
