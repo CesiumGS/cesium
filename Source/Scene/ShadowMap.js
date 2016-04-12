@@ -255,6 +255,8 @@ define([
             this._passCommands[i] = [];
         }
 
+        this._commandList = [];
+
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this._debugFreezeFrame = false;
@@ -461,6 +463,12 @@ define([
         passCullingVolumes : {
             get : function() {
                 return this._passCullingVolumes;
+            }
+        },
+
+        commandList : {
+            get : function() {
+                return this._commandList;
             }
         },
 

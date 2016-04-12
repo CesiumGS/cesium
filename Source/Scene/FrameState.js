@@ -30,6 +30,12 @@ define([
         this.commandList = [];
 
         /**
+         * An array of shadow maps.
+         * @type {ShadowMap[]}
+         */
+        this.shadowMaps = [];
+
+        /**
          * The current mode of the scene.
          * @type {SceneMode}
          * @default {@link SceneMode.SCENE3D}
