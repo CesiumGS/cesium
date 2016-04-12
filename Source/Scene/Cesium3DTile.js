@@ -84,9 +84,6 @@ define([
 
         this._boundingVolume = createBoundingVolume(header.boundingVolume);
 
-// TODO: if the content type has pixel size, like points or billboards, the bounding volume needs
-// to dynamic size bigger like BillboardCollection and PointCollection
-
         var contentBoundingVolume;
 
         if (defined(contentHeader) && defined(contentHeader.boundingVolume)) {

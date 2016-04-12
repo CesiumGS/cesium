@@ -29,10 +29,8 @@ define([
     var DEFAULT_JSON_BOOLEAN_EXPRESSION = true;
 
     /**
-     * <p>
      * Evaluates an expression defined using the
      * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
-     * </p>
      *
      * @alias Cesium3DTileStyle
      * @constructor
