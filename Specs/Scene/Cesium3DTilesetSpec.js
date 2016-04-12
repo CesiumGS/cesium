@@ -1256,7 +1256,6 @@ defineSuite([
     it('Unloads cached tiles in a tileset with empty tiles', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(function(tileset) {
             var stats = tileset._statistics;
-            var replacementList = tileset._replacementList;
 
             tileset.maximumNumberOfLoadedTiles = 2;
 
