@@ -1015,10 +1015,11 @@ define([
         return this.viewProjectionMatrix;
     };
 
-    var scratchSplitNear = new Array(4);
-    var scratchSplitFar = new Array(4);
+    var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
+
+    var maximumDistances = [50.0, 300.0, Number.MAX_VALUE, Number.MAX_VALUE];
 
     function computeCascades(shadowMap) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -1028,31 +1029,39 @@ define([
         var numberOfCascades = shadowMap._numberOfCascades;
 
         // Split cascades. Use a mix of linear and log splits.
+        var i;
         var lambda = 0.9;
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
-        var splitsNear = scratchSplitNear;
-        var splitsFar = scratchSplitFar;
-        splitsNear[0] = cameraNear;
-        splitsFar[numberOfCascades - 1] = cameraFar;
+        var splits = scratchSplits;
+        splits[0] = cameraNear;
+        splits[numberOfCascades] = cameraFar;
 
-        for (var i = 0; i < numberOfCascades - 1; ++i) {
+        // Find initial splits
+        for (i = 0; i < numberOfCascades - 1; ++i) {
             var p = (i + 1) / numberOfCascades;
             var logScale = cameraNear * Math.pow(ratio, p);
             var uniformScale = cameraNear + range * p;
-            var split = CesiumMath.lerp(uniformScale, logScale, lambda);
-            splitsFar[i] = split;
-            splitsNear[i + 1] = split;
+            splits[i + 1] = CesiumMath.lerp(uniformScale, logScale, lambda);
         }
 
+        // Clamp each cascade to its maximum distance
         var cascadeDistances = scratchCascadeDistances;
-        for (var m = 0; m < numberOfCascades; ++m) {
-            cascadeDistances[m] = splitsFar[m] - splitsNear[m];
+        for (i = 0; i < numberOfCascades; ++i) {
+            var cascadeDistance = splits[i + 1] - splits[i];
+            cascadeDistances[i] = Math.min(cascadeDistance, maximumDistances[i]);
         }
 
-        Cartesian4.unpack(splitsNear, 0, shadowMap._cascadeSplits[0]);
-        Cartesian4.unpack(splitsFar, 0, shadowMap._cascadeSplits[1]);
+        // Recompute splits
+        var split = splits[0];
+        for (i = 0; i < numberOfCascades - 1; ++i) {
+            split += cascadeDistances[i];
+            splits[i + 1] = split;
+        }
+
+        Cartesian4.unpack(splits, 0, shadowMap._cascadeSplits[0]);
+        Cartesian4.unpack(splits, 1, shadowMap._cascadeSplits[1]);
         Cartesian4.unpack(cascadeDistances, 0, shadowMap._cascadeDistances);
 
         var left = shadowMapCamera.frustum.left;
@@ -1069,10 +1078,10 @@ define([
         var cascadeSubFrustum = sceneCamera.frustum.clone(scratchFrustum);
         var shadowViewProjection = shadowMapCamera.getViewProjection();
 
-        for (var j = 0; j < numberOfCascades; ++j) {
+        for (i = 0; i < numberOfCascades; ++i) {
             // Find the bounding box of the camera sub-frustum in shadow map texture space
-            cascadeSubFrustum.near = splitsNear[j];
-            cascadeSubFrustum.far = splitsFar[j];
+            cascadeSubFrustum.near = splits[i];
+            cascadeSubFrustum.far = splits[i + 1];
             var viewProjection = Matrix4.multiply(cascadeSubFrustum.projectionMatrix, sceneCamera.viewMatrix, scratchMatrix);
             var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
             var shadowMapMatrix = Matrix4.multiply(shadowViewProjection, inverseViewProjection, scratchMatrix);
@@ -1096,7 +1105,7 @@ define([
             // Always start cascade frustum at the top of the light frustum to capture objects in the light's path
             min.z = 0.0;
 
-            var cascadeCamera = shadowMap._passCameras[j];
+            var cascadeCamera = shadowMap._passCameras[i];
             cascadeCamera.clone(shadowMapCamera); // PERFORMANCE_IDEA : could do a shallow clone for all properties except the frustum
             cascadeCamera.frustum.left = left + min.x * (right - left);
             cascadeCamera.frustum.right = left + max.x * (right - left);
@@ -1105,12 +1114,12 @@ define([
             cascadeCamera.frustum.near = near + min.z * (far - near);
             cascadeCamera.frustum.far = near + max.z * (far - near);
 
-            shadowMap._passCullingVolumes[j] = cascadeCamera.frustum.computeCullingVolume(position, direction, up);
+            shadowMap._passCullingVolumes[i] = cascadeCamera.frustum.computeCullingVolume(position, direction, up);
 
             // Transforms from eye space to the cascade's texture space
-            var cascadeMatrix = shadowMap._cascadeMatrices[j];
+            var cascadeMatrix = shadowMap._cascadeMatrices[i];
             Matrix4.multiply(cascadeCamera.getViewProjection(), sceneCamera.inverseViewMatrix, cascadeMatrix);
-            Matrix4.multiply(shadowMap._passTextureOffsets[j], cascadeMatrix, cascadeMatrix);
+            Matrix4.multiply(shadowMap._passTextureOffsets[i], cascadeMatrix, cascadeMatrix);
         }
     }
 
