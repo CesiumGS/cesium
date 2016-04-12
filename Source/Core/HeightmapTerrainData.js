@@ -82,13 +82,11 @@ define([
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
      * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
      *   childTileMask : childTileMask,
-     *   structure : structure,
      *   waterMask : waterMask
      * });
      * 
@@ -155,6 +153,8 @@ define([
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
+     *
+     * @private
      *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
