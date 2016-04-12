@@ -1064,10 +1064,13 @@ define([
             command._dirty = false;
 
             var context = scene._context;
+            var frameState = scene.frameState;
+
             var derivedCommands = command.derivedCommands;
 
-            if (defined(scene.shadowMap)) {
-                derivedCommands.shadows = scene.shadowMap.createDerivedCommands(command, context, derivedCommands.shadows);
+            var shadowMaps = frameState.shadowMaps;
+            if (shadowMaps.length > 0) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
@@ -1772,40 +1775,50 @@ define([
     }
 
     function executeShadowMapCommands(scene) {
-        var context = scene.context;
-        var uniformState = context.uniformState;
-        var shadowMap = scene.shadowMap;
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var shadowMapLength = shadowMaps.length;
 
-        if (shadowMap.outOfView) {
+        if (shadowMapLength === 0 || scene.frameState.passes.picking) {
             return;
         }
 
-        var shadowPassCommands = shadowMap.passCommands;
-        resetShadowCommands(shadowPassCommands);
+        var context = scene.context;
+        var uniformState = context.uniformState;
 
-        // Insert the scene commands into the shadow map passes
-        var sceneCommands = scene.frameState.commandList;
-        insertShadowCommands(scene, sceneCommands, false, shadowMap, shadowPassCommands);
-        var terrainCommands = shadowMap.commandList;
-        insertShadowCommands(scene, terrainCommands, true, shadowMap, shadowPassCommands);
+        for (var i = 0; i < shadowMapLength; ++i) {
+            var shadowMap = shadowMaps[i];
+            if (shadowMap.outOfView) {
+                continue;
+            }
 
-        var numberOfPasses = shadowMap.numberOfPasses;
+            var shadowPassCommands = shadowMap.passCommands;
+            resetShadowCommands(shadowPassCommands);
 
-        // // TODO : testing only
-        // for (var k = 0; k < numberOfPasses; ++k) {
-        //     console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
-        // }
+            // Insert the scene commands into the shadow map passes
+            var sceneCommands = scene.frameState.commandList;
+            insertShadowCommands(scene, sceneCommands, false, shadowMap, shadowPassCommands);
+            var terrainCommands = shadowMap.commandList;
+            insertShadowCommands(scene, terrainCommands, true, shadowMap, shadowPassCommands);
 
-        for (var i = 0; i < numberOfPasses; ++i) {
-            uniformState.updateCamera(shadowMap.passCameras[i]);
-            var passState = shadowMap.passStates[i];
-            shadowMap.updatePass(context, i);
+            var numberOfPasses = shadowMap.numberOfPasses;
 
-            var passCommands = shadowPassCommands[i];
-            var numberOfCommands = passCommands.length;
-            for (var j = 0; j < numberOfCommands; ++j) {
-                var command = passCommands[j];
-                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
+            // // TODO : testing only
+            // for (var k = 0; k < numberOfPasses; ++k) {
+            //     console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
+            // }
+
+            for (var j = 0; j < numberOfPasses; ++j) {
+                uniformState.updateCamera(shadowMap.passCameras[j]);
+                var passState = shadowMap.passStates[j];
+                shadowMap.updatePass(context, j);
+
+                var passCommands = shadowPassCommands[j];
+                var numberOfCommands = passCommands.length;
+                for (var k = 0; k < numberOfCommands; ++k) {
+                    var command = passCommands[k];
+                    executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, passState);
+                }
             }
         }
     }
@@ -1824,10 +1837,7 @@ define([
             createPotentiallyVisibleSet(scene);
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
-
-            if (scene.shadowMap.enabled && !picking) {
-                executeShadowMapCommands(scene);
-            }
+            executeShadowMapCommands(scene);
 
             // Based on Calculating Stereo pairs by Paul Bourke
             // http://paulbourke.net/stereographics/stereorender/
@@ -1975,10 +1985,7 @@ define([
         if (firstViewport) {
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
-
-            if (scene.shadowMap.enabled && !picking) {
-                executeShadowMapCommands(scene);
-            }
+            executeShadowMapCommands(scene);
         }
 
         executeCommands(scene, passState);
