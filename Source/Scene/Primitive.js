@@ -33,8 +33,7 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode',
-        './ShadowMapShader'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -69,8 +68,7 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     /**
@@ -302,8 +300,6 @@ define([
          * @default false
          */
         this.receiveShadows = defaultValue(options.receiveShadows, false);
-
-        this._sceneShadowsEnabled = true;
 
         this._translucent = undefined;
 
@@ -1141,9 +1137,7 @@ define([
             context : context,
             shaderProgram : primitive._sp,
             vertexShaderSource : vs,
-            fragmentShaderSource : new ShaderSource({
-                sources : [fs]
-            }),
+            fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);
@@ -1204,8 +1198,6 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
-                colorCommand.castShadows = primitive.castShadows;
-                colorCommand.receiveShadows = primitive.receiveShadows;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1222,8 +1214,6 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
-            colorCommand.castShadows = primitive.castShadows;
-            colorCommand.receiveShadows = primitive.receiveShadows;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
@@ -1338,23 +1328,27 @@ define([
             var colorLength = colorCommands.length;
             for (var j = 0; j < colorLength; ++j) {
                 var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
-                colorCommands[j].modelMatrix = modelMatrix;
-                colorCommands[j].boundingVolume = boundingSpheres[sphereIndex];
-                colorCommands[j].cull = cull;
-                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+                var colorCommand = colorCommands[j];
+                colorCommand.modelMatrix = modelMatrix;
+                colorCommand.boundingVolume = boundingSpheres[sphereIndex];
+                colorCommand.cull = cull;
+                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.castShadows = primitive.castShadows;
+                colorCommand.receiveShadows = primitive.receiveShadows;
 
-                commandList.push(colorCommands[j]);
+                commandList.push(colorCommand);
             }
         }
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
             for (var k = 0; k < pickLength; ++k) {
-                pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingSpheres[k];
-                pickCommands[k].cull = cull;
+                var pickCommand = pickCommands[k];
+                pickCommand.modelMatrix = modelMatrix;
+                pickCommand.boundingVolume = boundingSpheres[k];
+                pickCommand.cull = cull;
 
-                commandList.push(pickCommands[k]);
+                commandList.push(pickCommand);
             }
         }
     }

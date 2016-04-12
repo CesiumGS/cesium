@@ -45,40 +45,19 @@ define([
         return findVarying(shaderSource, positionVaryingNames);
     }
 
-    function terrainHasPositionVarying(defines) {
-        var length = defines.length;
-        for (var i = 0; i < length; ++i) {
-            var define = defines[i];
-            if (define.indexOf('ENABLE_VERTEX_LIGHTING') !== -1 || define.indexOf('ENABLE_DAYNIGHT_SHADING') !== -1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    function terrainHasNormalVarying(defines) {
-        var length = defines.length;
-        for (var i = 0; i < length; ++i) {
-            var define = defines[i];
-            if (define.indexOf('ENABLE_VERTEX_LIGHTING') !== -1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, isTerrain) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        if (isTerrain && !terrainHasPositionVarying(defines)) {
-            defines.push('ENABLE_DAYNIGHT_SHADING');
+        if (isTerrain) {
+            defines.push('GENERATE_POSITION');
         }
 
         var positionVaryingName = findPositionVarying(vs);
         var hasPositionVarying = defined(positionVaryingName);
 
         if (isPointLight && !hasPositionVarying) {
+            var length = sources.length;
             for (var j = 0; j < length; ++j) {
                 sources[j] = ShaderSource.replaceMain(sources[j], 'czm_shadow_cast_main');
             }
@@ -99,15 +78,14 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque, isTerrain) {
+    ShadowMapShader.createShadowCastFragmentShader = function(fs, isPointLight, useDepthTexture, opaque) {
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
         var positionVaryingName = findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
-
-        if (isTerrain && !terrainHasPositionVarying(defines)) {
-            defines.push('ENABLE_DAYNIGHT_SHADING');
+        if (!hasPositionVarying) {
+            positionVaryingName = 'v_positionEC';
         }
 
         var length = sources.length;
@@ -117,12 +95,14 @@ define([
 
         var fsSource = '';
 
-        if (opaque) {
+        if (isPointLight) {
             if (!hasPositionVarying) {
-                fsSource +=
-                    'varying vec3 ' + positionVaryingName + ';\n';
+                fsSource += 'varying vec3 v_positionEC; \n';
             }
+            fsSource += 'uniform vec4 u_shadowMapLightPositionEC; \n';
+        }
 
+        if (opaque) {
             fsSource +=
                 'void main() \n' +
                 '{ \n';
@@ -149,13 +129,6 @@ define([
 
         fsSource += '} \n';
 
-        if (isPointLight) {
-            if (!hasPositionVarying) {
-                fsSource = 'varying vec3 v_positionEC; \n' + fsSource;
-            }
-            fsSource = 'uniform vec4 u_shadowMapLightPositionEC; \n' + fsSource;
-        }
-
         sources.push(fsSource);
 
         return new ShaderSource({
@@ -164,12 +137,16 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain) {
+    ShadowMapShader.createShadowReceiveVertexShader = function(vs, isTerrain, hasTerrainNormal) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
 
-        if (isTerrain && !terrainHasPositionVarying(defines)) {
-            defines.push('ENABLE_DAYNIGHT_SHADING');
+        if (isTerrain) {
+            if (hasTerrainNormal) {
+                defines.push('GENERATE_POSITION_AND_NORMAL');
+            } else {
+                defines.push('GENERATE_POSITION');
+            }
         }
 
         return new ShaderSource({
@@ -178,9 +155,9 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain, hasTerrainNormal) {
         var normalVaryingName = findNormalVarying(fs);
-        var hasNormalVarying = defined(normalVaryingName);
+        var hasNormalVarying = (!isTerrain && defined(normalVaryingName)) || (isTerrain && hasTerrainNormal);
 
         var positionVaryingName = findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
@@ -197,13 +174,6 @@ define([
 
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
-
-        if (isTerrain) {
-            if (!terrainHasPositionVarying(defines)) {
-                defines.push('ENABLE_DAYNIGHT_SHADING');
-            }
-            hasNormalVarying = hasNormalVarying && terrainHasNormalVarying(defines);
-        }
 
         var length = sources.length;
         for (var i = 0; i < length; ++i) {

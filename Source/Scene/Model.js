@@ -53,8 +53,7 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode',
-        './ShadowMapShader'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -109,8 +108,7 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -1144,7 +1142,7 @@ define([
 
                 // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
                 // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
-                // circa Cesium 1.15-1.17 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
+                // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
                 if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
@@ -1500,9 +1498,7 @@ define([
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
-            fragmentShaderSource : new ShaderSource({
-                sources : [drawFS]
-            }),
+            fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
 

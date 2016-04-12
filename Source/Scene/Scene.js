@@ -1387,8 +1387,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
-            // TODO
+        } else if (scene.shadowMap.enabled && command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
