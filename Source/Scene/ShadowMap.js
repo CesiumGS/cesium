@@ -29,6 +29,7 @@ define([
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
         '../Renderer/CubeMap',
+        '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
@@ -49,7 +50,8 @@ define([
         './Pass',
         './PerInstanceColorAppearance',
         './PerspectiveFrustum',
-        './Primitive'
+        './Primitive',
+        './ShadowMapShader'
     ], function(
         BoundingRectangle,
         BoundingSphere,
@@ -80,6 +82,7 @@ define([
         SphereOutlineGeometry,
         ClearCommand,
         CubeMap,
+        DrawCommand,
         Framebuffer,
         PassState,
         PixelDatatype,
@@ -100,7 +103,8 @@ define([
         Pass,
         PerInstanceColorAppearance,
         PerspectiveFrustum,
-        Primitive) {
+        Primitive,
+        ShadowMapShader) {
     'use strict';
 
     /**
@@ -1398,48 +1402,145 @@ define([
     var scratchUniformCartesian3 = new Cartesian3();
     var scratchUniformCartesian4 = new Cartesian4();
 
-    ShadowMap.prototype.combineUniforms = function(uniforms, isTerrain) {
-        var bias = this._isPointLight ? this._pointBias : (isTerrain ? this._terrainBias : this._primitiveBias);
+    function combineUniforms(shadowMap, uniforms, isTerrain) {
+        var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
-        var that = this;
         var mapUniforms = {
             u_shadowMapTexture :function() {
-                return that._shadowMapTexture;
+                return shadowMap._shadowMapTexture;
             },
             u_shadowMapTextureCube : function() {
-                return that._shadowMapTexture;
+                return shadowMap._shadowMapTexture;
             },
             u_shadowMapMatrix : function() {
-                return that._shadowMapMatrix;
+                return shadowMap._shadowMapMatrix;
             },
             u_shadowMapCascadeSplits : function() {
-                return that._cascadeSplits;
+                return shadowMap._cascadeSplits;
             },
             u_shadowMapCascadeMatrices : function() {
-                return that._cascadeMatrices;
+                return shadowMap._cascadeMatrices;
             },
             u_shadowMapLightDirectionEC : function() {
-                return that._lightDirectionEC;
+                return shadowMap._lightDirectionEC;
             },
             u_shadowMapLightPositionEC : function() {
-                return that._lightPositionEC;
+                return shadowMap._lightPositionEC;
             },
             u_shadowMapCascadeDistances : function() {
-                return that._cascadeDistances;
+                return shadowMap._cascadeDistances;
             },
             u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth : function() {
                 var texelStepSize = scratchTexelStepSize;
-                texelStepSize.x = 1.0 / that._textureSize.x;
-                texelStepSize.y = 1.0 / that._textureSize.y;
+                texelStepSize.x = 1.0 / shadowMap._textureSize.x;
+                texelStepSize.y = 1.0 / shadowMap._textureSize.y;
 
                 return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian4);
             },
             u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return Cartesian3.fromElements(bias.normalOffsetScale, that._distance, that._maximumDistance, scratchUniformCartesian3);
+                return Cartesian3.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, scratchUniformCartesian3);
             }
         };
 
-        return combine(uniforms, mapUniforms);
+        return combine(uniforms, mapUniforms, false);
+    }
+
+    ShadowMap.prototype.createDerivedCommands = function(command, context, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shaderProgram = command.shaderProgram;
+        var vertexShaderSource = shaderProgram.vertexShaderSource;
+        var fragmentShaderSource = shaderProgram.fragmentShaderSource;
+
+        var isTerrain = command.pass === Pass.GLOBE;
+        var isOpaque = command.pass !== Pass.TRANSLUCENT;
+        var isPointLight = this._isPointLight;
+        var useDepthTexture = this._usesDepthTexture;
+
+        var hasTerrainNormal = false;
+        if (isTerrain) {
+            hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+        }
+
+        if (command.castShadows) {
+            var castShader;
+            var castRenderState;
+            var castUniformMap;
+            if (defined(result.castCommand)) {
+                castShader = result.castCommand.shaderProgram;
+                castRenderState = result.castCommand.renderState;
+                castUniformMap = result.castCommand.uniformMap;
+            }
+
+            result.castCommand = DrawCommand.shallowClone(command, result.castCommand);
+
+            if (!defined(castShader) || result.castShaderProgramId !== command.shaderProgram.id) {
+                if (defined(castShader)) {
+                    castShader.destroy();
+                }
+
+                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
+                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+
+                castShader = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : castVS,
+                    fragmentShaderSource : castFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
+
+                castRenderState = this._primitiveRenderState;
+                if (isPointLight) {
+                    castRenderState = this._pointRenderState;
+                } else if (isTerrain) {
+                    castRenderState = this._terrainRenderState;
+                }
+
+                castUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
+            }
+
+            result.castCommand.shaderProgram = castShader;
+            result.castCommand.renderState = castRenderState;
+            result.castCommand.uniformMap = castUniformMap;
+            result.castShaderProgramId = command.shaderProgram.id;
+        }
+
+        if (command.receiveShadows) {
+            var receiveShader;
+            var receiveUniformMap;
+            if (defined(result.receiveCommand)) {
+                receiveShader = result.receiveCommand.shaderProgram;
+                receiveUniformMap = result.receiveCommand.uniformMap;
+            }
+
+            result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
+
+            if (!defined(receiveShader) || result.receiveShaderProgramId !== command.shaderProgram.id) {
+                if (defined(receiveShader)) {
+                    receiveShader.destroy();
+                }
+
+                var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain, hasTerrainNormal);
+
+                receiveShader = ShaderProgram.fromCache({
+                    context : context,
+                    vertexShaderSource : receiveVS,
+                    fragmentShaderSource : receiveFS,
+                    attributeLocations : shaderProgram._attributeLocations
+                });
+
+                receiveUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
+            }
+
+            result.receiveCommand.shaderProgram = receiveShader;
+            result.receiveCommand.uniformMap = receiveUniformMap;
+            result.receiveShaderProgramId = command.shaderProgram.id;
+        }
+
+        return result;
     };
 
     ShadowMap.prototype.isDestroyed = function() {

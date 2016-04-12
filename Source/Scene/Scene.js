@@ -34,6 +34,7 @@ define([
         '../Renderer/ComputeEngine',
         '../Renderer/Context',
         '../Renderer/ContextLimits',
+        '../Renderer/DrawCommand',
         '../Renderer/PassState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
@@ -99,6 +100,7 @@ define([
         ComputeEngine,
         Context,
         ContextLimits,
+        DrawCommand,
         PassState,
         ShaderProgram,
         ShaderSource,
@@ -1119,6 +1121,26 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
+        if (command._dirty) {
+            command._dirty = false;
+            
+            var context = scene._context;
+            var derivedCommands = command.derivedCommands;
+
+            if (defined(scene.shadowMap)) {
+                derivedCommands.shadows = scene.shadowMap.createDerivedCommands(command, context, derivedCommands.shadows);
+            }
+
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                if (command.receiveShadows) {
+                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+            }
+        }
+
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
 
@@ -1346,13 +1368,11 @@ define([
         });
     }
 
-    function executeDebugCommand(command, scene, passState, renderState, shaderProgram) {
-        if (defined(command.shaderProgram) || defined(shaderProgram)) {
-            // Replace shader for frustum visualization
-            var sp = createDebugFragmentShaderProgram(command, scene, shaderProgram);
-            command.execute(scene.context, passState, renderState, sp);
-            sp.destroy();
-        }
+    function executeDebugCommand(command, scene, passState) {
+        var debugCommand = DrawCommand.shallowClone(command);
+        debugCommand.shaderProgram = createDebugFragmentShaderProgram(command, scene);
+        debugCommand.execute(scene.context, passState);
+        debugCommand.shaderProgram.destroy();
     }
 
     var transformFrom2D = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -1361,15 +1381,17 @@ define([
                                       0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
-    function executeCommand(command, scene, context, passState, renderState, shaderProgram, debugFramebuffer) {
+    function executeCommand(command, scene, context, passState, debugFramebuffer) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
-            executeDebugCommand(command, scene, passState, renderState, shaderProgram);
+            executeDebugCommand(command, scene, passState);
+        } else if (scene.shadowMap.enabled && command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
+            command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
-            command.execute(context, passState, renderState, shaderProgram);
+            command.execute(context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
@@ -1789,8 +1811,6 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
-        var isPointLight = shadowMap.isPointLight;
-        var renderState = isPointLight ? shadowMap.pointRenderState : shadowMap.primitiveRenderState;
 
         if (shadowMap.outOfView) {
             return;
@@ -1816,7 +1836,7 @@ define([
             var numberOfCommands = passCommands.length;
             for (var j = 0; j < numberOfCommands; ++j) {
                 var command = passCommands[j];
-                executeCommand(command, scene, context, passState, renderState, command.shadowCastProgram);
+                executeCommand(command.derivedCommands.shadows.castCommand, scene, context, passState);
             }
         }
     }

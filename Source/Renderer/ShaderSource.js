@@ -275,6 +275,7 @@ define([
         this.pickColorQualifier = pickColorQualifier;
         this.includeBuiltIns = defaultValue(options.includeBuiltIns, true);
     }
+    
     ShaderSource.prototype.clone = function() {
         return new ShaderSource({
             sources : this.sources,

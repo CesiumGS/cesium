@@ -33,8 +33,7 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode',
-        './ShadowMapShader'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -69,8 +68,7 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     /**
@@ -293,7 +291,6 @@ define([
          * @default false
          */
         this.castShadows = defaultValue(options.castShadows, false);
-        this._castShadows = this.castShadows;
 
         /**
          * Determines whether this primitive will receive shadows when shadow mapping is enabled.
@@ -303,9 +300,6 @@ define([
          * @default false
          */
         this.receiveShadows = defaultValue(options.receiveShadows, false);
-        this._receiveShadows = this.receiveShadows;
-
-        this._sceneShadowsEnabled = true;
 
         this._translucent = undefined;
 
@@ -338,8 +332,6 @@ define([
         this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
-
-        this._shadowCastSP = undefined;
 
         this._colorCommands = [];
         this._pickCommands = [];
@@ -1122,19 +1114,6 @@ define([
         vs = modifyForEncodedNormals(primitive, vs);
         var fs = appearance.getFragmentShaderSource();
 
-        // Create shadow cast program
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (!defined(primitive._shadowCastSP) && shadowsEnabled && primitive._castShadows) {
-            var shadowCastVS = ShadowMapShader.createShadowCastVertexShader(vs, frameState, 'v_positionEC');
-            var shadowCastFS = ShadowMapShader.createShadowCastFragmentShader(fs, frameState, false, 'v_positionEC');
-            primitive._shadowCastSP = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : shadowCastVS,
-                fragmentShaderSource : shadowCastFS,
-                attributeLocations : attributeLocations
-            });
-        }
-
         // Create pick program
         if (primitive.allowPicking) {
             primitive._pickSP = ShaderProgram.replaceCache({
@@ -1154,21 +1133,11 @@ define([
         }
         validateShaderMatching(primitive._pickSP, attributeLocations);
 
-        // Modify program to receive shadows
-        var shadowDefines = [];
-        if (shadowsEnabled && primitive._receiveShadows) {
-            vs = ShadowMapShader.createShadowReceiveVertexShader(vs, frameState);
-            fs = ShadowMapShader.createShadowReceiveFragmentShader(fs, frameState, 'v_normalEC', 'v_positionEC', false, shadowDefines);
-        }
-
         primitive._sp = ShaderProgram.replaceCache({
             context : context,
             shaderProgram : primitive._sp,
             vertexShaderSource : vs,
-            fragmentShaderSource : new ShaderSource({
-                sources : [fs],
-                defines : shadowDefines
-            }),
+            fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);
@@ -1196,12 +1165,6 @@ define([
             }
         }
         var uniforms = combine(appearanceUniformMap, materialUniformMap);
-
-        // Update uniforms for shadow maps.
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if (shadowsEnabled && (primitive._receiveShadows || primitive._castShadows)) {
-            uniforms = frameState.shadowMap.combineUniforms(uniforms, false);
-        }
 
         if (defined(primitive.rtcCenter)) {
             uniforms.u_modifiedModelView = function() {
@@ -1235,9 +1198,6 @@ define([
                 colorCommand.vertexArray = primitive._va[vaIndex];
                 colorCommand.renderState = primitive._backFaceRS;
                 colorCommand.shaderProgram = primitive._sp;
-                colorCommand.shadowCastProgram = primitive._shadowCastSP;
-                colorCommand.castShadows = primitive._castShadows;
-                colorCommand.receiveShadows = primitive._receiveShadows;
                 colorCommand.uniformMap = uniforms;
                 colorCommand.pass = pass;
 
@@ -1254,9 +1214,6 @@ define([
             colorCommand.vertexArray = primitive._va[vaIndex];
             colorCommand.renderState = primitive._frontFaceRS;
             colorCommand.shaderProgram = primitive._sp;
-            colorCommand.shadowCastProgram = primitive._shadowCastSP;
-            colorCommand.castShadows = primitive._castShadows;
-            colorCommand.receiveShadows = primitive._receiveShadows;
             colorCommand.uniformMap = uniforms;
             colorCommand.pass = pass;
 
@@ -1371,23 +1328,27 @@ define([
             var colorLength = colorCommands.length;
             for (var j = 0; j < colorLength; ++j) {
                 var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
-                colorCommands[j].modelMatrix = modelMatrix;
-                colorCommands[j].boundingVolume = boundingSpheres[sphereIndex];
-                colorCommands[j].cull = cull;
-                colorCommands[j].debugShowBoundingVolume = debugShowBoundingVolume;
+                var colorCommand = colorCommands[j];
+                colorCommand.modelMatrix = modelMatrix;
+                colorCommand.boundingVolume = boundingSpheres[sphereIndex];
+                colorCommand.cull = cull;
+                colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommand.castShadows = primitive.castShadows;
+                colorCommand.receiveShadows = primitive.receiveShadows;
 
-                commandList.push(colorCommands[j]);
+                commandList.push(colorCommand);
             }
         }
 
         if (passes.pick) {
             var pickLength = pickCommands.length;
             for (var k = 0; k < pickLength; ++k) {
-                pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingSpheres[k];
-                pickCommands[k].cull = cull;
+                var pickCommand = pickCommands[k];
+                pickCommand.modelMatrix = modelMatrix;
+                pickCommand.boundingVolume = boundingSpheres[k];
+                pickCommand.cull = cull;
 
-                commandList.push(pickCommands[k]);
+                commandList.push(pickCommand);
             }
         }
     }
@@ -1455,16 +1416,6 @@ define([
         } else if (this._material !== material ) {
             this._material = material;
             createSP = true;
-        }
-
-        var shadowsEnabled = defined(frameState.shadowMap) && frameState.shadowMap.enabled;
-        if ((this._sceneShadowsEnabled !== shadowsEnabled) ||
-            (this._castShadows !== this.castShadows) ||
-            (this._receiveShadows !== this.receiveShadows)) {
-                this._sceneShadowsEnabled = shadowsEnabled;
-                this._castShadows = this.castShadows;
-                this._receiveShadows = this.receiveShadows;
-                createSP = true;
         }
 
         var translucent = this._appearance.isTranslucent();
@@ -1661,7 +1612,6 @@ define([
 
         this._sp = this._sp && this._sp.destroy();
         this._pickSP = this._pickSP && this._pickSP.destroy();
-        this._shadowCastSP = this._shadowCastSP && this._shadowCastSP.destroy();
 
         var va = this._va;
         length = va.length;
