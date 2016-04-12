@@ -1241,6 +1241,7 @@ define([
                     // When moving the camera low LOD terrain tiles begin to load, whose bounding volumes
                     // throw off the near/far fitting for the shadow map. Only update shadowNear and shadowFar
                     // for reasonably sized bounding volumes.
+                    // TODO : handle similar case for 3D Tiles
                     if (!((distances.start < -100.0) && (distances.stop > 100.0) && (pass === Pass.GLOBE))){
                         shadowNear = Math.min(shadowNear, distances.start);
                         shadowFar = Math.max(shadowFar, distances.stop);
