@@ -324,8 +324,6 @@ define([
      * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
      * @param {String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {DisplayCondition} [options.displayCondition] DOC_TBA
-     * @param {Boolean} [options.loadOnlyIfDisplayCondition] DOC_TBA
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
@@ -410,16 +408,6 @@ define([
          * @default true
          */
         this.show = defaultValue(options.show, true);
-
-        /**
-         * DOC_TBA
-         */
-        this.displayCondition = options.displayCondition;
-
-        /**
-         * DOC_TBA
-         */
-        this.loadOnlyIfDisplayCondition = defaultValue(options.loadOnlyIfDisplayCondition, false);
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -920,8 +908,6 @@ define([
      * @param {String} options.url The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
-     * @param {DisplayCondition} [options.displayCondition] DOC_TBA
-     * @param {Boolean} [options.loadOnlyIfDisplayCondition] DOC_TBA
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
@@ -3388,12 +3374,6 @@ define([
             return;
         }
 
-        var displayConditionPassed = defined(this.displayCondition) ? this.displayCondition.isVisible(this, frameState) : true;
-        if (this.loadOnlyIfDisplayCondition && !displayConditionPassed) {
-            // Don't even try to load until the display condition is true
-            return;
-        }
-
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
@@ -3498,7 +3478,7 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0) && displayConditionPassed && (!defined(loadResources) || !loadResources.decompressionInFlight);
+        var show = this.show && (this.scale !== 0.0) && (!defined(loadResources) || !loadResources.decompressionInFlight);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
