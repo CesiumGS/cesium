@@ -20,7 +20,6 @@ define([
     'use strict';
 
     var defaultRepeat = new Cartesian2(1, 1);
-    var defaultAlpha = 1.0;
     var defaultTransparent = false;
     var defaultColor = Color.WHITE;
 
