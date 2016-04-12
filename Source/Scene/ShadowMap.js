@@ -1259,7 +1259,7 @@ define([
             var surfaceNormal = frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(sceneCamera.positionWC, scratchCartesian1);
             var lightDirection = Cartesian3.negate(shadowMapCamera.directionWC, scratchCartesian2);
             var dot = Cartesian3.dot(surfaceNormal, lightDirection);
-            if (dot < 0.1) {
+            if (dot < 0.05) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
