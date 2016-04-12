@@ -122,7 +122,11 @@
         </tr>
         <tr>
             <td>Model Position</td>
-            <td><select data-bind="options: modelPositionOptions, value: modelPosition"/></td>
+            <td>
+                <select data-bind="options: modelPositionOptions, value: modelPosition"/>
+                <input type="checkbox" data-bind="checked: grid"/>
+                <span>Grid</span>
+            </td>
         </tr>
         <tr>
             <td>Bias Mode</td>
@@ -213,6 +217,7 @@ var viewModel = {
     location : 'Pinnacle PA',
     modelPositionOptions : ['Center', 'Ground'],
     modelPosition : 'Center',
+    grid : false,
     biasModes : [
         new BiasOptions({
             type : 'terrain',
@@ -351,6 +356,7 @@ Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows)
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
 for (var i = 0; i < viewModel.biasModes.length; ++i) {
@@ -597,15 +603,17 @@ function resetShadows(shadowOptions) {
     createSphere(position1);
 
     // Add a grid of models
-    var spacing = 0.00002;
-    var gridSize = 10;
-    for (var i = 0; i < gridSize * gridSize; ++i) {
-        var x = i % gridSize;
-        var y = Math.floor(i / gridSize);
-        var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
-        var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
-        var position = Cesium.Cartesian3.fromRadians(longitude, latitude, modelHeight);
-        createModel(uiOptions.modelUrls['Shadow Tester'], position);
+    if (viewModel.grid) {
+        var spacing = 0.00002;
+        var gridSize = 10;
+        for (var i = 0; i < gridSize * gridSize; ++i) {
+            var x = i % gridSize;
+            var y = Math.floor(i / gridSize);
+            var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
+            var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
+            var position = Cesium.Cartesian3.fromRadians(longitude, latitude, modelHeight);
+            createModel(uiOptions.modelUrls[viewModel.model], position);
+        }
     }
 }
 

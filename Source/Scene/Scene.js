@@ -1263,7 +1263,8 @@ define([
                     // When moving the camera low LOD terrain tiles begin to load, whose bounding volumes
                     // throw off the near/far fitting for the shadow map. Only update shadowNear and shadowFar
                     // for reasonably sized bounding volumes.
-                    if (!(distances.start < 0.0 && distances.stop > frameState.shadowFar)) {
+                    // TODO : handle similar case for 3D Tiles
+                    if (!((distances.start < -100.0) && (distances.stop > 100.0) && (pass === Pass.GLOBE))){
                         shadowNear = Math.min(shadowNear, distances.start);
                         shadowFar = Math.max(shadowFar, distances.stop);
                     }
@@ -1756,6 +1757,7 @@ define([
         var isPointLight = shadowMap.isPointLight;
         var center = shadowMap.pointLightPosition;
         var radius = shadowMap.pointLightRadius;
+        var radiusSquared = radius * radius;
 
         var numberOfPasses = shadowMap.numberOfPasses;
 
@@ -1767,7 +1769,7 @@ define([
                 if (isPointLight) {
                     if (defined(command.boundingVolume)) {
                         var distance = command.boundingVolume.distanceSquaredTo(center);
-                        if (distance < radius * radius) {
+                        if (distance < radiusSquared) {
                             for (var k = 0; k < numberOfPasses; ++k) {
                                 shadowPassCommands[k].push(command);
                             }
@@ -1809,6 +1811,10 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
         var shadowMap = scene.shadowMap;
+
+        if (shadowMap.outOfView) {
+            return;
+        }
 
         var shadowPassCommands = shadowMap.passCommands;
         resetShadowCommands(shadowPassCommands);
