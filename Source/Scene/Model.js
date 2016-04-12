@@ -53,8 +53,7 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode',
-        './ShadowMapShader'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -109,8 +108,7 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -1500,9 +1498,7 @@ define([
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
-            fragmentShaderSource : new ShaderSource({
-                sources : [drawFS]
-            }),
+            fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
 

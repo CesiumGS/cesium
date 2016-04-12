@@ -33,8 +33,7 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode',
-        './ShadowMapShader'
+        './SceneMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -69,8 +68,7 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     /**
@@ -302,8 +300,6 @@ define([
          * @default false
          */
         this.receiveShadows = defaultValue(options.receiveShadows, false);
-
-        this._sceneShadowsEnabled = true;
 
         this._translucent = undefined;
 
@@ -1141,9 +1137,7 @@ define([
             context : context,
             shaderProgram : primitive._sp,
             vertexShaderSource : vs,
-            fragmentShaderSource : new ShaderSource({
-                sources : [fs]
-            }),
+            fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
         validateShaderMatching(primitive._sp, attributeLocations);

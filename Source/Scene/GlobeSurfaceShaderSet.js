@@ -4,15 +4,13 @@ define([
         '../Core/destroyObject',
         '../Core/TerrainQuantization',
         '../Renderer/ShaderProgram',
-        '../Scene/SceneMode',
-        '../Scene/ShadowMapShader'
+        '../Scene/SceneMode'
     ], function(
         defined,
         destroyObject,
         TerrainQuantization,
         ShaderProgram,
-        SceneMode,
-        ShadowMapShader) {
+        SceneMode) {
     'use strict';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, shaderProgram) {
@@ -33,7 +31,6 @@ define([
 
         this._shadersByTexturesFlags = [];
         this._pickShaderPrograms = [];
-        this._shadowCastPrograms = [];
     }
 
     function getPositionMode(sceneMode) {
@@ -270,14 +267,6 @@ define([
         for (flags in pickShaderPrograms) {
             if (pickShaderPrograms.hasOwnProperty(flags)) {
                 shader = pickShaderPrograms[flags];
-                shader.destroy();
-            }
-        }
-
-        var shadowCastPrograms = this._shadowCastPrograms;
-        for (flags in shadowCastPrograms) {
-            if (shadowCastPrograms.hasOwnProperty(flags)) {
-                shader = shadowCastPrograms[flags];
                 shader.destroy();
             }
         }

@@ -431,7 +431,7 @@ define([
                     this._dirty = true;
                 }
             }
-        },
+        }
     });
 
     /**
