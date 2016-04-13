@@ -152,7 +152,6 @@ define([
         return this === other ||
                (other instanceof ImageMaterialProperty &&
                 Property.equals(this._image, other._image) &&
-                Property.equals(this._alpha, other._alpha) &&
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._transparent, other._transparent) &&
                 Property.equals(this._repeat, other._repeat));
