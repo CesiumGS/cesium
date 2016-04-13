@@ -933,7 +933,7 @@ define([
                         if (outOfCore) {
                             for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
                                 child = children[k];
-// TODO: we could spin a bit less CPU here and probably above by keeping separate lists for unloaded/ready children.
+                                // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
                                 if (child.contentUnloaded) {
                                     requestContent(tileset, child, outOfCore);
                                 }
