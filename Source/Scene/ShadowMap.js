@@ -1224,7 +1224,7 @@ define([
         // Check whether the shadow map is in view and needs to be updated
         if (shadowMap._cascadesEnabled) {
             // If the nearest shadow receiver is further than the shadow map's maximum distance then the shadow map is out of view.
-            if (sceneCamera.frustum.near > shadowMap._maximumDistance) {
+            if (sceneCamera.frustum.near >= shadowMap._maximumDistance) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
