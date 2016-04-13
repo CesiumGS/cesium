@@ -1431,8 +1431,10 @@ define([
         var useDepthTexture = this._usesDepthTexture;
 
         var hasTerrainNormal = false;
+        var skirtIndex;
         if (isTerrain) {
             hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+            skirtIndex = command.owner.data.terrainData._skirtIndex;
         }
 
         if (command.castShadows) {
@@ -1475,6 +1477,11 @@ define([
             result.castCommand.shaderProgram = castShader;
             result.castCommand.renderState = castRenderState;
             result.castCommand.uniformMap = castUniformMap;
+
+            if (defined(skirtIndex)) {
+                result.castCommand.count = skirtIndex;
+            }
+
             result.castShaderProgramId = command.shaderProgram.id;
         }
 
