@@ -155,7 +155,7 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain, hasTerrainNormal) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, castShadows, isTerrain, hasTerrainNormal) {
         var normalVaryingName = findNormalVarying(fs);
         var hasNormalVarying = (!isTerrain && defined(normalVaryingName)) || (isTerrain && hasTerrainNormal);
 
@@ -191,7 +191,7 @@ define([
             defines.push('USE_SOFT_SHADOWS');
         }
 
-        if (bias.normalShading && hasNormalVarying) {
+        if (castShadows && bias.normalShading && hasNormalVarying) {
             defines.push('USE_NORMAL_SHADING');
             if (bias.normalShadingSmooth > 0.0) {
                 defines.push('USE_NORMAL_SHADING_SMOOTH');

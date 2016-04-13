@@ -1495,13 +1495,18 @@ define([
 
             result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
 
-            if (!defined(receiveShader) || result.receiveShaderProgramId !== command.shaderProgram.id) {
+            // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
+            // self-shadowing so it should be turned off if castShadows is false.
+            var castShadowsDirty = result.receiveShaderCastShadows !== command.castShadows;
+            var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
+
+            if (!defined(receiveShader) || shaderDirty || castShadowsDirty) {
                 if (defined(receiveShader)) {
                     receiveShader.destroy();
                 }
 
                 var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, command.castShadows, isTerrain, hasTerrainNormal);
 
                 receiveShader = ShaderProgram.fromCache({
                     context : context,
@@ -1516,6 +1521,7 @@ define([
             result.receiveCommand.shaderProgram = receiveShader;
             result.receiveCommand.uniformMap = receiveUniformMap;
             result.receiveShaderProgramId = command.shaderProgram.id;
+            result.receiveShaderCastShadows = command.castShadows;
         }
 
         return result;
