@@ -4,6 +4,7 @@ Change Log
 ### 1.21 - 2016-05-02
 
 * Breaking changes
+  * Removed `ImageryMaterialProperty.alpha`. Use `ImageryMaterialProperty.color.alpha` instead.
   * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
 * Deprecated
   *
