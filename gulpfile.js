@@ -522,8 +522,6 @@ function getMimeType(filename) {
         return {type : 'image/svg+xml', compress : true, isCompressed : false};
     } else if (ext === '.woff') {
         return {type : 'application/font-woff', compress : false, isCompressed : false};
-    } else if (/^\.(b3dm|pnts|i3dm|cmpt)$/.test(ext)) {
-        return {type : 'application/application/octet-stream', compress : false, isCompressed : true};
     }
 
     var mimeType = mime.lookup(filename);
