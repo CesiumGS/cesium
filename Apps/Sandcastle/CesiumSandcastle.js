@@ -728,15 +728,13 @@ require({
             if (defined(queryObject.gistId)) {
                 Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
                     .then(function(data) {
-                        var getUrl = window.location;
-                        var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
                         var files = data.data.files;
                         var code = files[Object.keys(files)[0]].content;
                         jsEditor.setValue(code);
                         demoJs = code.replace(/\s/g, '');
                         gistCode = code;
                         previousCode = code;
-                        sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+                        sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
                         clearRun();
                     }).otherwise(function(error) {
                         appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many request, try again in an hour.', true);
@@ -909,9 +907,7 @@ require({
             data : JSON.stringify(data),
             method : 'POST'
         }).then(function(content) {
-            var getUrl = window.location;
-            var baseUrl = getUrl.protocol + '//' + getUrl.host + '/' + getUrl.pathname.split('/')[1];
-            sandcastleUrl = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
+            sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
             textArea.value = sandcastleUrl;
             textArea.select();
         }).otherwise(function(error) {
