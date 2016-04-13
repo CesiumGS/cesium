@@ -85,8 +85,12 @@
             <td><input type="checkbox" data-bind="checked: globe"/></td>
         </tr>
         <tr>
-            <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast, enable: terrainCastEnabled"/></td>
+            <td>Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
+            <td>Terrain Receive</td>
+            <td><input type="checkbox" data-bind="checked: terrainReceive"/></td>
         </tr>
         <tr>
             <td>Show debug</td>
@@ -194,7 +198,7 @@ var viewModel = {
     terrain : true,
     globe : true,
     terrainCast : true,
-    terrainCastEnabled : true,
+    terrainReceive : true,
     debug : true,
     freeze : false,
     cascadeColors : false,
@@ -347,6 +351,7 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateLocation);
 Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
@@ -395,6 +400,7 @@ function updateSettings() {
     shadowMap.setSize(viewModel.size);
 
     globe.castShadows = viewModel.terrainCast;
+    globe.receiveShadows = viewModel.terrainReceive;
     globe.show = viewModel.globe;
     scene.skyAtmosphere.show = viewModel.globe;
 }
