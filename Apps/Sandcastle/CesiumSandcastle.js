@@ -40,7 +40,7 @@ require({
         'Sandcastle/LinkButton',
         "dijit/Dialog",
         "dijit/form/Form",
-        "dijit/form/TextArea",
+        "dijit/form/Textarea",
         "dijit/form/Button",
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
