@@ -4,7 +4,7 @@ Change Log
 ### 1.21 - 2016-05-02
 
 * Breaking changes
-  * Removed `ImageryMaterialProperty.alpha`.  It will be removed in 1.21.  Use `ImageryMaterialProperty.color.alpha` instead.
+  * Removed `ImageryMaterialProperty.alpha`. Use `ImageryMaterialProperty.color.alpha` instead.
 * Deprecated
   *
 * Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
