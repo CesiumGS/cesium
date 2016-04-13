@@ -133,11 +133,7 @@ define([
 
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
-        var color = Property.getValueOrUndefined(this._color, time, result.color);
-        if (!defined(color)) {
-            color = Color.clone(defaultColor, result.color);
-        }
-        result.color = color;
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
         if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
             result.color.alpha = Math.min(0.99, result.color.alpha);
         }
