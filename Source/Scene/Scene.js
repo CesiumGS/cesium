@@ -1765,7 +1765,8 @@ define([
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];
             // Don't insert globe commands with the rest of the scene commands since they are handled separately
-            if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
+            // TODO : remove second condition once shadow casters are able to create derived commands without needing to go through insertIntoBin
+            if (command.castShadows && defined(command.derivedCommands.shadows) && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
                 if (isPointLight) {
                     if (defined(command.boundingVolume)) {
                         var distance = command.boundingVolume.distanceSquaredTo(center);
