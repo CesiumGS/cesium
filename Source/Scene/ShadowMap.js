@@ -361,45 +361,6 @@ define([
         },
 
         /**
-         * The primitive render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        primitiveRenderState : {
-            get : function() {
-                return this._primitiveRenderState;
-            }
-        },
-
-        /**
-         * The terrain render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        terrainRenderState : {
-            get : function() {
-                return this._terrainRenderState;
-            }
-        },
-
-        /**
-         * The point render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        pointRenderState : {
-            get : function() {
-                return this._pointRenderState;
-            }
-        },
-
-        /**
          * The number of passes required for rendering shadows.
          *
          * @memberof ShadowMap.prototype
