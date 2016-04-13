@@ -48,13 +48,7 @@
 
     var app = express();
     app.use(compression());
-    app.use(express.static(__dirname, {
-        setHeaders : function(res, url) {
-            if (/(b3dm|pnts|i3dm|cmpt)$/.test(url)) {
-                res.header('Content-Encoding', 'gzip');
-            }
-        }
-    }));
+    app.use(express.static(__dirname));
 
     function getRemoteUrlFromParam(req) {
         var remoteUrl = req.params[0];
