@@ -1127,13 +1127,15 @@ define([
             var context = scene._context;
             var derivedCommands = command.derivedCommands;
 
-            if (defined(scene.shadowMap)) {
+            var shadowsEnabled = defined(scene.shadowMap) && scene.shadowMap.enabled;
+
+            if (shadowsEnabled) {
                 derivedCommands.shadows = scene.shadowMap.createDerivedCommands(command, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (command.receiveShadows) {
+                if (shadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
