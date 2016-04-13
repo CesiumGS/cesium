@@ -162,7 +162,7 @@ define([
             normalOffset : true,
             normalOffsetScale : 2.0,
             normalShading : true,
-            normalShadingSmooth : 0.35,
+            normalShadingSmooth : 0.3,
             depthBias : 0.0001
         };
 
@@ -171,7 +171,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.05,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0001
