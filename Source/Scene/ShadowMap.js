@@ -160,10 +160,10 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.5,
+            normalOffsetScale : 2.0,
             normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0
+            normalShadingSmooth : 0.3,
+            depthBias : 0.0001
         };
 
         this._primitiveBias = {
@@ -171,7 +171,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.05,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0001
@@ -359,45 +359,6 @@ define([
         shadowMapCullingVolume : {
             get : function() {
                 return this._shadowMapCullingVolume;
-            }
-        },
-
-        /**
-         * The primitive render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        primitiveRenderState : {
-            get : function() {
-                return this._primitiveRenderState;
-            }
-        },
-
-        /**
-         * The terrain render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        terrainRenderState : {
-            get : function() {
-                return this._terrainRenderState;
-            }
-        },
-
-        /**
-         * The point render state used for rendering shadow casters into the shadow map.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {RenderState}
-         * @readonly
-         */
-        pointRenderState : {
-            get : function() {
-                return this._pointRenderState;
             }
         },
 
@@ -1023,10 +984,11 @@ define([
         return this.viewProjectionMatrix;
     };
 
-    var scratchSplitNear = new Array(4);
-    var scratchSplitFar = new Array(4);
+    var scratchSplits = new Array(5);
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
+
+    var maximumDistances = [50.0, 300.0, Number.MAX_VALUE, Number.MAX_VALUE];
 
     function computeCascades(shadowMap) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
@@ -1036,31 +998,39 @@ define([
         var numberOfCascades = shadowMap._numberOfCascades;
 
         // Split cascades. Use a mix of linear and log splits.
+        var i;
         var lambda = 0.9;
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
-        var splitsNear = scratchSplitNear;
-        var splitsFar = scratchSplitFar;
-        splitsNear[0] = cameraNear;
-        splitsFar[numberOfCascades - 1] = cameraFar;
+        var splits = scratchSplits;
+        splits[0] = cameraNear;
+        splits[numberOfCascades] = cameraFar;
 
-        for (var i = 0; i < numberOfCascades - 1; ++i) {
+        // Find initial splits
+        for (i = 0; i < numberOfCascades - 1; ++i) {
             var p = (i + 1) / numberOfCascades;
             var logScale = cameraNear * Math.pow(ratio, p);
             var uniformScale = cameraNear + range * p;
-            var split = CesiumMath.lerp(uniformScale, logScale, lambda);
-            splitsFar[i] = split;
-            splitsNear[i + 1] = split;
+            splits[i + 1] = CesiumMath.lerp(uniformScale, logScale, lambda);
         }
 
+        // Clamp each cascade to its maximum distance
         var cascadeDistances = scratchCascadeDistances;
-        for (var m = 0; m < numberOfCascades; ++m) {
-            cascadeDistances[m] = splitsFar[m] - splitsNear[m];
+        for (i = 0; i < numberOfCascades; ++i) {
+            var cascadeDistance = splits[i + 1] - splits[i];
+            cascadeDistances[i] = Math.min(cascadeDistance, maximumDistances[i]);
         }
 
-        Cartesian4.unpack(splitsNear, 0, shadowMap._cascadeSplits[0]);
-        Cartesian4.unpack(splitsFar, 0, shadowMap._cascadeSplits[1]);
+        // Recompute splits
+        var split = splits[0];
+        for (i = 0; i < numberOfCascades - 1; ++i) {
+            split += cascadeDistances[i];
+            splits[i + 1] = split;
+        }
+
+        Cartesian4.unpack(splits, 0, shadowMap._cascadeSplits[0]);
+        Cartesian4.unpack(splits, 1, shadowMap._cascadeSplits[1]);
         Cartesian4.unpack(cascadeDistances, 0, shadowMap._cascadeDistances);
 
         var left = shadowMapCamera.frustum.left;
@@ -1077,10 +1047,10 @@ define([
         var cascadeSubFrustum = sceneCamera.frustum.clone(scratchFrustum);
         var shadowViewProjection = shadowMapCamera.getViewProjection();
 
-        for (var j = 0; j < numberOfCascades; ++j) {
+        for (i = 0; i < numberOfCascades; ++i) {
             // Find the bounding box of the camera sub-frustum in shadow map texture space
-            cascadeSubFrustum.near = splitsNear[j];
-            cascadeSubFrustum.far = splitsFar[j];
+            cascadeSubFrustum.near = splits[i];
+            cascadeSubFrustum.far = splits[i + 1];
             var viewProjection = Matrix4.multiply(cascadeSubFrustum.projectionMatrix, sceneCamera.viewMatrix, scratchMatrix);
             var inverseViewProjection = Matrix4.inverse(viewProjection, scratchMatrix);
             var shadowMapMatrix = Matrix4.multiply(shadowViewProjection, inverseViewProjection, scratchMatrix);
@@ -1104,7 +1074,7 @@ define([
             // Always start cascade frustum at the top of the light frustum to capture objects in the light's path
             min.z = 0.0;
 
-            var cascadeCamera = shadowMap._passCameras[j];
+            var cascadeCamera = shadowMap._passCameras[i];
             cascadeCamera.clone(shadowMapCamera); // PERFORMANCE_IDEA : could do a shallow clone for all properties except the frustum
             cascadeCamera.frustum.left = left + min.x * (right - left);
             cascadeCamera.frustum.right = left + max.x * (right - left);
@@ -1113,12 +1083,12 @@ define([
             cascadeCamera.frustum.near = near + min.z * (far - near);
             cascadeCamera.frustum.far = near + max.z * (far - near);
 
-            shadowMap._passCullingVolumes[j] = cascadeCamera.frustum.computeCullingVolume(position, direction, up);
+            shadowMap._passCullingVolumes[i] = cascadeCamera.frustum.computeCullingVolume(position, direction, up);
 
             // Transforms from eye space to the cascade's texture space
-            var cascadeMatrix = shadowMap._cascadeMatrices[j];
+            var cascadeMatrix = shadowMap._cascadeMatrices[i];
             Matrix4.multiply(cascadeCamera.getViewProjection(), sceneCamera.inverseViewMatrix, cascadeMatrix);
-            Matrix4.multiply(shadowMap._passTextureOffsets[j], cascadeMatrix, cascadeMatrix);
+            Matrix4.multiply(shadowMap._passTextureOffsets[i], cascadeMatrix, cascadeMatrix);
         }
     }
 
@@ -1189,8 +1159,8 @@ define([
         // 5. Update the shadow map camera
         Matrix4.clone(lightView, shadowMapCamera.viewMatrix);
         Matrix4.inverse(lightView, shadowMapCamera.inverseViewMatrix);
-        frameState.mapProjection.ellipsoid.cartesianToCartographic(shadowMapCamera.positionWC, shadowMapCamera.positionCartographic);
         Matrix4.getTranslation(shadowMapCamera.inverseViewMatrix, shadowMapCamera.positionWC);
+        frameState.mapProjection.ellipsoid.cartesianToCartographic(shadowMapCamera.positionWC, shadowMapCamera.positionCartographic);
         Cartesian3.clone(lightDir, shadowMapCamera.directionWC);
         Cartesian3.clone(lightUp, shadowMapCamera.upWC);
         Cartesian3.clone(lightRight, shadowMapCamera.rightWC);
@@ -1223,7 +1193,7 @@ define([
         new Cartesian3(1, 0, 0)
     ];
 
-    function computeOmnidirectional(shadowMap) {
+    function computeOmnidirectional(shadowMap, frameState) {
         // All sides share the same frustum
         var frustum = new PerspectiveFrustum();
         frustum.fov = CesiumMath.PI_OVER_TWO;
@@ -1234,6 +1204,7 @@ define([
         for (var i = 0; i < 6; ++i) {
             var camera = shadowMap._passCameras[i];
             camera.positionWC = shadowMap._shadowMapCamera.positionWC;
+            camera.positionCartographic = frameState.mapProjection.ellipsoid.cartesianToCartographic(camera.positionWC, camera.positionCartographic);
             camera.directionWC = directions[i];
             camera.upWC = ups[i];
             camera.rightWC = rights[i];
@@ -1261,7 +1232,7 @@ define([
         // Check whether the shadow map is in view and needs to be updated
         if (shadowMap._cascadesEnabled) {
             // If the nearest shadow receiver is further than the shadow map's maximum distance then the shadow map is out of view.
-            if (sceneCamera.frustum.near > shadowMap._maximumDistance) {
+            if (sceneCamera.frustum.near >= shadowMap._maximumDistance) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
@@ -1365,7 +1336,7 @@ define([
             updateFramebuffer(this, frameState.context);
 
             if (this._isPointLight) {
-                computeOmnidirectional(this);
+                computeOmnidirectional(this, frameState);
             }
 
             if (this._cascadesEnabled) {
@@ -1517,8 +1488,10 @@ define([
         var isTerrain = command.pass === Pass.GLOBE;
 
         var hasTerrainNormal = false;
+        var skirtIndex;
         if (isTerrain) {
             hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+            skirtIndex = command.owner.data.terrainData._skirtIndex;
         }
 
         if (command.castShadows) {
@@ -1536,6 +1509,11 @@ define([
                 castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, oldShaderId, castCommands[i]);
             }
 
+
+            if (defined(skirtIndex)) {
+                result.castCommand.count = skirtIndex;
+            }
+
             result.castShaderProgramId = command.shaderProgram.id;
         }
 
@@ -1549,13 +1527,18 @@ define([
 
             result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
 
-            if (!defined(receiveShader) || result.receiveShaderProgramId !== command.shaderProgram.id) {
+            // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
+            // self-shadowing so it should be turned off if castShadows is false.
+            var castShadowsDirty = result.receiveShaderCastShadows !== command.castShadows;
+            var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
+
+            if (!defined(receiveShader) || shaderDirty || castShadowsDirty) {
                 if (defined(receiveShader)) {
                     receiveShader.destroy();
                 }
 
                 var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, shadowMaps[0], isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, shadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
 
                 receiveShader = ShaderProgram.fromCache({
                     context : context,
@@ -1570,6 +1553,7 @@ define([
             result.receiveCommand.shaderProgram = receiveShader;
             result.receiveCommand.uniformMap = receiveUniformMap;
             result.receiveShaderProgramId = command.shaderProgram.id;
+            result.receiveShaderCastShadows = command.castShadows;
         }
 
         return result;

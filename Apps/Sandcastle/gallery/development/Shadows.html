@@ -85,8 +85,12 @@
             <td><input type="checkbox" data-bind="checked: globe"/></td>
         </tr>
         <tr>
-            <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast, enable: terrainCastEnabled"/></td>
+            <td>Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
+            <td>Terrain Receive</td>
+            <td><input type="checkbox" data-bind="checked: terrainReceive"/></td>
         </tr>
         <tr>
             <td>Show debug</td>
@@ -194,7 +198,7 @@ var viewModel = {
     terrain : true,
     globe : true,
     terrainCast : true,
-    terrainCastEnabled : true,
+    terrainReceive : true,
     debug : true,
     freeze : false,
     cascadeColors : false,
@@ -215,7 +219,7 @@ var viewModel = {
     model : 'Shadow Tester',
     locationOptions : ['Exton', 'Everest', 'Pinnacle PA', 'Seneca Rocks', 'Half Dome'],
     location : 'Pinnacle PA',
-    modelPositionOptions : ['Center', 'Ground'],
+    modelPositionOptions : ['Center', 'Ground', 'High', 'Higher', 'Space'],
     modelPosition : 'Center',
     grid : false,
     biasModes : [
@@ -225,10 +229,10 @@ var viewModel = {
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.5,
+            normalOffsetScale : 2.0,
             normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0
+            normalShadingSmooth : 0.3,
+            depthBias : 0.0001
         }),
         new BiasOptions({
             type : 'primitive',
@@ -236,7 +240,7 @@ var viewModel = {
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.05,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0001
@@ -347,6 +351,7 @@ Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateLocation);
 Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
@@ -355,7 +360,7 @@ Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateLocation);
 Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
@@ -395,6 +400,7 @@ function updateSettings() {
     shadowMap.setSize(viewModel.size);
 
     globe.castShadows = viewModel.terrainCast;
+    globe.receiveShadows = viewModel.terrainReceive;
     globe.show = viewModel.globe;
     scene.skyAtmosphere.show = viewModel.globe;
 }
@@ -518,6 +524,20 @@ var imageryProvider = new Cesium.BingMapsImageryProvider({
 
 updateLocation();
 
+function getModelPosition() {
+    if (viewModel.modelPosition === 'Ground') {
+        return 0.0;
+    } else if (viewModel.modelPosition === 'Center') {
+        return 50.0;
+    } else if (viewModel.modelPosition === 'High') {
+        return 5000.0;
+    } else if (viewModel.modelPosition === 'Higher') {
+        return 20000.0;
+    } else if (viewModel.modelPosition === 'Space') {
+        return 10000000.0;
+    }
+}
+
 function updateLocation() {
     // Get the height of the terrain at the given longitude/latitude, then create the scene.
     var location = uiOptions.locations[viewModel.location];
@@ -525,7 +545,7 @@ function updateLocation() {
     var terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
     var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
     Cesium.when(promise, function(updatedPositions) {
-        location.height = updatedPositions[0].height + 50.0;
+        location.height = updatedPositions[0].height + getModelPosition();
         createScene();
     });
 }
@@ -587,15 +607,7 @@ function resetShadows(shadowOptions) {
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
-
-    var modelHeight;
-    if (viewModel.modelPosition === 'Ground') {
-        modelHeight = height - 50.0;
-    } else if (viewModel.modelPosition === 'Center') {
-        modelHeight = height;
-    }
-
-    var modelPosition = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, modelHeight);
+    var modelPosition = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
 
     createModel(uiOptions.modelUrls[viewModel.model], modelPosition);
     createBox(position3);
@@ -611,7 +623,7 @@ function resetShadows(shadowOptions) {
             var y = Math.floor(i / gridSize);
             var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
             var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
-            var position = Cesium.Cartesian3.fromRadians(longitude, latitude, modelHeight);
+            var position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
             createModel(uiOptions.modelUrls[viewModel.model], position);
         }
     }

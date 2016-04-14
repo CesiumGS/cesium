@@ -673,14 +673,14 @@ define([
             },
             u_modifiedModelView : function() {
                 var viewMatrix = frameState.context.uniformState.view;
-                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.center3D, centerEyeScratch);
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.rtc, centerEyeScratch);
                 Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
                 return modifiedModelViewScratch;
             },
             u_modifiedModelViewProjection : function() {
                 var viewMatrix = frameState.context.uniformState.view;
                 var projectionMatrix = frameState.context.uniformState.projection;
-                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.center3D, centerEyeScratch);
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.rtc, centerEyeScratch);
                 Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewProjectionScratch);
                 Matrix4.multiply(projectionMatrix, modifiedModelViewProjectionScratch, modifiedModelViewProjectionScratch);
                 return modifiedModelViewProjectionScratch;
@@ -744,6 +744,7 @@ define([
                 lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
 
                 center3D : undefined,
+                rtc : new Cartesian3(),
                 modifiedModelView : new Matrix4(),
                 tileRectangle : new Cartesian4(),
 
@@ -1033,6 +1034,7 @@ define([
             uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
             uniformMapProperties.center3D = surfaceTile.center;
+            Cartesian3.clone(rtc, uniformMapProperties.rtc);
 
             Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);
             uniformMapProperties.southAndNorthLatitude.x = southLatitude;
