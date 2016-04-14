@@ -1075,7 +1075,7 @@ define([
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (command.receiveShadows) {
+                if (shadowMaps.length > 0 && command.receiveShadows) {
                     derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
