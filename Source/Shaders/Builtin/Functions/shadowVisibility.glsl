@@ -37,6 +37,7 @@ float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParam
     float normalShadingSmooth = shadowParameters.normalShadingSmooth;
     vec2 uv = shadowParameters.texCoords;
 
+    depth -= depthBias;
 #ifdef USE_SOFT_SHADOWS
     vec2 texelStepSize = shadowParameters.texelStepSize;
     float radius = 1.0;
@@ -56,7 +57,6 @@ float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParam
         czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, dy1), depth, shadowDistance)
     ) * (1.0 / 9.0);
 #else
-    depth -= depthBias;
     float visibility = czm_shadowDepthCompare(shadowMap, uv, depth, shadowDistance);
 #endif
 

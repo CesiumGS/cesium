@@ -155,7 +155,7 @@ define([
         });
     };
 
-    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, isTerrain, hasTerrainNormal) {
+    ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, castShadows, isTerrain, hasTerrainNormal) {
         var normalVaryingName = findNormalVarying(fs);
         var hasNormalVarying = (!isTerrain && defined(normalVaryingName)) || (isTerrain && hasTerrainNormal);
 
@@ -167,6 +167,7 @@ define([
         var isSpotLight = shadowMap._isSpotLight;
         var usesCubeMap = shadowMap._usesCubeMap;
         var hasCascades = shadowMap._numberOfCascades > 1;
+        var cascadesEnabled = shadowMap._cascadesEnabled;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
@@ -190,7 +191,7 @@ define([
             defines.push('USE_SOFT_SHADOWS');
         }
 
-        if (bias.normalShading && hasNormalVarying) {
+        if (castShadows && bias.normalShading && hasNormalVarying) {
             defines.push('USE_NORMAL_SHADING');
             if (bias.normalShadingSmooth > 0.0) {
                 defines.push('USE_NORMAL_SHADING_SMOOTH');
@@ -237,7 +238,8 @@ define([
             '{ \n' +
             '    czm_shadow_receive_main(); \n' +
             '    vec4 positionEC = getPositionEC(); \n' +
-            '    vec3 normalEC = getNormalEC(); \n';
+            '    vec3 normalEC = getNormalEC(); \n' +
+            '    float depth = -positionEC.z; \n';
 
         fsSource +=
             '    czm_shadowParameters shadowParameters; \n' +
@@ -245,6 +247,16 @@ define([
             '    shadowParameters.depthBias = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.z; \n' +
             '    shadowParameters.normalShadingSmooth = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.w; \n' +
             '    shadowParameters.distance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.y; \n';
+
+        if (isTerrain) {
+            fsSource +=
+            '    // Scale depth bias based on view distance to reduce z-fighting in distant terrain \n' +
+            '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
+        } else if (cascadesEnabled) {
+            fsSource +=
+            '    // Reduce depth bias for larger shadow maps to limit light leaking \n' +
+            '    shadowParameters.depthBias /= shadowParameters.distance; \n';
+        }
 
         if (isPointLight) {
             fsSource +=
@@ -290,7 +302,6 @@ define([
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n';
         } else if (hasCascades) {
             fsSource +=
-                '    float depth = -positionEC.z; \n' +
                 '    float maxDepth = u_shadowMapCascadeSplits[1].w; \n' +
 
                 '    // Stop early if the eye depth exceeds the last cascade \n' +
@@ -300,7 +311,6 @@ define([
 
                 '    // Get the cascade based on the eye-space depth \n' +
                 '    vec4 weights = czm_cascadeWeights(depth); \n' +
-                '    float shadowDistance = czm_cascadeDistance(weights); \n' +
 
                 '    // Apply normal offset \n' +
                 '    float nDotL = clamp(dot(normalEC, u_shadowMapLightDirectionEC), 0.0, 1.0); \n' +
@@ -313,6 +323,7 @@ define([
                 '    shadowParameters.texCoords = shadowPosition.xy; \n' +
                 '    shadowParameters.depth = shadowPosition.z; \n' +
                 '    shadowParameters.nDotL = nDotL; \n' +
+                '    shadowParameters.distance = czm_cascadeDistance(weights); \n' +
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n' +
 
                 '    // Fade out shadows that are far away \n' +

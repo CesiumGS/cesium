@@ -307,6 +307,8 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {Boolean} [options.castShadows=true] Determines whether this model will cast shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether this model will receive shadows when shadow mapping is enabled.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -557,16 +559,8 @@ define([
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
 
-        // TODO : handle updating these properties at runtime
-        /**
-         * DOC_TBA
-         */
-        this.receiveShadows = true;
-
-        /**
-         * @DOC_TBA
-         */
-        this.castShadows = true;
+        this._castShadows = defaultValue(options.castShadows, true);
+        this._receiveShadows = defaultValue(options.receiveShadows, true);
     }
 
     defineProperties(Model.prototype, {
@@ -804,6 +798,54 @@ define([
         },
 
         /**
+         * Determines whether the model will cast shadows when shadow mapping is enabled.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        castShadows : {
+            get : function() {
+                return this._castShadows;
+            },
+            set : function(value) {
+                if (value !== this._castShadows) {
+                    this._castShadows = value;
+                    var length = this._nodeCommands.length;
+                    for (var i = 0; i < length; ++i) {
+                        this._nodeCommands[i].command.castShadows = value;
+                    }
+                }
+            }
+        },
+
+        /**
+         * Determines whether the model will receive shadows when shadow mapping is enabled.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        receiveShadows : {
+            get : function() {
+                return this._receiveShadows;
+            },
+            set : function(value) {
+                if (value !== this._receiveShadows) {
+                    this._receiveShadows = value;
+                    var length = this._nodeCommands.length;
+                    for (var i = 0; i < length; ++i) {
+                        this._nodeCommands[i].command.receiveShadows = value;
+                    }
+                }
+            }
+        },
+
+        /**
          * Returns true if the model was transformed this frame
          *
          * @memberof Model.prototype
@@ -897,6 +939,9 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {Boolean} [options.castShadows=true] Determines whether this model will cast shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether this model will receive shadows when shadow mapping is enabled.
+     *
      * @returns {Model} The newly created model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -2588,8 +2633,8 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
-                    castShadows : model.castShadows,
-                    receiveShadows : model.receiveShadows,
+                    castShadows : model._castShadows,
+                    receiveShadows : model._receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
