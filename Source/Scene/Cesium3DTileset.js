@@ -936,6 +936,11 @@ define([
                                 // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
                                 if (child.contentUnloaded) {
                                     requestContent(tileset, child, outOfCore);
+                                } else {
+                                    // Touch loaded child even though it is not selected this frame since
+                                    // we want to keep it in the cache for when all children are loaded
+                                    // and this tile can refine to them.
+                                    touch(tileset, child);
                                 }
                             }
                         }
@@ -946,6 +951,11 @@ define([
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
                             child.parentPlaneMask = planeMask;
                             stack.push(child);
+
+                            // Touch the child tile now even if it turns out not to be visible when
+                            // it comes off the stack.  Since replacement refinement requires all child
+                            // tiles to be loaded to refine to them, we want to keep it in the cache.
+                            touch(tileset, child);
                         }
 
                         if (defined(t.descendantsWithContent)) {
