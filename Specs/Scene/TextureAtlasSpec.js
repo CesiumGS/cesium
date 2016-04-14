@@ -187,8 +187,8 @@ void main() {\n\
 
             var texture = atlas.texture;
 
-            var atlasWidth = 4.0;
-            var atlasHeight = 4.0;
+            var atlasWidth = 16.0;
+            var atlasHeight = 16.0;
             expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
@@ -378,8 +378,8 @@ void main() {\n\
             var c2 = atlas.textureCoordinates[bigRedIndex];
             var c3 = atlas.textureCoordinates[bigBlueIndex];
 
-            var atlasWidth = 48.0;
-            var atlasHeight = 48.0;
+            var atlasWidth = 68.0;
+            var atlasHeight = 68.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -589,7 +589,7 @@ void main() {\n\
             expect(coordinates[greenIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[greenIndex].height).toEqual(1.0 / atlasHeight);
 
-            expect(coordinates[blueIndex].x).toEqual(4.0 / atlasWidth);
+            expect(coordinates[blueIndex].x).toEqual(3.0 / atlasWidth);
             expect(coordinates[blueIndex].y).toEqual(0.0 / atlasHeight);
             expect(coordinates[blueIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[blueIndex].height).toEqual(1.0 / atlasHeight);
