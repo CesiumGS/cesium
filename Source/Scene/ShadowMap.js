@@ -1424,7 +1424,7 @@ define([
         return combine(uniforms, mapUniforms, false);
     }
 
-    function createCastDerivedCommand(shadowMap, command, context, oldShaderId, result) {
+    function createCastDerivedCommand(shadowMap, command, context, skirtIndex, oldShaderId, result) {
         var castShader;
         var castRenderState;
         var castUniformMap;
@@ -1474,6 +1474,10 @@ define([
         result.renderState = castRenderState;
         result.uniformMap = castUniformMap;
 
+        if (defined(skirtIndex)) {
+            result.count = skirtIndex;
+        }
+
         return result;
     }
 
@@ -1506,12 +1510,7 @@ define([
             castCommands.length = shadowMapLength;
 
             for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, oldShaderId, castCommands[i]);
-            }
-
-
-            if (defined(skirtIndex)) {
-                result.castCommand.count = skirtIndex;
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, skirtIndex, oldShaderId, castCommands[i]);
             }
 
             result.castShaderProgramId = command.shaderProgram.id;
