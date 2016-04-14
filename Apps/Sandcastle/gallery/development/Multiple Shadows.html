@@ -10,10 +10,10 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-                           baseUrl : '../../../Source',
-                           waitSeconds : 60
-                       });
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -74,16 +74,16 @@
             shadowMap.enabled = true;
 
             var model = scene.primitives.add(Cesium.Model.fromGltf({
-               url : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf',
-               modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, 0.0, 0.0)
-           }));
+                url : '../../SampleData/models/ShadowTester/Shadow_Tester_Point.gltf',
+                modelMatrix : Cesium.Transforms.headingPitchRollToFixedFrame(center, heading, 0.0, 0.0)
+            }));
 
             model.readyPromise.then(function(model) {
                 // Play and loop all animations at half-speed
                 model.activeAnimations.addAll({
-                                                  speedup : 0.5,
-                                                  loop : Cesium.ModelAnimationLoop.REPEAT
-                                              });
+                    speedup : 0.5,
+                    loop : Cesium.ModelAnimationLoop.REPEAT
+                });
             }).otherwise(function(error) {
                 window.alert(error);
             });

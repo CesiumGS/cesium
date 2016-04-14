@@ -1804,11 +1804,6 @@ define([
 
             var numberOfPasses = shadowMap.numberOfPasses;
 
-            // // TODO : testing only
-            // for (var k = 0; k < numberOfPasses; ++k) {
-            //     console.log('Pass ' + k + ': ' + shadowPassCommands[k].length + ' commands.');
-            // }
-
             for (var j = 0; j < numberOfPasses; ++j) {
                 uniformState.updateCamera(shadowMap.passCameras[j]);
                 var passState = shadowMap.passStates[j];
