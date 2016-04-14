@@ -925,9 +925,7 @@ require({
 
         return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
             .then(function() {
-                var getUrl = window.location;
-                var baseUrl = getUrl.protocol + "//" + getUrl.host + "/" + getUrl.pathname.split('/')[1];
-                location.href = baseUrl + '/Sandcastle/?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+                window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
             }).otherwise(function(error) {
                 if (gistId !== '') {
                     appendConsole('consoleError', 'Can\'t GET Gist : ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
