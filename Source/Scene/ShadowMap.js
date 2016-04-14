@@ -659,10 +659,10 @@ define([
         }
     }
 
-    function clearFramebuffer(shadowMap, context, pass) {
-        pass = defaultValue(pass, 0);
-        if ((shadowMap._isPointLight && shadowMap._usesCubeMap) || (pass === 0)) {
-            shadowMap._clearCommand.framebuffer = shadowMap._passFramebuffers[pass];
+    function clearFramebuffer(shadowMap, context, shadowPass) {
+        shadowPass = defaultValue(shadowPass, 0);
+        if ((shadowMap._isPointLight && shadowMap._usesCubeMap) || (shadowPass === 0)) {
+            shadowMap._clearCommand.framebuffer = shadowMap._passFramebuffers[shadowPass];
             shadowMap._clearCommand.execute(context, shadowMap._clearPassState);
         }
     }
@@ -1271,7 +1271,7 @@ define([
             var surfaceNormal = frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(sceneCamera.positionWC, scratchCartesian1);
             var lightDirection = Cartesian3.negate(shadowMapCamera.directionWC, scratchCartesian2);
             var dot = Cartesian3.dot(surfaceNormal, lightDirection);
-            if (dot < 0.1) {
+            if (dot < 0.05) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
@@ -1402,8 +1402,8 @@ define([
         }
     };
 
-    ShadowMap.prototype.updatePass = function(context, pass) {
-        clearFramebuffer(this, context, pass);
+    ShadowMap.prototype.updatePass = function(context, shadowPass) {
+        clearFramebuffer(this, context, shadowPass);
     };
 
     var scratchTexelStepSize = new Cartesian2();
