@@ -61,6 +61,13 @@
             </td>
         </tr>
         <tr>
+            <td>Darkness</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: darkness, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: darkness">
+            </td>
+        </tr>
+        <tr>
             <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">Cascades</td>
             <td><select data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"/></td>
         </tr>
@@ -194,6 +201,7 @@ var viewModel = {
     distanceEnabled : true,
     radius : 200.0,
     radiusEnabled : true,
+    darkness : 0.3,
     shadows : true,
     terrain : true,
     globe : true,
@@ -345,6 +353,7 @@ Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDire
 Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
 Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'darkness').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
@@ -394,6 +403,7 @@ function updateSettings() {
     shadowMap._maximumDistance = Number(viewModel.distance);
     shadowMap._radius = Number(viewModel.radius);
     shadowMap._fitNearFar = viewModel.fitNearFar;
+    shadowMap.darkness = viewModel.darkness;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;

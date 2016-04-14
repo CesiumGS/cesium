@@ -1,5 +1,5 @@
 
-float czm_private_shadowVisibility(float visibility, float nDotL, float normalShadingSmooth) {
+float czm_private_shadowVisibility(float visibility, float nDotL, float normalShadingSmooth, float darkness) {
 #ifdef USE_NORMAL_SHADING
 #ifdef USE_NORMAL_SHADING_SMOOTH
     float strength = clamp(nDotL / normalShadingSmooth, 0.0, 1.0);
@@ -9,7 +9,7 @@ float czm_private_shadowVisibility(float visibility, float nDotL, float normalSh
     visibility *= strength;
 #endif
 
-    visibility = max(visibility, 0.3);
+    visibility = max(visibility, darkness);
     return visibility;
 }
 
@@ -21,11 +21,12 @@ float czm_shadowVisibility(samplerCube shadowMap, czm_shadowParameters shadowPar
     float depth = shadowParameters.depth;
     float nDotL = shadowParameters.nDotL;
     float normalShadingSmooth = shadowParameters.normalShadingSmooth;
+    float darkness = shadowParameters.darkness;
     vec3 uvw = shadowParameters.texCoords;
 
     depth -= depthBias;
     float visibility = czm_shadowDepthCompare(shadowMap, uvw, depth, shadowDistance);
-    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth);
+    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth, darkness);
 }
 #else
 float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParameters)
@@ -35,6 +36,7 @@ float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParam
     float depth = shadowParameters.depth;
     float nDotL = shadowParameters.nDotL;
     float normalShadingSmooth = shadowParameters.normalShadingSmooth;
+    float darkness = shadowParameters.darkness;
     vec2 uv = shadowParameters.texCoords;
 
     depth -= depthBias;
@@ -60,6 +62,6 @@ float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParam
     float visibility = czm_shadowDepthCompare(shadowMap, uv, depth, shadowDistance);
 #endif
 
-    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth);
+    return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth, darkness);
 }
 #endif

@@ -122,6 +122,7 @@ define([
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
      * @param {Number} [options.size=1024] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+     * @param {Number} [options.darkness=0.3] The shadow darkness.
      *
      * @see ShadowMapShader
      *
@@ -149,6 +150,7 @@ define([
 
         this.enabled = false;
         this.softShadows = defaultValue(options.softShadows, false);
+        this.darkness = defaultValue(options.darkness, 0.3);
         this._exponentialShadows = false;
 
         this._outOfView = false;
@@ -1370,8 +1372,8 @@ define([
     };
 
     var scratchTexelStepSize = new Cartesian2();
-    var scratchUniformCartesian3 = new Cartesian3();
-    var scratchUniformCartesian4 = new Cartesian4();
+    var scratchUniformCartesian1 = new Cartesian4();
+    var scratchUniformCartesian2 = new Cartesian4();
 
     function combineUniforms(shadowMap, uniforms, isTerrain) {
         var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
@@ -1406,10 +1408,10 @@ define([
                 texelStepSize.x = 1.0 / shadowMap._textureSize.x;
                 texelStepSize.y = 1.0 / shadowMap._textureSize.y;
 
-                return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian4);
+                return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian1);
             },
-            u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return Cartesian3.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, scratchUniformCartesian3);
+            u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
+                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap.darkness, scratchUniformCartesian2);
             }
         };
 

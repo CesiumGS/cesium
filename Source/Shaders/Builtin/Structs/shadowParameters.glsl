@@ -12,4 +12,5 @@ struct czm_shadowParameters
     float nDotL;
     vec2 texelStepSize;
     float normalShadingSmooth;
+    float darkness;
 };
