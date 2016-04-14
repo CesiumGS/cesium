@@ -179,7 +179,7 @@ define([
             gl.framebufferTexture2D(framebufferTarget, gl.COLOR_ATTACHMENT0, textureTarget, texture, 0);
 
             if(pixelFormat === gl.RGBA) {
-                gl.clearColor(0.0, 0.0, 0.0, 1.0);
+                gl.clearColor(0.0, 0.0, 0.0, 0.0);
                 gl.clear(gl.COLOR_BUFFER_BIT);
             }
 
