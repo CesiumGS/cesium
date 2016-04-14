@@ -217,7 +217,7 @@ define([
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-        this._maximumDistance = 1000.0;
+        this._maximumDistance = 5000.0;
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
