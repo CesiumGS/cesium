@@ -213,6 +213,12 @@ define([
             // First image exceeds initialSize
             var initialWidth = scalingFactor * (image.width + textureAtlas._borderWidthInPixels);
             var initialHeight = scalingFactor * (image.height + textureAtlas._borderWidthInPixels);
+            if(initialWidth < textureAtlas._initialSize.x) {
+                initialWidth = textureAtlas._initialSize.x;
+            }
+            if(initialHeight < textureAtlas._initialSize.y) {
+                initialHeight = textureAtlas._initialSize.y;
+            }
             textureAtlas._texture = textureAtlas._texture && textureAtlas._texture.destroy();
             textureAtlas._texture = new Texture({
                 context : textureAtlas._context,
@@ -220,12 +226,6 @@ define([
                 height : initialHeight,
                 pixelFormat : textureAtlas._pixelFormat
             });
-            if(initialWidth < textureAtlas._initialSize.x) {
-                initialWidth = textureAtlas._initialSize.x;
-            }
-            if(initialHeight < textureAtlas._initialSize.y) {
-                initialHeight = textureAtlas._initialSize.y;
-            }
             textureAtlas._root = new TextureAtlasNode(new Cartesian2(), new Cartesian2(initialWidth, initialHeight));
         }
     }
