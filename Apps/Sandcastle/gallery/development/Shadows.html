@@ -257,8 +257,7 @@ var viewModel = {
 };
 
 // Temp values for testing
-//viewModel.lightSource = 'Spot';
-viewModel.lightSource = 'Freeform';
+viewModel.lightSource = 'Spot';
 viewModel.lightHorizon = 71.0;
 viewModel.lightAngle = 40.0;
 viewModel.distance = 10000.0;
@@ -555,7 +554,6 @@ function createScene() {
     pointLightCamera.position = center;
 
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
-    camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     updateLightDirection();
     updateShadows();
