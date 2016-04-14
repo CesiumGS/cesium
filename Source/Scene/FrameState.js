@@ -170,12 +170,6 @@ define([
         this.terrainExaggeration = 1.0;
 
         /**
-        * The shadow map being used.
-        * @type {ShadowMap}
-        */
-        this.shadowMap = undefined;
-
-        /**
         * The near plane of the scene's frustum commands. Used for fitting the shadow map.
         * @type {Number}
         */
