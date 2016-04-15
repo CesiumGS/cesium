@@ -255,6 +255,8 @@ define([
             this._passCommands[i] = [];
         }
 
+        this._commandList = [];
+
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this._debugFreezeFrame = false;
@@ -422,6 +424,12 @@ define([
         passCullingVolumes : {
             get : function() {
                 return this._passCullingVolumes;
+            }
+        },
+
+        commandList : {
+            get : function() {
+                return this._commandList;
             }
         },
 
@@ -1416,7 +1424,64 @@ define([
         return combine(uniforms, mapUniforms, false);
     }
 
-    ShadowMap.prototype.createDerivedCommands = function(command, context, result) {
+    function createCastDerivedCommand(shadowMap, command, context, skirtIndex, oldShaderId, result) {
+        var castShader;
+        var castRenderState;
+        var castUniformMap;
+        if (defined(result)) {
+            castShader = result.shaderProgram;
+            castRenderState = result.renderState;
+            castUniformMap = result.uniformMap;
+        }
+
+        result = DrawCommand.shallowClone(command, result);
+
+        if (!defined(castShader) || oldShaderId !== command.shaderProgram.id) {
+            if (defined(castShader)) {
+                castShader.destroy();
+            }
+
+            var shaderProgram = command.shaderProgram;
+            var vertexShaderSource = shaderProgram.vertexShaderSource;
+            var fragmentShaderSource = shaderProgram.fragmentShaderSource;
+
+            var isTerrain = command.pass === Pass.GLOBE;
+            var isOpaque = command.pass !== Pass.TRANSLUCENT;
+            var isPointLight = shadowMap._isPointLight;
+            var useDepthTexture = shadowMap._usesDepthTexture;
+
+            var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
+            var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
+
+            castShader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : castVS,
+                fragmentShaderSource : castFS,
+                attributeLocations : shaderProgram._attributeLocations
+            });
+
+            castRenderState = shadowMap._primitiveRenderState;
+            if (isPointLight) {
+                castRenderState = shadowMap._pointRenderState;
+            } else if (isTerrain) {
+                castRenderState = shadowMap._terrainRenderState;
+            }
+
+            castUniformMap = combineUniforms(shadowMap, command.uniformMap, isTerrain);
+        }
+
+        result.shaderProgram = castShader;
+        result.renderState = castRenderState;
+        result.uniformMap = castUniformMap;
+
+        if (defined(skirtIndex)) {
+            result.count = skirtIndex;
+        }
+
+        return result;
+    }
+
+    ShadowMap.createDerivedCommands = function(shadowMaps, command, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -1424,11 +1489,7 @@ define([
         var shaderProgram = command.shaderProgram;
         var vertexShaderSource = shaderProgram.vertexShaderSource;
         var fragmentShaderSource = shaderProgram.fragmentShaderSource;
-
         var isTerrain = command.pass === Pass.GLOBE;
-        var isOpaque = command.pass !== Pass.TRANSLUCENT;
-        var isPointLight = this._isPointLight;
-        var useDepthTexture = this._usesDepthTexture;
 
         var hasTerrainNormal = false;
         var skirtIndex;
@@ -1438,48 +1499,18 @@ define([
         }
 
         if (command.castShadows) {
-            var castShader;
-            var castRenderState;
-            var castUniformMap;
-            if (defined(result.castCommand)) {
-                castShader = result.castCommand.shaderProgram;
-                castRenderState = result.castCommand.renderState;
-                castUniformMap = result.castCommand.uniformMap;
+            var castCommands = result.castCommands;
+            if (!defined(castCommands)) {
+                castCommands = result.castCommands = [];
             }
 
-            result.castCommand = DrawCommand.shallowClone(command, result.castCommand);
+            var oldShaderId = result.castShaderProgramId;
 
-            if (!defined(castShader) || result.castShaderProgramId !== command.shaderProgram.id) {
-                if (defined(castShader)) {
-                    castShader.destroy();
-                }
+            var shadowMapLength = shadowMaps.length;
+            castCommands.length = shadowMapLength;
 
-                var castVS = ShadowMapShader.createShadowCastVertexShader(vertexShaderSource, isPointLight, isTerrain);
-                var castFS = ShadowMapShader.createShadowCastFragmentShader(fragmentShaderSource, isPointLight, useDepthTexture, isOpaque);
-
-                castShader = ShaderProgram.fromCache({
-                    context : context,
-                    vertexShaderSource : castVS,
-                    fragmentShaderSource : castFS,
-                    attributeLocations : shaderProgram._attributeLocations
-                });
-
-                castRenderState = this._primitiveRenderState;
-                if (isPointLight) {
-                    castRenderState = this._pointRenderState;
-                } else if (isTerrain) {
-                    castRenderState = this._terrainRenderState;
-                }
-
-                castUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
-            }
-
-            result.castCommand.shaderProgram = castShader;
-            result.castCommand.renderState = castRenderState;
-            result.castCommand.uniformMap = castUniformMap;
-
-            if (defined(skirtIndex)) {
-                result.castCommand.count = skirtIndex;
+            for (var i = 0; i < shadowMapLength; ++i) {
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, skirtIndex, oldShaderId, castCommands[i]);
             }
 
             result.castShaderProgramId = command.shaderProgram.id;
@@ -1506,7 +1537,7 @@ define([
                 }
 
                 var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, this, command.castShadows, isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, shadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
 
                 receiveShader = ShaderProgram.fromCache({
                     context : context,
@@ -1515,7 +1546,7 @@ define([
                     attributeLocations : shaderProgram._attributeLocations
                 });
 
-                receiveUniformMap = combineUniforms(this, command.uniformMap, isTerrain);
+                receiveUniformMap = combineUniforms(shadowMaps[0], command.uniformMap, isTerrain);
             }
 
             result.receiveCommand.shaderProgram = receiveShader;

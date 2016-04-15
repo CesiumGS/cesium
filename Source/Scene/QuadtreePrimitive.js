@@ -505,7 +505,8 @@ define([
     }
 
     function screenSpaceError(primitive, frameState, tile) {
-        if (frameState.mode === SceneMode.SCENE2D) {
+        // TODO: check for sseDenominator so shadow cameras with orthographic frustum works. check correctness.
+        if (frameState.mode === SceneMode.SCENE2D || !defined(frameState.camera.frustum.sseDenominator)) {
             return screenSpaceError2D(primitive, frameState, tile);
         }
 
