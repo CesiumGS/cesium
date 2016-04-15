@@ -202,6 +202,11 @@ define([
 
     var BILLBOARD_SIZE = 32;
 
+    var BILLBOARD_NEAR_DISTANCE = 2414016;
+    var BILLBOARD_NEAR_RATIO = 1.0;
+    var BILLBOARD_FAR_DISTANCE = 1.6093e+7;
+    var BILLBOARD_FAR_RATIO = 0.1;
+
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
@@ -565,7 +570,8 @@ define([
         var billboard = new BillboardGraphics();
         billboard.width = BILLBOARD_SIZE;
         billboard.height = BILLBOARD_SIZE;
-        billboard.scaleByDistance = new NearFarScalar(2414016, 1.0, 1.6093e+7, 0.1);
+        billboard.scaleByDistance = new NearFarScalar(BILLBOARD_NEAR_DISTANCE, BILLBOARD_NEAR_RATIO, BILLBOARD_FAR_DISTANCE, BILLBOARD_FAR_RATIO);
+        billboard.pixelOffsetScaleByDistance = new NearFarScalar(BILLBOARD_NEAR_DISTANCE, BILLBOARD_NEAR_RATIO, BILLBOARD_FAR_DISTANCE, BILLBOARD_FAR_RATIO);
         return billboard;
     }
 
@@ -663,7 +669,7 @@ define([
         }
 
         //GE treats a heading of zero as no heading
-        //Yes, this means it's impossible to actually point north in KML
+        //You can still point north using a 360 degree angle (or any multiple of 360)
         if (defined(heading) && heading !== 0) {
             billboard.rotation = CesiumMath.toRadians(-heading);
             billboard.alignedAxis = Cartesian3.UNIT_Z;
