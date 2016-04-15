@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/Event',
         './createPropertyDescriptor',
         './Property'
@@ -15,14 +14,12 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         Event,
         createPropertyDescriptor,
         Property) {
     'use strict';
 
     var defaultRepeat = new Cartesian2(1, 1);
-    var defaultAlpha = 1.0;
     var defaultTransparent = false;
     var defaultColor = Color.WHITE;
 
@@ -45,20 +42,12 @@ define([
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
-        this._alpha = undefined;
-        this._alphaSubscription = undefined;
         this._color = undefined;
         this._colorSubscription = undefined;
         this._transparent = undefined;
         this._transparentSubscription = undefined;
-
-        if (defined(options.alpha)) {
-            deprecationWarning('ImageMaterialProperty.alpha', 'ImageMaterialProperty.alpha was deprecated in Cesium 1.20.  It will be removed in 1.21.  Use ImageMaterialProperty.color.alpha instead.');
-        }
-
         this.image = options.image;
         this.repeat = options.repeat;
-        this.alpha = options.alpha;
         this.color = options.color;
         this.transparent = options.transparent;
     }
@@ -105,14 +94,6 @@ define([
          */
         repeat : createPropertyDescriptor('repeat'),
         /**
-         * Gets or sets the Number Property specifying the desired opacity of the overall image.
-         * @memberof ImageMaterialProperty.prototype
-         * @type {Property}
-         * @default 1.0
-         * @deprecated
-         */
-        alpha : createPropertyDescriptor('alpha'),
-        /**
          * Gets or sets the Color Property specifying the desired color applied to the image.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
@@ -152,12 +133,7 @@ define([
 
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
-        var color = Property.getValueOrUndefined(this._color, time, result.color);
-        if (!defined(color)) {
-            color = Color.clone(defaultColor, result.color);
-            color.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
-        }
-        result.color = color;
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
         if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
             result.color.alpha = Math.min(0.99, result.color.alpha);
         }
@@ -176,7 +152,6 @@ define([
         return this === other ||
                (other instanceof ImageMaterialProperty &&
                 Property.equals(this._image, other._image) &&
-                Property.equals(this._alpha, other._alpha) &&
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._transparent, other._transparent) &&
                 Property.equals(this._repeat, other._repeat));

@@ -398,3 +398,11 @@ https://github.com/dataarts/webgl-globe
 Creative Commons Attribution 3.0
 (c) copyright 2012, Dennis Haupt
 http://www.blendswap.com/blends/view/61653
+
+### GitHub logo
+
+https://github.com/logos
+
+### Font Awesome Icon
+
+Font Awesome by Dave Gandy - http://fontawesome.io

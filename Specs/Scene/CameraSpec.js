@@ -218,7 +218,7 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
-    it('set heading in 2D', function() {
+    it('does not set heading in 2D', function() {
         camera._mode = SceneMode.SCENE2D;
 
         var heading = camera.heading;
@@ -232,8 +232,7 @@ defineSuite([
         });
 
         expect(camera.positionCartographic).toEqual(positionCartographic);
-        expect(camera.heading).not.toEqual(heading);
-        expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+        expect(camera.heading).toEqual(heading);
     });
 
     it('set heading in CV', function() {
