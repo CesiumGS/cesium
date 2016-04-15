@@ -30,6 +30,12 @@ define([
         this.commandList = [];
 
         /**
+         * An array of shadow maps.
+         * @type {ShadowMap[]}
+         */
+        this.shadowMaps = [];
+
+        /**
          * The current mode of the scene.
          * @type {SceneMode}
          * @default {@link SceneMode.SCENE3D}
@@ -162,12 +168,6 @@ define([
         * @type {Number}
         */
         this.terrainExaggeration = 1.0;
-
-        /**
-        * The shadow map being used.
-        * @type {ShadowMap}
-        */
-        this.shadowMap = undefined;
 
         /**
         * The near plane of the scene's frustum commands. Used for fitting the shadow map.

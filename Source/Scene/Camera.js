@@ -253,7 +253,7 @@ define([
     function updateViewMatrix(camera) {
         Matrix4.computeView(camera._direction, camera._up, camera._right, camera._position, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
-        Matrix4.inverse(camera._viewMatrix, camera._invViewMatrix);
+        Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
     var scratchCartographic = new Cartographic();
@@ -2836,6 +2836,7 @@ define([
         Cartesian3.clone(camera.up, result.up);
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
+        result._transformChanged = true;
 
         // Clone frustum only if it is the same type
         if (defined(camera.frustum.left) === defined(result.frustum.left)) {

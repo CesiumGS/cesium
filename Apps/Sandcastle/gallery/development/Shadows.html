@@ -61,6 +61,13 @@
             </td>
         </tr>
         <tr>
+            <td>Darkness</td>
+            <td>
+                <input type="range" min="0.0" max="1.0" step="0.01" data-bind="value: darkness, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: darkness">
+            </td>
+        </tr>
+        <tr>
             <td data-bind="style: { color: cascadesEnabled ? '' : 'gray'}">Cascades</td>
             <td><select data-bind="options: cascadeOptions, value: cascades, enable: cascadesEnabled"/></td>
         </tr>
@@ -85,8 +92,12 @@
             <td><input type="checkbox" data-bind="checked: globe"/></td>
         </tr>
         <tr>
-            <td data-bind="style: { color: terrainCastEnabled ? '' : 'gray'}">Terrain Cast</td>
-            <td><input type="checkbox" data-bind="checked: terrainCast, enable: terrainCastEnabled"/></td>
+            <td>Terrain Cast</td>
+            <td><input type="checkbox" data-bind="checked: terrainCast"/></td>
+        </tr>
+        <tr>
+            <td>Terrain Receive</td>
+            <td><input type="checkbox" data-bind="checked: terrainReceive"/></td>
         </tr>
         <tr>
             <td>Show debug</td>
@@ -122,7 +133,11 @@
         </tr>
         <tr>
             <td>Model Position</td>
-            <td><select data-bind="options: modelPositionOptions, value: modelPosition"/></td>
+            <td>
+                <select data-bind="options: modelPositionOptions, value: modelPosition"/>
+                <input type="checkbox" data-bind="checked: grid"/>
+                <span>Grid</span>
+            </td>
         </tr>
         <tr>
             <td>Bias Mode</td>
@@ -186,11 +201,12 @@ var viewModel = {
     distanceEnabled : true,
     radius : 200.0,
     radiusEnabled : true,
+    darkness : 0.3,
     shadows : true,
     terrain : true,
     globe : true,
     terrainCast : true,
-    terrainCastEnabled : true,
+    terrainReceive : true,
     debug : true,
     freeze : false,
     cascadeColors : false,
@@ -207,12 +223,13 @@ var viewModel = {
     lightSource : 'Freeform',
     sizeOptions : [256, 512, 1024, 2048],
     size : 1024,
-    modelOptions : ['Wood Tower', 'Cesium Air', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester 4', 'Shadow Tester Point'],
+    modelOptions : ['Wood Tower', 'Cesium Air', 'Transparent Box', 'Shadow Tester', 'Shadow Tester 2', 'Shadow Tester 3', 'Shadow Tester 4', 'Shadow Tester Point'],
     model : 'Shadow Tester',
     locationOptions : ['Exton', 'Everest', 'Pinnacle PA', 'Seneca Rocks', 'Half Dome'],
     location : 'Pinnacle PA',
-    modelPositionOptions : ['Center', 'Ground'],
+    modelPositionOptions : ['Center', 'Ground', 'High', 'Higher', 'Space'],
     modelPosition : 'Center',
+    grid : false,
     biasModes : [
         new BiasOptions({
             type : 'terrain',
@@ -220,10 +237,10 @@ var viewModel = {
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.5,
+            normalOffsetScale : 2.0,
             normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0
+            normalShadingSmooth : 0.3,
+            depthBias : 0.0001
         }),
         new BiasOptions({
             type : 'primitive',
@@ -231,7 +248,7 @@ var viewModel = {
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.05,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.1,
             depthBias : 0.0001
@@ -245,7 +262,7 @@ var viewModel = {
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.01
+            depthBias : 0.0005
         })
     ],
     biasMode : Cesium.knockout.observable()
@@ -257,8 +274,10 @@ viewModel.lightHorizon = 71.0;
 viewModel.lightAngle = 40.0;
 viewModel.distance = 10000.0;
 viewModel.location = 'Pinnacle PA';
-viewModel.model = 'Shadow Tester 4';
-viewModel.modelPosition = 'Ground';
+viewModel.model = 'Shadow Tester';
+viewModel.modelPosition = 'Center';
+viewModel.terrain = true;
+viewModel.terrainCast = true;
 
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
@@ -272,6 +291,7 @@ var uiOptions = {
     modelUrls : {
         'Wood Tower' : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
         'Cesium Air' : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        'Transparent Box' : '../../SampleData/models/ShadowTester/Shadow_Transparent.gltf',
         'Shadow Tester' : '../../SampleData/models/ShadowTester/Shadow_Tester.gltf',
         'Shadow Tester 2' : '../../SampleData/models/ShadowTester/Shadow_Tester_2.gltf',
         'Shadow Tester 3' : '../../SampleData/models/ShadowTester/Shadow_Tester_3.gltf',
@@ -334,12 +354,14 @@ Cesium.knockout.getObservable(viewModel, 'lightAngle').subscribe(updateLightDire
 Cesium.knockout.getObservable(viewModel, 'lightHorizon').subscribe(updateLightDirection);
 Cesium.knockout.getObservable(viewModel, 'distance').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'radius').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'darkness').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'debug').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'freeze').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'shadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrain').subscribe(updateLocation);
 Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
@@ -348,7 +370,8 @@ Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateLocation);
+Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
 for (var i = 0; i < viewModel.biasModes.length; ++i) {
@@ -381,12 +404,14 @@ function updateSettings() {
     shadowMap._maximumDistance = Number(viewModel.distance);
     shadowMap._radius = Number(viewModel.radius);
     shadowMap._fitNearFar = viewModel.fitNearFar;
+    shadowMap.darkness = viewModel.darkness;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;
     shadowMap.setSize(viewModel.size);
 
     globe.castShadows = viewModel.terrainCast;
+    globe.receiveShadows = viewModel.terrainReceive;
     globe.show = viewModel.globe;
     scene.skyAtmosphere.show = viewModel.globe;
 }
@@ -510,6 +535,20 @@ var imageryProvider = new Cesium.BingMapsImageryProvider({
 
 updateLocation();
 
+function getModelPosition() {
+    if (viewModel.modelPosition === 'Ground') {
+        return 0.0;
+    } else if (viewModel.modelPosition === 'Center') {
+        return 50.0;
+    } else if (viewModel.modelPosition === 'High') {
+        return 5000.0;
+    } else if (viewModel.modelPosition === 'Higher') {
+        return 20000.0;
+    } else if (viewModel.modelPosition === 'Space') {
+        return 10000000.0;
+    }
+}
+
 function updateLocation() {
     // Get the height of the terrain at the given longitude/latitude, then create the scene.
     var location = uiOptions.locations[viewModel.location];
@@ -517,7 +556,7 @@ function updateLocation() {
     var terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
     var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
     Cesium.when(promise, function(updatedPositions) {
-        location.height = updatedPositions[0].height + 50.0;
+        location.height = updatedPositions[0].height + getModelPosition();
         createScene();
     });
 }
@@ -540,7 +579,7 @@ function createScene() {
     spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
     spotLightCamera.frustum.aspectRatio = 1.0;
     spotLightCamera.frustum.near = 1.0;
-    spotLightCamera.frustum.far = 200.0;
+    spotLightCamera.frustum.far = 500.0;
     spotLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
 
     pointLightCamera.position = center;
@@ -579,35 +618,35 @@ function resetShadows(shadowOptions) {
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);
     var position3 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 15.0);
+    var modelPosition = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height);
 
-    var model = createModel(uiOptions.modelUrls[viewModel.model], location, viewModel.modelPosition);
-    addModelToView(model);
+    createModel(uiOptions.modelUrls[viewModel.model], modelPosition);
     createBox(position3);
     createBoxRTC(position2);
     createSphere(position1);
+
+    // Add a grid of models
+    if (viewModel.grid) {
+        var spacing = 0.00002;
+        var gridSize = 10;
+        for (var i = 0; i < gridSize * gridSize; ++i) {
+            var x = i % gridSize;
+            var y = Math.floor(i / gridSize);
+            var longitude = centerLongitude + spacing * (x - gridSize / 2.0);
+            var latitude = centerLatitude + spacing * (y - gridSize / 2.0);
+            var position = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
+            createModel(uiOptions.modelUrls[viewModel.model], position);
+        }
+    }
 }
 
-function createModel(url, location, position) {
-    var origin;
-    if (position === 'Ground') {
-        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height - 50.0);
-    }
-    else if (position === 'Center') {
-        origin = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
-    }
-
+function createModel(url, origin) {
     var modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
 
-    var model = Cesium.Model.fromGltf({
+    var model = scene.primitives.add(Cesium.Model.fromGltf({
         url : url,
         modelMatrix : modelMatrix
-    });
-
-    return model;
-}
-
-function addModelToView(model) {
-    model = scene.primitives.add(model);
+    }));
 
     model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
@@ -618,6 +657,8 @@ function addModelToView(model) {
     }).otherwise(function(error){
         window.alert(error);
     });
+
+    return model;
 }
 
 function createBoxRTC(origin) {
