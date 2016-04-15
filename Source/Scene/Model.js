@@ -307,8 +307,8 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {Boolean} [options.castShadows=true] Determines whether this model will cast shadows when shadow mapping is enabled.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether this model will receive shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model will cast shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model will receive shadows from any shadow casters in the scene.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -798,7 +798,7 @@ define([
         },
 
         /**
-         * Determines whether the model will cast shadows when shadow mapping is enabled.
+         * Determines whether the model will cast shadows from each light source.
          *
          * @memberof Model.prototype
          *
@@ -822,7 +822,7 @@ define([
         },
 
         /**
-         * Determines whether the model will receive shadows when shadow mapping is enabled.
+         * Determines whether the model will receive shadows from any shadow casters in the scene.
          *
          * @memberof Model.prototype
          *
@@ -939,8 +939,8 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {Boolean} [options.castShadows=true] Determines whether this model will cast shadows when shadow mapping is enabled.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether this model will receive shadows when shadow mapping is enabled.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model will cast shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model will receive shadows from any shadow casters in the scene.
      *
      * @returns {Model} The newly created model.
      *

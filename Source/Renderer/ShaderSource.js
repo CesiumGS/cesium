@@ -357,5 +357,35 @@ define([
         return renamedFS + '\n' + pickMain;
     };
 
+    ShaderSource.findVarying = function(shaderSource, names) {
+        var sources = shaderSource.sources;
+
+        var namesLength = names.length;
+        for (var i = 0; i < namesLength; ++i) {
+            var name = names[i];
+
+            var sourcesLength = sources.length;
+            for (var j = 0; j < sourcesLength; ++j) {
+                if (sources[j].indexOf(name) !== -1) {
+                    return name;
+                }
+            }
+        }
+
+        return undefined;
+    };
+
+    var normalVaryingNames = ['v_normalEC', 'v_normal'];
+
+    ShaderSource.findNormalVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, normalVaryingNames);
+    };
+
+    var positionVaryingNames = ['v_positionEC'];
+
+    ShaderSource.findPositionVarying = function(shaderSource) {
+        return ShaderSource.findVarying(shaderSource, positionVaryingNames);
+    };
+
     return ShaderSource;
 });

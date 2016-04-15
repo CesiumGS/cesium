@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Shadow maps.">
-    <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
+    <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -402,7 +402,7 @@ function updateLightDirection() {
 
 function updateSettings() {
     shadowMap._maximumDistance = Number(viewModel.distance);
-    shadowMap._radius = Number(viewModel.radius);
+    shadowMap._pointLightRadius = Number(viewModel.radius);
     shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.darkness = viewModel.darkness;
     shadowMap.debugShow = viewModel.debug;
@@ -484,7 +484,7 @@ function updateShadows() {
     }
 
     // Update render states for when polygon offset values change
-    shadowMap._createRenderStates();
+    shadowMap.debugCreateRenderStates();
 
     updateSettings();
     updateUI();

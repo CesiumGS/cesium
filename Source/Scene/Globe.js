@@ -189,15 +189,18 @@ define([
         this.depthTestAgainstTerrain = false;
 
         /**
-         * Determines whether the globe will cast shadows when shadow mapping is enabled.
+         * Determines whether the globe will cast shadows from each light source. Any primitive that has
+         * <code>receiveShadows</code> set to <code>true</code> will receive shadows that are casted by
+         * the globe. This may impact performance since the terrain is rendered again from the light's
+         * perspective, which will also load terrain tiles that are potentially out of view.
          *
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         this.castShadows = false;
 
         /**
-         * Determines whether the globe will receive shadows when shadow mapping is enabled.
+         * Determines whether the globe will receive shadows from any shadow casters in the scene.
          *
          * @type {Boolean}
          * @default true

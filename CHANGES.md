@@ -2,10 +2,10 @@ Change Log
 ==========
 
 ### Shadows TODO
-* Added `Primitive.castShadows` and `Primitive.receiveShadows`.
-* Added `Globe.castShadows` and `Globe.receiveShadows`.
-* Added `Model.castShadows` and `Model.receiveShadows`.
-* Added `Matrix4.computeView`
+* Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
+* Added `castShadows` and `receiveShadows` properties to `Model`, and options to the `Model` constructor and `Model.fromGltf`.
+* Added `castShadows` and `receiveShadows` properties to `Globe`.
+* Added `Matrix4.computeView`.
 
 ### 1.21 - 2016-05-02
 

@@ -15,36 +15,6 @@ define([
     function ShadowMapShader() {
     }
 
-    function findVarying(shaderSource, names) {
-        var sources = shaderSource.sources;
-
-        var namesLength = names.length;
-        for (var i = 0; i < namesLength; ++i) {
-            var name = names[i];
-
-            var sourcesLength = sources.length;
-            for (var j = 0; j < sourcesLength; ++j) {
-                if (sources[j].indexOf(name) !== -1) {
-                    return name;
-                }
-            }
-        }
-
-        return undefined;
-    }
-
-    var normalVaryingNames = ['v_normalEC', 'v_normal'];
-
-    function findNormalVarying(shaderSource) {
-        return findVarying(shaderSource, normalVaryingNames);
-    }
-
-    var positionVaryingNames = ['v_positionEC'];
-
-    function findPositionVarying(shaderSource) {
-        return findVarying(shaderSource, positionVaryingNames);
-    }
-
     ShadowMapShader.createShadowCastVertexShader = function(vs, isPointLight, isTerrain) {
         var defines = vs.defines.slice(0);
         var sources = vs.sources.slice(0);
@@ -53,7 +23,7 @@ define([
             defines.push('GENERATE_POSITION');
         }
 
-        var positionVaryingName = findPositionVarying(vs);
+        var positionVaryingName = ShaderSource.findPositionVarying(vs);
         var hasPositionVarying = defined(positionVaryingName);
 
         if (isPointLight && !hasPositionVarying) {
@@ -82,7 +52,7 @@ define([
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
 
-        var positionVaryingName = findPositionVarying(fs);
+        var positionVaryingName = ShaderSource.findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
         if (!hasPositionVarying) {
             positionVaryingName = 'v_positionEC';
@@ -111,7 +81,8 @@ define([
                 'void main() \n' +
                 '{ \n' +
                 '    czm_shadow_cast_main(); \n' +
-                '    if (gl_FragColor.a == 0.0) { \n' +
+                '    if (gl_FragColor.a == 0.0) \n' +
+                '    { \n' +
                 '       discard; \n' +
                 '    } \n';
         }
@@ -156,16 +127,15 @@ define([
     };
 
     ShadowMapShader.createShadowReceiveFragmentShader = function(fs, shadowMap, castShadows, isTerrain, hasTerrainNormal) {
-        var normalVaryingName = findNormalVarying(fs);
+        var normalVaryingName = ShaderSource.findNormalVarying(fs);
         var hasNormalVarying = (!isTerrain && defined(normalVaryingName)) || (isTerrain && hasTerrainNormal);
 
-        var positionVaryingName = findPositionVarying(fs);
+        var positionVaryingName = ShaderSource.findPositionVarying(fs);
         var hasPositionVarying = defined(positionVaryingName);
 
         var usesDepthTexture = shadowMap._usesDepthTexture;
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
-        var usesCubeMap = shadowMap._usesCubeMap;
         var hasCascades = shadowMap._numberOfCascades > 1;
         var cascadesEnabled = shadowMap._cascadesEnabled;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
@@ -181,7 +151,7 @@ define([
             sources[i] = ShaderSource.replaceMain(sources[i], 'czm_shadow_receive_main');
         }
 
-        if (isPointLight && usesCubeMap) {
+        if (isPointLight) {
             defines.push('USE_CUBE_MAP_SHADOW');
         } else if (usesDepthTexture) {
             defines.push('USE_SHADOW_DEPTH_TEXTURE');
@@ -202,14 +172,20 @@ define([
             defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
 
-        var fsSource =
+        var fsSource = '';
+
+        if (isPointLight) {
+            fsSource += 'uniform samplerCube u_shadowMapTextureCube; \n';
+        } else {
+            fsSource += 'uniform sampler2D u_shadowMapTexture; \n';
+        }
+
+        fsSource +=
             'uniform mat4 u_shadowMapMatrix; \n' +
             'uniform vec3 u_shadowMapLightDirectionEC; \n' +
             'uniform vec4 u_shadowMapLightPositionEC; \n' +
             'uniform vec4 u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness; \n' +
             'uniform vec4 u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth; \n' +
-            'uniform sampler2D u_shadowMapTexture; \n' +
-            'uniform samplerCube u_shadowMapTextureCube; \n' +
             'vec4 getPositionEC() \n' +
             '{ \n' +
             (hasPositionVarying ?
@@ -250,13 +226,11 @@ define([
             '    shadowParameters.darkness = u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness.w; \n';
 
         if (isTerrain) {
-            fsSource +=
-            '    // Scale depth bias based on view distance to reduce z-fighting in distant terrain \n' +
-            '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
+            // Scale depth bias based on view distance to reduce z-fighting in distant terrain
+            fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
         } else if (cascadesEnabled) {
-            fsSource +=
-            '    // Reduce depth bias for larger shadow maps to limit light leaking \n' +
-            '    shadowParameters.depthBias /= shadowParameters.distance; \n';
+            // Reduce depth bias for larger shadow maps to limit light leaking
+            fsSource += '    shadowParameters.depthBias /= shadowParameters.distance; \n';
         }
 
         if (isPointLight) {
@@ -266,7 +240,8 @@ define([
                 '    directionEC = normalize(directionEC); \n' +
                 '    float radius = u_shadowMapLightPositionEC.w; \n' +
                 '    // Stop early if the fragment is beyond the point light radius \n' +
-                '    if (distance > radius) { \n' +
+                '    if (distance > radius) \n' +
+                '    { \n' +
                 '        return; \n' +
                 '    } \n' +
                 '    vec3 directionWC  = czm_inverseViewRotation * directionEC; \n' +
@@ -275,12 +250,8 @@ define([
                 '    shadowParameters.nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
                 '    shadowParameters.distance = radius; \n' +
 
-
-                (usesCubeMap ?
                 '    shadowParameters.texCoords = directionWC; \n' +
-                '    float visibility = czm_shadowVisibility(u_shadowMapTextureCube, shadowParameters); \n' :
-                '    shadowParameters.texCoords = czm_cubeMapToUV(directionWC); \n' +
-                '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n');
+                '    float visibility = czm_shadowVisibility(u_shadowMapTextureCube, shadowParameters); \n';
         } else if (isSpotLight) {
             fsSource +=
                 '    vec3 directionEC = normalize(positionEC.xyz - u_shadowMapLightPositionEC.xyz); \n' +
@@ -292,7 +263,8 @@ define([
                 '    shadowPosition /= shadowPosition.w; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) { \n' +
+                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) \n' +
+                '    { \n' +
                 '        return; \n' +
                 '    } \n' +
 
@@ -306,7 +278,8 @@ define([
                 '    float maxDepth = u_shadowMapCascadeSplits[1].w; \n' +
 
                 '    // Stop early if the eye depth exceeds the last cascade \n' +
-                '    if (depth > maxDepth) { \n' +
+                '    if (depth > maxDepth) \n' +
+                '    { \n' +
                 '        return; \n' +
                 '    } \n' +
 
@@ -342,7 +315,8 @@ define([
                 '    vec4 shadowPosition = u_shadowMapMatrix * positionEC; \n' +
 
                 '    // Stop early if the fragment is not in the shadow bounds \n' +
-                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) { \n' +
+                '    if (any(lessThan(shadowPosition.xyz, vec3(0.0))) || any(greaterThan(shadowPosition.xyz, vec3(1.0)))) \n' +
+                '    { \n' +
                 '        return; \n' +
                 '    } \n' +
 

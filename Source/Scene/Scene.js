@@ -549,9 +549,9 @@ define([
          */
         this.shadowMap = new ShadowMap({
             context : context,
-            lightCamera : this._sunCamera
+            lightCamera : this._sunCamera,
+            enabled : false
         });
-        this.shadowMap.enabled = false;
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1396,7 +1396,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowMaps.length > 0 && command.receiveShadows && defined(command.derivedCommands.shadows.receiveCommand)) {
+        } else if (scene.frameState.shadowMaps.length > 0 && command.receiveShadows) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -1716,16 +1716,16 @@ define([
         }
     }
 
-    function insertShadowCommands(scene, commandList, insertAll, shadowMap, shadowPassCommands) {
+    function insertShadowCastCommands(scene, commandList, insertAll, shadowMap) {
         var shadowVolume = shadowMap.shadowMapCullingVolume;
-        var passVolumes = shadowMap.passCullingVolumes;
 
         var isPointLight = shadowMap.isPointLight;
         var center = shadowMap.pointLightPosition;
         var radius = shadowMap.pointLightRadius;
         var radiusSquared = radius * radius;
 
-        var numberOfPasses = shadowMap.numberOfPasses;
+        var passes = shadowMap.passes;
+        var numberOfPasses = passes.length;
 
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
@@ -1739,21 +1739,21 @@ define([
                         var distance = command.boundingVolume.distanceSquaredTo(center);
                         if (distance < radiusSquared) {
                             for (var k = 0; k < numberOfPasses; ++k) {
-                                shadowPassCommands[k].push(command);
+                                passes[k].commandList.push(command);
                             }
                         }
                     }
                 } else {
                     if (isVisible(command, shadowVolume)) {
                         if (numberOfPasses <= 1) {
-                            shadowPassCommands[0].push(command);
+                            passes[0].commandList.push(command);
                         } else {
                             var wasVisible = false;
                             // Loop over cascades from largest to smallest
                             for (var j = numberOfPasses - 1; j >= 0; --j) {
-                                var cascadeVolume = passVolumes[j];
+                                var cascadeVolume = passes[j].cullingVolume;
                                 if (isVisible(command, cascadeVolume)) {
-                                    shadowPassCommands[j].push(command);
+                                    passes[j].commandList.push(command);
                                     wasVisible = true;
                                 } else if (wasVisible) {
                                     // If it was visible in the previous cascade but now isn't
@@ -1768,14 +1768,7 @@ define([
         }
     }
 
-    function resetShadowCommands(passCommands) {
-        var length = passCommands.length;
-        for (var i = 0; i < length; ++i) {
-            passCommands[i].length = 0;
-        }
-    }
-
-    function executeShadowMapCommands(scene) {
+    function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
         var shadowMaps = frameState.shadowMaps;
         var shadowMapLength = shadowMaps.length;
@@ -1793,26 +1786,30 @@ define([
                 continue;
             }
 
-            var shadowPassCommands = shadowMap.passCommands;
-            resetShadowCommands(shadowPassCommands);
+            // Reset the command lists
+            var j;
+            var passes = shadowMap.passes;
+            var numberOfPasses = passes.length;
+            for (j = 0; j < numberOfPasses; ++j) {
+                passes[j].commandList.length = 0;
+            }
 
-            // Insert the scene commands into the shadow map passes
+            // Insert the primitive/model commands into the command lists
             var sceneCommands = scene.frameState.commandList;
-            insertShadowCommands(scene, sceneCommands, false, shadowMap, shadowPassCommands);
-            var terrainCommands = shadowMap.commandList;
-            insertShadowCommands(scene, terrainCommands, true, shadowMap, shadowPassCommands);
+            insertShadowCastCommands(scene, sceneCommands, false, shadowMap);
 
-            var numberOfPasses = shadowMap.numberOfPasses;
+            // Insert the globe commands into the command lists
+            var globeCommands = shadowMap.commandList;
+            insertShadowCastCommands(scene, globeCommands, true, shadowMap);
 
-            for (var j = 0; j < numberOfPasses; ++j) {
-                uniformState.updateCamera(shadowMap.passCameras[j]);
-                var passState = shadowMap.passStates[j];
+            for (j = 0; j < numberOfPasses; ++j) {
+                var pass = shadowMap.passes[j];
+                uniformState.updateCamera(pass.camera);
                 shadowMap.updatePass(context, j);
-                var passCommands = shadowPassCommands[j];
-                var numberOfCommands = passCommands.length;
+                var numberOfCommands = pass.commandList.length;
                 for (var k = 0; k < numberOfCommands; ++k) {
-                    var command = passCommands[k];
-                    executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, passState);
+                    var command = pass.commandList[k];
+                    executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, pass.passState);
                 }
             }
         }
@@ -1832,7 +1829,7 @@ define([
             createPotentiallyVisibleSet(scene);
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
-            executeShadowMapCommands(scene);
+            executeShadowMapCastCommands(scene);
 
             // Based on Calculating Stereo pairs by Paul Bourke
             // http://paulbourke.net/stereographics/stereorender/
@@ -1980,7 +1977,7 @@ define([
         if (firstViewport) {
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
-            executeShadowMapCommands(scene);
+            executeShadowMapCastCommands(scene);
         }
 
         executeCommands(scene, passState);
@@ -2009,19 +2006,16 @@ define([
         }
     }
 
-    function updatePrimitives(scene) {
+    function updateShadowMaps(scene) {
         var frameState = scene._frameState;
-
-        scene._groundPrimitives.update(frameState);
-        scene._primitives.update(frameState);
-
+        var globe = scene._globe;
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
 
-            if (!shadowMap.outOfView && defined(scene._globe) && scene._globe.castShadows) {
+            if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
                 var sceneCamera = frameState.camera;
                 var sceneCullingVolume = frameState.cullingVolume;
                 var sceneCommandList = frameState.commandList;
@@ -2033,8 +2027,9 @@ define([
 
                 frameState.commandList.length = 0;
 
-                // Collect terrain commands from the light's POV
-                scene._globe.update(frameState);
+                // Update the globe again to Collect terrain commands from the light's POV.
+                // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
+                globe.update(frameState);
 
                 // Revert back to original frame state
                 frameState.camera = sceneCamera;
@@ -2042,6 +2037,15 @@ define([
                 frameState.commandList = sceneCommandList;
             }
         }
+    }
+
+    function updatePrimitives(scene) {
+        var frameState = scene._frameState;
+
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
+
+        updateShadowMaps(scene);
 
         if (scene._globe) {
             scene._globe.update(frameState);

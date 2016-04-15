@@ -38,7 +38,7 @@ define([
         this._debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);
-        this._receiveShadows = defaultValue(options.receiveShadows, false); // TODO : not used right now, but keep if it proves useful
+        this._receiveShadows = defaultValue(options.receiveShadows, false);
         this._dirty = true;
 
         /**

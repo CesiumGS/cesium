@@ -251,7 +251,7 @@ define([
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {
-        Matrix4.computeView(camera._direction, camera._up, camera._right, camera._position, camera._viewMatrix);
+        Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
@@ -2819,7 +2819,6 @@ define([
     Camera.clone = function(camera, result) {
         if (!defined(result)) {
             result = new Camera(camera._scene);
-            result.frustum = camera.frustum.clone(); // Allocate a new frustum of the correct type
         }
 
         Cartesian3.clone(camera.position, result.position);
@@ -2828,11 +2827,6 @@ define([
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
         result._transformChanged = true;
-
-        // Clone frustum only if it is the same type
-        if (defined(camera.frustum.left) === defined(result.frustum.left)) {
-            camera.frustum.clone(result.frustum);
-        }
 
         return result;
     };

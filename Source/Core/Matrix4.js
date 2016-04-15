@@ -961,15 +961,18 @@ define([
     /**
      * Computes a Matrix4 instance that transforms from world space to view space.
      *
+     * @param {Cartesian3} position The position of the camera.
      * @param {Cartesian3} direction The forward direction.
      * @param {Cartesian3} up The up direction.
      * @param {Cartesian3} right The right direction.
-     * @param {Cartesian3} position The position of the camera.
      * @param {Matrix4} result The object in which the result will be stored.
      * @returns {Matrix4} The modified result parameter.
      */
-    Matrix4.computeView = function(direction, up, right, position, result) {
+    Matrix4.computeView = function(position, direction, up, right, result) {
         //>>includeStart('debug', pragmas.debug);
+        if (!defined(position)) {
+            throw new DeveloperError('position is required');
+        }
         if (!defined(direction)) {
             throw new DeveloperError('direction is required');
         }
@@ -978,9 +981,6 @@ define([
         }
         if (!defined(right)) {
             throw new DeveloperError('right is required');
-        }
-        if (!defined(position)) {
-            throw new DeveloperError('position is required');
         }
         if (!defined(result)) {
             throw new DeveloperError('result is required');
