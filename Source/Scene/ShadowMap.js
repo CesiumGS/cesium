@@ -148,7 +148,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.enabled = false;
+        this.enabled = true;
         this.softShadows = defaultValue(options.softShadows, false);
         this.darkness = defaultValue(options.darkness, 0.3);
         this._exponentialShadows = false;
@@ -997,6 +997,7 @@ define([
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
+        var cascadeDistances = scratchCascadeDistances;
         var splits = scratchSplits;
         splits[0] = cameraNear;
         splits[numberOfCascades] = cameraFar;
@@ -1006,21 +1007,24 @@ define([
             var p = (i + 1) / numberOfCascades;
             var logScale = cameraNear * Math.pow(ratio, p);
             var uniformScale = cameraNear + range * p;
-            splits[i + 1] = CesiumMath.lerp(uniformScale, logScale, lambda);
-        }
-
-        // Clamp each cascade to its maximum distance
-        var cascadeDistances = scratchCascadeDistances;
-        for (i = 0; i < numberOfCascades; ++i) {
-            var cascadeDistance = splits[i + 1] - splits[i];
-            cascadeDistances[i] = Math.min(cascadeDistance, maximumDistances[i]);
-        }
-
-        // Recompute splits
-        var split = splits[0];
-        for (i = 0; i < numberOfCascades - 1; ++i) {
-            split += cascadeDistances[i];
+            var split = CesiumMath.lerp(uniformScale, logScale, lambda);
             splits[i + 1] = split;
+            cascadeDistances[i] = split - splits[i];
+        }
+
+        // When the camera is close enough to something provide more detail in the closer cascades
+        if (cameraNear < 100.0) {
+            // Clamp each cascade to its maximum distance
+            for (i = 0; i < numberOfCascades; ++i) {
+                cascadeDistances[i] = Math.min(cascadeDistances[i], maximumDistances[i]);
+            }
+
+            // Recompute splits
+            var distance = splits[0];
+            for (i = 0; i < numberOfCascades - 1; ++i) {
+                distance += cascadeDistances[i];
+                splits[i + 1] = distance;
+            }
         }
 
         Cartesian4.unpack(splits, 0, shadowMap._cascadeSplits[0]);

@@ -551,6 +551,7 @@ define([
             context : context,
             lightCamera : this._sunCamera
         });
+        this.shadowMap.enabled = false;
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
