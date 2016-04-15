@@ -2836,6 +2836,7 @@ define([
         Cartesian3.clone(camera.up, result.up);
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
+        result._transformChanged = true;
 
         // Clone frustum only if it is the same type
         if (defined(camera.frustum.left) === defined(result.frustum.left)) {

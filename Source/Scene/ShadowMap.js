@@ -122,6 +122,7 @@ define([
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
      * @param {Number} [options.size=1024] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
+     * @param {Number} [options.darkness=0.3] The shadow darkness.
      *
      * @see ShadowMapShader
      *
@@ -147,8 +148,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.enabled = false;
+        this.enabled = true;
         this.softShadows = defaultValue(options.softShadows, false);
+        this.darkness = defaultValue(options.darkness, 0.3);
         this._exponentialShadows = false;
 
         this._outOfView = false;
@@ -185,7 +187,7 @@ define([
             normalOffsetScale : 0.0,
             normalShading : true,
             normalShadingSmooth : 0.1,
-            depthBias : 0.01
+            depthBias : 0.0005
         };
 
         // Framebuffer resources
@@ -215,7 +217,7 @@ define([
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-        this._maximumDistance = 1000.0;
+        this._maximumDistance = 5000.0;
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -1003,6 +1005,7 @@ define([
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
 
+        var cascadeDistances = scratchCascadeDistances;
         var splits = scratchSplits;
         splits[0] = cameraNear;
         splits[numberOfCascades] = cameraFar;
@@ -1012,21 +1015,24 @@ define([
             var p = (i + 1) / numberOfCascades;
             var logScale = cameraNear * Math.pow(ratio, p);
             var uniformScale = cameraNear + range * p;
-            splits[i + 1] = CesiumMath.lerp(uniformScale, logScale, lambda);
-        }
-
-        // Clamp each cascade to its maximum distance
-        var cascadeDistances = scratchCascadeDistances;
-        for (i = 0; i < numberOfCascades; ++i) {
-            var cascadeDistance = splits[i + 1] - splits[i];
-            cascadeDistances[i] = Math.min(cascadeDistance, maximumDistances[i]);
-        }
-
-        // Recompute splits
-        var split = splits[0];
-        for (i = 0; i < numberOfCascades - 1; ++i) {
-            split += cascadeDistances[i];
+            var split = CesiumMath.lerp(uniformScale, logScale, lambda);
             splits[i + 1] = split;
+            cascadeDistances[i] = split - splits[i];
+        }
+
+        // When the camera is close enough to something provide more detail in the closer cascades
+        if (cameraNear < 100.0) {
+            // Clamp each cascade to its maximum distance
+            for (i = 0; i < numberOfCascades; ++i) {
+                cascadeDistances[i] = Math.min(cascadeDistances[i], maximumDistances[i]);
+            }
+
+            // Recompute splits
+            var distance = splits[0];
+            for (i = 0; i < numberOfCascades - 1; ++i) {
+                distance += cascadeDistances[i];
+                splits[i + 1] = distance;
+            }
         }
 
         Cartesian4.unpack(splits, 0, shadowMap._cascadeSplits[0]);
@@ -1378,8 +1384,8 @@ define([
     };
 
     var scratchTexelStepSize = new Cartesian2();
-    var scratchUniformCartesian3 = new Cartesian3();
-    var scratchUniformCartesian4 = new Cartesian4();
+    var scratchUniformCartesian1 = new Cartesian4();
+    var scratchUniformCartesian2 = new Cartesian4();
 
     function combineUniforms(shadowMap, uniforms, isTerrain) {
         var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
@@ -1414,10 +1420,10 @@ define([
                 texelStepSize.x = 1.0 / shadowMap._textureSize.x;
                 texelStepSize.y = 1.0 / shadowMap._textureSize.y;
 
-                return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian4);
+                return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, scratchUniformCartesian1);
             },
-            u_shadowMapNormalOffsetScaleDistanceAndMaxDistance : function() {
-                return Cartesian3.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, scratchUniformCartesian3);
+            u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
+                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap.darkness, scratchUniformCartesian2);
             }
         };
 

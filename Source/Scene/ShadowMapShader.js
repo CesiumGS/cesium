@@ -206,7 +206,7 @@ define([
             'uniform mat4 u_shadowMapMatrix; \n' +
             'uniform vec3 u_shadowMapLightDirectionEC; \n' +
             'uniform vec4 u_shadowMapLightPositionEC; \n' +
-            'uniform vec3 u_shadowMapNormalOffsetScaleDistanceAndMaxDistance; \n' +
+            'uniform vec4 u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness; \n' +
             'uniform vec4 u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth; \n' +
             'uniform sampler2D u_shadowMapTexture; \n' +
             'uniform samplerCube u_shadowMapTextureCube; \n' +
@@ -226,7 +226,7 @@ define([
             'void applyNormalOffset(inout vec4 positionEC, vec3 normalEC, float nDotL) \n' +
             '{ \n' +
             (bias.normalOffset && hasNormalVarying ?
-            '    float normalOffset = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.x; \n' +
+            '    float normalOffset = u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness.x; \n' +
             '    // Offset the shadow position in the direction of the normal for perpendicular and back faces \n' +
             '    float normalOffsetScale = 1.0 - nDotL; \n' +
             '    vec3 offset = normalOffset * normalOffsetScale * normalEC; \n' +
@@ -246,7 +246,8 @@ define([
             '    shadowParameters.texelStepSize = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.xy; \n' +
             '    shadowParameters.depthBias = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.z; \n' +
             '    shadowParameters.normalShadingSmooth = u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth.w; \n' +
-            '    shadowParameters.distance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.y; \n';
+            '    shadowParameters.distance = u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness.y; \n' +
+            '    shadowParameters.darkness = u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness.w; \n';
 
         if (isTerrain) {
             fsSource +=
@@ -327,7 +328,7 @@ define([
                 '    float visibility = czm_shadowVisibility(u_shadowMapTexture, shadowParameters); \n' +
 
                 '    // Fade out shadows that are far away \n' +
-                '    float shadowMapMaximumDistance = u_shadowMapNormalOffsetScaleDistanceAndMaxDistance.z; \n' +
+                '    float shadowMapMaximumDistance = u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness.z; \n' +
                 '    float fade = max((depth - shadowMapMaximumDistance * 0.8) / (shadowMapMaximumDistance * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
 
