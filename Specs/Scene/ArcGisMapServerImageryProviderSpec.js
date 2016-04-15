@@ -695,6 +695,65 @@ defineSuite([
         });
     });
 
+    it('constrains extent to the tiling scheme\'s rectangle', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+
+        var webMercatorOutsideBoundsResult = {
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -20037508.342787,
+                    "y" : 20037508.342787
+                },
+                "spatialReference" : {
+                    "wkid" : 102100
+                },
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 156543.033928,
+                    "scale" : 591657527.591555
+                }, {
+                    "level" : 1,
+                    "resolution" : 78271.5169639999,
+                    "scale" : 295828763.795777
+                }, {
+                    "level" : 2,
+                    "resolution" : 39135.7584820001,
+                    "scale" : 147914381.897889
+                }]
+            },
+            fullExtent : {
+                "xmin" :  -2.0037507067161843E7,
+                "ymin" : -1.4745615008589065E7,
+                "xmax" : 2.0037507067161843E7,
+                "ymax" : 3.0240971958386205E7,
+                "spatialReference" : {
+                    "wkid" : 102100
+                }
+            }
+        };
+
+        stubJSONPCall(baseUrl, webMercatorOutsideBoundsResult);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl
+        });
+
+        expect(provider.url).toEqual(baseUrl);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.rectangle.west >= -Math.PI).toBe(true);
+            expect(provider.rectangle.east <= Math.PI).toBe(true);
+            expect(provider.rectangle.south >= -WebMercatorProjection.MaximumLatitude).toBe(true);
+            expect(provider.rectangle.north <= WebMercatorProjection.MaximumLatitude).toBe(true);
+        });
+    });
+
     it('honors fullExtent of tiled server with geographic projection', function() {
         var baseUrl = '//tiledArcGisMapServer.invalid';
 
