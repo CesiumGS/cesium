@@ -50,7 +50,6 @@
         });
 
         var scene = viewer.scene;
-        var context = scene.context;
         var camera = scene.camera;
 
         scene.debugShowFramesPerSecond = true;
@@ -65,7 +64,7 @@
             camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
             var shadowMap = new Cesium.ShadowMap({
-                context : context,
+                context : scene.context,
                 lightCamera : pointLightCamera,
                 isPointLight : true,
                 softShadows : false
@@ -117,7 +116,6 @@
         };
 
         scene.primitives.add(new CustomPrimitive(shadowMap2));
-
 
 //Sandcastle_End
         Sandcastle.finishedLoading();
