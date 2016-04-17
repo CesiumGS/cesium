@@ -1,5 +1,6 @@
 
-float czm_private_shadowVisibility(float visibility, float nDotL, float normalShadingSmooth, float darkness) {
+float czm_private_shadowVisibility(float visibility, float nDotL, float normalShadingSmooth, float darkness)
+{
 #ifdef USE_NORMAL_SHADING
 #ifdef USE_NORMAL_SHADING_SMOOTH
     float strength = clamp(nDotL / normalShadingSmooth, 0.0, 1.0);
