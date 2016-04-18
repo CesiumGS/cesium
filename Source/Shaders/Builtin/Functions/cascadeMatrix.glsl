@@ -1,10 +1,10 @@
 
-uniform mat4 u_shadowMapCascadeMatrices[4];
+uniform mat4 shadowMap_cascadeMatrices[4];
 
 mat4 czm_cascadeMatrix(vec4 weights)
 {
-    return u_shadowMapCascadeMatrices[0] * weights.x +
-           u_shadowMapCascadeMatrices[1] * weights.y +
-           u_shadowMapCascadeMatrices[2] * weights.z +
-           u_shadowMapCascadeMatrices[3] * weights.w;
+    return shadowMap_cascadeMatrices[0] * weights.x +
+           shadowMap_cascadeMatrices[1] * weights.y +
+           shadowMap_cascadeMatrices[2] * weights.z +
+           shadowMap_cascadeMatrices[3] * weights.w;
 }

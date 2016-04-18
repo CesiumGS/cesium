@@ -653,7 +653,7 @@ define([
     function createDebugShadowViewCommand(shadowMap, context) {
         var fs;
         if (shadowMap._isPointLight) {
-            fs = 'uniform samplerCube u_shadowMapTextureCube; \n' +
+            fs = 'uniform samplerCube shadowMap_textureCube; \n' +
                  'varying vec2 v_textureCoordinates; \n' +
                  'void main() \n' +
                  '{ \n' +
@@ -703,18 +703,18 @@ define([
                  '        } \n' +
                  '    } \n' +
                  ' \n' +
-                 '    float shadow = czm_unpackDepth(textureCube(u_shadowMapTextureCube, dir)); \n' +
+                 '    float shadow = czm_unpackDepth(textureCube(shadowMap_textureCube, dir)); \n' +
                  '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                  '} \n';
         } else {
-            fs = 'uniform sampler2D u_shadowMapTexture; \n' +
+            fs = 'uniform sampler2D shadowMap_texture; \n' +
                  'varying vec2 v_textureCoordinates; \n' +
                  'void main() \n' +
                  '{ \n' +
 
                  (shadowMap._usesDepthTexture ?
-                 '    float shadow = texture2D(u_shadowMapTexture, v_textureCoordinates).r; \n' :
-                 '    float shadow = czm_unpackDepth(texture2D(u_shadowMapTexture, v_textureCoordinates)); \n') +
+                 '    float shadow = texture2D(shadowMap_texture, v_textureCoordinates).r; \n' :
+                 '    float shadow = czm_unpackDepth(texture2D(shadowMap_texture, v_textureCoordinates)); \n') +
 
                  '    gl_FragColor = vec4(vec3(shadow), 1.0); \n' +
                  '} \n';
@@ -722,10 +722,10 @@ define([
 
         var drawCommand = context.createViewportQuadCommand(fs, {
             uniformMap : {
-                u_shadowMapTexture : function() {
+                shadowMap_texture : function() {
                     return shadowMap._shadowMapTexture;
                 },
-                u_shadowMapTextureCube : function() {
+                shadowMap_textureCube : function() {
                     return shadowMap._shadowMapTexture;
                 }
             }
@@ -1355,38 +1355,38 @@ define([
         var bias = shadowMap._isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
         var mapUniforms = {
-            u_shadowMapTexture :function() {
+            shadowMap_texture :function() {
                 return shadowMap._shadowMapTexture;
             },
-            u_shadowMapTextureCube : function() {
+            shadowMap_textureCube : function() {
                 return shadowMap._shadowMapTexture;
             },
-            u_shadowMapMatrix : function() {
+            shadowMap_matrix : function() {
                 return shadowMap._shadowMapMatrix;
             },
-            u_shadowMapCascadeSplits : function() {
+            shadowMap_cascadeSplits : function() {
                 return shadowMap._cascadeSplits;
             },
-            u_shadowMapCascadeMatrices : function() {
+            shadowMap_cascadeMatrices : function() {
                 return shadowMap._cascadeMatrices;
             },
-            u_shadowMapLightDirectionEC : function() {
+            shadowMap_lightDirectionEC : function() {
                 return shadowMap._lightDirectionEC;
             },
-            u_shadowMapLightPositionEC : function() {
+            shadowMap_lightPositionEC : function() {
                 return shadowMap._lightPositionEC;
             },
-            u_shadowMapCascadeDistances : function() {
+            shadowMap_cascadeDistances : function() {
                 return shadowMap._cascadeDistances;
             },
-            u_shadowMapTexelSizeDepthBiasAndNormalShadingSmooth : function() {
+            shadowMap_texelSizeDepthBiasAndNormalShadingSmooth : function() {
                 var texelStepSize = scratchTexelStepSize;
                 texelStepSize.x = 1.0 / shadowMap._textureSize.x;
                 texelStepSize.y = 1.0 / shadowMap._textureSize.y;
 
                 return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, this.combinedUniforms1);
             },
-            u_shadowMapNormalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
+            shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
                 return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap.darkness, this.combinedUniforms2);
             },
 

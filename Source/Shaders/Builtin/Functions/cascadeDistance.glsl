@@ -1,7 +1,7 @@
 
-uniform vec4 u_shadowMapCascadeDistances;
+uniform vec4 shadowMap_cascadeDistances;
 
 float czm_cascadeDistance(vec4 weights)
 {
-    return dot(u_shadowMapCascadeDistances, weights);
+    return dot(shadowMap_cascadeDistances, weights);
 }
