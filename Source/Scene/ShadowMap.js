@@ -220,6 +220,7 @@ define([
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
         this._maximumDistance = 5000.0;
+        this._maximumCascadeDistances = [50.0, 300.0, Number.MAX_VALUE, Number.MAX_VALUE];
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -954,8 +955,6 @@ define([
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
 
-    var maximumDistances = [50.0, 300.0, Number.MAX_VALUE, Number.MAX_VALUE];
-
     function computeCascades(shadowMap) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
         var sceneCamera = shadowMap._sceneCamera;
@@ -988,7 +987,7 @@ define([
         if (cameraNear < 100.0) {
             // Clamp each cascade to its maximum distance
             for (i = 0; i < numberOfCascades; ++i) {
-                cascadeDistances[i] = Math.min(cascadeDistances[i], maximumDistances[i]);
+                cascadeDistances[i] = Math.min(cascadeDistances[i], shadowMap._maximumCascadeDistances[i]);
             }
 
             // Recompute splits
