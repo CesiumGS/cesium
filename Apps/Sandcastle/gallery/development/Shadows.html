@@ -120,10 +120,6 @@
             <td><input type="checkbox" data-bind="checked: softShadows, enable: softShadowsEnabled"/></td>
         </tr>
         <tr>
-            <td>Exponential Shadows</td>
-            <td><input type="checkbox" data-bind="checked: exponentialShadows"/></td>
-        </tr>
-        <tr>
             <td>Location</td>
             <td><select data-bind="options: locationOptions, value: location"/></td>
         </tr>
@@ -215,7 +211,6 @@ var viewModel = {
     fitNearFarEnabled : true,
     softShadows : false,
     softShadowsEnabled : true,
-    exponentialShadows : false,
     cascadeOptions : [1, 4],
     cascades : 4,
     cascadesEnabled : true,
@@ -365,7 +360,6 @@ Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSetti
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'exponentialShadows').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
@@ -421,7 +415,6 @@ function updateShadows() {
     var lightSource = viewModel.lightSource;
     var cascadeColors = viewModel.cascadeColors;
     var softShadows = viewModel.softShadows;
-    var exponentialShadows = viewModel.exponentialShadows;
 
     var lightCamera;
     if (lightSource === 'Freeform') {
@@ -466,8 +459,6 @@ function updateShadows() {
             softShadows : softShadows
         });
     }
-
-    shadowMap._exponentialShadows = exponentialShadows;
 
     // Update biases
     for (var i = 0; i < viewModel.biasModes.length; ++i) {

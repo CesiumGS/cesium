@@ -141,7 +141,6 @@ define([
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
-        var exponentialShadows = shadowMap._exponentialShadows;
 
         var defines = fs.defines.slice(0);
         var sources = fs.sources.slice(0);
@@ -166,10 +165,6 @@ define([
             if (bias.normalShadingSmooth > 0.0) {
                 defines.push('USE_NORMAL_SHADING_SMOOTH');
             }
-        }
-
-        if (exponentialShadows) {
-            defines.push('USE_EXPONENTIAL_SHADOW_MAPS');
         }
 
         var fsSource = '';

@@ -154,7 +154,6 @@ define([
         this.enabled = defaultValue(options.enabled, true);
         this.softShadows = defaultValue(options.softShadows, false);
         this.darkness = defaultValue(options.darkness, 0.3);
-        this._exponentialShadows = false;
 
         this._outOfView = false;
         this._outOfViewPrevious = false;
