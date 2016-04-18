@@ -194,11 +194,11 @@ define([
             '    return vec3(1.0); \n') +
             '} \n' +
 
+            // Offset the shadow position in the direction of the normal for perpendicular and back faces
             'void applyNormalOffset(inout vec4 positionEC, vec3 normalEC, float nDotL) \n' +
             '{ \n' +
             (bias.normalOffset && hasNormalVarying ?
             '    float normalOffset = shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness.x; \n' +
-            '    // Offset the shadow position in the direction of the normal for perpendicular and back faces \n' +
             '    float normalOffsetScale = 1.0 - nDotL; \n' +
             '    vec3 offset = normalOffset * normalOffsetScale * normalEC; \n' +
             '    positionEC.xyz += offset; \n' : '') +
