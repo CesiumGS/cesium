@@ -477,9 +477,6 @@ define([
             result.translucentCommand = DrawCommand.shallowClone(command, result.translucentCommand);
 
             if (!defined(translucentShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                if (defined(translucentShader)) {
-                    translucentShader.destroy();
-                }
                 result.translucentCommand.shaderProgram = getTranslucentMRTShaderProgram(this, context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentMRTRenderState(this, context, command.renderState);
                 result.shaderProgramId = command.shaderProgram.id;
@@ -503,11 +500,6 @@ define([
             result.alphaCommand = DrawCommand.shallowClone(command, result.alphaCommand);
 
             if (!defined(colorShader) || result.shaderProgramId !== command.shaderProgram.id) {
-                if (defined(colorShader)) {
-                    colorShader.destroy();
-                    alphaShader.destroy();
-                }
-
                 result.translucentCommand.shaderProgram = getTranslucentColorShaderProgram(this, context, command.shaderProgram);
                 result.translucentCommand.renderState = getTranslucentColorRenderState(this, context, command.renderState);
                 result.alphaCommand.shaderProgram = getTranslucentAlphaShaderProgram(this, context, command.shaderProgram);

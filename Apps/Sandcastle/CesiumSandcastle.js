@@ -726,7 +726,7 @@ require({
             demoJs = scriptCode.replace(/\s/g, '');
 
             if (defined(queryObject.gistId)) {
-                Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId)
+                Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
                     .then(function(data) {
                         var files = data.data.files;
                         var code = files[Object.keys(files)[0]].content;
@@ -735,9 +735,10 @@ require({
                         gistCode = code;
                         previousCode = code;
                         sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+                        CodeMirror.commands.runCesium(jsEditor);
                         clearRun();
                     }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many request, try again in an hour.', true);
+                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + gistId , true);
                         console.log(error);
                 });
             } else {
@@ -911,7 +912,7 @@ require({
             textArea.value = sandcastleUrl;
             textArea.select();
         }).otherwise(function(error) {
-            appendConsole('consoleError', 'Unable to POST to GitHub API.', true);
+            appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many POST requests, try again in an hour.', true);
             console.log(error);
         });
     });
@@ -922,16 +923,7 @@ require({
             var index = gistId.lastIndexOf('/');
             gistId = gistId.substring(index + 1);
         }
-
-        return Cesium.loadJsonp('https://api.github.com/gists/' + gistId)
-            .then(function() {
-                window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
-            }).otherwise(function(error) {
-                if (gistId !== '') {
-                    appendConsole('consoleError', 'Can\'t GET Gist : ' + document.getElementById('gistId').value + '. If you are inputting a url be sure it is in this form: https://gist.github.com/id', true);
-                    console.log(error);
-                }
-            });
+        window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
     });
 
     registry.byId('buttonNew').on('click', function() {
