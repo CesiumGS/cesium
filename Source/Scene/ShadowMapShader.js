@@ -137,7 +137,6 @@ define([
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
         var hasCascades = shadowMap._numberOfCascades > 1;
-        var cascadesEnabled = shadowMap._cascadesEnabled;
         var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
@@ -223,9 +222,6 @@ define([
         if (isTerrain) {
             // Scale depth bias based on view distance to reduce z-fighting in distant terrain
             fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
-        } else if (cascadesEnabled) {
-            // Reduce depth bias for larger shadow maps to limit light leaking
-            fsSource += '    shadowParameters.depthBias /= shadowParameters.distance; \n';
         }
 
         if (isPointLight) {

@@ -177,8 +177,8 @@ define([
             normalOffset : true,
             normalOffsetScale : 0.1,
             normalShading : true,
-            normalShadingSmooth : 0.1,
-            depthBias : 0.0001
+            normalShadingSmooth : 0.01,
+            depthBias : 0.00001
         };
 
         this._pointBias = {
