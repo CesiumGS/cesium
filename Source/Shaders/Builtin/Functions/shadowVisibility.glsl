@@ -18,7 +18,6 @@ float czm_private_shadowVisibility(float visibility, float nDotL, float normalSh
 float czm_shadowVisibility(samplerCube shadowMap, czm_shadowParameters shadowParameters)
 {
     float depthBias = shadowParameters.depthBias;
-    float shadowDistance = shadowParameters.distance;
     float depth = shadowParameters.depth;
     float nDotL = shadowParameters.nDotL;
     float normalShadingSmooth = shadowParameters.normalShadingSmooth;
@@ -26,14 +25,13 @@ float czm_shadowVisibility(samplerCube shadowMap, czm_shadowParameters shadowPar
     vec3 uvw = shadowParameters.texCoords;
 
     depth -= depthBias;
-    float visibility = czm_shadowDepthCompare(shadowMap, uvw, depth, shadowDistance);
+    float visibility = czm_shadowDepthCompare(shadowMap, uvw, depth);
     return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth, darkness);
 }
 #else
 float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParameters)
 {
     float depthBias = shadowParameters.depthBias;
-    float shadowDistance = shadowParameters.distance;
     float depth = shadowParameters.depth;
     float nDotL = shadowParameters.nDotL;
     float normalShadingSmooth = shadowParameters.normalShadingSmooth;
@@ -49,18 +47,18 @@ float czm_shadowVisibility(sampler2D shadowMap, czm_shadowParameters shadowParam
     float dx1 = texelStepSize.x * radius;
     float dy1 = texelStepSize.y * radius;
     float visibility = (
-        czm_shadowDepthCompare(shadowMap, uv, depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, dy0), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(0.0, dy0), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, dy0), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, 0.0), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, 0.0), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, dy1), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(0.0, dy1), depth, shadowDistance) +
-        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, dy1), depth, shadowDistance)
+        czm_shadowDepthCompare(shadowMap, uv, depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, dy0), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(0.0, dy0), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, dy0), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, 0.0), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, 0.0), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx0, dy1), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(0.0, dy1), depth) +
+        czm_shadowDepthCompare(shadowMap, uv + vec2(dx1, dy1), depth)
     ) * (1.0 / 9.0);
 #else
-    float visibility = czm_shadowDepthCompare(shadowMap, uv, depth, shadowDistance);
+    float visibility = czm_shadowDepthCompare(shadowMap, uv, depth);
 #endif
 
     return czm_private_shadowVisibility(visibility, nDotL, normalShadingSmooth, darkness);

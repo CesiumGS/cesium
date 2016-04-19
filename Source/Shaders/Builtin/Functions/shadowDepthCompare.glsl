@@ -13,12 +13,12 @@ float czm_sampleShadowMap(sampler2D shadowMap, vec2 uv)
 #endif
 }
 
-float czm_shadowDepthCompare(samplerCube shadowMap, vec3 uv, float depth, float shadowDistance)
+float czm_shadowDepthCompare(samplerCube shadowMap, vec3 uv, float depth)
 {
     return step(depth, czm_sampleShadowMap(shadowMap, uv));
 }
 
-float czm_shadowDepthCompare(sampler2D shadowMap, vec2 uv, float depth, float shadowDistance)
+float czm_shadowDepthCompare(sampler2D shadowMap, vec2 uv, float depth)
 {
     return step(depth, czm_sampleShadowMap(shadowMap, uv));
 }

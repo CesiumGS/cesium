@@ -216,7 +216,6 @@ define([
             '    shadowParameters.texelStepSize = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.xy; \n' +
             '    shadowParameters.depthBias = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.z; \n' +
             '    shadowParameters.normalShadingSmooth = shadowMap_texelSizeDepthBiasAndNormalShadingSmooth.w; \n' +
-            '    shadowParameters.distance = shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness.y; \n' +
             '    shadowParameters.darkness = shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness.w; \n';
 
         if (isTerrain) {
@@ -239,7 +238,6 @@ define([
 
                 '    shadowParameters.depth = distance / radius; \n' +
                 '    shadowParameters.nDotL = clamp(dot(normalEC, -directionEC), 0.0, 1.0); \n' +
-                '    shadowParameters.distance = radius; \n' +
 
                 '    shadowParameters.texCoords = directionWC; \n' +
                 '    float visibility = czm_shadowVisibility(shadowMap_textureCube, shadowParameters); \n';
@@ -288,7 +286,6 @@ define([
                 '    shadowParameters.texCoords = shadowPosition.xy; \n' +
                 '    shadowParameters.depth = shadowPosition.z; \n' +
                 '    shadowParameters.nDotL = nDotL; \n' +
-                '    shadowParameters.distance = czm_cascadeDistance(weights); \n' +
                 '    float visibility = czm_shadowVisibility(shadowMap_texture, shadowParameters); \n' +
 
                 '    // Fade out shadows that are far away \n' +

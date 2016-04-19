@@ -7,7 +7,6 @@ struct czm_shadowParameters
 #endif
 
     float depthBias;
-    float distance;
     float depth;
     float nDotL;
     vec2 texelStepSize;
