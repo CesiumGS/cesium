@@ -738,7 +738,7 @@ require({
                         CodeMirror.commands.runCesium(jsEditor);
                         clearRun();
                     }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour. Here is a link to the Gist you where trying to GET: https://gist.github.com/' + gistId , true);
+                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + gistId , true);
                         console.log(error);
                 });
             } else {
