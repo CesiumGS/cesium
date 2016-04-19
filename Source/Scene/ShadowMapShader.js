@@ -159,6 +159,15 @@ define([
             defines.push('USE_SOFT_SHADOWS');
         }
 
+        // Enable day-night shading so that the globe is dark when the light is below the horizon
+        if (hasCascades && castShadows && isTerrain) {
+            if (hasNormalVarying) {
+                defines.push('ENABLE_VERTEX_LIGHTING');
+            } else {
+                defines.push('ENABLE_DAYNIGHT_SHADING');
+            }
+        }
+
         if (castShadows && bias.normalShading && hasNormalVarying) {
             defines.push('USE_NORMAL_SHADING');
             if (bias.normalShadingSmooth > 0.0) {

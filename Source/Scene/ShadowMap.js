@@ -154,6 +154,7 @@ define([
         this.enabled = defaultValue(options.enabled, true);
         this.softShadows = defaultValue(options.softShadows, false);
         this.darkness = defaultValue(options.darkness, 0.3);
+        this._darkness = this.darkness;
 
         this._outOfView = false;
         this._outOfViewPrevious = false;
@@ -175,9 +176,9 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.1,
+            normalOffsetScale : 0.2,
             normalShading : true,
-            normalShadingSmooth : 0.01,
+            normalShadingSmooth : 0.05,
             depthBias : 0.00001
         };
 
@@ -1213,7 +1214,13 @@ define([
             var surfaceNormal = frameState.mapProjection.ellipsoid.geodeticSurfaceNormal(sceneCamera.positionWC, scratchCartesian1);
             var lightDirection = Cartesian3.negate(shadowMapCamera.directionWC, scratchCartesian2);
             var dot = Cartesian3.dot(surfaceNormal, lightDirection);
-            if (dot < 0.05) {
+
+            // Shadows start to fade out once the light gets closer to the horizon.
+            // At this point the globe uses vertex lighting alone to darken the surface.
+            var darknessAmount = CesiumMath.clamp(dot / 0.1, 0.0, 1.0);
+            shadowMap._darkness = CesiumMath.lerp(1.0, shadowMap.darkness, darknessAmount);
+
+            if (dot < 0.0) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
@@ -1387,7 +1394,7 @@ define([
                 return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, this.combinedUniforms1);
             },
             shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
-                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap.darkness, this.combinedUniforms2);
+                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap._darkness, this.combinedUniforms2);
             },
 
             combinedUniforms1 : new Cartesian4(),
