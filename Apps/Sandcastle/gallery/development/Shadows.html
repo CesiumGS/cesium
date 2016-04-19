@@ -296,48 +296,23 @@ var uiOptions = {
     locations : {
         'Exton' : {
             'centerLongitude' : -1.31968,
-            'centerLatitude' : 0.698874,
-            'offsetZ' : 20.0,
-            'frustumSize' : 15,
-            'frustumNear' : 1.0,
-            'frustumFar' : 100.0,
-            'tilt' : 0.0
+            'centerLatitude' : 0.698874
         },
         'Everest' : {
             'centerLongitude' : 1.517132688,
-            'centerLatitude' : 0.4884844964,
-            'offsetZ' : 50.0,
-            'frustumSize' : 55.0,
-            'frustumNear' : 1.0,
-            'frustumFar' : 400.0,
-            'tilt' : 30.0
+            'centerLatitude' : 0.4884844964
         },
         'Pinnacle PA' : {
             'centerLongitude' : -1.3324415110874286,
-            'centerLatitude' : 0.6954224325279967,
-            'offsetZ' : 236.6770689945084,
-            'frustumSize' : 55.0,
-            'frustumNear' : 1.0,
-            'frustumFar' : 400.0,
-            'tilt' : 30.0
+            'centerLatitude' : 0.6954224325279967
         },
         'Seneca Rocks' : {
             'centerLongitude' : -1.38519677,
-            'centerLatitude' : 0.67781497,
-            'offsetZ' : 236.6770689945084,
-            'frustumSize' : 55.0,
-            'frustumNear' : 1.0,
-            'frustumFar' : 400.0,
-            'tilt' : 30.0
+            'centerLatitude' : 0.67781497
         },
         'Half Dome' : {
             'centerLongitude' : -2.0862479628,
-            'centerLatitude' : 0.6587902522,
-            'offsetZ' : 236.6770689945084,
-            'frustumSize' : 55.0,
-            'frustumNear' : 1.0,
-            'frustumFar' : 400.0,
-            'tilt' : 30.0
+            'centerLatitude' : 0.6587902522
         }
     }
 };
@@ -556,22 +531,25 @@ function createScene() {
     var location = uiOptions.locations[viewModel.location];
     var center = Cesium.Cartesian3.fromRadians(location.centerLongitude, location.centerLatitude, location.height);
 
+    var frustumSize = 55.0;
+    var frustumNear = 1.0;
+    var frustumFar = 400.0;
     var frustum = new Cesium.OrthographicFrustum();
-    frustum.left = -location.frustumSize;
-    frustum.right = location.frustumSize;
-    frustum.bottom = -location.frustumSize;
-    frustum.top = location.frustumSize;
-    frustum.near = location.frustumNear;
-    frustum.far = location.frustumFar;
+    frustum.left = -frustumSize;
+    frustum.right = frustumSize;
+    frustum.bottom = -frustumSize;
+    frustum.top = frustumSize;
+    frustum.near = frustumNear;
+    frustum.far = frustumFar;
 
     fixedLightCamera.frustum = frustum;
-    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
+    fixedLightCamera.lookAt(center, new Cesium.Cartesian3(30.0, 30.0, 50.0));
 
     spotLightCamera.frustum.fov = Cesium.Math.PI_OVER_TWO;
     spotLightCamera.frustum.aspectRatio = 1.0;
     spotLightCamera.frustum.near = 1.0;
     spotLightCamera.frustum.far = 500.0;
-    spotLightCamera.lookAt(center, new Cesium.Cartesian3(location.tilt, location.tilt, location.offsetZ));
+    spotLightCamera.lookAt(center, new Cesium.Cartesian3(30.0, 30.0, 50.0));
 
     pointLightCamera.position = center;
 
