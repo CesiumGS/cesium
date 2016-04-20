@@ -116,6 +116,5 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html"><img src="http://cesiumjs.org/images/Sandcastle.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/"><img src="http://cesiumjs.org/images/CesiumViewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/Build/Apps/CesiumViewer/index.html?source=/Gallery/BAMS_C4ISR.czml&lookAt=Aircraft/GlobalHawk_1a"><img src="http://cesiumjs.org/images/BAMSC4ISR.png" height="150" /></a>&nbsp;
-<a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 </p>
 
