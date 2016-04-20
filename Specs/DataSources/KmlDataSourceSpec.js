@@ -23,6 +23,8 @@ defineSuite([
         'DataSources/ImageMaterialProperty',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/SceneMode',
+        'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -49,6 +51,8 @@ defineSuite([
         ImageMaterialProperty,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
+        createScene,
         pollToPromise,
         when) {
     "use strict";
@@ -3712,6 +3716,32 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.log.calls.count()).toEqual(1);
             expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
+
+    it('NetworkLink: Scene can async morph camera mode while active', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        var scene = createScene();
+        var kmlOptions = {
+            camera : scene.camera,
+            canvas : scene.canvas
+        };
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function() {
+            scene.morphTo3D();
+            expect(scene.mode).toEqual(SceneMode.SCENE3D);
+            scene.morphTo2D(1.0);
+            return scene.morphComplete.addEventListener(function() {
+                expect(scene.mode).toEqual(SceneMode.SCENE2D);
+                scene.destroyForSpecs();
+            });
         });
     });
 });
