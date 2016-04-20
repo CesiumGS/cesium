@@ -472,10 +472,17 @@ define([
 
         var extrudedHeight = options.extrudedHeight;
         var extrude = defined(extrudedHeight);
-        if (extrude && !perPositionHeight) {
-            var h = extrudedHeight;
-            extrudedHeight = Math.min(h, height);
-            height = Math.max(h, height);
+
+        if (!perPositionHeight && extrude) {
+            //Ignore extrudedHeight if it matches height
+            if (CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON10)) {
+                extrudedHeight = undefined;
+                extrude = false;
+            } else {
+                var h = extrudedHeight;
+                extrudedHeight = Math.min(h, height);
+                height = Math.max(h, height);
+            }
         }
 
         this._vertexFormat = VertexFormat.clone(vertexFormat);
