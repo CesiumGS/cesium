@@ -11,15 +11,14 @@ define([
         JulianDate,
         CesiumMath,
         TimeConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * This is a collection of the orientation information available for central bodies.
      * The data comes from the Report of the IAU/IAG Working Group on Cartographic
      * Coordinates and Rotational Elements: 2000.
      *
-     * @namespace
-     * @alias Iau2000Orientation
+     * @exports Iau2000Orientation
      *
      * @private
      */

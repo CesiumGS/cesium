@@ -31,7 +31,7 @@ define([
         RenderState,
         Texture,
         when) {
-    "use strict";
+    'use strict';
 
     // The atlas is made up of regions of space called nodes that contain images or child nodes.
     function TextureAtlasNode(bottomLeft, topRight, childNode1, childNode2, imageIndex) {
@@ -476,10 +476,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see TextureAtlas#isDestroyed
      *
      * @example
      * atlas = atlas && atlas.destroy();
+     * 
+     * @see TextureAtlas#isDestroyed
      */
     TextureAtlas.prototype.destroy = function() {
         this._texture = this._texture && this._texture.destroy();

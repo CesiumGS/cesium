@@ -67,7 +67,7 @@ defineSuite([
         equals,
         pollToPromise,
         render) {
-    "use strict";
+    'use strict';
 
     var scene;
 
@@ -80,6 +80,7 @@ defineSuite([
         scene.debugCommandFilter = undefined;
         scene.fxaa = false;
         scene.primitives.removeAll();
+        scene.morphTo3D();
     });
 
     afterAll(function() {
@@ -250,6 +251,13 @@ defineSuite([
             })
         });
         c.execute = function() {};
+
+        var originalShallowClone = DrawCommand.shallowClone;
+        spyOn(DrawCommand, 'shallowClone').and.callFake(function(command, result) {
+            result = originalShallowClone(command, result);
+            result.execute = function() {};
+            return result;
+        });
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -530,6 +538,28 @@ defineSuite([
         s.destroyForSpecs();
     });
 
+    it('renders map twice when in 2D', function() {
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+
+        var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+        rectanglePrimitive1.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive1);
+
+        scene.camera.setView({
+            destination : new Cartesian3(Ellipsoid.WGS84.maximumRadius * Math.PI + 10000.0, 0.0, 10.0),
+            convert : false
+        });
+
+        var pixels = scene.renderForSpecs();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+    });
+
     it('copies the globe depth', function() {
         var scene = createScene();
         if (defined(scene._globeDepth)) {
@@ -577,6 +607,40 @@ defineSuite([
 
         var primitives = scene.primitives;
         primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+
+        position = scene.pickPosition(windowPosition);
+        expect(position).toBeDefined();
+    });
+
+    it('pickPosition returns undefined when useDepthPicking is false', function() {
+        if (!scene.pickPositionSupported) {
+            return;
+        }
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        var canvas = scene.canvas;
+        var windowPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 2);
+
+        var rectanglePrimitive = createRectangle(rectangle);
+        rectanglePrimitive.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive);
+
+        scene.useDepthPicking = false;
+
+        scene.renderForSpecs();
+
+        var position = scene.pickPosition(windowPosition);
+        expect(position).not.toBeDefined();
+
+        scene.useDepthPicking = true;
 
         scene.renderForSpecs();
 

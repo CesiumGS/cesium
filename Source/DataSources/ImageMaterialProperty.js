@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -9,16 +10,18 @@ define([
         './Property'
     ], function(
         Cartesian2,
+        Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultRepeat = new Cartesian2(1, 1);
-    var defaultAlpha = 1.0;
+    var defaultTransparent = false;
+    var defaultColor = Color.WHITE;
 
     /**
      * A {@link MaterialProperty} that maps to image {@link Material} uniforms.
@@ -28,6 +31,8 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.image] A Property specifying the Image, URL, Canvas, or Video.
      * @param {Property} [options.repeat=new Cartesian2(1.0, 1.0)] A {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
+     * @param {Property} [options.color=Color.WHITE] The color applied to the image
+     * @param {Property} [options.transparent=false] Set to true when the image has transparency (for example, when a png has transparent sections)
      */
     function ImageMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -37,12 +42,14 @@ define([
         this._imageSubscription = undefined;
         this._repeat = undefined;
         this._repeatSubscription = undefined;
-        this._alpha = undefined;
-        this._alphaSubscription = undefined;
-
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._transparent = undefined;
+        this._transparentSubscription = undefined;
         this.image = options.image;
         this.repeat = options.repeat;
-        this.alpha = options.alpha;
+        this.color = options.color;
+        this.transparent = options.transparent;
     }
 
     defineProperties(ImageMaterialProperty.prototype, {
@@ -87,12 +94,19 @@ define([
          */
         repeat : createPropertyDescriptor('repeat'),
         /**
-         * Gets or sets the Number Property specifying the desired opacity of the overall image.
+         * Gets or sets the Color Property specifying the desired color applied to the image.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          * @default 1.0
          */
-        alpha : createPropertyDescriptor('alpha')
+        color : createPropertyDescriptor('color'),
+        /**
+         * Gets or sets the Boolean Property specifying whether the image has transparency
+         * @memberof ImageMaterialProperty.prototype
+         * @type {Property}
+         * @default 1.0
+         */
+        transparent : createPropertyDescriptor('transparent')
     });
 
     /**
@@ -119,7 +133,10 @@ define([
 
         result.image = Property.getValueOrUndefined(this._image, time);
         result.repeat = Property.getValueOrClonedDefault(this._repeat, time, defaultRepeat, result.repeat);
-        result.alpha = Property.getValueOrDefault(this._alpha, time, defaultAlpha);
+        result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
+        if (Property.getValueOrDefault(this._transparent, time, defaultTransparent)) {
+            result.color.alpha = Math.min(0.99, result.color.alpha);
+        }
 
         return result;
     };
@@ -132,10 +149,11 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     ImageMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof ImageMaterialProperty && //
-                Property.equals(this._image, other._image) && //
-                Property.equals(this._alpha, other._alpha) && //
+        return this === other ||
+               (other instanceof ImageMaterialProperty &&
+                Property.equals(this._image, other._image) &&
+                Property.equals(this._color, other._color) &&
+                Property.equals(this._transparent, other._transparent) &&
                 Property.equals(this._repeat, other._repeat));
     };
 

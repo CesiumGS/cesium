@@ -35,7 +35,7 @@ define([
         TerrainEncoding,
         Transforms,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     var maxShort = 32767;
 
@@ -190,7 +190,8 @@ define([
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
-            encoding : encoding
+            encoding : encoding,
+            skirtIndex : parameters.indices.length
         };
     }
 

@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A vertex format defines what attributes make up a vertex.  A VertexFormat can be provided
@@ -223,7 +223,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {VertexFormat} value The value to pack.
      * @param {Number[]} array The array to pack into.

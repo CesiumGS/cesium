@@ -3,9 +3,11 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
@@ -34,9 +36,11 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         GeometryInstance,
@@ -61,7 +65,7 @@ define([
         SceneMode,
         StencilFunction,
         StencilOperation) {
-    "use strict";
+    'use strict';
 
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
@@ -74,6 +78,12 @@ define([
      * is supported at this time.
      * </p>
      * <p>
+     * Because of the cutting edge nature of this feature in WebGL, it requires the EXT_frag_depth extension, which is currently only supported in Chrome,
+     * Firefox, and Edge. Apple support is expected in iOS 9 and MacOS Safari 9. Android support varies by hardware and IE11 will most likely never support
+     * it. You can use webglreport.com to verify support for your hardware. Finally, this feature is currently only supported in Primitives and not yet
+     * available via the Entity API.
+     * </p>
+     * <p>
      * Valid geometries are {@link CircleGeometry}, {@link CorridorGeometry}, {@link EllipseGeometry}, {@link PolygonGeometry}, and {@link RectangleGeometry}.
      * </p>
      *
@@ -81,7 +91,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render.
+     * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.interleave=false] When <code>true</code>, geometry vertex attributes are interleaved, which can slightly improve rendering performance but increases load time.
@@ -91,11 +101,8 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      *
-     * @see Primitive
-     * @see GeometryInstance
-     * @see Appearance
-     *
      * @example
+     * // Example 1: Create primitive with a single instance
      * var rectangleInstance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.RectangleGeometry({
      *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
@@ -106,8 +113,38 @@ define([
      *   }
      * });
      * scene.primitives.add(new Cesium.GroundPrimitive({
-     *   geometryInstance : rectangleInstance
+     *   geometryInstances : rectangleInstance
      * }));
+     *
+     * // Example 2: Batch instances
+     * var color = new Cesium.ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5); // Both instances must have the same color.
+     * var rectangleInstance = new Cesium.GeometryInstance({
+     *   geometry : new Cesium.RectangleGeometry({
+     *     rectangle : Cesium.Rectangle.fromDegrees(-140.0, 30.0, -100.0, 40.0)
+     *   }),
+     *   id : 'rectangle',
+     *   attributes : {
+     *     color : color
+     *   }
+     * });
+     * var ellipseInstance = new Cesium.GeometryInstance({
+     *     geometry : new Cesium.EllipseGeometry({
+     *         center : Cesium.Cartesian3.fromDegrees(-105.0, 40.0),
+     *         semiMinorAxis : 300000.0,
+     *         semiMajorAxis : 400000.0
+     *     }),
+     *     id : 'ellipse',
+     *     attributes : {
+     *         color : color
+     *     }
+     * });
+     * scene.primitives.add(new Cesium.GroundPrimitive({
+     *   geometryInstances : [rectangleInstance, ellipseInstance]
+     * }));
+     *
+     * @see Primitive
+     * @see GeometryInstance
+     * @see Appearance
      */
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -119,17 +156,22 @@ define([
          * <p>
          * Changing this property after the primitive is rendered has no effect.
          * </p>
+         * <p>
+         * Because of the rendering technique used, all geometry instances must be the same color.
+         * If there is an instance with a differing color, a <code>DeveloperError</code> will be thrown
+         * on the first attempt to render.
+         * </p>
          *
-         * @type Array
+         * @type {Array|GeometryInstance}
          *
          * @default undefined
          */
-        this.geometryInstance = options.geometryInstance;
+        this.geometryInstances = options.geometryInstances;
         /**
          * Determines if the primitive will be shown.  This affects all geometry
          * instances in the primitive.
          *
-         * @type Boolean
+         * @type {Boolean}
          *
          * @default true
          */
@@ -154,6 +196,8 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
+        this._uniformMap = {};
+
         this._boundingVolumes = [];
         this._boundingVolumes2D = [];
 
@@ -166,6 +210,11 @@ define([
             flat : true
         });
 
+        var readOnlyAttributes;
+        if (defined(this.geometryInstances) && isArray(this.geometryInstances) && this.geometryInstances.length > 1) {
+            readOnlyAttributes = readOnlyInstanceAttributesScratch;
+        }
+
         this._primitiveOptions = {
             geometryInstances : undefined,
             appearance : appearance,
@@ -175,11 +224,15 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
+            _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
-            _createCommandsFunction : undefined
+            _createCommandsFunction : undefined,
+            _createPickOffsets : true
         };
     }
+
+    var readOnlyInstanceAttributesScratch = ['color'];
 
     defineProperties(GroundPrimitive.prototype, {
         /**
@@ -319,11 +372,9 @@ define([
 
     GroundPrimitive._maxHeight = undefined;
     GroundPrimitive._minHeight = undefined;
-    GroundPrimitive._minOBBHeight = undefined;
 
     GroundPrimitive._maxTerrainHeight = 9000.0;
     GroundPrimitive._minTerrainHeight = -100000.0;
-    GroundPrimitive._minOBBTerrainHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -485,12 +536,17 @@ define([
         rectangle.east = maxLon;
         rectangle.west = minLon;
 
-        var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
-        primitive._boundingVolumes.push(obb);
+        // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
+        if (rectangle.width < CesiumMath.PI) {
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minHeight, ellipsoid);
+            primitive._boundingVolumes.push(obb);
+        } else {
+            primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
+        }
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight);
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minHeight);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             primitive._boundingVolumes2D.push(boundingVolume);
@@ -515,7 +571,8 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._modifyShaderPosition(primitive, ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = ShadowVolumeVS;
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
@@ -551,17 +608,15 @@ define([
         }
     }
 
-    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+    function createColorCommands(groundPrimitive, colorCommands) {
         var primitive = groundPrimitive._primitive;
         var length = primitive._va.length * 3;
-
         colorCommands.length = length;
-        pickCommands.length = length;
 
         var vaIndex = 0;
 
         for (var i = 0; i < length; i += 3) {
-            var vertexArray = primitive._va[vaIndex];
+            var vertexArray = primitive._va[vaIndex++];
 
             // stencil preload command
             var command = colorCommands[i];
@@ -575,7 +630,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilPreloadPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // stencil depth command
@@ -590,7 +645,7 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsStencilDepthPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
 
             // color command
@@ -605,35 +660,90 @@ define([
             command.vertexArray = vertexArray;
             command.renderState = groundPrimitive._rsColorPass;
             command.shaderProgram = groundPrimitive._sp;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
+        }
+    }
 
-            // pick stencil preload and depth are the same as the color pass
-            pickCommands[i] = colorCommands[i];
-            pickCommands[i + 1] = colorCommands[i + 1];
+    function createPickCommands(groundPrimitive, pickCommands) {
+        var primitive = groundPrimitive._primitive;
+        var pickOffsets = primitive._pickOffsets;
+        var length = pickOffsets.length * 3;
+        pickCommands.length = length;
 
-            command = pickCommands[i + 2];
+        var pickIndex = 0;
+
+        for (var j = 0; j < length; j += 3) {
+            var pickOffset = pickOffsets[pickIndex++];
+
+            var offset = pickOffset.offset;
+            var count = pickOffset.count;
+            var vertexArray = primitive._va[pickOffset.index];
+
+            // stencil preload command
+            var command = pickCommands[j];
             if (!defined(command)) {
-                command = pickCommands[i + 2] = new DrawCommand({
+                command = pickCommands[j] = new DrawCommand({
                     owner : groundPrimitive,
                     primitiveType : primitive._primitiveType
                 });
             }
 
             command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = groundPrimitive._rsStencilPreloadPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = groundPrimitive._uniformMap;
+            command.pass = Pass.GROUND;
+
+            // stencil depth command
+            command = pickCommands[j + 1];
+            if (!defined(command)) {
+                command = pickCommands[j + 1] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = groundPrimitive._rsStencilDepthPass;
+            command.shaderProgram = groundPrimitive._sp;
+            command.uniformMap = groundPrimitive._uniformMap;
+            command.pass = Pass.GROUND;
+
+            // color command
+            command = pickCommands[j + 2];
+            if (!defined(command)) {
+                command = pickCommands[j + 2] = new DrawCommand({
+                    owner : groundPrimitive,
+                    primitiveType : primitive._primitiveType
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
             command.renderState = groundPrimitive._rsPickPass;
             command.shaderProgram = groundPrimitive._spPick;
-            command.uniformMap = {};
+            command.uniformMap = groundPrimitive._uniformMap;
             command.pass = Pass.GROUND;
         }
     }
 
-    function updateAndQueueCommands(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+        createColorCommands(groundPrimitive, colorCommands);
+        createPickCommands(groundPrimitive, pickCommands);
+    }
+
+    function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
         var boundingVolumes;
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingVolumes = primitive._boundingVolumes;
-        } else if (frameState.mode !== SceneMode.SCENE3D && defined(primitive._boundingVolumes2D)) {
-            boundingVolumes = primitive._boundingVolumes2D;
+            boundingVolumes = groundPrimitive._boundingVolumes;
+        } else if (frameState.mode !== SceneMode.SCENE3D && defined(groundPrimitive._boundingVolumes2D)) {
+            boundingVolumes = groundPrimitive._boundingVolumes2D;
         }
 
         var commandList = frameState.commandList;
@@ -651,13 +761,29 @@ define([
         }
 
         if (passes.pick) {
-            var pickLength = pickCommands.length;
-            for (var k = 0; k < pickLength; ++k) {
+            var primitive = groundPrimitive._primitive;
+            var pickOffsets = primitive._pickOffsets;
+            var length = pickOffsets.length * 3;
+            pickCommands.length = length;
+
+            var pickIndex = 0;
+            for (var k = 0; k < length; k += 3) {
+                var pickOffset = pickOffsets[pickIndex++];
+                var bv = boundingVolumes[pickOffset.index];
+
                 pickCommands[k].modelMatrix = modelMatrix;
-                pickCommands[k].boundingVolume = boundingVolumes[Math.floor(k / 3)];
+                pickCommands[k].boundingVolume = bv;
                 pickCommands[k].cull = cull;
 
-                commandList.push(pickCommands[k]);
+                pickCommands[k + 1].modelMatrix = modelMatrix;
+                pickCommands[k + 1].boundingVolume = bv;
+                pickCommands[k + 1].cull = cull;
+
+                pickCommands[k + 2].modelMatrix = modelMatrix;
+                pickCommands[k + 2].boundingVolume = bv;
+                pickCommands[k + 2].cull = cull;
+
+                commandList.push(pickCommands[k], pickCommands[k + 1], pickCommands[k + 2]);
             }
         }
     }
@@ -672,10 +798,11 @@ define([
      *
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      * @exception {DeveloperError} Appearance and material have a uniform with the same name.
+     * @exception {DeveloperError} Not all of the geometry instances have the same color attribute.
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -683,41 +810,67 @@ define([
             var exaggeration = frameState.terrainExaggeration;
             GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
             GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
-            GroundPrimitive._minOBBHeight = GroundPrimitive._minOBBTerrainHeight * exaggeration;
         }
 
         if (!defined(this._primitive)) {
-            var instance = this.geometryInstance;
-            var geometry = instance.geometry;
+            var primitiveOptions = this._primitiveOptions;
 
-            var instanceType = geometry.constructor;
-            if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                instance = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                    attributes : instance.attributes,
-                    modelMatrix : Matrix4.IDENTITY,
-                    id : instance.id,
-                    pickPrimitive : this
-                });
+            var instance;
+            var geometry;
+            var instanceType;
+
+
+            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var length = instances.length;
+            var groundInstances = new Array(length);
+
+            var color;
+
+            for (var i = 0 ; i < length; ++i) {
+                instance = instances[i];
+                geometry = instance.geometry;
+
+                instanceType = geometry.constructor;
+                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                    var attributes = instance.attributes;
+
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(attributes) || !defined(attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (!defined(color)) {
+                        color = attributes.color;
+                    }
+                    //>>includeEnd('debug');
+
+                    groundInstances[i] = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : attributes,
+                        id : instance.id,
+                        pickPrimitive : this
+                    });
+                } else {
+                    throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
+                }
+
+                primitiveOptions.geometryInstances = groundInstances;
             }
 
-            var primitiveOptions = this._primitiveOptions;
-            primitiveOptions.geometryInstances = instance;
-
             var that = this;
-            this._primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
+            primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
                 createBoundingVolume(that, frameState, geometry);
             };
-            this._primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
+            primitiveOptions._createRenderStatesFunction = function(primitive, context, appearance, twoPasses) {
                 createRenderStates(that, context);
             };
-            this._primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
+            primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState);
             };
-            this._primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
                 createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
-            this._primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
+            primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
             };
 
@@ -726,7 +879,7 @@ define([
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
-                    that.geometryInstance = undefined;
+                    that.geometryInstances = undefined;
                 }
 
                 var error = primitive._error;
@@ -792,10 +945,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see GroundPrimitive#isDestroyed
-     *
      * @example
      * e = e && e.destroy();
+     *
+     * @see GroundPrimitive#isDestroyed
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();

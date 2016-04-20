@@ -9,7 +9,7 @@ define([
         defined,
         EllipseOutlineGeometry,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     function createEllipseOutlineGeometry(ellipseGeometry, offset) {
         if (defined(offset)) {

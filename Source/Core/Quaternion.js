@@ -17,7 +17,7 @@ define([
         freezeObject,
         CesiumMath,
         Matrix3) {
-    "use strict";
+    'use strict';
 
     /**
      * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.
@@ -901,7 +901,6 @@ define([
      * @param {Quaternion} result The object onto which to store the result.
      * @returns {Quaternion} The modified result parameter.
      *
-     * @see Quaternion#computeInnerQuadrangle
      *
      * @example
      * // 1. compute the squad interpolation between two quaternions on a curve
@@ -912,6 +911,8 @@ define([
      * // 2. compute the squad interpolation as above but where the first quaternion is a end point.
      * var s1 = Cesium.Quaternion.computeInnerQuadrangle(quaternions[0], quaternions[1], quaternions[2], new Cesium.Quaternion());
      * var q = Cesium.Quaternion.squad(quaternions[0], quaternions[1], quaternions[0], s1, t, new Cesium.Quaternion());
+     * 
+     * @see Quaternion#computeInnerQuadrangle
      */
     Quaternion.squad = function(q0, q1, s0, s1, t, result) {
         //>>includeStart('debug', pragmas.debug);

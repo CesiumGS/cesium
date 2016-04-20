@@ -31,7 +31,7 @@ define([
         Uri,
         when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
@@ -60,14 +60,6 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see GoogleEarthImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
-     * @see UrlTemplateImageryProvider
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -95,6 +87,15 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
+     * 
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see WebMapServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      */
     function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

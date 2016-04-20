@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
@@ -16,6 +17,7 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -31,7 +33,7 @@ define([
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -202,7 +204,7 @@ define([
         return geometry;
     };
 
-    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy) {
+    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, ellipsoid) {
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];
@@ -216,17 +218,17 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
 
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
-
-            for (var i = 0; i < numChildren; i++) {
+            var i;
+            for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
@@ -242,6 +244,14 @@ define([
                 }
             }
 
+            if (!perPositionHeight) {
+                for (i = 0; i < outerRing.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+                for (i = 0; i < polygonHoles.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(polygonHoles[i], polygonHoles[i]);
+                }
+            }
             hierarchy.push({
                 outerRing : outerRing,
                 holes : polygonHoles

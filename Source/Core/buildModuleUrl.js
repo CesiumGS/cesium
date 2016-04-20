@@ -3,13 +3,17 @@ define([
         '../ThirdParty/Uri',
         './defined',
         './DeveloperError',
+        './getAbsoluteUri',
+        './joinUrls',
         'require'
     ], function(
         Uri,
         defined,
         DeveloperError,
+        getAbsoluteUri,
+        joinUrls,
         require) {
-    "use strict";
+    'use strict';
     /*global CESIUM_BASE_URL*/
 
     var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
@@ -42,7 +46,7 @@ define([
             throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
         }
 
-        baseUrl = new Uri(baseUrlString).resolve(new Uri(document.location.href));
+        baseUrl = new Uri(getAbsoluteUri(baseUrlString));
 
         return baseUrl;
     }
@@ -53,7 +57,7 @@ define([
     }
 
     function buildModuleUrlFromBaseUrl(moduleID) {
-        return new Uri(moduleID).resolve(getCesiumBaseUrl()).toString();
+        return joinUrls(getCesiumBaseUrl(), moduleID);
     }
 
     var implementation;

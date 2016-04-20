@@ -1,14 +1,17 @@
 /*jslint node: true, latedef: nofunc*/
-"use strict";
+'use strict';
 
 var fs = require('fs');
 var path = require('path');
 var os = require('os');
 var child_process = require('child_process');
+var crypto = require('crypto');
+var zlib = require('zlib');
+var readline = require('readline');
+var request = require('request');
 
 var globby = require('globby');
 var jshint = require('gulp-jshint');
-var async = require('async');
 var rimraf = require('rimraf');
 var stripComments = require('strip-comments');
 var mkdirp = require('mkdirp');
@@ -20,6 +23,11 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
+var karma = require('karma').Server;
+var yargs = require('yargs');
+var aws = require('aws-sdk');
+var mime = require('mime');
+var compressible = require('compressible');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -27,11 +35,24 @@ if (/\.0$/.test(version)) {
     version = version.substring(0, version.length - 2);
 }
 
+var karmaConfigFile = path.join(__dirname, 'Specs/karma.conf.js');
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+
 //Gulp doesn't seem to have a way to get the currently running tasks for setting
 //per-task variables.  We use the command line argument here to detect which task is being run.
 var taskName = process.argv[2];
 var noDevelopmentGallery = taskName === 'release' || taskName === 'makeZipFile';
+var buildingRelease = noDevelopmentGallery;
 var minifyShaders = taskName === 'minify' || taskName === 'minifyRelease' || taskName === 'release' || taskName === 'makeZipFile' || taskName === 'buildApps';
+
+//travis reports 32 cores but only has 3GB of memory, which causes the VM to run out.  Limit to 8 cores instead.
+var concurrency = Math.min(os.cpus().length, 8);
+
+//Since combine and minify run in parallel already, split concurrency in half when building both.
+//This can go away when gulp 4 comes out because it allows for synchronous tasks.
+if (buildingRelease) {
+    concurrency = concurrency / 2;
+}
 
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
@@ -76,6 +97,7 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Specs/spec-main.js',
                            '!Specs/SpecRunner.js',
                            '!Specs/SpecList.js',
+                           '!Specs/karma.conf.js',
                            '!Apps/Sandcastle/Sandcastle-client.js',
                            '!Apps/Sandcastle/Sandcastle-header.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
@@ -97,12 +119,22 @@ gulp.task('build-watch', function() {
     gulp.watch(buildFiles, ['build']);
 });
 
-gulp.task('buildApps', ['combine', 'minifyRelease'], function() {
+gulp.task('buildApps', function() {
     return buildCesiumViewer();
 });
 
 gulp.task('clean', function(done) {
-    async.forEach(filesToClean, rimraf, done);
+    filesToClean.forEach(function(file) {
+        rimraf.sync(file);
+    });
+    done();
+});
+
+gulp.task('requirejs', function(done) {
+    var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+    requirejs.optimize(config, function() {
+        done();
+    }, done);
 });
 
 gulp.task('cloc', ['build'], function() {
@@ -199,11 +231,15 @@ gulp.task('instrumentForCoverage', ['build'], function(done) {
 });
 
 gulp.task('jsHint', ['build'], function() {
-    return gulp.src(jsHintFiles)
+    var stream = gulp.src(jsHintFiles)
         .pipe(jshint.extract('auto'))
         .pipe(jshint())
-        .pipe(jshint.reporter('jshint-stylish'))
-        .pipe(jshint.reporter('fail'));
+        .pipe(jshint.reporter('jshint-stylish'));
+
+    if (yargs.argv.failTaskOnError) {
+        stream = stream.pipe(jshint.reporter('fail'));
+    }
+    return stream;
 });
 
 gulp.task('jsHint-watch', function() {
@@ -272,7 +308,341 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
+gulp.task('deploy-s3', function(done) {
+    var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
+        .demand(['b', 'd']).argv;
+
+    var uploadDirectory = argv.d;
+    var bucketName = argv.b;
+    var cacheControl = argv.c ? argv.c : 'max-age=3600';
+
+    if (argv.confirm) {
+        // skip prompt for travis
+        deployCesium(bucketName, uploadDirectory, cacheControl, done);
+        return;
+    }
+
+    var iface = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    });
+
+    // prompt for confirmation
+    iface.question('Files from your computer will be published to the ' + bucketName + ' bucket. Continue? [y/n] ', function(answer) {
+        iface.close();
+        if (answer === 'y') {
+            deployCesium(bucketName, uploadDirectory, cacheControl, done);
+        } else {
+            console.log('Deploy aborted by user.');
+            done();
+        }
+    });
+
+});
+
+// Deploy cesium to s3
+function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
+    var readFile = Promise.promisify(fs.readFile);
+    var gzip = Promise.promisify(zlib.gzip);
+    var getCredentials = Promise.promisify(aws.config.getCredentials, {context: aws.config});
+    var concurrencyLimit = 2000;
+
+    var s3 = new Promise.promisifyAll(new aws.S3({
+        maxRetries : 10,
+        retryDelayOptions : {
+            base : 500
+        }
+    }));
+
+    var existingBlobs = [];
+    var totalFiles = 0;
+    var uploaded = 0;
+    var skipped = 0;
+    var errors = [];
+
+    return getCredentials()
+    .then(function() {
+        return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+        .then(function() {
+            return globby([
+                'Apps/**',
+                'Build/**',
+                'Source/**',
+                'Specs/**',
+                'ThirdParty/**',
+                '*.md',
+                'favicon.ico',
+                'gulpfile.js',
+                'index.html',
+                'logo.png',
+                'package.json',
+                'server.js',
+                'web.config',
+                '*.zip',
+                '*.tgz'
+            ], {
+                dot : true, // include hidden files
+                nodir : true // only directory files
+            });
+        })
+        .then(function(files) {
+            return Promise.map(files, function(file) {
+                var blobName = uploadDirectory + '/' + file;
+                var mimeLookup = getMimeType(blobName);
+                var contentType = mimeLookup.type;
+                var compress = mimeLookup.compress;
+                var contentEncoding = compress ? 'gzip' : undefined;
+                var etag;
+
+                totalFiles++;
+
+                return readFile(file)
+                .then(function(content) {
+                    return compress ? gzip(content) : content;
+                })
+                .then(function(content) {
+                    // compute hash and etag
+                    var hash = crypto.createHash('md5').update(content).digest('hex');
+                    etag = crypto.createHash('md5').update(content).digest('base64');
+
+                    var index = existingBlobs.indexOf(blobName);
+                    if (index <= -1) {
+                        return content;
+                    }
+
+                    // remove files as we find them on disk
+                    existingBlobs.splice(index, 1);
+
+                    // get file info
+                    return s3.headObjectAsync({
+                        Bucket : bucketName,
+                        Key : blobName
+                    })
+                    .then(function(data) {
+                        if (data.ETag !== ('"' + hash + '"') ||
+                            data.CacheControl !== cacheControl ||
+                            data.ContentType !== contentType ||
+                            data.ContentEncoding !== contentEncoding) {
+                            return content;
+                        }
+
+                        // We don't need to upload this file again
+                        skipped++;
+                        return undefined;
+                    })
+                    .catch(function(error) {
+                        errors.push(error);
+                    });
+                })
+                .then(function(content) {
+                    if (!content) {
+                        return;
+                    }
+
+                    console.log('Uploading ' + blobName + '...');
+                    var params = {
+                        Bucket : bucketName,
+                        Key : blobName,
+                        Body : content,
+                        ContentMD5 : etag,
+                        ContentType : contentType,
+                        ContentEncoding : contentEncoding,
+                        CacheControl : cacheControl
+                    };
+
+                    return s3.putObjectAsync(params).then(function() {
+                        uploaded++;
+                    })
+                    .catch(function(error) {
+                        errors.push(error);
+                    });
+                });
+            }, {concurrency : concurrencyLimit});
+        })
+        .then(function() {
+            console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
+            if (existingBlobs.length === 0) {
+                return;
+            }
+
+            var objectToDelete = [];
+            existingBlobs.forEach(function(file) {
+                //Don't delete generate zip files.
+                if (!/\.(zip|tgz)$/.test(file)) {
+                    objectToDelete.push({Key : file});
+                }
+            });
+
+            if (objectToDelete.length > 0) {
+                console.log('Cleaning up old files...');
+                return s3.deleteObjectsAsync({
+                                                 Bucket : bucketName,
+                                                 Delete : {
+                                                     Objects : objectToDelete
+                                                 }
+                                             })
+                    .then(function() {
+                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                    });
+            }
+        })
+        .catch(function(error) {
+            errors.push(error);
+        })
+        .then(function() {
+            if (errors.length === 0) {
+                done();
+                return;
+            }
+
+            console.log('Errors: ');
+            errors.map(function(e) {
+                console.log(e);
+            });
+            done(1);
+        });
+    })
+    .catch(function(error) {
+        console.log('Error: Could not load S3 credentials.');
+        done();
+    });
+}
+
+function getMimeType(filename) {
+    var ext = path.extname(filename);
+    if (ext === '.bin' || ext === '.terrain') {
+        return { type : 'application/octet-stream', compress : true };
+    } else if (ext === '.md' || ext === '.glsl') {
+        return { type : 'text/plain', compress : true };
+    } else if (ext === '.czml' || ext === '.geojson' || ext === '.json') {
+        return { type : 'application/json', compress : true };
+    } else if (ext === '.js') {
+        return { type : 'application/javascript', compress : true };
+    } else if (ext === '.svg') {
+        return { type : 'image/svg+xml', compress : true };
+    } else if (ext === '.woff') {
+        return { type : 'application/font-woff', compress : false };
+    }
+
+    var mimeType = mime.lookup(filename);
+    return {type : mimeType, compress : compressible(mimeType)};
+}
+
+// get all files currently in bucket asynchronously
+function listAll(s3, bucketName, directory, files, marker) {
+    return s3.listObjectsAsync({
+        Bucket : bucketName,
+        MaxKeys : 1000,
+        Prefix: directory,
+        Marker : marker
+    })
+    .then(function(data) {
+        var items = data.Contents;
+        for (var i = 0; i < items.length; i++) {
+            files.push(items[i].Key);
+        }
+
+        if (data.IsTruncated) {
+            // get next page of results
+            return listAll(s3, bucketName, directory, files, files[files.length - 1]);
+        }
+    });
+}
+
+gulp.task('deploy-set-version', function() {
+    var version = yargs.argv.version;
+    if (version) {
+        packageJson.version += '-' + version;
+        fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
+    }
+});
+
+gulp.task('deploy-status', function() {
+    var status = yargs.argv.status;
+    var message = yargs.argv.message;
+
+    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
+    var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
+    var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+
+    return Promise.join(
+        setStatus(status, deployUrl, message, 'deployment'),
+        setStatus(status, zipUrl, message, 'zip file'),
+        setStatus(status, npmUrl, message, 'npm package')
+    );
+});
+
+function setStatus(state, targetUrl, description, context) {
+    // skip if the environment does not have the token
+    if (!process.env.TOKEN) {
+        return;
+    }
+
+    var requestPost = Promise.promisify(request.post);
+    return requestPost({
+         url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
+         json: true,
+         headers: {
+             'Authorization': 'token ' + process.env.TOKEN,
+             'User-Agent': 'Cesium'
+         },
+         body: {
+             state: state,
+             target_url: targetUrl,
+             description: description,
+             context: context
+         }
+     });
+}
+
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
+
+gulp.task('test', function(done) {
+    var argv = yargs.argv;
+
+    var enableAllBrowsers = argv.all ? true : false;
+    var includeCategory = argv.include ? argv.include : '';
+    var excludeCategory = argv.exclude ? argv.exclude : '';
+    var webglValidation = argv.webglValidation ? argv.webglValidation : false;
+    var release = argv.release ? argv.release : false;
+    var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+    var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+
+    var browsers = ['Chrome'];
+    if (argv.browsers) {
+        browsers = argv.browsers.split(',');
+    }
+
+    var files = [
+        'Specs/karma-main.js',
+        {pattern : 'Source/**', included : false},
+        {pattern : 'Specs/**', included : false}
+    ];
+
+    if (release) {
+        files.push({pattern : 'Build/**', included : false});
+    }
+
+    karma.start({
+        configFile: karmaConfigFile,
+        browsers : browsers,
+        specReporter: {
+            suppressErrorSummary: false,
+            suppressFailed: false,
+            suppressPassed: suppressPassed,
+            suppressSkipped: true
+        },
+        detectBrowsers : {
+            enabled: enableAllBrowsers
+        },
+        files: files,
+        client: {
+            args: [includeCategory, excludeCategory, webglValidation, release]
+        }
+    }, function(e) {
+        return done(failTaskOnError ? e : undefined);
+    });
+});
 
 gulp.task('generateStubs', ['build'], function(done) {
     mkdirp.sync(path.join('Build', 'Stubs'));
@@ -280,7 +650,7 @@ gulp.task('generateStubs', ['build'], function(done) {
     var contents = '\
 /*global define,Cesium*/\n\
 (function() {\n\
-"use strict";\n\
+\'use strict\';\n\
 /*jshint sub:true*/\n';
     var modulePathMappings = [];
 
@@ -301,7 +671,7 @@ define(\'' + moduleId + '\', function() {\n\
     var paths = '\
 /*global define*/\n\
 define(function() {\n\
-    "use strict";\n\
+    \'use strict\';\n\
     return {\n' + modulePathMappings.join(',\n') + '\n\
     };\n\
 });';
@@ -311,23 +681,23 @@ define(function() {\n\
     done();
 });
 
-gulp.task('sortRequires', function(done) {
+gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
     var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
     var filesChecked = 0;
 
+    var fsReadFile = Promise.promisify(fs.readFile);
+    var fsWriteFile = Promise.promisify(fs.writeFile);
+
     var files = globby.sync(filesToSortRequires);
-    async.forEach(files, function(file, callback) {
+    return Promise.map(files, function(file) {
         if (filesChecked > 0 && filesChecked % 50 === 0) {
             console.log('Sorted requires in ' + filesChecked + ' files');
         }
         ++filesChecked;
 
-        fs.readFile(file, function(err, contents) {
-            if (err) {
-                return callback(err);
-            }
+        fsReadFile(file).then(function(contents) {
 
             var result = requiresRegex.exec(contents);
 
@@ -434,13 +804,13 @@ gulp.task('sortRequires', function(done) {
                        ') {' +
                        result[6];
 
-            fs.writeFile(file, contents, callback);
+            return fsWriteFile(file, contents);
         });
-    }, done);
+    });
 });
 
 function combineCesium(debug, optimizer, combineOutput) {
-    return requirejsOptimize({
+    return requirejsOptimize('Cesium.js', {
         wrap : true,
         useStrict : true,
         optimize : optimizer,
@@ -457,12 +827,13 @@ function combineCesium(debug, optimizer, combineOutput) {
 }
 
 function combineWorkers(debug, optimizer, combineOutput) {
-    return Promise.join(
-        globby(['Source/Workers/cesiumWorkerBootstrapper.js',
-                'Source/Workers/transferTypedArrayTest.js',
-                'Source/ThirdParty/Workers/*.js']).then(function(files) {
-            return Promise.all(files.map(function(file) {
-                return requirejsOptimize({
+    //This is done waterfall style for concurrency reasons.
+    return globby(['Source/Workers/cesiumWorkerBootstrapper.js',
+                   'Source/Workers/transferTypedArrayTest.js',
+                   'Source/ThirdParty/Workers/*.js'])
+        .then(function(files) {
+            return Promise.map(files, function(file) {
+                return requirejsOptimize(file, {
                     wrap : false,
                     useStrict : true,
                     optimize : optimizer,
@@ -475,15 +846,18 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     include : filePathToModuleId(path.relative('Source', file)),
                     out : path.join(combineOutput, path.relative('Source', file))
                 });
-            }));
-        }),
-        globby(['Source/Workers/*.js',
-                '!Source/Workers/cesiumWorkerBootstrapper.js',
-                '!Source/Workers/transferTypedArrayTest.js',
-                '!Source/Workers/createTaskProcessorWorker.js',
-                '!Source/ThirdParty/Workers/*.js']).then(function(files) {
-            return Promise.all(files.map(function(file) {
-                return requirejsOptimize({
+            }, {concurrency : concurrency});
+        })
+        .then(function() {
+            return globby(['Source/Workers/*.js',
+                           '!Source/Workers/cesiumWorkerBootstrapper.js',
+                           '!Source/Workers/transferTypedArrayTest.js',
+                           '!Source/Workers/createTaskProcessorWorker.js',
+                           '!Source/ThirdParty/Workers/*.js']);
+        })
+        .then(function(files) {
+            return Promise.map(files, function(file) {
+                return requirejsOptimize(file, {
                     wrap : true,
                     useStrict : true,
                     optimize : optimizer,
@@ -495,15 +869,14 @@ function combineWorkers(debug, optimizer, combineOutput) {
                     include : filePathToModuleId(path.relative('Source', file)),
                     out : path.join(combineOutput, path.relative('Source', file))
                 });
-            }));
-        })
-    );
+            }, {concurrency : concurrency});
+        });
 }
 
 function minifyCSS(outputDirectory) {
     return globby('Source/**/*.css').then(function(files) {
-        return Promise.all(files.map(function(file) {
-            return requirejsOptimize({
+        return Promise.map(files, function(file) {
+            return requirejsOptimize(file, {
                 wrap : true,
                 useStrict : true,
                 optimizeCss : 'standard',
@@ -513,7 +886,7 @@ function minifyCSS(outputDirectory) {
                 cssIn : file,
                 out : path.join(outputDirectory, path.relative('Source', file))
             });
-        }));
+        }, {concurrency : concurrency});
     });
 }
 
@@ -620,7 +993,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
 //This file is automatically rebuilt by the Cesium build process.\n\
 /*global define*/\n\
 define(function() {\n\
-    "use strict";\n\
+    \'use strict\';\n\
     return "' + contents + '";\n\
 });';
 
@@ -665,7 +1038,7 @@ define([\n' +
                        '\n    ], function(\n' +
                        contents.amdClassName +
                        ') {\n\
-                           "use strict";\n\
+                           \'use strict\';\n\
                            return {\n' + contents.builtinLookup + '};\n\
 });';
 
@@ -699,7 +1072,7 @@ function createCesiumJs() {
     var contents = '\
 /*global define*/\n\
 define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
-  "use strict";\n\
+  \'use strict\';\n\
   /*jshint sub:true*/\n\
   var Cesium = {\n\
     VERSION : "' + version + '",\n\
@@ -775,7 +1148,7 @@ function buildCesiumViewer() {
     mkdirp.sync(cesiumViewerOutputDirectory);
 
     var promise = Promise.join(
-        requirejsOptimize({
+        requirejsOptimize('CesiumViewer', {
             wrap : true,
             useStrict : true,
             optimizeCss : 'standard',
@@ -787,7 +1160,7 @@ function buildCesiumViewer() {
             name : 'CesiumViewerStartup',
             out : cesiumViewerStartup
         }),
-        requirejsOptimize({
+        requirejsOptimize('CesiumViewer CSS', {
             wrap : true,
             useStrict : true,
             optimizeCss : 'standard',
@@ -853,9 +1226,19 @@ function removeExtension(p) {
     return p.slice(0, -path.extname(p).length);
 }
 
-function requirejsOptimize(config) {
+function requirejsOptimize(name, config) {
+    console.log('Building ' + name);
     return new Promise(function(resolve, reject) {
-        requirejs.optimize(config, resolve, reject);
+        var cmd = 'npm run requirejs -- --' + new Buffer(JSON.stringify(config)).toString('base64') + ' --silent';
+        child_process.exec(cmd, function(e) {
+            if (e) {
+                console.log('Error ' + name);
+                reject(e);
+                return;
+            }
+            console.log('Finished ' + name);
+            resolve();
+        });
     });
 }
 

@@ -31,7 +31,7 @@ define([
         Matrix3,
         Plane,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates an instance of an OrientedBoundingBox.
@@ -44,8 +44,6 @@ define([
      *                                          Equivalently, the transformation matrix, to rotate and scale a 2x2x2
      *                                          cube centered at the origin.
      *
-     * @see BoundingSphere
-     * @see BoundingRectangle
      *
      * @example
      * // Create an OrientedBoundingBox using a transformation matrix, a position where the box will be translated, and a scale.
@@ -53,6 +51,9 @@ define([
      * var halfAxes = Cesium.Matrix3.fromScale(new Cesium.Cartesian3(1.0, 3.0, 2.0), new Cesium.Matrix3());
      *
      * var obb = new Cesium.OrientedBoundingBox(center, halfAxes);
+     * 
+     * @see BoundingSphere
+     * @see BoundingRectangle
      */
     function OrientedBoundingBox(center, halfAxes) {
         /**

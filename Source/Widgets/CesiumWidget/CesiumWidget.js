@@ -10,6 +10,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
+        '../../Core/FeatureDetection',
         '../../Core/formatError',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -33,6 +34,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        FeatureDetection,
         formatError,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -45,7 +47,7 @@ define([
         SkyBox,
         Sun,
         getElement) {
-    "use strict";
+    'use strict';
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');
@@ -98,13 +100,16 @@ define([
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var zoomFactor = defaultValue(window.devicePixelRatio, 1.0) * widget._resolutionScale;
+        var resolutionScale = widget._resolutionScale;
+        if (!widget._supportsImageRenderingPixelated) {
+            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
+        }
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
 
-        width *= zoomFactor;
-        height *= zoomFactor;
+        width *= resolutionScale;
+        height *= resolutionScale;
 
         canvas.width = width;
         canvas.height = height;
@@ -170,7 +175,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//assets.agi.com/stk-terrain/world'
+     *         url : 'https://assets.agi.com/stk-terrain/world'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
@@ -205,6 +210,12 @@ define([
         container.appendChild(element);
 
         var canvas = document.createElement('canvas');
+        var supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+        this._supportsImageRenderingPixelated = supportsImageRenderingPixelated;
+        if (supportsImageRenderingPixelated) {
+            canvas.style.imageRendering = FeatureDetection.imageRenderingValue();
+        }
+
         canvas.oncontextmenu = function() {
             return false;
         };
@@ -298,7 +309,7 @@ define([
             var imageryProvider = (options.globe === false) ? false : options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net'
+                    url : 'https://dev.virtualearth.net'
                 });
             }
 
@@ -464,8 +475,8 @@ define([
         /**
          * Gets or sets the target frame rate of the widget when <code>useDefaultRenderLoop</code>
          * is true. If undefined, the browser's {@link requestAnimationFrame} implementation
-         * determines the frame rate.  This value must be greater than 0 and a value higher than
-         * the underlying requestAnimationFrame implementatin will have no affect.
+         * determines the frame rate.  If defined, this value must be greater than 0.  A value higher
+         * than the underlying requestAnimationFrame implementation will have no effect.
          * @memberof CesiumWidget.prototype
          *
          * @type {Number}
@@ -476,7 +487,7 @@ define([
             },
             set : function(value) {
                 if (value <= 0) {
-                    throw new DeveloperError('targetFrameRate must be greater than 0.');
+                    throw new DeveloperError('targetFrameRate must be greater than 0, or undefined.');
                 }
                 this._targetFrameRate = value;
             }

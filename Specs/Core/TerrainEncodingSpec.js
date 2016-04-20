@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Core/TerrainEncoding',
+        'Core/AttributeCompression',
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -10,6 +11,7 @@ defineSuite([
         'Core/Transforms'
     ], function(
         TerrainEncoding,
+        AttributeCompression,
         AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
@@ -17,7 +19,25 @@ defineSuite([
         Matrix4,
         TerrainQuantization,
         Transforms) {
-    "use strict";
+    'use strict';
+
+    var center;
+    var maximum;
+    var minimum;
+    var aabox;
+    var fromENU;
+    var minimumHeight;
+    var maximumHeight;
+
+    beforeEach(function() {
+        center = Cartesian3.fromDegrees(0.0, 0.0);
+        maximum = new Cartesian3(6.0e2, 6.0e2, 6.0e2);
+        minimum = Cartesian3.negate(maximum, new Cartesian3());
+        aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
+        maximumHeight = 6.0e2;
+        minimumHeight = maximumHeight;
+        fromENU = Transforms.eastNorthUpToFixedFrame(center);
+    });
 
     it('default constructs', function() {
         var encoding = new TerrainEncoding();
@@ -32,18 +52,12 @@ defineSuite([
     });
 
     it('constructs without quantization', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
         var maximum = new Cartesian3(1.0e6, 1.0e6, 1.0e6);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());
         var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
         var maximumHeight = 1.0e6;
         var minimumHeight = maximumHeight;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
         var hasVertexNormals = false;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         expect(encoding.quantization).toEqual(TerrainQuantization.NONE);
@@ -60,18 +74,12 @@ defineSuite([
     });
 
     it('constructs with quantization', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
         var maximum = new Cartesian3(100.0, 100.0, 100.0);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());
         var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
         var minimumHeight = -100.0;
         var maximumHeight = 100.0;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
         var hasVertexNormals = false;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         expect(encoding.quantization).toEqual(TerrainQuantization.BITS12);
@@ -88,18 +96,12 @@ defineSuite([
     });
 
     it('encodes without quantization or normals', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
         var maximum = new Cartesian3(6.0e3, 6.0e3, 6.0e3);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());
         var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
         var maximumHeight = 6.0e3;
         var minimumHeight = maximumHeight;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
         var hasVertexNormals = false;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         var position = new Cartesian3(1.0e3, 1.0e3, 1.0e3);
@@ -115,18 +117,12 @@ defineSuite([
     });
 
     it('encodes without quantization and with normals', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
         var maximum = new Cartesian3(6.0e3, 6.0e3, 6.0e3);
         var minimum = Cartesian3.negate(maximum, new Cartesian3());
         var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
         var maximumHeight = 6.0e3;
         var minimumHeight = maximumHeight;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
         var hasVertexNormals = true;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         var position = new Cartesian3(1.0e3, 1.0e3, 1.0e3);
@@ -142,19 +138,8 @@ defineSuite([
         expect(encoding.decodePosition(buffer, 0)).toEqual(position);
     });
 
-    it('encodes with quantization and without normals', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
-        var maximum = new Cartesian3(6.0e2, 6.0e2, 6.0e2);
-        var minimum = Cartesian3.negate(maximum, new Cartesian3());
-        var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
-        var maximumHeight = 6.0e2;
-        var minimumHeight = maximumHeight;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
+    it('encodes position with quantization and without normals', function() {
         var hasVertexNormals = false;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         var position = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
@@ -169,19 +154,8 @@ defineSuite([
         expect(encoding.decodePosition(buffer, 0)).toEqualEpsilon(position, 1.0);
     });
 
-    it('encodes with quantization and normals', function() {
-        var center = Cartesian3.fromDegrees(0.0, 0.0);
-        var maximum = new Cartesian3(6.0e2, 6.0e2, 6.0e2);
-        var minimum = Cartesian3.negate(maximum, new Cartesian3());
-        var aabox = new AxisAlignedBoundingBox(minimum, maximum, center);
-
-        var maximumHeight = 6.0e2;
-        var minimumHeight = maximumHeight;
-
-        var fromENU = Transforms.eastNorthUpToFixedFrame(center);
-
+    it('encodes position with quantization and normals', function() {
         var hasVertexNormals = true;
-
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
 
         var position = new Cartesian3(1.0e2, 1.0e2, 1.0e2);
@@ -195,6 +169,85 @@ defineSuite([
         expect(buffer.length).toEqual(encoding.getStride());
 
         expect(encoding.decodePosition(buffer, 0)).toEqualEpsilon(position, 1.0);
+    });
+
+    it('encodes texture coordinates with quantization and without normals', function() {
+        var hasVertexNormals = false;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+
+        var texCoords = new Cartesian2(0.25, 0.75);
+
+        var buffer = [];
+        encoding.encode(buffer, 0, Cartesian3.ZERO, texCoords, 100.0);
+
+        expect(encoding.getStride()).toEqual(3);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, CesiumMath.EPSILON14);
+    });
+
+    it('encodes textureCoordinates with quantization and normals', function() {
+        var hasVertexNormals = true;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+
+        var texCoords = new Cartesian2(0.75, 0.25);
+
+        var buffer = [];
+        encoding.encode(buffer, 0, Cartesian3.ZERO, texCoords, 100.0, Cartesian3.UNIT_X);
+
+        expect(encoding.getStride()).toEqual(4);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.decodeTextureCoordinates(buffer, 0)).toEqualEpsilon(texCoords, CesiumMath.EPSILON14);
+    });
+
+    it('encodes height with quantization and without normals', function() {
+        var hasVertexNormals = false;
+        minimumHeight = 0.0;
+        maximumHeight = 200.0;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+
+        var buffer = [];
+        var height = (maximumHeight + minimumHeight) * 0.5;
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height);
+
+        expect(encoding.getStride()).toEqual(3);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, CesiumMath.EPSILON14);
+    });
+
+    it('encodes height with quantization and normals', function() {
+        var hasVertexNormals = true;
+        minimumHeight = 0.0;
+        maximumHeight = 200.0;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+
+        var buffer = [];
+        var height = (maximumHeight + minimumHeight) * 0.5;
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X);
+
+        expect(encoding.getStride()).toEqual(4);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.decodeHeight(buffer, 0)).toEqualEpsilon(height, CesiumMath.EPSILON14);
+    });
+
+    it('gets oct-encoded normal', function() {
+        var hasVertexNormals = true;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals);
+
+        var normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        var octNormal = AttributeCompression.octEncode(normal, new Cartesian2());
+
+        var buffer = [];
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, minimumHeight, octNormal);
+
+        expect(encoding.getStride()).toEqual(4);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.getOctEncodedNormal(buffer, 0)).toEqual(octNormal);
     });
 
     it('gets attributes', function() {

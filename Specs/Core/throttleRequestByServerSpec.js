@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         throttleRequestByServer,
         when) {
-    "use strict";
+    'use strict';
 
     var originalMaximumRequestsPerServer;
 

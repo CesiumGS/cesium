@@ -3,13 +3,12 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * The interface for interpolation algorithms.
      *
-     * @namespace
-     * @alias InterpolationAlgorithm
+     * @exports InterpolationAlgorithm
      *
      * @see LagrangePolynomialApproximation
      * @see LinearApproximation

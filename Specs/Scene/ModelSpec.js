@@ -49,7 +49,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -57,7 +57,6 @@ defineSuite([
     var texturedBoxUrl = './Data/Models/Box-Textured/CesiumTexturedBoxTest.gltf';
     var texturedBoxSeparateUrl = './Data/Models/Box-Textured-Separate/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
-    var texturedBoxBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.bgltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
@@ -458,8 +457,8 @@ defineSuite([
 
     it('boundingSphere returns the bounding sphere', function() {
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -0.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(0.866, CesiumMath.EPSILON3);
     });
 
     it('boundingSphere returns the bounding sphere when scale property is set', function() {
@@ -467,8 +466,8 @@ defineSuite([
         texturedBoxModel.scale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.scale = originalScale;
     });
@@ -480,8 +479,8 @@ defineSuite([
         texturedBoxModel.maximumScale = 10;
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -2.5, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.scale = originalScale;
         texturedBoxModel.maximumScale = originalMaximumScale;
@@ -492,8 +491,8 @@ defineSuite([
         Matrix4.multiplyByScale(texturedBoxModel.modelMatrix, new Cartesian3(2, 5, 10), texturedBoxModel.modelMatrix);
 
         var boundingSphere = texturedBoxModel.boundingSphere;
-        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, -1.25, 0.0), CesiumMath.EPSILON3);
-        expect(boundingSphere.radius).toEqualEpsilon(7.5, CesiumMath.EPSILON3);
+        expect(boundingSphere.center).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON3);
+        expect(boundingSphere.radius).toEqualEpsilon(8.66, CesiumMath.EPSILON3);
 
         texturedBoxModel.modelMatrix = originalMatrix;
     });
@@ -511,6 +510,20 @@ defineSuite([
     it('Throws because of invalid extension', function() {
         return loadJson(boxUrl).then(function(gltf) {
             gltf.extensionsUsed = ['NOT_supported_extension'];
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
+
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+            primitives.remove(model);
+        });
+    });
+
+    it('Throws because of invalid extension', function() {
+        return loadJson(boxUrl).then(function(gltf) {
+            gltf.extensionsUsed = ['CESIUM_binary_glTF'];
             var model = primitives.add(new Model({
                 gltf : gltf
             }));
@@ -557,31 +570,6 @@ defineSuite([
         return loadModel(texturedBoxCustomUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
-        });
-    });
-
-    it('renders a model with the CESIUM_binary_glTF extension', function() {
-        return loadModel(texturedBoxBinaryUrl).then(function(m) {
-            verifyRender(m);
-            primitives.remove(m);
-        });
-    });
-
-    it('loads a model with the CESIUM_binary_glTF extension as an ArrayBuffer using new Model', function() {
-        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            return loadModelJson(arrayBuffer).then(function(model) {
-                verifyRender(model);
-                primitives.remove(model);
-            });
-        });
-    });
-
-    it('loads a model with the CESIUM_binary_glTF extension as an Uint8Array using new Model', function() {
-        return loadArrayBuffer(texturedBoxBinaryUrl).then(function(arrayBuffer) {
-            return loadModelJson(new Uint8Array(arrayBuffer)).then(function(model) {
-                verifyRender(model);
-                primitives.remove(model);
-            });
         });
     });
 
@@ -640,8 +628,9 @@ defineSuite([
             minimumPixelSize : 1
         }).then(function(m) {
             var bs = m.boundingSphere;
-            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, -0.25, 0.0), CesiumMath.EPSILON14));
-            expect(bs.radius).toEqualEpsilon(0.75, CesiumMath.EPSILON14);
+            expect(bs.center.equalsEpsilon(new Cartesian3(6378137.0, 0.0, 0.0), CesiumMath.EPSILON14));
+            var radius = Math.sqrt(0.5 * 0.5 * 3);
+            expect(bs.radius).toEqualEpsilon(radius, CesiumMath.EPSILON14);
 
             verifyRender(m);
             primitives.remove(m);

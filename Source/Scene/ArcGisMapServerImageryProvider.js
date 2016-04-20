@@ -47,7 +47,7 @@ define([
         DiscardMissingTileImagePolicy,
         ImageryLayerFeatureInfo,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by an ArcGIS MapServer.  By default, the server's pre-cached tiles are
@@ -97,18 +97,19 @@ define([
      * @see GoogleEarthImageryProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
-     *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+     *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
+     * 
+     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function ArcGisMapServerImageryProvider(options) {
         options = defaultValue(options, {});
@@ -178,8 +179,9 @@ define([
                             data.fullExtent.spatialReference.wkid === 102113) {
 
                             var projection = new WebMercatorProjection();
-                            var sw = projection.unproject(new Cartesian2(data.fullExtent.xmin, data.fullExtent.ymin));
-                            var ne = projection.unproject(new Cartesian2(data.fullExtent.xmax, data.fullExtent.ymax));
+                            var extent = data.fullExtent;
+                            var sw = projection.unproject(new Cartesian3(Math.max(extent.xmin, -that._tilingScheme.ellipsoid.maximumRadius * Math.PI), Math.max(extent.ymin, -that._tilingScheme.ellipsoid.maximumRadius * Math.PI), 0.0));
+                            var ne = projection.unproject(new Cartesian3(Math.min(extent.xmax, that._tilingScheme.ellipsoid.maximumRadius * Math.PI), Math.min(extent.ymax, that._tilingScheme.ellipsoid.maximumRadius * Math.PI), 0.0));
                             that._rectangle = new Rectangle(sw.longitude, sw.latitude, ne.longitude, ne.latitude);
                         } else if (data.fullExtent.spatialReference.wkid === 4326) {
                             that._rectangle = Rectangle.fromDegrees(data.fullExtent.xmin, data.fullExtent.ymin, data.fullExtent.xmax, data.fullExtent.ymax);

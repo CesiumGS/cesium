@@ -21,7 +21,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         CameraEventType) {
-    "use strict";
+    'use strict';
 
     function getKey(type, modifier) {
         var key = type;
@@ -497,10 +497,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraEventAggregator#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     *
+     * @see CameraEventAggregator#isDestroyed
      */
     CameraEventAggregator.prototype.destroy = function() {
         this._eventHandler = this._eventHandler && this._eventHandler.destroy();

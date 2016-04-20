@@ -3,7 +3,6 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         './ImageryLayerFeatureInfo'
@@ -11,11 +10,10 @@ define([
         Cartographic,
         defaultValue,
         defined,
-        definedNotNull,
         DeveloperError,
         RuntimeError,
         ImageryLayerFeatureInfo) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes the format in which to request GetFeatureInfo from a Web Map Service (WMS) server.
@@ -94,7 +92,7 @@ define([
             featureInfo.configureDescriptionFromProperties(feature.properties);
 
             // If this is a point feature, use the coordinates of the point.
-            if (definedNotNull(feature.geometry) && feature.geometry.type === 'Point') {
+            if (defined(feature.geometry) && feature.geometry.type === 'Point') {
                 var longitude = feature.geometry.coordinates[0];
                 var latitude = feature.geometry.coordinates[1];
                 featureInfo.position = Cartographic.fromDegrees(longitude, latitude);
@@ -194,10 +192,13 @@ define([
 
                 properties = {};
 
-                var featureInfoChildren = featureInfoElement.children;
+                // node.children is not supported in IE9-11, so use childNodes and check that child.nodeType is an element
+                var featureInfoChildren = featureInfoElement.childNodes;
                 for (var childIndex = 0; childIndex < featureInfoChildren.length; ++childIndex) {
                     var child = featureInfoChildren[childIndex];
-                    properties[child.localName] = child.textContent;
+                    if (child.nodeType === Node.ELEMENT_NODE) {
+                        properties[child.localName] = child.textContent;
+                    }
                 }
 
                 result.push(imageryLayerFeatureInfoFromDataAndProperties(featureInfoElement, properties));
@@ -230,15 +231,25 @@ define([
     function msGmlToFeatureInfo(xml) {
         var result = [];
 
-        var layer = xml.documentElement.children[0];
+        // Find the first child. Except for IE, this would work:
+        // var layer = xml.documentElement.children[0];
+        var layer;
+        var children = xml.documentElement.childNodes;
+        for (var i = 0; i < children.length; i++) {
+            if (children[i].nodeType === Node.ELEMENT_NODE) {
+                layer = children[i];
+                break;
+            }
+        }
 
-        var featureMembers = layer.children;
+        var featureMembers = layer.childNodes;
         for (var featureIndex = 0; featureIndex < featureMembers.length; ++featureIndex) {
             var featureMember = featureMembers[featureIndex];
-
-            var properties = {};
-            getGmlPropertiesRecursively(featureMember, properties);
-            result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            if (featureMember.nodeType === Node.ELEMENT_NODE) {
+                var properties = {};
+                getGmlPropertiesRecursively(featureMember, properties);
+                result.push(imageryLayerFeatureInfoFromDataAndProperties(featureMember, properties));
+            }
         }
 
         return result;
@@ -247,8 +258,8 @@ define([
     function getGmlPropertiesRecursively(gmlNode, properties) {
         var isSingleValue = true;
 
-        for (var i = 0; i < gmlNode.children.length; ++i) {
-            var child = gmlNode.children[i];
+        for (var i = 0; i < gmlNode.childNodes.length; ++i) {
+            var child = gmlNode.childNodes[i];
 
             if (child.nodeType === Node.ELEMENT_NODE) {
                 isSingleValue = false;

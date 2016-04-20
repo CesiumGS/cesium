@@ -11,7 +11,7 @@ define([
         DeveloperError,
         CzmBuiltins,
         AutomaticUniforms) {
-    "use strict";
+    'use strict';
 
     function removeComments(source) {
         // remove inline comments

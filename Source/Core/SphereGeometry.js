@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipsoidGeometry,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of a sphere centered at the origin.
@@ -31,8 +31,6 @@ define([
      * @exception {DeveloperError} options.stackPartitions cannot be less than three.
      *
      * @see SphereGeometry#createGeometry
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sphere.html|Cesium Sandcastle Sphere Demo}
      *
      * @example
      * var sphere = new Cesium.SphereGeometry({
@@ -63,7 +61,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {SphereGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.

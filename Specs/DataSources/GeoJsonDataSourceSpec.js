@@ -21,7 +21,7 @@ defineSuite([
         CallbackProperty,
         EntityCollection,
         when) {
-    "use strict";
+    'use strict';
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -95,6 +95,28 @@ defineSuite([
             type : 'name',
             properties : {
                 name : 'EPSG:4326'
+            }
+        }
+    };
+
+    var pointNamedCrsOgc = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:OGC:1.3:CRS84'
+            }
+        }
+    };
+
+    var pointNamedCrsEpsg = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'urn:ogc:def:crs:EPSG::4326'
             }
         }
     };
@@ -248,6 +270,19 @@ defineSuite([
         expect(dataSource.name).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new GeoJsonDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('Works with null geometry', function() {
@@ -742,6 +777,24 @@ defineSuite([
     it('Works with named crs', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(pointNamedCrs).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs OGC:1.3:CRS84', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsOgc).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with named crs EPSG::4326', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(pointNamedCrsEpsg).then(function() {
             var entityCollection = dataSource.entities;
             var entity = entityCollection.values[0];
             expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));

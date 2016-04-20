@@ -21,7 +21,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var diffScratch = new Cartesian3();
 
@@ -38,8 +38,6 @@ define([
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
      * @see Packable
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
      *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
@@ -77,13 +75,14 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxOutlineGeometry.createGeometry
-     *
+     * 
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
+     * 
+     * @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -112,9 +111,7 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxOutlineGeometry}
      *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
-     * @see BoxOutlineGeometry.createGeometry
      *
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
@@ -125,6 +122,8 @@ define([
      *      -68.0, 40.0
      * ]));
      * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
+     * 
+     *  @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
         if (!defined(boundingBox)) {
@@ -145,7 +144,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {BoxOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -208,11 +206,15 @@ define([
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxOutlineGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._min;
         var max = boxGeometry._max;
+
+        if (Cartesian3.equals(min, max)) {
+            return;
+        }
 
         var attributes = new GeometryAttributes();
         var indices = new Uint16Array(12 * 2);

@@ -11,7 +11,7 @@ defineSuite([
         getTimestamp,
         FrameRateMonitor,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function() {

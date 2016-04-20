@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * A structure containing the orientation data computed at a particular time. The data
@@ -10,8 +10,7 @@ define(function() {
      * except that they are expressed in radians.
      * </p>
      *
-     * @namespace
-     * @alias IauOrientationParameters
+     * @exports IauOrientationParameters
      *
      * @private
      */

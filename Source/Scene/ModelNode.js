@@ -7,7 +7,7 @@ define([
         defaultValue,
         defineProperties,
         Matrix4) {
-    "use strict";
+    'use strict';
 
     /**
      * A model node with a transform for user-defined animations.  A glTF asset can
@@ -21,11 +21,12 @@ define([
      * @alias ModelNode
      * @internalConstructor
      *
-     * @see Model#getNode
      *
      * @example
      * var node = model.getNode('LOD3sp');
      * node.matrix = Cesium.Matrix4.fromScale(new Cesium.Cartesian3(5.0, 1.0, 1.0), node.matrix);
+     *
+     * @see Model#getNode
      */
     function ModelNode(model, node, runtimeNode, id, matrix) {
         this._model = model;

@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         objectToQuery,
         queryToObject) {
-    "use strict";
+    'use strict';
 
     it('can encode data', function() {
         var obj = {

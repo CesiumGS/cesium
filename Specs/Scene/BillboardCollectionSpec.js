@@ -11,6 +11,7 @@ defineSuite([
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/Rectangle',
         'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -32,6 +33,7 @@ defineSuite([
         loadImage,
         CesiumMath,
         NearFarScalar,
+        Rectangle,
         ContextLimits,
         HeightReference,
         HorizontalOrigin,
@@ -41,7 +43,7 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;
@@ -1195,6 +1197,10 @@ defineSuite([
         orthoFrustum.bottom = -orthoFrustum.top;
         orthoFrustum.near = 0.01 * maxRadii;
         orthoFrustum.far = 60.0 * maxRadii;
+
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
         // Update scene state
         scene.morphTo2D(0);

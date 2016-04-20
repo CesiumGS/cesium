@@ -5,13 +5,12 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * An {@link InterpolationAlgorithm} for performing linear interpolation.
      *
-     * @namespace
-     * @alias LinearApproximation
+     * @exports LinearApproximation
      */
     var LinearApproximation = {
         type : 'Linear'

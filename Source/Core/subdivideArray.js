@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Subdivides an array into a number of smaller, equal sized arrays.

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingRectangle',
         './BoundingSphere',
         './Cartesian2',
@@ -17,12 +18,12 @@ define([
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
-        './PolylinePipeline',
         './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './VertexFormat',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -40,12 +41,11 @@ define([
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
-        PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         PrimitiveType,
         VertexFormat,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat) {
         var attributes = new GeometryAttributes();
@@ -249,7 +249,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {PolylineVolumeGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -376,7 +375,7 @@ define([
      */
     PolylineVolumeGeometry.createGeometry = function(polylineVolumeGeometry) {
         var positions = polylineVolumeGeometry._positions;
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var shape2D = polylineVolumeGeometry._shape;
         shape2D = PolylineVolumeGeometryLibrary.removeDuplicatesFromShape(shape2D);
 

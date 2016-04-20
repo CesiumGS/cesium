@@ -17,7 +17,7 @@ define([
         Event,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultEvenColor = Color.WHITE;
     var defaultOddColor = Color.BLACK;

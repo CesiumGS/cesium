@@ -3,13 +3,12 @@ define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
     /**
      * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
      *
-     * @namespace
-     * @alias LagrangePolynomialApproximation
+     * @exports LagrangePolynomialApproximation
      */
     var LagrangePolynomialApproximation = {
         type : 'Lagrange'

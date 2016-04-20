@@ -5,13 +5,12 @@ define([
     ], function(
         WebGLConstants,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Winding order defines the order of vertices for a triangle to be considered front-facing.
      *
-     * @namespace
-     * @alias WindingOrder
+     * @exports WindingOrder
      */
     var WindingOrder = {
         /**

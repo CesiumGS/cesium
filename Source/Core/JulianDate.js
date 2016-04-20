@@ -21,7 +21,7 @@ define([
         LeapSecond,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     var gregorianDateScratch = new GregorianDate();
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];

@@ -3,15 +3,14 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Static interface for {@link Packable} types which are interpolated in a
      * different representation than their packed value.  These methods and
      * properties are expected to be defined on a constructor function.
      *
-     * @namespace
-     * @alias PackableForInterpolation
+     * @exports PackableForInterpolation
      *
      * @see Packable
      */

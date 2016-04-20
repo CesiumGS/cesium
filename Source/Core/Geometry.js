@@ -11,7 +11,7 @@ define([
         DeveloperError,
         GeometryType,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     /**
      * A geometry representation with attributes forming vertices and optional index data
@@ -107,8 +107,6 @@ define([
          *
          * @default undefined
          *
-         * @see GeometryAttribute
-         * @see VertexFormat
          *
          * @example
          * geometry.attributes.position = new Cesium.GeometryAttribute({
@@ -116,6 +114,9 @@ define([
          *   componentsPerAttribute : 3,
          *   values : new Float32Array(0)
          * });
+         * 
+         * @see GeometryAttribute
+         * @see VertexFormat
          */
         this.attributes = options.attributes;
 

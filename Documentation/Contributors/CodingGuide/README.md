@@ -60,7 +60,7 @@ this._canvas = canvas;
 ```javascript
 Cartesian3.UNIT_X = freezeObject(new Cartesian3(1.0, 0.0, 0.0));
 ```
-* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g., 
+* Avoid abbreviations in public identifiers unless the full name is prohibitively cumbersome and has a widely accepted abbreviation, e.g.,
 ```javascript
 Cartesian3.maximumComponent() // Not Cartesian3.maxComponent()
 
@@ -98,6 +98,17 @@ function defaultValue(a, b) {
 
 if (!defined(result)) {
    // ...
+}
+```
+* Use curly braces even for single line `if`, `for`, and `while` blocks, e.g.,
+```javascript
+if (!defined(result))
+    result = new Cartesian3();
+```
+is better written as
+```javascript
+if (!defined(result)) {
+    result = new Cartesian3();
 }
 ```
 * Use parenthesis judiciously, e.g.,
@@ -196,6 +207,20 @@ state.isSkyAtmosphereVisible = true
 state.isSunVisible = true;
 state.isMoonVisible = false;
 ```
+* Do not create a local variable that is used only once unless it significantly improves readability, e.g.,
+```javascript
+function radiiEquals(left, right) {
+    var leftRadius = left.radius;
+    var rightRadius = right.radius;
+    return (leftRadius === rightRadius);
+}
+```
+is better written as
+```javascript
+function radiiEquals(left, right) {
+    return (left.radius === right.radius);
+}
+```
 * Use `undefined` instead of `null`.
 * Test if a variable is defined using Cesium's `defined` function, e.g.,
 ```javascript
@@ -209,7 +234,6 @@ if (defined(u)) {
     // True
 }
 ```
-* Use Cesium's `definedNotNull` function to test the return of `String.match()` and JSON properties.
 * Use Cesium's `freezeObject` function to create enums, e.g.,
 ```javascript
 /*global define*/
@@ -217,7 +241,7 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     var ModelAnimationState = {
         STOPPED : 0,
@@ -241,7 +265,7 @@ byteOffset += sizeOfUint32; // Skip length field
 ## Functions
 
 * :art: Functions should be **cohesive**; they should only do one task.
-* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g., 
+* Statements in a function should be at a similar level of abstraction.  If a code block is much lower level than the rest of the statements, it is a good candidate to move to a helper function, e.g.,
 ```javascript
 Cesium3DTileset.prototype.update = function(frameState) {
     var tiles = this._processingQueue;
@@ -272,6 +296,26 @@ function processTiles(tiles3D, frameState) {
     }
 }
 ```
+* Do not use an unnecessary `else` block at the end of a function, e.g.,
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    } else {
+        return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
+    }
+}
+```
+is better written as
+```javascript
+function getTransform(node) {
+    if (defined(node.matrix)) {
+        return Matrix4.fromArray(node.matrix);
+    }
+
+    return Matrix4.fromTranslationQuaternionRotationScale(node.translation, node.rotation, node.scale);
+}
+```
 * :speedboat: Smaller functions are more likely to be optimized by JavaScript engines.  Consider this for code that is likely to be a hot spot.
 
 ### `options` Parameters
@@ -297,7 +341,7 @@ var p = new Cartesian3({
     z : 3.0
 });
 ```
-is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of 
+is a bad design for the `Cartesian3` constructor function since its performance is not as good as that of
 ```javascript
 var p = new Cartesian3(1.0, 2.0, 3.0);
 ```
@@ -653,6 +697,23 @@ It is usually obvious what directory a file belongs in.  When it isn't, the deci
 
 Modules (files) should only reference modules in the same level or a lower level of the stack.  For example, a module in `Scene` can use modules in `Scene`, `Renderer`, and `Core`, but not in `DataSources` or `Widgets`.
 
+* Modules in `define` statements should be in alphabetical order.  This can be done automatically with `npm run sortRequires`, see the [Build Guide](../BuildGuide/README.md).  For example, the modules required by `Scene/ModelAnimation.js` are:
+```javascript
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties',
+        '../Core/Event',
+        '../Core/JulianDate',
+        './ModelAnimationLoop',
+        './ModelAnimationState'
+    ], function(
+        defaultValue,
+        defineProperties,
+        Event,
+        JulianDate,
+        ModelAnimationLoop,
+        ModelAnimationState) { /* ... */ });
+```
 * WebGL resources need to be explicitly deleted so classes that contain them (and classes that contain these classes, and so on) have `destroy` and `isDestroyed` functions, e.g.,
 ```javascript
 var primitive = new Primitive(/* ... */);

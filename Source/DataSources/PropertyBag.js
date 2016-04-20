@@ -5,8 +5,8 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        './createPropertyDescriptor',
         './ConstantProperty',
+        './createPropertyDescriptor',
         './Property'
     ], function(
         defaultValue,
@@ -14,10 +14,10 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        createPropertyDescriptor,
         ConstantProperty,
+        createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.

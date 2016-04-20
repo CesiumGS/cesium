@@ -17,13 +17,15 @@ define([
         ReferenceFrame,
         CompositeProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link CompositeProperty} which is also a {@link PositionProperty}.
      *
      * @alias CompositePositionProperty
      * @constructor
+     *
+     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     function CompositePositionProperty(referenceFrame) {
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);

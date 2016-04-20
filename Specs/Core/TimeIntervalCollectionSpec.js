@@ -7,7 +7,7 @@ defineSuite([
         TimeIntervalCollection,
         JulianDate,
         TimeInterval) {
-    "use strict";
+    'use strict';
 
     function TestObject(value) {
         this.value = value;
@@ -687,6 +687,47 @@ defineSuite([
         expect(intervals.get(1).stop).toEqual(interval.stop);
         expect(intervals.get(1).isStartIncluded).toEqual(true);
         expect(intervals.get(1).isStopIncluded).toEqual(true);
+    });
+
+    it('removeInterval removes overlapped intervals', function() {
+        var intervals = new TimeIntervalCollection();
+
+        intervals.addInterval(new TimeInterval({
+            start : new JulianDate(1),
+            stop : new JulianDate(2),
+            isStartIncluded : true,
+            isStopIncluded : false
+        }));
+        intervals.addInterval(new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(3),
+            isStartIncluded : false,
+            isStopIncluded : false
+        }));
+        intervals.addInterval(new TimeInterval({
+            start : new JulianDate(3),
+            stop : new JulianDate(4),
+            isStartIncluded : false,
+            isStopIncluded : false
+        }));
+        intervals.addInterval(new TimeInterval({
+            start : new JulianDate(4),
+            stop : new JulianDate(5),
+            isStartIncluded : false,
+            isStopIncluded : true
+        }));
+
+        var removedInterval = new TimeInterval({
+            start : new JulianDate(2),
+            stop : new JulianDate(4),
+            isStartIncluded : false,
+            isStopIncluded : false
+        });
+
+        expect(intervals.length).toEqual(4);
+        expect(intervals.removeInterval(removedInterval)).toEqual(true);
+
+        expect(intervals.length).toEqual(2);
     });
 
     it('intersect works with an empty collection', function() {

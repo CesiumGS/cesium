@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         RuntimeError) {
-    "use strict";
+    'use strict';
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {

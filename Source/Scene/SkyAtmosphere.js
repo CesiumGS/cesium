@@ -41,7 +41,7 @@ define([
         BlendingState,
         CullFace,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
@@ -236,10 +236,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see SkyAtmosphere#isDestroyed
      *
      * @example
      * skyAtmosphere = skyAtmosphere && skyAtmosphere.destroy();
+     * 
+     * @see SkyAtmosphere#isDestroyed
      */
     SkyAtmosphere.prototype.destroy = function() {
         var command = this._command;

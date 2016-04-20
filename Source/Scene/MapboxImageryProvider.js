@@ -15,7 +15,7 @@ define([
         DeveloperError,
         MapboxApi,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
@@ -28,7 +28,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='//api.mapbox.com/v4/'] The Mapbox server url.
+     * @param {String} [options.url='https://api.mapbox.com/v4/'] The Mapbox server url.
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
      * @param {String} [options.format='png'] The format of the image request.
@@ -41,8 +41,6 @@ define([
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle, in radians, covered by the image.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
-     * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
      *
      * @example
      * // Mapbox tile provider
@@ -50,6 +48,9 @@ define([
      *     mapId: 'mapbox.streets',
      *     accessToken: 'thisIsMyAccessToken'
      * });
+     *
+     * @see {@link https://www.mapbox.com/developers/api/maps/#tiles}
+     * @see {@link https://www.mapbox.com/developers/api/#access-tokens}
      */
     function MapboxImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -60,7 +61,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = defaultValue(options.url, '//api.mapbox.com/v4/');
+        var url = defaultValue(options.url, 'https://api.mapbox.com/v4/');
         this._url = url;
         this._mapId = mapId;
         this._accessToken = MapboxApi.getAccessToken(options.accessToken);
@@ -324,7 +325,6 @@ define([
      * a tile.  This function should not be called before {@link MapboxImageryProvider#ready} returns true.
      * This function is optional, so it may not exist on all ImageryProviders.
      *
-     * @function
      *
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.

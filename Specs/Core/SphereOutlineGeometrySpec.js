@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         SphereOutlineGeometry,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
@@ -41,6 +41,16 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(6 * 3);
         expect(m.indices.length).toEqual(6 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
+    });
+
+    it('undefined is returned if radius is equals to zero', function() {
+        var sphereOutline = new SphereOutlineGeometry({
+            radius : 0.0
+        });
+
+        var geometry = SphereOutlineGeometry.createGeometry(sphereOutline);
+
+        expect(geometry).toBeUndefined();
     });
 
     var sphere = new SphereOutlineGeometry({

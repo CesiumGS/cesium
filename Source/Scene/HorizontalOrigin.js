@@ -3,15 +3,14 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The horizontal location of an origin relative to an object, e.g., a {@link Billboard}.
      * For example, the horizontal origin is used to display a billboard to the left or right (in
      * screen space) of the actual position.
      *
-     * @namespace
-     * @alias HorizontalOrigin
+     * @exports HorizontalOrigin
      *
      * @see Billboard#horizontalOrigin
      */

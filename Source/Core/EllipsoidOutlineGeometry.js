@@ -27,7 +27,7 @@ define([
         IndexDatatype,
         CesiumMath,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
     var cos = Math.cos;
@@ -48,8 +48,6 @@ define([
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Outline.html|Cesium Sandcastle Ellipsoid Outline Demo}
      *
      * @example
      * var ellipsoid = new Cesium.EllipsoidOutlineGeometry({
@@ -94,7 +92,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {EllipsoidOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -171,10 +168,15 @@ define([
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
         var radii = ellipsoidGeometry._radii;
+
+        if ((radii.x <= 0) || (radii.y <= 0) || (radii.z <= 0)) {
+            return;
+        }
+
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var stackPartitions = ellipsoidGeometry._stackPartitions;
         var slicePartitions = ellipsoidGeometry._slicePartitions;

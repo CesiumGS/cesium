@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A convenience object that simplifies the common pattern of attaching event listeners
@@ -15,7 +15,6 @@ define([
      * @alias EventHelper
      * @constructor
      *
-     * @see Event
      *
      * @example
      * var helper = new Cesium.EventHelper();
@@ -25,6 +24,8 @@ define([
      *
      * // later...
      * helper.removeAll();
+     * 
+     * @see Event
      */
     function EventHelper() {
         this._removalFunctions = [];

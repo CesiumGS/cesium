@@ -5,13 +5,12 @@ define([
     ], function(
         WebGLConstants,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The format of a pixel, i.e., the number of components it has and what they represent.
      *
-     * @namespace
-     * @alias PixelFormat
+     * @exports PixelFormat
      */
     var PixelFormat = {
         /**

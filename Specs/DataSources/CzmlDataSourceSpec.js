@@ -55,7 +55,7 @@ defineSuite([
         VerticalOrigin,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     function makePacket(packet) {
         return [{
@@ -157,6 +157,19 @@ defineSuite([
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('name returns CZML defined name', function() {
@@ -657,6 +670,22 @@ defineSuite([
 
         dataSource.load(makePacket(czml));
         entity = dataSource.entities.values[0];
+        expect(entity.position.referenceFrame).toBe(ReferenceFrame.FIXED);
+    });
+
+    it('uses FIXED as default if not specified in CZML', function() {
+        var epoch = JulianDate.now();
+        var dataSource = new CzmlDataSource();
+
+        var czml = {
+            position : {
+                epoch : JulianDate.toIso8601(epoch),
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        };
+
+        dataSource.load(makePacket(czml));
+        var entity = dataSource.entities.values[0];
         expect(entity.position.referenceFrame).toBe(ReferenceFrame.FIXED);
     });
 

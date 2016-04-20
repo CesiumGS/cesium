@@ -11,7 +11,7 @@ define([
         loadImage,
         when,
         CubeMap) {
-    "use strict";
+    'use strict';
 
     /**
      * Asynchronously loads six images and creates a cube map.  Returns a promise that
@@ -29,8 +29,6 @@ define([
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * Cesium.loadCubeMap(context, {
@@ -45,6 +43,9 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @private
      */

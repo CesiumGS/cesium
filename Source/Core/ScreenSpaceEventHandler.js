@@ -19,7 +19,7 @@ define([
         FeatureDetection,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
-    "use strict";
+    'use strict';
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;
@@ -100,7 +100,7 @@ define([
         if ('onwheel' in element) {
             // spec event type
             wheelEvent = 'wheel';
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
             // legacy event type
             wheelEvent = 'mousewheel';
         } else {
@@ -756,10 +756,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ScreenSpaceEventHandler#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     * 
+     * @see ScreenSpaceEventHandler#isDestroyed
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
         unregisterListeners(this);

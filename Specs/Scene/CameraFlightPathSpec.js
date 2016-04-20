@@ -17,7 +17,7 @@ defineSuite([
         OrthographicFrustum,
         SceneMode,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
 
@@ -253,6 +253,7 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
         camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
         camera.frustum = createOrthographicFrustum();
+        camera.update(scene.mode);
         var frustum = camera.frustum;
         var destination = Cartesian3.clone(camera.position);
         destination.z = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
@@ -380,5 +381,46 @@ defineSuite([
         expect(typeof flight.complete).toEqual('function');
         flight.complete();
         expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+    });
+
+    it('does not go above the maximum height', function() {
+        var camera = scene.camera;
+
+        var startPosition = Cartesian3.fromDegrees(0.0, 0.0, 1000.0);
+        var endPosition = Cartesian3.fromDegrees(10.0, 0.0, 1000.0);
+        var duration = 5.0;
+
+        camera.setView({
+            destination : startPosition
+        });
+
+        var flight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration
+        });
+
+        var maximumHeight = Number.NEGATIVE_INFINITY;
+        var i;
+        for (i = 0; i <= duration; ++i) {
+            flight.update({ time : i });
+            maximumHeight = Math.max(maximumHeight, camera.positionCartographic.height);
+        }
+
+        maximumHeight *= 0.5;
+
+        camera.setView({
+            destination : startPosition
+        });
+
+        flight = CameraFlightPath.createTween(scene, {
+            destination : endPosition,
+            duration : duration,
+            maximumHeight : maximumHeight
+        });
+
+        for (i = 0; i <= duration; ++i) {
+            flight.update({ time : i });
+            expect(camera.positionCartographic.height).toBeLessThan(maximumHeight);
+        }
     });
 }, 'WebGL');

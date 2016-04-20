@@ -31,7 +31,7 @@ define([
         PrimitiveType,
         VertexFormat,
         WallGeometryLibrary) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
@@ -92,9 +92,6 @@ define([
         if (!defined(wallPositions)) {
             throw new DeveloperError('options.positions is required.');
         }
-        if (wallPositions.length < 2) {
-            throw new DeveloperError('options.positions length must be greater than or equal to 2.');
-        }
         if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('options.positions and options.maximumHeights must have the same length.');
         }
@@ -132,7 +129,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {WallGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -286,7 +282,6 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @returns {WallGeometry}
      *
-     * @see WallGeometry#createGeometry
      *
      * @example
      * // create a wall that spans from 10000 meters to 20000 meters
@@ -302,6 +297,8 @@ define([
      *   maximumHeight : 10000.0
      * });
      * var geometry = Cesium.WallGeometry.createGeometry(wall);
+     *
+     * @see WallGeometry#createGeometry
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -363,11 +360,12 @@ define([
 
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         if (!defined(pos)) {
-            return undefined;
+            return;
         }
 
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
+        var numCorners = pos.numCorners;
 
         var length = topPositions.length;
         var size = length * 2;
@@ -535,7 +533,7 @@ define([
         //
 
         var numVertices = size / 3;
-        size -= 6;
+        size -= 6 * (numCorners + 1);
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;

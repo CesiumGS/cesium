@@ -17,14 +17,13 @@ define([
         Matrix3,
         TimeConstants,
         TimeStandard) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions for finding the Cartesian coordinates of the sun and the moon in the
      * Earth-centered inertial frame.
      *
-     * @namespace
-     * @alias Simon1994PlanetaryPositions
+     * @exports Simon1994PlanetaryPositions
      */
     var Simon1994PlanetaryPositions = {};
 

@@ -19,7 +19,7 @@ define([
         HermiteSpline,
         Matrix4,
         Spline) {
-    "use strict";
+    'use strict';
 
     var scratchTimeVec = new Cartesian4();
     var scratchTemp0 = new Cartesian3();
@@ -122,9 +122,6 @@ define([
      * @exception {DeveloperError} points.length must be greater than or equal to 2.
      * @exception {DeveloperError} times.length must be equal to points.length.
      *
-     * @see HermiteSpline
-     * @see LinearSpline
-     * @see QuaternionSpline
      *
      * @example
      * // spline above the earth from Philadelphia to Los Angeles
@@ -141,6 +138,10 @@ define([
      *
      * var p0 = spline.evaluate(times[i]);         // equal to positions[i]
      * var p1 = spline.evaluate(times[i] + delta); // interpolated value when delta < times[i + 1] - times[i]
+     * 
+     * @see HermiteSpline
+     * @see LinearSpline
+     * @see QuaternionSpline
      */
     function CatmullRomSpline(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

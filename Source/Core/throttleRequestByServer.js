@@ -7,7 +7,7 @@ define([
         Uri,
         when,
         defaultValue) {
-    "use strict";
+    'use strict';
 
     var activeRequests = {};
 
@@ -36,7 +36,6 @@ define([
      * @returns {Promise.<Object>|undefined} Either undefined, meaning the request would exceed the maximum number of
      *          parallel requests, or a Promise for the requested data.
      *
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // throttle requests for an image
@@ -53,6 +52,8 @@ define([
      *     // handle loaded image
      *   });
      * }
+     * 
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function throttleRequestByServer(url, requestFunction) {
         var server = getServer(url);

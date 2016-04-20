@@ -17,12 +17,13 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         BoundingSphereState) {
-    "use strict";
+    'use strict';
 
     function Batch(primitives, translucent, width) {
         this.translucent = translucent;
         this.primitives = primitives;
         this.createPrimitive = false;
+        this.waitingOnCreate = false;
         this.primitive = undefined;
         this.oldPrimitive = undefined;
         this.geometry = new AssociativeArray();
@@ -129,6 +130,7 @@ define([
             this.attributes.removeAll();
             this.primitive = primitive;
             this.createPrimitive = false;
+            this.waitingOnCreate = true;
         } else if (defined(primitive) && primitive.ready) {
             if (defined(this.oldPrimitive)) {
                 primitives.remove(this.oldPrimitive);
@@ -137,6 +139,7 @@ define([
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
+            var waitingOnCreate = this.waitingOnCreate;
             for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.entity.id);
@@ -147,7 +150,7 @@ define([
                     this.attributes.set(instance.id.id, attributes);
                 }
 
-                if (!updater.outlineColorProperty.isConstant) {
+                if (!updater.outlineColorProperty.isConstant || waitingOnCreate) {
                     var outlineColorProperty = updater.outlineColorProperty;
                     outlineColorProperty.getValue(time, colorScratch);
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
@@ -167,6 +170,7 @@ define([
             }
 
             this.updateShows(primitive);
+            this.waitingOnCreate = false;
         } else if (defined(primitive) && !primitive.ready) {
             isUpdated = false;
         }

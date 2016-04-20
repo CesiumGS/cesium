@@ -3,15 +3,14 @@ define([
         './DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Static interface for types which can store their values as packed
      * elements in an array.  These methods and properties are expected to be
      * defined on a constructor function.
      *
-     * @namespace
-     * @alias Packable
+     * @exports Packable
      *
      * @see PackableForInterpolation
      */

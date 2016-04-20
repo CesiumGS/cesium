@@ -13,7 +13,7 @@ define([
         DeveloperError,
         FeatureDetection,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
@@ -25,8 +25,7 @@ define([
      * WebGL component datatypes.  Components are intrinsics,
      * which form attributes, which form vertices.
      *
-     * @namespace
-     * @alias ComponentDatatype
+     * @exports ComponentDatatype
      */
     var ComponentDatatype = {
         /**

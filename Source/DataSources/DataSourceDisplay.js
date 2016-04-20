@@ -51,7 +51,7 @@ define([
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -96,6 +96,8 @@ define([
         var defaultDataSource = new CustomDataSource();
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
+
+        this._ready = false;
     }
 
     /**
@@ -157,6 +159,18 @@ define([
             get : function() {
                 return this._defaultDataSource;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not all entities in the data source are ready
+         * @memberof DataSourceDisplay.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
         }
     });
 
@@ -186,10 +200,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceDisplay#isDestroyed
      *
      * @example
      * dataSourceDisplay = dataSourceDisplay.destroy();
+     *
+     * @see DataSourceDisplay#isDestroyed
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();
@@ -242,6 +257,8 @@ define([
         for (x = 0; x < vLength; x++) {
             result = visualizers[x].update(time) && result;
         }
+
+        this._ready = result;
 
         return result;
     };

@@ -21,7 +21,7 @@ define([
         Rectangle,
         when,
         ImageryLayer) {
-    "use strict";
+    'use strict';
 
     /**
      * An ordered collection of imagery layers.
@@ -217,7 +217,7 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @returns {ImageryLayer} The imagery layer at the given index.
      */
     ImageryLayerCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -460,6 +460,32 @@ define([
     };
 
     /**
+     * Updates frame state to execute any queued texture re-projections.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     */
+    ImageryLayerCollection.prototype.queueReprojectionCommands = function(frameState) {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].queueReprojectionCommands(frameState);
+        }
+    };
+
+    /**
+     * Cancels re-projection commands queued for the next frame.
+     *
+     * @private
+     */
+    ImageryLayerCollection.prototype.cancelReprojections = function() {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].cancelReprojections();
+        }
+    };
+
+    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -486,10 +512,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * 
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);

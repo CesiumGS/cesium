@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     var _supportsFullscreen;
     var _names = {
@@ -20,8 +20,7 @@ define([
     /**
      * Browser-independent functions for working with the standard fullscreen API.
      *
-     * @namespace
-     * @alias Fullscreen
+     * @exports Fullscreen
      *
      * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
      */
@@ -174,22 +173,22 @@ define([
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenEnabled';
-            if (defined(document[name])) {
+            if (document[name] !== undefined) {
                 _names.fullscreenEnabled = name;
             } else {
                 name = prefix + 'FullScreenEnabled';
-                if (defined(document[name])) {
+                if (document[name] !== undefined) {
                     _names.fullscreenEnabled = name;
                 }
             }
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenElement';
-            if (defined(document[name])) {
+            if (document[name] !== undefined) {
                 _names.fullscreenElement = name;
             } else {
                 name = prefix + 'FullScreenElement';
-                if (defined(document[name])) {
+                if (document[name] !== undefined) {
                     _names.fullscreenElement = name;
                 }
             }
@@ -197,7 +196,7 @@ define([
             // thankfully, event names are all lowercase per spec
             name = prefix + 'fullscreenchange';
             // event names do not have 'on' in the front, but the property on the document does
-            if (defined(document['on' + name])) {
+            if (document['on' + name] !== undefined) {
                 //except on IE
                 if (prefix === 'ms') {
                     name = 'MSFullscreenChange';
@@ -206,7 +205,7 @@ define([
             }
 
             name = prefix + 'fullscreenerror';
-            if (defined(document['on' + name])) {
+            if (document['on' + name] !== undefined) {
                 //except on IE
                 if (prefix === 'ms') {
                     name = 'MSFullscreenError';
@@ -223,6 +222,7 @@ define([
      * If fullscreen mode is not supported by the browser, does nothing.
      *
      * @param {Object} element The HTML element which will be placed into fullscreen mode.
+     * @param {HMDVRDevice} [vrDevice] The VR device.
      *
      * @example
      * // Put the entire page into fullscreen.
@@ -231,12 +231,12 @@ define([
      * // Place only the Cesium canvas into fullscreen.
      * Cesium.Fullscreen.requestFullscreen(scene.canvas)
      */
-    Fullscreen.requestFullscreen = function(element) {
+    Fullscreen.requestFullscreen = function(element, vrDevice) {
         if (!Fullscreen.supportsFullscreen()) {
             return;
         }
 
-        element[_names.requestFullscreen]();
+        element[_names.requestFullscreen]({ vrDisplay: vrDevice });
     };
 
     /**

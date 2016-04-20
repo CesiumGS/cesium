@@ -33,7 +33,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         WebGLConstants) {
-    "use strict";
+    'use strict';
     
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -207,14 +207,15 @@ define([
      * @exception {DeveloperError} framebufferXOffset + width must be less than or equal to canvas.clientWidth.
      * @exception {DeveloperError} framebufferYOffset + height must be less than or equal to canvas.clientHeight.
      *
-     * @see Sampler
      *
      * @example
      * // Create a texture with the contents of the framebuffer.
      * var t = Texture.fromFramebuffer({
      *     context : context
      * });
-     *
+     * 
+     * @see Sampler
+     * 
      * @private
      */
     Texture.fromFramebuffer = function(options) {

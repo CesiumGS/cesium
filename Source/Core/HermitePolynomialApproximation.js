@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var factorial = CesiumMath.factorial;
 
@@ -58,8 +58,7 @@ define([
     /**
      * An {@link InterpolationAlgorithm} for performing Hermite interpolation.
      *
-     * @namespace
-     * @alias HermitePolynomialApproximation
+     * @exports HermitePolynomialApproximation
      */
     var HermitePolynomialApproximation = {
         type : 'Hermite'

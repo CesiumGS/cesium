@@ -25,14 +25,14 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // Add an ArcGIS MapServer imagery layer
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
-    url : '//nationalmap.gov.au/proxy/http://www.ga.gov.au/gis/rest/services/earth_science/GA_Surface_Geology_of_Australia_WM/MapServer'
+    url : 'https://nationalmap.gov.au/proxy/http://www.ga.gov.au/gis/rest/services/earth_science/GA_Surface_Geology_of_Australia_WM/MapServer'
 }));
 
 // Start off looking at Australia.

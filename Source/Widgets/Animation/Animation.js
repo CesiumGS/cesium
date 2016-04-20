@@ -15,7 +15,7 @@ define([
         DeveloperError,
         getElement,
         subscribeAndEvaluate) {
-    "use strict";
+    'use strict';
 
     var svgNS = "http://www.w3.org/2000/svg";
     var xlinkNS = "http://www.w3.org/1999/xlink";
@@ -312,8 +312,6 @@ define([
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
-     * @see AnimationViewModel
-     * @see Clock
      *
      * @example
      * // In HTML head, include a link to Animation.css stylesheet,
@@ -329,6 +327,9 @@ define([
      *     Cesium.requestAnimationFrame(tick);
      * }
      * Cesium.requestAnimationFrame(tick);
+     * 
+     * @see AnimationViewModel
+     * @see Clock
      */
     function Animation(container, viewModel) {
         //>>includeStart('debug', pragmas.debug);

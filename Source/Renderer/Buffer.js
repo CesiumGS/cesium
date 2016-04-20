@@ -17,7 +17,7 @@ define([
         IndexDatatype,
         BufferUsage,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -94,9 +94,6 @@ define([
      * @exception {DeveloperError} The buffer size must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
      *
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
      *
      * @example
      * // Example 1. Create a dynamic vertex buffer 16 bytes in size.
@@ -115,6 +112,10 @@ define([
      *     typedArray : new Float32Array([0, 0, 0]),
      *     usage : BufferUsage.STATIC_DRAW
      * });
+     * 
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ARRAY_BUFFER</code>
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ARRAY_BUFFER</code>
      */
     Buffer.createVertexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -153,9 +154,6 @@ define([
      * @exception {DeveloperError} Invalid <code>usage</code>.
      * @exception {DeveloperError} Invalid <code>indexDatatype</code>.
      *
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
-     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
      *
      * @example
      * // Example 1. Create a stream index buffer of unsigned shorts that is
@@ -175,6 +173,10 @@ define([
      *     usage : BufferUsage.STATIC_DRAW,
      *     indexDatatype : IndexDatatype.UNSIGNED_SHORT
      * });
+     * 
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glGenBuffer.xml|glGenBuffer}
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBindBuffer.xml|glBindBuffer} with <code>ELEMENT_ARRAY_BUFFER</code>
+     * @see {@link https://www.khronos.org/opengles/sdk/docs/man/xhtml/glBufferData.xml|glBufferData} with <code>ELEMENT_ARRAY_BUFFER</code>
      */
     Buffer.createIndexBuffer = function(options) {
         //>>includeStart('debug', pragmas.debug);

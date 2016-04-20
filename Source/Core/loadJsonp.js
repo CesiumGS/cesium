@@ -17,7 +17,7 @@ define([
         DeveloperError,
         objectToQuery,
         queryToObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Requests a resource using JSONP.
@@ -31,7 +31,6 @@ define([
      * @param {Proxy} [options.proxy] A proxy to use for the request. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @returns {Promise.<Object>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a data asynchronously
@@ -40,6 +39,8 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadJsonp(url, options) {
         //>>includeStart('debug', pragmas.debug);

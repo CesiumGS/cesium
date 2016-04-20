@@ -15,7 +15,7 @@ define([
         EventHelper,
         TimeIntervalCollection,
         Property) {
-    "use strict";
+    'use strict';
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
         function callback() {
@@ -40,8 +40,6 @@ define([
      * @alias CompositeProperty
      * @constructor
      *
-     * @see CompositeMaterialProperty
-     * @see CompositePositionProperty
      *
      * @example
      * var constantProperty = ...;
@@ -62,6 +60,9 @@ define([
      *     isStopIncluded : false,
      *     data : sampledProperty
      * }));
+     * 
+     * @see CompositeMaterialProperty
+     * @see CompositePositionProperty
      */
     function CompositeProperty() {
         this._eventHelper = new EventHelper();

@@ -3,15 +3,17 @@ define([
         './Cartesian2',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './freezeObject'
     ], function(
         Cartesian2,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * A 2x2 matrix, indexable as a column-major order array.
@@ -680,12 +682,13 @@ define([
      * @param {Matrix2} result The object onto which to store the result.
      * @returns {Matrix2} The modified result parameter.
      *
-     * @see Matrix2.fromScale
-     * @see Matrix2.multiplyByUniformScale
      *
      * @example
      * // Instead of Cesium.Matrix2.multiply(m, Cesium.Matrix2.fromScale(scale), m);
      * Cesium.Matrix2.multiplyByScale(m, scale, m);
+     * 
+     * @see Matrix2.fromScale
+     * @see Matrix2.multiplyByUniformScale
      */
     Matrix2.multiplyByScale = function(matrix, scale, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -904,6 +907,20 @@ define([
      * matrix[Cesium.Matrix2.COLUMN1ROW1] = 5.0; // set column 1, row 1 to 5.0
      */
     Matrix2.COLUMN1ROW1 = 3;
+
+    defineProperties(Matrix2.prototype, {
+        /**
+         * Gets the number of items in the collection.
+         * @memberof Matrix2.prototype
+         *
+         * @type {Number}
+         */
+        length : {
+            get : function() {
+                return Matrix2.packedLength;
+            }
+        }
+    });
 
     /**
      * Duplicates the provided Matrix2 instance.

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -14,9 +15,10 @@ define([
         './GeometryAttributes',
         './IndexDatatype',
         './Math',
-        './PolylinePipeline',
+        './PolygonPipeline',
         './PrimitiveType'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -31,9 +33,9 @@ define([
         GeometryAttributes,
         IndexDatatype,
         CesiumMath,
-        PolylinePipeline,
+        PolygonPipeline,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
@@ -267,8 +269,8 @@ define([
         extrudedPositions.set(positions);
         var newPositions = new Float64Array(length * 2);
 
-        positions = CorridorGeometryLibrary.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
-        extrudedPositions = CorridorGeometryLibrary.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid, extrudedPositions);
+        positions = PolygonPipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+        extrudedPositions = PolygonPipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
         newPositions.set(positions);
         newPositions.set(extrudedPositions, length);
         attributes.position.values = newPositions;
@@ -311,13 +313,11 @@ define([
      * @param {Number} options.width The distance between the edges of the corridor outline.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
-     * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
+     * @param {Number} [options.height=0] The distance in meters between the positions and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the extruded face and the ellipsoid surface.
      * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
      *
      * @see CorridorOutlineGeometry.createGeometry
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor%20Outline.html|Cesium Sandcastle Corridor Outline Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorOutlineGeometry({
@@ -357,7 +357,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {CorridorOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -467,20 +466,21 @@ define([
     CorridorOutlineGeometry.createGeometry = function(corridorOutlineGeometry) {
         var positions = corridorOutlineGeometry._positions;
         var height = corridorOutlineGeometry._height;
+        var width = corridorOutlineGeometry._width;
         var extrudedHeight = corridorOutlineGeometry._extrudedHeight;
         var extrude = (height !== extrudedHeight);
 
-        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
+        var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
-        if (cleanPositions.length < 2) {
-            return undefined;
+        if ((cleanPositions.length < 2) || (width <= 0)) {
+            return;
         }
 
         var ellipsoid = corridorOutlineGeometry._ellipsoid;
         var params = {
             ellipsoid : ellipsoid,
             positions : cleanPositions,
-            width : corridorOutlineGeometry._width,
+            width : width,
             cornerType : corridorOutlineGeometry._cornerType,
             granularity : corridorOutlineGeometry._granularity,
             saveAttributes : false
@@ -496,7 +496,7 @@ define([
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, params.cornerType);
-            attr.attributes.position.values = CorridorGeometryLibrary.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values);
+            attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);

@@ -3,7 +3,7 @@ define([
         './loadWithXhr'
     ], function(
         loadWithXhr) {
-    "use strict";
+    'use strict';
 
     /**
      * Asynchronously loads the given URL as text.  Returns a promise that will resolve to
@@ -17,9 +17,6 @@ define([
      * @param {Object} [headers] HTTP headers to send with the request.
      * @returns {Promise.<String>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load text from a URL, setting a custom header
@@ -30,6 +27,10 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest|XMLHttpRequest}
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadText(url, headers) {
         return loadWithXhr({

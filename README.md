@@ -2,13 +2,21 @@
 <img src="https://github.com/AnalyticalGraphicsInc/cesium/wiki/logos/Cesium_Logo_Color.jpg" width="50%" />
 </p>
 
+[![Build Status](https://travis-ci.org/AnalyticalGraphicsInc/cesium.svg?branch=master)](https://travis-ci.org/AnalyticalGraphicsInc/cesium)&nbsp;
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0.html)
+
 Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin. It uses WebGL for hardware-accelerated graphics, and is cross-platform, cross-browser, and tuned for dynamic-data visualization.
 
 http://cesiumjs.org/
 
 ### Get Started ###
 
-See the [Cesium Up and Running](http://cesiumjs.org/2013/04/12/Cesium-up-and-running/) tutorial.  Have questions?  Ask them on the [forum](https://groups.google.com/d/forum/cesium-dev).
+Visit the [Downloads page](http://cesiumjs.org/downloads.html) or use the npm module:
+```
+npm install cesium
+```
+
+Have questions?  Ask them on the [forum](http://cesiumjs.org/forum.html).
 
 Interested in contributing?  See [CONTRIBUTING.md](CONTRIBUTING.md).
 

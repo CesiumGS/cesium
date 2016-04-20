@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Matrix3,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * The Axes representing the orientation of a Globe as represented by the data

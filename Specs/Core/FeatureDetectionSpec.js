@@ -3,7 +3,7 @@ defineSuite([
         'Core/FeatureDetection'
     ], function(
         FeatureDetection) {
-    "use strict";
+    'use strict';
 
     //generally, these tests just make sure the function runs, the test can't expect a value of true or false
     it('detects fullscreen support', function() {
@@ -87,6 +87,16 @@ defineSuite([
             checkVersionArray(firefoxVersion);
 
             console.log('detected Firefox ' + firefoxVersion.join('.'));
+        }
+    });
+
+    it('detects imageRendering support', function() {
+        var supportsImageRenderingPixelated = FeatureDetection.supportsImageRenderingPixelated();
+        expect(typeof supportsImageRenderingPixelated).toEqual('boolean');
+        if (supportsImageRenderingPixelated) {
+            expect(FeatureDetection.imageRenderingValue()).toBeDefined();
+        } else {
+            expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
     });
 });

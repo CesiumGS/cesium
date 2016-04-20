@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         FullscreenButtonViewModel,
         Fullscreen) {
-    "use strict";
+    'use strict';
 
     it('constructor sets default values', function() {
         var viewModel = new FullscreenButtonViewModel();

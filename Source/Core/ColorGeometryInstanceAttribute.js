@@ -13,7 +13,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Value and type information for per-instance geometry color.
@@ -26,8 +26,6 @@ define([
      * @param {Number} [blue=1.0] The blue component.
      * @param {Number} [alpha=1.0] The alpha component.
      *
-     * @see GeometryInstance
-     * @see GeometryInstanceAttribute
      *
      * @example
      * var instance = new Cesium.GeometryInstance({
@@ -41,6 +39,9 @@ define([
      *     color : new Cesium.ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
+     * 
+     * @see GeometryInstance
+     * @see GeometryInstanceAttribute
      */
     function ColorGeometryInstanceAttribute(red, green, blue, alpha) {
         red = defaultValue(red, 1.0);
@@ -163,6 +164,24 @@ define([
             return new Uint8Array(color.toBytes());
         }
         return color.toBytes(result);
+    };
+
+    /**
+     * Compares the provided ColorGeometryInstanceAttributes and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {ColorGeometryInstanceAttribute} [left] The first ColorGeometryInstanceAttribute.
+     * @param {ColorGeometryInstanceAttribute} [right] The second ColorGeometryInstanceAttribute.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    ColorGeometryInstanceAttribute.equals = function(left, right) {
+        return (left === right) ||
+               (defined(left) &&
+                defined(right) &&
+                left.value[0] === right.value[0] &&
+                left.value[1] === right.value[1] &&
+                left.value[2] === right.value[2] &&
+                left.value[3] === right.value[3]);
     };
 
     return ColorGeometryInstanceAttribute;

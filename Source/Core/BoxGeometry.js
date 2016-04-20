@@ -23,7 +23,7 @@ define([
         GeometryAttributes,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var diffScratch = new Cartesian3();
 
@@ -85,14 +85,15 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * @see BoxGeometry.createGeometry
-     *
+     * 
      * @example
      * var box = Cesium.BoxGeometry.fromDimensions({
      *   vertexFormat : Cesium.VertexFormat.POSITION_ONLY,
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxGeometry.createGeometry(box);
+     * 
+     * @see BoxGeometry.createGeometry
      */
     BoxGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -122,10 +123,8 @@ define([
      * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
      * @returns {BoxGeometry}
      *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
      *
-     * @see BoxGeometry.createGeometry
-     *
+     * 
      * @example
      * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
      *      -72.0, 40.0,
@@ -134,42 +133,9 @@ define([
      *      -70.0, 30.0,
      *      -68.0, 40.0
      * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
-     */
-    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
-        if (!defined(boundingBox)) {
-            throw new DeveloperError('boundingBox is required.');
-        }
-
-        return new BoxGeometry({
-            minimum: boundingBox.minimum,
-            maximum: boundingBox.maximum
-        });
-    };
-
-    /**
-     * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
-     *
-     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
-     * @returns {BoxGeometry}
-     *
-     * @exception {DeveloperError} AxisAlignedBoundingBox must be defined.
-     *
+     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
+     * 
      * @see BoxGeometry.createGeometry
-     *
-     * @example
-     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
-     *      -72.0, 40.0,
-     *      -70.0, 35.0,
-     *      -75.0, 30.0,
-     *      -70.0, 30.0,
-     *      -68.0, 40.0
-     * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
      */
     BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
         if (!defined(boundingBox)) {
@@ -190,7 +156,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {BoxGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
@@ -258,12 +223,16 @@ define([
      * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._minimum;
         var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
+
+        if (Cartesian3.equals(min, max)) {
+            return;
+        }
 
         var attributes = new GeometryAttributes();
         var indices;

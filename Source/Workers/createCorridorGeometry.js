@@ -7,7 +7,7 @@ define([
         CorridorGeometry,
         defined,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     function createCorridorGeometry(corridorGeometry, offset) {
         if (defined(offset)) {

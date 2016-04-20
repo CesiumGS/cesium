@@ -9,13 +9,13 @@ defineSuite([
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
+        'Scene/GetFeatureInfoFormat',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        'Scene/GetFeatureInfoFormat'
+        'ThirdParty/when'
     ], function(
         UrlTemplateImageryProvider,
         DefaultProxy,
@@ -26,14 +26,14 @@ defineSuite([
         Rectangle,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        GetFeatureInfoFormat,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        when,
-        GetFeatureInfoFormat) {
-    "use strict";
+        when) {
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -596,5 +596,101 @@ defineSuite([
                 expect(provider.pickFeatures(0, 0, 0, 0.0, 0.0)).toBeUndefined();
             });
         });
+    });
+
+    it('throws if tileWidth called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileWidth();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tileHeight called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileHeight();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if maximumLevel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.maximumLevel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if minimumLevel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.minimumLevel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tilingScheme called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tilingScheme();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if rectangle called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.rectangle();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if tileDiscardPolicy called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.tileDiscardPolicy();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if credit called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.credit();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if hasAlphaChannel called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.hasAlphaChannel();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if getTileCredits called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.getTileCredits();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if requestImage called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.requestImage();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws if pickFeatures called before provider is ready', function() {
+        var provider = new UrlTemplateImageryProvider(when.defer());
+
+        expect(function() {
+            return provider.pickFeatures();
+        }).toThrowDeveloperError();
     });
 });

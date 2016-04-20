@@ -13,7 +13,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('throws without hierarchy', function() {
         expect(function() {
@@ -49,7 +49,7 @@ defineSuite([
                 0.0, 0.0
             ])
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('createGeometry returns undefined due to duplicate positions extruded', function() {
@@ -61,7 +61,7 @@ defineSuite([
             ]),
             extrudedHeight: 2
         }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('createGeometry returns undefined due to duplicate hierarchy positions', function() {
@@ -81,39 +81,38 @@ defineSuite([
         };
 
         var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy }));
-        expect(geometry).not.toBeDefined();
+        expect(geometry).toBeUndefined();
     });
 
     it('computes positions', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([
-                -50.0, -50.0,
-                50.0, -50.0,
-                50.0, 50.0,
-                -50.0, 50.0
-            ]),
-            granularity : CesiumMath.PI_OVER_THREE
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ])
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 6);
-        expect(p.indices.length).toEqual(2 * 6);
+        expect(p.attributes.position.values.length).toEqual(8 * 3);
+        expect(p.indices.length).toEqual(8 * 2);
     });
 
     it('computes positions with per position heights', function() {
         var ellipsoid = Ellipsoid.WGS84;
+        var height = 100.0;
         var positions = Cartesian3.fromDegreesArrayHeights([
-           -50.0, -50.0, 100000.0,
-           50.0, -50.0, 0.0,
-           50.0, 50.0, 0.0,
-           -50.0, 50.0, 0.0
+           -1.0, -1.0, height,
+           1.0, -1.0, 0.0,
+           1.0, 1.0, 0.0,
+           -1.0, 1.0, 0.0
        ]);
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
-            granularity : CesiumMath.PI_OVER_THREE,
             perPositionHeight : true
         }));
 
-        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(100000, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(0, CesiumMath.EPSILON6);
     });
 
@@ -148,8 +147,8 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 12);
-        expect(p.indices.length).toEqual(2 * 12);
+        expect(p.attributes.position.values.length).toEqual(12 * 3); // 4 corners * 3 rectangles
+        expect(p.indices.length).toEqual(12 * 2);
     });
 
     it('creates a polygon from clockwise hierarchy', function() {
@@ -183,8 +182,8 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 12);
-        expect(p.indices.length).toEqual(2 * 12);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
+        expect(p.indices.length).toEqual(12 * 2);
     });
 
     it('doesn\'t reverse clockwise input array', function() {
@@ -283,17 +282,16 @@ defineSuite([
     it('computes positions extruded', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([
-                -50.0, -50.0,
-                50.0, -50.0,
-                50.0, 50.0,
-                -50.0, 50.0
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
             ]),
-            granularity : CesiumMath.PI_OVER_THREE,
             extrudedHeight: 30000
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 6 * 2);
-        expect(p.indices.length).toEqual(2 * 6 * 2 + 4*2);
+        expect(p.attributes.position.values.length).toEqual(16 * 3); // 8 top + 8 bottom
+        expect(p.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
     });
 
     it('creates a polygon from hierarchy extruded', function() {
@@ -328,8 +326,21 @@ defineSuite([
             extrudedHeight: 30000
         }));
 
-        expect(p.attributes.position.values.length).toEqual(3 * 12 * 2);
-        expect(p.indices.length).toEqual(2 * 12 * 2 + 12*2);
+        expect(p.attributes.position.values.length).toEqual(24 * 3); // 12 top + 12 bottom
+        expect(p.indices.length).toEqual(36 * 2); // 12 top + 12 bottom + 12 edges
+    });
+
+    it('undefined is returned if there are less than 3 positions', function() {
+        var polygonOutline = PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -72.0, 40.0,
+                -68.0, 40.0
+            ])
+        });
+
+        var geometry = PolygonOutlineGeometry.createGeometry(polygonOutline);
+
+        expect(geometry).toBeUndefined();
     });
 
     var positions = Cartesian3.fromDegreesArray([

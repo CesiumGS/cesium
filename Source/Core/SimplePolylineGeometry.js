@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PolylinePipeline,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
         var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
@@ -93,8 +93,6 @@ define([
      *
      * @see SimplePolylineGeometry#createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Simple%20Polyline.html|Cesium Sandcastle Simple Polyline Demo}
-     *
      * @example
      * // A polyline with two connected line segments
      * var polyline = new Cesium.SimplePolylineGeometry({
@@ -141,7 +139,6 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
      * @param {SimplePolylineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
