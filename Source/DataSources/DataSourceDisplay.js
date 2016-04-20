@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -27,6 +28,7 @@ define([
         './WallGeometryUpdater'
     ], function(
         BoundingSphere,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -77,6 +79,8 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
+
+        this._displayID = createGuid();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -345,15 +349,27 @@ define([
 
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var visualizers = this._visualizersCallback(this._scene, dataSource);
-        dataSource._visualizers = visualizers;
+
+        dataSource._visualizersByDisplayID = dataSource._visualizersByDisplayID || {};
+        dataSource._visualizersByDisplayID[this._displayID] = visualizers;
+
+        dataSource._visualizers = dataSource._visualizers || [];
+        dataSource._visualizers = dataSource._visualizers.concat(visualizers);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-        var visualizers = dataSource._visualizers;
+        var visualizers = dataSource._visualizersByDisplayID[this._displayID];
+        if (!defined(visualizers)) {
+            return;
+        }
+
         var length = visualizers.length;
         for (var i = 0; i < length; i++) {
-            visualizers[i].destroy();
-            dataSource._visualizers = undefined;
+            var visualizer = visualizers[i];
+            visualizer.destroy();
+
+            var index = dataSource._visualizers.indexOf(visualizer);
+            dataSource._visualizers.splice(index, 1);
         }
     };
 
