@@ -24,7 +24,6 @@ defineSuite([
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/SceneMode',
-        'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -52,7 +51,6 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
-        createScene,
         pollToPromise,
         when) {
     "use strict";
@@ -3719,7 +3717,7 @@ defineSuite([
         });
     });
 
-    it('NetworkLink: Scene can async morph camera mode while active', function() {
+    it('NetworkLink: Camera can be in morphing mode', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Link>\
@@ -3728,20 +3726,12 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        var scene = createScene();
-        var kmlOptions = {
-            camera : scene.camera,
-            canvas : scene.canvas
-        };
+        var oldMode = options.camera._mode;
+        options.camera._mode = SceneMode.MORPHING;
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function() {
-            scene.morphTo3D();
-            expect(scene.mode).toEqual(SceneMode.SCENE3D);
-            scene.morphTo2D(1.0);
-            return scene.morphComplete.addEventListener(function() {
-                expect(scene.mode).toEqual(SceneMode.SCENE2D);
-                scene.destroyForSpecs();
-            });
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
+            options.camera._mode = oldMode;
         });
     });
 });
