@@ -1231,6 +1231,7 @@ define([
 
         var shadowNear = Number.MAX_VALUE;
         var shadowFar = -Number.MAX_VALUE;
+        var shadowClosestObjectSize = Number.MAX_VALUE;
 
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
@@ -1268,11 +1269,19 @@ define([
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
 
-                    // When moving the camera low LOD terrain tiles begin to load, whose bounding volumes
-                    // throw off the near/far fitting for the shadow map. Only update shadowNear and shadowFar
-                    // for reasonably sized bounding volumes.
-                    // TODO : handle similar case for 3D Tiles
-                    if (!((distances.start < -100.0) && (distances.stop > 100.0) && (pass === Pass.GLOBE))){
+                    // Compute a tight near and far plane for commands that receive shadows. This helps compute
+                    // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
+                    // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
+                    // camera isn't inside.
+                    if (command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                        !((pass === Pass.GLOBE) && (distances.start < 0.0) && (distances.stop > 0.0))) {
+
+                        // Get the smallest bounding volume the camera is near. This is used to improve cascaded shadow splits.
+                        var size = distances.stop - distances.start;
+                        if ((pass !== Pass.GLOBE) && (distances.start < 100.0)) {
+                            shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
+                        }
                         shadowNear = Math.min(shadowNear, distances.start);
                         shadowFar = Math.max(shadowFar, distances.stop);
                     }
@@ -1304,8 +1313,9 @@ define([
         }
 
         // Use the computed near and far for shadows
-        frameState.shadowNear = shadowNear;
-        frameState.shadowFar = shadowFar;
+        frameState.shadowHints.nearPlane = shadowNear;
+        frameState.shadowHints.farPlane = shadowFar;
+        frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
@@ -1768,6 +1778,21 @@ define([
         }
     }
 
+    function getTerrainShadowCommands(scene) {
+        // TODO : Temporary for testing. Globe.update doesn't work currently.
+        var terrainCommands = [];
+        var commandList = scene.frameState.commandList;
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            if (command.castShadows && command.pass === Pass.GLOBE) {
+                terrainCommands.push(command);
+            }
+        }
+
+        return terrainCommands;
+    }
+
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
         var shadowMaps = frameState.shadowMaps;
@@ -1799,7 +1824,8 @@ define([
             insertShadowCastCommands(scene, sceneCommands, false, shadowMap);
 
             // Insert the globe commands into the command lists
-            var globeCommands = shadowMap.commandList;
+            //var globeCommands = shadowMap.commandList;
+            var globeCommands = getTerrainShadowCommands(scene);
             insertShadowCastCommands(scene, globeCommands, true, shadowMap);
 
             for (j = 0; j < numberOfPasses; ++j) {

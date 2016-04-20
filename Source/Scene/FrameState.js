@@ -169,17 +169,25 @@ define([
         */
         this.terrainExaggeration = 1.0;
 
-        /**
-        * The near plane of the scene's frustum commands. Used for fitting the shadow map.
-        * @type {Number}
-        */
-        this.shadowNear = 1.0;
+        this.shadowHints = {
+            /**
+            * The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+            * @type {Number}
+            */
+            nearPlane : undefined,
 
-        /**
-        * The far plane of the scene's frustum commands. Used for fitting the shadow map.
-        * @type {Number}
-        */
-        this.shadowFar = 10000.0;
+            /**
+            * The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+            * @type {Number}
+            */
+            farPlane : undefined,
+
+            /**
+             * The size of the bounding volume that is closest to the camera. Used to estimate cascade splits.
+             * @type {Number}
+             */
+            closestObjectSize : undefined
+        };
     }
 
     /**

@@ -220,7 +220,7 @@ define([
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
         this._maximumDistance = 5000.0;
-        this._maximumCascadeDistances = [50.0, 300.0, Number.MAX_VALUE, Number.MAX_VALUE];
+        this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -284,6 +284,10 @@ define([
 
         this.setSize(this._shadowMapSize);
     }
+
+    // Global maximum shadow distance used to prevent far off receivers from extending
+    // the shadow far plane. E.g. setting a tighter near/far when viewing a satellite in space.
+    ShadowMap.MAXIMUM_DISTANCE = 20000.0;
 
     function ShadowPass(context) {
         this.camera = new ShadowMapCamera();
@@ -955,7 +959,7 @@ define([
     var scratchFrustum = new PerspectiveFrustum();
     var scratchCascadeDistances = new Array(4);
 
-    function computeCascades(shadowMap) {
+    function computeCascades(shadowMap, frameState) {
         var shadowMapCamera = shadowMap._shadowMapCamera;
         var sceneCamera = shadowMap._sceneCamera;
         var cameraNear = sceneCamera.frustum.near;
@@ -964,9 +968,19 @@ define([
 
         // Split cascades. Use a mix of linear and log splits.
         var i;
-        var lambda = 0.9;
         var range = cameraFar - cameraNear;
         var ratio = cameraFar / cameraNear;
+
+        var lambda = 0.9;
+        var clampCascadeDistances = false;
+
+        // When the camera is close to a relatively small model, provide more detail in the closer cascades.
+        // If the camera is near or inside a large model, such as the root tile of a city, then use the default values.
+        // To get the most accurate cascade splits we would need to find the min and max values from the depth texture.
+        if (frameState.shadowHints.closestObjectSize < 200.0) {
+            clampCascadeDistances = true;
+            lambda = 0.9;
+        }
 
         var cascadeDistances = scratchCascadeDistances;
         var splits = scratchSplits;
@@ -983,8 +997,7 @@ define([
             cascadeDistances[i] = split - splits[i];
         }
 
-        // When the camera is close enough to something provide more detail in the closer cascades
-        if (cameraNear < 100.0) {
+        if (clampCascadeDistances) {
             // Clamp each cascade to its maximum distance
             for (i = 0; i < numberOfCascades; ++i) {
                 cascadeDistances[i] = Math.min(cascadeDistances[i], shadowMap._maximumCascadeDistances[i]);
@@ -1294,8 +1307,8 @@ define([
         var far;
         if (shadowMap._fitNearFar) {
             // shadowFar can be very large, so limit to shadowMap._maximumDistance
-            near = Math.min(frameState.shadowNear, shadowMap._maximumDistance);
-            far = Math.min(frameState.shadowFar, shadowMap._maximumDistance);
+            near = Math.min(frameState.shadowHints.nearPlane, shadowMap._maximumDistance);
+            far = Math.min(frameState.shadowHints.farPlane, shadowMap._maximumDistance);
         } else {
             near = camera.frustum.near;
             far = shadowMap._maximumDistance;
@@ -1322,7 +1335,7 @@ define([
                 fitShadowMapToScene(this, frameState);
 
                 if (this._numberOfCascades > 1) {
-                    computeCascades(this);
+                    computeCascades(this, frameState);
                 }
             }
 
