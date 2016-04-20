@@ -3717,7 +3717,7 @@ defineSuite([
         });
     });
 
-    it('NetworkLink: Camera can be in morphing mode', function() {
+    it('NetworkLink: Heading and pitch can be undefined if the camera is in morphing mode', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
             <Link>\
@@ -3727,11 +3727,18 @@ defineSuite([
           </NetworkLink>';
 
         var oldMode = options.camera._mode;
+        var oldHeading = options.camera.heading;
+        var oldPitch = options.camera.pitch;
+
         options.camera._mode = SceneMode.MORPHING;
+        options.camera.heading = undefined;
+        options.camera.pitch = undefined;
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
             options.camera._mode = oldMode;
+            options.camera.heading = oldHeading;
+            options.camera.pitch = oldPitch;
         });
     });
 });
