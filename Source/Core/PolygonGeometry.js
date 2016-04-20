@@ -472,6 +472,13 @@ define([
 
         var extrudedHeight = options.extrudedHeight;
         var extrude = defined(extrudedHeight);
+
+        //Ignore extrudedHeight if it matches height
+        if (extrude && CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON10)) {
+            extrudedHeight = undefined;
+            extrude = false;
+        }
+
         if (extrude && !perPositionHeight) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
