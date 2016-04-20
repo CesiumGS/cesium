@@ -1,6 +1,6 @@
 {
   "name": "terriajs-cesium",
-  "version": "1.19.2",
+  "version": "1.19.3",
   "description": "Cesium for TerriaJS.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
