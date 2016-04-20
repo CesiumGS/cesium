@@ -36,7 +36,7 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <a href="http://cesiumjs.org/demos/NewYork.html"><img src="http://cesiumjs.org/demos/images/nyc.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodar_03_md.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/xalps.html"><img src="http://cesiumjs.org/demos/images/RedBull1.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta2012.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta.png" height="150" /></a>&nbsp;
 <a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/demos/VestaTrek.html"><img src="http://cesiumjs.org/demos/images/VestaTrek.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/CyberCity3D.html"><img src="http://cesiumjs.org/demos/images/CyberCity.png" height="150" /></a>&nbsp;
