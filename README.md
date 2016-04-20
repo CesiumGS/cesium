@@ -33,14 +33,34 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Featured Demos ###
 
 <p align="center">
-<a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodar_03_md.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/doarama.html"><img src="http://cesiumjs.org/demos/images/doarama.jpg" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html"><img src="http://cesiumjs.org/images/Sandcastle.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/NewYork.html"><img src="http://cesiumjs.org/demos/images/nyc.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodat_03_md.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/xalps.html"><img src="http://cesiumjs.org/demos/images/RedBull1.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta2012.png" height="150" /></a>&nbsp;
+<a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/Cesium/demos/VestaTrek.html"><img src="http://cesiumjs.org/images/VestaTrek.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/CyberCity3D.html"><img src="http://cesiumjs.org/demos/images/CyberCity.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GEFSonline.html"><img src="http://cesiumjs.org/demos/images/GEFS.jpg" height="150" /></a>&nbsp;
 </p>
 
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/CubeGlobe.html"><img src="http://cesiumjs.org/demos/images/CubeGlobe.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/OrbitalPredictor.html"><img src="http://cesiumjs.org/demos/images/OrbitalPredictor.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/RapidScat.html"><img src="http://cesiumjs.org/demos/images/RapidScat.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Wasurenai.html"><img src="http://cesiumjs.org/demos/images/Wasurenai.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/N2YO.html"><img src="http://cesiumjs.org/demos/images/N2YO.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/LiveTrack24.html"><img src="http://cesiumjs.org/demos/images/LiveTrack24.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/PHAROS.html"><img src="http://cesiumjs.org/demos/images/PHAROS.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/LSDSLAM.html"><img src="http://cesiumjs.org/demos/images/LSDSLAM.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GEFSonline.html"><img src="http://cesiumjs.org/demos/images/GEFS.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GeoglyphRail.html"><img src="http://cesiumjs.org/demos/images/GeoglyphRail.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/ParaglidingLogbook.html"><img src="http://cesiumjs.org/demos/images/ParaglidingLogbook.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/EarthClock.html"><img src="http://cesiumjs.org/demos/images/EarthClock.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Quadrodynamics.html"><img src="http://cesiumjs.org/demos/images/quadrodynamics.jpg" height="150" /></a>&nbsp;
+<a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/WAVE.html"><img src="http://cesiumjs.org/demos/images/WAVE.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Nanaimo.html"><img src="http://cesiumjs.org/demos/images/Nanaimo.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/WAVE.html"><img src="http://cesiumjs.org/demos/images/WAVE.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/HereYouGo.html"><img src="http://cesiumjs.org/demos/images/HereYouGo.png" height="150" /></a>&nbsp;
