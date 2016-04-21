@@ -1417,7 +1417,7 @@ define([
         return combine(uniforms, mapUniforms, false);
     }
 
-    function createCastDerivedCommand(shadowMap, command, context, skirtIndex, oldShaderId, result) {
+    function createCastDerivedCommand(shadowMap, command, context, oldShaderId, result) {
         var castShader;
         var castRenderState;
         var castUniformMap;
@@ -1475,11 +1475,6 @@ define([
         result.renderState = castRenderState;
         result.uniformMap = castUniformMap;
 
-        if (defined(skirtIndex)) {
-            // Don't render terrain skirts when casting into the shadow map. Render all indices of the tile up to the skirt index.
-            result.count = skirtIndex;
-        }
-
         return result;
     }
 
@@ -1494,10 +1489,8 @@ define([
         var isTerrain = command.pass === Pass.GLOBE;
 
         var hasTerrainNormal = false;
-        var skirtIndex;
         if (isTerrain) {
             hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
-            skirtIndex = command.owner.data.terrainData._skirtIndex;
         }
 
         if (command.castShadows) {
@@ -1512,7 +1505,7 @@ define([
             castCommands.length = shadowMapLength;
 
             for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, skirtIndex, oldShaderId, castCommands[i]);
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, oldShaderId, castCommands[i]);
             }
 
             result.castShaderProgramId = command.shaderProgram.id;
