@@ -911,7 +911,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maxiumumScale] The maximum scale for the model.
+     * @param {Number} [options.maximumScale] The maximum scale for the model.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
@@ -1163,7 +1163,7 @@ define([
 
                 // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
                 // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
-                // circa Cesium 1.15-1.17 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
+                // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
                 if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;

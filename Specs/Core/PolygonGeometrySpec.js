@@ -1,4 +1,3 @@
-
 /*global defineSuite*/
 defineSuite([
         'Core/PolygonGeometry',
@@ -394,6 +393,23 @@ defineSuite([
 
         expect(p.attributes.position.values.length).toEqual(50 * 3);
         expect(p.indices.length).toEqual(48 * 3);
+    });
+
+    it('Ignores extrudedHeight if it equals height.', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([
+                                                         -1.0, -1.0,
+                                                         1.0, -1.0,
+                                                         1.0, 1.0,
+                                                         -1.0, 1.0
+                                                     ]),
+            height: 0,
+            extrudedHeight: CesiumMath.EPSILON10
+         }));
+
+        expect(p.attributes.position.values.length).toEqual(13 * 3);
+        expect(p.indices.length).toEqual(16 * 3);
     });
 
     it('computes all attributes extruded', function() {
