@@ -21,9 +21,11 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/Camera',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -48,9 +50,11 @@ defineSuite([
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
+        Camera,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
+        createCamera,
         pollToPromise,
         when) {
     "use strict";
@@ -3726,19 +3730,18 @@ defineSuite([
             </Link>\
           </NetworkLink>';
 
-        var oldMode = options.camera._mode;
-        var oldHeading = options.camera.heading;
-        var oldPitch = options.camera.pitch;
+        var camera = createCamera();
+        Camera.clone(options.camera, camera);
 
-        options.camera._mode = SceneMode.MORPHING;
-        options.camera.heading = undefined;
-        options.camera.pitch = undefined;
+        var kmlOptions = {
+            camera: camera,
+            canvas: options.canvas
+        };
 
-        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+        camera._mode = SceneMode.MORPHING;
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(2);
-            options.camera._mode = oldMode;
-            options.camera.heading = oldHeading;
-            options.camera.pitch = oldPitch;
         });
     });
 });
