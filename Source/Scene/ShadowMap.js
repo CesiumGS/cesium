@@ -29,6 +29,7 @@ define([
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
+        '../Renderer/ContextLimits',
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -83,6 +84,7 @@ define([
         Quaternion,
         SphereOutlineGeometry,
         ClearCommand,
+        ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
@@ -204,9 +206,6 @@ define([
         this._lightPositionEC = new Cartesian4();
         this._distance = 0.0;
 
-        this._shadowMapSize = defaultValue(options.size, 1024);
-        this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
-
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._shadowMapCullingVolume = undefined;
@@ -221,6 +220,20 @@ define([
         this._fitNearFar = true;
         this._maximumDistance = 5000.0;
         this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
+
+        var size = options.size;
+        if (!defined(size)) {
+            if (this._isPointLight) {
+                size = ContextLimits.maximumCubeMapSize > 2048 ? 2048 : 1024;
+            } else if (this._cascadesEnabled && this._numberOfCascades > 1) {
+                size = ContextLimits.maximumTextureSize > 2048 * 2.0 ? 2048 : 1024;
+            } else {
+                size = ContextLimits.maximumTextureSize > 2048 ? 2048 : 1024;
+            }
+        }
+
+        this._shadowMapSize = size;
+        this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
