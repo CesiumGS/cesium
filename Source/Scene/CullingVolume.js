@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -8,6 +9,7 @@ define([
         '../Core/Plane'
     ], function(
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
@@ -21,7 +23,7 @@ define([
      * @alias CullingVolume
      * @constructor
      *
-     * @param {Cartesian4[]} planes An array of clipping planes.
+     * @param {Cartesian4[]} [planes] An array of clipping planes.
      */
     function CullingVolume(planes) {
         /**
@@ -34,7 +36,50 @@ define([
         this.planes = defaultValue(planes, []);
     }
 
+    var faces = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    Cartesian3.clone(Cartesian3.UNIT_X, faces[0]);
+    Cartesian3.negate(Cartesian3.UNIT_X, faces[1]);
+    Cartesian3.clone(Cartesian3.UNIT_Y, faces[2]);
+    Cartesian3.negate(Cartesian3.UNIT_Y, faces[3]);
+    Cartesian3.clone(Cartesian3.UNIT_Z, faces[4]);
+    Cartesian3.negate(Cartesian3.UNIT_Z, faces[5]);
+
+    var scratchPlaneCenter = new Cartesian3();
+    var scratchPlaneNormal = new Cartesian3();
     var scratchPlane = new Plane(new Cartesian3(), 0.0);
+
+    CullingVolume.fromBoundingSphere = function(boundingSphere, result) {
+        if (!defined(result)) {
+            result = new CullingVolume();
+        }
+
+        var planes = result.planes;
+        var length = planes.length = 6;
+
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        for (var i = 0; i < length; ++i) {
+            var plane = planes[i];
+            if (!defined(plane)) {
+                plane = planes[i] = new Cartesian4();
+            }
+
+            var face = faces[i];
+
+            var planeCenter = scratchPlaneCenter;
+            Cartesian3.multiplyByScalar(face, radius, planeCenter);
+            Cartesian3.add(planeCenter, center, planeCenter);
+
+            var planeNormal = Cartesian3.negate(face, scratchPlaneNormal);
+
+            var tempPlane = Plane.fromPointNormal(planeCenter, planeNormal, scratchPlane);
+            Cartesian4.fromElements(planeNormal.x, planeNormal.y, planeNormal.z, tempPlane.distance, plane);
+        }
+
+        return result;
+    };
+
     /**
      * Determines whether a bounding volume intersects the culling volume.
      *

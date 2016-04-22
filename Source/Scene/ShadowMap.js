@@ -47,6 +47,7 @@ define([
         '../Renderer/WebGLConstants',
         './Camera',
         './CullFace',
+        './CullingVolume',
         './OrthographicFrustum',
         './Pass',
         './PerInstanceColorAppearance',
@@ -101,6 +102,7 @@ define([
         WebGLConstants,
         Camera,
         CullFace,
+        CullingVolume,
         OrthographicFrustum,
         Pass,
         PerInstanceColorAppearance,
@@ -1251,7 +1253,7 @@ define([
             boundingSphere.center = shadowMapCamera.positionWC;
             boundingSphere.radius = shadowMap._pointLightRadius;
             shadowMap._outOfView = frameState.cullingVolume.computeVisibility(boundingSphere) === Intersect.OUTSIDE;
-            shadowMap._needsUpdate = !shadowMap._outOfView && !shadowMap._boundingSphere.equals(boundingSphere);
+            shadowMap._needsUpdate = true;//!shadowMap._outOfView && !shadowMap._boundingSphere.equals(boundingSphere);
             BoundingSphere.clone(boundingSphere, shadowMap._boundingSphere);
         } else {
             // Simplify frustum-frustum intersection test as a sphere-frustum test
@@ -1339,17 +1341,20 @@ define([
                 }
             }
 
+            var shadowMapCamera = this._shadowMapCamera;
             if (!this._isPointLight) {
                 // Compute the culling volume
-                var position = this._shadowMapCamera.positionWC;
-                var direction = this._shadowMapCamera.directionWC;
-                var up = this._shadowMapCamera.upWC;
-                this._shadowMapCullingVolume = this._shadowMapCamera.frustum.computeCullingVolume(position, direction, up);
+                var position = shadowMapCamera.positionWC;
+                var direction = shadowMapCamera.directionWC;
+                var up = shadowMapCamera.upWC;
+                this._shadowMapCullingVolume = shadowMapCamera.frustum.computeCullingVolume(position, direction, up);
 
                 if (this._passes.length === 1) {
                     // Since there is only one pass, use the shadow map camera as the pass camera.
-                    this._passes[0].camera.clone(this._shadowMapCamera);
+                    this._passes[0].camera.clone(shadowMapCamera);
                 }
+            } else {
+                this._shadowMapCullingVolume = CullingVolume.fromBoundingSphere(this._boundingSphere);
             }
         }
 

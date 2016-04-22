@@ -2047,7 +2047,8 @@ define([
                 var sceneCommandList = frameState.commandList;
 
                 // Update frame state to render from the light camera
-                frameState.camera = shadowMap.shadowMapCamera;
+                // TODO: temporary fix for point lights. update for every face of the shadow map?
+                frameState.camera = shadowMap.isPointLight ? sceneCamera : shadowMap.shadowMapCamera;
                 frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
                 frameState.commandList = shadowMap.commandList;
 
