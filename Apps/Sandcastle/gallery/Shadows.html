@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shadow maps.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false,
+    shadowsEnabled : true
+});
+
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var scene = viewer.scene;
+var shadowMap = scene.shadowMap;
+shadowMap._maxmimumDistance = 10000.0;
+scene.globe.castShadows = true;
+
+var models = {
+    'Cesium Air' : {
+        url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
+        height : 100.0
+    },
+    'Ground Vehicle' : {
+        url : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
+        height : 0.0
+    },
+    'Cesium Man' : {
+        url : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
+        height : 0.0
+    },
+    'Wood Tower' : {
+        url : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
+        height : 0.0
+    },
+    'Simple City' : {
+        url : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf',
+        height : 0.0
+    }
+};
+
+var locations = {
+    'Half Dome' : {
+        longitude : -2.0862479628,
+        latitude : 0.6587902522,
+        height : 2662.991061159884
+    },
+    'Exton' : {
+        longitude : -1.31968,
+        latitude : 0.698874,
+        height : 74.14210186070714
+    },
+    'Everest' : {
+        longitude : 1.517132688,
+        latitude : 0.4884844964,
+        height : 8773.17824498951
+    },
+    'Pinnacle PA' : {
+        longitude : -1.3324415110874286,
+        latitude : 0.6954224325279967,
+        height : 179.14276256241743
+    },
+    'Seneca Rocks' : {
+        longitude : -1.38519677,
+        latitude : 0.67781497,
+        height : 627.9167668617168
+    },
+    'Space' : {
+        longitude : -1.31968,
+        latitude : 0.698874,
+        height : 2000000.0
+    }
+};
+
+function reset() {
+    viewer.entities.removeAll();
+
+    var position = Cesium.Cartesian3.fromRadians(currentLocation.longitude, currentLocation.latitude, currentLocation.height + currentModel.height);
+    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, 0.0, 0.0, 0.0);
+
+    var entity = viewer.entities.add({
+        name : currentModel.url,
+        position : position,
+        orientation : orientation,
+        model : {
+            uri : currentModel.url
+        }
+    });
+
+    viewer.trackedEntity = entity;
+}
+
+function setLocationFunction(location) {
+    return function() {
+        currentLocation = location;
+        reset();
+    }
+}
+
+var locationToolbarOptions = [];
+for (var locationName in locations) {
+    if (locations.hasOwnProperty(locationName)) {
+        var location = locations[locationName];
+        locationToolbarOptions.push({
+            text : locationName,
+            onselect : setLocationFunction(location)
+        });
+    }
+}
+
+Sandcastle.addToolbarMenu(locationToolbarOptions);
+
+
+function setModelFunction(model) {
+    return function() {
+        currentModel = model;
+        reset();
+    }
+}
+
+var modelToolbarOptions = [];
+for (var modelName in models) {
+    if (models.hasOwnProperty(modelName)) {
+        var model = models[modelName];
+        modelToolbarOptions.push({
+            text : modelName,
+            onselect : setModelFunction(model)
+        });
+    }
+}
+
+Sandcastle.addToolbarMenu(modelToolbarOptions);
+
+var currentModel = models['Cesium Air'];
+var currentLocation = locations['Half Dome'];
+reset();
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
