@@ -1,6 +1,8 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/buildModuleUrl',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ColorGeometryInstanceAttribute',
@@ -10,8 +12,10 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/GeographicTilingScheme',
         '../Core/GeometryInstance',
         '../Core/isArray',
+        '../Core/loadJson',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -34,6 +38,8 @@ define([
         './StencilOperation'
     ], function(
         BoundingSphere,
+        buildModuleUrl,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         ColorGeometryInstanceAttribute,
@@ -43,8 +49,10 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        GeographicTilingScheme,
         GeometryInstance,
         isArray,
+        loadJson,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -205,6 +213,12 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
+
+        this._maxHeight = undefined;
+        this._minHeight = undefined;
+
+        this._maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
+        this._minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -370,20 +384,24 @@ define([
         return scene.context.fragmentDepth;
     };
 
-    GroundPrimitive._maxHeight = undefined;
-    GroundPrimitive._minHeight = undefined;
+    GroundPrimitive._defaultMaxTerrainHeight = 9000.0;
+    GroundPrimitive._defaultMinTerrainHeight = -100000.0;
 
-    GroundPrimitive._maxTerrainHeight = 9000.0;
-    GroundPrimitive._minTerrainHeight = -100000.0;
+    GroundPrimitive._terrainHeights = undefined;
+    GroundPrimitive._terrainHeightsMaxLevel = 6;
 
-    function computeMaximumHeight(granularity, ellipsoid) {
-        var r = ellipsoid.maximumRadius;
-        var delta = (r / Math.cos(granularity * 0.5)) - r;
-        return GroundPrimitive._maxHeight + delta;
+    function getComputeMaximumHeightFunction(primitive) {
+        return function(granularity, ellipsoid) {
+            var r = ellipsoid.maximumRadius;
+            var delta = (r / Math.cos(granularity * 0.5)) - r;
+            return primitive._maxHeight + delta;
+        };
     }
 
-    function computeMinimumHeight(granularity, ellipsoid) {
-        return GroundPrimitive._minHeight;
+    function getComputeMinimumHeightFunction(primitive) {
+        return function(granularity, ellipsoid) {
+            return primitive._minHeight;
+        };
     }
 
     var stencilPreloadRenderState = {
@@ -501,6 +519,9 @@ define([
     var scratchBVCartesian = new Cartesian3();
     var scratchBVCartographic = new Cartographic();
     var scratchBVRectangle = new Rectangle();
+    var tilingScheme = new GeographicTilingScheme();
+    var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+    var scratchTileXY = new Cartesian2();
 
     function createBoundingVolume(primitive, frameState, geometry) {
         var highPositions = geometry.attributes.position3DHigh.values;
@@ -536,9 +557,60 @@ define([
         rectangle.east = maxLon;
         rectangle.west = minLon;
 
+        Cartographic.fromRadians(maxLon, maxLat, 0.0, scratchCorners[0]);
+        Cartographic.fromRadians(minLon, maxLat, 0.0, scratchCorners[1]);
+        Cartographic.fromRadians(maxLon, minLat, 0.0, scratchCorners[2]);
+        Cartographic.fromRadians(minLon, minLat, 0.0, scratchCorners[3]);
+
+        // Determine which tile the bounding rectangle is in
+        var lastLevelX = 0, lastLevelY = 0;
+        var currentX = 0, currentY = 0;
+        var maxLevel = GroundPrimitive._terrainHeightsMaxLevel;
+        for(i = 0; i <= maxLevel; ++i) {
+            var failed = false;
+            for(var j = 0; j < 4; ++j) {
+                var corner = scratchCorners[j];
+                tilingScheme.positionToTileXY(corner, i, scratchTileXY);
+                if (j === 0) {
+                    currentX = scratchTileXY.x;
+                    currentY = scratchTileXY.y;
+                } else if(currentX !== scratchTileXY.x || currentY !== scratchTileXY.y) {
+                    failed = true;
+                    break;
+                }
+            }
+
+            if (failed) {
+                break;
+            }
+
+            lastLevelX = currentX;
+            lastLevelY = currentY;
+        }
+
+        // Get the terrain min/max for that tile
+        var minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
+        var maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
+        if (i > 0) {
+            var key = (i > maxLevel) ? maxLevel.toString() : (i - 1).toString();
+            key += '-' + lastLevelX + '-' + lastLevelY;
+            var heights = GroundPrimitive._terrainHeights[key];
+            if (defined(heights)) {
+                minTerrainHeight = heights[0];
+                maxTerrainHeight = heights[1];
+            }
+        }
+        primitive._minTerrainHeight = minTerrainHeight;
+        primitive._maxTerrainHeight = maxTerrainHeight;
+
+        // Now compute the min/max heights for the primitive
+        var exaggeration = frameState.terrainExaggeration;
+        primitive._minHeight = minTerrainHeight * exaggeration;
+        primitive._maxHeight = maxTerrainHeight * exaggeration;
+
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minHeight, ellipsoid);
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, primitive._maxHeight, primitive._minHeight, ellipsoid);
             primitive._boundingVolumes.push(obb);
         } else {
             primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
@@ -546,7 +618,7 @@ define([
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minHeight);
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, primitive._maxHeight, primitive._minHeight);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             primitive._boundingVolumes2D.push(boundingVolume);
@@ -788,6 +860,12 @@ define([
         }
     }
 
+    GroundPrimitive.init = function() {
+        return loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+            GroundPrimitive._terrainHeights = json;
+        });
+    };
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -806,10 +884,10 @@ define([
             return;
         }
 
-        if (!defined(GroundPrimitive._maxHeight)) {
+        if (!defined(this._maxHeight)) {
             var exaggeration = frameState.terrainExaggeration;
-            GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
-            GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
+            this._maxHeight = this._maxTerrainHeight * exaggeration;
+            this._minHeight = this._minTerrainHeight * exaggeration;
         }
 
         if (!defined(this._primitive)) {
@@ -819,14 +897,13 @@ define([
             var geometry;
             var instanceType;
 
-
             var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
             var length = instances.length;
             var groundInstances = new Array(length);
 
             var color;
 
-            for (var i = 0 ; i < length; ++i) {
+            for (var i = 0; i < length; ++i) {
                 instance = instances[i];
                 geometry = instance.geometry;
 
@@ -845,7 +922,8 @@ define([
                     //>>includeEnd('debug');
 
                     groundInstances[i] = new GeometryInstance({
-                        geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
+                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                                                                   getComputeMaximumHeightFunction(this)),
                         attributes : attributes,
                         id : instance.id,
                         pickPrimitive : this
