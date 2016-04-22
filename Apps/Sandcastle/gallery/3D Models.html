@@ -30,7 +30,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     scene3DOnly: true,
     infoBox : false,
-    selectionIndicator : false
+    selectionIndicator : false,
+    shadowsEnabled : true
 });
 
 function createModel(url, height) {

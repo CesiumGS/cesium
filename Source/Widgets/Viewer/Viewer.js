@@ -276,6 +276,7 @@ define([
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadowsEnabled=false] Determines if shadows are cast by the sun.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -408,7 +409,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
             scene3DOnly : scene3DOnly,
-            terrainExaggeration : options.terrainExaggeration
+            terrainExaggeration : options.terrainExaggeration,
+            shadowsEnabled : options.shadowsEnabled
         });
 
         var dataSourceCollection = options.dataSources;
@@ -939,6 +941,21 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         scene : {
             get : function() {
                 return this._cesiumWidget.scene;
+            }
+        },
+
+        /**
+         * Determines if shadows are cast by the sun.
+         * @memberof Viewer.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        shadowsEnabled : {
+            get : function() {
+                return this.scene.shadowMap.enabled;
+            },
+            set : function(value) {
+                this.scene.shadowMap.enabled = value;
             }
         },
 
