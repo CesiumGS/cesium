@@ -221,19 +221,8 @@ define([
         this._maximumDistance = 5000.0;
         this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
 
-        var size = options.size;
-        if (!defined(size)) {
-            if (this._isPointLight) {
-                size = ContextLimits.maximumCubeMapSize > 2048 ? 2048 : 1024;
-            } else if (this._cascadesEnabled && this._numberOfCascades > 1) {
-                size = ContextLimits.maximumTextureSize > 2048 * 2.0 ? 2048 : 1024;
-            } else {
-                size = ContextLimits.maximumTextureSize > 2048 ? 2048 : 1024;
-            }
-        }
-
-        this._shadowMapSize = size;
-        this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
+        this._shadowMapSize = options.size;
+        this._textureSize = new Cartesian2();
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -615,6 +604,16 @@ define([
     }
 
     ShadowMap.prototype.setSize = function(size) {
+        if (!defined(size)) {
+            if (this._isPointLight) {
+                size = ContextLimits.maximumCubeMapSize >= 2048 ? 2048 : 1024;
+            } else if (this._cascadesEnabled && this._numberOfCascades > 1) {
+                size = ContextLimits.maximumTextureSize >= 2048 * 2.0 ? 2048 : 1024;
+            } else {
+                size = ContextLimits.maximumTextureSize >= 2048 ? 2048 : 1024;
+            }
+        }
+
         this._shadowMapSize = size;
         var passes = this._passes;
         var numberOfPasses = passes.length;
