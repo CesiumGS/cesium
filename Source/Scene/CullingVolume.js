@@ -36,13 +36,10 @@ define([
         this.planes = defaultValue(planes, []);
     }
 
-    var faces = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var faces = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
     Cartesian3.clone(Cartesian3.UNIT_X, faces[0]);
-    Cartesian3.negate(Cartesian3.UNIT_X, faces[1]);
-    Cartesian3.clone(Cartesian3.UNIT_Y, faces[2]);
-    Cartesian3.negate(Cartesian3.UNIT_Y, faces[3]);
-    Cartesian3.clone(Cartesian3.UNIT_Z, faces[4]);
-    Cartesian3.negate(Cartesian3.UNIT_Z, faces[5]);
+    Cartesian3.clone(Cartesian3.UNIT_Y, faces[1]);
+    Cartesian3.clone(Cartesian3.UNIT_Z, faces[2]);
 
     var scratchPlaneCenter = new Cartesian3();
     var scratchPlaneNormal = new Cartesian3();
@@ -53,28 +50,45 @@ define([
             result = new CullingVolume();
         }
 
+        var length = faces.length;
         var planes = result.planes;
-        var length = planes.length = 6;
+        planes.length = 2 * length;
 
         var center = boundingSphere.center;
         var radius = boundingSphere.radius;
 
+        var planeIndex = 0;
+
         for (var i = 0; i < length; ++i) {
-            var plane = planes[i];
-            if (!defined(plane)) {
-                plane = planes[i] = new Cartesian4();
+            var faceNormal = faces[i];
+
+            var plane0 = planes[planeIndex];
+            var plane1 = planes[planeIndex + 1];
+
+            if (!defined(plane0)) {
+                plane0 = planes[planeIndex] = new Cartesian4();
+            }
+            if (!defined(plane1)) {
+                plane1 = planes[planeIndex + 1] = new Cartesian4();
             }
 
-            var face = faces[i];
+            Cartesian3.multiplyByScalar(faceNormal, -radius, scratchPlaneCenter);
+            Cartesian3.add(center, scratchPlaneCenter, scratchPlaneCenter);
 
-            var planeCenter = scratchPlaneCenter;
-            Cartesian3.multiplyByScalar(face, radius, planeCenter);
-            Cartesian3.add(planeCenter, center, planeCenter);
+            plane0.x = faceNormal.x;
+            plane0.y = faceNormal.y;
+            plane0.z = faceNormal.z;
+            plane0.w = -Cartesian3.dot(faceNormal, scratchPlaneCenter);
 
-            var planeNormal = Cartesian3.negate(face, scratchPlaneNormal);
+            Cartesian3.multiplyByScalar(faceNormal, radius, scratchPlaneCenter);
+            Cartesian3.add(center, scratchPlaneCenter, scratchPlaneCenter);
 
-            var tempPlane = Plane.fromPointNormal(planeCenter, planeNormal, scratchPlane);
-            Cartesian4.fromElements(planeNormal.x, planeNormal.y, planeNormal.z, tempPlane.distance, plane);
+            plane1.x = -faceNormal.x;
+            plane1.y = -faceNormal.y;
+            plane1.z = -faceNormal.z;
+            plane1.w = -Cartesian3.dot(Cartesian3.negate(faceNormal, scratchPlaneNormal), scratchPlaneCenter);
+
+            planeIndex += 2;
         }
 
         return result;

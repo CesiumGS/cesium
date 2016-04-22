@@ -1253,7 +1253,7 @@ define([
             boundingSphere.center = shadowMapCamera.positionWC;
             boundingSphere.radius = shadowMap._pointLightRadius;
             shadowMap._outOfView = frameState.cullingVolume.computeVisibility(boundingSphere) === Intersect.OUTSIDE;
-            shadowMap._needsUpdate = true;//!shadowMap._outOfView && !shadowMap._boundingSphere.equals(boundingSphere);
+            shadowMap._needsUpdate = !shadowMap._outOfView && !shadowMap._boundingSphere.equals(boundingSphere);
             BoundingSphere.clone(boundingSphere, shadowMap._boundingSphere);
         } else {
             // Simplify frustum-frustum intersection test as a sphere-frustum test
