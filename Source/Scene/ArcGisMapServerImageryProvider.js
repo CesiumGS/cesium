@@ -109,7 +109,7 @@ define([
      *
      * @example
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
-     *     url: '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
+     *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      * 
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}

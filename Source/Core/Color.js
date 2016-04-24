@@ -394,6 +394,7 @@ define([
             result.red = parseInt(matches[1], 16) / 15;
             result.green = parseInt(matches[2], 16) / 15.0;
             result.blue = parseInt(matches[3], 16) / 15.0;
+            result.alpha = 1.0;
             return result;
         }
 
@@ -402,6 +403,7 @@ define([
             result.red = parseInt(matches[1], 16) / 255.0;
             result.green = parseInt(matches[2], 16) / 255.0;
             result.blue = parseInt(matches[3], 16) / 255.0;
+            result.alpha = 1.0;
             return result;
         }
 

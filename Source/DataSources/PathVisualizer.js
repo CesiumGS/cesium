@@ -529,7 +529,9 @@ define([
             entity = removed[i];
             item = items.get(entity.id);
             if (defined(item)) {
-                item.updater.removeObject(item);
+                if (defined(item.updater)) {
+                    item.updater.removeObject(item);
+                }
                 items.remove(entity.id);
             }
         }

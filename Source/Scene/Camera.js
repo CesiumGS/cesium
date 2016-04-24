@@ -826,6 +826,10 @@ define([
             frustum.top = ratio * frustum.right;
             frustum.bottom = -frustum.top;
         }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            clampMove2D(this, this.position);
+        }
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1240,15 +1244,15 @@ define([
     };
 
     function clampMove2D(camera, position) {
-        var maxX = camera._maxCoord.x * camera.maximumTranslateFactor;
+        var maxX = camera._maxCoord.x;
         if (position.x > maxX) {
-            position.x = maxX;
+            position.x = position.x - maxX * 2.0;
         }
         if (position.x < -maxX) {
-            position.x = -maxX;
+            position.x = position.x + maxX * 2.0;
         }
 
-        var maxY = camera._maxCoord.y * camera.maximumTranslateFactor;
+        var maxY = camera._maxCoord.y;
         if (position.y > maxY) {
             position.y = maxY;
         }
@@ -1610,7 +1614,7 @@ define([
         var newRight = frustum.right - amount;
         var newLeft = frustum.left + amount;
 
-        var maxRight = camera._maxCoord.x * camera.maximumZoomFactor;
+        var maxRight = camera._maxCoord.x;
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;
@@ -2109,8 +2113,7 @@ define([
         position.z = 0.0;
         var cart = projection.unproject(position);
 
-        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+        if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO) {
             return undefined;
         }
 
@@ -2299,63 +2302,6 @@ define([
         return Math.max(pixelSize.x, pixelSize.y);
     };
 
-    function createAnimation2D(camera, duration) {
-        var position = camera.position;
-        var translateX = position.x < -camera._maxCoord.x || position.x > camera._maxCoord.x;
-        var translateY = position.y < -camera._maxCoord.y || position.y > camera._maxCoord.y;
-        var animatePosition = translateX || translateY;
-
-        var frustum = camera.frustum;
-        var top = frustum.top;
-        var bottom = frustum.bottom;
-        var right = frustum.right;
-        var left = frustum.left;
-        var startFrustum = camera._max2Dfrustum;
-        var animateFrustum = right > camera._max2Dfrustum.right;
-
-        if (animatePosition || animateFrustum) {
-            var translatedPosition = Cartesian3.clone(position);
-
-            if (translatedPosition.x > camera._maxCoord.x) {
-                translatedPosition.x = camera._maxCoord.x;
-            } else if (translatedPosition.x < -camera._maxCoord.x) {
-                translatedPosition.x = -camera._maxCoord.x;
-            }
-
-            if (translatedPosition.y > camera._maxCoord.y) {
-                translatedPosition.y = camera._maxCoord.y;
-            } else if (translatedPosition.y < -camera._maxCoord.y) {
-                translatedPosition.y = -camera._maxCoord.y;
-            }
-
-            var update2D = function(value) {
-                if (animatePosition) {
-                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time, camera.position);
-                }
-                if (animateFrustum) {
-                    camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
-                    camera.frustum.bottom = CesiumMath.lerp(bottom, startFrustum.bottom, value.time);
-                    camera.frustum.right = CesiumMath.lerp(right, startFrustum.right, value.time);
-                    camera.frustum.left = CesiumMath.lerp(left, startFrustum.left, value.time);
-                }
-            };
-
-            return {
-                easingFunction : EasingFunction.EXPONENTIAL_OUT,
-                startObject : {
-                    time : 0.0
-                },
-                stopObject : {
-                    time : 1.0
-                },
-                duration : duration,
-                update : update2D
-            };
-        }
-
-        return undefined;
-    }
-
     function createAnimationTemplateCV(camera, position, center, maxX, maxY, duration) {
         var newPosition = Cartesian3.clone(position);
 
@@ -2442,9 +2388,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (this._mode === SceneMode.SCENE2D) {
-            return createAnimation2D(this, duration);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+        if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return createAnimationCV(this, duration);
         }
 
@@ -2453,6 +2397,7 @@ define([
 
 
     var scratchFlyToDestination = new Cartesian3();
+    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2553,16 +2498,26 @@ define([
         }
 
         var sscc = this._scene.screenSpaceCameraController;
-        var ellipsoid = this._scene.mapProjection.ellipsoid;
-        var destinationCartographic = Cartographic.fromCartesian(destination);
 
-        // Make sure camera doesn't zoom outside set limits
-        if (defined(sscc)) {
-            destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+        if (defined(sscc) || mode === SceneMode.SCENE2D) {
+            var ellipsoid = this._scene.mapProjection.ellipsoid;
+            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
+            var height = destinationCartographic.height;
+
+            // Make sure camera doesn't zoom outside set limits
+            if (defined(sscc)) {
+                destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+            }
+
+            // The max height in 2D might be lower than the max height for sscc.
+            if (mode === SceneMode.SCENE2D) {
+                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
+                destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+            }
 
             //Only change if we clamped the height
-            if (destinationCartographic.height === sscc.minimumZoomDistance || destinationCartographic.height === sscc.maximumZoomDistance) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic);
+            if (destinationCartographic.height !== height) {
+                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
             }
         }
 
@@ -2800,17 +2755,29 @@ define([
     }
 
     var scratchPickCartesian2 = new Cartesian2();
-
+    var scratchRectCartesian = new Cartesian3();
+    var cartoArray = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+    function addToResult(x, y, index, camera, ellipsoid, computedHorizonQuad) {
+        scratchPickCartesian2.x = x;
+        scratchPickCartesian2.y = y;
+        var r = camera.pickEllipsoid(scratchPickCartesian2, ellipsoid, scratchRectCartesian);
+        if (defined(r)) {
+            cartoArray[index] = ellipsoid.cartesianToCartographic(r, cartoArray[index]);
+            return 1;
+        }
+        cartoArray[index] = ellipsoid.cartesianToCartographic(computedHorizonQuad[index], cartoArray[index]);
+        return 0;
+    }
     /**
      * Computes the approximate visible rectangle on the ellipsoid.
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that you want to know the visible region.
+     * @param {Rectangle} [result] The rectangle in which to store the result
      *
      * @returns {Rectangle|undefined} The visible rectangle or undefined if the ellipsoid isn't visible at all.
      */
-    Camera.prototype.computeViewRectangle = function(ellipsoid) {
+    Camera.prototype.computeViewRectangle = function(ellipsoid, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
         var cullingVolume = this.frustum.computeCullingVolume(this.positionWC, this.directionWC, this.upWC);
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius);
         var visibility = cullingVolume.computeVisibility(boundingSphere);
@@ -2822,45 +2789,27 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
 
-        var that = this;
-        var computedHorizonQuad;
-        var cartographics = [];
         var successfulPickCount = 0;
-        function addToResult(x, y, index) {
-            scratchPickCartesian2.x = x;
-            scratchPickCartesian2.y = y;
-            var r = that.pickEllipsoid(scratchPickCartesian2, ellipsoid, new Cartesian3());
-            if (defined(r)) {
-                cartographics.push(ellipsoid.cartesianToCartographic(r));
-                ++successfulPickCount;
-            } else {
-                if (!defined(computedHorizonQuad)) {
-                    computedHorizonQuad = computeHorizonQuad(that, ellipsoid);
-                }
-                cartographics.push(ellipsoid.cartesianToCartographic(computedHorizonQuad[index]));
-            }
-        }
 
-        addToResult(0, 0, 0);
-        addToResult(0, height, 1);
-        addToResult(width, height, 2);
-        addToResult(width, 0, 3);
+        var computedHorizonQuad = computeHorizonQuad(this, ellipsoid);
 
-        if (successfulPickCount === 0 || successfulPickCount === 1) {
+        successfulPickCount += addToResult(0, 0, 0, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(0, height, 1, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(width, height, 2, this, ellipsoid, computedHorizonQuad);
+        successfulPickCount += addToResult(width, 0, 3, this, ellipsoid, computedHorizonQuad);
+
+        if (successfulPickCount < 2) {
             // If we have space non-globe in 3 or 4 corners then return the whole globe
             return Rectangle.MAX_VALUE;
         }
 
-        var i;
-        var point;
-        var cartographicsCount = cartographics.length;
+        result = Rectangle.fromCartographicArray(cartoArray, result);
 
         // Detect if we go over the poles
         var distance = 0;
-        var lastLon = cartographics[cartographicsCount-1].longitude;
-        for (i=0;i<cartographicsCount;++i) {
-            point = cartographics[i];
-            var lon = point.longitude;
+        var lastLon = cartoArray[3].longitude;
+        for (var i = 0; i < 4; ++i) {
+            var lon = cartoArray[i].longitude;
             var diff = Math.abs(lon - lastLon);
             if (diff > CesiumMath.PI) {
                 // Crossed the dateline
@@ -2872,22 +2821,11 @@ define([
             lastLon = lon;
         }
 
-        var result;
-        for(i=0;i<cartographicsCount;++i) {
-            point = cartographics[i];
-            if (!defined(result)) {
-                result = new Rectangle(point.longitude, point.latitude,
-                    point.longitude, point.latitude);
-            } else {
-                Rectangle.expand(result, point, result);
-            }
-        }
-
         // We are over one of the poles so adjust the rectangle accordingly
         if (CesiumMath.equalsEpsilon(Math.abs(distance), CesiumMath.TWO_PI, CesiumMath.EPSILON9)) {
             result.west = -CesiumMath.PI;
             result.east = CesiumMath.PI;
-            if (cartographics[0].latitude >= 0.0) {
+            if (cartoArray[0].latitude >= 0.0) {
                 result.north = CesiumMath.PI_OVER_TWO;
             } else {
                 result.south = -CesiumMath.PI_OVER_TWO;

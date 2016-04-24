@@ -1772,9 +1772,6 @@ defineSuite([
         var p = camera.pickEllipsoid(windowCoord);
         var c = ellipsoid.cartesianToCartographic(p);
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
-
-        p = camera.pickEllipsoid(Cartesian2.ZERO);
-        expect(p).toBeUndefined();
     });
 
     it('pick rotated map in 2D', function() {
@@ -1937,7 +1934,7 @@ defineSuite([
         expect(camera.createCorrectPositionTween(0.05)).not.toBeDefined();
     });
 
-    it('animates position to visible map in 2D', function() {
+    it('does not animate in 2D', function() {
         var frustum = new OrthographicFrustum();
         frustum.near = 1.0;
         frustum.far = 2.0;
@@ -1953,70 +1950,11 @@ defineSuite([
         var factor = 1000.0;
         var dx = max.x * factor;
         var dy = max.y * factor;
-        var tweens = new TweenCollection();
 
         camera.moveUp(dy);
         camera.moveRight(dx);
 
-        var correctAnimation = camera.createCorrectPositionTween(0.05);
-        expect(correctAnimation).toBeDefined();
-        var animation = tweens.add(correctAnimation);
-        while(tweens.contains(animation)) {
-            tweens.update();
-        }
-
-        expect(camera.position.x).toEqual(max.x);
-        expect(camera.position.y).toEqual(max.y);
-
-        camera.moveDown(dy);
-        camera.moveLeft(dx);
-
-        correctAnimation = camera.createCorrectPositionTween(0.05);
-        expect(correctAnimation).toBeDefined();
-        animation = tweens.add(correctAnimation);
-        while(tweens.contains(animation)) {
-            tweens.update();
-        }
-
-        expect(camera.position.x).toEqual(-max.x);
-        expect(camera.position.y).toEqual(-max.y);
-    });
-
-    it('animates frustum in 2D', function() {
-        var frustum = new OrthographicFrustum();
-        frustum.near = 1.0;
-        frustum.far = 2.0;
-        frustum.left = -2.0;
-        frustum.right = 2.0;
-        frustum.top = 1.0;
-        frustum.bottom = -1.0;
-        camera.frustum = frustum;
-
-        camera.update(SceneMode.SCENE2D);
-
-        var max = scene.mapProjection.project(new Cartographic(Math.PI, CesiumMath.toRadians(85.05112878)));
-        var factor = 1000.0;
-        var dx = max.x * factor;
-        var tweens = new TweenCollection();
-
-        camera.zoomOut(dx);
-
-        var right = frustum.right;
-        var top = frustum.top;
-
-        var correctAnimation = camera.createCorrectPositionTween(0.05);
-        expect(correctAnimation).toBeDefined();
-        var animation = tweens.add(correctAnimation);
-        while(tweens.contains(animation)) {
-            tweens.update();
-        }
-
-        expect(frustum.right).toBeLessThan(right);
-        expect(frustum.right).toBeGreaterThan(max.x);
-        expect(frustum.left).toEqual(-frustum.right);
-        expect(frustum.top).toBeLessThan(top);
-        expect(frustum.top).toBeGreaterThan(max.y);
-        expect(frustum.bottom).toEqual(-frustum.top);
+        expect(camera.createCorrectPositionTween(0.05)).not.toBeDefined();
     });
 
     it('animates position to visible map in Columbus view', function() {
@@ -2350,7 +2288,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('computeViewRegion when zoomed in', function() {
+    it('computeViewRectangle when zoomed in', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -2367,12 +2305,15 @@ defineSuite([
         expect(rect).toEqual(correctResult);
     });
 
-    it('computeViewRegion when zoomed in to pole', function() {
+    it('computeViewRectangle when zoomed in to pole', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_Z);
         Cartesian3.multiplyByScalar(position, 7000000, position);
         camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
 
         var correctResult = new Rectangle(-CesiumMath.PI, 1.4961779388065022, CesiumMath.PI, CesiumMath.PI_OVER_TWO);
 
@@ -2380,7 +2321,23 @@ defineSuite([
         expect(rect).toEqual(correctResult);
     });
 
-    it('computeViewRegion when zoomed out', function() {
+    it('computeViewRectangle when zoomed in to IDL', function() {
+        scene.mode = SceneMode.SCENE3D;
+
+        var position = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
+        Cartesian3.multiplyByScalar(position, 7000000, position);
+        camera.position = position;
+        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        camera.direction = Cartesian3.clone(Cartesian3.UNIT_X, new Cartesian3());
+        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
+
+        var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
+
+        var rect = camera.computeViewRectangle();
+        expect(rect).toEqual(correctResult);
+    });
+
+    it('computeViewRectangle when zoomed out', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
@@ -2395,7 +2352,7 @@ defineSuite([
         expect(rect).toEqual(Rectangle.MAX_VALUE);
     });
 
-    it('computeViewRegion when globe isn\'t visible', function() {
+    it('computeViewRectangle when globe isn\'t visible', function() {
         scene.mode = SceneMode.SCENE3D;
 
         var position = Cartesian3.clone(Cartesian3.UNIT_X);
