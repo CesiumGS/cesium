@@ -34,6 +34,7 @@ define([
         '../Core/TimeIntervalCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
+        '../Scene/SceneMode',
         '../ThirdParty/Autolinker',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
@@ -91,6 +92,7 @@ define([
         TimeIntervalCollection,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
         Autolinker,
         Uri,
         when,
@@ -1714,7 +1716,7 @@ define([
             return value;
         }
 
-        if (defined(camera)) {
+        if (defined(camera) && camera._mode !== SceneMode.MORPHING) {
             var wgs84 = Ellipsoid.WGS84;
             var centerCartesian;
             var centerCartographic;
