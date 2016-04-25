@@ -31,7 +31,8 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 7,
-            open : true
+            closeTop : true,
+            closeBottom : true
         };
 
         var polygon = new PolygonGraphics(options);
@@ -47,7 +48,8 @@ defineSuite([
         expect(polygon.outline).toBeInstanceOf(ConstantProperty);
         expect(polygon.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(polygon.outlineWidth).toBeInstanceOf(ConstantProperty);
-        expect(polygon.open).toBeInstanceOf(ConstantProperty);
+        expect(polygon.closeTop).toBeInstanceOf(ConstantProperty);
+        expect(polygon.closeBottom).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -61,7 +63,8 @@ defineSuite([
         expect(polygon.outline.getValue()).toEqual(options.outline);
         expect(polygon.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(polygon.outlineWidth.getValue()).toEqual(options.outlineWidth);
-        expect(polygon.open.getValue()).toEqual(options.open);
+        expect(polygon.closeTop.getValue()).toEqual(options.closeTop);
+        expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -78,7 +81,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.perPositionHeight = new ConstantProperty();
-        source.open = new ConstantProperty();
+        source.closeTop = new ConstantProperty();
+        source.closeBottom = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -95,7 +99,8 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.perPositionHeight).toBe(source.perPositionHeight);
-        expect(target.open).toBe(source.open);
+        expect(target.closeTop).toBe(source.closeTop);
+        expect(target.closeBottom).toBe(source.closeBottom);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -113,7 +118,8 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var perPositionHeight = new ConstantProperty();
-        var open = new ConstantProperty();
+        var closeTop = new ConstantProperty();
+        var closeBottom = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -128,7 +134,8 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.perPositionHeight = perPositionHeight;
-        target.open = open;
+        target.closeTop = closeTop;
+        target.closeBottom = closeBottom;
 
         target.merge(source);
 
@@ -144,7 +151,8 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.perPositionHeight).toBe(perPositionHeight);
-        expect(target.open).toBe(open);
+        expect(target.closeTop).toBe(closeTop);
+        expect(target.closeBottom).toBe(closeBottom);
     });
 
     it('clone works', function() {
@@ -161,7 +169,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.perPositionHeight = new ConstantProperty();
-        source.open = new ConstantProperty();
+        source.closeTop = new ConstantProperty();
+        source.closeBottom = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -176,7 +185,8 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.perPositionHeight).toBe(source.perPositionHeight);
-        expect(result.open).toBe(source.open);
+        expect(result.closeTop).toBe(source.closeTop);
+        expect(result.closeBottom).toBe(source.closeBottom);
     });
 
     it('merge throws if source undefined', function() {
@@ -200,6 +210,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'perPositionHeight', false, true);
-        testDefinitionChanged(property, 'open', true, false);
+        testDefinitionChanged(property, 'closeTop', true, false);
+        testDefinitionChanged(property, 'closeBottom', true, false);
     });
 });
