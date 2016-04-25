@@ -537,7 +537,8 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {Boolean} [options.open=false] When true, leaves off the top and bottom of an extruded polygon.
+     * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
+     * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
      * @returns {PolygonGeometry}
      *
      *
