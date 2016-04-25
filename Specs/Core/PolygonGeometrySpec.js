@@ -399,16 +399,16 @@ defineSuite([
 
     it('computes positions extruded and not closeBottom', function() {
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
-                                                                                 vertexFormat : VertexFormat.POSITION_ONLY,
-                                                                                 positions : Cartesian3.fromDegreesArray([
-                                                                                                                             -1.0, -1.0,
-                                                                                                                             1.0, -1.0,
-                                                                                                                             1.0, 1.0,
-                                                                                                                             -1.0, 1.0
-                                                                                                                         ]),
-                                                                                 extrudedHeight: 30000,
-                                                                                 closeBottom: false
-                                                                             }));
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([
+                                                         -1.0, -1.0,
+                                                         1.0, -1.0,
+                                                         1.0, 1.0,
+                                                         -1.0, 1.0
+                                                     ]),
+             extrudedHeight: 30000,
+             closeBottom: false
+         }));
 
         var numVertices = 37; // 13 top + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
         var numTriangles = 32; // 16 top fill + 2 triangles * 4 sides
