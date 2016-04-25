@@ -143,6 +143,14 @@ defineSuite([
         expect(updater.isClosed).toBe(true);
     });
 
+    it('Settings extrudedHeight and open causes geometry to be open.', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.open = true;
+        expect(updater.isClosed).toBe(false);
+    });
+
     it('A time-varying outlineWidth causes geometry to be dynamic', function() {
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
@@ -216,6 +224,7 @@ defineSuite([
         polygon.outline = new ConstantProperty(options.outline);
         polygon.outlineColor = new ConstantProperty(options.outlineColor);
         polygon.perPositionHeight = new ConstantProperty(options.perPositionHeight);
+        polygon.open = new ConstantProperty(options.open);
 
         polygon.stRotation = new ConstantProperty(options.stRotation);
         polygon.height = new ConstantProperty(options.height);
@@ -234,6 +243,7 @@ defineSuite([
             expect(geometry._height).toEqual(options.height);
             expect(geometry._granularity).toEqual(options.granularity);
             expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+            expect(geometry._open).toEqual(options.open);
 
             attributes = instance.attributes;
             if (options.material instanceof ColorMaterialProperty) {
@@ -269,7 +279,8 @@ defineSuite([
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : true
+            perPositionHeight : true,
+            open: false
         });
     });
 
@@ -284,7 +295,8 @@ defineSuite([
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : false
+            perPositionHeight : false,
+            open : true
         });
     });
 
@@ -392,6 +404,7 @@ defineSuite([
         polygon.perPositionHeight = createDynamicProperty(false);
         polygon.granularity = createDynamicProperty(2);
         polygon.stRotation = createDynamicProperty(1);
+        polygon.open = createDynamicProperty(true);
 
         var entity = new Entity();
         entity.polygon = polygon;
@@ -413,6 +426,7 @@ defineSuite([
         expect(options.perPositionHeight).toEqual(polygon.perPositionHeight.getValue());
         expect(options.granularity).toEqual(polygon.granularity.getValue());
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+        expect(options.open).toEqual(polygon.open.getValue());
 
         entity.show = false;
         dynamicUpdater.update(JulianDate.now());

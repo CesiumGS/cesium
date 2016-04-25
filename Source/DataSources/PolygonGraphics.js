@@ -38,6 +38,7 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
+     * @param {Property} [options.open=false] When true, leaves off the top and bottom of an extruded polygon.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -68,6 +69,8 @@ define([
         this._definitionChanged = new Event();
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._open = undefined;
+        this._openSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -181,7 +184,14 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : createPropertyDescriptor('perPositionHeight')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight'),
+
+        /**
+         * Gets or sets the boolean specifying whether or not the the top and bottom an extruded polygon are included.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        open : createPropertyDescriptor('open')
     });
 
     /**
@@ -206,6 +216,7 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.perPositionHeight = this.perPositionHeight;
+        result.open = this.open;
         return result;
     };
 
@@ -234,6 +245,7 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
+        this.open = defaultValue(this.open, source.open);
     };
 
     return PolygonGraphics;

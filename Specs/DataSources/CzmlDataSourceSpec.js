@@ -1403,7 +1403,8 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                open : true
             }
         };
 
@@ -1421,6 +1422,7 @@ defineSuite([
         expect(entity.polygon.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.polygon.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.polygon.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.polygon.open.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained polygon.', function() {
