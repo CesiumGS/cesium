@@ -10,9 +10,6 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
-TODO: this is not finished yet:
-* Added support for glTF compression using the `mesh_compression_open3dgc` glTF extension.
-
 ### 1.21 - 2016-05-02
 
 * Breaking changes
