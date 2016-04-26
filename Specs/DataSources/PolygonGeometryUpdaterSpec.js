@@ -289,7 +289,7 @@ defineSuite([
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : true,
+            perPositionHeight : false,
             closeTop: true,
             closeBottom: false
         });

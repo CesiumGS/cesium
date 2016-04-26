@@ -480,6 +480,9 @@ define([
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+        if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
+            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
+        }
         //>>includeEnd('debug');
 
         var polygonHierarchy = options.polygonHierarchy;
@@ -489,6 +492,7 @@ define([
         var stRotation = defaultValue(options.stRotation, 0.0);
         var height = defaultValue(options.height, 0.0);
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
+
 
         var extrudedHeight = options.extrudedHeight;
         var extrude = defined(extrudedHeight);

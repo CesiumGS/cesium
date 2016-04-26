@@ -23,6 +23,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('throws with height when perPositionHeight is true', function() {
+        expect(function() {
+            return new PolygonGeometry({
+                height: 30,
+                perPositionHeight: true
+            });
+        }).toThrowDeveloperError();
+    });
+
     it('throws without positions', function() {
         expect(function() {
             return PolygonGeometry.fromPositions();
