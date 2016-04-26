@@ -143,6 +143,22 @@ defineSuite([
         expect(updater.isClosed).toBe(true);
     });
 
+    it('Settings extrudedHeight and closeTop false causes geometry to be open.', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.closeTop = false;
+        expect(updater.isClosed).toBe(false);
+    });
+
+    it('Settings extrudedHeight and closeBottom false causes geometry to be open.', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.extrudedHeight = new ConstantProperty(1000);
+        entity.polygon.closeBottom = false;
+        expect(updater.isClosed).toBe(false);
+    });
+
     it('A time-varying outlineWidth causes geometry to be dynamic', function() {
         var entity = createBasicPolygon();
         var updater = new PolygonGeometryUpdater(entity, scene);
@@ -216,6 +232,8 @@ defineSuite([
         polygon.outline = new ConstantProperty(options.outline);
         polygon.outlineColor = new ConstantProperty(options.outlineColor);
         polygon.perPositionHeight = new ConstantProperty(options.perPositionHeight);
+        polygon.closeTop = new ConstantProperty(options.closeTop);
+        polygon.closeBottom = new ConstantProperty(options.closeBottom);
 
         polygon.stRotation = new ConstantProperty(options.stRotation);
         polygon.height = new ConstantProperty(options.height);
@@ -234,6 +252,8 @@ defineSuite([
             expect(geometry._height).toEqual(options.height);
             expect(geometry._granularity).toEqual(options.granularity);
             expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+            expect(geometry._closeTop).toEqual(options.closeTop);
+            expect(geometry._closeBottom).toEqual(options.closeBottom);
 
             attributes = instance.attributes;
             if (options.material instanceof ColorMaterialProperty) {
@@ -269,7 +289,9 @@ defineSuite([
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : true
+            perPositionHeight : true,
+            closeTop: true,
+            closeBottom: false
         });
     });
 
@@ -284,7 +306,9 @@ defineSuite([
             fill : true,
             outline : true,
             outlineColor : Color.BLUE,
-            perPositionHeight : false
+            perPositionHeight : false,
+            closeTop: false,
+            closeBottom: true
         });
     });
 
@@ -392,6 +416,8 @@ defineSuite([
         polygon.perPositionHeight = createDynamicProperty(false);
         polygon.granularity = createDynamicProperty(2);
         polygon.stRotation = createDynamicProperty(1);
+        polygon.closeTop = createDynamicProperty(false);
+        polygon.closeBottom = createDynamicProperty(false);
 
         var entity = new Entity();
         entity.polygon = polygon;
@@ -413,6 +439,8 @@ defineSuite([
         expect(options.perPositionHeight).toEqual(polygon.perPositionHeight.getValue());
         expect(options.granularity).toEqual(polygon.granularity.getValue());
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
+        expect(options.closeTop).toEqual(polygon.closeTop.getValue());
+        expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
 
         entity.show = false;
         dynamicUpdater.update(JulianDate.now());
