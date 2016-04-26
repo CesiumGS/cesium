@@ -10,6 +10,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -27,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -295,8 +297,7 @@ define([
                 flattenedPositions[index++] = p.y;
                 flattenedPositions[index++] = p.z;
             }
-
-            return new Geometry({
+            var geometry = new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
@@ -307,6 +308,7 @@ define([
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
+            return GeometryPipeline.computeNormal(geometry);
         }
 
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
