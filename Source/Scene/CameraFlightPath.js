@@ -192,19 +192,12 @@ define([
         var camera = scene.camera;
 
         var start = Cartesian3.clone(camera.position, scratchStart);
-        var startHeading = adjustAngleForLERP(camera.heading, heading);
 
         var startHeight = camera.frustum.right - camera.frustum.left;
         var heightFunction = createHeightFunction(camera, destination, startHeight, destination.z, optionAltitude);
 
         function update(value) {
             var time = value.time / duration;
-
-            camera.setView({
-                orientation: {
-                    heading : CesiumMath.lerp(startHeading, heading, time)
-                }
-            });
 
             Cartesian2.lerp(start, destination, time, camera.position);
 

@@ -2157,6 +2157,27 @@ defineSuite([
         expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
     });
 
+    it('Polyline arrow.', function() {
+        var packet = {
+            id : 'polylineArrow',
+            polyline : {
+                material : {
+                    polylineArrow : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+
+        var entity = dataSource.entities.getById('polylineArrow');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+    });
+
     it('Processes extrapolation options', function() {
         var packet = {
             id : 'point',
