@@ -125,6 +125,14 @@ define([
          */
         texture : {
             get : function() {
+                if(!defined(this._texture)) {
+                    this._texture = new Texture({
+                        context : this._context,
+                        width : this._initialSize.x,
+                        height : this._initialSize.y,
+                        pixelFormat : this._pixelFormat
+                    });
+                }
                 return this._texture;
             }
         },
