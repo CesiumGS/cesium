@@ -6,11 +6,13 @@ Change Log
 * Breaking changes
   * Removed `ImageryMaterialProperty.alpha`. Use `ImageryMaterialProperty.color.alpha` instead.
   * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
+  * `PolygonGeometry` throws a `DeveloperError` when using `options.perPositionHeight === true` and `options.height !== undefined`.  Remove `options.height` to fix the error (it is not used in the polygon geometry calculation)
 * Deprecated
   *
 * Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
 * Added ability to import and export Sandcastle example using GitHub Gists. [#3795](https://github.com/AnalyticalGraphicsInc/cesium/pull/3795)
 * Added `PolygonGraphics.closeTop`, `PolygonGraphics.closeBottom`, and `PolygonGeometry` options for creating an extruded polygon without a top or bottom.
+* Fixed vertex normals for a `PolygonGeometry` using `options.perPositionHeight`
 * Fixed issue where `Camera.flyTo` does not go to the rectangle. [#3688](https://github.com/AnalyticalGraphicsInc/cesium/issues/3688)
 * Fixed issue causing the fog to go dark and the atmosphere to flicker when the camera clips the globe. [#3178](https://github.com/AnalyticalGraphicsInc/cesium/issues/3178)
 * Fixed a bug that caused an exception and rendering to stop when using `ArcGisMapServerImageryProvider` to connect to a MapServer specifying the Web Mercator projection and a fullExtent bigger than the valid extent of the projection. [#3854](https://github.com/AnalyticalGraphicsInc/cesium/pull/3854)
