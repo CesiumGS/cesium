@@ -493,7 +493,6 @@ define([
         var height = defaultValue(options.height, 0.0);
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
 
-
         var extrudedHeight = options.extrudedHeight;
         var extrude = defined(extrudedHeight);
 
