@@ -480,6 +480,9 @@ define([
         if (!defined(options) || !defined(options.polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+        if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
+            throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
+        }
         //>>includeEnd('debug');
 
         var polygonHierarchy = options.polygonHierarchy;
