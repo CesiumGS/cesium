@@ -602,7 +602,7 @@ define([
             y = 7 - Math.min(y / 32, 7);
             var iconNum = (8 * y) + x;
 
-            href = '//maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
+            href = 'https://maps.google.com/mapfiles/kml/pal' + palette + '/icon' + iconNum + '.png';
         }
 
         href = resolveHref(href, dataSource._proxy, sourceUri, uriResolver);
@@ -818,10 +818,16 @@ define([
         //Google earth seems to always use the first external style only.
         var externalStyle = queryStringValue(placeMark, 'styleUrl', namespaces.kml);
         if (defined(externalStyle)) {
-            //Google Earth ignores leading and trailing whitespace for styleUrls
-            //Without the below trim, some docs that load in Google Earth won't load
-            //in cesium.
             var id = externalStyle;
+            if (externalStyle[0] !== '#' && externalStyle.indexOf('#') !== -1) {
+                var tokens = externalStyle.split('#');
+                var uri = tokens[0];
+                if (defined(sourceUri)) {
+                    uri = getAbsoluteUri(uri, getAbsoluteUri(sourceUri));
+                }
+                id = uri + '#' + tokens[1];
+            }
+            
             styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
@@ -894,7 +900,15 @@ define([
 
                                 var styleUrl = queryStringValue(pair, 'styleUrl', namespaces.kml);
                                 if (defined(styleUrl)) {
-                                    var base = styleCollection.getOrCreateEntity(styleUrl);
+                                    if (styleUrl[0] !== '#') {
+                                        styleUrl = '#' + styleUrl;
+                                    }
+
+                                    if (isExternal && defined(sourceUri)) {
+                                        styleUrl = sourceUri + styleUrl;
+                                    }
+                                    var base = styleCollection.getById(styleUrl);
+
                                     if (defined(base)) {
                                         styleEntity.merge(base);
                                     }
@@ -1604,6 +1618,8 @@ define([
             }
 
             geometry.material = href;
+            geometry.material.color = queryColorValue(groundOverlay, 'color', namespaces.kml);
+            geometry.material.transparent = true;
         } else {
             geometry.material = queryColorValue(groundOverlay, 'color', namespaces.kml);
         }
@@ -1815,7 +1831,7 @@ define([
                 var queryString = makeQueryString(viewFormat, httpQuery);
 
                 var networkLinkCollection = new EntityCollection();
-                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, '?' + queryString, false),
+                var linkUrl = processNetworkLinkQueryString(dataSource._camera, dataSource._canvas, joinUrls(href, queryString, false),
                                                             viewBoundScale, dataSource._lastCameraView.bbox);
 
                 var promise = when(load(dataSource, networkLinkCollection, linkUrl), function(rootElement) {

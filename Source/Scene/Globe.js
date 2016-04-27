@@ -498,7 +498,7 @@ define([
 
                     that._oceanNormalMap = that._oceanNormalMap && that._oceanNormalMap.destroy();
                     that._oceanNormalMap = new Texture({
-                        context : context,
+                        context : frameState.context,
                         source : image
                     });
                 });

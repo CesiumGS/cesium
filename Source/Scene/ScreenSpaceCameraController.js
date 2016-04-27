@@ -495,12 +495,19 @@ define([
                 var worldPosition = object._zoomWorldPosition;
                 var endPosition = camera.position;
 
-                if (!Cartesian3.equals(worldPosition, endPosition)) {
+                if (!Cartesian3.equals(worldPosition, endPosition) && camera.positionCartographic.height < object._maxCoord.x * 2.0) {
+                    var savedX = camera.position.x;
+
                     var direction = Cartesian3.subtract(worldPosition, endPosition, scratchZoomDirection);
                     Cartesian3.normalize(direction, direction);
 
                     var d = Cartesian3.distance(worldPosition, endPosition) * distance / (camera.getMagnitude() * 0.5);
                     camera.move(direction, d * 0.5);
+
+                    if ((camera.position.x < 0.0 && savedX > 0.0) || (camera.position.x > 0.0 && savedX < 0.0)) {
+                        pickedPosition = camera.getPickRay(startPosition, scratchZoomPickRay).origin;
+                        object._zoomWorldPosition = Cartesian3.clone(pickedPosition, object._zoomWorldPosition);
+                    }
                 }
             } else if (mode === SceneMode.SCENE3D) {
                 var cameraPositionNormal = Cartesian3.normalize(camera.position, scratchCameraPositionNormal);
@@ -587,97 +594,13 @@ define([
         handleZoom(controller, startPosition, movement, controller._zoomFactor, camera.getMagnitude());
     }
 
-    var twist2DStart = new Cartesian2();
-    var twist2DEnd = new Cartesian2();
-    function twist2D(controller, startPosition, movement) {
-        if (defined(movement.angleAndHeight)) {
-            singleAxisTwist2D(controller, startPosition, movement.angleAndHeight);
-            return;
-        }
-
-        var scene = controller._scene;
-        var camera = scene.camera;
-        var canvas = scene.canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-
-        var start = twist2DStart;
-        start.x = (2.0 / width) * movement.startPosition.x - 1.0;
-        start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
-        start = Cartesian2.normalize(start, start);
-
-        var end = twist2DEnd;
-        end.x = (2.0 / width) * movement.endPosition.x - 1.0;
-        end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
-        end = Cartesian2.normalize(end, end);
-
-        var startTheta = CesiumMath.acosClamped(start.x);
-        if (start.y < 0) {
-            startTheta = CesiumMath.TWO_PI - startTheta;
-        }
-        var endTheta = CesiumMath.acosClamped(end.x);
-        if (end.y < 0) {
-            endTheta = CesiumMath.TWO_PI - endTheta;
-        }
-        var theta = endTheta - startTheta;
-
-        camera.twistRight(theta);
-    }
-
-    function singleAxisTwist2D(controller, startPosition, movement) {
-        var rotateRate = controller._rotateFactor * controller._rotateRateRangeAdjustment;
-
-        if (rotateRate > controller._maximumRotateRate) {
-            rotateRate = controller._maximumRotateRate;
-        }
-
-        if (rotateRate < controller._minimumRotateRate) {
-            rotateRate = controller._minimumRotateRate;
-        }
-
-        var scene = controller._scene;
-        var camera = scene.camera;
-        var canvas = scene.canvas;
-
-        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / canvas.clientWidth;
-        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
-
-        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
-
-        camera.twistRight(deltaPhi);
-    }
-
     function update2D(controller) {
-        var tweens = controller._tweens;
-        if (controller._aggregator.anyButtonDown) {
-            tweens.removeAll();
+        if (!Matrix4.equals(Matrix4.IDENTITY, controller._scene.camera.transform)) {
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+        } else {
+            reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
+            reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
         }
-
-        var scene = controller._scene;
-        var camera = scene.camera;
-
-        if (!tweens.contains(controller._tween)) {
-            if (!Matrix4.equals(Matrix4.IDENTITY, camera.transform)) {
-                reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
-                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-            } else {
-                reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
-                reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
-                reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
-            }
-        }
-
-        if (!controller._aggregator.anyButtonDown &&
-                (!defined(controller._lastInertiaZoomMovement) || !controller._lastInertiaZoomMovement.active) &&
-                (!defined(controller._lastInertiaTranslateMovement) || !controller._lastInertiaTranslateMovement.active) &&
-                !tweens.contains(controller._tween)) {
-            var tween = camera.createCorrectPositionTween(controller.bounceAnimationTime);
-            if (defined(tween)) {
-                controller._tween = tweens.add(tween);
-            }
-        }
-
-        tweens.update();
     }
 
     var pickGlobeScratchRay = new Ray();
