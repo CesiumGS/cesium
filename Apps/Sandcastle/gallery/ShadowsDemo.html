@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shadow maps.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false
+});
+
+var terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask : false,
+    requestVertexNormals : true
+});
+
+var ellipsoid = Cesium.Ellipsoid.WGS84;
+var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider({
+    ellipsoid : ellipsoid
+});
+
+var scene = viewer.scene;
+var camera = scene.camera;
+var shadowMap = scene.shadowMap;
+var globe = scene.globe;
+var model;
+
+shadowMap._maxmimumDistance = 10000.0;
+globe.castShadows = true;
+shadowMap.enabled = true;
+
+var mapboxImageryProvider = new Cesium.MapboxImageryProvider({
+    mapId: 'mapbox.streets'
+});
+
+var bingImageryProvider = new Cesium.BingMapsImageryProvider({
+    url : 'https://dev.virtualearth.net',
+    mapStyle : Cesium.BingMapsStyle.AERIAL
+});
+
+scene.imageryLayers.removeAll();
+
+var mapboxLayer = scene.imageryLayers.addImageryProvider(mapboxImageryProvider);
+var bingLayer = scene.imageryLayers.addImageryProvider(bingImageryProvider);
+
+function setImageryLayer(layer) {
+    scene.imageryLayers.raiseToTop(layer);
+}
+
+function createModel(url, origin) {
+    var modelMatrix;
+    if (Cesium.defined(origin)) {
+        modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(origin, 0.0, 0.0, 0.0);
+    } else {
+        modelMatrix = Cesium.Matrix4.IDENTITY;
+    }
+
+    model = scene.primitives.add(Cesium.Model.fromGltf({
+        url : url,
+        modelMatrix : modelMatrix
+    }));
+
+    model.readyPromise.then(function(model) {
+        // Play and loop all animations at half-speed
+        model.activeAnimations.addAll({
+            speedup : 0.5,
+            loop : Cesium.ModelAnimationLoop.REPEAT
+        });
+    }).otherwise(function(error){
+        window.alert(error);
+    });
+
+    return model;
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Model',
+    onselect : function() {
+        // Exton
+        var longitude = -1.31968;
+        var latitude = 0.698874;
+        var height = 74.14210186070714;
+        var origin = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
+
+        scene.primitives.removeAll();
+        createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', origin);
+        camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
+        setImageryLayer(bingLayer);
+        scene.terrainProvider = terrainProvider;
+
+        model.castShadows = false;
+        model.receiveShadows = false;
+        globe.castShadows = false;
+        globe.receiveShadows = false;
+        shadowMap._maxmimumDistance = 10000.0;
+    }
+}, {
+    text : 'Terrain',
+    onselect : function() {
+        // Half Dome
+        var longitude = -2.0862019628;
+        var latitude = 0.6588002522;
+        var height = 2652.991061159884;
+        var origin = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
+
+        scene.primitives.removeAll();
+        createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', origin);
+        camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
+        setImageryLayer(bingLayer);
+        scene.terrainProvider = terrainProvider;
+
+        model.castShadows = false;
+        model.receiveShadows = false;
+        globe.castShadows = false;
+        globe.receiveShadows = false;
+        shadowMap._maxmimumDistance = 10000.0;
+    }
+}, {
+    text : 'City',
+    onselect : function() {
+        scene.primitives.removeAll();
+        createModel('../../SampleData/seattle.glb');
+        model.readyPromise.then(function(model) {
+            var origin = model.boundingSphere.center;
+            camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
+        });
+        setImageryLayer(mapboxLayer);
+        scene.terrainProvider = ellipsoidTerrainProvider;
+
+        model.castShadows = false;
+        model.receiveShadows = false;
+        globe.castShadows = false;
+        globe.receiveShadows = false;
+        shadowMap._maxmimumDistance = 2000.0;
+    }
+}, {
+    text : 'Satellite',
+    onselect : function() {
+        scene.primitives.removeAll();
+
+        var czmlUrl = '../../SampleData/articulationTest.czml';
+        var promise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlUrl));
+
+        promise.then(function(dataSource){
+            viewer.trackedEntity = dataSource.entities.getById('Satellite/Satellite1');
+        }).otherwise(function(error){
+            window.alert(error);
+        });
+
+        setImageryLayer(bingLayer);
+        scene.terrainProvider = terrainProvider;
+
+        globe.castShadows = false;
+        globe.receiveShadows = false;
+    }
+}
+
+]);
+
+var canvas = viewer.canvas;
+canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+canvas.onclick = function() {
+    // To get key events
+    canvas.focus();
+};
+
+document.addEventListener('keydown', function(event) {
+    if (event.keyCode === 83) { // s
+        model.castShadows = !model.castShadows;
+        model.receiveShadows = !model.receiveShadows;
+        globe.castShadows = !globe.castShadows;
+        globe.receiveShadows = !globe.receiveShadows;
+    }
+});
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
