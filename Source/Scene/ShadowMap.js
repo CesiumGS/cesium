@@ -290,7 +290,7 @@ define([
 
     // Global maximum shadow distance used to prevent far off receivers from extending
     // the shadow far plane. E.g. setting a tighter near/far when viewing a satellite in space.
-    ShadowMap.MAXIMUM_DISTANCE = 20000.0;
+    ShadowMap.MAXIMUM_DISTANCE = 50000.0;
 
     function ShadowPass(context) {
         this.camera = new ShadowMapCamera();
@@ -1124,6 +1124,7 @@ define([
 
         // 2. Set bounding box back to include objects in the light's view
         max.z += 1000.0; // Note: in light space, a positive number is behind the camera
+        min.z -= 10.0; // Extra buffer;
 
         // 3. Adjust light view matrix so that it is centered on the bounding volume
         var translation = scratchTranslation;

@@ -112,6 +112,8 @@ Sandcastle.addToolbarMenu([{
         camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
         setImageryLayer(bingLayer);
         scene.terrainProvider = terrainProvider;
+        viewer.dataSources.removeAll();
+        viewer.clock.currentTime =  new Cesium.JulianDate(2457507.083843);
 
         model.castShadows = false;
         model.receiveShadows = false;
@@ -133,12 +135,14 @@ Sandcastle.addToolbarMenu([{
         camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
         setImageryLayer(bingLayer);
         scene.terrainProvider = terrainProvider;
+        viewer.dataSources.removeAll();
+        viewer.clock.currentTime =  new Cesium.JulianDate(2457507.167176);
 
         model.castShadows = false;
         model.receiveShadows = false;
         globe.castShadows = false;
         globe.receiveShadows = false;
-        shadowMap._maxmimumDistance = 10000.0;
+        shadowMap._maxmimumDistance = 30000.0;
     }
 }, {
     text : 'City',
@@ -151,6 +155,8 @@ Sandcastle.addToolbarMenu([{
         });
         setImageryLayer(mapboxLayer);
         scene.terrainProvider = ellipsoidTerrainProvider;
+        viewer.dataSources.removeAll();
+        viewer.clock.currentTime =  new Cesium.JulianDate(2457507.167176);
 
         model.castShadows = false;
         model.receiveShadows = false;
@@ -162,12 +168,13 @@ Sandcastle.addToolbarMenu([{
     text : 'Satellite',
     onselect : function() {
         scene.primitives.removeAll();
-
+        viewer.dataSources.removeAll();
         var czmlUrl = '../../SampleData/articulationTest.czml';
         var promise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlUrl));
 
         promise.then(function(dataSource){
             viewer.trackedEntity = dataSource.entities.getById('Satellite/Satellite1');
+            viewer.clock.currentTime =  new Cesium.JulianDate(2457361.243275);
         }).otherwise(function(error){
             window.alert(error);
         });
@@ -177,6 +184,7 @@ Sandcastle.addToolbarMenu([{
 
         globe.castShadows = false;
         globe.receiveShadows = false;
+        shadowMap._maxmimumDistance = 2000.0;
     }
 }
 
@@ -190,11 +198,14 @@ canvas.onclick = function() {
 };
 
 document.addEventListener('keydown', function(event) {
-    if (event.keyCode === 83) { // s
+    if (event.keyCode === 32) { // Space
         model.castShadows = !model.castShadows;
         model.receiveShadows = !model.receiveShadows;
-        globe.castShadows = !globe.castShadows;
         globe.receiveShadows = !globe.receiveShadows;
+
+        if (scene.terrainProvider !== ellipsoidTerrainProvider) {
+            globe.castShadows = !globe.castShadows;
+        }
     }
 });
 
