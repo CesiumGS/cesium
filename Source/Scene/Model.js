@@ -156,8 +156,49 @@ define([
         this.skinnedNodesIds = [];
     }
 
+    LoadResources.prototype.getBufferBytes = function(buffer, byteOffset, byteLength) {
+        return getSubarray(buffer, byteOffset, byteLength);
+    };
+
     LoadResources.prototype.getBuffer = function(bufferView) {
-        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+        return this.getBufferBytes(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+    };
+
+    LoadResources.prototype.getDecodedBuffer = function(bufferView, decodeBufferAccessors) {
+        var bufferData = new Uint8Array(0);
+        var byteShift = 0;
+        for (var i in decodeBufferAccessors) {
+            var accessor = decodeBufferAccessors[i];
+            //accessor.byteOffset += byteShift;
+            var chunkData = this.getBufferBytes(this.buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.byteStride * accessor.count);
+            var extensions = accessor.extensions;
+            if (defined(extensions)) {
+                var attributes = extensions.WEB3D_quantized_attributes;
+                if (defined(attributes)) {
+                    var decodeMatrix = attributes.decodeMatrix;
+                    var numComponents = Math.floor(Math.sqrt(decodeMatrix.length)) - 1;
+                    var decodedData = new Float32Array(numComponents * accessor.count);
+                    var index = 0;
+                    for (var j = 0; j < chunkData.length; j += 2*numComponents) {
+                        for (var k = 0; k < numComponents; k++) {
+                            var encodedValue = (chunkData[j + k*2 + 1] << 8) + chunkData[j + k*2];
+                            var decodedValue = encodedValue * decodeMatrix[k * (numComponents + 1) + k] + decodeMatrix[numComponents*(numComponents + 1) + k];
+                            decodedData[index] = decodedValue;
+                            index++;
+                        }
+                    }
+                    accessor.byteStride *= 2;
+                    byteShift = decodedData.length - chunkData.length;
+                    chunkData = new Uint8Array(decodedData.buffer);
+                }
+            }
+            var tempData = new Uint8Array(bufferData.length + chunkData.length);
+            tempData.set(bufferData);
+            tempData.set(chunkData, bufferData.length);
+            bufferData = tempData;
+        }
+        bufferView.byteLength = bufferData.length;
+        return bufferData;
     };
 
     LoadResources.prototype.finishedPendingBufferLoads = function() {
@@ -1388,7 +1429,35 @@ define([
         }
 
         var bufferView;
+        var accessors = model.gltf.accessors;
         var bufferViews = model.gltf.bufferViews;
+
+        var accessorsForBufferViewId = {};
+        for (var id in accessors) {
+            if (accessors.hasOwnProperty(id)) {
+                var accessor = accessors[id];
+                bufferViewId = accessor.bufferView;
+                // Accessors must be in byte offset order
+                if (!defined(accessorsForBufferViewId[bufferViewId])) {
+                    accessorsForBufferViewId[bufferViewId] = [accessor];
+                } else {
+                    var inserted = false;
+                    var bufferViewAccessors = accessorsForBufferViewId[bufferViewId];
+                    for (var j in bufferViewAccessors) {
+                        var bufferViewAccessor = bufferViewAccessors[j];
+                        if (bufferViewAccessor.byteOffset > accessor.byteOffset) {
+                            inserted = true;
+                            bufferViewAccessors.splice(j, 0, accessor);
+                            break;
+                        }
+                    }
+                    if (!inserted) {
+                        bufferViewAccessors.push(accessor);
+                    }
+                }
+            }
+        }
+
         var rendererBuffers = model._rendererResources.buffers;
 
         while (loadResources.buffersToCreate.length > 0) {
@@ -1398,7 +1467,7 @@ define([
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
             var vertexBuffer = Buffer.createVertexBuffer({
                 context : context,
-                typedArray : loadResources.getBuffer(bufferView),
+                typedArray : loadResources.getDecodedBuffer(bufferView, accessorsForBufferViewId[bufferViewId]),
                 usage : BufferUsage.STATIC_DRAW
             });
             vertexBuffer.vertexArrayDestroyable = false;
@@ -1408,7 +1477,6 @@ define([
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF accessors to create the bufferview's index buffer.
-        var accessors = model.gltf.accessors;
         for (var id in accessors) {
             if (accessors.hasOwnProperty(id)) {
                 var accessor = accessors[id];
@@ -3022,7 +3090,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common') {
+                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
