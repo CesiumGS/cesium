@@ -190,6 +190,20 @@ Sandcastle.addToolbarMenu([{
 
 ]);
 
+function toggleShadows() {
+    model.castShadows = !model.castShadows;
+    model.receiveShadows = !model.receiveShadows;
+    globe.receiveShadows = !globe.receiveShadows;
+
+    if (scene.terrainProvider !== ellipsoidTerrainProvider) {
+        globe.castShadows = !globe.castShadows;
+    }
+}
+
+Sandcastle.addToolbarButton('Toggle Shadows', function() {
+    toggleShadows();
+});
+
 var canvas = viewer.canvas;
 canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
 canvas.onclick = function() {
@@ -198,14 +212,8 @@ canvas.onclick = function() {
 };
 
 document.addEventListener('keydown', function(event) {
-    if (event.keyCode === 32) { // Space
-        model.castShadows = !model.castShadows;
-        model.receiveShadows = !model.receiveShadows;
-        globe.receiveShadows = !globe.receiveShadows;
-
-        if (scene.terrainProvider !== ellipsoidTerrainProvider) {
-            globe.castShadows = !globe.castShadows;
-        }
+    if (event.keyCode === 65) { // a
+        toggleShadows();
     }
 });
 
