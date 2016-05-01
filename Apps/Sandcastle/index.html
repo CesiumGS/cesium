@@ -93,6 +93,26 @@
                     </a>
                 </div>
             </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonShareDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'shareIcon', showLabel: true">
+                <span>Share</span>
+                <div id="dropDownShare" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    Be sure to re-share if you make any changes.<br />
+                        <textarea data-dojo-type="dijit.form.Textarea" id="link"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonImportDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'gitHubIcon', showLabel: true">
+                <span>Import Gist</span>
+                <div id="dropDownImport" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    <div>Gist Id or Url:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="gistId"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                    <div id="buttonImport" data-dojo-type="dijit.form.Button">Import</div>
+                </div>
+            </div>
             <!--
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonUpload" data-dojo-type="dijit.form.Button" data-dojo-props="iconClass: 'dijitIconDocuments', showLabel: true">

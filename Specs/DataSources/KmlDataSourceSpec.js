@@ -21,8 +21,11 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/Camera',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -47,8 +50,11 @@ defineSuite([
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
+        Camera,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
+        createCamera,
         pollToPromise,
         when) {
     "use strict";
@@ -3712,6 +3718,30 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.log.calls.count()).toEqual(1);
             expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
+
+    it('NetworkLink: Heading and pitch can be undefined if the camera is in morphing mode', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        var camera = createCamera();
+        Camera.clone(options.camera, camera);
+
+        var kmlOptions = {
+            camera: camera,
+            canvas: options.canvas
+        };
+
+        camera._mode = SceneMode.MORPHING;
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
         });
     });
 });

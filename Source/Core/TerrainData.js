@@ -66,6 +66,8 @@ define([
      * Creates a {@link TerrainMesh} from this terrain data.
      * @function
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
