@@ -75,6 +75,7 @@ defineSuite([
     var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
     var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
     var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
+    var boxQuantizedUrl = './Data/Models/Box-Quantized/Box.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var texturedBoxModel;
@@ -1544,6 +1545,13 @@ defineSuite([
 
     it('loads a glTF with KHR_materials_common that has transparency', function() {
         return loadModel(boxTransparentUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes', function() {
+        return loadModel(boxQuantizedUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });
