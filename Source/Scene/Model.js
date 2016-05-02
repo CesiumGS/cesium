@@ -169,7 +169,6 @@ define([
         var byteShift = 0;
         for (var i in decodeBufferAccessors) {
             var accessor = decodeBufferAccessors[i];
-            //accessor.byteOffset += byteShift;
             var chunkData = this.getBufferBytes(this.buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.byteStride * accessor.count);
             var extensions = accessor.extensions;
             if (defined(extensions)) {
@@ -188,7 +187,8 @@ define([
                         }
                     }
                     accessor.byteStride *= 2;
-                    byteShift = decodedData.length - chunkData.length;
+                    accessor.byteOffset += byteShift;
+                    byteShift += decodedData.length*4 - chunkData.length;
                     chunkData = new Uint8Array(decodedData.buffer);
                 }
             }
