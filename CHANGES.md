@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+### 1.22 - 2016-06-01
+
+* Breaking changes
+  *
+* Deprecated
+  *
+* Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
+
 ### 1.21 - 2016-05-02
 
 * Breaking changes
