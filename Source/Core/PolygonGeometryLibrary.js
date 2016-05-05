@@ -271,7 +271,7 @@ define([
 
     var createGeometryFromPositionsPositions = [];
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight, vertexFormat) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -308,7 +308,12 @@ define([
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
-            return GeometryPipeline.computeNormal(geometry);
+
+            if (vertexFormat.normal) {
+                return GeometryPipeline.computeNormal(geometry);
+            }
+
+            return geometry;
         }
 
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
