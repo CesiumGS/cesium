@@ -2138,7 +2138,7 @@ define([
         }
 
         if (showWarning) {
-            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.21.');
+            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.22.');
         }
 
         this._changed = new Event();
