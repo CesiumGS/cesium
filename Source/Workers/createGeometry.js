@@ -20,7 +20,7 @@ define([
         if (!defined(module)) {
             if (typeof exports === 'object') {
                 // Use CommonJS-style require.
-                moduleCache[module] = module = require('Workers/' + moduleName);
+                moduleCache[module] = module = require('./' + moduleName);
             } else {
                 // Use AMD-style require.
                 // in web workers, require is synchronous
