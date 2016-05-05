@@ -1768,32 +1768,32 @@ define([
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x += windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var right = camera.frustum.right;
-            camera.frustum.right = -camera.frustum.left;
-            camera.frustum.left = -right;
+            camera.frustum.left = -camera.frustum.right;
+            camera.frustum.right = camera.frustum.left + x;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
-            viewport.x += windowCoordinates.x;
-            viewport.width -= windowCoordinates.x;
+            viewport.x = windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
             camera.frustum.left = -maxCoord.x - x;
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
-            viewport.x = viewport.x - viewport.width;
+            viewport.x = 0;
+            viewport.width = windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var left = camera.frustum.left;
-            camera.frustum.left = -camera.frustum.right;
-            camera.frustum.right = -left;
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = camera.frustum.right + x;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
