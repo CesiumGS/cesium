@@ -334,6 +334,7 @@ define([
         }
 
         this._usedDrawCommands = 0;
+        this._usedPickCommands = 0;
     };
 
     /**
@@ -995,10 +996,14 @@ define([
         do {
             var numberOfDayTextures = 0;
 
+            var storedUniformMaps = tileProvider._uniformMaps;
+            var storedCommands = passes.render ? tileProvider._drawCommands : tileProvider._pickCommands;
+            var usedCommands = passes.render ? tileProvider._usedDrawCommands : tileProvider._usedPickCommands;
+
             var command;
             var uniformMap;
 
-            if (tileProvider._drawCommands.length <= tileProvider._usedDrawCommands) {
+            if (storedCommands.length <= usedCommands) {
                 command = new DrawCommand();
                 command.owner = tile;
                 command.cull = false;
@@ -1007,16 +1012,20 @@ define([
 
                 uniformMap = createTileUniformMap();
 
-                tileProvider._drawCommands.push(command);
-                tileProvider._uniformMaps.push(uniformMap);
+                storedCommands.push(command);
+                storedUniformMaps.push(uniformMap);
             } else {
-                command = tileProvider._drawCommands[tileProvider._usedDrawCommands];
-                uniformMap = tileProvider._uniformMaps[tileProvider._usedDrawCommands];
+                command = storedCommands[usedCommands];
+                uniformMap = storedUniformMaps[usedCommands];
+            }
+
+            if (passes.render) {
+                ++tileProvider._usedDrawCommands;
+            } else {
+                ++tileProvider._usedPickCommands;
             }
 
             command.owner = tile;
-
-            ++tileProvider._usedDrawCommands;
 
             if (tile === tileProvider._debug.boundingSphereTile) {
                 // If a debug primitive already exists for this tile, it will not be

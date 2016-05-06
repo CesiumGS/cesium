@@ -95,6 +95,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
+        this._tilesToRenderForPick = [];
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
@@ -292,23 +293,6 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
-        /*
-        var passes = frameState.passes;
-
-        if (passes.render) {
-            this._tileProvider.beginUpdate(frameState);
-
-            selectTilesForRendering(this, frameState);
-            createRenderCommandsForSelectedTiles(this, frameState);
-
-            this._tileProvider.endUpdate(frameState);
-        }
-
-        if (passes.pick && this._tilesToRender.length > 0) {
-            this._tileProvider.updateForPick(frameState);
-        }
-        */
-        
         this._tileProvider.beginUpdate(frameState);
         
         selectTilesForRendering(this, frameState);
@@ -402,8 +386,10 @@ define([
         var i;
         var len;
 
+        var passes = frameState.passes;
+
         // Clear the render list.
-        var tilesToRender = primitive._tilesToRender;
+        var tilesToRender = passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
         tilesToRender.length = 0;
 
         var traversalQueue = primitive._tileTraversalQueue;
@@ -479,7 +465,7 @@ define([
 
             if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
-                addTileToRenderList(primitive, tile);
+                addTileToRenderList(primitive, frameState, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
                 // SSE is not good enough and children are loaded, so refine.
                 var children = tile.children;
@@ -493,7 +479,7 @@ define([
                 }
             } else {
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
-                addTileToRenderList(primitive, tile);
+                addTileToRenderList(primitive, frameState, tile);
             }
         }
 
@@ -546,8 +532,9 @@ define([
         return maxGeometricError / pixelSize;
     }
 
-    function addTileToRenderList(primitive, tile) {
-        primitive._tilesToRender.push(tile);
+    function addTileToRenderList(primitive, frameState, tile) {
+        var tilesToRender = frameState.passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
+        tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
     }
 
@@ -704,7 +691,7 @@ define([
 
     function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
-        var tilesToRender = primitive._tilesToRender;
+        var tilesToRender = frameState.passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         tilesToRender.sort(tileDistanceSortFunction);
