@@ -216,9 +216,7 @@ define([
 
         if (defined(this.vertexArray)) {
             indexBuffer = this.vertexArray.indexBuffer;
-
-            //this.vertexArray = this.vertexArray.destroy();
-
+            
             --this.vertexArray.referenceCount;
             if (this.vertexArray.referenceCount === 0) {
                 this.vertexArray.destroy();

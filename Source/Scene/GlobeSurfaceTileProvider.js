@@ -149,6 +149,7 @@ define([
         this._pickCommands = [];
         this._usedDrawCommands = 0;
         this._usedPickCommands = 0;
+        this._commandFrameCount = 0;
 
         this._debug = {
             wireframe : false,
@@ -331,6 +332,28 @@ define([
             if (defined(tiles)) {
                 tiles.length = 0;
             }
+        }
+
+        // Release unused WebGL resources from cached commands once every 120 frames
+        if (this._commandFrameCount++ === 120) {
+            this._commandFrameCount = 0;
+
+            var j;
+
+            var commands = this._drawCommands;
+            var length = commands.length;
+            for (j = this._usedDrawCommands; j < length; ++j) {
+                swapCommandVertexArray(commands[j], undefined);
+            }
+
+            commands = this._pickCommands;
+            length = commands.length;
+            for (j = this._usedPickCommands; j < length; ++j) {
+                swapCommandVertexArray(commands[j], undefined);
+            }
+
+            this._drawCommands.length = 0;
+            this._pickCommands.length = 0;
         }
 
         this._usedDrawCommands = 0;
@@ -887,7 +910,10 @@ define([
         }
 
         command.vertexArray = vertexArray;
-        ++command.vertexArray.referenceCount;
+
+        if (defined(vertexArray)) {
+            ++command.vertexArray.referenceCount;
+        }
     }
 
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
