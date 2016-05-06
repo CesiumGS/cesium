@@ -285,7 +285,6 @@ define([
         debug.tilesWaitingForChildren = 0;
 
         this._tileLoadQueue.length = 0;
-        this._tileReplacementQueue.trimTiles(this.tileCacheSize);
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
@@ -592,7 +591,7 @@ define([
 
         // Remove any tiles that were not used this frame beyond the number
         // we're allowed to keep.
-        //primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
+        primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
         var startTime = getTimestamp();
         var timeSlice = primitive._loadQueueTimeSlice;
