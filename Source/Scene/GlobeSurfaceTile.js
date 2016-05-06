@@ -241,7 +241,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, tileProvider) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -253,7 +253,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider);
+            processTerrainStateMachine(tile, frameState, terrainProvider, tileProvider);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -336,7 +336,16 @@ define([
         }
     }
 
-    function processTerrainStateMachine(tile, frameState, terrainProvider) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider, tileProvider) {
+
+        var drawCommands = tileProvider._drawCommands;
+        var length = tileProvider._usedDrawCommands;
+        for ( var k = 0; k < length; ++k) {
+            if (drawCommands[k].vertexArray.isDestroyed()) {
+                debugger;
+            }
+        }
+
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
         var upsampled = surfaceTile.upsampledTerrain;
@@ -406,6 +415,14 @@ define([
                 // Upsampling failed for some reason.  This is pretty much a catastrophic failure,
                 // but maybe we'll be saved by loading.
                 surfaceTile.upsampledTerrain = undefined;
+            }
+        }
+
+        var drawCommands = tileProvider._drawCommands;
+        var length = tileProvider._usedDrawCommands;
+        for ( var k = 0; k < length; ++k) {
+            if (drawCommands[k].vertexArray.isDestroyed()) {
+                debugger;
             }
         }
     }

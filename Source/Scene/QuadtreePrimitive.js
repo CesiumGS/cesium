@@ -285,6 +285,7 @@ define([
         debug.tilesWaitingForChildren = 0;
 
         this._tileLoadQueue.length = 0;
+        this._tileReplacementQueue.trimTiles(this.tileCacheSize);
         this._tileReplacementQueue.markStartOfRenderFrame();
     };
 
@@ -292,6 +293,7 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
+        /*
         var passes = frameState.passes;
 
         if (passes.render) {
@@ -306,6 +308,14 @@ define([
         if (passes.pick && this._tilesToRender.length > 0) {
             this._tileProvider.updateForPick(frameState);
         }
+        */
+        
+        this._tileProvider.beginUpdate(frameState);
+        
+        selectTilesForRendering(this, frameState);
+        createRenderCommandsForSelectedTiles(this, frameState);
+        
+        this._tileProvider.endUpdate(frameState);
     };
 
     /**
@@ -582,7 +592,7 @@ define([
 
         // Remove any tiles that were not used this frame beyond the number
         // we're allowed to keep.
-        primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
+        //primitive._tileReplacementQueue.trimTiles(primitive.tileCacheSize);
 
         var startTime = getTimestamp();
         var timeSlice = primitive._loadQueueTimeSlice;

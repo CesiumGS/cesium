@@ -343,7 +343,9 @@ define([
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(frameState) {
-        if (!defined(this._renderState)) {
+        var passes = frameState.passes;
+
+        if (passes.render && !defined(this._renderState)) {
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
@@ -363,6 +365,20 @@ define([
                     func : DepthFunction.LESS_OR_EQUAL
                 },
                 blending : BlendingState.ALPHA_BLEND
+            });
+        }
+
+        if (passes.pick && !defined(this._pickRenderState)) {
+            this._pickRenderState = RenderState.fromCache({
+                colorMask : {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                },
+                depthTest : {
+                    enabled : true
+                }
             });
         }
 
@@ -438,7 +454,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -963,7 +979,10 @@ define([
 
         var firstPassRenderState = tileProvider._renderState;
         var otherPassesRenderState = tileProvider._blendRenderState;
-        var renderState = firstPassRenderState;
+        var pickRenderState = tileProvider._pickRenderState;
+
+        var passes = frameState.passes;
+        var renderState = passes.render ? firstPassRenderState : pickRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
 
@@ -1035,7 +1054,7 @@ define([
             var applyGamma = false;
             var applyAlpha = false;
 
-            while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
+            while (!passes.pick && numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
                 var imagery = tileImagery.readyImagery;
                 ++imageryIndex;
@@ -1093,7 +1112,14 @@ define([
             uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
-            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            var shaderProgram;
+            if (passes.render) {
+                shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            } else {
+                shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState, surfaceTile, useWebMercatorProjection);
+            }
+
+            command.shaderProgram = shaderProgram;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
@@ -1127,7 +1153,7 @@ define([
 
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
-        } while (imageryIndex < imageryLen);
+        } while (imageryIndex < imageryLen && !passes.pick);
     }
 
     function addPickCommandsForTile(tileProvider, drawCommand, frameState) {
@@ -1154,7 +1180,7 @@ define([
         pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
-        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
 
         frameState.commandList.push(pickCommand);
