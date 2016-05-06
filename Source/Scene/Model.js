@@ -1480,9 +1480,10 @@ define([
                     var programId = technique.program;
                     if (programId === programName) {
                         var primitiveAttributes = primitive.attributes;
+                        var attributeVarName;
                         for (var attributeSemantic in primitiveAttributes) {
                             if (primitiveAttributes.hasOwnProperty(attributeSemantic)) {
-                                var attributeVarName = undefined;
+                                attributeVarName = undefined;
                                 for (var attributeName in technique.parameters) {
                                     if (technique.parameters.hasOwnProperty(attributeName)) {
                                         if (defined(attributeVarName)) {
@@ -3120,7 +3121,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common' && extension != 'WEB3D_quantized_attributes') {
+                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
