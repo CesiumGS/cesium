@@ -156,49 +156,8 @@ define([
         this.skinnedNodesIds = [];
     }
 
-    LoadResources.prototype.getBufferBytes = function(buffer, byteOffset, byteLength) {
-        return getSubarray(buffer, byteOffset, byteLength);
-    };
-
     LoadResources.prototype.getBuffer = function(bufferView) {
-        return this.getBufferBytes(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-    };
-
-    LoadResources.prototype.getDecodedBuffer = function(bufferView, decodeBufferAccessors) {
-        var bufferData = new Uint8Array(0);
-        var byteShift = 0;
-        for (var i in decodeBufferAccessors) {
-            var accessor = decodeBufferAccessors[i];
-            var chunkData = this.getBufferBytes(this.buffers[bufferView.buffer], bufferView.byteOffset + accessor.byteOffset, accessor.byteStride * accessor.count);
-            var extensions = accessor.extensions;
-            if (defined(extensions)) {
-                var attributes = extensions.WEB3D_quantized_attributes;
-                if (defined(attributes)) {
-                    var decodeMatrix = attributes.decodeMatrix;
-                    var numComponents = Math.floor(Math.sqrt(decodeMatrix.length)) - 1;
-                    var decodedData = new Float32Array(numComponents * accessor.count);
-                    var index = 0;
-                    for (var j = 0; j < chunkData.length; j += 2*numComponents) {
-                        for (var k = 0; k < numComponents; k++) {
-                            var encodedValue = (chunkData[j + k*2 + 1] << 8) + chunkData[j + k*2];
-                            var decodedValue = encodedValue * decodeMatrix[k * (numComponents + 1) + k] + decodeMatrix[numComponents*(numComponents + 1) + k];
-                            decodedData[index] = decodedValue;
-                            index++;
-                        }
-                    }
-                    accessor.byteStride *= 2;
-                    accessor.byteOffset += byteShift;
-                    byteShift += decodedData.length*4 - chunkData.length;
-                    chunkData = new Uint8Array(decodedData.buffer);
-                }
-            }
-            var tempData = new Uint8Array(bufferData.length + chunkData.length);
-            tempData.set(bufferData);
-            tempData.set(chunkData, bufferData.length);
-            bufferData = tempData;
-        }
-        bufferView.byteLength = bufferData.length;
-        return bufferData;
+        return getSubarray(this.buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
     };
 
     LoadResources.prototype.finishedPendingBufferLoads = function() {
@@ -1429,35 +1388,7 @@ define([
         }
 
         var bufferView;
-        var accessors = model.gltf.accessors;
         var bufferViews = model.gltf.bufferViews;
-
-        var accessorsForBufferViewId = {};
-        for (var id in accessors) {
-            if (accessors.hasOwnProperty(id)) {
-                var accessor = accessors[id];
-                bufferViewId = accessor.bufferView;
-                // Accessors must be in byte offset order
-                if (!defined(accessorsForBufferViewId[bufferViewId])) {
-                    accessorsForBufferViewId[bufferViewId] = [accessor];
-                } else {
-                    var inserted = false;
-                    var bufferViewAccessors = accessorsForBufferViewId[bufferViewId];
-                    for (var j in bufferViewAccessors) {
-                        var bufferViewAccessor = bufferViewAccessors[j];
-                        if (bufferViewAccessor.byteOffset > accessor.byteOffset) {
-                            inserted = true;
-                            bufferViewAccessors.splice(j, 0, accessor);
-                            break;
-                        }
-                    }
-                    if (!inserted) {
-                        bufferViewAccessors.push(accessor);
-                    }
-                }
-            }
-        }
-
         var rendererBuffers = model._rendererResources.buffers;
 
         while (loadResources.buffersToCreate.length > 0) {
@@ -1467,7 +1398,7 @@ define([
             // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
             var vertexBuffer = Buffer.createVertexBuffer({
                 context : context,
-                typedArray : loadResources.getDecodedBuffer(bufferView, accessorsForBufferViewId[bufferViewId]),
+                typedArray : loadResources.getBuffer(bufferView),
                 usage : BufferUsage.STATIC_DRAW
             });
             vertexBuffer.vertexArrayDestroyable = false;
@@ -1477,6 +1408,7 @@ define([
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF accessors to create the bufferview's index buffer.
+        var accessors = model.gltf.accessors;
         for (var id in accessors) {
             if (accessors.hasOwnProperty(id)) {
                 var accessor = accessors[id];
@@ -1521,6 +1453,102 @@ define([
 
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
+    
+    function modifyShaderForExtensions(shader, programName, model) {
+        var gltf = model.gltf;
+        var accessors = gltf.accessors;
+        var meshes = gltf.meshes;
+
+        for (var meshId in meshes) {
+            if (meshes.hasOwnProperty(meshId)) {
+                var primitives = meshes[meshId].primitives;
+                var primitivesLength = primitives.length;
+
+                for (var i = 0; i < primitivesLength; ++i) {
+                    var primitive = primitives[i];
+
+                    // GLTF_SPEC: This does not take into account attribute arrays,
+                    // indicated by when an attribute points to a parameter with a
+                    // count property.
+                    //
+                    // https://github.com/KhronosGroup/glTF/issues/258
+
+                    var materialId = primitive.material;
+                    var material = gltf.materials[materialId];
+                    var technique = gltf.techniques[material.technique];
+                    
+                    var programId = technique.program;
+                    if (programId === programName) {
+                        var primitiveAttributes = primitive.attributes;
+                        for (var attributeSemantic in primitiveAttributes) {
+                            if (primitiveAttributes.hasOwnProperty(attributeSemantic)) {
+                                var attributeVarName = undefined;
+                                for (var attributeName in technique.parameters) {
+                                    if (technique.parameters.hasOwnProperty(attributeName)) {
+                                        if (defined(attributeVarName)) {
+                                            break;
+                                        }
+                                        if (technique.parameters[attributeName].semantic === attributeSemantic) {
+                                            for (var varName in technique.attributes) {
+                                                if (technique.attributes.hasOwnProperty(varName)) {
+                                                    if (technique.attributes[varName] === attributeName) {
+                                                        attributeVarName = varName;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                // Skip if the attribute is not used by the material, e.g., because the asset was exported
+                                // with an attribute that wasn't used and the asset wasn't optimized.
+                                if (defined(attributeVarName)) {
+                                    var a = accessors[primitiveAttributes[attributeSemantic]];
+                                    if (a.hasOwnProperty('extensions')) {
+                                        var extensions = a.extensions;
+                                        if (extensions.hasOwnProperty('WEB3D_quantized_attributes')) {
+                                            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                                            var decodeMatrix = quantizedAttributes.decodeMatrix;
+                                            decodeMatrix = decodeMatrix.map(function(val) {
+                                                return val.toFixed(16);
+                                            });
+
+                                            var newMain = "decoded_" + attributeSemantic;
+                                            var matrixName = "decode_" + attributeSemantic + "_matrix";
+                                            var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
+
+                                            // replace usages of the original attribute with the decoded version, but not the declaration
+                                            var first = true;
+                                            shader = shader.replace(new RegExp(attributeVarName, 'g'), function(match) {
+                                                if (first) {
+                                                    first = false;
+                                                    return match;
+                                                }
+                                                return decodedAttributeVarName;
+                                            });
+                                            // declare decoded attribute
+                                            shader = "vec3 " + decodedAttributeVarName + ";\n" + shader;
+
+                                            // splice decode function into the shader
+                                            var decode = "\n" +
+                                                         "mat4 " + matrixName + " = mat4(" + decodeMatrix + ");\n" +
+                                                         "void main(void) {\n" +
+                                                         "    " + decodedAttributeVarName + " = vec3(vec4(" + attributeVarName + ",1.0) * " + matrixName + ");\n" +
+                                                         "    " + newMain + "();\n" +
+                                                         "}\n";
+                                            shader = ShaderSource.replaceMain(shader, newMain);
+                                            shader += decode;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return shader;
+    }
 
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
@@ -1537,6 +1565,8 @@ define([
         var attributeLocations = createAttributeLocations(program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
+        
+        vs = modifyShaderForExtensions(vs, id, model);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
@@ -1986,13 +2016,13 @@ define([
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
                                 attributes.push({
-                                    index                  : attributeLocation,
-                                    vertexBuffer           : rendererBuffers[a.bufferView],
+                                    index : attributeLocation,
+                                    vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : a.componentType,
-                                    normalize              : false,
-                                    offsetInBytes          : a.byteOffset,
-                                    strideInBytes          : a.byteStride
+                                    componentDatatype : a.componentType,
+                                    normalize : false,
+                                    offsetInBytes : a.byteOffset,
+                                    strideInBytes : a.byteStride
                                 });
                             }
                         }
@@ -2801,10 +2831,11 @@ define([
             }
         } else {
             createBuffers(model, context); // using glTF bufferViews
-            createPrograms(model, context);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
             createTextures(model, context);
+
+            createPrograms(model, context);
         }
 
         createSkins(model);
@@ -2813,7 +2844,6 @@ define([
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
             createRenderStates(model, context); // using glTF materials/techniques/states
-
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
@@ -3090,7 +3120,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
+                    extension !== 'KHR_materials_common' && extension != 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
