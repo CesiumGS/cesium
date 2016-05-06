@@ -251,6 +251,7 @@ define([
             attributes : attributes,
             indexBuffer : indexBuffer
         });
+        tileTerrain.vertexArray.referenceCount = 1;
 
         tileTerrain.state = TerrainState.READY;
     }

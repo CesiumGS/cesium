@@ -1,94 +1,94 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/FeatureDetection',
-        '../Core/GeometryInstance',
-        '../Core/GeometryPipeline',
-        '../Core/IndexDatatype',
-        '../Core/Intersect',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/PrimitiveType',
-        '../Core/Rectangle',
-        '../Core/SphereOutlineGeometry',
-        '../Core/TerrainQuantization',
-        '../Core/Visibility',
-        '../Core/WebMercatorProjection',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/RenderState',
-        '../Renderer/VertexArray',
-        '../Scene/BlendingState',
-        '../Scene/DepthFunction',
-        '../Scene/Pass',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        '../ThirdParty/when',
-        './GlobeSurfaceTile',
-        './ImageryLayer',
-        './ImageryState',
-        './QuadtreeTileLoadState',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        BoxOutlineGeometry,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        FeatureDetection,
-        GeometryInstance,
-        GeometryPipeline,
-        IndexDatatype,
-        Intersect,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        PrimitiveType,
-        Rectangle,
-        SphereOutlineGeometry,
-        TerrainQuantization,
-        Visibility,
-        WebMercatorProjection,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        RenderState,
-        VertexArray,
-        BlendingState,
-        DepthFunction,
-        Pass,
-        PerInstanceColorAppearance,
-        Primitive,
-        when,
-        GlobeSurfaceTile,
-        ImageryLayer,
-        ImageryState,
-        QuadtreeTileLoadState,
-        SceneMode) {
+    '../Core/BoundingSphere',
+    '../Core/BoxOutlineGeometry',
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartesian4',
+    '../Core/Color',
+    '../Core/ColorGeometryInstanceAttribute',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/destroyObject',
+    '../Core/DeveloperError',
+    '../Core/Event',
+    '../Core/FeatureDetection',
+    '../Core/GeometryInstance',
+    '../Core/GeometryPipeline',
+    '../Core/IndexDatatype',
+    '../Core/Intersect',
+    '../Core/Math',
+    '../Core/Matrix4',
+    '../Core/OrientedBoundingBox',
+    '../Core/PrimitiveType',
+    '../Core/Rectangle',
+    '../Core/SphereOutlineGeometry',
+    '../Core/TerrainQuantization',
+    '../Core/Visibility',
+    '../Core/WebMercatorProjection',
+    '../Renderer/Buffer',
+    '../Renderer/BufferUsage',
+    '../Renderer/ContextLimits',
+    '../Renderer/DrawCommand',
+    '../Renderer/RenderState',
+    '../Renderer/VertexArray',
+    '../Scene/BlendingState',
+    '../Scene/DepthFunction',
+    '../Scene/Pass',
+    '../Scene/PerInstanceColorAppearance',
+    '../Scene/Primitive',
+    '../ThirdParty/when',
+    './GlobeSurfaceTile',
+    './ImageryLayer',
+    './ImageryState',
+    './QuadtreeTileLoadState',
+    './SceneMode'
+], function(
+    BoundingSphere,
+    BoxOutlineGeometry,
+    Cartesian2,
+    Cartesian3,
+    Cartesian4,
+    Color,
+    ColorGeometryInstanceAttribute,
+    defaultValue,
+    defined,
+    defineProperties,
+    destroyObject,
+    DeveloperError,
+    Event,
+    FeatureDetection,
+    GeometryInstance,
+    GeometryPipeline,
+    IndexDatatype,
+    Intersect,
+    CesiumMath,
+    Matrix4,
+    OrientedBoundingBox,
+    PrimitiveType,
+    Rectangle,
+    SphereOutlineGeometry,
+    TerrainQuantization,
+    Visibility,
+    WebMercatorProjection,
+    Buffer,
+    BufferUsage,
+    ContextLimits,
+    DrawCommand,
+    RenderState,
+    VertexArray,
+    BlendingState,
+    DepthFunction,
+    Pass,
+    PerInstanceColorAppearance,
+    Primitive,
+    when,
+    GlobeSurfaceTile,
+    ImageryLayer,
+    ImageryState,
+    QuadtreeTileLoadState,
+    SceneMode) {
     'use strict';
 
     /**
@@ -334,7 +334,6 @@ define([
         }
 
         this._usedDrawCommands = 0;
-        this._usedPickCommands = 0;
     };
 
     /**
@@ -344,9 +343,7 @@ define([
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.endUpdate = function(frameState) {
-        var passes = frameState.passes;
-
-        if (passes.render && !defined(this._renderState)) {
+        if (!defined(this._renderState)) {
             this._renderState = RenderState.fromCache({ // Write color and depth
                 cull : {
                     enabled : true
@@ -366,20 +363,6 @@ define([
                     func : DepthFunction.LESS_OR_EQUAL
                 },
                 blending : BlendingState.ALPHA_BLEND
-            });
-        }
-
-        if (passes.pick && !defined(this._pickRenderState)) {
-            this._pickRenderState = RenderState.fromCache({
-                colorMask : {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                },
-                depthTest : {
-                    enabled : true
-                }
             });
         }
 
@@ -886,6 +869,27 @@ define([
         };
     })();
 
+    function swapCommandVertexArray(command, vertexArray) {
+        if (defined(command.vertexArray)) {
+            var indexBuffer = command.vertexArray.indexBuffer;
+
+            --command.vertexArray.referenceCount;
+            if (command.vertexArray.referenceCount === 0) {
+                command.vertexArray.destroy();
+            }
+
+            if (command.vertexArray.isDestroyed() && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
+            }
+        }
+
+        command.vertexArray = vertexArray;
+        ++command.vertexArray.referenceCount;
+    }
+
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -980,10 +984,7 @@ define([
 
         var firstPassRenderState = tileProvider._renderState;
         var otherPassesRenderState = tileProvider._blendRenderState;
-        var pickRenderState = tileProvider._pickRenderState;
-
-        var passes = frameState.passes;
-        var renderState = passes.render ? firstPassRenderState : pickRenderState;
+        var renderState = firstPassRenderState;
 
         var initialColor = tileProvider._firstPassInitialColor;
 
@@ -996,14 +997,10 @@ define([
         do {
             var numberOfDayTextures = 0;
 
-            var storedUniformMaps = tileProvider._uniformMaps;
-            var storedCommands = passes.render ? tileProvider._drawCommands : tileProvider._pickCommands;
-            var usedCommands = passes.render ? tileProvider._usedDrawCommands : tileProvider._usedPickCommands;
-
             var command;
             var uniformMap;
 
-            if (storedCommands.length <= usedCommands) {
+            if (tileProvider._drawCommands.length <= tileProvider._usedDrawCommands) {
                 command = new DrawCommand();
                 command.owner = tile;
                 command.cull = false;
@@ -1012,20 +1009,16 @@ define([
 
                 uniformMap = createTileUniformMap();
 
-                storedCommands.push(command);
-                storedUniformMaps.push(uniformMap);
+                tileProvider._drawCommands.push(command);
+                tileProvider._uniformMaps.push(uniformMap);
             } else {
-                command = storedCommands[usedCommands];
-                uniformMap = storedUniformMaps[usedCommands];
-            }
-
-            if (passes.render) {
-                ++tileProvider._usedDrawCommands;
-            } else {
-                ++tileProvider._usedPickCommands;
+                command = tileProvider._drawCommands[tileProvider._usedDrawCommands];
+                uniformMap = tileProvider._uniformMaps[tileProvider._usedDrawCommands];
             }
 
             command.owner = tile;
+
+            ++tileProvider._usedDrawCommands;
 
             if (tile === tileProvider._debug.boundingSphereTile) {
                 // If a debug primitive already exists for this tile, it will not be
@@ -1063,7 +1056,7 @@ define([
             var applyGamma = false;
             var applyAlpha = false;
 
-            while (!passes.pick && numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
+            while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
                 var imagery = tileImagery.readyImagery;
                 ++imageryIndex;
@@ -1121,19 +1114,13 @@ define([
             uniformMap.minMaxHeight.y = encoding.maximumHeight;
             Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
 
-            var shaderProgram;
-            if (passes.render) {
-                shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
-            } else {
-                shaderProgram = tileProvider._surfaceShaderSet.getPickShaderProgram(frameState, surfaceTile, useWebMercatorProjection);
-            }
-
-            command.shaderProgram = shaderProgram;
+            command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
-            command.vertexArray = surfaceTile.vertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
+
+            swapCommandVertexArray(command, surfaceTile.vertexArray);
 
             if (tileProvider._debug.wireframe) {
                 createWireframeVertexArrayIfNecessary(context, tileProvider, tile);
@@ -1162,7 +1149,7 @@ define([
 
             renderState = otherPassesRenderState;
             initialColor = otherPassesInitialColor;
-        } while (imageryIndex < imageryLen && !passes.pick);
+        } while (imageryIndex < imageryLen);
     }
 
     function addPickCommandsForTile(tileProvider, drawCommand, frameState) {
@@ -1186,11 +1173,12 @@ define([
 
         pickCommand.owner = drawCommand.owner;
         pickCommand.primitiveType = drawCommand.primitiveType;
-        pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
         pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
+
+        swapCommandVertexArray(pickCommand, drawCommand.vertexArray);
 
         frameState.commandList.push(pickCommand);
     }

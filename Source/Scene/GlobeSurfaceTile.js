@@ -217,14 +217,21 @@ define([
         if (defined(this.vertexArray)) {
             indexBuffer = this.vertexArray.indexBuffer;
 
-            this.vertexArray = this.vertexArray.destroy();
+            //this.vertexArray = this.vertexArray.destroy();
 
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            --this.vertexArray.referenceCount;
+            if (this.vertexArray.referenceCount === 0) {
+                this.vertexArray.destroy();
+            }
+
+            if (this.vertexArray.isDestroyed() && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
                 }
             }
+
+            this.vertexArray = undefined;
         }
 
         if (defined(this.wireframeVertexArray)) {

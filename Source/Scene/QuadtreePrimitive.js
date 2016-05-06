@@ -1,42 +1,42 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/Math',
-        '../Core/Queue',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Visibility',
-        './QuadtreeOccluders',
-        './QuadtreeTile',
-        './QuadtreeTileLoadState',
-        './SceneMode',
-        './TileReplacementQueue'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        getTimestamp,
-        CesiumMath,
-        Queue,
-        Ray,
-        Rectangle,
-        Visibility,
-        QuadtreeOccluders,
-        QuadtreeTile,
-        QuadtreeTileLoadState,
-        SceneMode,
-        TileReplacementQueue) {
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Event',
+    '../Core/getTimestamp',
+    '../Core/Math',
+    '../Core/Queue',
+    '../Core/Ray',
+    '../Core/Rectangle',
+    '../Core/Visibility',
+    './QuadtreeOccluders',
+    './QuadtreeTile',
+    './QuadtreeTileLoadState',
+    './SceneMode',
+    './TileReplacementQueue'
+], function(
+    Cartesian3,
+    Cartographic,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Event,
+    getTimestamp,
+    CesiumMath,
+    Queue,
+    Ray,
+    Rectangle,
+    Visibility,
+    QuadtreeOccluders,
+    QuadtreeTile,
+    QuadtreeTileLoadState,
+    SceneMode,
+    TileReplacementQueue) {
     'use strict';
 
     /**
@@ -95,7 +95,6 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
-        this._tilesToRenderForPick = [];
         this._tileTraversalQueue = new Queue();
         this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
@@ -293,12 +292,20 @@ define([
      * @private
      */
     QuadtreePrimitive.prototype.update = function(frameState) {
-        this._tileProvider.beginUpdate(frameState);
-        
-        selectTilesForRendering(this, frameState);
-        createRenderCommandsForSelectedTiles(this, frameState);
-        
-        this._tileProvider.endUpdate(frameState);
+        var passes = frameState.passes;
+
+        if (passes.render) {
+            this._tileProvider.beginUpdate(frameState);
+
+            selectTilesForRendering(this, frameState);
+            createRenderCommandsForSelectedTiles(this, frameState);
+
+            this._tileProvider.endUpdate(frameState);
+        }
+
+        if (passes.pick && this._tilesToRender.length > 0) {
+            this._tileProvider.updateForPick(frameState);
+        }
     };
 
     /**
@@ -386,10 +393,8 @@ define([
         var i;
         var len;
 
-        var passes = frameState.passes;
-
         // Clear the render list.
-        var tilesToRender = passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
+        var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
 
         var traversalQueue = primitive._tileTraversalQueue;
@@ -465,7 +470,7 @@ define([
 
             if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
-                addTileToRenderList(primitive, frameState, tile);
+                addTileToRenderList(primitive, tile);
             } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
                 // SSE is not good enough and children are loaded, so refine.
                 var children = tile.children;
@@ -479,7 +484,7 @@ define([
                 }
             } else {
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
-                addTileToRenderList(primitive, frameState, tile);
+                addTileToRenderList(primitive, tile);
             }
         }
 
@@ -532,9 +537,8 @@ define([
         return maxGeometricError / pixelSize;
     }
 
-    function addTileToRenderList(primitive, frameState, tile) {
-        var tilesToRender = frameState.passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
-        tilesToRender.push(tile);
+    function addTileToRenderList(primitive, tile) {
+        primitive._tilesToRender.push(tile);
         ++primitive._debug.tilesRendered;
     }
 
@@ -691,7 +695,7 @@ define([
 
     function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
-        var tilesToRender = frameState.passes.render ? primitive._tilesToRender : primitive._tilesToRenderForPick;
+        var tilesToRender = primitive._tilesToRender;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
 
         tilesToRender.sort(tileDistanceSortFunction);
