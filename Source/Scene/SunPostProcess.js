@@ -215,7 +215,7 @@ define([
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
         var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
-        var downSampleSize = Math.max(downSampleWidth, downSampleHeight);
+        var downSampleSize = Math.max(1.0, Math.max(downSampleWidth, downSampleHeight));
 
         var downSampleViewport = downSampleViewportBoundingRectangle;
         downSampleViewport.width = downSampleSize;
