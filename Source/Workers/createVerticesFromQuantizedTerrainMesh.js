@@ -145,7 +145,7 @@ define([
 
                 if (exaggeration !== 1.0) {
                     var normal = AttributeCompression.octDecode(toPack.x, toPack.y, scratchNormal);
-                    var fromENUNormal = Transforms.eastNorthUpToFixedFrame(cartesian3Scratch, ellipsoid, scratchFromENU);
+                    var fromENUNormal = Transforms.eastNorthUpToFixedFrame(positions[j], ellipsoid, scratchFromENU);
                     var toENUNormal = Matrix4.inverseTransformation(fromENUNormal, scratchToENU);
 
                     Matrix4.multiplyByPointAsVector(toENUNormal, normal, normal);
