@@ -835,7 +835,7 @@ define([
                 }
                 id = uri + '#' + tokens[1];
             }
-            
+
             styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
@@ -1827,6 +1827,10 @@ define([
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
+
+        if(!defined(link)){
+            link = queryFirstNode(node, 'Url', namespaces.kml);
+        }
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {

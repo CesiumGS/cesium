@@ -4,6 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryPipeline',
         'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
@@ -12,6 +13,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryPipeline,
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
@@ -594,6 +596,35 @@ defineSuite([
         var geometry = PolygonGeometry.createGeometry(polygon);
 
         expect(geometry).toBeUndefined();
+    });
+
+    it('computes normals for perPositionHeight', function() {
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                positions: [new Cartesian3(1333485.211963876, -4654510.505548239, 4138557.5850382405),
+                            new Cartesian3(1333441.3994441305, -4654261.147368878, 4138322.784348336),
+                            new Cartesian3(1333521.9333286814, -4654490.298890729, 4138567.564118971)],
+                extrudedHeight: 56,
+                vertexFormat: VertexFormat.POSITION_AND_NORMAL,
+                perPositionHeight: true,
+                closeBottom: false
+            })
+        );
+
+        var normals = geometry.attributes.normal.values;
+
+        geometry = GeometryPipeline.computeNormal(geometry);
+        var expectedNormals = geometry.attributes.normal.values;
+
+        var notEqualCount = 0;
+        for (var i = 0; i < expectedNormals.length; i++) {
+            if (!CesiumMath.equalsEpsilon(normals[i], expectedNormals[i], CesiumMath.EPSILON6)) {
+                notEqualCount++;
+            }
+        }
+
+        //Exactly 2 normals will be different due to weird triangles on the walls of the extrusion
+        //PolygonGeometry needs major changes to how extruded walls are computed with perPositionHeight in order to improve this
+        expect(notEqualCount).toEqual(6);
     });
 
     var positions = Cartesian3.fromDegreesArray([
