@@ -8,7 +8,6 @@ define([
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/Ellipsoid',
-        '../Core/EllipsoidalOccluder',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix3',
@@ -26,7 +25,6 @@ define([
         Cartographic,
         defined,
         Ellipsoid,
-        EllipsoidalOccluder,
         IndexDatatype,
         CesiumMath,
         Matrix3,
@@ -111,7 +109,6 @@ define([
             Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
 
-        var occludeePointInScaledSpace;
         var orientedBoundingBox;
         var boundingSphere;
 
@@ -119,9 +116,6 @@ define([
             // Bounding volumes and horizon culling point need to be recomputed since the tile payload assumes no exaggeration.
             boundingSphere = BoundingSphere.fromPoints(positions);
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
-
-            var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromPoints(center, positions);
         }
 
         var hMin = minimumHeight;
@@ -189,7 +183,6 @@ define([
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace,
             encoding : encoding,
             skirtIndex : parameters.indices.length
         };

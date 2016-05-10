@@ -178,7 +178,7 @@ define([
             this._glowFactorDirty = false;
 
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
-            size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
+            size = Math.max(1.0, Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0));
 
             this._texture = new Texture({
                 context : context,
