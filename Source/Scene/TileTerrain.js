@@ -64,19 +64,15 @@ define([
         if (defined(this.vertexArray)) {
             var indexBuffer = this.vertexArray.indexBuffer;
 
-            --this.vertexArray.referenceCount;
-            if (this.vertexArray.referenceCount === 0) {
-                this.vertexArray.destroy();
-            }
+            this.vertexArray.destroy();
+            this.vertexArray = undefined;
 
-            if (this.vertexArray.isDestroyed() && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
                 }
             }
-
-            this.vertexArray = undefined;
         }
     };
 
@@ -97,13 +93,6 @@ define([
         });
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
-
-        // Free the tile's existing vertex array, if any.
-        surfaceTile.freeVertexArray();
-
-        // Transfer ownership of the vertex array to the tile itself.
-        surfaceTile.vertexArray = this.vertexArray;
-        this.vertexArray = undefined;
     };
 
     TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level) {
@@ -133,12 +122,12 @@ define([
 
             var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
             terrainProvider._requestError = TileProviderError.handleError(
-                    terrainProvider._requestError,
-                    terrainProvider,
-                    terrainProvider.errorEvent,
-                    message,
-                    x, y, level,
-                    doRequest);
+                terrainProvider._requestError,
+                terrainProvider,
+                terrainProvider.errorEvent,
+                message,
+                x, y, level,
+                doRequest);
         }
 
         function doRequest() {
@@ -255,7 +244,6 @@ define([
             attributes : attributes,
             indexBuffer : indexBuffer
         });
-        tileTerrain.vertexArray.referenceCount = 1;
 
         tileTerrain.state = TerrainState.READY;
     }

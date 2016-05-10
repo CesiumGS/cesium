@@ -149,7 +149,8 @@ define([
         this._pickCommands = [];
         this._usedDrawCommands = 0;
         this._usedPickCommands = 0;
-        this._commandFrameCount = 0;
+
+        this._vertexArraysToDestroy = [];
 
         this._debug = {
             wireframe : false,
@@ -283,6 +284,18 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+    function freeVertexArray(vertexArray) {
+        var indexBuffer = vertexArray.indexBuffer;
+        vertexArray.destroy();
+
+        if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            --indexBuffer.referenceCount;
+            if (indexBuffer.referenceCount === 0) {
+                indexBuffer.destroy();
+            }
+        }
+    }
+
     /**
      * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * @param {FrameState} frameState The frame state.
@@ -317,6 +330,13 @@ define([
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+
+        var vertexArraysToDestroy = this._vertexArraysToDestroy;
+        var length = vertexArraysToDestroy.length;
+        for (var j = 0; j < length; ++j) {
+            freeVertexArray(vertexArraysToDestroy[j]);
+        }
+        vertexArraysToDestroy.length = 0;
     };
 
     /**
@@ -332,28 +352,6 @@ define([
             if (defined(tiles)) {
                 tiles.length = 0;
             }
-        }
-
-        // Release unused WebGL resources from cached commands once every 120 frames
-        if (this._commandFrameCount++ === 120) {
-            this._commandFrameCount = 0;
-
-            var j;
-
-            var commands = this._drawCommands;
-            var length = commands.length;
-            for (j = this._usedDrawCommands; j < length; ++j) {
-                swapCommandVertexArray(commands[j], undefined);
-            }
-
-            commands = this._pickCommands;
-            length = commands.length;
-            for (j = this._usedPickCommands; j < length; ++j) {
-                swapCommandVertexArray(commands[j], undefined);
-            }
-
-            this._drawCommands.length = 0;
-            this._pickCommands.length = 0;
         }
 
         this._usedDrawCommands = 0;
@@ -461,7 +459,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -892,30 +890,6 @@ define([
         };
     })();
 
-    function swapCommandVertexArray(command, vertexArray) {
-        if (defined(command.vertexArray)) {
-            var indexBuffer = command.vertexArray.indexBuffer;
-
-            --command.vertexArray.referenceCount;
-            if (command.vertexArray.referenceCount === 0) {
-                command.vertexArray.destroy();
-            }
-
-            if (command.vertexArray.isDestroyed() && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
-                --indexBuffer.referenceCount;
-                if (indexBuffer.referenceCount === 0) {
-                    indexBuffer.destroy();
-                }
-            }
-        }
-
-        command.vertexArray = vertexArray;
-
-        if (defined(vertexArray)) {
-            ++command.vertexArray.referenceCount;
-        }
-    }
-
     var otherPassesInitialColor = new Cartesian4(0.0, 0.0, 0.0, 0.0);
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1143,10 +1117,9 @@ define([
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
+            command.vertexArray = surfaceTile.vertexArray;
             command.uniformMap = uniformMap;
             command.pass = Pass.GLOBE;
-
-            swapCommandVertexArray(command, surfaceTile.vertexArray);
 
             if (tileProvider._debug.wireframe) {
                 createWireframeVertexArrayIfNecessary(context, tileProvider, tile);
@@ -1199,12 +1172,11 @@ define([
 
         pickCommand.owner = drawCommand.owner;
         pickCommand.primitiveType = drawCommand.primitiveType;
+        pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
         pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
-
-        swapCommandVertexArray(pickCommand, drawCommand.vertexArray);
 
         frameState.commandList.push(pickCommand);
     }
