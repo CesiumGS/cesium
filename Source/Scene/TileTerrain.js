@@ -64,15 +64,19 @@ define([
         if (defined(this.vertexArray)) {
             var indexBuffer = this.vertexArray.indexBuffer;
 
-            this.vertexArray.destroy();
-            this.vertexArray = undefined;
+            --this.vertexArray.referenceCount;
+            if (this.vertexArray.referenceCount === 0) {
+                this.vertexArray.destroy();
+            }
 
-            if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            if (this.vertexArray.isDestroyed() && !indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
                 --indexBuffer.referenceCount;
                 if (indexBuffer.referenceCount === 0) {
                     indexBuffer.destroy();
                 }
             }
+
+            this.vertexArray = undefined;
         }
     };
 
