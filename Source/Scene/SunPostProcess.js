@@ -215,7 +215,11 @@ define([
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
         var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
-        var downSampleSize = Math.max(1.0, Math.max(downSampleWidth, downSampleHeight));
+
+        // The size computed above can be less than 1.0 if size < 4.0. This will probably
+        // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
+        // errors in the tests.
+        var downSampleSize = Math.max(1.0, downSampleWidth, downSampleHeight);
 
         var downSampleViewport = downSampleViewportBoundingRectangle;
         downSampleViewport.width = downSampleSize;
