@@ -1625,9 +1625,9 @@ defineSuite([
         expect(entity.model.scale.getValue(validTime)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(validTime)).toEqual(5.0);
         expect(entity.model.uri.getValue(validTime)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
-        expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
-        expect(entity.model.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
-        expect(entity.model.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
+        expect(entity.model.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.model.receiveShadows.getValue(validTime)).toEqual(true);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
         expect(nodeTransform).toBeDefined();
