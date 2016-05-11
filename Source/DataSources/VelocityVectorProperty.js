@@ -115,14 +115,21 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     VelocityVectorProperty.prototype.getValue = function(time, result) {
+        return this._getValue(time, result);
+    };
+
+    /**
+     * @private
+     */
+    VelocityVectorProperty.prototype._getValue = function(time, velocityResult, positionResult) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            result = new Cartesian3();
+        if (!defined(velocityResult)) {
+            velocityResult = new Cartesian3();
         }
 
         var property = this._position;
@@ -152,8 +159,12 @@ define([
             return undefined;
         }
 
+        if (defined(positionResult)) {
+            position1.clone(positionResult);
+        }
+
         var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
-        return Cartesian3.normalize(velocity, result);
+        return Cartesian3.normalize(velocity, velocityResult);
     };
 
     /**

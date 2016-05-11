@@ -24,7 +24,7 @@ defineSuite([
         expect(property.isConstant).toBe(true);
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBeUndefined();
-        expect(property.getValue(time)).toBe(undefined);
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('can construct with arguments', function() {
@@ -33,7 +33,7 @@ defineSuite([
         expect(property.isConstant).toBe(true);
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBe(position);
-        expect(property.getValue(time)).toBe(undefined);
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('setting position raises definitionChanged event', function() {
