@@ -109,7 +109,14 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
-                model.readyPromise.otherwise(onModelError);
+                model.readyPromise.then(function (model) {
+                    entity._model._ready = true;
+                    entity._model._readyPromise.resolve(model);
+                }, function (error) {
+                    entity._model._ready = false;
+                    entity._model._readyPromise.resolve(model);
+                    onModelError(error);
+                });
 
                 model.id = entity;
                 primitives.add(model);
