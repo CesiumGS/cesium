@@ -835,7 +835,7 @@ define([
                 }
                 id = uri + '#' + tokens[1];
             }
-            
+
             styleEntity = styleCollection.getById(id);
             if (!defined(styleEntity)) {
                 styleEntity = styleCollection.getById('#' + id);
@@ -1827,6 +1827,10 @@ define([
         var networkEntity = r.entity;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
+
+        if(!defined(link)){
+            link = queryFirstNode(node, 'Url', namespaces.kml);
+        }
         if (defined(link)) {
             var href = queryStringValue(link, 'href', namespaces.kml);
             if (defined(href)) {
@@ -2138,7 +2142,7 @@ define([
         }
 
         if (showWarning) {
-            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.21.');
+            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.22.');
         }
 
         this._changed = new Event();

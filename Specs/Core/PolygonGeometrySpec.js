@@ -4,6 +4,7 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryPipeline',
         'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
@@ -12,6 +13,7 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryPipeline,
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
@@ -20,6 +22,15 @@ defineSuite([
     it('throws without hierarchy', function() {
         expect(function() {
             return new PolygonGeometry();
+        }).toThrowDeveloperError();
+    });
+
+    it('throws with height when perPositionHeight is true', function() {
+        expect(function() {
+            return new PolygonGeometry({
+                height: 30,
+                perPositionHeight: true
+            });
         }).toThrowDeveloperError();
     });
 
@@ -378,6 +389,64 @@ defineSuite([
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
+    it('computes positions extruded and not closeTop', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([
+                                                         -1.0, -1.0,
+                                                         1.0, -1.0,
+                                                         1.0, 1.0,
+                                                         -1.0, 1.0
+                                                     ]),
+             extrudedHeight: 30000,
+             closeTop: false
+         }));
+
+        var numVertices = 37; // 13 bottom + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
+        var numTriangles = 32; // 16 bottom fill + 2 triangles * 4 sides
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(p.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes positions extruded and not closeBottom', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([
+                                                         -1.0, -1.0,
+                                                         1.0, -1.0,
+                                                         1.0, 1.0,
+                                                         -1.0, 1.0
+                                                     ]),
+             extrudedHeight: 30000,
+             closeBottom: false
+         }));
+
+        var numVertices = 37; // 13 top + 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
+        var numTriangles = 32; // 16 top fill + 2 triangles * 4 sides
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(p.indices.length).toEqual(numTriangles * 3);
+    });
+
+    it('computes positions extruded and not closeBottom or closeTop', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+             vertexFormat : VertexFormat.POSITION_ONLY,
+             positions : Cartesian3.fromDegreesArray([
+                                                         -1.0, -1.0,
+                                                         1.0, -1.0,
+                                                         1.0, 1.0,
+                                                         -1.0, 1.0
+                                                     ]),
+             extrudedHeight: 30000,
+             closeTop: false,
+             closeBottom: false
+         }));
+
+        var numVertices = 24; // 8 top edge + 8 bottom edge + 4 top corner + 4 bottom corner
+        var numTriangles = 16; // 2 triangles * 4 sides
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(p.indices.length).toEqual(numTriangles * 3);
+    });
+
     it('removes duplicates extruded', function() {
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.POSITION_ONLY,
@@ -529,6 +598,35 @@ defineSuite([
         expect(geometry).toBeUndefined();
     });
 
+    it('computes normals for perPositionHeight', function() {
+        var geometry = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+                positions: [new Cartesian3(1333485.211963876, -4654510.505548239, 4138557.5850382405),
+                            new Cartesian3(1333441.3994441305, -4654261.147368878, 4138322.784348336),
+                            new Cartesian3(1333521.9333286814, -4654490.298890729, 4138567.564118971)],
+                extrudedHeight: 56,
+                vertexFormat: VertexFormat.POSITION_AND_NORMAL,
+                perPositionHeight: true,
+                closeBottom: false
+            })
+        );
+
+        var normals = geometry.attributes.normal.values;
+
+        geometry = GeometryPipeline.computeNormal(geometry);
+        var expectedNormals = geometry.attributes.normal.values;
+
+        var notEqualCount = 0;
+        for (var i = 0; i < expectedNormals.length; i++) {
+            if (!CesiumMath.equalsEpsilon(normals[i], expectedNormals[i], CesiumMath.EPSILON6)) {
+                notEqualCount++;
+            }
+        }
+
+        //Exactly 2 normals will be different due to weird triangles on the walls of the extrusion
+        //PolygonGeometry needs major changes to how extruded walls are computed with perPositionHeight in order to improve this
+        expect(notEqualCount).toEqual(6);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -124.0, 35.0,
         -110.0, 35.0,
@@ -559,7 +657,9 @@ defineSuite([
         vertexFormat : VertexFormat.POSITION_ONLY,
         polygonHierarchy : hierarchy,
         granularity : CesiumMath.PI_OVER_THREE,
-        perPositionHeight : true
+        perPositionHeight : true,
+        closeTop : false,
+        closeBottom : true
     });
 
     function addPositions(array, positions) {
@@ -574,6 +674,6 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 49);
+    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 51);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });
