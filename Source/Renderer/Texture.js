@@ -136,14 +136,12 @@ define([
 
         var gl = context._gl;
         var textureTarget = gl.TEXTURE_2D;
-        var framebufferTarget = gl.FRAMEBUFFER;
-        var texture;
+        var texture = gl.createTexture();
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(textureTarget, texture);
 
         if (defined(source)) {
-            texture = gl.createTexture();
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(textureTarget, texture);
-
             // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
             gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
@@ -166,26 +164,10 @@ define([
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
                 gl.texImage2D(textureTarget, 0, internalFormat, pixelFormat, pixelDatatype, source);
             }
-            gl.bindTexture(textureTarget, null);
         } else {
-            // Initialize the pixels to zero to make sure that the texture was loaded, this is a workaround for chrome and may not always be necessary
-            var framebuffer = gl.createFramebuffer();
-            gl.bindFramebuffer(framebufferTarget, framebuffer);
-
-            texture = gl.createTexture();
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(textureTarget, texture);
             gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, null);
-            gl.framebufferTexture2D(framebufferTarget, gl.COLOR_ATTACHMENT0, textureTarget, texture, 0);
-
-            if(pixelFormat === gl.RGBA) {
-                gl.clear(gl.COLOR_BUFFER_BIT);
-            }
-
-            gl.bindTexture(textureTarget, null);
-            gl.bindFramebuffer(framebufferTarget, null);
-            gl.deleteFramebuffer(framebuffer);
         }
+        gl.bindTexture(textureTarget, null);
 
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
