@@ -109,14 +109,7 @@ define([
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
-                model.readyPromise.then(function (model) {
-                    entity._model._ready = true;
-                    entity._model._readyPromise.resolve(model);
-                }, function (error) {
-                    entity._model._ready = false;
-                    entity._model._readyPromise.resolve(model);
-                    onModelError(error);
-                });
+               setupPromiseCallback(model, entity);
 
                 model.id = entity;
                 primitives.add(model);
@@ -298,6 +291,23 @@ define([
 
     function onModelError(error) {
         console.error(error);
+    }
+    
+     /**
+     * to setup the promise / failure for model. 
+     * 
+     * @param model (description)
+     * @param entity (description)
+     */
+    function setupPromiseCallback(model, entity){
+        model.readyPromise.then(function (model) {
+                entity._model._ready = true;
+                entity._model._readyPromise.resolve(model);
+        }, function (error) {
+                entity._model._ready = false;
+                entity._model._readyPromise.resolve(model);
+                onModelError(error);
+        });
     }
 
     return ModelVisualizer;

@@ -193,10 +193,10 @@ define([
          *
          * @example
          * // Play all animations at half-speed when the model is ready to render
-         * Cesium.when(entity.readyPromise).then(function(model) {
-         *   window.alert("entity loaded successfully");
+         * Cesium.when(entity._model.readyPromise).then(function(model) {
+         *   // success call
          * }).otherwise(function(error){
-         *   window.alert(error);
+         *   // fail call
          * });
          *
          * @see ModelGraphics#ready
