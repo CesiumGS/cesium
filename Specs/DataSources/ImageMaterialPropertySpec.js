@@ -2,6 +2,7 @@
 defineSuite([
         'DataSources/ImageMaterialProperty',
         'Core/Cartesian2',
+        'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
@@ -9,6 +10,7 @@ defineSuite([
     ], function(
         ImageMaterialProperty,
         Cartesian2,
+        Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
@@ -22,24 +24,27 @@ defineSuite([
         var result = property.getValue();
         expect(result.image).toBeUndefined();
         expect(result.repeat).toEqual(new Cartesian2(1.0, 1.0));
-        expect(result.alpha).toEqual(1.0);
+        expect(result.color).toEqual(Color.WHITE);
     });
 
     it('constructor sets options and allows raw assignment', function() {
         var options = {
             image : 'test.invalid',
             repeat : new Cartesian2(1, 2),
-            alpha : 0.5
+            color : Color.RED.withAlpha(0.5),
+            transparent: true
         };
 
         var property = new ImageMaterialProperty(options);
         expect(property.image).toBeInstanceOf(ConstantProperty);
         expect(property.repeat).toBeInstanceOf(ConstantProperty);
-        expect(property.alpha).toBeInstanceOf(ConstantProperty);
+        expect(property.color).toBeInstanceOf(ConstantProperty);
+        expect(property.transparent).toBeInstanceOf(ConstantProperty);
 
         expect(property.image.getValue()).toEqual(options.image);
         expect(property.repeat.getValue()).toEqual(options.repeat);
-        expect(property.alpha.getValue()).toEqual(options.alpha);
+        expect(property.color.getValue()).toEqual(options.color);
+        expect(property.transparent.getValue()).toEqual(options.transparent);
     });
 
     it('works with constant values', function() {

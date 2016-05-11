@@ -21,8 +21,11 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/Camera',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -47,8 +50,11 @@ defineSuite([
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
+        Camera,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
+        createCamera,
         pollToPromise,
         when) {
     "use strict";
@@ -684,6 +690,23 @@ defineSuite([
             var entity = dataSource.entities.values[0];
             expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
             expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+        });
+    });
+
+    it('GroundOverlay: Sets rectangle image material', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <color>7F0000FF</color>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+            </Icon>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
+            expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127/255));
         });
     });
 
@@ -3093,6 +3116,27 @@ defineSuite([
         });
     });
 
+    it('NetworkLink can accept invalid but common URL tag instead of Link', function(){
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Url>\
+              <href>./Data/KML/refresh.kml</href>\
+            </Url>\
+          </NetworkLink>';
+
+        var requestNetworkLink = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual('./Data/KML/refresh.kml');
+        });
+    });
+
     it('NetworkLink: Url is correct on initial load with onStop defaults', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
@@ -3317,7 +3361,7 @@ defineSuite([
 			expect(polyline.width.getValue()).toEqual(10);
 		});
 	});
-	
+
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -3695,6 +3739,30 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.log.calls.count()).toEqual(1);
             expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
+
+    it('NetworkLink: Heading and pitch can be undefined if the camera is in morphing mode', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        var camera = createCamera();
+        Camera.clone(options.camera, camera);
+
+        var kmlOptions = {
+            camera: camera,
+            canvas: options.canvas
+        };
+
+        camera._mode = SceneMode.MORPHING;
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
         });
     });
 });

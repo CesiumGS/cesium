@@ -377,7 +377,9 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
                 'logo.png',
                 'package.json',
                 'server.js',
-                'web.config'
+                'web.config',
+                '*.zip',
+                '*.tgz'
             ], {
                 dot : true, // include hidden files
                 nodir : true // only directory files
@@ -460,21 +462,29 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
         .then(function() {
             console.log('Skipped ' + skipped + ' files and successfully uploaded ' + uploaded + ' files of ' + (totalFiles - skipped) + ' files.');
             if (existingBlobs.length === 0) {
-               return;
+                return;
             }
 
-            console.log('Cleaning up old files...');
-            return s3.deleteObjectsAsync({
-                Bucket : bucketName,
-                Delete : {
-                    Objects : existingBlobs.map(function(file) {
-                        return {Key : file};
-                    })
+            var objectToDelete = [];
+            existingBlobs.forEach(function(file) {
+                //Don't delete generate zip files.
+                if (!/\.(zip|tgz)$/.test(file)) {
+                    objectToDelete.push({Key : file});
                 }
-            })
-            .then(function() {
-                console.log('Cleaned ' + existingBlobs.length + ' files.');
             });
+
+            if (objectToDelete.length > 0) {
+                console.log('Cleaning up old files...');
+                return s3.deleteObjectsAsync({
+                                                 Bucket : bucketName,
+                                                 Delete : {
+                                                     Objects : objectToDelete
+                                                 }
+                                             })
+                    .then(function() {
+                        console.log('Cleaned ' + existingBlobs.length + ' files.');
+                    });
+            }
         })
         .catch(function(error) {
             errors.push(error);
@@ -539,24 +549,37 @@ function listAll(s3, bucketName, directory, files, marker) {
     });
 }
 
-gulp.task('deploy-status-pending', function (done) {
-    var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
-    setStatus('pending', deployUrl, 'Deploying build...', 'deployment', done);
+gulp.task('deploy-set-version', function() {
+    var version = yargs.argv.version;
+    if (version) {
+        packageJson.version += '-' + version;
+        fs.writeFileSync('package.json', JSON.stringify(packageJson, undefined, 2));
+    }
 });
 
-gulp.task('deploy-status-success', function (done) {
+gulp.task('deploy-status', function() {
+    var status = yargs.argv.status;
+    var message = yargs.argv.message;
+
     var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
-    setStatus('success', deployUrl, 'The build has been successfully deployed.', 'deployment', done);
+    var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
+    var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+
+    return Promise.join(
+        setStatus(status, deployUrl, message, 'deployment'),
+        setStatus(status, zipUrl, message, 'zip file'),
+        setStatus(status, npmUrl, message, 'npm package')
+    );
 });
 
-function setStatus(state, targetUrl, description, context, done) {
+function setStatus(state, targetUrl, description, context) {
     // skip if the environment does not have the token
     if (!process.env.TOKEN) {
-        done();
         return;
     }
 
-    request.post({
+    var requestPost = Promise.promisify(request.post);
+    return requestPost({
          url: 'https://api.github.com/repos/' + process.env.TRAVIS_REPO_SLUG + '/statuses/' + process.env.TRAVIS_COMMIT,
          json: true,
          headers: {
@@ -569,7 +592,7 @@ function setStatus(state, targetUrl, description, context, done) {
              description: description,
              context: context
          }
-     }, done);
+     });
 }
 
 gulp.task('release', ['combine', 'minifyRelease', 'generateDocumentation']);
