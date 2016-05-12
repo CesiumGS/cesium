@@ -45,7 +45,21 @@ define([
     var scratchPlaneNormal = new Cartesian3();
     var scratchPlane = new Plane(new Cartesian3(), 0.0);
 
+    /**
+     * Constructs a culling volume from a bounding sphere. Creates six planes that create a box containing the sphere.
+     * The planes are aligned to the x, y, and z axes in world coordinates.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere used to create the culling volume.
+     * @param {CullingVolume} [result] The object onto which to store the result.
+     * @returns {CullingVolume} The culling volume created from the bounding sphere.
+     */
     CullingVolume.fromBoundingSphere = function(boundingSphere, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
         if (!defined(result)) {
             result = new CullingVolume();
         }
