@@ -184,6 +184,7 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadowsEnabled=false] Determines if shadows are cast by the sun.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -550,7 +551,7 @@ define([
         this.shadowMap = new ShadowMap({
             context : context,
             lightCamera : this._sunCamera,
-            enabled : false
+            enabled : defaultValue(options.shadowsEnabled, false)
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1946,37 +1947,40 @@ define([
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
+            var right = camera.frustum.right;
             camera.frustum.right = maxCoord.x - x;
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x += windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var right = camera.frustum.right;
-            camera.frustum.right = -camera.frustum.left;
-            camera.frustum.left = -right;
+            camera.frustum.left = -camera.frustum.right;
+            camera.frustum.right = camera.frustum.left + (right - camera.frustum.right);
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
-            viewport.x += windowCoordinates.x;
-            viewport.width -= windowCoordinates.x;
+            viewport.x = windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
+            var left = camera.frustum.left;
             camera.frustum.left = -maxCoord.x - x;
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
-            viewport.x = viewport.x - viewport.width;
+            viewport.x = 0;
+            viewport.width = windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var left = camera.frustum.left;
-            camera.frustum.left = -camera.frustum.right;
-            camera.frustum.right = -left;
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = camera.frustum.right + (left - camera.frustum.left);
+
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);

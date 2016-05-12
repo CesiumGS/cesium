@@ -300,18 +300,4 @@ defineSuite([
             '}';
         context.verifyDrawForSpecs(fs);
     });
-
-    it('has czm_cubeMapToUV', function() {
-        var fs =
-            'void main() { ' +
-            '  bool positiveX = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(1.0, 0.0, 0.0)) - vec2(0.16, 0.75)), vec2(0.01)));' +
-            '  bool negativeX = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(-1.0, 0.0, 0.0)) - vec2(0.16, 0.25)), vec2(0.01)));' +
-            '  bool positiveY = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(0.0, 1.0, 0.0)) - vec2(0.5, 0.75)), vec2(0.01)));' +
-            '  bool negativeY = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(0.0, -1.0, 0.0)) - vec2(0.5, 0.25)), vec2(0.01)));' +
-            '  bool positiveZ = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(0.0, 0.0, 1.0)) - vec2(0.83, 0.75)), vec2(0.01)));' +
-            '  bool negativeZ = all(lessThanEqual(abs(czm_cubeMapToUV(vec3(0.0, 0.0, -1.0)) - vec2(0.83, 0.25)), vec2(0.01)));' +
-            '  gl_FragColor = vec4(positiveX && negativeX && positiveY && negativeY && positiveZ && negativeZ);' +
-            '}';
-        context.verifyDrawForSpecs(fs);
-    });
 }, 'WebGL');

@@ -29,6 +29,7 @@ define([
         '../Core/Quaternion',
         '../Core/SphereOutlineGeometry',
         '../Renderer/ClearCommand',
+        '../Renderer/ContextLimits',
         '../Renderer/CubeMap',
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
@@ -84,6 +85,7 @@ define([
         Quaternion,
         SphereOutlineGeometry,
         ClearCommand,
+        ContextLimits,
         CubeMap,
         DrawCommand,
         Framebuffer,
@@ -125,7 +127,8 @@ define([
      * @param {Boolean} [options.pointLightRadius=100.0] Radius of the point light.
      * @param {Boolean} [options.cascadesEnabled=true] Use multiple shadow maps to cover different partitions of the view frustum.
      * @param {Number} [options.numberOfCascades=4] The number of cascades to use for the shadow map. Supported values are one and four.
-     * @param {Number} [options.size=1024] The width and height, in pixels, of each shadow map.
+     * @param {Number} [options.maximumDistance=5000.0] The maximum distance used for generating cascaded shadows. Lower values improve shadow quality.
+     * @param {Number} [options.size=2048] The width and height, in pixels, of each shadow map.
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      * @param {Number} [options.darkness=0.3] The shadow darkness.
      *
@@ -206,9 +209,6 @@ define([
         this._lightPositionEC = new Cartesian4();
         this._distance = 0.0;
 
-        this._shadowMapSize = defaultValue(options.size, 1024);
-        this._textureSize = new Cartesian2(this._shadowMapSize, this._shadowMapSize);
-
         this._lightCamera = options.lightCamera;
         this._shadowMapCamera = new ShadowMapCamera();
         this._shadowMapCullingVolume = undefined;
@@ -221,8 +221,10 @@ define([
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-        this._maximumDistance = 5000.0;
+        this._maximumDistance = defaultValue(options.maximumDistance, 5000.0);
         this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
+
+        this._textureSize = new Cartesian2();
 
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
@@ -284,7 +286,8 @@ define([
 
         this._clearPassState = new PassState(context);
 
-        this.setSize(this._shadowMapSize);
+        var size = defaultValue(options.size, 2048);
+        this.setSize(size);
     }
 
     // Global maximum shadow distance used to prevent far off receivers from extending
@@ -532,15 +535,15 @@ define([
     function createFramebufferCube(shadowMap, context) {
         var depthRenderbuffer = new Renderbuffer({
             context : context,
-            width : shadowMap._shadowMapSize,
-            height : shadowMap._shadowMapSize,
+            width : shadowMap._textureSize.x,
+            height : shadowMap._textureSize.y,
             format : RenderbufferFormat.DEPTH_COMPONENT16
         });
 
         var cubeMap = new CubeMap({
             context : context,
-            width : shadowMap._shadowMapSize,
-            height : shadowMap._shadowMapSize,
+            width : shadowMap._textureSize.x,
+            height : shadowMap._textureSize.y,
             pixelFormat : PixelFormat.RGBA,
             pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
             sampler : createSampler()
@@ -604,12 +607,12 @@ define([
     }
 
     ShadowMap.prototype.setSize = function(size) {
-        this._shadowMapSize = size;
         var passes = this._passes;
         var numberOfPasses = passes.length;
         var textureSize = this._textureSize;
 
         if (this._isPointLight) {
+            size = (ContextLimits.maximumCubeMapSize >= size) ? size : ContextLimits.maximumCubeMapSize;
             textureSize.x = size;
             textureSize.y = size;
             var faceViewport = new BoundingRectangle(0, 0, size, size);
@@ -623,6 +626,7 @@ define([
             // +----+
             // |  1 |
             // +----+
+            size = (ContextLimits.maximumTextureSize >= size) ? size : ContextLimits.maximumTextureSize;
             textureSize.x = size;
             textureSize.y = size;
             passes[0].passState.viewport = new BoundingRectangle(0, 0, size, size);
@@ -632,6 +636,7 @@ define([
             // +----+----+
             // |  1 |  2 |
             // +----+----+
+            size = (ContextLimits.maximumTextureSize >= size * 2) ? size : ContextLimits.maximumTextureSize / 2;
             textureSize.x = size * 2;
             textureSize.y = size * 2;
             passes[0].passState.viewport = new BoundingRectangle(0, 0, size, size);

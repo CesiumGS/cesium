@@ -354,6 +354,13 @@ defineSuite([
         viewer.render();
     });
 
+    it('can set shadowsEnabled', function() {
+        viewer = createViewer(container, {
+            shadowsEnabled : true
+        });
+        expect(viewer.shadowsEnabled).toBe(true);
+    });
+
     it('can set terrainProvider', function() {
         var provider = new EllipsoidTerrainProvider();
 

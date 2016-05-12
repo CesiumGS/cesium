@@ -305,10 +305,10 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model will cast shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model will receive shadows from any shadow casters in the scene.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -473,6 +473,26 @@ define([
         this._asynchronous = defaultValue(options.asynchronous, true);
 
         /**
+         * Determines whether the model casts shadows from each light source.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.castShadows = defaultValue(options.castShadows, true);
+        this._castShadows = this.castShadows;
+
+        /**
+         * Determines whether the model receives shadows from shadow casters in the scene.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.receiveShadows = defaultValue(options.receiveShadows, true);
+        this._receiveShadows = this.receiveShadows;
+
+        /**
          * This property is for debugging only; it is not for production use nor is it optimized.
          * <p>
          * Draws the bounding sphere for each draw command in the model.  A glTF primitive corresponds
@@ -558,9 +578,6 @@ define([
         // CESIUM_RTC extension
         this._rtcCenter = undefined;    // in world coordinates
         this._rtcCenterEye = undefined; // in eye coordinates
-
-        this._castShadows = defaultValue(options.castShadows, true);
-        this._receiveShadows = defaultValue(options.receiveShadows, true);
     }
 
     defineProperties(Model.prototype, {
@@ -798,54 +815,6 @@ define([
         },
 
         /**
-         * Determines whether the model will cast shadows from each light source.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        castShadows : {
-            get : function() {
-                return this._castShadows;
-            },
-            set : function(value) {
-                if (value !== this._castShadows) {
-                    this._castShadows = value;
-                    var length = this._nodeCommands.length;
-                    for (var i = 0; i < length; ++i) {
-                        this._nodeCommands[i].command.castShadows = value;
-                    }
-                }
-            }
-        },
-
-        /**
-         * Determines whether the model will receive shadows from any shadow casters in the scene.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        receiveShadows : {
-            get : function() {
-                return this._receiveShadows;
-            },
-            set : function(value) {
-                if (value !== this._receiveShadows) {
-                    this._receiveShadows = value;
-                    var length = this._nodeCommands.length;
-                    for (var i = 0; i < length; ++i) {
-                        this._nodeCommands[i].command.receiveShadows = value;
-                    }
-                }
-            }
-        },
-
-        /**
          * Returns true if the model was transformed this frame
          *
          * @memberof Model.prototype
@@ -937,10 +906,10 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model will cast shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model will receive shadows from any shadow casters in the scene.
      *
      * @returns {Model} The newly created model.
      *
@@ -3017,8 +2986,26 @@ define([
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
 
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
+            }
+        }
+    }
+
+    function updateShadows(model) {
+        if ((model.castShadows !== model._castShadows) || (model.receiveShadows !== model._receiveShadows)) {
+            model._castShadows = model.castShadows;
+            model._receiveShadows = model.receiveShadows;
+
+            var castShadows = model.castShadows;
+            var receiveShadows = model.receiveShadows;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                var nodeCommand = nodeCommands[i];
+                nodeCommand.command.castShadows = castShadows;
+                nodeCommand.command.receiveShadows = receiveShadows;
             }
         }
     }
@@ -3294,6 +3281,7 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
+            updateShadows(this);
         }
 
         if (justLoaded) {
