@@ -58,6 +58,7 @@ defineSuite([
         }
         expect(culling.computeVisibilityWithPlaneMask(bound, mask)).toEqual(mask);
     }
+
     describe('box intersections', function() {
 
         it('can contain an axis aligned bounding box', function() {
@@ -267,6 +268,131 @@ defineSuite([
 
             it('past the bottom plane', function() {
                 var sphere13 = BoundingSphere.fromPoints([new Cartesian3(-0.5, -4.5, -1.25), new Cartesian3(-0.5, -5, -1.25)]);
+                testWithAndWithoutPlaneMask(cullingVolume, sphere13, Intersect.OUTSIDE);
+            });
+        });
+    });
+
+    describe('construct from bounding sphere', function() {
+        var boundingSphereCullingVolume = new BoundingSphere(new Cartesian3(1000.0, 2000.0, 3000.0), 100.0);
+        var cullingVolume = CullingVolume.fromBoundingSphere(boundingSphereCullingVolume);
+
+        it('can contain a volume', function() {
+            var sphere1 = BoundingSphere.clone(boundingSphereCullingVolume);
+            sphere1.radius *= 0.5;
+            testWithAndWithoutPlaneMask(cullingVolume, sphere1, Intersect.INSIDE);
+        });
+
+        describe('can partially contain a volume', function() {
+
+            it('on the far plane', function() {
+                var offset = new Cartesian3(0.0, 0.0, boundingSphereCullingVolume.radius * 1.5);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere2 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere2, Intersect.INTERSECTING);
+            });
+
+            it('on the near plane', function() {
+                var offset = new Cartesian3(0.0, 0.0, -boundingSphereCullingVolume.radius * 1.5);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere3 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere3, Intersect.INTERSECTING);
+            });
+
+            it('on the left plane', function() {
+                var offset = new Cartesian3(-boundingSphereCullingVolume.radius * 1.5, 0.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere4 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere4, Intersect.INTERSECTING);
+            });
+
+            it('on the right plane', function() {
+                var offset = new Cartesian3(boundingSphereCullingVolume.radius * 1.5, 0.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere5 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere5, Intersect.INTERSECTING);
+            });
+
+            it('on the top plane', function() {
+                var offset = new Cartesian3(0.0, boundingSphereCullingVolume.radius * 1.5, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere6 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere6, Intersect.INTERSECTING);
+            });
+
+            it('on the bottom plane', function() {
+                var offset = new Cartesian3(0.0, -boundingSphereCullingVolume.radius * 1.5, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere7 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere7, Intersect.INTERSECTING);
+            });
+        });
+
+        describe('can not contain a volume', function() {
+
+            it('past the far plane', function() {
+                var offset = new Cartesian3(0.0, 0.0, boundingSphereCullingVolume.radius * 2.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere8 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere8, Intersect.OUTSIDE);
+            });
+
+            it('before the near plane', function() {
+                var offset = new Cartesian3(0.0, 0.0, -boundingSphereCullingVolume.radius * 2.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere9 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere9, Intersect.OUTSIDE);
+            });
+
+            it('past the left plane', function() {
+                var offset = new Cartesian3(-boundingSphereCullingVolume.radius * 2.0, 0.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere10 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere10, Intersect.OUTSIDE);
+            });
+
+            it('past the right plane', function() {
+                var offset = new Cartesian3(boundingSphereCullingVolume.radius * 2.0, 0.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere11 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere11, Intersect.OUTSIDE);
+            });
+
+            it('past the top plane', function() {
+                var offset = new Cartesian3(0.0, boundingSphereCullingVolume.radius * 2.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere12 = new BoundingSphere(center, radius);
+
+                testWithAndWithoutPlaneMask(cullingVolume, sphere12, Intersect.OUTSIDE);
+            });
+
+            it('past the bottom plane', function() {
+                var offset = new Cartesian3(0.0, -boundingSphereCullingVolume.radius * 2.0, 0.0);
+                var center = Cartesian3.add(boundingSphereCullingVolume.center, offset, new Cartesian3());
+                var radius = boundingSphereCullingVolume.radius * 0.5;
+                var sphere13 = new BoundingSphere(center, radius);
+
                 testWithAndWithoutPlaneMask(cullingVolume, sphere13, Intersect.OUTSIDE);
             });
         });
