@@ -1244,12 +1244,8 @@ define([
                 return;
             }
 
-            // If the scene camera or light direction changes, then the shadow map needs to update
-            var sceneCameraChanged = !Matrix4.equals(sceneCamera.viewMatrix, camera.viewMatrix);
-            var directionChanged = !Cartesian3.equals(shadowMapCamera.directionWC, lightCamera.directionWC);
-            shadowMap._needsUpdate = sceneCameraChanged || directionChanged;
-
-            // By default cascaded shadows are always in view
+            // By default cascaded shadows need to update and are always in view
+            shadowMap._needsUpdate = true;
             shadowMap._outOfView = false;
         } else if (shadowMap._isPointLight) {
             // Sphere-frustum intersection test
