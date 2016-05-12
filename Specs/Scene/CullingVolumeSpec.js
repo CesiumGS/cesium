@@ -63,11 +63,11 @@ defineSuite([
 
         it('can contain an axis aligned bounding box', function() {
             var box1 = AxisAlignedBoundingBox.fromPoints([
-                                                   new Cartesian3(-0.5, 0, -1.25),
-                                                   new Cartesian3(0.5, 0, -1.25),
-                                                   new Cartesian3(-0.5, 0, -1.75),
-                                                   new Cartesian3(0.5, 0, -1.75)
-                                                  ]);
+                new Cartesian3(-0.5, 0, -1.25),
+                new Cartesian3(0.5, 0, -1.25),
+                new Cartesian3(-0.5, 0, -1.75),
+                new Cartesian3(0.5, 0, -1.75)
+            ]);
             testWithAndWithoutPlaneMask(cullingVolume, box1, Intersect.INSIDE);
         });
 
@@ -75,61 +75,61 @@ defineSuite([
 
             it('on the far plane', function() {
                 var box2 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, 0, -1.5),
-                                                       new Cartesian3(0.5, 0, -1.5),
-                                                       new Cartesian3(-0.5, 0, -2.5),
-                                                       new Cartesian3(0.5, 0, -2.5)
-                                                      ]);
+                    new Cartesian3(-0.5, 0, -1.5),
+                    new Cartesian3(0.5, 0, -1.5),
+                    new Cartesian3(-0.5, 0, -2.5),
+                    new Cartesian3(0.5, 0, -2.5)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box2, Intersect.INTERSECTING);
             });
 
             it('on the near plane', function() {
                 var box3 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, 0, -0.5),
-                                                       new Cartesian3(0.5, 0, -0.5),
-                                                       new Cartesian3(-0.5, 0, -1.5),
-                                                       new Cartesian3(0.5, 0, -1.5)
-                                                      ]);
+                    new Cartesian3(-0.5, 0, -0.5),
+                    new Cartesian3(0.5, 0, -0.5),
+                    new Cartesian3(-0.5, 0, -1.5),
+                    new Cartesian3(0.5, 0, -1.5)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box3, Intersect.INTERSECTING);
             });
 
             it('on the left plane', function() {
                 var box4 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-1.5, 0, -1.25),
-                                                       new Cartesian3(0, 0, -1.25),
-                                                       new Cartesian3(-1.5, 0, -1.5),
-                                                       new Cartesian3(0, 0, -1.5)
-                                                      ]);
+                    new Cartesian3(-1.5, 0, -1.25),
+                    new Cartesian3(0, 0, -1.25),
+                    new Cartesian3(-1.5, 0, -1.5),
+                    new Cartesian3(0, 0, -1.5)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box4, Intersect.INTERSECTING);
             });
 
             it('on the right plane', function() {
                 var box5 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(0, 0, -1.25),
-                                                       new Cartesian3(1.5, 0, -1.25),
-                                                       new Cartesian3(0, 0, -1.5),
-                                                       new Cartesian3(1.5, 0, -1.5)
-                                                      ]);
+                    new Cartesian3(0, 0, -1.25),
+                    new Cartesian3(1.5, 0, -1.25),
+                    new Cartesian3(0, 0, -1.5),
+                    new Cartesian3(1.5, 0, -1.5)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box5, Intersect.INTERSECTING);
             });
 
             it('on the top plane', function() {
                 var box6 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, 0, -1.25),
-                                                       new Cartesian3(0.5, 0, -1.25),
-                                                       new Cartesian3(-0.5, 2.0, -1.75),
-                                                       new Cartesian3(0.5, 2.0, -1.75)
-                                                      ]);
+                    new Cartesian3(-0.5, 0, -1.25),
+                    new Cartesian3(0.5, 0, -1.25),
+                    new Cartesian3(-0.5, 2.0, -1.75),
+                    new Cartesian3(0.5, 2.0, -1.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box6, Intersect.INTERSECTING);
             });
 
             it('on the bottom plane', function() {
                 var box7 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, -2.0, -1.25),
-                                                       new Cartesian3(0.5, 0, -1.25),
-                                                       new Cartesian3(-0.5, -2.0, -1.5),
-                                                       new Cartesian3(0.5, 0, -1.5)
-                                                      ]);
+                    new Cartesian3(-0.5, -2.0, -1.25),
+                    new Cartesian3(0.5, 0, -1.25),
+                    new Cartesian3(-0.5, -2.0, -1.5),
+                    new Cartesian3(0.5, 0, -1.5)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box7, Intersect.INTERSECTING);
             });
         });
@@ -138,61 +138,61 @@ defineSuite([
 
             it('past the far plane', function() {
                 var box8 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, 0, -2.25),
-                                                       new Cartesian3(0.5, 0, -2.25),
-                                                       new Cartesian3(-0.5, 0, -2.75),
-                                                       new Cartesian3(0.5, 0, -2.75)
-                                                      ]);
+                    new Cartesian3(-0.5, 0, -2.25),
+                    new Cartesian3(0.5, 0, -2.25),
+                    new Cartesian3(-0.5, 0, -2.75),
+                    new Cartesian3(0.5, 0, -2.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box8, Intersect.OUTSIDE);
             });
 
             it('before the near plane', function() {
                 var box9 = AxisAlignedBoundingBox.fromPoints([
-                                                       new Cartesian3(-0.5, 0, -0.25),
-                                                       new Cartesian3(0.5, 0, -0.25),
-                                                       new Cartesian3(-0.5, 0, -0.75),
-                                                       new Cartesian3(0.5, 0, -0.75)
-                                                      ]);
+                    new Cartesian3(-0.5, 0, -0.25),
+                    new Cartesian3(0.5, 0, -0.25),
+                    new Cartesian3(-0.5, 0, -0.75),
+                    new Cartesian3(0.5, 0, -0.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box9, Intersect.OUTSIDE);
             });
 
             it('past the left plane', function() {
                 var box10 = AxisAlignedBoundingBox.fromPoints([
-                                                        new Cartesian3(-5, 0, -1.25),
-                                                        new Cartesian3(-3, 0, -1.25),
-                                                        new Cartesian3(-5, 0, -1.75),
-                                                        new Cartesian3(-3, 0, -1.75)
-                                                       ]);
+                    new Cartesian3(-5, 0, -1.25),
+                    new Cartesian3(-3, 0, -1.25),
+                    new Cartesian3(-5, 0, -1.75),
+                    new Cartesian3(-3, 0, -1.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box10, Intersect.OUTSIDE);
             });
 
             it('past the right plane', function() {
                 var box11 = AxisAlignedBoundingBox.fromPoints([
-                                                        new Cartesian3(3, 0, -1.25),
-                                                        new Cartesian3(5, 0, -1.25),
-                                                        new Cartesian3(3, 0, -1.75),
-                                                        new Cartesian3(5, 0, -1.75)
-                                                       ]);
+                    new Cartesian3(3, 0, -1.25),
+                    new Cartesian3(5, 0, -1.25),
+                    new Cartesian3(3, 0, -1.75),
+                    new Cartesian3(5, 0, -1.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box11, Intersect.OUTSIDE);
             });
 
             it('past the top plane', function() {
                 var box12 = AxisAlignedBoundingBox.fromPoints([
-                                                        new Cartesian3(-0.5, 3, -1.25),
-                                                        new Cartesian3(0.5, 3, -1.25),
-                                                        new Cartesian3(-0.5, 5, -1.75),
-                                                        new Cartesian3(0.5, 5, -1.75)
-                                                       ]);
+                    new Cartesian3(-0.5, 3, -1.25),
+                    new Cartesian3(0.5, 3, -1.25),
+                    new Cartesian3(-0.5, 5, -1.75),
+                    new Cartesian3(0.5, 5, -1.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box12, Intersect.OUTSIDE);
             });
 
             it('past the bottom plane', function() {
                 var box13 = AxisAlignedBoundingBox.fromPoints([
-                                                        new Cartesian3(-0.5, -3, -1.25),
-                                                        new Cartesian3(0.5, -3, -1.25),
-                                                        new Cartesian3(-0.5, -5, -1.75),
-                                                        new Cartesian3(0.5, -5, -1.75)
-                                                       ]);
+                    new Cartesian3(-0.5, -3, -1.25),
+                    new Cartesian3(0.5, -3, -1.25),
+                    new Cartesian3(-0.5, -5, -1.75),
+                    new Cartesian3(0.5, -5, -1.75)
+                ]);
                 testWithAndWithoutPlaneMask(cullingVolume, box13, Intersect.OUTSIDE);
             });
 
