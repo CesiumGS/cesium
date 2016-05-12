@@ -288,14 +288,16 @@ defineSuite([
                 expect(childTile.data.waterMaskTexture).toBeDefined();
                 var childWaterMaskTexture = childTile.data.waterMaskTexture;
                 var referenceCount = childWaterMaskTexture.referenceCount;
+                var vertexArraysToDestroy = [];
 
                 return pollToPromise(function() {
-                    GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, []);
+                    GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, vertexArraysToDestroy);
                     return childTile.state === QuadtreeTileLoadState.DONE;
                 }).then(function() {
                     expect(childTile.data.waterMaskTexture).toBeDefined();
                     expect(childTile.data.waterMaskTexture).not.toBe(childWaterMaskTexture);
                     expect(childWaterMaskTexture.referenceCount + 1).toBe(referenceCount);
+                    expect(vertexArraysToDestroy.length).toEqual(1);
                 });
             });
         });
@@ -333,13 +335,16 @@ defineSuite([
                     expect(grandchildTile.data.loadedTerrain).toBeUndefined();
                     expect(grandchildTile.data.upsampledTerrain).toBeUndefined();
 
+                    var vertexArraysToDestroy = [];
+
                     return pollToPromise(function() {
-                        GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, []);
+                        GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, vertexArraysToDestroy);
                         return childTile.state === QuadtreeTileLoadState.DONE;
                     }).then(function() {
                         expect(grandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                         expect(grandchildTile.data.loadedTerrain).toBeUndefined();
                         expect(grandchildTile.data.upsampledTerrain).toBeUndefined();
+                        expect(vertexArraysToDestroy.length).toEqual(1);
                     });
                 });
             });
@@ -368,15 +373,18 @@ defineSuite([
                     expect(greatGrandchildTile.data.loadedTerrain).toBeUndefined();
                     expect(greatGrandchildTile.data.upsampledTerrain).toBeUndefined();
 
+                    var vertexArraysToBeDestroyed = [];
+
                     return pollToPromise(function() {
-                        GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, []);
-                        GlobeSurfaceTile.processStateMachine(grandchildTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, []);
+                        GlobeSurfaceTile.processStateMachine(childTile, scene.frameState, realTerrainProvider, imageryLayerCollection, vertexArraysToBeDestroyed);
+                        GlobeSurfaceTile.processStateMachine(grandchildTile, scene.frameState, alwaysDeferTerrainProvider, imageryLayerCollection, vertexArraysToBeDestroyed);
                         return childTile.state === QuadtreeTileLoadState.DONE &&
                                !defined(grandchildTile.data.upsampledTerrain);
                     }).then(function() {
                         expect(greatGrandchildTile.state).toBe(QuadtreeTileLoadState.DONE);
                         expect(greatGrandchildTile.data.loadedTerrain).toBeUndefined();
                         expect(greatGrandchildTile.data.upsampledTerrain).toBeUndefined();
+                        expect(vertexArraysToBeDestroyed.length).toEqual(2);
                     });
                 });
             });
