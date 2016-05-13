@@ -2029,6 +2029,10 @@ define([
         }
     }
 
+    var scratchShadowMapPasses = [{
+        camera : undefined
+    }];
+
     function updateShadowMaps(scene) {
         var frameState = scene._frameState;
         var globe = scene._globe;
@@ -2039,21 +2043,33 @@ define([
             shadowMap.update(frameState);
 
             if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
+                // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.
+                // We could create some type of camera representing a point light.
+                var passes;
+                if (shadowMap.isPointLight) {
+                    passes = shadowMap.passes;
+                } else {
+                    passes = scratchShadowMapPasses;
+                    passes[0].camera = shadowMap.shadowMapCamera;
+                }
+
                 var sceneCamera = frameState.camera;
                 var sceneCullingVolume = frameState.cullingVolume;
                 var sceneCommandList = frameState.commandList;
 
-                // Update frame state to render from the light camera
-                // TODO: temporary fix for point lights. update for every face of the shadow map?
-                frameState.camera = shadowMap.isPointLight ? sceneCamera : shadowMap.shadowMapCamera;
                 frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
                 frameState.commandList = shadowMap.commandList;
-
                 frameState.commandList.length = 0;
 
-                // Update the globe again to Collect terrain commands from the light's POV.
-                // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
-                globe.update(frameState);
+                var passesLength = passes.length;
+                for (var j = 0; j < passesLength; ++j) {
+                    // Update frame state to render from the light camera
+                    frameState.camera = passes[j].camera;
+
+                    // Update the globe again to Collect terrain commands from the light's POV.
+                    // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
+                    globe.update(frameState);
+                }
 
                 // Revert back to original frame state
                 frameState.camera = sceneCamera;

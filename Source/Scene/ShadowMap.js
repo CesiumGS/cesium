@@ -1340,9 +1340,9 @@ define([
                 }
             }
 
-            var shadowMapCamera = this._shadowMapCamera;
             if (!this._isPointLight) {
                 // Compute the culling volume
+                var shadowMapCamera = this._shadowMapCamera;
                 var position = shadowMapCamera.positionWC;
                 var direction = shadowMapCamera.directionWC;
                 var up = shadowMapCamera.upWC;
