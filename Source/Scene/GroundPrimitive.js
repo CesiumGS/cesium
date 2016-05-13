@@ -860,8 +860,15 @@ define([
         }
     }
 
+    GroundPrimitive._initialized = false;
     GroundPrimitive.init = function() {
+        var initialized = GroundPrimitive._initialized;
+        if (initialized) {
+            return when.resolve();
+        }
+
         return loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+            GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
     };

@@ -9,6 +9,7 @@ define([
         '../../DataSources/CzmlDataSource',
         '../../DataSources/GeoJsonDataSource',
         '../../DataSources/KmlDataSource',
+        '../../Scene/GroundPrimitive',
         '../getElement'
     ], function(
         defaultValue,
@@ -20,6 +21,7 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
+        GroundPrimitive,
         getElement) {
     'use strict';
 
@@ -248,8 +250,11 @@ define([
                         sourceUri : fileName
                     });
                 } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
-                    loadPromise = GeoJsonDataSource.load(JSON.parse(evt.target.result), {
-                        sourceUri : fileName
+                    loadPromise = GroundPrimitive.init().then(function() {
+                        return GeoJsonDataSource.load(JSON.parse(evt.target.result), {
+                            sourceUri : fileName,
+                            terrain : true
+                        });
                     });
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
                     loadPromise = KmlDataSource.load(file, {
