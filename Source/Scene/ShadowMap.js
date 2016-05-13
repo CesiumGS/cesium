@@ -1214,8 +1214,6 @@ define([
     var scratchCenter = scratchBoundingSphere.center;
 
     function checkVisibility(shadowMap, frameState) {
-        var camera = frameState.camera;
-        var lightCamera = shadowMap._lightCamera;
         var sceneCamera = shadowMap._sceneCamera;
         var shadowMapCamera = shadowMap._shadowMapCamera;
 
