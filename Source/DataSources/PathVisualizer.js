@@ -376,6 +376,7 @@ define([
             this._unusedIndexes.push(item.index);
             item.polyline = undefined;
             polyline.show = false;
+            polyline.id = undefined;
             item.index = undefined;
         }
     };
