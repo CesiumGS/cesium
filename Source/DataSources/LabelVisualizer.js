@@ -250,6 +250,7 @@ define([
             var label = item.label;
             if (defined(label)) {
                 unusedIndexes.push(item.index);
+                label.id = undefined;
                 label.show = false;
                 item.label = undefined;
                 item.index = -1;
