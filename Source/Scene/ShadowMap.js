@@ -135,8 +135,6 @@ define([
      * @exception {DeveloperError} Only one or four cascades are supported.
 
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
-     *
-     * @private
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -154,10 +152,29 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.enabled = defaultValue(options.enabled, true);
-        this.softShadows = defaultValue(options.softShadows, false);
+
+        this._enabled = defaultValue(options.enabled, true);
+        this._softShadows = defaultValue(options.softShadows, false);
+        this._dirty = false;
+
+        /**
+         * Determines the darkness of the shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Number}
+         * @default 0.3
+         */
         this.darkness = defaultValue(options.darkness, 0.3);
         this._darkness = this.darkness;
+
+        /**
+         * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Number}
+         * @default 5000.0
+         */
+        this.maximumDistance = defaultValue(options.maximumDistance, 5000.0);
 
         this._outOfView = false;
         this._outOfViewPrevious = false;
@@ -219,7 +236,6 @@ define([
         this._cascadesEnabled = this._isPointLight ? false : defaultValue(options.cascadesEnabled, true);
         this._numberOfCascades = !this._cascadesEnabled ? 0 : defaultValue(options.numberOfCascades, 4);
         this._fitNearFar = true;
-        this._maximumDistance = defaultValue(options.maximumDistance, 5000.0);
         this._maximumCascadeDistances = [25.0, 150.0, 700.0, Number.MAX_VALUE];
 
         this._textureSize = new Cartesian2();
@@ -258,7 +274,7 @@ define([
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this._debugFreezeFrame = false;
-        this.debugVisualizeCascades = false;
+        this.debugCascadeColors = false;
         this._debugLightFrustum = undefined;
         this._debugCameraFrustum = undefined;
         this._debugCascadeFrustums = new Array(this._numberOfCascades);
@@ -284,8 +300,8 @@ define([
 
         this._clearPassState = new PassState(context);
 
-        var size = defaultValue(options.size, 2048);
-        this.setSize(size);
+        this._size = defaultValue(options.size, 2048);
+        this.size = this._size;
     }
 
     // Global maximum shadow distance used to prevent far off receivers from extending
@@ -342,7 +358,76 @@ define([
 
     defineProperties(ShadowMap.prototype, {
         /**
+         * Determines if the shadow map will be shown.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        enabled : {
+            get : function() {
+                return this._enabled;
+            },
+            set : function(value) {
+                this._dirty = this._enabled !== value;
+                this._enabled = value;
+            }
+        },
+
+        /**
+         * Determines if soft shadows are enabled. Uses pcf filtering which requires more texture reads and may hurt performance.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        softShadows : {
+            get : function() {
+                return this._softShadows;
+            },
+            set : function(value) {
+                this._dirty = this._softShadows !== value;
+                this._softShadows = value;
+            }
+        },
+
+        /**
+         * Determines whether derived shadow commands need to update.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @default false
+         */
+        dirty : {
+            get : function() {
+                return this._dirty;
+            },
+            set : function(value) {
+                this._dirty = value;
+            }
+        },
+
+        /**
+         * The width and height, in pixels, of each shadow map.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Number}
+         */
+        size : {
+            get : function() {
+                return this._size;
+            },
+            set : function(value) {
+                resize(this, value);
+            }
+        },
+
+        /**
          * Whether the shadow map is out of view of the scene camera.
+         *
+         * @memberof ShadowMap.prototype
+         * @type {Boolean}
+         * @readonly
          */
         outOfView : {
             get : function() {
@@ -604,12 +689,12 @@ define([
         }
     }
 
-    ShadowMap.prototype.setSize = function(size) {
-        var passes = this._passes;
+    function resize(shadowMap, size) {
+        var passes = shadowMap._passes;
         var numberOfPasses = passes.length;
-        var textureSize = this._textureSize;
+        var textureSize = shadowMap._textureSize;
 
-        if (this._isPointLight) {
+        if (shadowMap._isPointLight) {
             size = (ContextLimits.maximumCubeMapSize >= size) ? size : ContextLimits.maximumCubeMapSize;
             textureSize.x = size;
             textureSize.y = size;
@@ -644,7 +729,7 @@ define([
         }
 
         // Update clear pass state
-        this._clearPassState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
+        shadowMap._clearPassState.viewport = new BoundingRectangle(0, 0, textureSize.x, textureSize.y);
 
         // Transforms shadow coordinates [0, 1] into the pass's region of the texture
         for (var i = 0; i < numberOfPasses; ++i) {
@@ -656,7 +741,7 @@ define([
             var scaleY = viewport.height / textureSize.y;
             pass.textureOffsets = new Matrix4(scaleX, 0.0, 0.0, biasX, 0.0, scaleY, 0.0, biasY, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
         }
-    };
+    }
 
     var scratchViewport = new BoundingRectangle();
 
@@ -1124,6 +1209,7 @@ define([
 
         // 2. Set bounding box back to include objects in the light's view
         max.z += 1000.0; // Note: in light space, a positive number is behind the camera
+        min.z -= 10.0; // Extend the shadow volume forward slightly to avoid problems right at the edge
 
         // 3. Adjust light view matrix so that it is centered on the bounding volume
         var translation = scratchTranslation;
@@ -1220,7 +1306,7 @@ define([
         // Check whether the shadow map is in view and needs to be updated
         if (shadowMap._cascadesEnabled) {
             // If the nearest shadow receiver is further than the shadow map's maximum distance then the shadow map is out of view.
-            if (sceneCamera.frustum.near >= shadowMap._maximumDistance) {
+            if (sceneCamera.frustum.near >= shadowMap.maximumDistance) {
                 shadowMap._outOfView = true;
                 shadowMap._needsUpdate = false;
                 return;
@@ -1305,12 +1391,12 @@ define([
         var near;
         var far;
         if (shadowMap._fitNearFar) {
-            // shadowFar can be very large, so limit to shadowMap._maximumDistance
-            near = Math.min(frameState.shadowHints.nearPlane, shadowMap._maximumDistance);
-            far = Math.min(frameState.shadowHints.farPlane, shadowMap._maximumDistance);
+            // shadowFar can be very large, so limit to shadowMap.maximumDistance
+            near = Math.min(frameState.shadowHints.nearPlane, shadowMap.maximumDistance);
+            far = Math.min(frameState.shadowHints.farPlane, shadowMap.maximumDistance);
         } else {
             near = camera.frustum.near;
-            far = shadowMap._maximumDistance;
+            far = shadowMap.maximumDistance;
         }
 
         shadowMap._sceneCamera = Camera.clone(camera, sceneCamera);
@@ -1406,7 +1492,7 @@ define([
                 return Cartesian4.fromElements(texelStepSize.x, texelStepSize.y, bias.depthBias, bias.normalShadingSmooth, this.combinedUniforms1);
             },
             shadowMap_normalOffsetScaleDistanceMaxDistanceAndDarkness : function() {
-                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap._maximumDistance, shadowMap._darkness, this.combinedUniforms2);
+                return Cartesian4.fromElements(bias.normalOffsetScale, shadowMap._distance, shadowMap.maximumDistance, shadowMap._darkness, this.combinedUniforms2);
             },
 
             combinedUniforms1 : new Cartesian4(),
@@ -1416,7 +1502,7 @@ define([
         return combine(uniforms, mapUniforms, false);
     }
 
-    function createCastDerivedCommand(shadowMap, command, context, oldShaderId, result) {
+    function createCastDerivedCommand(shadowMap, shadowsDirty, command, context, oldShaderId, result) {
         var castShader;
         var castRenderState;
         var castUniformMap;
@@ -1428,7 +1514,7 @@ define([
 
         result = DrawCommand.shallowClone(command, result);
 
-        if (!defined(castShader) || oldShaderId !== command.shaderProgram.id) {
+        if (!defined(castShader) || oldShaderId !== command.shaderProgram.id || shadowsDirty) {
             if (defined(castShader)) {
                 castShader.destroy();
             }
@@ -1477,7 +1563,7 @@ define([
         return result;
     }
 
-    ShadowMap.createDerivedCommands = function(shadowMaps, command, context, result) {
+    ShadowMap.createDerivedCommands = function(shadowMaps, command, shadowsDirty, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -1504,7 +1590,7 @@ define([
             castCommands.length = shadowMapLength;
 
             for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], command, context, oldShaderId, castCommands[i]);
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
             }
 
             result.castShaderProgramId = command.shaderProgram.id;
@@ -1525,7 +1611,7 @@ define([
             var castShadowsDirty = result.receiveShaderCastShadows !== command.castShadows;
             var shaderDirty = result.receiveShaderProgramId !== command.shaderProgram.id;
 
-            if (!defined(receiveShader) || shaderDirty || castShadowsDirty) {
+            if (!defined(receiveShader) || shaderDirty || shadowsDirty || castShadowsDirty) {
                 if (defined(receiveShader)) {
                     receiveShader.destroy();
                 }
