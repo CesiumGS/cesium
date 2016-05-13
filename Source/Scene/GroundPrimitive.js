@@ -20,6 +20,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/PolygonGeometry',
         '../Core/Rectangle',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
@@ -57,6 +58,7 @@ define([
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
+        PolygonGeometry,
         Rectangle,
         DrawCommand,
         RenderState,
@@ -523,10 +525,22 @@ define([
     var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
     var scratchTileXY = new Cartesian2();
 
-    function createBoundingVolume(primitive, frameState, geometry) {
-        var highPositions = geometry.attributes.position3DHigh.values;
-        var lowPositions = geometry.attributes.position3DLow.values;
-        var length = highPositions.length;
+    function getRectangle(frameState, geometry) {
+        var highPositions;
+        var lowPositions;
+        var positions;
+        var length = 0;
+        if (defined(geometry.attributes) && defined(geometry.attributes.position3DHigh)) {
+            highPositions = geometry.attributes.position3DHigh.values;
+            lowPositions = geometry.attributes.position3DLow.values;
+            length = highPositions.length;
+        } else {
+            var instanceType = geometry.constructor;
+            if (defined(instanceType.getPositions)) {
+                positions = instanceType.getPositions(geometry);
+                length = positions.length;
+            }
+        }
 
         var ellipsoid = frameState.mapProjection.ellipsoid;
 
@@ -536,10 +550,16 @@ define([
         var maxLon = Number.NEGATIVE_INFINITY;
 
         for (var i = 0; i < length; i +=3) {
-            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
-            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
+            var position;
+            if (defined(highPositions)) {
+                var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
+                var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
 
-            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
+                position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
+            } else {
+                position = positions[i];
+            }
+
             var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
 
             var latitude = cartographic.latitude;
@@ -557,16 +577,22 @@ define([
         rectangle.east = maxLon;
         rectangle.west = minLon;
 
-        Cartographic.fromRadians(maxLon, maxLat, 0.0, scratchCorners[0]);
-        Cartographic.fromRadians(minLon, maxLat, 0.0, scratchCorners[1]);
-        Cartographic.fromRadians(maxLon, minLat, 0.0, scratchCorners[2]);
-        Cartographic.fromRadians(minLon, minLat, 0.0, scratchCorners[3]);
+        return rectangle;
+    }
+
+    function setMinMaxTerrainHeights(primitive, frameState, geometry) {
+        var rectangle = getRectangle(frameState, geometry);
+
+        Cartographic.fromRadians(rectangle.east, rectangle.north, 0.0, scratchCorners[0]);
+        Cartographic.fromRadians(rectangle.west, rectangle.north, 0.0, scratchCorners[1]);
+        Cartographic.fromRadians(rectangle.east, rectangle.south, 0.0, scratchCorners[2]);
+        Cartographic.fromRadians(rectangle.west, rectangle.south, 0.0, scratchCorners[3]);
 
         // Determine which tile the bounding rectangle is in
         var lastLevelX = 0, lastLevelY = 0;
         var currentX = 0, currentY = 0;
         var maxLevel = GroundPrimitive._terrainHeightsMaxLevel;
-        for(i = 0; i <= maxLevel; ++i) {
+        for(var i = 0; i <= maxLevel; ++i) {
             var failed = false;
             for(var j = 0; j < 4; ++j) {
                 var corner = scratchCorners[j];
@@ -600,19 +626,26 @@ define([
                 maxTerrainHeight = heights[1];
             }
         }
-        primitive._minTerrainHeight = minTerrainHeight;
-        primitive._maxTerrainHeight = maxTerrainHeight;
+        primitive._minTerrainHeight = Math.min(primitive._minTerrainHeight, minTerrainHeight);
+        primitive._maxTerrainHeight = Math.max(primitive._maxTerrainHeight, maxTerrainHeight);
 
         // Now compute the min/max heights for the primitive
         var exaggeration = frameState.terrainExaggeration;
         primitive._minHeight = minTerrainHeight * exaggeration;
         primitive._maxHeight = maxTerrainHeight * exaggeration;
+    }
+
+    function createBoundingVolume(primitive, frameState, geometry) {
+        var ellipsoid = frameState.mapProjection.ellipsoid;
+        var rectangle = getRectangle(frameState, geometry);
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
             var obb = OrientedBoundingBox.fromRectangle(rectangle, primitive._maxHeight, primitive._minHeight, ellipsoid);
             primitive._boundingVolumes.push(obb);
         } else {
+            var highPositions = geometry.attributes.position3DHigh.values;
+            var lowPositions = geometry.attributes.position3DLow.values;
             primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
         }
 
@@ -935,6 +968,8 @@ define([
                         id : instance.id,
                         pickPrimitive : this
                     });
+
+                    setMinMaxTerrainHeights(this, frameState, geometry);
                 } else {
                     throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                 }

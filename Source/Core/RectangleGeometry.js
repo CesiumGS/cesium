@@ -807,5 +807,12 @@ define([
         });
     };
 
+    /**
+     * @private
+     */
+    RectangleGeometry.getPositions = function(geometry) {
+        return geometry._polygonHierarchy.positions;
+    };
+
     return RectangleGeometry;
 });

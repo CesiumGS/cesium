@@ -175,5 +175,12 @@ define([
         });
     };
 
+    /**
+     * @private
+     */
+    CircleGeometry.getPositions = function(geometry) {
+        return geometry._polygonHierarchy.positions;
+    };
+
     return CircleGeometry;
 });

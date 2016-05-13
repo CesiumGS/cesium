@@ -870,5 +870,12 @@ define([
         });
     };
 
+    /**
+     * @private
+     */
+    CorridorGeometry.getPositions = function(geometry) {
+        return geometry._polygonHierarchy.positions;
+    };
+
     return CorridorGeometry;
 });

@@ -873,5 +873,12 @@ define([
         });
     };
 
+    /**
+     * @private
+     */
+    EllipseGeometry.getPositions = function(geometry) {
+        return geometry._polygonHierarchy.positions;
+    };
+
     return EllipseGeometry;
 });
