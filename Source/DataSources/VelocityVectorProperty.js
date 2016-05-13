@@ -34,7 +34,10 @@ define([
      * position.addSamples(...);
      * var entity = viewer.entities.add({
      *   position : position,
-     *   orientation : new Cesium.VelocityVectorProperty(position)
+     *   billboard : {
+     *     image : 'image.png',
+     *     alignedAxis : new Cesium.VelocityVectorProperty(position)
+     *   }
      * }));
      */
     function VelocityVectorProperty(position) {
