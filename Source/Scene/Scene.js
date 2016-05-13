@@ -1745,32 +1745,25 @@ define([
 
             // Don't insert globe commands with the rest of the scene commands since they are handled separately
             if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
-                if (isPointLight) {
-                    if (defined(command.boundingVolume)) {
-                        var distance = command.boundingVolume.distanceSquaredTo(center);
-                        if (distance < radiusSquared) {
-                            for (var k = 0; k < numberOfPasses; ++k) {
-                                passes[k].commandList.push(command);
-                            }
+                if (isVisible(command, shadowVolume)) {
+                    if (isPointLight) {
+                        for (var k = 0; k < numberOfPasses; ++k) {
+                            passes[k].commandList.push(command);
                         }
-                    }
-                } else {
-                    if (isVisible(command, shadowVolume)) {
-                        if (numberOfPasses <= 1) {
-                            passes[0].commandList.push(command);
-                        } else {
-                            var wasVisible = false;
-                            // Loop over cascades from largest to smallest
-                            for (var j = numberOfPasses - 1; j >= 0; --j) {
-                                var cascadeVolume = passes[j].cullingVolume;
-                                if (isVisible(command, cascadeVolume)) {
-                                    passes[j].commandList.push(command);
-                                    wasVisible = true;
-                                } else if (wasVisible) {
-                                    // If it was visible in the previous cascade but now isn't
-                                    // then there is no need to check any more cascades
-                                    break;
-                                }
+                    } else if (numberOfPasses <= 1) {
+                        passes[0].commandList.push(command);
+                    } else {
+                        var wasVisible = false;
+                        // Loop over cascades from largest to smallest
+                        for (var j = numberOfPasses - 1; j >= 0; --j) {
+                            var cascadeVolume = passes[j].cullingVolume;
+                            if (isVisible(command, cascadeVolume)) {
+                                passes[j].commandList.push(command);
+                                wasVisible = true;
+                            } else if (wasVisible) {
+                                // If it was visible in the previous cascade but now isn't
+                                // then there is no need to check any more cascades
+                                break;
                             }
                         }
                     }
