@@ -21,8 +21,11 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/Camera',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -47,8 +50,11 @@ defineSuite([
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
+        Camera,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
+        createCamera,
         pollToPromise,
         when) {
     "use strict";
@@ -687,6 +693,23 @@ defineSuite([
         });
     });
 
+    it('GroundOverlay: Sets rectangle image material', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <GroundOverlay>\
+            <color>7F0000FF</color>\
+            <Icon>\
+                <href>http://test.invalid/image.png</href>\
+            </Icon>\
+        </GroundOverlay>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.rectangle.material).toBeInstanceOf(ImageMaterialProperty);
+            expect(entity.rectangle.material.image.getValue()).toEqual('http://test.invalid/image.png');
+            expect(entity.rectangle.material.color.getValue()).toEqual(new Color(1.0, 0.0, 0.0, 127/255));
+        });
+    });
+
     it('GroundOverlay: Sets rectangle color material', function() {
         var color = Color.fromBytes(0xcc, 0xdd, 0xee, 0xff);
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -835,6 +858,18 @@ defineSuite([
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <Placemark>\
               <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
+            </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entities = dataSource.entities.values;
+            expect(entities[0].billboard.scale.getValue()).toEqual(3.0);
+        });
+    });
+
+    it('Styles: supports external style maps with styleUrl', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+              <styleUrl>Data/KML/externalStyle.kml#testStyleMap</styleUrl>\
             </Placemark>';
 
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
@@ -1311,6 +1346,31 @@ defineSuite([
         });
     });
 
+    it('Styles: Applies normal StyleMap containing styleUrl without #', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2">\
+          <Style id="normalStyle">\
+            <IconStyle>\
+              <scale>2</scale>\
+            </IconStyle>\
+          </Style>\
+          <StyleMap id="styleMapExample">\
+            <Pair>\
+              <key>normal</key>\
+              <styleUrl>normalStyle</styleUrl>\
+            </Pair>\
+          </StyleMap>\
+          <Placemark>\
+            <styleUrl>#styleMapExample</styleUrl>\
+            </Placemark>\
+        </Document>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.billboard.scale.getValue()).toBe(2.0);
+        });
+    });
+
     it('IconStyle: handles empty element', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -1360,7 +1420,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             var billboard = entities[0].billboard;
-            expect(billboard.image.getValue()).toEqual('//maps.google.com/mapfiles/kml/pal3/icon56.png');
+            expect(billboard.image.getValue()).toEqual('https://maps.google.com/mapfiles/kml/pal3/icon56.png');
         });
     });
 
@@ -3056,6 +3116,27 @@ defineSuite([
         });
     });
 
+    it('NetworkLink can accept invalid but common URL tag instead of Link', function(){
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Url>\
+              <href>./Data/KML/refresh.kml</href>\
+            </Url>\
+          </NetworkLink>';
+
+        var requestNetworkLink = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual('./Data/KML/refresh.kml');
+        });
+    });
+
     it('NetworkLink: Url is correct on initial load with onStop defaults', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <NetworkLink id="link">\
@@ -3280,7 +3361,7 @@ defineSuite([
 			expect(polyline.width.getValue()).toEqual(10);
 		});
 	});
-	
+
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
@@ -3658,6 +3739,30 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.log.calls.count()).toEqual(1);
             expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
+
+    it('NetworkLink: Heading and pitch can be undefined if the camera is in morphing mode', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        var camera = createCamera();
+        Camera.clone(options.camera, camera);
+
+        var kmlOptions = {
+            camera: camera,
+            canvas: options.canvas
+        };
+
+        camera._mode = SceneMode.MORPHING;
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
         });
     });
 });

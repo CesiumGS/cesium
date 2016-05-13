@@ -61,6 +61,8 @@ define([
         this.vertexFormat = undefined;
         this.polygonHierarchy = undefined;
         this.perPositionHeight = undefined;
+        this.closeTop = undefined;
+        this.closeBottom = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
@@ -453,6 +455,8 @@ define([
         var stRotation = polygon.stRotation;
         var outlineWidth = polygon.outlineWidth;
         var perPositionHeight = polygon.perPositionHeight;
+        var closeTop = polygon.closeTop;
+        var closeBottom = polygon.closeBottom;
 
         this._fillEnabled = fillEnabled;
         this._outlineEnabled = outlineEnabled;
@@ -463,7 +467,9 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(perPositionHeight)) {
+            !Property.isConstant(perPositionHeight) || //
+            !Property.isConstant(closeTop) || //
+            !Property.isConstant(closeBottom)) {
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -477,17 +483,21 @@ define([
                 hierarchyValue = new PolygonHierarchy(hierarchyValue);
             }
 
-            var heightValue = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            var extrudedHeightValue = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            var heightValue = Property.getValueOrUndefined(height, Iso8601.MINIMUM_VALUE);
+            var closeTopValue = Property.getValueOrDefault(closeTop, Iso8601.MINIMUM_VALUE, true);
+            var closeBottomValue = Property.getValueOrDefault(closeBottom, Iso8601.MINIMUM_VALUE, true);
+            var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeight, Iso8601.MINIMUM_VALUE);
 
             options.polygonHierarchy = hierarchyValue;
             options.height = heightValue;
             options.extrudedHeight = extrudedHeightValue;
-            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue;
+            options.granularity = Property.getValueOrUndefined(granularity, Iso8601.MINIMUM_VALUE);
+            options.stRotation = Property.getValueOrUndefined(stRotation, Iso8601.MINIMUM_VALUE);
+            options.perPositionHeight = Property.getValueOrUndefined(perPositionHeight, Iso8601.MINIMUM_VALUE);
+            options.closeTop = closeTopValue;
+            options.closeBottom = closeBottomValue;
+            this._outlineWidth = Property.getValueOrDefault(outlineWidth, Iso8601.MINIMUM_VALUE, 1.0);
+            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue && closeTopValue && closeBottomValue;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -525,6 +535,7 @@ define([
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
@@ -557,11 +568,16 @@ define([
             options.polygonHierarchy = hierarchy;
         }
 
+        var closeTopValue = Property.getValueOrDefault(polygon.closeTop, time, true);
+        var closeBottomValue = Property.getValueOrDefault(polygon.closeBottom, time, true);
+
         options.height = Property.getValueOrUndefined(polygon.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
         options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
         options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, time);
+        options.closeTop = closeTopValue;
+        options.closeBottom = closeBottomValue;
 
         if (Property.getValueOrDefault(polygon.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
@@ -570,7 +586,7 @@ define([
             var appearance = new MaterialAppearance({
                 material : material,
                 translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height
+                closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height && closeTopValue && closeBottomValue
             });
             options.vertexFormat = appearance.vertexFormat;
 

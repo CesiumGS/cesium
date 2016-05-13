@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
@@ -9,6 +10,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -16,6 +18,7 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -25,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -216,7 +220,7 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -226,7 +230,7 @@ define([
             var i;
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
@@ -267,7 +271,7 @@ define([
 
     var createGeometryFromPositionsPositions = [];
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight, vertexFormat) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -293,8 +297,7 @@ define([
                 flattenedPositions[index++] = p.y;
                 flattenedPositions[index++] = p.z;
             }
-
-            return new Geometry({
+            var geometry = new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
@@ -305,6 +308,12 @@ define([
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
+
+            if (vertexFormat.normal) {
+                return GeometryPipeline.computeNormal(geometry);
+            }
+
+            return geometry;
         }
 
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);

@@ -1126,6 +1126,8 @@ define([
 
     PolylineBucket.prototype.write = function(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context, projection) {
         var mode = this.mode;
+        var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+
         var polylines = this.polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
@@ -1156,14 +1158,8 @@ define([
                     position = positions[j - 1];
                 }
 
-                scratchWritePrevPosition.x = position.x;
-                scratchWritePrevPosition.y = position.y;
-                scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
-
-                position = positions[j];
-                scratchWritePosition.x = position.x;
-                scratchWritePosition.y = position.y;
-                scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWritePrevPosition);
+                Cartesian3.clone(positions[j], scratchWritePosition);
 
                 if (j === positionsLength - 1) {
                     if (polyline._loop) {
@@ -1177,9 +1173,7 @@ define([
                     position = positions[j + 1];
                 }
 
-                scratchWriteNextPosition.x = position.x;
-                scratchWriteNextPosition.y = position.y;
-                scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWriteNextPosition);
 
                 var segmentLength = lengths[segmentIndex];
                 if (j === count + segmentLength) {
@@ -1189,6 +1183,26 @@ define([
 
                 var segmentStart = j - count === 0;
                 var segmentEnd = j === count + lengths[segmentIndex] - 1;
+
+                if (mode === SceneMode.SCENE2D) {
+                    scratchWritePrevPosition.z = 0.0;
+                    scratchWritePosition.z = 0.0;
+                    scratchWriteNextPosition.z = 0.0;
+                }
+
+                if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+                    if ((segmentStart || segmentEnd) && maxLon - Math.abs(scratchWritePosition.x) < 1.0) {
+                        if ((scratchWritePosition.x < 0.0 && scratchWritePrevPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWritePrevPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWritePrevPosition);
+                        }
+
+                        if ((scratchWritePosition.x < 0.0 && scratchWriteNextPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWriteNextPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWriteNextPosition);
+                        }
+                    }
+                }
 
                 var startK = (segmentStart) ? 2 : 0;
                 var endK = (segmentEnd) ? 2 : 4;
@@ -1444,6 +1458,8 @@ define([
 
     PolylineBucket.prototype.writeUpdate = function(index, polyline, positionBuffer, texCoordExpandWidthAndShowBuffer, projection) {
         var mode = this.mode;
+        var maxLon = projection.ellipsoid.maximumRadius * CesiumMath.PI;
+
         var positionsLength = polyline._actualLength;
         if (positionsLength) {
             index += this.getPolylineStartIndex(polyline);
@@ -1489,14 +1505,8 @@ define([
                     position = positions[i - 1];
                 }
 
-                scratchWritePrevPosition.x = position.x;
-                scratchWritePrevPosition.y = position.y;
-                scratchWritePrevPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
-
-                position = positions[i];
-                scratchWritePosition.x = position.x;
-                scratchWritePosition.y = position.y;
-                scratchWritePosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWritePrevPosition);
+                Cartesian3.clone(positions[i], scratchWritePosition);
 
                 if (i === positionsLength - 1) {
                     if (polyline._loop) {
@@ -1510,9 +1520,7 @@ define([
                     position = positions[i + 1];
                 }
 
-                scratchWriteNextPosition.x = position.x;
-                scratchWriteNextPosition.y = position.y;
-                scratchWriteNextPosition.z = (mode !== SceneMode.SCENE2D) ? position.z : 0.0;
+                Cartesian3.clone(position, scratchWriteNextPosition);
 
                 var segmentLength = lengths[segmentIndex];
                 if (i === count + segmentLength) {
@@ -1522,6 +1530,26 @@ define([
 
                 var segmentStart = i - count === 0;
                 var segmentEnd = i === count + lengths[segmentIndex] - 1;
+
+                if (mode === SceneMode.SCENE2D) {
+                    scratchWritePrevPosition.z = 0.0;
+                    scratchWritePosition.z = 0.0;
+                    scratchWriteNextPosition.z = 0.0;
+                }
+
+                if (mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+                    if ((segmentStart || segmentEnd) && maxLon - Math.abs(scratchWritePosition.x) < 1.0) {
+                        if ((scratchWritePosition.x < 0.0 && scratchWritePrevPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWritePrevPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWritePrevPosition);
+                        }
+
+                        if ((scratchWritePosition.x < 0.0 && scratchWriteNextPosition.x > 0.0) ||
+                            (scratchWritePosition.x > 0.0 && scratchWriteNextPosition.x < 0.0)) {
+                            Cartesian3.clone(scratchWritePosition, scratchWriteNextPosition);
+                        }
+                    }
+                }
 
                 var startJ = (segmentStart) ? 2 : 0;
                 var endJ = (segmentEnd) ? 2 : 4;

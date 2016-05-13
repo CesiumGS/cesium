@@ -150,6 +150,8 @@ define([
         this._usedDrawCommands = 0;
         this._usedPickCommands = 0;
 
+        this._vertexArraysToDestroy = [];
+
         this._debug = {
             wireframe : false,
             boundingSphereTile : undefined
@@ -282,10 +284,20 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+    function freeVertexArray(vertexArray) {
+        var indexBuffer = vertexArray.indexBuffer;
+        vertexArray.destroy();
+
+        if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            --indexBuffer.referenceCount;
+            if (indexBuffer.referenceCount === 0) {
+                indexBuffer.destroy();
+            }
+        }
+    }
+
     /**
      * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * or any other functions.
-     *
      * @param {FrameState} frameState The frame state.
      */
     GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
@@ -318,6 +330,13 @@ define([
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+
+        var vertexArraysToDestroy = this._vertexArraysToDestroy;
+        var length = vertexArraysToDestroy.length;
+        for (var j = 0; j < length; ++j) {
+            freeVertexArray(vertexArraysToDestroy[j]);
+        }
+        vertexArraysToDestroy.length = 0;
     };
 
     /**
@@ -440,7 +459,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -1156,7 +1175,7 @@ define([
         pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
-        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
 
         frameState.commandList.push(pickCommand);
