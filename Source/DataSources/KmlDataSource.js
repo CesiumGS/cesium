@@ -32,6 +32,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/SceneMode',
@@ -90,6 +91,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
@@ -967,6 +969,40 @@ define([
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
+    function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
+        if (!defined(altitudeMode) && !defined(gxAltitudeMode) || altitudeMode === 'clampToGround') {
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (altitudeMode === 'relativeToGround') {
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (altitudeMode === 'absolute') {
+            window.console.log('KML - <kml:altitudeMode>:absolute is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'clampToSeaFloor') {
+            window.console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            window.console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (defined(altitudeMode)) {
+            window.console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        } else {
+            window.console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        }
+
+        //Clamp to ellipsoid until we support terrain
+        return HeightReference.CLAMP_TO_GROUND;
+    }
+
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
             //Just return the ellipsoid referenced property until we support MSL and terrain
@@ -1006,7 +1042,7 @@ define([
         return properties;
     }
 
-    function processPositionGraphics(dataSource, entity, styleEntity) {
+    function processPositionGraphics(dataSource, entity, styleEntity, heightReference) {
         var label = entity.label;
         if (!defined(label)) {
             label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
@@ -1034,6 +1070,11 @@ define([
                 label.horizontalOrigin = undefined;
             }
         }
+
+        if (defined(heightReference)) {
+            billboard.heightReference = heightReference;
+            label.heightReference = heightReference;
+        }
     }
 
     function processPathGraphics(dataSource, entity, styleEntity) {
@@ -1059,8 +1100,8 @@ define([
 
         var position = readCoordinate(coordinatesString);
 
-        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = position;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(entityCollection, entity, styleEntity);

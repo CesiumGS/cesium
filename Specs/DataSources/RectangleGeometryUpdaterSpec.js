@@ -64,6 +64,7 @@ defineSuite([
         var entity = new Entity();
         entity.rectangle = rectangle;
         entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
+        entity.rectangle.height = new ConstantProperty(0);
         return entity;
     }
 
@@ -367,6 +368,46 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)));
     });
 
+    it('Checks that an entity without height and extrudedHeight and with a color material is on terrain', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.height = undefined;
+        entity.rectangle.outline = new ConstantProperty(true);
+
+        var updater = new RectangleGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(true);
+        expect(updater.outlineEnabled).toBe(false);
+    });
+
+    it('Checks that an entity with height isn\'t on terrain', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.height = new ConstantProperty(1);
+
+        var updater = new RectangleGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('Checks that an entity with extrudedHeight isn\'t on terrain', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.height = undefined;
+        entity.rectangle.extrudedHeight = new ConstantProperty(1);
+
+        var updater = new RectangleGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('Checks that an entity with a non-color material isn\'t on terrain', function() {
+        var entity = createBasicRectangle();
+        entity.rectangle.height = undefined;
+        entity.rectangle.material = new GridMaterialProperty(Color.BLUE);
+
+        var updater = new RectangleGeometryUpdater(entity, scene);
+
+        expect(updater.onTerrain).toBe(false);
+    });
+
     it('createFillGeometryInstance obeys Entity.show is false.', function() {
         var entity = createBasicRectangle();
         entity.show = false;
@@ -403,12 +444,15 @@ defineSuite([
 
         var updater = new RectangleGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
-        var dynamicUpdater = updater.createDynamicUpdater(primitives);
+        var groundPrimitives = new PrimitiveCollection();
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
 
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
+        expect(groundPrimitives.length).toBe(0);
 
         var options = dynamicUpdater._options;
         expect(options.id).toEqual(entity);
@@ -421,21 +465,53 @@ defineSuite([
         entity.show = false;
         dynamicUpdater.update(JulianDate.now());
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
         entity.show = true;
 
         //If a dynamic show returns false, the primitive should go away.
         rectangle.show.setValue(false);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
 
         rectangle.show.setValue(true);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2);
+        expect(groundPrimitives.length).toBe(0);
 
         //If a dynamic coordinates returns undefined, the primitive should go away.
         rectangle.coordinates.setValue(undefined);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.destroy();
+        updater.destroy();
+    });
+
+    it('dynamic updater on terrain', function() {
+        var rectangle = new RectangleGraphics();
+        rectangle.coordinates = createDynamicProperty(new Rectangle(0, 0, 1, 1));
+        rectangle.show = createDynamicProperty(true);
+        rectangle.outline = createDynamicProperty(true);
+        rectangle.fill = createDynamicProperty(true);
+        rectangle.granularity = createDynamicProperty(2);
+        rectangle.stRotation = createDynamicProperty(1);
+
+        var entity = new Entity();
+        entity.rectangle = rectangle;
+
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        var primitives = new PrimitiveCollection();
+        var groundPrimitives = new PrimitiveCollection();
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, groundPrimitives);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+        expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(0);
+
+        dynamicUpdater.update(time);
+        expect(primitives.length).toBe(0);
+        expect(groundPrimitives.length).toBe(1);
 
         dynamicUpdater.destroy();
         updater.destroy();

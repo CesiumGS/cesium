@@ -13,6 +13,7 @@ define([
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/RuntimeError',
+        '../Scene/HeightReference',
         '../Scene/VerticalOrigin',
         '../ThirdParty/topojson',
         '../ThirdParty/when',
@@ -21,6 +22,7 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './CorridorGraphics',
         './DataSource',
         './EntityCollection',
         './PolygonGraphics',
@@ -39,6 +41,7 @@ define([
         PinBuilder,
         PolygonHierarchy,
         RuntimeError,
+        HeightReference,
         VerticalOrigin,
         topojson,
         when,
@@ -47,6 +50,7 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CorridorGraphics,
         DataSource,
         EntityCollection,
         PolygonGraphics,
@@ -71,6 +75,7 @@ define([
     var defaultStroke = Color.YELLOW;
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
+    var defaultTerrain = false;
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
     var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
@@ -279,6 +284,10 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
+            if (options.terrain) {
+                billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
+            }
+
             var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
             entity.billboard = billboard;
             entity.position = new ConstantPositionProperty(crsFunction(coordinates));
@@ -324,13 +333,19 @@ define([
             }
         }
 
-        var polyline = new PolylineGraphics();
-        polyline.material = material;
-        polyline.width = widthProperty;
-        polyline.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-        entity.polyline = polyline;
+        var graphics;
+        if (options.terrain) {
+            graphics = new CorridorGraphics();
+            entity.corridor = graphics;
+        } else {
+            graphics = new PolylineGraphics();
+            entity.polyline = graphics;
+        }
+
+        graphics.material = material;
+        graphics.width = widthProperty;
+        graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -400,6 +415,9 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        if (!options.terrain) {
+            polygon.height = 0;
+        }
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -508,6 +526,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -602,6 +621,20 @@ define([
             set : function(value) {
                 defaultFill = value;
                 defaultFillMaterialProperty = new ColorMaterialProperty(defaultFill);
+            }
+        },
+        /**
+         * Gets or sets default of whether to draw on terrain.
+         * @memberof GeoJsonDataSource
+         * @type {Boolean}
+         * @default false
+         */
+        terrain : {
+            get : function() {
+                return defaultTerrain;
+            },
+            set : function(value) {
+                defaultTerrain = value;
             }
         },
 
@@ -748,6 +781,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
+     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -777,7 +811,8 @@ define([
             markerColor : defaultValue(options.markerColor, defaultMarkerColor),
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
-            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill))
+            fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
+            terrain : defaultValue(options.terrain, defaultTerrain)
         };
 
         var that = this;

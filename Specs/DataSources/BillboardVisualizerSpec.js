@@ -15,6 +15,7 @@ defineSuite([
         'Scene/BillboardCollection',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -33,6 +34,7 @@ defineSuite([
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
+        createGlobe,
         createScene,
         pollToPromise) {
     'use strict';
@@ -42,6 +44,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.globe = createGlobe();
     });
 
     afterAll(function() {
