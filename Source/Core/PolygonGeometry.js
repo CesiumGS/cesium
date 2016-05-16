@@ -22,6 +22,7 @@ define([
         './PolygonGeometryLibrary',
         './PolygonPipeline',
         './Quaternion',
+        './Rectangle',
         './VertexFormat',
         './WindingOrder'
     ], function(
@@ -47,6 +48,7 @@ define([
         PolygonGeometryLibrary,
         PolygonPipeline,
         Quaternion,
+        Rectangle,
         VertexFormat,
         WindingOrder) {
     'use strict';
@@ -443,6 +445,36 @@ define([
         return geos;
     }
 
+    function computeRectangle(positions, ellipsoid) {
+        var minLat = Number.POSITIVE_INFINITY;
+        var minLon = Number.POSITIVE_INFINITY;
+        var maxLat = Number.NEGATIVE_INFINITY;
+        var maxLon = Number.NEGATIVE_INFINITY;
+
+        var length = positions.length;
+
+        for (var i = 0; i < length; i +=3) {
+            var position = positions[i];
+            var cartographic = ellipsoid.cartesianToCartographic(position, scratchCarto1);
+
+            var latitude = cartographic.latitude;
+            var longitude = cartographic.longitude;
+
+            minLat = Math.min(minLat, latitude);
+            minLon = Math.min(minLon, longitude);
+            maxLat = Math.max(maxLat, latitude);
+            maxLon = Math.max(maxLon, longitude);
+        }
+
+        var rectangle = new Rectangle();
+        rectangle.north = maxLat;
+        rectangle.south = minLat;
+        rectangle.east = maxLon;
+        rectangle.west = minLon;
+
+        return rectangle;
+    }
+
     /**
      * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -578,12 +610,15 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
+        if (defined(polygonHierarchy.positions)) {
+            this._rectangle = computeRectangle(polygonHierarchy.positions, ellipsoid);
+        }
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
     }
 
     /**
@@ -671,6 +706,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
@@ -684,6 +722,7 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
 
     //Only used to avoid inaability to default construct.
     var dummyOptions = {
@@ -716,6 +755,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
@@ -741,6 +783,7 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
+        result._rectangle = Rectangle.clone(rectangle);
         result.packedLength = packedLength;
         return result;
     };
@@ -892,8 +935,8 @@ define([
     /**
      * @private
      */
-    PolygonGeometry.getPositions = function(geometry) {
-        return geometry._polygonHierarchy.positions;
+    PolygonGeometry.getRectangle = function(geometry) {
+        return geometry._rectangle;
     };
 
     return PolygonGeometry;

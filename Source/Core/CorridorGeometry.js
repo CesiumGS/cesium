@@ -873,7 +873,7 @@ define([
     /**
      * @private
      */
-    CorridorGeometry.getPositions = function(geometry) {
+    CorridorGeometry.getRectangle = function(geometry) {
         return geometry._polygonHierarchy.positions;
     };
 

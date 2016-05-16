@@ -810,8 +810,8 @@ define([
     /**
      * @private
      */
-    RectangleGeometry.getPositions = function(geometry) {
-        return geometry._polygonHierarchy.positions;
+    RectangleGeometry.getRectangle = function(geometry) {
+        return geometry._rectangle;
     };
 
     return RectangleGeometry;

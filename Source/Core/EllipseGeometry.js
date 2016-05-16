@@ -876,7 +876,7 @@ define([
     /**
      * @private
      */
-    EllipseGeometry.getPositions = function(geometry) {
+    EllipseGeometry.getRectangle = function(geometry) {
         return geometry._polygonHierarchy.positions;
     };
 

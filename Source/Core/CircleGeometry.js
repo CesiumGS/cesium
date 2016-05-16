@@ -178,8 +178,8 @@ define([
     /**
      * @private
      */
-    CircleGeometry.getPositions = function(geometry) {
-        return geometry._polygonHierarchy.positions;
+    CircleGeometry.getRectangle = function(geometry) {
+        return EllipseGeometry.getRectangle(geometry._ellipseGeometry);
     };
 
     return CircleGeometry;

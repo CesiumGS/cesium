@@ -526,23 +526,20 @@ define([
     var scratchTileXY = new Cartesian2();
 
     function getRectangle(frameState, geometry) {
-        var highPositions;
-        var lowPositions;
-        var positions;
-        var length = 0;
-        if (defined(geometry.attributes) && defined(geometry.attributes.position3DHigh)) {
-            highPositions = geometry.attributes.position3DHigh.values;
-            lowPositions = geometry.attributes.position3DLow.values;
-            length = highPositions.length;
-        } else {
+        var ellipsoid = frameState.mapProjection.ellipsoid;
+        
+        if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
             var instanceType = geometry.constructor;
-            if (defined(instanceType.getPositions)) {
-                positions = instanceType.getPositions(geometry);
-                length = positions.length;
+            if (defined(instanceType.getRectangle)) {
+                return instanceType.getRectangle(geometry, ellipsoid);
             }
+
+            return undefined;
         }
 
-        var ellipsoid = frameState.mapProjection.ellipsoid;
+        var highPositions = geometry.attributes.position3DHigh.values;
+        var lowPositions = geometry.attributes.position3DLow.values;
+        var length = highPositions.length;
 
         var minLat = Number.POSITIVE_INFINITY;
         var minLon = Number.POSITIVE_INFINITY;
@@ -550,16 +547,10 @@ define([
         var maxLon = Number.NEGATIVE_INFINITY;
 
         for (var i = 0; i < length; i +=3) {
-            var position;
-            if (defined(highPositions)) {
-                var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
-                var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
+            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
+            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
 
-                position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
-            } else {
-                position = positions[i];
-            }
-
+            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
             var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
 
             var latitude = cartographic.latitude;
