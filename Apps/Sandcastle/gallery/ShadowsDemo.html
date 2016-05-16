@@ -98,6 +98,36 @@ function createModel(url, origin) {
     return model;
 }
 
+
+var airplane;
+var startDate = new Cesium.JulianDate(2457507.167176);
+var startLongitude = -2.0862019628;
+var startLatitude = 0.6588002522;
+var startHeight = 2672.991061159884;
+var scratchPosition = new Cesium.Cartesian3();
+
+function animatePlane() {
+    var currentDate = viewer.clock.currentTime;
+    var secondsDifference = Cesium.JulianDate.secondsDifference(startDate, currentDate);
+    var alpha = 1.0 - Cesium.Math.mod(secondsDifference + 25.0, 50.0) / 50.0;
+    var rotation = Cesium.Math.TWO_PI * alpha;
+
+    var longitude = startLongitude + 0.00005 * Math.sin(rotation);
+    var latitude = startLatitude + 0.00005 * Math.cos(rotation);
+    var position = Cesium.Cartesian3.fromRadians(longitude, latitude, startHeight, scene.globe.ellipsoid, scratchPosition);
+    airplane.modelMatrix = Cesium.Transforms.headingPitchRollToFixedFrame(position, rotation, 0.0, 0.0, scene.globe.ellipsoid, airplane.modelMatrix);
+}
+
+function reset() {
+    viewer.clock.clockRange = Cesium.ClockRange.UNBOUNDED;
+    viewer.clock.multiplier = 1.0;
+    scene.primitives.removeAll();
+    scene.postRender.removeEventListener(animatePlane);
+    setImageryLayer(bingLayer);
+    scene.terrainProvider = terrainProvider;
+    viewer.dataSources.removeAll();
+}
+
 Sandcastle.addToolbarMenu([{
     text : 'Model',
     onselect : function() {
@@ -107,15 +137,10 @@ Sandcastle.addToolbarMenu([{
         var height = 74.14210186070714;
         var origin = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
 
-        scene.primitives.removeAll();
+        reset();
         createModel('../../SampleData/models/WoodTower/Wood_Tower.gltf', origin);
         camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
-        setImageryLayer(bingLayer);
-        scene.terrainProvider = terrainProvider;
-        viewer.dataSources.removeAll();
         viewer.clock.currentTime =  new Cesium.JulianDate(2457507.083843);
-        viewer.clock.multiplier = 1.0;
-
         shadowMap._maxmimumDistance = 10000.0;
     }
 }, {
@@ -127,21 +152,18 @@ Sandcastle.addToolbarMenu([{
         var height = 2652.991061159884;
         var origin = Cesium.Cartesian3.fromRadians(longitude, latitude, height);
 
-        scene.primitives.removeAll();
-        createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', origin);
+        reset();
+        airplane = createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', origin);
+        airplane.scale = 3.0;
         camera.lookAt(origin, new Cesium.Cartesian3(300.0, 300.0, 200.0));
-        setImageryLayer(bingLayer);
-        scene.terrainProvider = terrainProvider;
-        viewer.dataSources.removeAll();
         viewer.clock.currentTime =  new Cesium.JulianDate(2457507.167176);
-        viewer.clock.multiplier = 1.0;
-
         shadowMap._maxmimumDistance = 30000.0;
+        scene.postRender.addEventListener(animatePlane);
     }
 }, {
     text : 'City',
     onselect : function() {
-        scene.primitives.removeAll();
+        reset();
         createModel('../../SampleData/seattle.glb');
         model.readyPromise.then(function(model) {
             var origin = model.boundingSphere.center;
@@ -149,62 +171,29 @@ Sandcastle.addToolbarMenu([{
         });
         setImageryLayer(mapboxLayer);
         scene.terrainProvider = ellipsoidTerrainProvider;
-        viewer.dataSources.removeAll();
         viewer.clock.currentTime =  new Cesium.JulianDate(2457507.167176);
-        viewer.clock.multiplier = 1.0;
-
         shadowMap._maxmimumDistance = 2000.0;
     }
 }, {
     text : 'Satellite',
     onselect : function() {
-        scene.primitives.removeAll();
-        viewer.dataSources.removeAll();
+        reset();
         var czmlUrl = '../../SampleData/articulationTest.czml';
         var promise = viewer.dataSources.add(Cesium.CzmlDataSource.load(czmlUrl));
-
         promise.then(function(dataSource){
             viewer.trackedEntity = dataSource.entities.getById('Satellite/Satellite1');
             viewer.clock.currentTime =  new Cesium.JulianDate(2457361.243275);
         }).otherwise(function(error){
             window.alert(error);
         });
-
-        setImageryLayer(bingLayer);
-        scene.terrainProvider = terrainProvider;
-        viewer.clock.multiplier = 1.0;
-
         shadowMap._maxmimumDistance = 2000.0;
     }
 }
 
 ]);
 
-function toggleShadows() {
-    model.castShadows = !model.castShadows;
-    model.receiveShadows = !model.receiveShadows;
-    globe.receiveShadows = !globe.receiveShadows;
-
-    if (scene.terrainProvider !== ellipsoidTerrainProvider) {
-        globe.castShadows = !globe.castShadows;
-    }
-}
-
 Sandcastle.addToolbarButton('Toggle Shadows', function() {
-    toggleShadows();
-});
-
-var canvas = viewer.canvas;
-canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
-canvas.onclick = function() {
-    // To get key events
-    canvas.focus();
-};
-
-document.addEventListener('keydown', function(event) {
-    if (event.keyCode === 65) { // a
-        toggleShadows();
-    }
+    scene.shadowMap.enabled = !scene.shadowMap.enabled;
 });
 
 //Sandcastle_End
