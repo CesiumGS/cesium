@@ -368,6 +368,7 @@ defineSuite([
         //internal cache used by the visualizer, instead it just hides it.
         entityCollection.removeAll();
         expect(primitive.show).toEqual(false);
+        expect(primitive.id).toBeUndefined();
     });
 
     it('Visualizer sets entity property.', function() {

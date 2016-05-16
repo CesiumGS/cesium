@@ -178,7 +178,12 @@ define([
             this._glowFactorDirty = false;
 
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
-            size = Math.max(1.0, Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0));
+            size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
+
+            // The size computed above can be less than 1.0 if size < 4.0. This will probably
+            // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
+            // errors in the tests.
+            size = Math.max(1.0, size);
 
             this._texture = new Texture({
                 context : context,
