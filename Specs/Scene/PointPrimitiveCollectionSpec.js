@@ -5,9 +5,11 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/Rectangle',
+        'Scene/HeightReference',
         'Scene/OrthographicFrustum',
         'Specs/createScene'
     ], function(
@@ -16,9 +18,11 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color,
+        Ellipsoid,
         CesiumMath,
         NearFarScalar,
         Rectangle,
+        HeightReference,
         OrthographicFrustum,
         createScene) {
     'use strict';
@@ -26,6 +30,7 @@ defineSuite([
     var scene;
     var camera;
     var pointPrimitives;
+    var pointsWithHeight;
 
     beforeAll(function() {
         scene = createScene();
@@ -43,6 +48,11 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
         pointPrimitives = new PointPrimitiveCollection();
         scene.primitives.add(pointPrimitives);
+
+        pointsWithHeight = new PointPrimitiveCollection({
+            scene : scene
+        });
+        scene.primitives.add(pointsWithHeight);
     });
 
     afterEach(function() {
@@ -66,6 +76,7 @@ defineSuite([
         expect(p.outlineWidth).toEqual(0.0);
         expect(p.scaleByDistance).not.toBeDefined();
         expect(p.translucencyByDistance).not.toBeDefined();
+        expect(p.heightReference).toEqual(HeightReference.NONE);
         expect(p.id).not.toBeDefined();
     });
 
@@ -801,5 +812,113 @@ defineSuite([
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
         expect(actual.radius).toBeGreaterThan(expected.radius);
+    });
+
+    describe('height referenced points', function() {
+        function createMockGlobe() {
+            var globe = {
+                callback : undefined,
+                removedCallback : false,
+                ellipsoid : Ellipsoid.WGS84,
+                update : function() {},
+                getHeight : function() {
+                    return 0.0;
+                },
+                _surface : {},
+                destroy : function() {}
+            };
+
+            globe._surface.updateHeight = function(position, callback) {
+                globe.callback = callback;
+                return function() {
+                    globe.removedCallback = true;
+                    globe.callback = undefined;
+                };
+            };
+
+            return globe;
+        }
+
+        it('explicitly constructs a point with height reference', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            });
+
+            expect(p.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('set billboard height reference property', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add();
+            p.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+            expect(p.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+        });
+
+        it('creating with a height reference creates a height update callback', function() {
+            scene.globe = createMockGlobe();
+            pointsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('set height reference property creates a height update callback', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add({
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            p.heightReference = HeightReference.CLAMP_TO_GROUND;
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('updates the callback when the height reference changes', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            p.heightReference = HeightReference.RELATIVE_TO_GROUND;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+
+            scene.globe.removedCallback = false;
+            p.heightReference = HeightReference.NONE;
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).not.toBeDefined();
+        });
+
+        it('changing the position updates the callback', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            p.position = Cartesian3.fromDegrees(-73.0, 40.0);
+            expect(scene.globe.removedCallback).toEqual(true);
+            expect(scene.globe.callback).toBeDefined();
+        });
+
+        it('callback updates the position', function() {
+            scene.globe = createMockGlobe();
+            var p = pointsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            var cartographic = scene.globe.ellipsoid.cartesianToCartographic(p._clampedPosition);
+            expect(cartographic.height).toEqual(0.0);
+
+            scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+            cartographic = scene.globe.ellipsoid.cartesianToCartographic(p._clampedPosition);
+            expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+        });
     });
 }, 'WebGL');
