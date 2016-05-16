@@ -8,6 +8,7 @@ Change Log
 * Deprecated
   *
 * Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
+* Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
 * Improve memory management for entity billboard/label/point/path visualization.
 * Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
 * Fixed infinite horizontal 2D scrolling in IE/Edge. [#3893](https://github.com/AnalyticalGraphicsInc/cesium/issues/3893)
