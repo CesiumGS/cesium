@@ -189,11 +189,11 @@ function BiasOptions(options) {
 }
 
 var viewModel = {
-    lightAngle : 0.0,
+    lightAngle : 40.0,
     lightAngleEnabled : true,
-    lightHorizon : 0.0,
+    lightHorizon : 70.0,
     lightHorizonEnabled : true,
-    distance : 1000.0,
+    distance : 10000.0,
     distanceEnabled : true,
     radius : 200.0,
     radiusEnabled : true,
@@ -263,17 +263,6 @@ var viewModel = {
     biasMode : Cesium.knockout.observable()
 };
 
-// Temp values for testing
-viewModel.lightSource = 'Freeform';
-viewModel.lightHorizon = 71.0;
-viewModel.lightAngle = 40.0;
-viewModel.distance = 10000.0;
-viewModel.location = 'Pinnacle PA';
-viewModel.model = 'Shadow Tester';
-viewModel.modelPosition = 'Center';
-viewModel.terrain = true;
-viewModel.terrainCast = true;
-
 var uiOptions = {
     all : ['lightHorizon', 'lightAngle', 'distance', 'radius', 'terrainCast', 'cascades', 'cascadeColors', 'fitNearFar', 'softShadows'],
     disable : {
@@ -334,26 +323,26 @@ Cesium.knockout.getObservable(viewModel, 'globe').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainCast').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'terrainReceive').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'fitNearFar').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateShadows);
-Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'cascadeColors').subscribe(updateSettings);
+Cesium.knockout.getObservable(viewModel, 'softShadows').subscribe(updateSettings);
 Cesium.knockout.getObservable(viewModel, 'cascades').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'lightSource').subscribe(updateShadows);
 Cesium.knockout.getObservable(viewModel, 'size').subscribe(updateSettings);
-Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'model').subscribe(updateModels);
 Cesium.knockout.getObservable(viewModel, 'modelPosition').subscribe(updateLocation);
-Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateShadows);
+Cesium.knockout.getObservable(viewModel, 'grid').subscribe(updateModels);
 Cesium.knockout.getObservable(viewModel, 'location').subscribe(updateLocation);
 
 for (var i = 0; i < viewModel.biasModes.length; ++i) {
     var biasMode = viewModel.biasModes[i];
-    biasMode.polygonOffset.subscribe(updateShadows);
-    biasMode.polygonOffsetFactor.subscribe(updateShadows);
-    biasMode.polygonOffsetUnits.subscribe(updateShadows);
-    biasMode.normalOffset.subscribe(updateShadows);
-    biasMode.normalOffsetScale.subscribe(updateShadows);
-    biasMode.normalShading.subscribe(updateShadows);
-    biasMode.normalShadingSmooth.subscribe(updateShadows);
-    biasMode.depthBias.subscribe(updateShadows);
+    biasMode.polygonOffset.subscribe(updateSettings);
+    biasMode.polygonOffsetFactor.subscribe(updateSettings);
+    biasMode.polygonOffsetUnits.subscribe(updateSettings);
+    biasMode.normalOffset.subscribe(updateSettings);
+    biasMode.normalOffsetScale.subscribe(updateSettings);
+    biasMode.normalShading.subscribe(updateSettings);
+    biasMode.normalShadingSmooth.subscribe(updateSettings);
+    biasMode.depthBias.subscribe(updateSettings);
 }
 
 var offset = new Cesium.Cartesian3();
@@ -371,70 +360,16 @@ function updateLightDirection() {
 }
 
 function updateSettings() {
-    shadowMap._maximumDistance = Number(viewModel.distance);
+    shadowMap.maximumDistance = Number(viewModel.distance);
     shadowMap._pointLightRadius = Number(viewModel.radius);
     shadowMap._fitNearFar = viewModel.fitNearFar;
     shadowMap.darkness = viewModel.darkness;
     shadowMap.debugShow = viewModel.debug;
     shadowMap.debugFreezeFrame = viewModel.freeze;
     shadowMap.enabled = viewModel.shadows;
-    shadowMap.setSize(viewModel.size);
-
-    globe.castShadows = viewModel.terrainCast;
-    globe.receiveShadows = viewModel.terrainReceive;
-    globe.show = viewModel.globe;
-    scene.skyAtmosphere.show = viewModel.globe;
-}
-
-function updateShadows() {
-    var cascades = viewModel.cascades;
-    var lightSource = viewModel.lightSource;
-    var cascadeColors = viewModel.cascadeColors;
-    var softShadows = viewModel.softShadows;
-
-    var lightCamera;
-    if (lightSource === 'Freeform') {
-        lightCamera = freeformLightCamera;
-    } else if (lightSource === 'Sun') {
-        lightCamera = sunCamera;
-    }
-
-    if (lightSource === 'Fixed') {
-        resetShadows({
-            context : context,
-            lightCamera : fixedLightCamera,
-            cascadesEnabled : false,
-            softShadows : softShadows
-        });
-    } else if (lightSource === 'Point') {
-        resetShadows({
-            context : context,
-            lightCamera : pointLightCamera,
-            isPointLight : true,
-            softShadows : softShadows
-        });
-    } else if (lightSource === 'Spot') {
-        resetShadows({
-            context : context,
-            lightCamera : spotLightCamera,
-            cascadesEnabled : false,
-            softShadows : softShadows
-        });
-    } else if (cascades === 4) {
-        resetShadows({
-            context : context,
-            lightCamera : lightCamera,
-            softShadows : softShadows
-        });
-        shadowMap.debugVisualizeCascades = cascadeColors;
-    } else if (cascades === 1) {
-        resetShadows({
-            context : context,
-            lightCamera : lightCamera,
-            numberOfCascades : 1,
-            softShadows : softShadows
-        });
-    }
+    shadowMap.size = viewModel.size;
+    shadowMap.debugCascadeColors = viewModel.cascadeColors;
+    shadowMap.softShadows = viewModel.softShadows;
 
     // Update biases
     for (var i = 0; i < viewModel.biasModes.length; ++i) {
@@ -452,6 +387,66 @@ function updateShadows() {
 
     // Update render states for when polygon offset values change
     shadowMap.debugCreateRenderStates();
+
+    // Force all derived commands to update
+    shadowMap.dirty = true;
+
+    globe.castShadows = viewModel.terrainCast;
+    globe.receiveShadows = viewModel.terrainReceive;
+    globe.show = viewModel.globe;
+    scene.skyAtmosphere.show = viewModel.globe;
+}
+
+function updateShadows() {
+    var cascades = viewModel.cascades;
+    var lightSource = viewModel.lightSource;
+
+    var lightCamera;
+    if (lightSource === 'Freeform') {
+        lightCamera = freeformLightCamera;
+    } else if (lightSource === 'Sun') {
+        lightCamera = sunCamera;
+    }
+
+    var shadowOptions;
+
+    if (lightSource === 'Fixed') {
+        shadowOptions = {
+            context : context,
+            lightCamera : fixedLightCamera,
+            cascadesEnabled : false
+        };
+    } else if (lightSource === 'Point') {
+        shadowOptions = {
+            context : context,
+            lightCamera : pointLightCamera,
+            isPointLight : true
+        };
+    } else if (lightSource === 'Spot') {
+        shadowOptions = {
+            context : context,
+            lightCamera : spotLightCamera,
+            cascadesEnabled : false
+        };
+    } else if (cascades === 4) {
+        shadowOptions = {
+            context : context,
+            lightCamera : lightCamera
+        };
+    } else if (cascades === 1) {
+        shadowOptions = {
+            context : context,
+            lightCamera : lightCamera,
+            numberOfCascades : 1
+        };
+    }
+
+    scene.shadowMap.destroy();
+    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
+
+    shadowMap = scene.shadowMap;
+    shadowMap.enabled = true;
+    shadowMap.debugShow = true;
 
     updateSettings();
     updateUI();
@@ -496,10 +491,6 @@ var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
 
 var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
-var imageryProvider = new Cesium.BingMapsImageryProvider({
-    url : 'https://dev.virtualearth.net'
-});
-
 updateLocation();
 
 function getModelPosition() {
@@ -521,6 +512,7 @@ function updateLocation() {
     var location = uiOptions.locations[viewModel.location];
     var positions = [new Cesium.Cartographic(location.centerLongitude, location.centerLatitude)];
     var terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
+    globe.terrainProvider = terrainProvider;
     var promise = Cesium.sampleTerrain(terrainProvider, 11, positions);
     Cesium.when(promise, function(updatedPositions) {
         location.height = updatedPositions[0].height + getModelPosition();
@@ -557,33 +549,17 @@ function createScene() {
     camera.lookAt(center, new Cesium.Cartesian3(25.0, 25.0, 30.0));
 
     updateLightDirection();
+    updateModels();
     updateShadows();
 }
 
-function resetGlobe() {
-    globe = scene.globe = new Cesium.Globe();
-    globe.imageryLayers.addImageryProvider(imageryProvider);
-    globe.terrainProvider = viewModel.terrain ? cesiumTerrainProvider : ellipsoidTerrainProvider;
-}
-
-function resetShadows(shadowOptions) {
-    // Changing the number of cascades or toggling cascade debug colors requires the receive-shadows shaders to recompile.
-    // For testing purposes it is easier to clear the whole scene and start fresh rather than handling dynamic updates.
+function updateModels() {
     scene.primitives.removeAll();
 
     var location = uiOptions.locations[viewModel.location];
     var centerLongitude = location.centerLongitude;
     var centerLatitude = location.centerLatitude;
     var height = location.height;
-
-    resetGlobe();
-
-    scene.shadowMap.destroy();
-    scene.shadowMap = new Cesium.ShadowMap(shadowOptions);
-
-    shadowMap = scene.shadowMap;
-    shadowMap.enabled = true;
-    shadowMap.debugShow = true;
 
     var position1 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 5.0);
     var position2 = Cesium.Cartesian3.fromRadians(centerLongitude, centerLatitude, height + 10.0);

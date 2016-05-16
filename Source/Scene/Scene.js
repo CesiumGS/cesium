@@ -184,7 +184,7 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-     * @param {Boolean} [options.shadowsEnabled=false] Determines if shadows are cast by the sun.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -551,7 +551,7 @@ define([
         this.shadowMap = new ShadowMap({
             context : context,
             lightCamera : this._sunCamera,
-            enabled : defaultValue(options.shadowsEnabled, false)
+            enabled : defaultValue(options.shadows, false)
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1062,17 +1062,28 @@ define([
     }
 
     function updateDerivedCommands(scene, command) {
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var context = scene._context;
+
+        var shadowsDirty = false;
+        if (shadowMaps.length > 0 && (command.receiveShadows || command.castShadows)) {
+            // Update derived commands when any shadow maps become dirty
+            var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+            if (command._lastDirtyTime !== lastDirtyTime) {
+                command._lastDirtyTime = lastDirtyTime;
+                command._dirty = true;
+                shadowsDirty = true;
+            }
+        }
+        
         if (command._dirty) {
             command._dirty = false;
 
-            var context = scene._context;
-            var frameState = scene.frameState;
-
             var derivedCommands = command.derivedCommands;
 
-            var shadowMaps = frameState.shadowMaps;
-            if (shadowMaps.length > 0) {
-                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, context, derivedCommands.shadows);
+            if (shadowMaps.length > 0 && (command.receiveShadows || command.castShadows)) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
@@ -1276,7 +1287,7 @@ define([
                     // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
                     // camera isn't inside.
                     if (command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
-                        !((pass === Pass.GLOBE) && (distances.start < 0.0) && (distances.stop > 0.0))) {
+                        !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
 
                         // Get the smallest bounding volume the camera is near. This is used to improve cascaded shadow splits.
                         var size = distances.stop - distances.start;
@@ -1947,37 +1958,40 @@ define([
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
+            var right = camera.frustum.right;
             camera.frustum.right = maxCoord.x - x;
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x += windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var right = camera.frustum.right;
-            camera.frustum.right = -camera.frustum.left;
-            camera.frustum.left = -right;
+            camera.frustum.left = -camera.frustum.right;
+            camera.frustum.right = camera.frustum.left + (right - camera.frustum.right);
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
 
             executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else {
-            viewport.x += windowCoordinates.x;
-            viewport.width -= windowCoordinates.x;
+            viewport.x = windowCoordinates.x;
+            viewport.width = context.drawingBufferWidth - windowCoordinates.x;
 
+            var left = camera.frustum.left;
             camera.frustum.left = -maxCoord.x - x;
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
-            viewport.x = viewport.x - viewport.width;
+            viewport.x = 0;
+            viewport.width = windowCoordinates.x;
 
             camera.position.x = -camera.position.x;
 
-            var left = camera.frustum.left;
-            camera.frustum.left = -camera.frustum.right;
-            camera.frustum.right = -left;
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = camera.frustum.right + (left - camera.frustum.left);
+
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
@@ -2041,6 +2055,11 @@ define([
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
+
+            if (shadowMap.dirty) {
+                ++frameState.shadowHints.lastDirtyTime;
+                shadowMap.dirty = false;
+            }
 
             if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
                 var sceneCamera = frameState.camera;

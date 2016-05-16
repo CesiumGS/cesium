@@ -40,6 +40,7 @@ define([
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
         this._dirty = true;
+        this._lastDirtyTime = 0;
 
         /**
          * @private
@@ -464,6 +465,7 @@ define([
         result._debugShowBoundingVolume = command._debugShowBoundingVolume;
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
         result._dirty = true;
+        result._lastDirtyTime = 0;
 
         return result;
     };

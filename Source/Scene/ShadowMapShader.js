@@ -137,7 +137,7 @@ define([
         var isPointLight = shadowMap._isPointLight;
         var isSpotLight = shadowMap._isSpotLight;
         var hasCascades = shadowMap._numberOfCascades > 1;
-        var debugVisualizeCascades = shadowMap.debugVisualizeCascades;
+        var debugCascadeColors = shadowMap.debugCascadeColors;
         var softShadows = shadowMap.softShadows;
         var bias = isPointLight ? shadowMap._pointBias : (isTerrain ? shadowMap._terrainBias : shadowMap._primitiveBias);
 
@@ -302,7 +302,7 @@ define([
                 '    float fade = max((depth - shadowMapMaximumDistance * 0.8) / (shadowMapMaximumDistance * 0.2), 0.0); \n' +
                 '    visibility = mix(visibility, 1.0, fade); \n' +
 
-                (debugVisualizeCascades ?
+                (debugCascadeColors ?
                 '    // Draw cascade colors for debugging \n' +
                 '    gl_FragColor *= czm_cascadeColor(weights); \n' : '');
         } else {
