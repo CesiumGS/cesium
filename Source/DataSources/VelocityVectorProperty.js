@@ -29,7 +29,7 @@ define([
      * @param {Property} [position] The position property used to compute the velocity.
      *
      * @example
-     * //Create an entity with position and orientation.
+     * //Create an entity with a billboard rotated to match its velocity.
      * var position = new Cesium.SampledProperty();
      * position.addSamples(...);
      * var entity = viewer.entities.add({
