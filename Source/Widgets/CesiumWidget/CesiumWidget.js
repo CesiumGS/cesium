@@ -160,7 +160,8 @@ define([
      *        to the bottom of the widget itself.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     *     
+     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Widget.html|Cesium Sandcastle Cesium Widget Demo}
@@ -277,6 +278,7 @@ define([
             }
             if (globe !== false) {
                 scene.globe = globe;
+                scene.globe.castShadows = defaultValue(options.terrainShadows, false);
             }
 
             var skyBox = options.skyBox;
