@@ -8,10 +8,14 @@ Change Log
 * Deprecated
   *
 * Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
+* Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
+* Improve memory management for entity billboard/label/point/path visualization.
 * Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
 * Fixed infinite horizontal 2D scrolling in IE/Edge. [#3893](https://github.com/AnalyticalGraphicsInc/cesium/issues/3893)
 * Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
+* Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
+* Added `CullingVolume.fromBoundingSphere`.
 
 ### 1.21 - 2016-05-02
 

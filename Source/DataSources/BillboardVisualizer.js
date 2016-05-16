@@ -267,6 +267,7 @@ define([
             if (defined(billboard)) {
                 item.textureValue = undefined;
                 item.billboard = undefined;
+                billboard.id = undefined;
                 billboard.show = false;
                 billboard.image = undefined;
                 unusedIndexes.push(billboard._index);

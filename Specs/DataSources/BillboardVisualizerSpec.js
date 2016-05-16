@@ -245,6 +245,7 @@ defineSuite([
             //internal cache used by the visualizer, instead it just hides it.
             entityCollection.removeAll();
             expect(bb.show).toEqual(false);
+            expect(bb.id).toBeUndefined();
         });
     });
 
