@@ -156,6 +156,7 @@ define([
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
 
+                    this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
             }

@@ -43,9 +43,11 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+        
         camera.position = new Cartesian3(10.0, 0.0, 0.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+        
         pointPrimitives = new PointPrimitiveCollection();
         scene.primitives.add(pointPrimitives);
 
@@ -812,6 +814,9 @@ defineSuite([
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
         expect(actual.radius).toBeGreaterThan(expected.radius);
+
+        scene.morphTo3D(0);
+        scene.renderForSpecs();
     });
 
     describe('height referenced points', function() {
