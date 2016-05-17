@@ -1559,8 +1559,8 @@ define([
                                                     return val.toFixed(20);
                                                 });
 
-                                                var newMain = "decoded_" + attributeSemantic;
-                                                var matrixName = "decode_" + attributeSemantic + "_matrix";
+                                                var newMain = 'decoded_' + attributeSemantic;
+                                                var matrixName = 'decode_' + attributeSemantic + '_matrix';
                                                 var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
 
                                                 // replace usages of the original attribute with the decoded version, but not the declaration
@@ -1573,15 +1573,15 @@ define([
                                                     return decodedAttributeVarName;
                                                 });
                                                 // declare decoded attribute
-                                                shader = "vec3 " + decodedAttributeVarName + ";\n" + shader;
+                                                shader = 'vec3 ' + decodedAttributeVarName + ';\n' + shader;
 
                                                 // splice decode function into the shader
-                                                var decode = "\n" +
-                                                             "mat4 " + matrixName + " = mat4(" + decodeMatrix + ");\n" +
-                                                             "void main(void) {\n" +
-                                                             "    " + decodedAttributeVarName + " = vec3(" + matrixName + " * vec4(" + attributeVarName + ",1.0));\n" +
-                                                             "    " + newMain + "();\n" +
-                                                             "}\n";
+                                                var decode = '\n' +
+                                                             'mat4 ' + matrixName + ' = mat4(' + decodeMatrix + ');\n' +
+                                                             'void main(void) {\n' +
+                                                             '    ' + decodedAttributeVarName + ' = vec3(' + matrixName + ' * vec4(' + attributeVarName + ',1.0));\n' +
+                                                             '    ' + newMain + '();\n' +
+                                                             '}\n';
                                                 shader = ShaderSource.replaceMain(shader, newMain);
                                                 shader += decode;
 
