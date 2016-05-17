@@ -1469,6 +1469,23 @@ define([
             return all.indexOf(find) === offset ? match : replace;
         });
     }
+
+    function scaleFromMatrix5Array(matrix) {
+        return [matrix[0], matrix[1], matrix[2], matrix[3],
+                matrix[5], matrix[6], matrix[7], matrix[8],
+                matrix[10], matrix[11], matrix[12], matrix[13],
+                matrix[15], matrix[16], matrix[17], matrix[18]];
+    }
+
+    function translateFromMatrix5Array(matrix) {
+        return [matrix[20], matrix[21], matrix[22], matrix[23]];
+    }
+
+    function stringifyArray(array) {
+        return array.map(function(val) {
+            return val.toFixed(20);
+        });
+    }
     
     function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
         var gltf = model.gltf;
@@ -1560,13 +1577,9 @@ define([
                                             }
                                             else {
                                                 var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                                                var decodeMatrixString = quantizedAttributes.decodeMatrix;
-                                                var decodeMatrix = decodeMatrixString.map(function(val) {
-                                                    return val.toFixed(20);
-                                                });
+                                                var decodeMatrix = quantizedAttributes.decodeMatrix;
 
                                                 var newMain = 'decoded_' + attributeSemantic;
-                                                var matrixName = 'decode_' + attributeSemantic + '_matrix';
                                                 var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
 
                                                 var size = Math.floor(Math.sqrt(decodeMatrix.length));
@@ -1578,12 +1591,32 @@ define([
                                                 shader = 'vec' + (size-1) + ' ' + decodedAttributeVarName + ';\n' + shader;
 
                                                 // splice decode function into the shader
-                                                var decode = '\n' +
-                                                             'mat' + size + ' ' + matrixName + ' = mat' + size + '(' + decodeMatrix + ');\n' +
-                                                             'void main() {\n' +
-                                                             '    ' + decodedAttributeVarName + ' = vec' + (size-1) + '(' + matrixName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                                             '    ' + newMain + '();\n' +
-                                                             '}\n';
+                                                var decode = '';
+                                                if (size === 5) {
+                                                    // separate scale and translate since glsl doesn't have mat5
+                                                    var decodeScaleString = stringifyArray(scaleFromMatrix5Array(decodeMatrix));
+                                                    var decodeTranslateString = stringifyArray(translateFromMatrix5Array(decodeMatrix));
+                                                    var scaleName = 'decode_' + attributeSemantic + '_scale';
+                                                    var translateName = 'decode_' + attributeSemantic + '_translate';
+
+                                                    decode = '\n' +
+                                                                 'mat4 ' + scaleName + ' = mat4(' + decodeScaleString + ');\n' +
+                                                                 'vec4 ' + translateName + ' = vec4(' + decodeTranslateString + ');\n' +
+                                                                 'void main() {\n' +
+                                                                 '    ' + decodedAttributeVarName + ' = ' + scaleName + ' * ' + attributeVarName + ' + ' + translateName + ';\n' +
+                                                                 '    ' + newMain +'();\n' +
+                                                                 '}\n';
+                                                }
+                                                else {
+                                                    var matrixName = 'decode_' + attributeSemantic + '_matrix';
+                                                    var decodeMatrixString = stringifyArray(decodeMatrix);
+                                                    decode = '\n' +
+                                                                 'mat' + size + ' ' + matrixName + ' = mat' + size + '(' + decodeMatrixString + ');\n' +
+                                                                 'void main() {\n' +
+                                                                 '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + matrixName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                                                 '    ' + newMain + '();\n' +
+                                                                 '}\n';
+                                                }
                                                 shader = ShaderSource.replaceMain(shader, newMain);
                                                 shader += decode;
 
