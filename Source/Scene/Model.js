@@ -1554,9 +1554,9 @@ define([
                                             }
                                             else {
                                                 var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                                                var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                                decodeMatrix = decodeMatrix.map(function(val) {
-                                                    return val.toFixed(16);
+                                                var decodeMatrixString = quantizedAttributes.decodeMatrix;
+                                                var decodeMatrix = decodeMatrixString.map(function(val) {
+                                                    return val.toFixed(20);
                                                 });
 
                                                 var newMain = "decoded_" + attributeSemantic;
