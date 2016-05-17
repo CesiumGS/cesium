@@ -1470,7 +1470,7 @@ define([
         });
     }
     
-    function modifyShaderForExtensions(shader, programName, model, context) {
+    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var materials = gltf.materials;
@@ -1620,7 +1620,7 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
         
-        vs = modifyShaderForExtensions(vs, id, model, context);
+        vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
