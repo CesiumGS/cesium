@@ -1463,6 +1463,12 @@ define([
         }
         return newObj;
     }
+
+    function replaceAllButFirstInString(string, find, replace) {
+        return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
+            return all.indexOf(find) === offset ? match : replace;
+        });
+    }
     
     function modifyShaderForExtensions(shader, programName, model, context) {
         var gltf = model.gltf;
@@ -1474,7 +1480,7 @@ define([
         var uniformMaps = model._uniformMaps;
         var processedAccessors = [];
         var decodedAttributes = [];
-        var unresolvedProgramId = undefined;
+        var unresolvedProgramId;
         var unresolvedTechniqueId;
         var unresolvedMaterialId;
 
@@ -1564,14 +1570,8 @@ define([
                                                 var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
 
                                                 // replace usages of the original attribute with the decoded version, but not the declaration
-                                                var first = true;
-                                                shader = shader.replace(new RegExp(attributeVarName, 'g'), function(match) {
-                                                    if (first) {
-                                                        first = false;
-                                                        return match;
-                                                    }
-                                                    return decodedAttributeVarName;
-                                                });
+                                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+
                                                 // declare decoded attribute
                                                 shader = 'vec3 ' + decodedAttributeVarName + ';\n' + shader;
 
