@@ -252,6 +252,13 @@ defineSuite([
         });
         c.execute = function() {};
 
+        var originalShallowClone = DrawCommand.shallowClone;
+        spyOn(DrawCommand, 'shallowClone').and.callFake(function(command, result) {
+            result = originalShallowClone(command, result);
+            result.execute = function() {};
+            return result;
+        });
+
         scene.primitives.add(new CommandMockPrimitive(c));
 
         scene.debugShowCommands = true;

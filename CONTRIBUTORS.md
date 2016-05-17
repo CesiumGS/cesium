@@ -89,3 +89,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Allen Korenevsky](https://github.com/theplatapi)
 * [Samy Beaudoux](https://github.com/vrittis)
 * [Mati Ostrovsky](https://github.com/mati-o)
+* [Tom Novacek](https://github.com/novacto2)
+* [Olivier Guyot-Roullot](https://github.com/theOgrable)

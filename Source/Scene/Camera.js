@@ -374,18 +374,21 @@ define([
         var direction = camera._direction;
         var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
+            Cartesian3.normalize(camera.direction, camera.direction);
             direction = Cartesian3.clone(camera.direction, camera._direction);
         }
 
         var up = camera._up;
         var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
+            Cartesian3.normalize(camera.up, camera.up);
             up = Cartesian3.clone(camera.up, camera._up);
         }
 
         var right = camera._right;
         var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
+            Cartesian3.normalize(camera.right, camera.right);
             right = Cartesian3.clone(camera.right, camera._right);
         }
 
@@ -443,9 +446,6 @@ define([
             var det = Cartesian3.dot(direction, Cartesian3.cross(up, right, scratchCartesian));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
-                direction = Cartesian3.normalize(direction, camera._direction);
-                Cartesian3.clone(direction, camera.direction);
-
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = Cartesian3.dot(up, direction) * invUpMag;
                 var w0 = Cartesian3.multiplyByScalar(direction, scalar, scratchCartesian);
@@ -853,10 +853,7 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, position, heading, convert) {
-        var pitch = -CesiumMath.PI_OVER_TWO;
-        var roll = 0.0;
-
+    function setView2D(camera, position, convert) {
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -881,12 +878,6 @@ define([
                 frustum.bottom = -frustum.top;
             }
         }
-
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
-
-        Matrix3.getColumn(rotMat, 2, camera.up);
-        Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         camera._setTransform(currentTransform);
     }
@@ -936,8 +927,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
-     * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
-     * y direction in Columbus view or 2D.
+     * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
+     * y direction in Columbus view. Orientation is not used in 2D.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
      *
      * @example
@@ -1011,7 +1002,7 @@ define([
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, heading, convert);
+            setView2D(this, destination, convert);
         } else {
             setViewCV(this, destination, heading, pitch, roll, convert);
         }
@@ -2369,8 +2360,8 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
-     * towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D. The up direction will point towards local north in 3D and in the positive
-     * y direction in Columbus view or 2D.
+     * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
+     * y direction in Columbus view.  Orientation is not used in 2D.
      * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
@@ -2458,13 +2449,22 @@ define([
 
             // Make sure camera doesn't zoom outside set limits
             if (defined(sscc)) {
-                destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                //The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
+                if (mode !== SceneMode.SCENE3D && isRectangle) {
+                    destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                } else {
+                    destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
+                }
             }
 
             // The max height in 2D might be lower than the max height for sscc.
             if (mode === SceneMode.SCENE2D) {
                 var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-                destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+                if (isRectangle) {
+                    destination.z = Math.min(destination.z, maxHeight);
+                } else {
+                    destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
+                }
             }
 
             //Only change if we clamped the height
