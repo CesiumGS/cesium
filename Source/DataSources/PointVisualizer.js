@@ -7,6 +7,8 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
+        '../Scene/BillboardCollection',
+        '../Scene/HeightReference',
         '../Scene/PointPrimitiveCollection',
         './BoundingSphereState',
         './Property'
@@ -18,6 +20,8 @@ define([
         destroyObject,
         DeveloperError,
         NearFarScalar,
+        BillboardCollection,
+        HeightReference,
         PointPrimitiveCollection,
         BoundingSphereState,
         Property) {
@@ -37,6 +41,7 @@ define([
     function EntityData(entity) {
         this.entity = entity;
         this.pointPrimitive = undefined;
+        this.billboard = undefined;
         this.color = undefined;
         this.outlineColor = undefined;
         this.pixelSize = undefined;
@@ -64,9 +69,11 @@ define([
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
         this._scene = scene;
-        this._unusedIndexes = [];
+        this._unusedPointIndexes = [];
+        this._unusedBillboardIndexes = [];
         this._entityCollection = entityCollection;
         this._pointPrimitiveCollection = undefined;
+        this._billboardCollection = undefined;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     }
@@ -86,23 +93,55 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var unusedIndexes = this._unusedIndexes;
+        var unusedPointIndexes = this._unusedPointIndexes;
+        var unusedBillboardIndexes = this._unusedBillboardIndexes;
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
             var pointGraphics = entity._point;
             var pointPrimitive = item.pointPrimitive;
+            var billboard = item.billboard;
+            var heightReference = pointGraphics.heightReference;
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
                 show = defined(position);
             }
             if (!show) {
-                returnPointPrimitive(item, unusedIndexes);
+                returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
                 continue;
             }
 
-            if (!defined(pointPrimitive)) {
+            var needsRedraw = false;
+            if ((heightReference === HeightReference.CLAMP_TO_GROUND) && !defined(billboard)) {
+                if (defined(pointPrimitive)) {
+                    returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
+                    pointPrimitive = undefined;
+                }
+
+                var billboardCollection = this._billboardCollection;
+                if (!defined(billboardCollection)) {
+                    billboardCollection = new BillboardCollection();
+                    this._billboardCollection = billboardCollection;
+                    this._scene.primitives.add(billboardCollection);
+                }
+
+                if (unusedBillboardIndexes.length > 0) {
+                    billboard = billboardCollection.get(unusedBillboardIndexes.pop());
+                } else {
+                    billboard = billboardCollection.add();
+                }
+
+                billboard.id = entity;
+                billboard.image = undefined;
+                item.billboard = billboard;
+                needsRedraw = true;
+            } else if (!defined(pointPrimitive)) {
+                if (defined(billboard)) {
+                    returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
+                    billboard = undefined;
+                }
+
                 var pointPrimitiveCollection = this._pointPrimitiveCollection;
                 if (!defined(pointPrimitiveCollection)) {
                     pointPrimitiveCollection = new PointPrimitiveCollection();
@@ -110,9 +149,8 @@ define([
                     this._scene.primitives.add(pointPrimitiveCollection);
                 }
 
-                var length = unusedIndexes.length;
-                if (length > 0) {
-                    pointPrimitive = pointPrimitiveCollection.get(unusedIndexes.pop());
+                if (unusedPointIndexes.length > 0) {
+                    pointPrimitive = pointPrimitiveCollection.get(unusedPointIndexes.pop());
                 } else {
                     pointPrimitive = pointPrimitiveCollection.add();
                 }
@@ -121,14 +159,28 @@ define([
                 item.pointPrimitive = pointPrimitive;
             }
 
-            pointPrimitive.show = true;
-            pointPrimitive.position = position;
-            pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
-            pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-            pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-            pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-            pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
-            pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+            if (defined(pointPrimitive)) {
+                pointPrimitive.show = true;
+                pointPrimitive.position = position;
+                pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
+                pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
+                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
+                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
+                pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+            } else { // billboard
+                billboard.show = true;
+                billboard.position = position;
+                billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
+                billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
+                billboard.heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE, heightReference);
+
+                // TODO: Generate marker that looks like this
+                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
+                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
+                pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+            }
         }
         return true;
     };
@@ -155,11 +207,12 @@ define([
         //>>includeEnd('debug');
 
         var item = this._items.get(entity.id);
-        if (!defined(item) || !defined(item.pointPrimitive)) {
+        if (!defined(item) || !(defined(item.pointPrimitive) || defined(item.billboard))) {
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.pointPrimitive.position, result.center);
+        result.center = Cartesian3.clone(defined(item.pointPrimitive) ?
+                                         item.pointPrimitive.position : item.billboard.position, result.center);
         result.radius = 0;
         return BoundingSphereState.DONE;
     };
@@ -181,13 +234,17 @@ define([
         if (defined(this._pointPrimitiveCollection)) {
             this._scene.primitives.remove(this._pointPrimitiveCollection);
         }
+        if (defined(this._billboardCollection)) {
+            this._scene.primitives.remove(this._billboardCollection);
+        }
         return destroyObject(this);
     };
 
     PointVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedIndexes = this._unusedIndexes;
+        var unusedPointIndexes = this._unusedPointIndexes;
+        var unusedBillboardIndexes = this._unusedBillboardIndexes;
         var items = this._items;
 
         for (i = added.length - 1; i > -1; i--) {
@@ -204,29 +261,76 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnPointPrimitive(items.get(entity.id), unusedIndexes);
+                returnPrimitive(items.get(entity.id), unusedPointIndexes, unusedBillboardIndexes);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnPointPrimitive(items.get(entity.id), unusedIndexes);
+            returnPrimitive(items.get(entity.id), unusedPointIndexes, unusedBillboardIndexes);
             items.remove(entity.id);
         }
     };
 
-    function returnPointPrimitive(item, unusedIndexes) {
+    function returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes) {
         if (defined(item)) {
             var pointPrimitive = item.pointPrimitive;
             if (defined(pointPrimitive)) {
                 item.pointPrimitive = undefined;
                 pointPrimitive.id = undefined;
                 pointPrimitive.show = false;
-                unusedIndexes.push(pointPrimitive._index);
+                unusedPointIndexes.push(pointPrimitive._index);
+            }
+            var billboard = item.billboard;
+            if (defined(billboard)) {
+                item.billboard = undefined;
+                billboard.id = undefined;
+                billboard.show = false;
+                unusedBillboardIndexes.push(billboard._index);
             }
         }
     }
+
+    function createCallback(centerAlpha, cssColor, cssOutlineColor, cssOutlineWidth, newPixelSize) {
+        return function(id) {
+            var canvas = document.createElement('canvas');
+
+            var length = newPixelSize + (2 * cssOutlineWidth);
+            canvas.height = canvas.width = length;
+
+            var context2D = canvas.getContext('2d');
+            context2D.clearRect(0, 0, length, length);
+
+            if (cssOutlineWidth !== 0) {
+                context2D.beginPath();
+                context2D.arc(length / 2, length / 2, length / 2, 0, 2 * Math.PI, true);
+                context2D.closePath();
+                context2D.fillStyle = cssOutlineColor;
+                context2D.fill();
+                // Punch a hole in the center if needed.
+                if (centerAlpha < 1.0) {
+                    context2D.save();
+                    context2D.globalCompositeOperation = 'destination-out';
+                    context2D.beginPath();
+                    context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+                    context2D.closePath();
+                    context2D.fillStyle = 'black';
+                    context2D.fill();
+                    context2D.restore();
+                }
+            }
+
+            context2D.beginPath();
+            context2D.arc(length / 2, length / 2, newPixelSize / 2, 0, 2 * Math.PI, true);
+            context2D.closePath();
+            context2D.fillStyle = cssColor;
+            context2D.fill();
+
+            return canvas;
+        };
+    }
+
 
     return PointVisualizer;
 });
