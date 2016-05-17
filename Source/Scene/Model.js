@@ -1569,17 +1569,19 @@ define([
                                                 var matrixName = 'decode_' + attributeSemantic + '_matrix';
                                                 var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
 
+                                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
+
                                                 // replace usages of the original attribute with the decoded version, but not the declaration
                                                 shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
 
                                                 // declare decoded attribute
-                                                shader = 'vec3 ' + decodedAttributeVarName + ';\n' + shader;
+                                                shader = 'vec' + (size-1) + ' ' + decodedAttributeVarName + ';\n' + shader;
 
                                                 // splice decode function into the shader
                                                 var decode = '\n' +
-                                                             'mat4 ' + matrixName + ' = mat4(' + decodeMatrix + ');\n' +
-                                                             'void main(void) {\n' +
-                                                             '    ' + decodedAttributeVarName + ' = vec3(' + matrixName + ' * vec4(' + attributeVarName + ',1.0));\n' +
+                                                             'mat' + size + ' ' + matrixName + ' = mat' + size + '(' + decodeMatrix + ');\n' +
+                                                             'void main() {\n' +
+                                                             '    ' + decodedAttributeVarName + ' = vec' + (size-1) + '(' + matrixName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
                                                              '    ' + newMain + '();\n' +
                                                              '}\n';
                                                 shader = ShaderSource.replaceMain(shader, newMain);
