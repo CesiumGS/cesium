@@ -948,8 +948,13 @@ define([
             });
         }
 
-        if (this.debugShowShadowVolume && defined(this._debugPrimitive)) {
-            this._debugPrimitive.update(frameState);
+        if (defined(this._debugPrimitive)) {
+            if (this.debugShowShadowVolume) {
+                this._debugPrimitive.update(frameState);
+            } else {
+                this._debugPrimitive.destroy();
+                this._debugPrimitive = undefined;
+            }
         }
     };
 
@@ -1010,6 +1015,7 @@ define([
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
+        this._debugPrimitive = this._debugPrimitive && this._debugPrimitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
