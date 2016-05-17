@@ -1615,12 +1615,18 @@ define([
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
         var program = programs[id];
+        var extensionsUsed = model.gltf.extensionsUsed;
 
         var attributeLocations = createAttributeLocations(program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
-        
-        vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
+
+        // Check for extensions
+        if (defined(extensionsUsed) && extensionsUsed.constructor === Array) {
+            if (extensionsUsed.indexOf('WEB3D_quantized_attributes') >= 0) {
+                vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
+            }
+        }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);

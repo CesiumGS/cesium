@@ -120,6 +120,9 @@
       "uri": "data:application/octet-stream;base64,AAABAAIAAwACAAEABAAFAAYABwAGAAUACAAJAAoACwAKAAkADAANAA4ADwAOAA0AEAARABIAEwASABEAFAAVABYAFwAWABUAAAAAAP////8AAP//AAD///////////////8AAP//AAAAAP////8AAAAAAAAAAAAA//////////8AAP///////wAA//8AAAAAAAD/////////////AAD//wAA/////wAAAAAAAP//AAD/////AAAAAAAAAAD//wAAAAAAAAAAAAD//wAA//8AAAAA/////wAA/3//f////3//f////3//f////3//f////38AAP9//38AAP9//38AAP9//38AAP9/////f/9/////f/9/////f/9/////f/9//3////9//3////9//3////9//3////9/AAD/f/9/AAD/f/9/AAD/f/9/AAD/f/9//3//fwAA/3//fwAA/3//fwAA/3//fwAA"
     }
   },
+  "extensionsUsed": [
+    "WEB3D_quantized_attributes"
+  ],
   "materials": {
     "Effect-Red": {
       "name": "Red",
