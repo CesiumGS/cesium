@@ -9,4 +9,4 @@ Below is a list of models with links to the originals and a statement of which a
 * Box-Quantized ([Box](https://github.com/KhronosGroup/glTF/tree/master/sampleModels/Box)): `NORMAL`, `POSITION`
 * CesiumMilkTruck-Quantized ([Cesium Milk Truck](https://github.com/KhronosGroup/glTF/tree/master/sampleModels/CesiumMilkTruck)): `NORMAL`, `POSITION`
 * Duck-Quantized ([Duck](https://github.com/KhronosGroup/glTF/tree/master/sampleModels/Duck)): `TEXCOORD`
-* RiggedSimple-Quantied ([Rigged Simple](https://github.com/KhronosGroup/glTF/tree/master/sampleModels/RiggedSimple)): `WEIGHT`, `JOINT`
+* RiggedSimple-Quantized ([Rigged Simple](https://github.com/KhronosGroup/glTF/tree/master/sampleModels/RiggedSimple)): `WEIGHT`, `JOINT`
