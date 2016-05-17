@@ -3,6 +3,7 @@
 * [Get the Code](#get-the-code)
 * [Build the Code](#build-the-code)
 * [Build Scripts](#build-scripts)
+* [Travis and Continuous Integration](#travis-and-continuous-integration)
 
 ## Get the Code
 
@@ -98,3 +99,65 @@ Here's the full set of scripts and what they do.
    * `test-webgl` - Runs only WebGL tests with [Karma](http://karma-runner.github.io/0.13/index.html).
    * `test-webgl-validation` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) and enables low-level WebGL validation.
    * `test-release` - Runs all tests with [Karma](http://karma-runner.github.io/0.13/index.html) on the minified release version of built Cesium.
+   * `deploy-s3` - Deploys the built cesium files, the npm package, and the zip file to Amazon S3. This requires having credentials set up for the S3 bucket to which you are deploying.
+   * `deploy-status` - Set the deployment statuses in GitHub, for use with Travis.
+   * `deploy-set-version` - Sets the version of `package.json`, for use with Travis.
+
+## Travis and Continuous Integration
+
+Cesium uses [Travis](https://travis-ci.org/) for continuous integration. The Travis configuration and all the steps of the build process are defined in `travis.yml`. The blog post [Cesium Continuous Integration](http://cesiumjs.org/2016/04/07/Cesium-Continuous-Integration/) contains an in-depth explaination of the travis build process.
+
+After pushing code to the Cesium repository or when opening a pull request, the build is triggered. After the build has completed, at the bottom on the pull request, the status of the build is shown and you can access the build by clicking the "Details" link.
+
+![Checks](checks_failed.jpg)
+
+You can also access the build of any branch of cesium by going to the [Cesium Branches](https://github.com/AnalyticalGraphicsInc/cesium/branches/all) page, and clicking the icon next to the branch name.
+
+![Branches](branches.png)
+
+Additional set up is required for deployment if you do not have commit access to Cesium.
+
+### Configure a Different S3 Bucket
+
+It is possible to configure your `travis.yml` and `gulpfile.js` to deploy to a different S3 Bucket. If you are using the cesium-dev bucket and have valid credentials, skip to [Configure S3 Credentials](#configure-s3-credentials)
+
+* In `travis.yml`, edit the following line:
+
+```
+- npm run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+```
+
+* Edit `cesium-dev` to be the name of the S3 bucket you would like to deploy to
+* In `gulpfile.js`, edit the following line:
+
+```
+var travisDeployUrl = "http://cesium-dev.s3-website-us-east-1.amazonaws.com/cesium/";
+```
+
+* Edit the URL to match the URL of the S3 bucket specified in `travis.yml`
+
+### Configure S3 Credentials
+
+To configure Travis for deployment for a fork of Cesium, you must have valid credentials to the S3 bucket.
+
+* Go to [travis.org](https://travis-ci.org/) and select your fork of Cesium
+* Go to "More Options">"Settings"
+* Under the "Environment Variables" section, add two environment variables, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, with your access key and secret key
+
+![Environment Variables](environment.jpg)
+
+### Configure Statuses
+
+To configure the additional commit statuses on GitHub for your fork of Cesium, you need to generate a personal access token for Travis to use.
+
+* In GitHub, go to "Settings" and "Personal access tokens"
+* Click "Generate new token" and confirm your password when prompted
+* Give a breif description of the token such as "Travis Statuses" and select "repo:status" and click "Generate token"
+   * `repo:status` gives the token access to only commit statuses
+
+![Token Access](token.jpg)
+
+* Copy the token to your clipboard
+* Go to [travis.org](https://travis-ci.org/) and select your fork of Cesium
+* Go to "More Options">"Settings"
+* Under the "Environment Variables" section, add the environment variable `TOKEN` and paste your token for the value
