@@ -92,6 +92,7 @@ define([
         }
         //>>includeEnd('debug');
 
+        var scene = this._scene;
         var items = this._items.values;
         var unusedPointIndexes = this._unusedPointIndexes;
         var unusedBillboardIndexes = this._unusedBillboardIndexes;
@@ -101,7 +102,7 @@ define([
             var pointGraphics = entity._point;
             var pointPrimitive = item.pointPrimitive;
             var billboard = item.billboard;
-            var heightReference = pointGraphics.heightReference;
+            var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE)
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
@@ -121,9 +122,9 @@ define([
 
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
-                    billboardCollection = new BillboardCollection();
+                    billboardCollection = new BillboardCollection({scene: scene});
                     this._billboardCollection = billboardCollection;
-                    this._scene.primitives.add(billboardCollection);
+                    scene.primitives.add(billboardCollection);
                 }
 
                 if (unusedBillboardIndexes.length > 0) {
@@ -136,7 +137,7 @@ define([
                 billboard.image = undefined;
                 item.billboard = billboard;
                 needsRedraw = true;
-            } else if (!defined(pointPrimitive)) {
+            } else if ((heightReference !== HeightReference.CLAMP_TO_GROUND) && !defined(pointPrimitive)) {
                 if (defined(billboard)) {
                     returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
                     billboard = undefined;
@@ -146,7 +147,7 @@ define([
                 if (!defined(pointPrimitiveCollection)) {
                     pointPrimitiveCollection = new PointPrimitiveCollection();
                     this._pointPrimitiveCollection = pointPrimitiveCollection;
-                    this._scene.primitives.add(pointPrimitiveCollection);
+                    scene.primitives.add(pointPrimitiveCollection);
                 }
 
                 if (unusedPointIndexes.length > 0) {
@@ -173,13 +174,42 @@ define([
                 billboard.position = position;
                 billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
                 billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-                billboard.heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE, heightReference);
+                billboard.heightReference = heightReference;
 
-                // TODO: Generate marker that looks like this
-                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
-                pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
-                pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
+                var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
+                var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
+                var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
+
+                if (newOutlineWidth > 0) {
+                    billboard.scale = 1.0;
+                    needsRedraw = needsRedraw || //
+                                 newOutlineWidth !== item.outlineWidth || //
+                                 newPixelSize !== item.pixelSize || //
+                                 !Color.equals(newColor, item.color) || //
+                                 !Color.equals(newOutlineColor, item.outlineColor);
+                } else {
+                    billboard.scale = newPixelSize / 50.0;
+                    newPixelSize = 50.0;
+                    needsRedraw = needsRedraw || //
+                                 newOutlineWidth !== item.outlineWidth || //
+                                 !Color.equals(newColor, item.color) || //
+                                 !Color.equals(newOutlineColor, item.outlineColor);
+                }
+
+                if (needsRedraw) {
+                    item.color = Color.clone(newColor, item.color);
+                    item.outlineColor = Color.clone(newOutlineColor, item.outlineColor);
+                    item.pixelSize = newPixelSize;
+                    item.outlineWidth = newOutlineWidth;
+
+                    var centerAlpha = newColor.alpha;
+                    var cssColor = newColor.toCssColorString();
+                    var cssOutlineColor = newOutlineColor.toCssColorString();
+                    var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
+
+                    billboard.setImage(textureId, createCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
+                }
             }
         }
         return true;
