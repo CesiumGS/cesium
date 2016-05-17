@@ -1453,11 +1453,30 @@ define([
 
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
+
+    function shallowClone(obj) {
+        var newObj = {};
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                newObj[key] = obj[key];
+            }
+        }
+        return newObj;
+    }
     
-    function modifyShaderForExtensions(shader, programName, model) {
+    function modifyShaderForExtensions(shader, programName, model, context) {
         var gltf = model.gltf;
         var accessors = gltf.accessors;
+        var materials = gltf.materials;
         var meshes = gltf.meshes;
+        var programs = gltf.programs;
+        var techniques = gltf.techniques;
+        var uniformMaps = model._uniformMaps;
+        var processedAccessors = [];
+        var decodedAttributes = [];
+        var unresolvedProgramId = undefined;
+        var unresolvedTechniqueId;
+        var unresolvedMaterialId;
 
         for (var meshId in meshes) {
             if (meshes.hasOwnProperty(meshId)) {
@@ -1474,8 +1493,9 @@ define([
                     // https://github.com/KhronosGroup/glTF/issues/258
 
                     var materialId = primitive.material;
-                    var material = gltf.materials[materialId];
-                    var technique = gltf.techniques[material.technique];
+                    var material = materials[materialId];
+                    var techniqueId = material.technique;
+                    var technique = techniques[techniqueId];
                     
                     var programId = technique.program;
                     if (programId === programName) {
@@ -1504,41 +1524,70 @@ define([
                                 // Skip if the attribute is not used by the material, e.g., because the asset was exported
                                 // with an attribute that wasn't used and the asset wasn't optimized.
                                 if (defined(attributeVarName)) {
-                                    var a = accessors[primitiveAttributes[attributeSemantic]];
-                                    if (a.hasOwnProperty('extensions')) {
+                                    var attributeId = primitiveAttributes[attributeSemantic];
+                                    var a = accessors[attributeId];
+                                    if (a.hasOwnProperty('extensions') && processedAccessors.indexOf(attributeId) < 0) {
                                         var extensions = a.extensions;
                                         if (extensions.hasOwnProperty('WEB3D_quantized_attributes')) {
-                                            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                                            var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                            decodeMatrix = decodeMatrix.map(function(val) {
-                                                return val.toFixed(16);
-                                            });
+                                            // Only one of each semantic type can be decoded per shader
+                                            if (decodedAttributes.indexOf(attributeSemantic) >= 0) {
+                                                // Assign any unresolved primitives to a new program
+                                                if (!defined(unresolvedProgramId)) {
+                                                    unresolvedProgramId = programName + '_r';
+                                                    unresolvedTechniqueId = techniqueId + '_r';
+                                                    unresolvedMaterialId = materialId + '_r';
+                                                    programs[unresolvedProgramId] = shallowClone(programs[programName]);
+                                                    var unresolvedTechnique = techniques[unresolvedTechniqueId] = shallowClone(techniques[techniqueId]);
+                                                    var unresolvedMaterial = materials[unresolvedMaterialId] = shallowClone(materials[materialId]);
+                                                    unresolvedTechnique.program = unresolvedProgramId;
+                                                    unresolvedMaterial.technique = unresolvedTechniqueId;
 
-                                            var newMain = "decoded_" + attributeSemantic;
-                                            var matrixName = "decode_" + attributeSemantic + "_matrix";
-                                            var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
+                                                    uniformMaps[unresolvedMaterialId] = {
+                                                        uniformMap : undefined,
+                                                        values : undefined,
+                                                        jointMatrixUniformName : undefined
+                                                    };
 
-                                            // replace usages of the original attribute with the decoded version, but not the declaration
-                                            var first = true;
-                                            shader = shader.replace(new RegExp(attributeVarName, 'g'), function(match) {
-                                                if (first) {
-                                                    first = false;
-                                                    return match;
+                                                    createRenderStateForTechnique(model, unresolvedTechniqueId, context);
                                                 }
-                                                return decodedAttributeVarName;
-                                            });
-                                            // declare decoded attribute
-                                            shader = "vec3 " + decodedAttributeVarName + ";\n" + shader;
+                                                primitive.material = unresolvedMaterialId;
+                                            }
+                                            else {
+                                                var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                                                var decodeMatrix = quantizedAttributes.decodeMatrix;
+                                                decodeMatrix = decodeMatrix.map(function(val) {
+                                                    return val.toFixed(16);
+                                                });
 
-                                            // splice decode function into the shader
-                                            var decode = "\n" +
-                                                         "mat4 " + matrixName + " = mat4(" + decodeMatrix + ");\n" +
-                                                         "void main(void) {\n" +
-                                                         "    " + decodedAttributeVarName + " = vec3(vec4(" + attributeVarName + ",1.0) * " + matrixName + ");\n" +
-                                                         "    " + newMain + "();\n" +
-                                                         "}\n";
-                                            shader = ShaderSource.replaceMain(shader, newMain);
-                                            shader += decode;
+                                                var newMain = "decoded_" + attributeSemantic;
+                                                var matrixName = "decode_" + attributeSemantic + "_matrix";
+                                                var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
+
+                                                // replace usages of the original attribute with the decoded version, but not the declaration
+                                                var first = true;
+                                                shader = shader.replace(new RegExp(attributeVarName, 'g'), function(match) {
+                                                    if (first) {
+                                                        first = false;
+                                                        return match;
+                                                    }
+                                                    return decodedAttributeVarName;
+                                                });
+                                                // declare decoded attribute
+                                                shader = "vec3 " + decodedAttributeVarName + ";\n" + shader;
+
+                                                // splice decode function into the shader
+                                                var decode = "\n" +
+                                                             "mat4 " + matrixName + " = mat4(" + decodeMatrix + ");\n" +
+                                                             "void main(void) {\n" +
+                                                             "    " + decodedAttributeVarName + " = vec3(" + matrixName + " * vec4(" + attributeVarName + ",1.0));\n" +
+                                                             "    " + newMain + "();\n" +
+                                                             "}\n";
+                                                shader = ShaderSource.replaceMain(shader, newMain);
+                                                shader += decode;
+
+                                                processedAccessors.push(attributeId);
+                                                decodedAttributes.push(attributeSemantic);
+                                            }
                                         }
                                     }
                                 }
@@ -1547,6 +1596,10 @@ define([
                     }
                 }
             }
+        }
+        // Recursively resolve any primitives that still need to be decoded
+        if (defined(unresolvedProgramId)) {
+            createProgram(unresolvedProgramId, model, context);
         }
         return shader;
     }
@@ -1567,7 +1620,7 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
         
-        vs = modifyShaderForExtensions(vs, id, model);
+        vs = modifyShaderForExtensions(vs, id, model, context);
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
@@ -2080,87 +2133,92 @@ define([
 
     function createRenderStates(model, context) {
         var loadResources = model._loadResources;
+        var techniques = model.gltf.techniques;
 
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
-            var rendererRenderStates = model._rendererResources.renderStates;
-            var techniques = model.gltf.techniques;
             for (var id in techniques) {
                 if (techniques.hasOwnProperty(id)) {
-                    var technique = techniques[id];
-                    var states = technique.states;
-
-                    var booleanStates = getBooleanStates(states);
-                    var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
-                    var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
-                    var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-                        WebGLConstants.FUNC_ADD,
-                        WebGLConstants.FUNC_ADD]);
-                    var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-                        WebGLConstants.ONE,
-                        WebGLConstants.ONE,
-                        WebGLConstants.ZERO,
-                        WebGLConstants.ZERO]);
-                    var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
-                    var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
-                    var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-                    var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
-
-                    rendererRenderStates[id] = RenderState.fromCache({
-                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
-                        cull : {
-                            enabled : booleanStates[WebGLConstants.CULL_FACE],
-                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-                        },
-                        lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-                        polygonOffset : {
-                            enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                            factor : polygonOffset[0],
-                            units : polygonOffset[1]
-                        },
-                        scissorTest : {
-                            enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                            rectangle : {
-                                x : scissor[0],
-                                y : scissor[1],
-                                width : scissor[2],
-                                height : scissor[3]
-                            }
-                        },
-                        depthRange : {
-                            near : depthRange[0],
-                            far : depthRange[1]
-                        },
-                        depthTest : {
-                            enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
-                        },
-                        colorMask : {
-                            red : colorMask[0],
-                            green : colorMask[1],
-                            blue : colorMask[2],
-                            alpha : colorMask[3]
-                        },
-                        depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
-                        blending : {
-                            enabled : booleanStates[WebGLConstants.BLEND],
-                            color : {
-                                red : blendColor[0],
-                                green : blendColor[1],
-                                blue : blendColor[2],
-                                alpha : blendColor[3]
-                            },
-                            equationRgb : blendEquationSeparate[0],
-                            equationAlpha : blendEquationSeparate[1],
-                            functionSourceRgb : blendFuncSeparate[0],
-                            functionSourceAlpha : blendFuncSeparate[1],
-                            functionDestinationRgb : blendFuncSeparate[2],
-                            functionDestinationAlpha : blendFuncSeparate[3]
-                        }
-                    });
+                    createRenderStateForTechnique(model, id, context);
                 }
             }
         }
+    }
+
+    function createRenderStateForTechnique(model, id, context) {
+        var rendererRenderStates = model._rendererResources.renderStates;
+        var techniques = model.gltf.techniques;
+        var technique = techniques[id];
+        var states = technique.states;
+
+        var booleanStates = getBooleanStates(states);
+        var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
+        var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
+        var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
+            WebGLConstants.FUNC_ADD,
+            WebGLConstants.FUNC_ADD]);
+        var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
+            WebGLConstants.ONE,
+            WebGLConstants.ONE,
+            WebGLConstants.ZERO,
+            WebGLConstants.ZERO]);
+        var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
+        var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
+        var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
+        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
+
+        rendererRenderStates[id] = RenderState.fromCache({
+            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
+            cull : {
+                enabled : booleanStates[WebGLConstants.CULL_FACE],
+                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
+            },
+            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
+            polygonOffset : {
+                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
+                factor : polygonOffset[0],
+                units : polygonOffset[1]
+            },
+            scissorTest : {
+                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
+                rectangle : {
+                    x : scissor[0],
+                    y : scissor[1],
+                    width : scissor[2],
+                    height : scissor[3]
+                }
+            },
+            depthRange : {
+                near : depthRange[0],
+                far : depthRange[1]
+            },
+            depthTest : {
+                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
+                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
+            },
+            colorMask : {
+                red : colorMask[0],
+                green : colorMask[1],
+                blue : colorMask[2],
+                alpha : colorMask[3]
+            },
+            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+            blending : {
+                enabled : booleanStates[WebGLConstants.BLEND],
+                color : {
+                    red : blendColor[0],
+                    green : blendColor[1],
+                    blue : blendColor[2],
+                    alpha : blendColor[3]
+                },
+                equationRgb : blendEquationSeparate[0],
+                equationAlpha : blendEquationSeparate[1],
+                functionSourceRgb : blendFuncSeparate[0],
+                functionSourceAlpha : blendFuncSeparate[1],
+                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationAlpha : blendFuncSeparate[3]
+            }
+        });
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
@@ -2832,11 +2890,10 @@ define([
             }
         } else {
             createBuffers(model, context); // using glTF bufferViews
+            createPrograms(model, context);
             createSamplers(model, context);
             loadTexturesFromBufferViews(model);
             createTextures(model, context);
-
-            createPrograms(model, context);
         }
 
         createSkins(model);
