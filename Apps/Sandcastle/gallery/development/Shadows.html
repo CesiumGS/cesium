@@ -175,7 +175,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-
 function BiasOptions(options) {
     this.type = options.type;
     this.polygonOffset = Cesium.knockout.observable(options.polygonOffset);
@@ -723,7 +722,6 @@ handler.setInputAction(function(movement) {
         picked.primitive.receiveShadows = !picked.primitive.receiveShadows;
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
-
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
