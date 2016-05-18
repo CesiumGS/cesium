@@ -3,8 +3,7 @@ Change Log
 
 ### Shadows TODO
 * Added shadows
-    * Added `ShadowMap` class which supports cascaded shadow maps, directional lights, point lights, and spot lights.
-    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Shadows are disabled by default.
+    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are disabled by default.
     * Added `castShadows` and `receiveShadows` properties to the entity API for models, boxes, corridors, cylinders, ellipses, ellipsoids, polygons, polylines, polyline volumes, rectangles, and walls.
     * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
     * Added `castShadows` and `receiveShadows` properties to `Model`, and options to the `Model` constructor and `Model.fromGltf`.

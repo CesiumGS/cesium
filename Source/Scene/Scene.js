@@ -1159,7 +1159,9 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        updateDerivedCommands(scene, command);
+        if (!scene.frameState.passes.pick) {
+            updateDerivedCommands(scene, command);
+        }
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1241,6 +1243,7 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
+        var updateShadowHints = (frameState.shadowMaps.length > 0) && !frameState.passes.pick;
         var shadowNear = Number.MAX_VALUE;
         var shadowFar = -Number.MAX_VALUE;
         var shadowClosestObjectSize = Number.MAX_VALUE;
@@ -1286,7 +1289,7 @@ define([
                     // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
                     // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
                     // camera isn't inside.
-                    if (command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                    if (updateShadowHints && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
                         !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
 
                         // Get the smallest bounding volume the camera is near. This is used to improve cascaded shadow splits.
@@ -1320,14 +1323,18 @@ define([
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
 
-            shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
-            shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            if (updateShadowHints) {
+                shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+                shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            }
         }
 
         // Use the computed near and far for shadows
-        frameState.shadowHints.nearPlane = shadowNear;
-        frameState.shadowHints.farPlane = shadowFar;
-        frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+        if (updateShadowHints) {
+            frameState.shadowHints.nearPlane = shadowNear;
+            frameState.shadowHints.farPlane = shadowFar;
+            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+        }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
@@ -1418,7 +1425,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowMaps.length > 0 && command.receiveShadows) {
+        } else if (!scene.frameState.passes.pick && scene.frameState.shadowMaps.length > 0 && command.receiveShadows) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -2052,6 +2059,11 @@ define([
         var globe = scene._globe;
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
+
+        if (length === 0 || frameState.passes.pick) {
+            return;
+        }
+
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
