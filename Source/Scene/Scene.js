@@ -1274,6 +1274,8 @@ define([
         if (!is2D) {
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
+            far = Math.min(far, camera.position.z + scene.frustumSize2D);
+            near = Math.min(near, far);
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.frustumSize2D);
         }
 
