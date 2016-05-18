@@ -280,6 +280,52 @@ defineSuite([
         });
     });
 
+    function createAndRemoveGeometryWithShadows(castShadows, receiveShadows) {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+        ellipse.castShadows = new ConstantProperty(castShadows);
+        ellipse.receiveShadows = new ConstantProperty(receiveShadows);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            expect(primitive.castShadows).toBe(castShadows);
+            expect(primitive.receiveShadows).toBe(receiveShadows);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry with shadows', function() {
+        createAndRemoveGeometryWithShadows(true, true);
+        createAndRemoveGeometryWithShadows(true, false);
+        createAndRemoveGeometryWithShadows(false, true);
+        createAndRemoveGeometryWithShadows(false, false);
+    });
+
     it('Correctly handles geometry changing batches', function() {
         var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
@@ -697,7 +743,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic fill color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic fill color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 
@@ -740,7 +786,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic outline color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic outline color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 

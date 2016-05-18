@@ -82,6 +82,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.castShadowsProperty).toBe(undefined);
+        expect(updater.receiveShadowsProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -131,6 +133,8 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.castShadowsProperty).toEqual(new ConstantProperty(false));
+        expect(updater.receiveShadowsProperty).toEqual(new ConstantProperty(false));
         expect(updater.isDynamic).toBe(false);
     });
 

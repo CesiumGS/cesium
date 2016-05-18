@@ -32,7 +32,9 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 10,
             closeTop : false,
-            closeBottom : false
+            closeBottom : false,
+            castShadows : false,
+            receiveShadows : false
         };
 
         var ellipse = new RectangleGraphics(options);
@@ -50,7 +52,9 @@ defineSuite([
         expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(ellipse.closeTop).toBeInstanceOf(ConstantProperty);
         expect(ellipse.closeBottom).toBeInstanceOf(ConstantProperty);
-
+        expect(ellipse.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.receiveShadows).toBeInstanceOf(ConstantProperty);
+        
         expect(ellipse.material.color.getValue()).toEqual(options.material);
         expect(ellipse.show.getValue()).toEqual(options.show);
         expect(ellipse.coordinates.getValue()).toEqual(options.coordinates);
@@ -65,6 +69,8 @@ defineSuite([
         expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(ellipse.closeTop.getValue()).toEqual(options.closeTop);
         expect(ellipse.closeBottom.getValue()).toEqual(options.closeBottom);
+        expect(ellipse.castShadows.getValue()).toEqual(options.castShadows);
+        expect(ellipse.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -83,6 +89,8 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new RectangleGraphics();
         target.merge(source);
@@ -101,6 +109,8 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -120,6 +130,8 @@ defineSuite([
         var outlineWidth = new ConstantProperty();
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new RectangleGraphics();
         target.material = material;
@@ -136,6 +148,8 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -153,6 +167,8 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -171,6 +187,8 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -187,6 +205,8 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -212,5 +232,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'closeTop', false, true);
         testDefinitionChanged(property, 'closeBottom', false, true);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

@@ -40,6 +40,8 @@ define([
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the rectangle clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
+     * @param {Property} [options.castShadows=false] A boolean Property specifying whether the rectangle casts shadows from each light source.
+     * @param {Property} [options.receiveShadows=false] A boolean Property specifying whether the rectangle receives shadows from shadow casters in the scene.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
@@ -73,6 +75,10 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._castShadows = undefined;
+        this._castShadowsSubscription = undefined;
+        this._receiveShadows = undefined;
+        this._receiveShadowsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -201,7 +207,25 @@ define([
          * @type {Property}
          * @default true
          */
-        closeBottom : createPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the rectangle
+         * casts shadows from each light source.
+         * @memberof RectangleGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        castShadows : createPropertyDescriptor('castShadows'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the rectangle
+         * receives shadows from shadow casters in the scene.
+         * @memberof RectangleGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        receiveShadows : createPropertyDescriptor('receiveShadows')
     });
 
     /**
@@ -228,6 +252,8 @@ define([
         result.outlineWidth = this.outlineWidth;
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
+        result.castShadows = this.castShadows;
+        result.receiveShadows = this.receiveShadows;
         return result;
     };
 
@@ -258,6 +284,8 @@ define([
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
+        this.castShadows = defaultValue(this.castShadows, source.castShadows);
+        this.receiveShadows = defaultValue(this.receiveShadows, source.receiveShadows);
     };
 
     return RectangleGraphics;

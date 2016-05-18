@@ -30,7 +30,9 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 5,
-            cornerType : CornerType.BEVELED
+            cornerType : CornerType.BEVELED,
+            castShadows : false,
+            receiveShadows : false
         };
 
         var corridor = new CorridorGraphics(options);
@@ -46,6 +48,8 @@ defineSuite([
         expect(corridor.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(corridor.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(corridor.cornerType).toBeInstanceOf(ConstantProperty);
+        expect(corridor.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(corridor.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(corridor.material.color.getValue()).toEqual(options.material);
         expect(corridor.positions.getValue()).toEqual(options.positions);
@@ -59,6 +63,8 @@ defineSuite([
         expect(corridor.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(corridor.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(corridor.cornerType.getValue()).toEqual(options.cornerType);
+        expect(corridor.castShadows.getValue()).toEqual(options.castShadows);
+        expect(corridor.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -75,6 +81,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new CorridorGraphics();
         target.merge(source);
@@ -91,6 +99,8 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.cornerType).toBe(source.cornerType);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -108,6 +118,8 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var cornerType = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new CorridorGraphics();
         target.material = material;
@@ -122,6 +134,8 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.cornerType = cornerType;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -137,6 +151,8 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.cornerType).toBe(cornerType);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -153,6 +169,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -167,6 +185,8 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.cornerType).toBe(source.cornerType);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -190,5 +210,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'cornerType', CornerType.BEVELED, CornerType.MITERED);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

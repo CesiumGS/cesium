@@ -27,7 +27,9 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 4
+            outlineWidth : 4,
+            castShadows : false,
+            receiveShadows : false
         };
 
         var ellipsoid = new EllipsoidGraphics(options);
@@ -40,6 +42,8 @@ defineSuite([
         expect(ellipsoid.outline).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(ellipsoid.material.color.getValue()).toEqual(options.material);
         expect(ellipsoid.show.getValue()).toEqual(options.show);
@@ -50,6 +54,8 @@ defineSuite([
         expect(ellipsoid.outline.getValue()).toEqual(options.outline);
         expect(ellipsoid.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipsoid.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(ellipsoid.castShadows.getValue()).toEqual(options.castShadows);
+        expect(ellipsoid.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -64,6 +70,8 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new EllipsoidGraphics();
         target.merge(source);
@@ -78,6 +86,8 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -93,6 +103,8 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new EllipsoidGraphics();
         target.material = material;
@@ -101,6 +113,9 @@ defineSuite([
         target.stackPartitions = stackPartitions;
         target.slicePartitions = slicePartitions;
         target.subdivisions = subdivisions;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
+
         source.fill = fill;
         source.outline = outline;
         source.outlineColor = outlineColor;
@@ -118,6 +133,8 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -132,6 +149,8 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -144,6 +163,8 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -165,5 +186,7 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });
