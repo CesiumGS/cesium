@@ -31,7 +31,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
-    shadowsEnabled : true
+    shadows : true,
+    terrainShadows : true
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
@@ -40,90 +41,110 @@ viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
     requestVertexNormals : true
 });
 
-var scene = viewer.scene;
-var shadowMap = scene.shadowMap;
-shadowMap._maxmimumDistance = 10000.0;
-scene.globe.castShadows = true;
+var shadowMap = viewer.shadowMap;
+shadowMap.maxmimumDistance = 10000.0;
 
-var models = {
-    'Cesium Air' : {
-        url : '../../SampleData/models/CesiumAir/Cesium_Air.glb',
-        height : 100.0
-    },
-    'Ground Vehicle' : {
-        url : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
-        height : 0.0
-    },
-    'Cesium Man' : {
-        url : '../../SampleData/models/CesiumMan/Cesium_Man.glb',
-        height : 0.0
-    },
-    'Wood Tower' : {
-        url : '../../SampleData/models/WoodTower/Wood_Tower.gltf',
-        height : 0.0
-    },
-    'Simple City' : {
-        url : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf',
-        height : 0.0
+var cesiumAir = viewer.entities.add({
+    name : 'Cesium Air',
+    height : 20.0,
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb'
     }
-};
+});
+
+var groundVehicle = viewer.entities.add({
+    name : 'Ground Vehicle',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/CesiumGround/Cesium_Ground.glb'
+    }
+});
+
+var cesiumMan = viewer.entities.add({
+    name : 'Cesium Man',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb'
+    }
+});
+
+var woodTower = viewer.entities.add({
+    name : 'Wood Tower',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/WoodTower/Wood_Tower.gltf'
+    }
+});
+
+var simpleCity = viewer.entities.add({
+    name : 'Simple City',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf'
+    }
+});
 
 var locations = {
-    'Half Dome' : {
-        longitude : -2.0862479628,
-        latitude : 0.6587902522,
-        height : 2662.991061159884
-    },
-    'Exton' : {
+    Exton : {
         longitude : -1.31968,
         latitude : 0.698874,
-        height : 74.14210186070714
+        height : 74.14210186070714,
+        date : 2457522.154792
     },
-    'Everest' : {
+    HalfDome : {
+        longitude : -2.086267733294987,
+        latitude : 0.6587491773830219,
+        height : 2640.716312584986,
+        date : 2457507.247512
+    },
+    Everest : {
         longitude : 1.517132688,
         latitude : 0.4884844964,
-        height : 8773.17824498951
+        height : 8773.17824498951,
+        date : 2457507.620845
     },
-    'Pinnacle PA' : {
+    PinnaclePA : {
         longitude : -1.3324415110874286,
         latitude : 0.6954224325279967,
-        height : 179.14276256241743
+        height : 179.14276256241743,
+        date : 2457523.041620
     },
-    'Seneca Rocks' : {
-        longitude : -1.38519677,
-        latitude : 0.67781497,
-        height : 627.9167668617168
+    SenecaRocks : {
+        longitude : -1.3851775172879768,
+        latitude : 0.6778211831093554,
+        height : 682.5893300695776,
+        date : 2457522.097512
     },
-    'Space' : {
+    Space : {
         longitude : -1.31968,
         latitude : 0.698874,
-        height : 2000000.0
+        height : 2000000.0,
+        date : 2457522.154792
     }
 };
 
-function reset() {
-    viewer.entities.removeAll();
+var i;
+var entities = viewer.entities.values;
+var entitiesLength = entities.length;
 
-    var position = Cesium.Cartesian3.fromRadians(currentLocation.longitude, currentLocation.latitude, currentLocation.height + currentModel.height);
-    var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, 0.0, 0.0, 0.0);
+function setLocation(location) {
+    var longitude = location.longitude;
+    var latitude = location.latitude;
+    var height = location.height;
 
-    var entity = viewer.entities.add({
-        name : currentModel.url,
-        position : position,
-        orientation : orientation,
-        model : {
-            uri : currentModel.url
-        }
-    });
+    for (i = 0; i < entitiesLength; ++i) {
+        var entity = entities[i];
+        entity.position = Cesium.Cartesian3.fromRadians(longitude, latitude, height + entity.height);
+    }
 
-    viewer.trackedEntity = entity;
+    viewer.clock.currentTime = new Cesium.JulianDate(location.date);
+    viewer.clock.multiplier = 1.0;
 }
 
 function setLocationFunction(location) {
     return function() {
-        currentLocation = location;
-        reset();
-    }
+        setLocation(location);
+    };
 }
 
 var locationToolbarOptions = [];
@@ -139,30 +160,96 @@ for (var locationName in locations) {
 
 Sandcastle.addToolbarMenu(locationToolbarOptions);
 
+function setEntity(entity) {
+    for (i = 0; i < entitiesLength; ++i) {
+        entities[i].show = false;
+    }
+    entity.show = true;
+    viewer.trackedEntity = entity;
+}
 
-function setModelFunction(model) {
+function setEntityFunction(entity) {
     return function() {
-        currentModel = model;
-        reset();
+        setEntity(entity);
+    };
+}
+
+var entityToolbarOptions = [];
+for (i = 0; i < entitiesLength; ++i) {
+    var entity = entities[i];
+    entityToolbarOptions.push({
+        text : entity.name,
+        onselect : setEntityFunction(entity)
+    });
+}
+
+Sandcastle.addToolbarMenu(entityToolbarOptions);
+
+Sandcastle.addToolbarButton('Toggle Shadows', function() {
+    viewer.shadows = !viewer.shadows;
+});
+
+Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
+    viewer.terrainShadows = !viewer.terrainShadows;
+});
+
+Sandcastle.addToolbarButton('Soft Shadows', function() {
+    shadowMap.softShadows = !shadowMap.softShadows;
+});
+
+Sandcastle.addToolbarMenu([{
+    text : 'Size : 2048',
+    onselect : function() {
+        shadowMap.size = 2048;
+    }
+}, {
+    text : 'Size : 1024',
+    onselect : function() {
+        shadowMap.size = 1024;
+    }
+}, {
+    text : 'Size : 512',
+    onselect : function() {
+        shadowMap.size = 512;
+    }
+}, {
+    text : 'Size : 256',
+    onselect : function() {
+        shadowMap.size = 256;
+    }
+}]);
+
+function setShadows(castShadows, receiveShadows) {
+    for (i = 0; i < entitiesLength; ++i) {
+        entities[i].model.castShadows = castShadows;
+        entities[i].model.receiveShadows = receiveShadows;
     }
 }
 
-var modelToolbarOptions = [];
-for (var modelName in models) {
-    if (models.hasOwnProperty(modelName)) {
-        var model = models[modelName];
-        modelToolbarOptions.push({
-            text : modelName,
-            onselect : setModelFunction(model)
-        });
+Sandcastle.addToolbarMenu([{
+    text : 'Entity Shadows',
+    onselect : function() {
+        setShadows(true, true);
     }
-}
+}, {
+    text : 'Cast Only',
+    onselect : function() {
+        setShadows(true, false);
+    }
+}, {
+    text : 'Receive Only',
+    onselect : function() {
+        setShadows(false, true);
+    }
+}, {
+    text : 'Off',
+    onselect : function() {
+        setShadows(false, false);
+    }
+}]);
 
-Sandcastle.addToolbarMenu(modelToolbarOptions);
-
-var currentModel = models['Cesium Air'];
-var currentLocation = locations['Half Dome'];
-reset();
+setLocation(locations.Exton);
+setEntity(cesiumAir);
 
 //Sandcastle_End
 Sandcastle.finishedLoading();
