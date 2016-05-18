@@ -16,6 +16,7 @@ Change Log
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
 * Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
 * Added `CullingVolume.fromBoundingSphere`.
+* Added `debugShowShadowVolume` to `GroundPrimitive`.
 * Added `Entity.readyPromise` and `Entity.ready` promises that resolve when the entity is ready.
 
 ### 1.21 - 2016-05-02
