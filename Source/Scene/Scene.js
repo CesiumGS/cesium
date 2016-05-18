@@ -539,6 +539,15 @@ define([
          */
         this.fog = new Fog();
 
+        /**
+         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
+         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * @type {Number}
+         * @default 1.75e6
+         */
+        this.frustumSize2D = 1.75e6;
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -576,8 +585,6 @@ define([
         this._useWebVR = false;
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
-
-        this.frustumSize2D = 1.75e6;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1272,8 +1279,10 @@ define([
 
         var numFrustums;
         if (!is2D) {
+            // The multifrustum for 3D/CV is non-uniformly distributed.
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
+            // The multifrustum for 2D is uniformly distributed.
             far = Math.min(far, camera.position.z + scene.frustumSize2D);
             near = Math.min(near, far);
             numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.frustumSize2D);
@@ -1621,6 +1630,8 @@ define([
             }
 
             if (scene.mode === SceneMode.SCENE2D) {
+                // To avoid z-fighting in 2D, move the camera to just before the frustum
+                // and scale the frustum depth to be in [1.0, frustumSize2D].
                 camera.position.z = height2D - frustumCommands.near + 1.0;
                 frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
                 frustum.near = 1.0;
