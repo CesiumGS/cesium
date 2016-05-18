@@ -577,7 +577,7 @@ define([
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
-        this.frustumSize2D = 1.0e6;
+        this.frustumSize2D = 1.75e6;
 
         // initial guess at frustums.
         var near = camera.frustum.near;
@@ -1099,7 +1099,7 @@ define([
                 curFar = Math.min(far, farToNearRatio * curNear);
             } else {
                 curNear = near + m * frustumSize2D;
-                curFar = curNear + frustumSize2D;
+                curFar = Math.min(far, curNear + frustumSize2D);
             }
 
             var frustumCommands = frustumCommandsList[m];
@@ -1562,6 +1562,8 @@ define([
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
 
+        var height2D = camera.position.z;
+
         // Execute commands in each frustum in back to front order
         var j;
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1571,18 +1573,10 @@ define([
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
 
-            if (scene.mode !== SceneMode.SCENE2D) {
-                // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
-                frustum.far = frustumCommands.far;
-                us.updateFrustum(frustum);
-            } else {
-                camera.position.z = frustum.right - frustum.left;//frustumCommands.near + 1.0;
-                frustum.far = frustumCommands.far - frustumCommands.near;
-                frustum.near = 1.0;
-                us.update(scene.frameState);
-                us.updateFrustum(frustum);
-            }
+            // Avoid tearing artifacts between adjacent frustums in the opaque passes
+            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+            frustum.far = frustumCommands.far;
+            us.updateFrustum(frustum);
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1624,6 +1618,14 @@ define([
                 }
             }
 
+            if (scene.mode === SceneMode.SCENE2D) {
+                camera.position.z = height2D - frustumCommands.near + 1.0;
+                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+                frustum.near = 1.0;
+                us.update(scene.frameState);
+                us.updateFrustum(frustum);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GROUND + 1;
@@ -1648,14 +1650,12 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands);
 
-            /*
             if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, globeDepth.framebuffer.depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
-            */
         }
     }
 

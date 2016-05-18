@@ -55,7 +55,7 @@ function createModel(url, height) {
     viewer.trackedEntity = entity;
 }
 
-var options = [/*{
+var options = [{
     text : 'Aircraft',
     onselect : function() {
         createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', 5000.0);
@@ -70,7 +70,7 @@ var options = [/*{
     onselect : function() {
         createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.glb', 0);
     }
-},*/ {
+}, {
     text : 'Skinned character',
     onselect : function() {
         createModel('../../SampleData/models/CesiumMan/Cesium_Man.glb', 0);
