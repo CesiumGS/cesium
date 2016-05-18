@@ -15,6 +15,7 @@ defineSuite([
         'Core/loadJson',
         'Core/Math',
         'Core/Matrix4',
+        'Core/Matrix3',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Renderer/RenderState',
@@ -40,6 +41,7 @@ defineSuite([
         loadJson,
         CesiumMath,
         Matrix4,
+        Matrix3,
         PrimitiveType,
         Transforms,
         RenderState,
@@ -75,6 +77,7 @@ defineSuite([
     var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
     var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
     var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
+    var boxColorUrl = './Data/Models/Box-Color/Box-Color.gltf';
     var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
     var milkTruckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Quantized.gltf';
     var duckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Duck-Quantized.gltf';
@@ -1579,6 +1582,40 @@ defineSuite([
             verifyRender(m);
             primitives.remove(m);
         });
+    });
+
+    it('loads a gltf with color attributes', function() {
+         return loadModel(boxColorUrl).then(function(m) {
+             expect(m.ready).toBe(true);
+             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+             m.show = true;
+             m.zoomTo();
+
+             var rotateX = Matrix3.fromRotationX(CesiumMath.toRadians(90.0));
+             var rotateY = Matrix3.fromRotationY(CesiumMath.toRadians(90.0));
+             var rotateZ = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0));
+
+             // Each side of the cube should be a different color
+             var oldPixelColor = scene.renderForSpecs();
+             for(var i = 0; i < 6; i++) {
+                 expect(oldPixelColor).not.toEqual([0, 0, 0, 255]);
+
+                 var rotate = rotateZ;
+                 if (i % 3 === 0) {
+                     rotate = rotateX;
+                 }
+                 else if ((i-1) % 3 === 0) {
+                     rotate = rotateY;
+                 }
+                 Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
+
+                 var pixelColor = scene.renderForSpecs();
+                 expect(pixelColor).not.toEqual(oldPixelColor);
+                 oldPixelColor = pixelColor;
+             }
+
+             primitives.remove(m);
+         });
     });
 
     it('loads with custom vertex attributes, vertexShader, fragmentShader, and uniform map', function() {
