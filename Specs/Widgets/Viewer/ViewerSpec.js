@@ -361,13 +361,6 @@ defineSuite([
         expect(viewer.shadows).toBe(true);
     });
 
-    it('can set terrain shadows', function() {
-        viewer = createViewer(container, {
-            terrainShadows : true
-        });
-        expect(viewer.terrainShadows).toBe(true);
-    });
-
     it('can set terrainProvider', function() {
         var provider = new EllipsoidTerrainProvider();
 
