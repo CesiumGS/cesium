@@ -2,9 +2,11 @@ Change Log
 ==========
 
 ### Shadows TODO
-* Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
-* Added `castShadows` and `receiveShadows` properties to `Model`, and options to the `Model` constructor and `Model.fromGltf`.
-* Added `castShadows` and `receiveShadows` properties to `Globe`.
+* Added shadows
+    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are disabled by default.
+    * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
+    * Added `castShadows` and `receiveShadows` properties to `Model`, and options to the `Model` constructor and `Model.fromGltf`.
+    * Added `castShadows` and `receiveShadows` properties to `Globe`.
 * Added `Matrix4.computeView`.
 
 ### 1.22 - 2016-06-01
