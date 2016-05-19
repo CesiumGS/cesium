@@ -15,7 +15,9 @@ Change Log
 * Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
 * Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
+* Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
 * Added `CullingVolume.fromBoundingSphere`.
+* Added `debugShowShadowVolume` to `GroundPrimitive`.
 
 ### 1.21 - 2016-05-02
 
