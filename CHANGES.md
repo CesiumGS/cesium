@@ -17,7 +17,7 @@ Change Log
 * Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
-* Implemented support for [WEB3D_Quantized_Attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
+* Implemented support for [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
 
 ### 1.21 - 2016-05-02
 
