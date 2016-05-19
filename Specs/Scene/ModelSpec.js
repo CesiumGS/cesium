@@ -4,10 +4,12 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/CesiumTerrainProvider',
         'Core/clone',
         'Core/combine',
         'Core/defaultValue',
         'Core/defined',
+        'Core/defineProperties',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/FeatureDetection',
@@ -32,10 +34,12 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumTerrainProvider,
         clone,
         combine,
         defaultValue,
         defined,
+        defineProperties,
         Ellipsoid,
         Event,
         FeatureDetection,
@@ -1720,6 +1724,13 @@ defineSuite([
             };
 
             globe.terrainProviderChanged = new Event();
+            defineProperties(globe, {
+                terrainProvider : {
+                    set : function(value) {
+                        this.terrainProviderChanged.raiseEvent(value);
+                    }
+                }
+            });
 
             globe._surface.updateHeight = function(position, callback) {
                 globe.callback = callback;
@@ -1850,6 +1861,26 @@ defineSuite([
                 expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
 
                 primitives.remove(model);
+            });
+        });
+
+        it('changing the terrain provider', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene
+            }).then(function(model) {
+                expect(model._heightChanged).toBe(false);
+
+                var terrainProvider = new CesiumTerrainProvider({
+                    url : 'made/up/url',
+                    requestVertexNormals : true
+                });
+
+                scene.terrainProvider = terrainProvider;
+
+                expect(model._heightChanged).toBe(true);
             });
         });
     });
