@@ -468,8 +468,8 @@ define([
         this._heightChanged = false;
         this._removeUpdateHeightCallback = undefined;
         var scene = options.scene;
+        this._scene = scene;
         if (defined(scene)) {
-            this._scene = scene;
             scene.terrainProviderChanged.addEventListener(function() {
                 this._heightChanged = true;
             }, this);
@@ -3142,24 +3142,30 @@ define([
             model._removeUpdateHeightCallback = undefined;
         }
 
-        // If it's on terrain use the clampedModelMatrix if we have it
         var scene = model._scene;
-        if ((model.heightReference !== HeightReference.NONE) && defined(scene)) {
-            var globe = scene.globe;
-            var ellipsoid = globe.ellipsoid;
-
-            // Compute cartographic position so we don't recompute every update
-            var modelMatrix = model.modelMatrix;
-            scratchPosition.x = modelMatrix[12];
-            scratchPosition.y = modelMatrix[13];
-            scratchPosition.z = modelMatrix[14];
-            var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
-
-            var surface = globe._surface;
-            model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
-        } else {
+        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (model.heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported without a scene.');
+            }
+            //>>includeEnd('debug');
             model._clampedModelMatrix = undefined;
+            return;
         }
+
+        // If it's on terrain use the clampedModelMatrix if we have it
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+
+        // Compute cartographic position so we don't recompute every update
+        var modelMatrix = model.modelMatrix;
+        scratchPosition.x = modelMatrix[12];
+        scratchPosition.y = modelMatrix[13];
+        scratchPosition.z = modelMatrix[14];
+        var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        var surface = globe._surface;
+        model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
     }
 
     /**

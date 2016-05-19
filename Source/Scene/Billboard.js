@@ -152,13 +152,6 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
-
-        var scene = this._billboardCollection._scene;
-        if (defined(scene)) {
-            scene.terrainProviderChanged.addEventListener(function() {
-                this._updateClamping();
-            }, this);
-        }
     }
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -853,9 +846,11 @@ define([
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
         if (!defined(scene)) {
+            //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported.');
+                throw new DeveloperError('Height reference is not supported without a scene.');
             }
+            //>>includeEnd('debug');
             return;
         }
 

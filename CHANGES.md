@@ -18,6 +18,7 @@ Change Log
 * Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
 * Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
 * Added `heightReference` to models so they can be drawn on terrain.
+* Added `terrainProviderChanged` event to `Scene` and `Globe`
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 
