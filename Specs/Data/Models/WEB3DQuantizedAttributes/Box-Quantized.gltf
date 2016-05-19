@@ -34,19 +34,11 @@
             -0.5,
             -0.5,
             1
-          ]
+          ],
+          "decodedMin": [-0.5, -0.5, -0.5],
+          "decodedMax": [0.5, 0.5, 0.5]
         }
-      },
-      "max": [
-        65535,
-        65535,
-        65535
-      ],
-      "min": [
-        0,
-        0,
-        0
-      ]
+      }
     },
     "accessor_25": {
       "bufferView": "bufferView_30",
@@ -54,16 +46,6 @@
       "byteStride": 6,
       "componentType": 5123,
       "count": 24,
-      "max": [
-        65535,
-        65535,
-        65535
-      ],
-      "min": [
-        0,
-        0,
-        0
-      ],
       "type": "VEC3",
       "extensions": {
         "WEB3D_quantized_attributes": {

@@ -23,7 +23,6 @@ define([
         '../Core/loadImageFromTypedArray',
         '../Core/loadText',
         '../Core/Math',
-        '../Core/Matrix',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -79,7 +78,6 @@ define([
         loadImageFromTypedArray,
         loadText,
         CesiumMath,
-        Matrix,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -1080,30 +1078,16 @@ define([
                             if (defined(position)) {
                                 var accessor = gltfAccessors[position];
                                 var extensions = accessor.extensions;
-                                var accessorMin = new Matrix(accessor.min);
-                                var accessorMax = new Matrix(accessor.max);
+                                var accessorMin = accessor.min;
+                                var accessorMax = accessor.max;
                                 
                                 // If this accessor is quantized, we should use the decoded min and max
                                 if (defined(extensions)) {
                                     var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                                    // The decodeMin and decodeMax attributes are required for POSITION attributes
                                     if (defined(quantizedAttributes)) {
-                                        var decodeMatrix = new Matrix(quantizedAttributes.decodeMatrix, Math.sqrt(quantizedAttributes.decodeMatrix.length));
-                                        if (defined(quantizedAttributes.decodedMin)) {
-                                            accessorMin = new Matrix(quantizedAttributes.decodedMin);
-                                        }
-                                        else {
-                                            accessorMin.push(1.0);
-                                            Matrix.multiply(decodeMatrix, accessorMin, accessorMin);
-                                            accessorMin.pop();
-                                        }
-                                        if (defined(quantizedAttributes.decodedMax)) {
-                                            accessorMax = new Matrix(quantizedAttributes.decodedMax);
-                                        }
-                                        else {
-                                            accessorMax.push(1.0);
-                                            Matrix.multiply(decodeMatrix, accessorMax, accessorMax);
-                                            accessorMax.pop();
-                                        }
+                                        accessorMin = quantizedAttributes.decodedMin;
+                                        accessorMax = quantizedAttributes.decodedMax;
                                     }
                                 }
                                 var aMin = Cartesian3.fromArray(accessorMin, 0, aMinScratch);
@@ -2753,7 +2737,20 @@ define([
                 var positionAttribute = primitive.attributes.POSITION;
                 if (defined(positionAttribute)) {
                     var a = accessors[positionAttribute];
-                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+                    var extensions = a.extensions;
+                    var accessorMin = a.min;
+                    var accessorMax = a.max;
+
+                    // If this accessor is quantized, we should use the decoded min and max
+                    if (defined(extensions)) {
+                        var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                        // The decodeMin and decodeMax attributes are required for POSITION attributes
+                        if (defined(quantizedAttributes)) {
+                            accessorMin = quantizedAttributes.decodedMin;
+                            accessorMax = quantizedAttributes.decodedMax;
+                        }
+                    }
+                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(accessorMin), Cartesian3.fromArray(accessorMax));
                 }
 
                 var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
