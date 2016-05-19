@@ -30,7 +30,7 @@ defineSuite([
         });
     });
 
-    it('throw querying heights from Small Terrain', function() {
+    it('should throw querying heights from Small Terrain', function() {
         var terrainProvider = new CesiumTerrainProvider({
             url : '//cesiumjs.org/smallTerrain'
         });
@@ -40,9 +40,10 @@ defineSuite([
                          Cartographic.fromDegrees(87.0, 28.0)
                      ];
 
-        expect(function() {
-            sampleTerrainMostDetailed(terrainProvider, positions);
-        }).toThrowDeveloperError();
+        return sampleTerrainMostDetailed(terrainProvider, positions).then(function() {
+            fail('the promise should not resolve');
+        }).otherwise(function() {
+        });
     });
 
     it('uses a suitable common tile height for a range of locations', function() {
