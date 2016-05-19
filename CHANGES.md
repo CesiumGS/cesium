@@ -16,6 +16,7 @@ Change Log
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
 * Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
 * Added `CullingVolume.fromBoundingSphere`.
+* Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
 
 ### 1.21 - 2016-05-02
 
