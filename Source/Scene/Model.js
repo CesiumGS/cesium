@@ -23,6 +23,7 @@ define([
         '../Core/loadImageFromTypedArray',
         '../Core/loadText',
         '../Core/Math',
+        '../Core/Matrix',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -78,6 +79,7 @@ define([
         loadImageFromTypedArray,
         loadText,
         CesiumMath,
+        Matrix,
         Matrix2,
         Matrix3,
         Matrix4,
@@ -1077,8 +1079,35 @@ define([
                             var position = primitives[m].attributes.POSITION;
                             if (defined(position)) {
                                 var accessor = gltfAccessors[position];
-                                var aMin = Cartesian3.fromArray(accessor.min, 0, aMinScratch);
-                                var aMax = Cartesian3.fromArray(accessor.max, 0, aMaxScratch);
+                                var extensions = accessor.extensions;
+                                var accessorMin = new Matrix(accessor.min);
+                                var accessorMax = new Matrix(accessor.max);
+                                
+                                // If this accessor is quantized, we should use the decoded min and max
+                                if (defined(extensions)) {
+                                    var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                                    if (defined(quantizedAttributes)) {
+                                        var decodeMatrix = new Matrix(quantizedAttributes.decodeMatrix, Math.sqrt(quantizedAttributes.decodeMatrix.length));
+                                        if (defined(quantizedAttributes.decodedMin)) {
+                                            accessorMin = new Matrix(quantizedAttributes.decodedMin);
+                                        }
+                                        else {
+                                            accessorMin.push(1.0);
+                                            Matrix.multiply(decodeMatrix, accessorMin, accessorMin);
+                                            accessorMin.pop();
+                                        }
+                                        if (defined(quantizedAttributes.decodedMax)) {
+                                            accessorMax = new Matrix(quantizedAttributes.decodedMax);
+                                        }
+                                        else {
+                                            accessorMax.push(1.0);
+                                            Matrix.multiply(decodeMatrix, accessorMax, accessorMax);
+                                            accessorMax.pop();
+                                        }
+                                    }
+                                }
+                                var aMin = Cartesian3.fromArray(accessorMin, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(accessorMax, 0, aMaxScratch);
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
