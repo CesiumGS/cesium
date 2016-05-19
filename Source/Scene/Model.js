@@ -2489,7 +2489,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2629,11 +2629,20 @@ define([
                     });
                 }
 
+                var command2D;
+
+                if (!scene3DOnly) {
+                    command2D = DrawCommand.shallowClone(command);
+                    command2D.boundingVolume = new BoundingSphere();
+                    command2D.modelMatrix = new Matrix4();
+                }
+
                 var nodeCommand = {
                     show : true,
                     boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    command2D : command2D
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -2641,7 +2650,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, context, scene3DOnly) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2699,7 +2708,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
@@ -2720,6 +2729,7 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
+        var scene3DOnly = frameState.scene3DOnly;
 
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2757,8 +2767,8 @@ define([
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createUniformMaps(model, context);               // using glTF materials/techniques
+        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2828,6 +2838,13 @@ define([
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                            }
+
+                            command = primitiveCommand.command2D;
+                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
+                                Matrix4.clone(nodeMatrix, command.modelMatrix);
+                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
                             }
                         }
                     }
@@ -3287,7 +3304,17 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
+                        var command = nc.command;
+                        commandList.push(command);
+
+                        if (!frameState.scene3DOnly) {
+                            var boundingVolume = command.boundingVolume;
+                            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.command2D);
+                            }
+                        }
                     }
                 }
             }
