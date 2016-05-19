@@ -8,6 +8,7 @@ defineSuite([
         'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
+        'Core/Event',
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
@@ -30,6 +31,7 @@ defineSuite([
         Color,
         defined,
         Ellipsoid,
+        Event,
         loadImage,
         CesiumMath,
         NearFarScalar,
@@ -1575,6 +1577,8 @@ defineSuite([
                 _surface : {},
                 destroy : function() {}
             };
+
+            globe.terrainProviderChanged = new Event();
 
             globe._surface.updateHeight = function(position, callback) {
                 globe.callback = callback;

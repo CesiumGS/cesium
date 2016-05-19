@@ -152,6 +152,13 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._updateClamping();
+
+        var scene = this._billboardCollection._scene;
+        if (defined(scene)) {
+            scene.terrainProviderChanged.addEventListener(function() {
+                this._updateClamping();
+            }, this);
+        }
     }
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;

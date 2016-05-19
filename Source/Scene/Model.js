@@ -467,7 +467,13 @@ define([
         this._heightReference = this.heightReference;
         this._heightChanged = false;
         this._removeUpdateHeightCallback = undefined;
-        this._scene = options.scene;
+        var scene = options.scene;
+        if (defined(scene)) {
+            this._scene = scene;
+            scene.terrainProviderChanged.addEventListener(function() {
+                this._heightChanged = true;
+            }, this);
+        }
 
         /**
          * Used for picking primitives that wrap a model.
@@ -3130,6 +3136,32 @@ define([
         };
     }
 
+    function updateClamping(model) {
+        if (defined(model._removeUpdateHeightCallback)) {
+            model._removeUpdateHeightCallback();
+            model._removeUpdateHeightCallback = undefined;
+        }
+
+        // If it's on terrain use the clampedModelMatrix if we have it
+        var scene = model._scene;
+        if ((model.heightReference !== HeightReference.NONE) && defined(scene)) {
+            var globe = scene.globe;
+            var ellipsoid = globe.ellipsoid;
+
+            // Compute cartographic position so we don't recompute every update
+            var modelMatrix = model.modelMatrix;
+            scratchPosition.x = modelMatrix[12];
+            scratchPosition.y = modelMatrix[13];
+            scratchPosition.z = modelMatrix[14];
+            var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+            var surface = globe._surface;
+            model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
+        } else {
+            model._clampedModelMatrix = undefined;
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3258,35 +3290,16 @@ define([
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                 (this._scale !== this.scale) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale) || (this._heightReference !== this.heightReference) ||
-                this._heightChanged;
+                (this._maximumScale !== this.maximumScale) ||
+                (this._heightReference !== this.heightReference) || this._heightChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
 
-                if (defined(this._removeUpdateHeightCallback)) {
-                    this._removeUpdateHeightCallback();
-                    this._removeUpdateHeightCallback = undefined;
-                }
+                updateClamping(this);
 
-                // If it's on terrain use the clampedModelMatrix if we have it
-                var scene = this._scene;
-                if ((this.heightReference !== HeightReference.NONE) && defined(scene)) {
-                    var globe = scene.globe;
-                    var ellipsoid = globe.ellipsoid;
-
-                    // Compute cartographic position so we don't recompute every update
-                    scratchPosition.x = modelMatrix[12];
-                    scratchPosition.y = modelMatrix[13];
-                    scratchPosition.z = modelMatrix[14];
-                    var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
-
-                    var surface = globe._surface;
-                    this._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(this, ellipsoid, cartoPosition));
-
-                    if (defined(this._clampedModelMatrix)) {
-                        modelMatrix = this._clampedModelMatrix;
-                    }
+                if (defined(this._clampedModelMatrix)) {
+                    modelMatrix = this._clampedModelMatrix;
                 }
 
                 this._scale = this.scale;
