@@ -400,6 +400,14 @@ define([
          * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
+        /**
+         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
+         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * @type {Number}
+         * @default 1.75e6
+         */
+        this.nearToFarDistance2D = 1.75e6;
 
         /**
          * This property is for debugging only; it is not for production use.
@@ -538,15 +546,6 @@ define([
          * @type {Fog}
          */
         this.fog = new Fog();
-
-        /**
-         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
-         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
-         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
-         * @type {Number}
-         * @default 1.75e6
-         */
-        this.frustumSize2D = 1.75e6;
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
@@ -1095,7 +1094,7 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, frustumSize2D) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
             var curNear;
@@ -1105,8 +1104,8 @@ define([
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
                 curFar = Math.min(far, farToNearRatio * curNear);
             } else {
-                curNear = near + m * frustumSize2D;
-                curFar = Math.min(far, curNear + frustumSize2D);
+                curNear = near + m * nearToFarDistance2D;
+                curFar = Math.min(far, curNear + nearToFarDistance2D);
             }
 
             var frustumCommands = frustumCommandsList[m];
@@ -1282,15 +1281,17 @@ define([
             // The multifrustum for 3D/CV is non-uniformly distributed.
             numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
         } else {
-            // The multifrustum for 2D is uniformly distributed.
-            far = Math.min(far, camera.position.z + scene.frustumSize2D);
+            // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // to be in [1.0, nearToFarDistance2D].
+            far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
             near = Math.min(near, far);
-            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.frustumSize2D);
+            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
         }
 
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.frustumSize2D);
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
     }
@@ -1631,7 +1632,7 @@ define([
 
             if (scene.mode === SceneMode.SCENE2D) {
                 // To avoid z-fighting in 2D, move the camera to just before the frustum
-                // and scale the frustum depth to be in [1.0, frustumSize2D].
+                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
                 camera.position.z = height2D - frustumCommands.near + 1.0;
                 frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
                 frustum.near = 1.0;
