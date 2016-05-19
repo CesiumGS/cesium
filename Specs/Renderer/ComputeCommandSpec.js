@@ -23,7 +23,7 @@ defineSuite([
         Material,
         ViewportQuad,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;

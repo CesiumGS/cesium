@@ -56,6 +56,7 @@ define([
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
+        './PolylineArrowMaterialProperty',
         './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
@@ -128,6 +129,7 @@ define([
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
+        PolylineArrowMaterialProperty,
         PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
@@ -143,7 +145,7 @@ define([
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     var currentId;
 
@@ -802,7 +804,8 @@ define([
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
             processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
-            processPacketData(Number, existingMaterial, 'alpha', materialData.alpha, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Boolean, existingMaterial, 'transparent', materialData.transparent, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
@@ -828,6 +831,12 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineArrow)) {
+            if (!(existingMaterial instanceof PolylineArrowMaterialProperty)) {
+                existingMaterial = new PolylineArrowMaterialProperty();
+            }
+            materialData = packetData.polylineArrow;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1318,6 +1327,8 @@ define([
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'outlineWidth', polygonData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
     }
 
@@ -1675,6 +1686,19 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CzmlDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
             }
         }
     });

@@ -3,7 +3,7 @@ defineSuite([
         'Core/binarySearch'
     ], function(
         binarySearch) {
-    "use strict";
+    'use strict';
 
     it('can perform a binary search for 0', function() {
         var array = [0, 1, 2, 3, 4, 5, 6, 7];

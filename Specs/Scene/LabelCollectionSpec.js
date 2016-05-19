@@ -9,6 +9,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/Rectangle',
         'Renderer/ContextLimits',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -26,6 +27,7 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         NearFarScalar,
+        Rectangle,
         ContextLimits,
         HeightReference,
         HorizontalOrigin,
@@ -33,7 +35,7 @@ defineSuite([
         OrthographicFrustum,
         VerticalOrigin,
         createScene) {
-    "use strict";
+    'use strict';
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -1447,20 +1449,12 @@ defineSuite([
             text : 'two'
         });
 
-        var maxRadii = ellipsoid.maximumRadius;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = maxRadii * Math.PI;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = 0.01 * maxRadii;
-        orthoFrustum.far = 60.0 * maxRadii;
+        camera.setView({
+            destination : Rectangle.fromDegrees(-60.0, -60.0, -40.0, 60.0)
+        });
 
-        // Update scene state
         scene.morphTo2D(0);
         scene.renderForSpecs();
-
-        camera.frustum = orthoFrustum;
 
         scene.renderForSpecs();
         var actual = scene.frameState.commandList[0].boundingVolume;

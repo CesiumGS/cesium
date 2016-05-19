@@ -21,7 +21,7 @@ defineSuite([
         Appearance,
         Primitive,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var primitive;

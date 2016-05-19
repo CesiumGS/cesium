@@ -9,7 +9,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     it('merge assigns unassigned properties', function() {
         var source = new DataSourceClock();

@@ -9,7 +9,7 @@ defineSuite([
         defined,
         Iau2006XysSample,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var xys;
 

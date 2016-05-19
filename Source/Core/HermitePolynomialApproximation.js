@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     var factorial = CesiumMath.factorial;
 

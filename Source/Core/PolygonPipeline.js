@@ -12,7 +12,6 @@ define([
         './GeometryAttribute',
         './Math',
         './pointInsideTriangle',
-        './PolylinePipeline',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -29,11 +28,10 @@ define([
         GeometryAttribute,
         CesiumMath,
         pointInsideTriangle,
-        PolylinePipeline,
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     var uScratch = new Cartesian2();
     var vScratch = new Cartesian2();
@@ -707,26 +705,6 @@ define([
     var PolygonPipeline = {};
 
     /**
-     * Cleans up a simple polygon by removing duplicate adjacent positions and making
-     * the first position not equal the last position.
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     */
-    PolygonPipeline.removeDuplicates = function(positions) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
-        //>>includeEnd('debug');
-
-        var cleanedPositions = PolylinePipeline.removeDuplicates(positions);
-        if (Cartesian3.equals(cleanedPositions[0], cleanedPositions[cleanedPositions.length - 1])) {
-            return cleanedPositions.slice(1);
-        }
-        return cleanedPositions;
-    };
-
-    /**
      * @exception {DeveloperError} At least three positions are required.
      */
     PolygonPipeline.computeArea2D = function(positions) {
@@ -952,13 +930,13 @@ define([
     /**
      * Scales each position of a geometry's position attribute to a height, in place.
      *
-     * @param {Geometry} geometry The geometry whose positions are to be scaled.
-     * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
+     * @param {Number[]} positions The array of numbers representing the positions to be scaled
+     * @param {Number} [height=0.0] The desired height to add to the positions
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
-     * @returns {Geometry} The same geometry whose positions where scaled.
+     * @returns {Number[]} The input array of positions, scaled to height
      */
-    PolygonPipeline.scaleToGeodeticHeight = function(geometry, height, ellipsoid, scaleToSurface) {
+    PolygonPipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, scaleToSurface) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var n = scaleToGeodeticHeightN;
@@ -967,8 +945,7 @@ define([
         height = defaultValue(height, 0.0);
         scaleToSurface = defaultValue(scaleToSurface, true);
 
-        if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
-            var positions = geometry.attributes.position.values;
+        if (defined(positions)) {
             var length = positions.length;
 
             for ( var i = 0; i < length; i += 3) {
@@ -991,7 +968,7 @@ define([
             }
         }
 
-        return geometry;
+        return positions;
     };
 
     /**

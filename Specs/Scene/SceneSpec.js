@@ -67,7 +67,7 @@ defineSuite([
         equals,
         pollToPromise,
         render) {
-    "use strict";
+    'use strict';
 
     var scene;
 
@@ -80,6 +80,7 @@ defineSuite([
         scene.debugCommandFilter = undefined;
         scene.fxaa = false;
         scene.primitives.removeAll();
+        scene.morphTo3D();
     });
 
     afterAll(function() {
@@ -250,6 +251,13 @@ defineSuite([
             })
         });
         c.execute = function() {};
+
+        var originalShallowClone = DrawCommand.shallowClone;
+        spyOn(DrawCommand, 'shallowClone').and.callFake(function(command, result) {
+            result = originalShallowClone(command, result);
+            result.execute = function() {};
+            return result;
+        });
 
         scene.primitives.add(new CommandMockPrimitive(c));
 
@@ -528,6 +536,28 @@ defineSuite([
             expect(pixels[2]).toEqual(0);
         }
         s.destroyForSpecs();
+    });
+
+    it('renders map twice when in 2D', function() {
+        scene.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+
+        var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+        rectanglePrimitive1.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = scene.primitives;
+        primitives.add(rectanglePrimitive1);
+
+        scene.camera.setView({
+            destination : new Cartesian3(Ellipsoid.WGS84.maximumRadius * Math.PI + 10000.0, 0.0, 10.0),
+            convert : false
+        });
+
+        var pixels = scene.renderForSpecs();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
     });
 
     it('copies the globe depth', function() {

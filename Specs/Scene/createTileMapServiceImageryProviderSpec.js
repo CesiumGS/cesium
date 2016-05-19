@@ -15,8 +15,8 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/UrlTemplateImageryProvider',
         'Scene/ImageryState',
+        'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -35,11 +35,11 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        UrlTemplateImageryProvider,
         ImageryState,
+        UrlTemplateImageryProvider,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
@@ -254,6 +254,23 @@ defineSuite([
         });
     });
 
+    it('resource request takes a query string', function() {
+        /*jshint unused: false*/
+        var requestMetadata = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestMetadata.resolve(url);
+            deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+        });
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'server.invalid?query=1',
+        });
+
+        return requestMetadata.promise.then(function(url) {
+            expect(/\?query=1$/.test(url)).toEqual(true);
+        });
+    });
+
     it('routes tile requests through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
         var provider = createTileMapServiceImageryProvider({
@@ -380,8 +397,8 @@ defineSuite([
                 "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
                 "  <Abstract/>" +
                 "  <SRS>EPSG:900913</SRS>" +
-                "  <BoundingBox minx='-88.0' miny='-185.0' maxx='88.0' maxy='185.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+                "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
+                "  <Origin y='-88.0' x='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
@@ -607,7 +624,8 @@ defineSuite([
         };
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {
@@ -647,7 +665,8 @@ defineSuite([
         };
 
         var provider = createTileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {

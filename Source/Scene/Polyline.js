@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/arrayRemoveDuplicates',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -11,6 +12,7 @@ define([
         '../Core/PolylinePipeline',
         './Material'
     ], function(
+        arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -21,7 +23,7 @@ define([
         Matrix4,
         PolylinePipeline,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * A renderable polyline. Create this by calling {@link PolylineCollection#add}
@@ -60,7 +62,7 @@ define([
         }
 
         this._positions = positions;
-        this._actualPositions = PolylinePipeline.removeDuplicates(positions);
+        this._actualPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
 
         if (this._loop && this._actualPositions.length > 2) {
             if (this._actualPositions === this._positions) {
@@ -155,7 +157,7 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var positions = PolylinePipeline.removeDuplicates(value);
+                var positions = arrayRemoveDuplicates(value, Cartesian3.equalsEpsilon);
 
                 if (this._loop && positions.length > 2) {
                     if (positions === value) {

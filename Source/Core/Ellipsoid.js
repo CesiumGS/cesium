@@ -19,7 +19,7 @@ define([
         freezeObject,
         CesiumMath,
         scaleToGeodeticSurface) {
-    "use strict";
+    'use strict';
 
     function initialize(ellipsoid, x, y, z) {
         x = defaultValue(x, 0.0);

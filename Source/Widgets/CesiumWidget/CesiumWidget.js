@@ -47,7 +47,7 @@ define([
         SkyBox,
         Sun,
         getElement) {
-    "use strict";
+    'use strict';
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');
@@ -175,7 +175,7 @@ define([
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
      *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//assets.agi.com/stk-terrain/world'
+     *         url : 'https://assets.agi.com/stk-terrain/world'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
@@ -309,7 +309,7 @@ define([
             var imageryProvider = (options.globe === false) ? false : options.imageryProvider;
             if (!defined(imageryProvider)) {
                 imageryProvider = new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net'
+                    url : 'https://dev.virtualearth.net'
                 });
             }
 

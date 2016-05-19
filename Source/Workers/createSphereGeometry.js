@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         SphereGeometry) {
-    "use strict";
+    'use strict';
 
     return function(sphereGeometry, offset) {
         if (defined(offset)) {

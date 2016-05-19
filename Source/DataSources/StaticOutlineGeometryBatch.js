@@ -17,7 +17,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         BoundingSphereState) {
-    "use strict";
+    'use strict';
 
     function Batch(primitives, translucent, width) {
         this.translucent = translucent;

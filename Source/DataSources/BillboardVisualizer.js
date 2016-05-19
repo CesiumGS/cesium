@@ -29,7 +29,7 @@ define([
         VerticalOrigin,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultEyeOffset = Cartesian3.ZERO;
@@ -258,6 +258,7 @@ define([
             if (defined(billboard)) {
                 item.textureValue = undefined;
                 item.billboard = undefined;
+                billboard.id = undefined;
                 billboard.show = false;
                 billboard.image = undefined;
                 unusedIndexes.push(billboard._index);

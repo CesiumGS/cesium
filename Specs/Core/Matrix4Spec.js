@@ -15,7 +15,7 @@ defineSuite([
         Matrix3,
         Quaternion,
         TranslationRotationScale) {
-    "use strict";
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -1730,5 +1730,19 @@ defineSuite([
                 height : 6.0
             }, 0.0, 2.0);
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix4 objects can be used as array like objects', function() {
+        var matrix = new Matrix4(
+                1, 5, 9, 13,
+                2, 6, 10, 14,
+                3, 7, 11, 15,
+                4, 8, 12, 16);
+        expect(matrix.length).toEqual(16);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

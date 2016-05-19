@@ -109,7 +109,7 @@ define([
         ModelNode,
         Pass,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
@@ -879,7 +879,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
      * @param {Number} [options.scale=1.0] A uniform scale applied to this model.
      * @param {Number} [options.minimumPixelSize=0.0] The approximate minimum pixel size of the model regardless of zoom.
-     * @param {Number} [options.maxiumumScale] The maximum scale for the model.
+     * @param {Number} [options.maximumScale] The maximum scale for the model.
      * @param {Object} [options.id] A user-defined object to return when the model is picked with {@link Scene#pick}.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
@@ -956,7 +956,7 @@ define([
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
                     var result = parseBinaryGltfHeader(array);
-                    //  KHR_binary_glTF is from the beginning of the binary section
+                    // KHR_binary_glTF is from the beginning of the binary section
                     if (result.binaryOffset !== 0) {
                         array = array.subarray(result.binaryOffset);
                     }
@@ -1056,7 +1056,7 @@ define([
         var nodeStack = [];
 
         var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        var max = new Cartesian3(Number.MIN_VALUE, Number.MIN_VALUE, Number.MIN_VALUE);
+        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
 
         for (var i = 0; i < rootNodesLength; ++i) {
             var n = gltfNodes[rootNodes[i]];
@@ -1129,7 +1129,10 @@ define([
             if (buffers.hasOwnProperty(id)) {
                 var buffer = buffers[id];
 
-                if (id === 'KHR_binary_glTF') {
+                // The extension 'KHR_binary_glTF' uses a special buffer entitled just 'binary_glTF'.
+                // The 'KHR_binary_glTF' check is for backwards compatibility for the Cesium model converter
+                // circa Cesium 1.15-1.20 when the converter incorrectly used the buffer name 'KHR_binary_glTF'.
+                if ((id === 'binary_glTF') || (id === 'KHR_binary_glTF')) {
                     // Buffer is the binary glTF file itself that is already loaded
                     var loadResources = model._loadResources;
                     loadResources.buffers[id] = model._cachedGltf.bgltf;
@@ -3306,7 +3309,7 @@ define([
      *
      * @example
      * model = model && model.destroy();
-     * 
+     *
      * @see Model#isDestroyed
      */
     Model.prototype.destroy = function() {

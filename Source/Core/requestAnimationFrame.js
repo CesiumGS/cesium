@@ -5,7 +5,7 @@ define([
     ], function(
         defined,
         getTimestamp) {
-    "use strict";
+    'use strict';
 
     if (typeof window === 'undefined') {
         return;
@@ -51,7 +51,7 @@ define([
      * @exports requestAnimationFrame
      *
      * @param {requestAnimationFrame~Callback} callback The function to call when the next frame should be drawn.
-     * @returns An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
+     * @returns {Number} An ID that can be passed to {@link cancelAnimationFrame} to cancel the request.
      *
      *
      * @example

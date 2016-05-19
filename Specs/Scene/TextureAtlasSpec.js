@@ -31,7 +31,7 @@ defineSuite([
         VertexArray,
         createScene,
         when) {
-    "use strict";
+    'use strict';
 
     var scene;
     var atlas;
@@ -145,8 +145,8 @@ void main() {\n\
             expect(atlas.borderWidthInPixels).toEqual(0);
 
             var texture = atlas.texture;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
@@ -228,8 +228,8 @@ void main() {\n\
 
             var texture = atlas.texture;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 5.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 8.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -451,8 +451,8 @@ void main() {\n\
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -469,8 +469,8 @@ void main() {\n\
                 var texture = atlas.texture;
                 var coordinates = atlas.textureCoordinates;
 
-                var atlasWidth = 10.0;
-                var atlasHeight = 10.0;
+                var atlasWidth = 12.0;
+                var atlasHeight = 12.0;
                 expect(texture.width).toEqual(atlasWidth);
                 expect(texture.height).toEqual(atlasHeight);
 
@@ -482,7 +482,7 @@ void main() {\n\
 
                 // big green image
                 expect(coordinates[greenIndex].x).toEqual(0.0 / atlasWidth);
-                expect(coordinates[greenIndex].y).toEqual(1.0 / atlasHeight);
+                expect(coordinates[greenIndex].y).toEqual(2.0 / atlasHeight);
                 expect(coordinates[greenIndex].width).toEqual(4.0 / atlasWidth);
                 expect(coordinates[greenIndex].height).toEqual(4.0 / atlasHeight);
             });
@@ -577,8 +577,8 @@ void main() {\n\
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
 
-            var atlasWidth = 10.0;
-            var atlasHeight = 10.0;
+            var atlasWidth = 6.0;
+            var atlasHeight = 6.0;
             expect(atlas.borderWidthInPixels).toEqual(2);
             expect(atlas.numberOfImages).toEqual(2);
             expect(texture.width).toEqual(atlasWidth);
@@ -589,7 +589,7 @@ void main() {\n\
             expect(coordinates[greenIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[greenIndex].height).toEqual(1.0 / atlasHeight);
 
-            expect(coordinates[blueIndex].x).toEqual(4.0 / atlasWidth);
+            expect(coordinates[blueIndex].x).toEqual(3.0 / atlasWidth);
             expect(coordinates[blueIndex].y).toEqual(0.0 / atlasHeight);
             expect(coordinates[blueIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[blueIndex].height).toEqual(1.0 / atlasHeight);
@@ -742,8 +742,8 @@ void main() {\n\
             expect(atlas.numberOfImages).toEqual(5);
 
             var coordinates = atlas.textureCoordinates;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
 
             expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
             expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);
@@ -793,8 +793,8 @@ void main() {\n\
                 expect(atlas.numberOfImages).toEqual(6);
 
                 var coordinates = atlas.textureCoordinates;
-                var atlasWidth = 4.0;
-                var atlasHeight = 4.0;
+                var atlasWidth = 2.0;
+                var atlasHeight = 2.0;
 
                 expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
                 expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);

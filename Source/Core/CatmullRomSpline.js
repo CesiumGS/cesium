@@ -19,7 +19,7 @@ define([
         HermiteSpline,
         Matrix4,
         Spline) {
-    "use strict";
+    'use strict';
 
     var scratchTimeVec = new Cartesian4();
     var scratchTemp0 = new Cartesian3();

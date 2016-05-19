@@ -25,14 +25,14 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 
 //Create the viewer.
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 scene.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url: '//assets.agi.com/stk-terrain/world',
+    url : 'https://assets.agi.com/stk-terrain/world',
     requestVertexNormals : true
 });
 

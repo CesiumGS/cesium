@@ -13,7 +13,7 @@ defineSuite([
         GeographicProjection,
         Intersect,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     it('default constructor sets expected values', function() {
         var rectangle = new BoundingRectangle();

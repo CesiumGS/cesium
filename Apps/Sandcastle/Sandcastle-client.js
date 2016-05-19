@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
     /*global console,Sandcastle,window*/
 
     window.parent.postMessage('reload', '*');

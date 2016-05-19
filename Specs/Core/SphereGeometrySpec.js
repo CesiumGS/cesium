@@ -11,7 +11,7 @@ defineSuite([
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws with invalid stackPartitions', function() {
         expect(function() {
@@ -37,8 +37,8 @@ defineSuite([
             slicePartitions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        expect(m.attributes.position.values.length).toEqual(16 * 3); // 4 positions * 4 rows
+        expect(m.indices.length).toEqual(12 * 3); //3 top + 3 bottom + 2 triangles * 3 sides
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -50,12 +50,14 @@ defineSuite([
             slicePartitions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.attributes.st.values.length).toEqual(2 * 16);
-        expect(m.attributes.normal.values.length).toEqual(3 * 16);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 16);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(6 * 9);
+        var numVertices = 16;
+        var numTriangles = 12;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('computes attributes for a unit sphere', function() {
@@ -82,6 +84,17 @@ defineSuite([
             expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent, normal), CesiumMath.EPSILON7);
         }
+    });
+
+    it('undefined is returned if radius is equals to zero', function() {
+         var sphere = new SphereGeometry({
+             radius : 0.0,
+             vertexFormat : VertexFormat.POSITION_ONLY
+         });
+
+        var geometry = SphereGeometry.createGeometry(sphere);
+
+        expect(geometry).toBeUndefined();
     });
 
     var sphere = new SphereGeometry({

@@ -89,7 +89,7 @@ define([
         ImageryState,
         QuadtreeTileLoadState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
@@ -149,6 +149,8 @@ define([
         this._pickCommands = [];
         this._usedDrawCommands = 0;
         this._usedPickCommands = 0;
+
+        this._vertexArraysToDestroy = [];
 
         this._debug = {
             wireframe : false,
@@ -282,14 +284,29 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+    function freeVertexArray(vertexArray) {
+        var indexBuffer = vertexArray.indexBuffer;
+        vertexArray.destroy();
+
+        if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            --indexBuffer.referenceCount;
+            if (indexBuffer.referenceCount === 0) {
+                indexBuffer.destroy();
+            }
+        }
+    }
+
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * or any other functions.
-     *
+     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * @param {FrameState} frameState The frame state.
      */
-    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
-        this._imageryLayers._update();
+    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
+        var imageryLayers = this._imageryLayers;
+
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        imageryLayers._update();
+        // update each layer for texture reprojection.
+        imageryLayers.queueReprojectionCommands(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;
@@ -300,19 +317,6 @@ define([
             });
         }
 
-        var i;
-        var len;
-
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
-            var tiles = tilesToRenderByTextureCount[i];
-            if (defined(tiles)) {
-                tiles.length = 0;
-            }
-        }
-
-        this._usedDrawCommands = 0;
-
         // Add credits for terrain and imagery providers.
         var creditDisplay = frameState.creditDisplay;
 
@@ -320,13 +324,37 @@ define([
             creditDisplay.addCredit(this._terrainProvider.credit);
         }
 
-        var imageryLayers = this._imageryLayers;
-        for (i = 0, len = imageryLayers.length; i < len; ++i) {
+        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
             var imageryProvider = imageryLayers.get(i).imageryProvider;
             if (imageryProvider.ready && defined(imageryProvider.credit)) {
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+
+        var vertexArraysToDestroy = this._vertexArraysToDestroy;
+        var length = vertexArraysToDestroy.length;
+        for (var j = 0; j < length; ++j) {
+            freeVertexArray(vertexArraysToDestroy[j]);
+        }
+        vertexArraysToDestroy.length = 0;
+    };
+
+    /**
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * or any other functions.
+     *
+     * @param {FrameState} frameState The frame state.
+     */
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (defined(tiles)) {
+                tiles.length = 0;
+            }
+        }
+
+        this._usedDrawCommands = 0;
     };
 
     /**
@@ -403,6 +431,13 @@ define([
     };
 
     /**
+     * Cancels any imagery re-projections in the queue.
+     */
+    GlobeSurfaceTileProvider.prototype.cancelReprojections = function() {
+        this._imageryLayers.cancelReprojections();
+    };
+
+    /**
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
      *
@@ -424,7 +459,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -567,7 +602,7 @@ define([
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
@@ -747,24 +782,11 @@ define([
             return;
         }
 
-        if (defined(surfaceTile.meshForWireframePromise)) {
+        if (!defined(surfaceTile.terrainData) || !defined(surfaceTile.terrainData._mesh)) {
             return;
         }
 
-        surfaceTile.meshForWireframePromise = surfaceTile.terrainData.createMesh(provider._terrainProvider.tilingScheme, tile.x, tile.y, tile.level);
-        if (!defined(surfaceTile.meshForWireframePromise)) {
-            // deferrred
-            return;
-        }
-
-        var vertexArray = surfaceTile.vertexArray;
-
-        when(surfaceTile.meshForWireframePromise, function(mesh) {
-            if (surfaceTile.vertexArray === vertexArray) {
-                surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
-            }
-            surfaceTile.meshForWireframePromise = undefined;
-        });
+        surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, surfaceTile.terrainData._mesh);
     }
 
     /**
@@ -1153,7 +1175,7 @@ define([
         pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
-        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
 
         frameState.commandList.push(pickCommand);

@@ -7,7 +7,7 @@ defineSuite([
         DrawCommand,
         PrimitiveType,
         Pass) {
-    "use strict";
+    'use strict';
 
     it('constructs', function() {
         var c = new DrawCommand();
@@ -76,5 +76,91 @@ defineSuite([
         expect(c.executeInClosestFrustum).toEqual(true);
         expect(c.owner).toBe(owner);
         expect(c.debugShowBoundingVolume).toEqual(true);
+    });
+
+    it('shallow clones', function() {
+        var c = new DrawCommand({
+            boundingVolume : {},
+            cull : false,
+            modelMatrix :  {},
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            vertexArray : {},
+            count : 3,
+            offset : 3,
+            instanceCount : 2,
+            shaderProgram : {},
+            uniformMap : {},
+            renderState : {},
+            framebuffer : {},
+            pass : Pass.TRANSLUCENT,
+            executeInClosestFrustum : true,
+            owner : {},
+            debugShowBoundingVolume : true
+        });
+
+        var clone = DrawCommand.shallowClone(c);
+
+        expect(clone.boundingVolume).toBe(c.boundingVolume);
+        expect(clone.cull).toEqual(c.cull);
+        expect(clone.modelMatrix).toBe(c.modelMatrix);
+        expect(clone.primitiveType).toEqual(c.primitiveType);
+        expect(clone.vertexArray).toBe(c.vertexArray);
+        expect(clone.count).toEqual(c.count);
+        expect(clone.offset).toEqual(c.offset);
+        expect(clone.instanceCount).toEqual(c.instanceCount);
+        expect(clone.shaderProgram).toBe(c.shaderProgram);
+        expect(clone.uniformMap).toBe(c.uniformMap);
+        expect(clone.renderState).toBe(c.renderState);
+        expect(clone.framebuffer).toBe(c.framebuffer);
+        expect(clone.pass).toEqual(c.pass);
+        expect(clone.executeInClosestFrustum).toEqual(c.executeInClosestFrustum);
+        expect(clone.owner).toBe(c.owner);
+        expect(clone.debugShowBoundingVolume).toEqual(c.debugShowBoundingVolume);
+    });
+
+    it('shallow clones with result', function() {
+        var c = new DrawCommand({
+            boundingVolume : {},
+            cull : false,
+            modelMatrix :  {},
+            primitiveType : PrimitiveType.TRIANGLE_FAN,
+            vertexArray : {},
+            count : 3,
+            offset : 3,
+            instanceCount : 2,
+            shaderProgram : {},
+            uniformMap : {},
+            renderState : {},
+            framebuffer : {},
+            pass : Pass.TRANSLUCENT,
+            executeInClosestFrustum : true,
+            owner : {},
+            debugShowBoundingVolume : true
+        });
+
+        var result = new DrawCommand();
+        var clone = DrawCommand.shallowClone(c, result);
+
+        expect(result).toBe(clone);
+        expect(clone.boundingVolume).toBe(c.boundingVolume);
+        expect(clone.cull).toEqual(c.cull);
+        expect(clone.modelMatrix).toBe(c.modelMatrix);
+        expect(clone.primitiveType).toEqual(c.primitiveType);
+        expect(clone.vertexArray).toBe(c.vertexArray);
+        expect(clone.count).toEqual(c.count);
+        expect(clone.offset).toEqual(c.offset);
+        expect(clone.instanceCount).toEqual(c.instanceCount);
+        expect(clone.shaderProgram).toBe(c.shaderProgram);
+        expect(clone.uniformMap).toBe(c.uniformMap);
+        expect(clone.renderState).toBe(c.renderState);
+        expect(clone.framebuffer).toBe(c.framebuffer);
+        expect(clone.pass).toEqual(c.pass);
+        expect(clone.executeInClosestFrustum).toEqual(c.executeInClosestFrustum);
+        expect(clone.owner).toBe(c.owner);
+        expect(clone.debugShowBoundingVolume).toEqual(c.debugShowBoundingVolume);
+    });
+
+    it('shallow clone returns undefined', function() {
+        expect(DrawCommand.shallowClone()).toBeUndefined();
     });
 });
