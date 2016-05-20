@@ -52,7 +52,6 @@ define([
 
         return terrainProvider.readyPromise.then(function() {
             var rectangle = Rectangle.fromCartographicArray(positions);
-            var start = Date.now();
             var tileLevel = terrainProvider.getMaximumTileLevel(rectangle);
             return sampleTerrain(terrainProvider, tileLevel, positions);
         });
