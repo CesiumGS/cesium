@@ -783,25 +783,25 @@ define([
         var southeast = Rectangle.southeast(rectangle);
         var northwest = Rectangle.northwest(rectangle);
 
-        if (0) {
+        // if (0) {
 
-            var maxLevel = 0;
+        //     var maxLevel = 0;
 
-            // Top down
-            for (var level = 0; level < available.length; ++level) {
-                var ll = this._tilingScheme.positionToTileXY(northwest, level);
-                var ur = this._tilingScheme.positionToTileXY(southeast, level);
+        //     // Top down
+        //     for (var level = 0; level < available.length; ++level) {
+        //         var ll = this._tilingScheme.positionToTileXY(northwest, level);
+        //         var ur = this._tilingScheme.positionToTileXY(southeast, level);
 
-                if (this.getTileDataAvailableForRange(ll, ur, level)) {
-                    maxLevel = level;
-                } else {
-                    return maxLevel;
-                }
-            }
+        //         if (this.getTileDataAvailableForRange(ll, ur, level)) {
+        //             maxLevel = level;
+        //         } else {
+        //             return maxLevel;
+        //         }
+        //     }
 
-            return maxLevel;
+        //     return maxLevel;
 
-        } else {
+        // } else {
 
             // Bottom up
             for (var level = available.length - 1; level >= 0; level--) {
@@ -813,7 +813,7 @@ define([
             }
 
             return 0;
-        }
+        // }
 
     };
 
