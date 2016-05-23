@@ -81,6 +81,7 @@ defineSuite([
     var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
     var boxColorQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Color-Quantized.gltf';
     var milkTruckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Quantized.gltf';
+    var milkTruckQuantizedMismatchUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Mismatch-Quantized.gltf';
     var duckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Duck-Quantized.gltf';
     var riggedSimpleQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
@@ -1566,6 +1567,13 @@ defineSuite([
 
     it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where primitives with different accessors use the same shader', function() {
         return loadModel(milkTruckQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where one primitive is quantized and the other is not, but both use the same shader', function() {
+        return loadModel(milkTruckQuantizedMismatchUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

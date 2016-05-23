@@ -1378,6 +1378,13 @@ define([
     }
 
     function parse(model) {
+        var extensionsUsed = model.gltf.extensionsUsed;
+        if (defined(extensionsUsed)) {
+            if (extensionsUsed.indexOf('WEB3D_quantized_attributes') >= 0) {
+                // Resolve any existing quantized attribute shader conflicts
+                resolveQuantizedAttributeConflicts(model);
+            }
+        }
         if (!model._loadRendererResourcesFromCache) {
             parseBuffers(model);
             parseBufferViews(model);
@@ -1467,16 +1474,6 @@ define([
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
-    function shallowClone(obj) {
-        var newObj = {};
-        for (var key in obj) {
-            if (obj.hasOwnProperty(key)) {
-                newObj[key] = obj[key];
-            }
-        }
-        return newObj;
-    }
-
     function replaceAllButFirstInString(string, find, replace) {
         return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
             return all.indexOf(find) === offset ? match : replace;
@@ -1499,145 +1496,217 @@ define([
             return val.toFixed(20);
         });
     }
-    
-    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
+
+    // Makes a copy of the given material, its technique, and its program,
+    // and adds them to the gltf hierarchy with new ids
+    // returns the id of the new material
+    function splitMaterial(model, materialId) {
         var gltf = model.gltf;
-        var accessors = gltf.accessors;
-        var materials = gltf.materials;
-        var meshes = gltf.meshes;
-        var programs = gltf.programs;
-        var techniques = gltf.techniques;
-        var uniformMaps = model._uniformMaps;
-        var processedAccessors = [];
-        var decodedAttributes = [];
-        var unresolvedProgramId;
-        var unresolvedTechniqueId;
-        var unresolvedMaterialId;
+        var num = 0;
 
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var primitives = meshes[meshId].primitives;
-                var primitivesLength = primitives.length;
+        var material = gltf.materials[materialId];
+        var newMaterialId;
 
-                for (var i = 0; i < primitivesLength; ++i) {
-                    var primitive = primitives[i];
+        // Find an available name for the new material
+        while (!defined(newMaterialId) ||
+               defined(gltf.materials[newMaterialId])) {
+            newMaterialId = materialId + '-' + num;
+            num++;
+        }
 
-                    // GLTF_SPEC: This does not take into account attribute arrays,
-                    // indicated by when an attribute points to a parameter with a
-                    // count property.
-                    //
-                    // https://github.com/KhronosGroup/glTF/issues/258
+        var newMaterial = clone(material);
+        newMaterial.technique = splitTechnique(model, material.technique);
+        gltf.materials[newMaterialId] = newMaterial;
+        return newMaterialId;
+    }
 
-                    var materialId = primitive.material;
-                    var material = materials[materialId];
+    // Makes a copy of the given technique and its program,
+    // and adds them to the gltf hierarchy with new ids
+    // returns the id of the new technique
+    function splitTechnique(model, techniqueId) {
+        var gltf = model.gltf;
+        var num = 0;
+
+        var technique = gltf.techniques[techniqueId];
+        var newTechniqueId;
+
+        // Find an available name for the new technique
+        while (!defined(newTechniqueId) ||
+               defined(gltf.techniques[newTechniqueId])) {
+            newTechniqueId = techniqueId + '-' + num;
+            num++;
+        }
+
+        var newTechnique = clone(technique);
+        newTechnique.program = splitProgram(model, technique.program);
+        gltf.techniques[newTechniqueId] = newTechnique;
+        return newTechniqueId;
+    }
+
+    // Makes a copy of the given program
+    // and adds it to the gltf hierarchy with a new id
+    // returns the id of the new program
+    function splitProgram(model, programId) {
+        var gltf = model.gltf;
+        var num = 0;
+
+        var program = gltf.programs[programId];
+        var newProgramId;
+
+        // Find an available name for the new program
+        while (!defined(newProgramId) ||
+               defined(gltf.programs[newProgramId])) {
+            newProgramId = programId + '-' + num;
+            num++;
+        }
+
+        var newProgram = clone(program);
+        gltf.programs[newProgramId] = newProgram;
+        return newProgramId;
+    }
+
+    function getAllPrimitives(model) {
+        var gltf = model.gltf;
+        var allPrimitives = [];
+
+        for (var meshId in gltf.meshes) {
+            if (gltf.meshes.hasOwnProperty(meshId)) {
+                var mesh = gltf.meshes[meshId];
+                var primitives = mesh.primitives;
+                if (defined(primitives)) {
+                    for (var i = 0; i < primitives.length; i++) {
+                        var primitive = primitives[i];
+                        allPrimitives.push(primitive);
+                    }
+                }
+            }
+        }
+        return allPrimitives;
+    }
+
+    function getPrimitivesByMaterial(primitives) {
+        var materialPrimitiveMap = {};
+
+        for(var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            var materialId = primitive.material;
+            if (!defined(materialPrimitiveMap[materialId])) {
+                materialPrimitiveMap[materialId] = [];
+            }
+            materialPrimitiveMap[materialId].push(primitive);
+        }
+        return materialPrimitiveMap;
+    }
+
+    function getPrimitivesByProgram(model, primitives) {
+        var gltf = model.gltf;
+        var programPrimitiveMap = {};
+
+        for(var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            var materialId = primitive.material;
+            var material = gltf.materials[materialId];
+            var techniqueId = material.technique;
+            var technique = gltf.techniques[techniqueId];
+            var programId = technique.program;
+            if (!defined(programPrimitiveMap[programId])) {
+                programPrimitiveMap[programId] = [];
+            }
+            programPrimitiveMap[programId].push(primitive);
+        }
+        return programPrimitiveMap;
+    }
+
+    function primitiveIsQuantized(model, primitive) {
+        for (var attributeSemantic in primitive.attributes) {
+            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                var accessorId = primitive.attributes[attributeSemantic];
+                if (defined(getQuantizedAttributes(model, accessorId))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function primitiveMatchesTemplate(template, primitive) {
+        for (var attributeSemantic in template) {
+            if (template.hasOwnProperty(attributeSemantic)) {
+                if (defined(primitive.attributes[attributeSemantic]) &&
+                    primitive.attributes[attributeSemantic] !== template[attributeSemantic]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    function addPrimitiveAttributesToTemplate(template, primitive) {
+        for (var attributeSemantic in primitive.attributes) {
+            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                template[attributeSemantic] = primitive.attributes[attributeSemantic];
+            }
+        }
+    }
+
+    function groupPrimitivesByQuantizedAttributes(model, primitives) {
+        var groups = [[]];
+        var primitiveTemplates = [];
+
+        for (var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            if (!primitiveIsQuantized(model, primitive)) {
+                // Non-quantized, put it in group 0
+                groups[0].push(primitive);
+            }
+            else {
+                // Test if the primitive fits into any of the existing quantized groups
+                var placed = false;
+                for (var j = 1; j < groups.length; j++) {
+                    var template = primitiveTemplates[j-1];
+                    if (primitiveMatchesTemplate(template, primitive)) {
+                        addPrimitiveAttributesToTemplate(template, primitive);
+                        groups[j].push(primitive);
+                        placed = true;
+                        break;
+                    }
+                }
+                if (!placed) {
+                    // Make a new group and template and put it there
+                    var group = [];
+                    group.push(primitive);
+                    groups.push(group);
+                    primitiveTemplates.push(clone(primitive.attributes));
+                }
+            }
+        }
+        return groups;
+    }
+
+    function resolveQuantizedAttributeConflicts(model) {
+        var gltf = model.gltf;
+
+        var primitives = getAllPrimitives(model);
+        var primitivesByProgram = getPrimitivesByProgram(model, primitives);
+        for (var meshId in gltf.meshes) {
+            if (gltf.meshes.hasOwnProperty(meshId)) {
+                var mesh = gltf.meshes[meshId];
+                var primitivesByMaterial = getPrimitivesByMaterial(mesh.primitives);
+                for (var materialId in primitivesByMaterial) {
+                    var material = gltf.materials[materialId];
                     var techniqueId = material.technique;
-                    var technique = techniques[techniqueId];
-                    
+                    var technique = gltf.techniques[techniqueId];
                     var programId = technique.program;
-                    if (programId === programName) {
-                        var primitiveAttributes = primitive.attributes;
-                        var attributeVarName;
-                        for (var attributeSemantic in primitiveAttributes) {
-                            if (primitiveAttributes.hasOwnProperty(attributeSemantic)) {
-                                attributeVarName = undefined;
-                                for (var attributeName in technique.parameters) {
-                                    if (technique.parameters.hasOwnProperty(attributeName)) {
-                                        if (defined(attributeVarName)) {
-                                            break;
-                                        }
-                                        if (technique.parameters[attributeName].semantic === attributeSemantic) {
-                                            for (var varName in technique.attributes) {
-                                                if (technique.attributes.hasOwnProperty(varName)) {
-                                                    if (technique.attributes[varName] === attributeName) {
-                                                        attributeVarName = varName;
-                                                        break;
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                                // Skip if the attribute is not used by the material, e.g., because the asset was exported
-                                // with an attribute that wasn't used and the asset wasn't optimized.
-                                if (defined(attributeVarName)) {
-                                    var attributeId = primitiveAttributes[attributeSemantic];
-                                    var a = accessors[attributeId];
-                                    if (a.hasOwnProperty('extensions') && processedAccessors.indexOf(attributeId) < 0) {
-                                        var extensions = a.extensions;
-                                        if (extensions.hasOwnProperty('WEB3D_quantized_attributes')) {
-                                            // Only one of each semantic type can be decoded per shader
-                                            if (decodedAttributes.indexOf(attributeSemantic) >= 0) {
-                                                // Assign any unresolved primitives to a new program
-                                                if (!defined(unresolvedProgramId)) {
-                                                    unresolvedProgramId = programName + '_r';
-                                                    unresolvedTechniqueId = techniqueId + '_r';
-                                                    unresolvedMaterialId = materialId + '_r';
-                                                    programs[unresolvedProgramId] = shallowClone(programs[programName]);
-                                                    var unresolvedTechnique = techniques[unresolvedTechniqueId] = shallowClone(techniques[techniqueId]);
-                                                    var unresolvedMaterial = materials[unresolvedMaterialId] = shallowClone(materials[materialId]);
-                                                    unresolvedTechnique.program = unresolvedProgramId;
-                                                    unresolvedMaterial.technique = unresolvedTechniqueId;
-
-                                                    uniformMaps[unresolvedMaterialId] = {
-                                                        uniformMap : undefined,
-                                                        values : undefined,
-                                                        jointMatrixUniformName : undefined
-                                                    };
-
-                                                    createRenderStateForTechnique(model, unresolvedTechniqueId, context);
-                                                }
-                                                primitive.material = unresolvedMaterialId;
-                                            }
-                                            else {
-                                                var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                                                var decodeMatrix = quantizedAttributes.decodeMatrix;
-
-                                                var newMain = 'decoded_' + attributeSemantic;
-                                                var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
-
-                                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
-
-                                                // replace usages of the original attribute with the decoded version, but not the declaration
-                                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
-
-                                                // declare decoded attribute
-                                                shader = 'vec' + (size-1) + ' ' + decodedAttributeVarName + ';\n' + shader;
-
-                                                // splice decode function into the shader
-                                                var decode = '';
-                                                if (size === 5) {
-                                                    // separate scale and translate since glsl doesn't have mat5
-                                                    var decodeScaleString = stringifyArray(scaleFromMatrix5Array(decodeMatrix));
-                                                    var decodeTranslateString = stringifyArray(translateFromMatrix5Array(decodeMatrix));
-                                                    var scaleName = 'decode_' + attributeSemantic + '_scale';
-                                                    var translateName = 'decode_' + attributeSemantic + '_translate';
-
-                                                    decode = '\n' +
-                                                                 'mat4 ' + scaleName + ' = mat4(' + decodeScaleString + ');\n' +
-                                                                 'vec4 ' + translateName + ' = vec4(' + decodeTranslateString + ');\n' +
-                                                                 'void main() {\n' +
-                                                                 '    ' + decodedAttributeVarName + ' = ' + scaleName + ' * ' + attributeVarName + ' + ' + translateName + ';\n' +
-                                                                 '    ' + newMain +'();\n' +
-                                                                 '}\n';
-                                                }
-                                                else {
-                                                    var matrixName = 'decode_' + attributeSemantic + '_matrix';
-                                                    var decodeMatrixString = stringifyArray(decodeMatrix);
-                                                    decode = '\n' +
-                                                                 'mat' + size + ' ' + matrixName + ' = mat' + size + '(' + decodeMatrixString + ');\n' +
-                                                                 'void main() {\n' +
-                                                                 '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + matrixName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                                                 '    ' + newMain + '();\n' +
-                                                                 '}\n';
-                                                }
-                                                shader = ShaderSource.replaceMain(shader, newMain);
-                                                shader += decode;
-
-                                                processedAccessors.push(attributeId);
-                                                decodedAttributes.push(attributeSemantic);
-                                            }
-                                        }
-                                    }
+                    if (primitivesByMaterial.hasOwnProperty(materialId)) {
+                        var groups = groupPrimitivesByQuantizedAttributes(model, primitivesByMaterial[materialId]);
+                        for (var i = 1; i < groups.length; i++) {
+                            var group = groups[i];
+                            // If these primitives are the only ones in the program, they don't need to be split off
+                            if (group.length > 0 && primitivesByProgram[programId].length > group.length) {
+                                var newMaterialId = splitMaterial(model, materialId);
+                                for (var j = 0; j < group.length; j++) {
+                                    var primitive = group[j];
+                                    primitive.material = newMaterialId;
                                 }
                             }
                         }
@@ -1645,9 +1714,127 @@ define([
                 }
             }
         }
-        // Recursively resolve any primitives that still need to be decoded
-        if (defined(unresolvedProgramId)) {
-            createProgram(unresolvedProgramId, model, context);
+    }
+
+    function getQuantizedPrimitivesForProgram(model, programId) {
+        var gltf = model.gltf;
+        var quantizedPrimitives = [];
+
+        for (var meshId in gltf.meshes) {
+            if (gltf.meshes.hasOwnProperty(meshId)) {
+                var primitives = gltf.meshes[meshId].primitives;
+
+                for(var i = 0; i < primitives.length; i++) {
+                    var primitive = primitives[i];
+                    var materialId = primitive.material;
+                    var material = gltf.materials[materialId];
+                    var techniqueId = material.technique;
+                    var technique = gltf.techniques[techniqueId];
+                    if (technique.program === programId) {
+                        for (var attributeSemantic in primitive.attributes) {
+                            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                                var accessorId = primitive.attributes[attributeSemantic];
+                                if (defined(getQuantizedAttributes(model, accessorId))) {
+                                    quantizedPrimitives.push(primitive);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return quantizedPrimitives;
+    }
+
+    function getQuantizedAttributes(model, accessorId) {
+        var gltf = model.gltf;
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        if (defined(extensions)) {
+            return extensions.WEB3D_quantized_attributes;
+        }
+        return undefined;
+    }
+
+    function getAttributeVariableName(model, primitive, attributeSemantic) {
+        var gltf = model.gltf;
+        var materialId = primitive.material;
+        var material = gltf.materials[materialId];
+        var techniqueId = material.technique;
+        var technique = gltf.techniques[techniqueId];
+        for (var parameter in technique.parameters) {
+            if (technique.parameters.hasOwnProperty(parameter)) {
+                var semantic = technique.parameters[parameter].semantic;
+                if (semantic === attributeSemantic) {
+                    for (var attributeVarName in technique.attributes) {
+                        if (technique.attributes.hasOwnProperty(attributeVarName)) {
+                            var name = technique.attributes[attributeVarName];
+                            if (name === parameter) {
+                                return attributeVarName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+    
+    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
+        var doneAccessors = [];
+
+        var primitives = getQuantizedPrimitivesForProgram(model, programName);
+        for (var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            for (var attributeSemantic in primitive.attributes) {
+                if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                    var accessorId = primitive.attributes[attributeSemantic];
+                    if (doneAccessors.indexOf(accessorId) < 0) {
+                        var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                        if (defined(quantizedAttributes)) {
+                            var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                            var decodeMatrix = quantizedAttributes.decodeMatrix;
+                            var newMain = 'decoded_' + attributeSemantic;
+                            var decodedAttributeVarName = attributeVarName.replace('a_', 'dec_');
+                            var size = Math.floor(Math.sqrt(decodeMatrix.length));
+
+                            // replace usages of the original attribute with the decoded version, but not the declaration
+                            shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                            // declare decoded attribute
+                            shader = 'vec' + (size - 1) + ' ' + decodedAttributeVarName + ';\n' + shader;
+                            // splice decode function into the shader
+                            var decode = '';
+                            if (size === 5) {
+                                // separate scale and translate since glsl doesn't have mat5
+                                var decodeScaleString = stringifyArray(scaleFromMatrix5Array(decodeMatrix));
+                                var decodeTranslateString = stringifyArray(translateFromMatrix5Array(decodeMatrix));
+                                var scaleName = 'decode_' + attributeSemantic + '_scale';
+                                var translateName = 'decode_' + attributeSemantic + '_translate';
+                                decode = '\n' +
+                                         'mat4 ' + scaleName + ' = mat4(' + decodeScaleString + ');\n' +
+                                         'vec4 ' + translateName + ' = vec4(' + decodeTranslateString + ');\n' +
+                                         'void main() {\n' +
+                                         '    ' + decodedAttributeVarName + ' = ' + scaleName + ' * ' + attributeVarName + ' + ' + translateName + ';\n' +
+                                         '    ' + newMain + '();\n' +
+                                         '}\n';
+                            }
+                            else {
+                                var matrixName = 'decode_' + attributeSemantic + '_matrix';
+                                var decodeMatrixString = stringifyArray(decodeMatrix);
+                                decode = '\n' +
+                                         'mat' + size + ' ' + matrixName + ' = mat' + size + '(' + decodeMatrixString + ');\n' +
+                                         'void main() {\n' +
+                                         '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + matrixName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                         '    ' + newMain + '();\n' +
+                                         '}\n';
+                            }
+                            shader = ShaderSource.replaceMain(shader, newMain);
+                            shader += decode;
+                        }
+                        doneAccessors.push(accessorId);
+                    }
+                }
+            }
         }
         return shader;
     }
@@ -1669,8 +1856,7 @@ define([
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
-        // Check for extensions
-        if (defined(extensionsUsed) && extensionsUsed.constructor === Array) {
+        if (defined(extensionsUsed)) {
             if (extensionsUsed.indexOf('WEB3D_quantized_attributes') >= 0) {
                 vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
             }

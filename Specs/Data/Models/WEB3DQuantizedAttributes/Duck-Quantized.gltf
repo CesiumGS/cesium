@@ -50,14 +50,6 @@
       "byteStride": 4,
       "componentType": 5123,
       "count": 2399,
-      "max": [
-        65535,
-        65535
-      ],
-      "min": [
-        0,
-        0
-      ],
       "type": "VEC2",
       "extensions": {
         "WEB3D_quantized_attributes": {
