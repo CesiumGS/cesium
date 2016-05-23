@@ -3153,7 +3153,6 @@ define([
             return;
         }
 
-        // If it's on terrain use the clampedModelMatrix if we have it
         var globe = scene.globe;
         var ellipsoid = globe.ellipsoid;
 
@@ -3164,8 +3163,22 @@ define([
         scratchPosition.z = modelMatrix[14];
         var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
 
+        // Install callback to handle updating of terrain tiles
         var surface = globe._surface;
         model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
+
+        // Set the correct height now
+        var height = globe.getHeight(cartoPosition);
+        if (defined(height)) {
+            // Get callback with cartoPosition being the non-clamped position
+            var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+            // Compute the clamped cartesian and call updateHeight callback
+            Cartographic.clone(cartoPosition, scratchCartographic);
+            scratchCartographic.height = height;
+            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            cb(scratchPosition);
+        }
     }
 
     /**
