@@ -16,6 +16,9 @@ Change Log
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
 * Fixed issue where labels were disappearing. [3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
 * Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
+* Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
+* Added `heightReference` to models so they can be drawn on terrain.
+* Added `terrainProviderChanged` event to `Scene` and `Globe`
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.

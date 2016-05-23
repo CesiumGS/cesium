@@ -4,10 +4,14 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
+        'Core/CesiumTerrainProvider',
         'Core/clone',
         'Core/combine',
         'Core/defaultValue',
         'Core/defined',
+        'Core/defineProperties',
+        'Core/Ellipsoid',
+        'Core/Event',
         'Core/FeatureDetection',
         'Core/HeadingPitchRange',
         'Core/JulianDate',
@@ -20,6 +24,7 @@ defineSuite([
         'Renderer/RenderState',
         'Renderer/ShaderSource',
         'Renderer/WebGLConstants',
+        'Scene/HeightReference',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
@@ -29,10 +34,14 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        CesiumTerrainProvider,
         clone,
         combine,
         defaultValue,
         defined,
+        defineProperties,
+        Ellipsoid,
+        Event,
         FeatureDetection,
         HeadingPitchRange,
         JulianDate,
@@ -45,6 +54,7 @@ defineSuite([
         RenderState,
         ShaderSource,
         WebGLConstants,
+        HeightReference,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
@@ -1712,6 +1722,213 @@ defineSuite([
 
             m.show = false;
             primitives.remove(m);
+        });
+    });
+
+    describe('height referenced model', function() {
+        function createMockGlobe() {
+            var globe = {
+                callback : undefined,
+                removedCallback : false,
+                ellipsoid : Ellipsoid.WGS84,
+                update : function() {},
+                getHeight : function() {
+                    return 0.0;
+                },
+                _surface : {},
+                destroy : function() {}
+            };
+
+            globe.beginFrame = function() {
+            };
+
+            globe.endFrame = function() {
+            };
+
+            globe.terrainProviderChanged = new Event();
+            defineProperties(globe, {
+                terrainProvider : {
+                    set : function(value) {
+                        this.terrainProviderChanged.raiseEvent(value);
+                    }
+                }
+            });
+
+            globe._surface.updateHeight = function(position, callback) {
+                globe.callback = callback;
+                return function() {
+                    globe.removedCallback = true;
+                    globe.callback = undefined;
+                };
+            };
+
+            return globe;
+        }
+
+        it('explicitly constructs a model with height reference', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                scene : scene
+            }).then(function(model) {
+                expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+                primitives.remove(model);
+            });
+        });
+
+        it('set model height reference property', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                scene : scene
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+                expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+                primitives.remove(model);
+            });
+        });
+
+        it('creating with a height reference creates a height update callback', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+                primitives.remove(model);
+            });
+        });
+
+        it('set height reference property creates a height update callback', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+                expect(model.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
+                scene.renderForSpecs();
+                expect(scene.globe.callback).toBeDefined();
+                primitives.remove(model);
+            });
+        });
+
+        it('updates the callback when the height reference changes', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+
+                model.heightReference = HeightReference.RELATIVE_TO_GROUND;
+                scene.renderForSpecs();
+                expect(scene.globe.removedCallback).toEqual(true);
+                expect(scene.globe.callback).toBeDefined();
+
+                scene.globe.removedCallback = false;
+                model.heightReference = HeightReference.NONE;
+                scene.renderForSpecs();
+                expect(scene.globe.removedCallback).toEqual(true);
+                expect(scene.globe.callback).not.toBeDefined();
+                
+                primitives.remove(model);
+            });
+        });
+
+        it('changing the position updates the callback', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+
+                var matrix = Matrix4.clone(model.modelMatrix);
+                var position = Cartesian3.fromDegrees(-73.0, 40.0);
+                matrix[12] = position.x;
+                matrix[13] = position.y;
+                matrix[14] = position.z;
+
+                model.modelMatrix = matrix;
+                scene.renderForSpecs();
+
+                expect(scene.globe.removedCallback).toEqual(true);
+                expect(scene.globe.callback).toBeDefined();
+
+                primitives.remove(model);
+            });
+        });
+
+        it('callback updates the position', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene,
+                show : true
+            }).then(function(model) {
+                expect(scene.globe.callback).toBeDefined();
+                scene.renderForSpecs();
+
+                scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
+                var matrix = model._clampedModelMatrix;
+                var clampedPosition = new Cartesian3(matrix[12], matrix[13], matrix[14]);
+                var cartographic = scene.globe.ellipsoid.cartesianToCartographic(clampedPosition);
+                expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+
+                primitives.remove(model);
+            });
+        });
+
+        it('changing the terrain provider', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                scene : scene
+            }).then(function(model) {
+                expect(model._heightChanged).toBe(false);
+
+                var terrainProvider = new CesiumTerrainProvider({
+                    url : 'made/up/url',
+                    requestVertexNormals : true
+                });
+
+                scene.terrainProvider = terrainProvider;
+
+                expect(model._heightChanged).toBe(true);
+            });
+        });
+
+        it('height reference without a scene rejects', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                show : true
+            }).otherwise(function(error) {
+                expect(error.message).toEqual('Height reference is not supported without a scene.');
+            });
+        });
+
+        it('changing height reference without a scene throws DeveloperError', function() {
+            scene.globe = createMockGlobe();
+            return loadModelJson(texturedBoxModel.gltf, {
+                position : Cartesian3.fromDegrees(-72.0, 40.0),
+                show : true
+            }).then(function(model) {
+                model.heightReference = HeightReference.CLAMP_TO_GROUND;
+
+                expect(function () {
+                    return scene.renderForSpecs();
+                }).toThrowDeveloperError();
+            });
         });
     });
 

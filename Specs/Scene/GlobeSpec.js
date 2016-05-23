@@ -106,6 +106,20 @@ defineSuite([
         });
     });
 
+    it('terrainProviderChanged event fires', function() {
+        var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        globe.terrainProviderChanged.addEventListener(spyListener);
+
+        globe.terrainProvider = terrainProvider;
+
+        expect(spyListener).toHaveBeenCalledWith(terrainProvider);
+    });
+
     it('renders terrain with enableLighting', function() {
         globe.enableLighting = true;
 
