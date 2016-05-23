@@ -186,7 +186,12 @@ define([
              * The size of the bounding volume that is closest to the camera. Used to estimate cascade splits.
              * @type {Number}
              */
-            closestObjectSize : undefined
+            closestObjectSize : undefined,
+
+            /**
+             * The time when a shadow map was last dirty
+             */
+            lastDirtyTime : 0
         };
     }
 

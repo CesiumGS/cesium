@@ -184,7 +184,7 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
-     * @param {Boolean} [options.shadowsEnabled=false] Determines if shadows are cast by the sun.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -551,7 +551,7 @@ define([
         this.shadowMap = new ShadowMap({
             context : context,
             lightCamera : this._sunCamera,
-            enabled : defaultValue(options.shadowsEnabled, false)
+            enabled : defaultValue(options.shadows, false)
         });
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -1062,17 +1062,28 @@ define([
     }
 
     function updateDerivedCommands(scene, command) {
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var context = scene._context;
+
+        var shadowsDirty = false;
+        if (shadowMaps.length > 0 && (command.receiveShadows || command.castShadows)) {
+            // Update derived commands when any shadow maps become dirty
+            var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+            if (command._lastDirtyTime !== lastDirtyTime) {
+                command._lastDirtyTime = lastDirtyTime;
+                command._dirty = true;
+                shadowsDirty = true;
+            }
+        }
+        
         if (command._dirty) {
             command._dirty = false;
 
-            var context = scene._context;
-            var frameState = scene.frameState;
-
             var derivedCommands = command.derivedCommands;
 
-            var shadowMaps = frameState.shadowMaps;
-            if (shadowMaps.length > 0) {
-                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, context, derivedCommands.shadows);
+            if (shadowMaps.length > 0 && (command.receiveShadows || command.castShadows)) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
@@ -1148,7 +1159,9 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        updateDerivedCommands(scene, command);
+        if (!scene.frameState.passes.pick) {
+            updateDerivedCommands(scene, command);
+        }
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
@@ -1230,6 +1243,7 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
+        var updateShadowHints = (frameState.shadowMaps.length > 0) && !frameState.passes.pick;
         var shadowNear = Number.MAX_VALUE;
         var shadowFar = -Number.MAX_VALUE;
         var shadowClosestObjectSize = Number.MAX_VALUE;
@@ -1275,8 +1289,8 @@ define([
                     // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
                     // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
                     // camera isn't inside.
-                    if (command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
-                        !((pass === Pass.GLOBE) && (distances.start < 0.0) && (distances.stop > 0.0))) {
+                    if (updateShadowHints && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                        !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
 
                         // Get the smallest bounding volume the camera is near. This is used to improve cascaded shadow splits.
                         var size = distances.stop - distances.start;
@@ -1309,14 +1323,18 @@ define([
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
 
-            shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
-            shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            if (updateShadowHints) {
+                shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+                shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            }
         }
 
         // Use the computed near and far for shadows
-        frameState.shadowHints.nearPlane = shadowNear;
-        frameState.shadowHints.farPlane = shadowFar;
-        frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+        if (updateShadowHints) {
+            frameState.shadowHints.nearPlane = shadowNear;
+            frameState.shadowHints.farPlane = shadowFar;
+            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+        }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
@@ -1407,7 +1425,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowMaps.length > 0 && command.receiveShadows) {
+        } else if (!scene.frameState.passes.pick && scene.frameState.shadowMaps.length > 0 && command.receiveShadows) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -2038,9 +2056,19 @@ define([
         var globe = scene._globe;
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
+
+        if (length === 0 || frameState.passes.pick) {
+            return;
+        }
+
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
+
+            if (shadowMap.dirty) {
+                ++frameState.shadowHints.lastDirtyTime;
+                shadowMap.dirty = false;
+            }
 
             if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
                 // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.

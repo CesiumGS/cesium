@@ -354,11 +354,18 @@ defineSuite([
         viewer.render();
     });
 
-    it('can set shadowsEnabled', function() {
+    it('can set shadows', function() {
         viewer = createViewer(container, {
-            shadowsEnabled : true
+            shadows : true
         });
-        expect(viewer.shadowsEnabled).toBe(true);
+        expect(viewer.shadows).toBe(true);
+    });
+
+    it('can set terrain shadows', function() {
+        viewer = createViewer(container, {
+            terrainShadows : true
+        });
+        expect(viewer.terrainShadows).toBe(true);
     });
 
     it('can set terrainProvider', function() {
