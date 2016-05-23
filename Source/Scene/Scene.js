@@ -1763,32 +1763,25 @@ define([
 
             // Don't insert globe commands with the rest of the scene commands since they are handled separately
             if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
-                if (isPointLight) {
-                    if (defined(command.boundingVolume)) {
-                        var distance = command.boundingVolume.distanceSquaredTo(center);
-                        if (distance < radiusSquared) {
-                            for (var k = 0; k < numberOfPasses; ++k) {
-                                passes[k].commandList.push(command);
-                            }
+                if (isVisible(command, shadowVolume)) {
+                    if (isPointLight) {
+                        for (var k = 0; k < numberOfPasses; ++k) {
+                            passes[k].commandList.push(command);
                         }
-                    }
-                } else {
-                    if (isVisible(command, shadowVolume)) {
-                        if (numberOfPasses <= 1) {
-                            passes[0].commandList.push(command);
-                        } else {
-                            var wasVisible = false;
-                            // Loop over cascades from largest to smallest
-                            for (var j = numberOfPasses - 1; j >= 0; --j) {
-                                var cascadeVolume = passes[j].cullingVolume;
-                                if (isVisible(command, cascadeVolume)) {
-                                    passes[j].commandList.push(command);
-                                    wasVisible = true;
-                                } else if (wasVisible) {
-                                    // If it was visible in the previous cascade but now isn't
-                                    // then there is no need to check any more cascades
-                                    break;
-                                }
+                    } else if (numberOfPasses <= 1) {
+                        passes[0].commandList.push(command);
+                    } else {
+                        var wasVisible = false;
+                        // Loop over cascades from largest to smallest
+                        for (var j = numberOfPasses - 1; j >= 0; --j) {
+                            var cascadeVolume = passes[j].cullingVolume;
+                            if (isVisible(command, cascadeVolume)) {
+                                passes[j].commandList.push(command);
+                                wasVisible = true;
+                            } else if (wasVisible) {
+                                // If it was visible in the previous cascade but now isn't
+                                // then there is no need to check any more cascades
+                                break;
                             }
                         }
                     }
@@ -2054,6 +2047,10 @@ define([
         }
     }
 
+    var scratchShadowMapPasses = [{
+        camera : undefined
+    }];
+
     function updateShadowMaps(scene) {
         var frameState = scene._frameState;
         var globe = scene._globe;
@@ -2074,20 +2071,33 @@ define([
             }
 
             if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
+                // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.
+                // We could create some type of camera representing a point light.
+                var passes;
+                if (shadowMap.isPointLight) {
+                    passes = shadowMap.passes;
+                } else {
+                    passes = scratchShadowMapPasses;
+                    passes[0].camera = shadowMap.shadowMapCamera;
+                }
+
                 var sceneCamera = frameState.camera;
                 var sceneCullingVolume = frameState.cullingVolume;
                 var sceneCommandList = frameState.commandList;
 
-                // Update frame state to render from the light camera
-                frameState.camera = shadowMap.shadowMapCamera;
                 frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
                 frameState.commandList = shadowMap.commandList;
-
                 frameState.commandList.length = 0;
 
-                // Update the globe again to Collect terrain commands from the light's POV.
-                // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
-                globe.update(frameState);
+                var passesLength = passes.length;
+                for (var j = 0; j < passesLength; ++j) {
+                    // Update frame state to render from the light camera
+                    frameState.camera = passes[j].camera;
+
+                    // Update the globe again to Collect terrain commands from the light's POV.
+                    // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
+                    globe.update(frameState);
+                }
 
                 // Revert back to original frame state
                 frameState.camera = sceneCamera;
