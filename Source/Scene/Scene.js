@@ -822,6 +822,19 @@ define([
         },
 
         /**
+         * Gets an event that's raised when the terrain provider is changed
+         * @memberof Scene.prototype
+         *
+         * @type {Event}
+         * @readonly
+         */
+        terrainProviderChanged : {
+            get : function() {
+                return this.globe.terrainProviderChanged;
+            }
+        },
+
+        /**
          * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
          * The Scene instance and the thrown error are the only two parameters passed to the event handler.
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting

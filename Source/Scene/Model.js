@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -46,6 +47,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './getModelAccessor',
+        './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
         './ModelMaterial',
@@ -59,6 +61,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         clone,
         combine,
         ComponentDatatype,
@@ -101,6 +104,7 @@ define([
         Uri,
         when,
         getModelAccessor,
+        HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
         ModelMaterial,
@@ -307,6 +311,8 @@ define([
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -400,6 +406,7 @@ define([
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
+        this._clampedModelMatrix = undefined;
 
         /**
          * A uniform scale applied to this model before the {@link Model#modelMatrix}.
@@ -446,6 +453,27 @@ define([
          */
         this.id = options.id;
         this._id = options.id;
+
+        /**
+         * Returns the height reference of the model
+         *
+         * @memberof Model.prototype
+         *
+         * @type {HeightReference}
+         *
+         * @default HeightReference.NONE
+         */
+        this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._heightReference = this.heightReference;
+        this._heightChanged = false;
+        this._removeUpdateHeightCallback = undefined;
+        var scene = options.scene;
+        this._scene = scene;
+        if (defined(scene)) {
+            scene.terrainProviderChanged.addEventListener(function() {
+                this._heightChanged = true;
+            }, this);
+        }
 
         /**
          * Used for picking primitives that wrap a model.
@@ -666,7 +694,12 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                var modelMatrix = this.modelMatrix;
+                if ((this.heightReference !== HeightReference.NONE) && this._clampedModelMatrix) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
+                var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
                 var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
                 Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
@@ -3077,6 +3110,77 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    var scratchCartographic = new Cartographic();
+
+    function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+        return function (clampedPosition) {
+            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                clampedCart.height += cartoPosition.height;
+                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+            }
+
+            var clampedModelMatrix = model._clampedModelMatrix;
+            if (!defined(clampedModelMatrix)) {
+                clampedModelMatrix = new Matrix4();
+                model._clampedModelMatrix = clampedModelMatrix;
+            }
+
+            // Modify clamped model matrix to use new height
+            Matrix4.clone(model.modelMatrix, clampedModelMatrix);
+            clampedModelMatrix[12] = clampedPosition.x;
+            clampedModelMatrix[13] = clampedPosition.y;
+            clampedModelMatrix[14] = clampedPosition.z;
+
+            model._heightChanged = true;
+        };
+    }
+
+    function updateClamping(model) {
+        if (defined(model._removeUpdateHeightCallback)) {
+            model._removeUpdateHeightCallback();
+            model._removeUpdateHeightCallback = undefined;
+        }
+
+        var scene = model._scene;
+        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (model.heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported without a scene.');
+            }
+            //>>includeEnd('debug');
+            model._clampedModelMatrix = undefined;
+            return;
+        }
+
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+
+        // Compute cartographic position so we don't recompute every update
+        var modelMatrix = model.modelMatrix;
+        scratchPosition.x = modelMatrix[12];
+        scratchPosition.y = modelMatrix[13];
+        scratchPosition.z = modelMatrix[14];
+        var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        // Install callback to handle updating of terrain tiles
+        var surface = globe._surface;
+        model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
+
+        // Set the correct height now
+        var height = globe.getHeight(cartoPosition);
+        if (defined(height)) {
+            // Get callback with cartoPosition being the non-clamped position
+            var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+            // Compute the clamped cartesian and call updateHeight callback
+            Cartographic.clone(cartoPosition, scratchCartographic);
+            scratchCartographic.height = height;
+            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            cb(scratchPosition);
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3199,22 +3303,33 @@ define([
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
+            var modelMatrix = this.modelMatrix;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                 (this._scale !== this.scale) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale);
+                (this._maximumScale !== this.maximumScale) ||
+                (this._heightReference !== this.heightReference) || this._heightChanged;
 
             if (modelTransformChanged || justLoaded) {
-                Matrix4.clone(this.modelMatrix, this._modelMatrix);
+                Matrix4.clone(modelMatrix, this._modelMatrix);
+
+                updateClamping(this);
+
+                if (defined(this._clampedModelMatrix)) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
                 this._maximumScale = this.maximumScale;
+                this._heightReference = this.heightReference;
+                this._heightChanged = false;
 
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
+                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
