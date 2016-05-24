@@ -21,6 +21,7 @@ Change Log
 * Added `terrainProviderChanged` event to `Scene` and `Globe`
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
+* Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
 
 ### 1.21 - 2016-05-02
