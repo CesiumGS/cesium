@@ -58,7 +58,7 @@ function loadTileset(url) {
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
-        var boundingBox = tileset._root._boundingVolume;
+        var boundingBox = tileset.boundingVolume;
         var center = Cesium.Rectangle.center(boundingBox.rectangle);
         var height = boundingBox.maximumHeight + 500.0;
         viewer.camera.setView({
