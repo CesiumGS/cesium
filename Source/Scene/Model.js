@@ -3161,8 +3161,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var scratchCartographic = new Cartographic();
-
     function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
         return function (clampedPosition) {
             if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
