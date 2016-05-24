@@ -78,6 +78,8 @@ define([
         });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
+        
+        this._iDayNight = 0;
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
@@ -111,6 +113,9 @@ define([
             },
             fScaleOverScaleDepth : function() {
                 return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
+            },
+            iDayNight : function() {
+                return that._iDayNight;
             }
         };
     }
@@ -129,6 +134,13 @@ define([
             }
         }
     });
+
+    /**
+     * @private
+     */
+    SkyAtmosphere.prototype.setDayNight = function(enableLighting) {
+        this._iDayNight = enableLighting;
+    }
 
     /**
      * @private

@@ -43,6 +43,7 @@ uniform float fInnerRadius;     // The inner (planetary) radius
 uniform float fScale;           // 1 / (fOuterRadius - fInnerRadius)
 uniform float fScaleDepth;      // The scale depth (i.e. the altitude at which the atmosphere's average density is found)
 uniform float fScaleOverScaleDepth; // fScale / fScaleDepth
+uniform int iDayNight; // Whether or not we are in day/night mode.
 
 const float Kr = 0.0025;
 const float fKr4PI = Kr * 4.0 * czm_pi;
@@ -108,11 +109,13 @@ void main(void)
 
     // Now loop through the sample rays
     vec3 v3FrontColor = vec3(0.0, 0.0, 0.0);
+    vec3 lightPosition = (iDayNight != 0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
+    lightPosition = normalize(lightPosition);
+
     for(int i=0; i<nSamples; i++)
     {
         float fHeight = length(v3SamplePoint);
         float fDepth = exp(fScaleOverScaleDepth * (fInnerRadius - fHeight));
-        vec3 lightPosition = normalize(czm_viewerPositionWC); // czm_sunDirectionWC
         float fLightAngle = dot(lightPosition, v3SamplePoint) / fHeight;
         float fCameraAngle = dot(v3Ray, v3SamplePoint) / fHeight;
         float fScatter = (fStartOffset + fDepth*(scale(fLightAngle) - scale(fCameraAngle)));

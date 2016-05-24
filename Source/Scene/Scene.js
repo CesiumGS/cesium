@@ -1848,6 +1848,9 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        if (defined(scene.skyAtmosphere)) {
+            scene.skyAtmosphere.setDayNight(scene._globe.enableLighting);
+        }
         environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
