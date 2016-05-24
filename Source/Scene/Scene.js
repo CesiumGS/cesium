@@ -1773,7 +1773,7 @@ define([
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
-        } else if (windowCoordinates.x === Math.floor(context.drawingBufferWidth * 0.5)) {
+        } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
             viewport.width = windowCoordinates.x;
 
             camera.position.x *= CesiumMath.sign(camera.position.x);
