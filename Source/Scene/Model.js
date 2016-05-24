@@ -3015,7 +3015,7 @@ define([
             // Compute size of bounding sphere in pixels
             var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var m = model.modelMatrix;
+            var m = defined(model._clampedModelMatrix) ? model._clampedModelMatrix : model.modelMatrix;
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
