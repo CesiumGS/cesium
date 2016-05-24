@@ -126,7 +126,7 @@ define([
             var projectionMatrix = camera.frustum.projectionMatrix;
 
             var x = camera.positionWC.y;
-            var eyePoint = Cartesian3.fromElements(Math.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x);
+            var eyePoint = Cartesian3.fromElements(CesiumMath.sign(x) * maxCoord.x - x, 0.0, -camera.positionWC.x);
             var windowCoordinates = Transforms.pointToGLWindowCoordinates(projectionMatrix, viewportTransformation, eyePoint);
 
             if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= canvas.clientWidth) {
@@ -208,7 +208,7 @@ define([
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
      * var scene = widget.scene;
      * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0));
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
      * handler.setInputAction(function(movement) {
      *     console.log(Cesium.SceneTransforms.wgs84ToWindowCoordinates(scene, position));
