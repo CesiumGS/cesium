@@ -608,8 +608,8 @@ defineSuite([
 
     it('pointToGLWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -621,8 +621,8 @@ defineSuite([
 
     it('pointToGLWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -658,8 +658,8 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -671,8 +671,8 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
