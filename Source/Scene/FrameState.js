@@ -183,15 +183,22 @@ define([
             farPlane : undefined,
 
             /**
-             * The size of the bounding volume that is closest to the camera. Used to estimate cascade splits.
+             * The size of the bounding volume that is closest to the camera. This is used to place more shadow detail near the object.
              * @type {Number}
              */
             closestObjectSize : undefined,
 
             /**
              * The time when a shadow map was last dirty
+             * @type {Number}
              */
-            lastDirtyTime : 0
+            lastDirtyTime : 0,
+
+            /**
+             * Whether the shadows maps are out of view this frame
+             * @type {Boolean}
+             */
+            outOfView : true
         };
     }
 
