@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,6 +23,7 @@ define([
         './SceneMode'
     ], function(
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
@@ -79,44 +81,20 @@ define([
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
-        // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-        this._iDayNight = 0;
+        // camera height, outer radius, inner radius, dayNight flag
+        this._camAndRadiiAndDayNight = new Cartesian4();
 
-        this._fCameraHeight = undefined;
-        this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
-        var innerRadius = ellipsoid.maximumRadius;
-        var rayleighScaleDepth = 0.25;
+        // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
+        this._camAndRadiiAndDayNight.w = 0;
+
+        this._camAndRadiiAndDayNight.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
+        this._camAndRadiiAndDayNight.z = ellipsoid.maximumRadius;
 
         var that = this;
 
         this._command.uniformMap = {
-            fCameraHeight : function() {
-                return that._fCameraHeight;
-            },
-            fCameraHeight2 : function() {
-                return that._fCameraHeight2;
-            },
-            fOuterRadius : function() {
-                return that._outerRadius;
-            },
-            fOuterRadius2 : function() {
-                return that._outerRadius * that._outerRadius;
-            },
-            fInnerRadius : function() {
-                return innerRadius;
-            },
-            fScale : function() {
-                return 1.0 / (that._outerRadius - innerRadius);
-            },
-            fScaleDepth : function() {
-                return rayleighScaleDepth;
-            },
-            fScaleOverScaleDepth : function() {
-                return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
-            },
-            iDayNight : function() {
-                return that._iDayNight;
+            camAndRadiiAndDayNight : function() {
+                return that._camAndRadiiAndDayNight;
             }
         };
     }
@@ -140,7 +118,7 @@ define([
      * @private
      */
     SkyAtmosphere.prototype.setDayNight = function(enableLighting) {
-        this._iDayNight = enableLighting ? 1 : 0;
+        this._camAndRadiiAndDayNight.w = enableLighting ? 1 : 0;
     };
 
     /**
@@ -209,10 +187,10 @@ define([
 
         var cameraPosition = frameState.camera.positionWC;
 
-        this._fCameraHeight2 = Cartesian3.magnitudeSquared(cameraPosition);
-        this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
+        var cameraHeight = Cartesian3.magnitude(cameraPosition);
+        this._camAndRadiiAndDayNight.x = cameraHeight;
 
-        if (this._fCameraHeight > this._outerRadius) {
+        if (cameraHeight > this._camAndRadiiAndDayNight.y) {
             // Camera in space
             command.shaderProgram = this._spSkyFromSpace;
         } else {

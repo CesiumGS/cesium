@@ -21,7 +21,7 @@ Change Log
 * Added `terrainProviderChanged` event to `Scene` and `Globe`
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
-* Added `setDayNight` to `SkyAtmosphere` to enable sun position based atmosphere color. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
+* Added option to enable sun position based atmosphere color when `Globe.enableLighting` is `true`. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Fixed a bug that would cause a crash is the camera was on the IDL in 2D. [#3951](https://github.com/AnalyticalGraphicsInc/cesium/issues/3951)
 
