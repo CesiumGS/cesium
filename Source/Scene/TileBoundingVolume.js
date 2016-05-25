@@ -33,7 +33,7 @@ define([
      *
      * @memberof TileBoundingVolume.prototype
      *
-     * @type {Object}
+     * @type {BoundingSphere}
      * @readonly
      */
     TileBoundingVolume.prototype.boundingSphere = undefined;

@@ -25,7 +25,7 @@ define([
         Primitive) {
     'use strict';
 
-    var TileBoundingSphere = function(center, radius) {
+    function TileBoundingSphere(center, radius) {
         this._boundingSphere = new BoundingSphere(center, radius);
     };
 
