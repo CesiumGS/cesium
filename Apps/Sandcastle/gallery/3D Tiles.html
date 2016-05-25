@@ -58,11 +58,11 @@ function loadTileset(url) {
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
-        var boundingBox = tileset.boundingVolume;
-        var center = Cesium.Rectangle.center(boundingBox.rectangle);
-        var height = boundingBox.maximumHeight + 500.0;
+        var boundingSphere = tileset.boundingSphere;
+        var center = Cesium.Cartographic.fromCartesian(boundingSphere.center);
+        center.height += boundingSphere.radius * 2.0;
         viewer.camera.setView({
-            destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, height)
+            destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, center.height)
         });
 
         var properties = tileset.properties;

@@ -594,6 +594,28 @@ define([
         },
 
         /**
+         * The tileset's bounding sphere.
+         *
+         * @memberof Cesium3DTileset.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         */
+        boundingSphere : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._root.boundingSphere;
+            }
+        },
+
+        /**
          * @private
          */
         styleEngine : {

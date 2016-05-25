@@ -26,6 +26,7 @@ defineSuite([
         var tbs = new TileBoundingSphere(center, radius);
         expect(tbs).toBeDefined();
         expect(tbs.boundingVolume).toBeDefined();
+        expect(tbs.boundingSphere).toBeDefined();
         expect(tbs.center).toEqual(center);
         expect(tbs.radius).toEqual(radius);
     });

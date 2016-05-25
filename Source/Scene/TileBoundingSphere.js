@@ -26,7 +26,7 @@ define([
     'use strict';
 
     var TileBoundingSphere = function(center, radius) {
-        this.boundingSphere = new BoundingSphere(center, radius);
+        this._boundingSphere = new BoundingSphere(center, radius);
     };
 
     defineProperties(TileBoundingSphere.prototype, {
@@ -40,7 +40,7 @@ define([
          */
         center : {
             get : function() {
-                return this.boundingSphere.center;
+                return this._boundingSphere.center;
             }
         },
 
@@ -54,7 +54,7 @@ define([
          */
         radius : {
             get : function() {
-                return this.boundingSphere.radius;
+                return this._boundingSphere.radius;
             }
         },
 
@@ -68,7 +68,20 @@ define([
          */
         boundingVolume : {
             get : function() {
-                return this.boundingSphere;
+                return this._boundingSphere;
+            }
+        },
+        /**
+         * The underlying bounding sphere
+         *
+         * @memberof TileBoundingSphere.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                return this._boundingSphere;
             }
         }
     });
@@ -86,7 +99,7 @@ define([
             throw new DeveloperError('frameState is required.');
         }
         //>>includeEnd('debug');
-        var bs = this.boundingSphere;
+        var bs = this._boundingSphere;
         return Math.max(0.0, Cartesian3.distance(bs.center, frameState.camera.positionWC) - bs.radius);
     };
 
@@ -105,7 +118,7 @@ define([
             throw new DeveloperError('plane is required.');
         }
         //>>includeEnd('debug');
-        return BoundingSphere.intersectPlane(this.boundingSphere, plane);
+        return BoundingSphere.intersectPlane(this._boundingSphere, plane);
     };
 
     TileBoundingSphere.prototype.createDebugVolume = function(color) {
