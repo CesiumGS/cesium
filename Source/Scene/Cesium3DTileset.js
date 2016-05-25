@@ -572,7 +572,7 @@ define([
         },
 
         /**
-         * The tileset's bounding volume. As previously accessed by tileset._root.contentBoundingVolume.
+         * The tileset's bounding volume.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -580,9 +580,6 @@ define([
          * @readonly
          *
          * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
-         *
-         * @example
-         * console.log('Bounding volume of tileset: ' + tileset.boundingVolume);
          */
         boundingVolume : {
             get : function() {
@@ -592,7 +589,7 @@ define([
                 }
                 //>>includeEnd('debug');
                 
-                return this._root.contentBoundingVolume;
+                return this._root._boundingVolume;
             }
         },
 
