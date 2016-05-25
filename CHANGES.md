@@ -22,7 +22,7 @@ Change Log
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
-* Added `setDayNight` to `SkyAtmosphere` to enable sun position based atmosphere color. Response to request for changeable atmosphere color. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
+* Added `setDayNight` to `SkyAtmosphere` to enable sun position based atmosphere color. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 
 ### 1.21 - 2016-05-02
 

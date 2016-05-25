@@ -55,29 +55,31 @@ defineSuite([
         s.destroy();
     });
 
-    it('draws sky with setDayNight(true) ', function() {
+    it('draws sky with setDayNight set to true', function() {
         var s = new SkyAtmosphere();
+        s.setDayNight(true);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
         expect(command).toBeDefined();
-        expect(s._iDayNight === true);
+        expect(s._iDayNight).toBe(1);
         command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
         s.destroy();
     });
 
-    it('draws sky with setDayNight(false) ', function() {
+    it('draws sky with setDayNight set to false', function() {
         var s = new SkyAtmosphere();
+        s.setDayNight(false);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.render();
 
         var command = s.update(scene.frameState);
         expect(command).toBeDefined();
-        expect(s._iDayNight === false);
+        expect(s._iDayNight).toBe(0);
         command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
         s.destroy();

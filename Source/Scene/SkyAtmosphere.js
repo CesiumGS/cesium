@@ -78,7 +78,8 @@ define([
         });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
-        
+
+        // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
         this._iDayNight = 0;
 
         this._fCameraHeight = undefined;
@@ -139,8 +140,8 @@ define([
      * @private
      */
     SkyAtmosphere.prototype.setDayNight = function(enableLighting) {
-        this._iDayNight = enableLighting;
-    }
+        this._iDayNight = enableLighting ? 1 : 0;
+    };
 
     /**
      * @private
