@@ -2520,7 +2520,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2660,11 +2660,27 @@ define([
                     });
                 }
 
+                var command2D;
+                var pickCommand2D;
+                if (!scene3DOnly) {
+                    command2D = DrawCommand.shallowClone(command);
+                    command2D.boundingVolume = new BoundingSphere();
+                    command2D.modelMatrix = new Matrix4();
+
+                    if (allowPicking) {
+                        pickCommand2D = DrawCommand.shallowClone(pickCommand);
+                        pickCommand2D.boundingVolume = new BoundingSphere();
+                        pickCommand2D.modelMatrix = new Matrix4();
+                    }
+                }
+
                 var nodeCommand = {
                     show : true,
                     boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    command2D : command2D,
+                    pickCommand2D : pickCommand2D
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -2672,7 +2688,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, context, scene3DOnly) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2730,7 +2746,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
@@ -2751,6 +2767,7 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
+        var scene3DOnly = frameState.scene3DOnly;
 
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2788,8 +2805,8 @@ define([
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createUniformMaps(model, context);               // using glTF materials/techniques
+        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2859,6 +2876,23 @@ define([
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                            }
+
+                            // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
+                            // will be clipped by the viewport. We create a second command that translates the model
+                            // model matrix to the opposite side of the map so the part that was clipped in one viewport
+                            // is drawn in the other.
+                            command = primitiveCommand.command2D;
+                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
+                                Matrix4.clone(nodeMatrix, command.modelMatrix);
+                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+
+                                if (allowPicking) {
+                                    var pickCommand2D = primitiveCommand.pickCommand2D;
+                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
+                                }
                             }
                         }
                     }
@@ -3394,11 +3428,21 @@ define([
             var i;
             var nc;
 
+            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+            var boundingVolume;
+
             if (passes.render) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
+                        var command = nc.command;
+                        commandList.push(command);
+
+                        boundingVolume = command.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.command2D);
+                        }
                     }
                 }
             }
@@ -3407,7 +3451,14 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.pickCommand);
+                        var pickCommand = nc.pickCommand;
+                        commandList.push(pickCommand);
+
+                        boundingVolume = pickCommand.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.pickCommand2D);
+                        }
                     }
                 }
             }

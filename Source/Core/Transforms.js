@@ -830,6 +830,8 @@ define([
     var scratchCartesian4NewXAxis = new Cartesian4();
     var scratchCartesian4NewYAxis = new Cartesian4();
     var scratchCartesian4NewZAxis = new Cartesian4();
+    var scratchFromENU = new Matrix4();
+    var scratchToENU = new Matrix4();
 
     /**
      * @private
@@ -852,6 +854,9 @@ define([
         var origin = Matrix4.getColumn(matrix, 3, scratchCartesian4Origin);
         var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
 
+        var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, scratchFromENU);
+        var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
+
         var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
         var newOrigin = scratchCartesian4NewOrigin;
         newOrigin.x = projectedPosition.z;
@@ -861,31 +866,13 @@ define([
 
         var xAxis = Matrix4.getColumn(matrix, 0, scratchCartesian3);
         var xScale = Cartesian3.magnitude(xAxis);
-        Cartesian4.add(xAxis, origin, xAxis);
-        ellipsoid.cartesianToCartographic(xAxis, cartographic);
-
-        projection.project(cartographic, projectedPosition);
-        var newXAxis = scratchCartesian4NewXAxis;
-        newXAxis.x = projectedPosition.z;
-        newXAxis.y = projectedPosition.x;
-        newXAxis.z = projectedPosition.y;
-        newXAxis.w = 0.0;
-
-        Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
+        var newXAxis = Matrix4.multiplyByVector(toENU, xAxis, scratchCartesian4NewXAxis);
+        Cartesian4.fromElements(newXAxis.z, newXAxis.x, newXAxis.y, 0.0, newXAxis);
 
         var yAxis = Matrix4.getColumn(matrix, 1, scratchCartesian3);
         var yScale = Cartesian3.magnitude(yAxis);
-        Cartesian4.add(yAxis, origin, yAxis);
-        ellipsoid.cartesianToCartographic(yAxis, cartographic);
-
-        projection.project(cartographic, projectedPosition);
-        var newYAxis = scratchCartesian4NewYAxis;
-        newYAxis.x = projectedPosition.z;
-        newYAxis.y = projectedPosition.x;
-        newYAxis.z = projectedPosition.y;
-        newYAxis.w = 0.0;
-
-        Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
+        var newYAxis = Matrix4.multiplyByVector(toENU, yAxis, scratchCartesian4NewYAxis);
+        Cartesian4.fromElements(newYAxis.z, newYAxis.x, newYAxis.y, 0.0, newYAxis);
 
         var zAxis = Matrix4.getColumn(matrix, 2, scratchCartesian3);
         var zScale = Cartesian3.magnitude(zAxis);
