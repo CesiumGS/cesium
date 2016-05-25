@@ -28,6 +28,7 @@ defineSuite([
     it('can be instantiated with center and half-axes', function() {
         expect(tileBoundingVolume).toBeDefined();
         expect(tileBoundingVolume.boundingVolume).toBeDefined();
+        expect(tileBoundingVolume.boundingSphere).toBeDefined();
     });
 
     it('createDebugVolume throws when color is undefined', function() {
