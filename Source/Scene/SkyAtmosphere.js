@@ -81,7 +81,7 @@ define([
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
-        // camera height, outer radius, inner radius, dayNight flag
+        // camera height, outer radius, inner radius, dynamic atmosphere color flag
         this._cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
 
         // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.

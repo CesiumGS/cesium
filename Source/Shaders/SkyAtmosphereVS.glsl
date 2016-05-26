@@ -35,7 +35,7 @@
   
 attribute vec4 position;
 
-uniform vec4 cameraAndRadiiAndDynamicAtmosphereColor; // camera height, outer radius, inner radius, dayNight flag
+uniform vec4 cameraAndRadiiAndDynamicAtmosphereColor; // camera height, outer radius, inner radius, dynamic atmosphere color flag
 
 const float Kr = 0.0025;
 const float Kr4PI = Kr * 4.0 * czm_pi;
