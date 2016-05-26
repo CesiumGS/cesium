@@ -132,10 +132,8 @@ define([
      * @param {Boolean} [options.softShadows=false] Whether percentage-closer-filtering is enabled for producing softer shadows.
      * @param {Number} [options.darkness=0.3] The shadow darkness.
      *
-     * @see ShadowMapShader
-     *
      * @exception {DeveloperError} Only one or four cascades are supported.
-
+     *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
@@ -157,12 +155,11 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
-        this._dirty = false;
+        this._dirty = true;
 
         /**
          * Determines the darkness of the shadows.
          *
-         * @memberof ShadowMap.prototype
          * @type {Number}
          * @default 0.3
          */
@@ -172,7 +169,6 @@ define([
         /**
          * Determines the maximum distance of the shadow map. Only applicable for cascaded shadows. Larger distances may result in lower quality shadows.
          *
-         * @memberof ShadowMap.prototype
          * @type {Number}
          * @default 5000.0
          */
@@ -245,7 +241,6 @@ define([
         this._isSpotLight = false;
         if (this._cascadesEnabled) {
             // Cascaded shadows are always orthographic. The frustum dimensions are calculated on the fly.
-            this._lightCamera.frustum = new OrthographicFrustum();
             this._shadowMapCamera.frustum = new OrthographicFrustum();
         } else if (defined(this._lightCamera.frustum.fov)) {
             // If the light camera uses a perspective frustum, then the light source is a spot light
@@ -276,7 +271,7 @@ define([
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this._debugFreezeFrame = false;
-        this.debugCascadeColors = false;
+        this._debugCascadeColors = false;
         this._debugLightFrustum = undefined;
         this._debugCameraFrustum = undefined;
         this._debugCascadeFrustums = new Array(this._numberOfCascades);
@@ -306,8 +301,12 @@ define([
         this.size = this._size;
     }
 
-    // Global maximum shadow distance used to prevent far off receivers from extending
-    // the shadow far plane. E.g. setting a tighter near/far when viewing a satellite in space.
+    /**
+     * Global maximum shadow distance used to prevent far off receivers from extending
+     * the shadow far plane. This helps set a tighter near/far when viewing objects from space.
+     *
+     * @private
+     */
     ShadowMap.MAXIMUM_DISTANCE = 20000.0;
 
     function ShadowPass(context) {
@@ -399,6 +398,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {Boolean}
          * @default false
+         * @private
          */
         dirty : {
             get : function() {
@@ -430,6 +430,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {Boolean}
          * @readonly
+         * @private
          */
         outOfView : {
             get : function() {
@@ -443,6 +444,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {ShadowMapCamera}
          * @readonly
+         * @private
          */
         shadowMapCamera : {
             get : function() {
@@ -456,6 +458,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {CullingVolume}
          * @readonly
+         * @private
          */
         shadowMapCullingVolume : {
             get : function() {
@@ -469,6 +472,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {ShadowPass[]}
          * @readonly
+         * @private
          */
         passes : {
             get : function() {
@@ -482,6 +486,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {DrawCommand[]}
          * @readonly
+         * @private
          */
         commandList : {
             get : function() {
@@ -495,6 +500,7 @@ define([
          * @memberof ShadowMap.prototype
          * @type {Boolean}
          * @readonly
+         * @private
          */
         isPointLight : {
             get : function() {
@@ -503,28 +509,19 @@ define([
         },
 
         /**
-         * The position of the point light source.
+         * Debug option for visualizing the cascades by color.
          *
          * @memberof ShadowMap.prototype
-         * @type {Cartesian3}
-         * @readonly
+         * @type {Boolean}
+         * @default false
          */
-        pointLightPosition : {
+        debugCascadeColors : {
             get : function() {
-                return this._shadowMapCamera.positionWC;
-            }
-        },
-
-        /**
-         * The radius of the point light source.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Number}
-         * @readonly
-         */
-        pointLightRadius : {
-            get : function() {
-                return this._pointLightRadius;
+                return this._debugCascadeColors;
+            },
+            set : function(value) {
+                this._dirty = this._debugCascadeColors !== value;
+                this._debugCascadeColors = value;
             }
         }
     });
@@ -692,6 +689,7 @@ define([
     }
 
     function resize(shadowMap, size) {
+        shadowMap._size = size;
         var passes = shadowMap._passes;
         var numberOfPasses = passes.length;
         var textureSize = shadowMap._textureSize;
@@ -955,7 +953,7 @@ define([
         return debugFrustum;
     }
 
-    var debugCascadeColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
+    var debugOutlineColors = [Color.RED, Color.GREEN, Color.BLUE, Color.MAGENTA];
     var scratchScale = new Cartesian3();
 
     function applyDebugSettings(shadowMap, frameState) {
@@ -988,7 +986,7 @@ define([
                     if (enterFreezeFrame) {
                         // Recreate debug frustum when entering freeze frame mode
                         shadowMap._debugCascadeFrustums[i] = shadowMap._debugCascadeFrustums[i] && shadowMap._debugCascadeFrustums[i].destroy();
-                        shadowMap._debugCascadeFrustums[i] = createDebugFrustum(shadowMap._passes[i].camera, debugCascadeColors[i]);
+                        shadowMap._debugCascadeFrustums[i] = createDebugFrustum(shadowMap._passes[i].camera, debugOutlineColors[i]);
                     }
                     shadowMap._debugCascadeFrustums[i].update(frameState);
                 }
@@ -1358,18 +1356,6 @@ define([
         var sceneCamera = shadowMap._sceneCamera; // Clone of camera, with clamped near and far planes
         var shadowMapCamera = shadowMap._shadowMapCamera; // Camera representing the shadow volume, initially cloned from lightCamera
 
-        if (defined(sceneCamera)) {
-            // Skip check on the first frame
-            checkVisibility(shadowMap, frameState);
-        }
-
-        // Clear the shadow texture when a cascaded shadow map goes out of view (e.g. when the sun dips below the horizon).
-        // This prevents objects that still read from the shadow map from reading old values.
-        if (shadowMap._cascadesEnabled && !shadowMap._outOfViewPrevious && shadowMap._outOfView) {
-            clearFramebuffer(shadowMap, frameState.context);
-        }
-        shadowMap._outOfViewPrevious = shadowMap._outOfView;
-
         // Clone light camera into the shadow map camera
         if (shadowMap._cascadesEnabled) {
             Cartesian3.clone(lightCamera.directionWC, shadowMapCamera.directionWC);
@@ -1406,8 +1392,18 @@ define([
         shadowMap._sceneCamera.frustum.near = near;
         shadowMap._sceneCamera.frustum.far = far;
         shadowMap._distance = far - near;
+
+        checkVisibility(shadowMap, frameState);
+
+        if (!shadowMap._outOfViewPrevious && shadowMap._outOfView) {
+            shadowMap._needsUpdate = true;
+        }
+        shadowMap._outOfViewPrevious = shadowMap._outOfView;
     }
 
+    /**
+     * @private
+     */
     ShadowMap.prototype.update = function(frameState) {
         updateCameras(this, frameState);
 
@@ -1455,6 +1451,9 @@ define([
         }
     };
 
+    /**
+     * @private
+     */
     ShadowMap.prototype.updatePass = function(context, shadowPass) {
         clearFramebuffer(this, context, shadowPass);
     };
@@ -1643,10 +1642,16 @@ define([
         return result;
     };
 
+    /**
+     * @private
+     */
     ShadowMap.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @private
+     */
     ShadowMap.prototype.destroy = function() {
         destroyFramebuffer(this);
 
