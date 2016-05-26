@@ -82,13 +82,14 @@ define([
         this._spSkyFromAtmosphere = undefined;
 
         // camera height, outer radius, inner radius, dynamic atmosphere color flag
-        this._cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
+        var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
 
         // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-        this._cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
+        cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
+        cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
+        cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
 
-        this._cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
-        this._cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
+        this._cameraAndRadiiAndDynamicAtmosphereColor = cameraAndRadiiAndDynamicAtmosphereColor;
 
         var that = this;
 
