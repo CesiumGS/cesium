@@ -457,7 +457,7 @@ define([
 
         var length = positions.length;
 
-        for (var i = 0; i < length; i +=3) {
+        for (var i = 0; i < length; ++i) {
             var position = positions[i];
             var cartographic = ellipsoid.cartesianToCartographic(position, scratchCarto1);
 
