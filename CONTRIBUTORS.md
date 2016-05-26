@@ -32,6 +32,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Thomas Pedbereznak](https://github.com/TomPed)
    * [Rob Taglang](https://github.com/lasalvavida)
    * [Todd Smith] (https://github.com/tsmith717)
+   * [Josh Becker] (https://github.com/JoshuaStorm)
+   * [Kangning Li] (https://github.com/likangning93)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
