@@ -1920,14 +1920,19 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        environmentState.isReadyForAtmosphere = defined(scene.skyAtmosphere) && (environmentState.isReadyForAtmosphere || (defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0));
-        environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var skyAtmosphere = scene.skyAtmosphere;
+        var globe = scene.globe;
+        if (defined(skyAtmosphere) && defined(globe)) {
+            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+            environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+        }
+        environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
-        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are

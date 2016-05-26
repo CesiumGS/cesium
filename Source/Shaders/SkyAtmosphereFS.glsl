@@ -44,14 +44,14 @@ varying vec3 v_positionEC;
 void main (void)
 {
     // Extra normalize added for Android
-    float fCos = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
-    float fRayleighPhase = 0.75 * (1.0 + fCos * fCos);
-    float fMiePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + fCos * fCos) / pow(1.0 + g2 - 2.0 * g * fCos, 1.5);
+    float cosAngle = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
+    float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
+    float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
     
-    const float fExposure = 2.0;
+    const float exposure = 2.0;
     
-    vec3 rgb = fRayleighPhase * v_rayleighColor + fMiePhase * v_mieColor;
-    rgb = vec3(1.0) - exp(-fExposure * rgb);
+    vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
+    rgb = vec3(1.0) - exp(-exposure * rgb);
     float l = czm_luminance(rgb);
     gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, czm_morphTime));
 }
