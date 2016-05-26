@@ -26,9 +26,10 @@ defineSuite([
     var frameState = createFrameState();
     
     it('can be instantiated with center and half-axes', function() {
-        expect(tileBoundingVolume).toBeDefined();
-        expect(tileBoundingVolume.boundingVolume).toBeDefined();
-        expect(tileBoundingVolume.boundingSphere).toBeDefined();
+        expect(tileBoundingVolume.boundingVolume.center).toEqual(center);
+        expect(tileBoundingVolume.boundingVolume.halfAxes).toEqual(halfAxes);
+        expect(tileBoundingVolume.boundingSphere.center).toEqual(center);
+        expect(tileBoundingVolume.boundingSphere.radius).toEqual(0.5);
     });
 
     it('createDebugVolume throws when color is undefined', function() {

@@ -59,12 +59,7 @@ function loadTileset(url) {
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
         var boundingSphere = tileset.boundingSphere;
-        var center = Cesium.Cartographic.fromCartesian(boundingSphere.center);
-        center.height += boundingSphere.radius * 2.0;
-        viewer.camera.setView({
-            destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, center.height)
-        });
-
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
         var properties = tileset.properties;
         if (Cesium.defined(properties)) {
             for (var name in properties) {
