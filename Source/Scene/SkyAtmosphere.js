@@ -117,7 +117,7 @@ define([
     /**
      * @private
      */
-    SkyAtmosphere.prototype.setDayNight = function(enableLighting) {
+    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
         this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
     };
 

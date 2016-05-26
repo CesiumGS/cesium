@@ -1879,7 +1879,7 @@ define([
         var skyAtmosphere = scene.skyAtmosphere;
         var globe = scene.globe;
         if (defined(skyAtmosphere) && defined(globe)) {
-            skyAtmosphere.setDayNight(globe.enableLighting);
+            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
         }
         environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;

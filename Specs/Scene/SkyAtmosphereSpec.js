@@ -55,9 +55,9 @@ defineSuite([
         s.destroy();
     });
 
-    it('draws sky with setDayNight set to true', function() {
+    it('draws sky with setDynamicAtmosphereColor set to true', function() {
         var s = new SkyAtmosphere();
-        s.setDayNight(true);
+        s.setDynamicAtmosphereColor(true);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.render();
@@ -70,9 +70,9 @@ defineSuite([
         s.destroy();
     });
 
-    it('draws sky with setDayNight set to false', function() {
+    it('draws sky with setDynamicAtmosphereColor set to false', function() {
         var s = new SkyAtmosphere();
-        s.setDayNight(false);
+        s.setDynamicAtmosphereColor(false);
 
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         scene.render();
