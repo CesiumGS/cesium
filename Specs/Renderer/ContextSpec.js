@@ -3,18 +3,30 @@ defineSuite([
         'Renderer/Context',
         'Core/Color',
         'Core/IndexDatatype',
+        'Core/PixelFormat',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ContextLimits',
+        'Renderer/Framebuffer',
+        'Renderer/PixelDatatype',
+        'Renderer/Renderbuffer',
+        'Renderer/RenderbufferFormat',
+        'Renderer/Texture',
         'Specs/createContext',
         'Specs/renderFragment'
     ], function(
         Context,
         Color,
         IndexDatatype,
+        PixelFormat,
         Buffer,
         BufferUsage,
         ContextLimits,
+        Framebuffer,
+        PixelDatatype,
+        Renderbuffer,
+        RenderbufferFormat,
+        Texture,
         createContext,
         renderFragment) {
     'use strict';
@@ -334,5 +346,637 @@ defineSuite([
         var c = createContext(undefined, 1024, 768);
         expect(c.drawingBufferHeight).toBe(768);
         c.destroyForSpecs();
+    });
+    
+    describe('blitFramebuffer', function() {
+        it('throws when WebGL 2.0 is not supported', function() {
+            if (!context.webgl2) {
+                expect(function() {
+                    context.blitFramebuffer();
+                }).toThrowDeveloperError();
+            }
+        });
+        
+        it ('throws without source framebuffer', function() {
+            if (context.webgl2) {
+                var fbo = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        destination : {
+                            framebuffer : fbo
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo.destroy();
+            }
+        });
+        
+        it ('throws without destination framebuffer', function() {
+            if (context.webgl2) {
+                var fbo = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo.destroy();
+            }
+        });
+        
+        it('throws with the same source and destination framebuffers', function() {
+            if (context.webgl2) {
+                var fbo = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo
+                        },
+                        destination : {
+                            framebuffer : fbo
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo.destroy();
+            }
+        });
+        
+        it('throws when missing a color attachment and the color bit is true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_COMPONENT16
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth renderbuffer attachment and the depth bit is true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_COMPONENT16
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth texture attachment and the depth bit is true', function() {
+            // TODO: This check can be removed when the depth texture issue with Webgl 2.0 is resolved.
+            if (context.webgl2 && context.depthTexture) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthTexture : new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        pixelFormat : PixelFormat.DEPTH_COMPONENT,
+                        pixelDatatype : PixelDatatype.UNSIGNED_SHORT
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing all depth attachments and the depth bit is true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a stencil attachment and the stencil bit is true', function() {
+            var fbo1 = new Framebuffer({
+                context : context,
+                stencilRenderbuffer : new Renderbuffer({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    format : RenderbufferFormat.STENCIL_INDEX8
+                })
+            });
+            var fbo2 = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1
+                })]
+            });
+            
+            expect(function() {
+                context.blitFramebuffer({
+                    source : {
+                        framebuffer : fbo1
+                    },
+                    destination : {
+                        framebuffer : fbo2
+                    },
+                    mask : {
+                        color : false,
+                        stencil : true
+                    }
+                });
+            }).toThrowDeveloperError();
+            
+            expect(function() {
+                context.blitFramebuffer({
+                    source : {
+                        framebuffer : fbo2
+                    },
+                    destination : {
+                        framebuffer : fbo1
+                    },
+                    mask : {
+                        color : false,
+                        stencil : true
+                    }
+                });
+            }).toThrowDeveloperError();
+            
+            fbo1.destroy();
+            fbo2.destroy();
+        });
+        
+        it('throws when missing all stencil attachments and the stencil bit is true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth-stencil renderbuffer attachment and the depth and stencil bits are true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing a depth-stencil texture attachment and the depth and stencil bits are true', function() {
+            // TODO: This check can be removed when the depth texture issue with Webgl 2.0 is resolved.
+            if (context.webgl2 && context.depthTexture) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    depthStencilTexture : new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        pixelFormat : PixelFormat.DEPTH_STENCIL,
+                        pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when missing all depth-stencil attachments and the depth and stencil bits are true', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })]
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo2
+                        },
+                        destination : {
+                            framebuffer : fbo1
+                        },
+                        mask : {
+                            color : false,
+                            depth : true,
+                            stencil : true
+                        }
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
+        
+        it('throws when the filter is linear and either the depth or stencil bits are set.', function() {
+            if (context.webgl2) {
+                var fbo1 = new Framebuffer({
+                    context : context,colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })],
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                var fbo2 = new Framebuffer({
+                    context : context,
+                    colorTextures : [new Texture({
+                        context : context,
+                        width : 1,
+                        height : 1
+                    })],
+                    depthStencilRenderbuffer : new Renderbuffer({
+                        context : context,
+                        width : 1,
+                        height : 1,
+                        format : RenderbufferFormat.DEPTH_STENCIL
+                    })
+                });
+                
+                expect(function() {
+                    context.blitFramebuffer({
+                        source : {
+                            framebuffer : fbo1
+                        },
+                        destination : {
+                            framebuffer : fbo2
+                        },
+                        mask : {
+                            color : true,
+                            depth : true,
+                            stencil : true
+                        },
+                        linearFilter : true
+                    });
+                }).toThrowDeveloperError();
+                
+                fbo1.destroy();
+                fbo2.destroy();
+            }
+        });
     });
 }, 'WebGL');
