@@ -4,7 +4,6 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
-        'Core/CesiumTerrainProvider',
         'Core/ComponentDatatype',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -20,7 +19,6 @@ defineSuite([
         'Renderer/Context',
         'Scene/Camera',
         'Scene/Globe',
-        'Scene/GridImageryProvider',
         'Scene/Model',
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
@@ -33,7 +31,6 @@ defineSuite([
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
-        CesiumTerrainProvider,
         ComponentDatatype,
         Color,
         ColorGeometryInstanceAttribute,
@@ -49,7 +46,6 @@ defineSuite([
         Context,
         Camera,
         Globe,
-        GridImageryProvider,
         Model,
         OrthographicFrustum,
         PerInstanceColorAppearance,
@@ -92,7 +88,6 @@ defineSuite([
         scene.frameState.scene3DOnly = true;
         Color.unpack(backgroundColor, 0, scene.backgroundColor);
 
-        scene.globe = new Globe();
         sunShadowMap = scene.shadowMap;
 
         var boxOrigin = new Cartesian3.fromRadians(longitude, latitude, boxHeight);
@@ -255,8 +250,8 @@ defineSuite([
         for (var i = 0; i < length; ++i) {
             scene.primitives.get(i).show = false;
         }
-        scene.globe.show = false;
 
+        scene.globe = undefined;
         scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
     });
 
@@ -484,7 +479,7 @@ defineSuite([
 
     it('model casts shadow onto globe', function() {
         box.show = true;
-        scene.globe.show = true;
+        scene.globe = new Globe();
         scene.camera.frustum._sseDenominator = 0.005;
         createCascadedShadowMap();
 
@@ -494,7 +489,7 @@ defineSuite([
     });
 
     it('globe casts shadow onto globe', function() {
-        scene.globe.show = true;
+        scene.globe = new Globe();
         scene.camera.frustum._sseDenominator = 0.01;
 
         var center = new Cartesian3.fromRadians(longitude, latitude, height);
