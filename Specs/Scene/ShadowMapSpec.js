@@ -9,8 +9,10 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defined',
+        'Core/EllipsoidTerrainProvider',
         'Core/GeometryInstance',
         'Core/HeadingPitchRange',
+        'Core/HeightmapTerrainData',
         'Core/JulianDate',
         'Core/Math',
         'Core/PixelFormat',
@@ -36,8 +38,10 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         defined,
+        EllipsoidTerrainProvider,
         GeometryInstance,
         HeadingPitchRange,
+        HeightmapTerrainData,
         JulianDate,
         CesiumMath,
         PixelFormat,
@@ -374,7 +378,6 @@ defineSuite([
         expect(render()).toEqual(shadowedColor);
 
         // Move the camera away from the shadow
-        caster.castShadows = true;
         scene.camera.moveRight(0.5);
         expect(render()).toEqual(unshadowedColor);
     }
@@ -479,15 +482,69 @@ defineSuite([
         verifyShadows(primitiveBoxTranslucent, primitiveFloor);
     });
 
-    // it('Model casts shadow onto globe', function() {
-    //     box.show = true;
-    //     scene.globe.show = true;
-    //     scene.camera.frustum._sseDenominator = 0.005;
-    //     createCascadedShadowMap();
-    //     return loadGlobe().then(function() {
-    //         verifyShadows(box, floor);
-    //     });
-    // });
+    it('model casts shadow onto globe', function() {
+        box.show = true;
+        scene.globe.show = true;
+        scene.camera.frustum._sseDenominator = 0.005;
+        createCascadedShadowMap();
+
+        return loadGlobe().then(function() {
+            verifyShadows(box, scene.globe);
+        });
+    });
+
+    it('globe casts shadow onto globe', function() {
+        scene.globe.show = true;
+        scene.camera.frustum._sseDenominator = 0.01;
+
+        var center = new Cartesian3.fromRadians(longitude, latitude, height);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, CesiumMath.toRadians(-70.0), 5.0));
+
+        // Create light camera that is angled horizontally
+        var lightCamera = new Camera(scene);
+        lightCamera.lookAt(center, new Cartesian3(1.0, 0.0, 0.1));
+
+        scene.shadowMap = new ShadowMap({
+            context : scene.context,
+            lightCamera : lightCamera
+        });
+
+        // Instead of the default flat tile, add a ridge that will cast shadows
+        spyOn(EllipsoidTerrainProvider.prototype, 'requestTileGeometry').and.callFake(function() {
+            var width = 16;
+            var height = 16;
+            var buffer = new Uint8Array(width * height);
+            for (var i = 0; i < buffer.length; ++i) {
+                var row = i % width;
+                if (row > 6 && row < 10) {
+                    buffer[i] = 1;
+                }
+            }
+            return new HeightmapTerrainData({
+                buffer : buffer,
+                width : width,
+                height : height
+            });
+        });
+
+        return loadGlobe().then(function() {
+            // Render without shadows
+            scene.shadowMap.enabled = false;
+            var unshadowedColor = render();
+            expect(unshadowedColor).not.toEqual(backgroundColor);
+
+            // Render with globe casting off
+            scene.shadowMap.enabled = true;
+            scene.globe.castShadows = false;
+            expect(render()).toEqual(unshadowedColor);
+
+            // Render with globe casting on
+            scene.globe.castShadows = true;
+            var shadowedColor = render();
+            expect(shadowedColor).not.toEqual(backgroundColor);
+            expect(shadowedColor).not.toEqual(unshadowedColor);
+        });
+    });
 
     it('changes light direction', function() {
         box.show = true;

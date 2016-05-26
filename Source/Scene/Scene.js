@@ -1748,12 +1748,7 @@ define([
 
     function insertShadowCastCommands(scene, commandList, insertAll, shadowMap) {
         var shadowVolume = shadowMap.shadowMapCullingVolume;
-
         var isPointLight = shadowMap.isPointLight;
-        var center = shadowMap.pointLightPosition;
-        var radius = shadowMap.pointLightRadius;
-        var radiusSquared = radius * radius;
-
         var passes = shadowMap.passes;
         var numberOfPasses = passes.length;
 
@@ -2305,7 +2300,7 @@ define([
         us.update(frameState);
 
         var shadowMap = scene.shadowMap;
-        if (shadowMap.enabled) {
+        if (defined(shadowMap) && shadowMap.enabled) {
             // Update the sun's direction
             Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
             frameState.shadowMaps.push(shadowMap);

@@ -923,7 +923,7 @@ define([
         var enableFog = frameState.fog.enabled;
         var castShadows = tileProvider.castShadows;
         var receiveShadows = tileProvider.receiveShadows;
-
+        
         if (showReflectiveOcean) {
             --maxTextures;
         }
