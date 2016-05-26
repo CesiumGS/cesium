@@ -509,34 +509,6 @@ define([
         },
 
         /**
-         * The position of the point light source.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Cartesian3}
-         * @readonly
-         * @private
-         */
-        pointLightPosition : {
-            get : function() {
-                return this._shadowMapCamera.positionWC;
-            }
-        },
-
-        /**
-         * The radius of the point light source.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Number}
-         * @readonly
-         * @private
-         */
-        pointLightRadius : {
-            get : function() {
-                return this._pointLightRadius;
-            }
-        },
-
-        /**
          * Debug option for visualizing the cascades by color.
          *
          * @memberof ShadowMap.prototype
