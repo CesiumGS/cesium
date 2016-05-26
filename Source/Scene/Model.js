@@ -31,6 +31,7 @@ define([
         '../Core/Quaternion',
         '../Core/Queue',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -88,6 +89,7 @@ define([
         Quaternion,
         Queue,
         RuntimeError,
+        Transforms,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -547,6 +549,8 @@ define([
         this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
+
+        this._mode = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
@@ -1153,7 +1157,7 @@ define([
             var loadResources = model._loadResources;
             loadResources.buffers[id] = new Uint8Array(arrayBuffer);
             --loadResources.pendingBufferLoads;
-         };
+        };
     }
 
     function parseBuffers(model) {
@@ -1199,7 +1203,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-         };
+        };
     }
 
     function parseShaders(model) {
@@ -1860,49 +1864,49 @@ define([
         var animations = model.gltf.animations;
         var accessors = model.gltf.accessors;
 
-         for (var animationId in animations) {
-             if (animations.hasOwnProperty(animationId)) {
-                 var animation = animations[animationId];
-                 var channels = animation.channels;
-                 var parameters = animation.parameters;
-                 var samplers = animation.samplers;
+        for (var animationId in animations) {
+            if (animations.hasOwnProperty(animationId)) {
+                var animation = animations[animationId];
+                var channels = animation.channels;
+                var parameters = animation.parameters;
+                var samplers = animation.samplers;
 
-                 var parameterValues = {};
+                var parameterValues = {};
 
-                 for (var name in parameters) {
-                     if (parameters.hasOwnProperty(name)) {
-                         parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
-                     }
-                 }
+                for (var name in parameters) {
+                    if (parameters.hasOwnProperty(name)) {
+                        parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
+                    }
+                }
 
-                 // Find start and stop time for the entire animation
-                 var startTime = Number.MAX_VALUE;
-                 var stopTime = -Number.MAX_VALUE;
+                // Find start and stop time for the entire animation
+                var startTime = Number.MAX_VALUE;
+                var stopTime = -Number.MAX_VALUE;
 
-                 var length = channels.length;
-                 var channelEvaluators = new Array(length);
+                var length = channels.length;
+                var channelEvaluators = new Array(length);
 
-                 for (var i = 0; i < length; ++i) {
-                     var channel = channels[i];
-                     var target = channel.target;
-                     var sampler = samplers[channel.sampler];
-                     var times = parameterValues[sampler.input];
+                for (var i = 0; i < length; ++i) {
+                    var channel = channels[i];
+                    var target = channel.target;
+                    var sampler = samplers[channel.sampler];
+                    var times = parameterValues[sampler.input];
 
-                     startTime = Math.min(startTime, times[0]);
-                     stopTime = Math.max(stopTime, times[times.length - 1]);
+                    startTime = Math.min(startTime, times[0]);
+                    stopTime = Math.max(stopTime, times[times.length - 1]);
 
-                     var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
-                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
-                 }
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
+                    // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
+                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
+                }
 
-                 model._runtime.animations[animationId] = {
-                     startTime : startTime,
-                     stopTime : stopTime,
-                     channelEvaluators : channelEvaluators
-                 };
-             }
-         }
+                model._runtime.animations[animationId] = {
+                    startTime : startTime,
+                    stopTime : stopTime,
+                    channelEvaluators : channelEvaluators
+                };
+            }
+        }
     }
 
     function createVertexArrays(model, context) {
@@ -2516,7 +2520,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2656,11 +2660,27 @@ define([
                     });
                 }
 
+                var command2D;
+                var pickCommand2D;
+                if (!scene3DOnly) {
+                    command2D = DrawCommand.shallowClone(command);
+                    command2D.boundingVolume = new BoundingSphere();
+                    command2D.modelMatrix = new Matrix4();
+
+                    if (allowPicking) {
+                        pickCommand2D = DrawCommand.shallowClone(pickCommand);
+                        pickCommand2D.boundingVolume = new BoundingSphere();
+                        pickCommand2D.modelMatrix = new Matrix4();
+                    }
+                }
+
                 var nodeCommand = {
                     show : true,
                     boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    command2D : command2D,
+                    pickCommand2D : pickCommand2D
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -2668,7 +2688,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, context, scene3DOnly) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2726,7 +2746,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
@@ -2747,6 +2767,7 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
+        var scene3DOnly = frameState.scene3DOnly;
 
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2784,8 +2805,8 @@ define([
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createUniformMaps(model, context);               // using glTF materials/techniques
+        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2807,8 +2828,9 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -2817,6 +2839,10 @@ define([
 
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
+
+        if (model._mode !== SceneMode.SCENE3D) {
+            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+        }
 
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
@@ -2850,6 +2876,23 @@ define([
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                            }
+
+                            // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
+                            // will be clipped by the viewport. We create a second command that translates the model
+                            // model matrix to the opposite side of the map so the part that was clipped in one viewport
+                            // is drawn in the other.
+                            command = primitiveCommand.command2D;
+                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
+                                Matrix4.clone(nodeMatrix, command.modelMatrix);
+                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+
+                                if (allowPicking) {
+                                    var pickCommand2D = primitiveCommand.pickCommand2D;
+                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
+                                }
                             }
                         }
                     }
@@ -3007,6 +3050,7 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+    var scratchCartographic = new Cartographic();
 
     function getScale(model, frameState) {
         var scale = model.scale;
@@ -3022,6 +3066,13 @@ define([
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
+            }
+
+            if (model._mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
+                projection.project(cartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
             }
 
             var radius = model.boundingSphere.radius;
@@ -3110,8 +3161,6 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var scratchCartographic = new Cartographic();
-
     function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
         return function (clampedPosition) {
             if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
@@ -3192,7 +3241,7 @@ define([
      * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(frameState) {
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -3305,12 +3354,16 @@ define([
             this._dirty = false;
             var modelMatrix = this.modelMatrix;
 
+            var modeChanged = frameState.mode !== this._mode;
+            this._mode = frameState.mode;
+
             // Model's model matrix needs to be updated
             var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                 (this._scale !== this.scale) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
                 (this._maximumScale !== this.maximumScale) ||
-                (this._heightReference !== this.heightReference) || this._heightChanged;
+                (this._heightReference !== this.heightReference) || this._heightChanged ||
+                modeChanged;
 
             if (modelTransformChanged || justLoaded) {
                 Matrix4.clone(modelMatrix, this._modelMatrix);
@@ -3335,7 +3388,7 @@ define([
 
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
 
                 if (animated || justLoaded) {
@@ -3375,11 +3428,21 @@ define([
             var i;
             var nc;
 
+            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+            var boundingVolume;
+
             if (passes.render) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.command);
+                        var command = nc.command;
+                        commandList.push(command);
+
+                        boundingVolume = command.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.command2D);
+                        }
                     }
                 }
             }
@@ -3388,7 +3451,14 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        commandList.push(nc.pickCommand);
+                        var pickCommand = nc.pickCommand;
+                        commandList.push(pickCommand);
+
+                        boundingVolume = pickCommand.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            commandList.push(nc.pickCommand2D);
+                        }
                     }
                 }
             }
