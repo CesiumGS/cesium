@@ -446,6 +446,10 @@ define([
     }
 
     function computeRectangle(positions, ellipsoid) {
+        if (!defined(positions)) {
+            return undefined;
+        }
+
         var minLat = Number.POSITIVE_INFINITY;
         var minLon = Number.POSITIVE_INFINITY;
         var maxLat = Number.NEGATIVE_INFINITY;
@@ -610,9 +614,7 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
-        if (defined(polygonHierarchy.positions)) {
-            this._rectangle = computeRectangle(polygonHierarchy.positions, ellipsoid);
-        }
+        this._rectangle = computeRectangle(polygonHierarchy.positions, ellipsoid);
 
         /**
          * The number of elements used to pack the object into an array.
