@@ -23,6 +23,7 @@ Change Log
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Fixed a bug that would cause a crash is the camera was on the IDL in 2D. [#3951](https://github.com/AnalyticalGraphicsInc/cesium/issues/3951)
+* Fixed a bug that was causing the atmosphere to disappear when only atmosphere is visible. [#3347](https://github.com/AnalyticalGraphicsInc/cesium/issues/3347) 
 
 ### 1.21 - 2016-05-02
 

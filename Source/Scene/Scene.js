@@ -562,6 +562,7 @@ define([
 
             isSunVisible : false,
             isMoonVisible : false,
+            isReadyForAtmosphere : false,
             isSkyAtmosphereVisible : false,
 
             clearGlobeDepth : false,
@@ -1221,7 +1222,7 @@ define([
 
         // Determine visibility of celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
         environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
         environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
@@ -1876,6 +1877,7 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
+        environmentState.isReadyForAtmosphere = defined(scene.skyAtmosphere) && (environmentState.isReadyForAtmosphere || (defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0));
         environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
