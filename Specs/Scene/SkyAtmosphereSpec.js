@@ -64,7 +64,7 @@ defineSuite([
 
         var command = s.update(scene.frameState);
         expect(command).toBeDefined();
-        expect(s._camAndRadiiAndDayNight.w).toBe(1);
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(1);
         command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
         s.destroy();
@@ -79,7 +79,7 @@ defineSuite([
 
         var command = s.update(scene.frameState);
         expect(command).toBeDefined();
-        expect(s._camAndRadiiAndDayNight.w).toBe(0);
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(0);
         command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
         s.destroy();

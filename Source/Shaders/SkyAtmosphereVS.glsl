@@ -35,7 +35,7 @@
   
 attribute vec4 position;
 
-uniform vec4 camAndRadiiAndDayNight; // camera height, outer radius, inner radius, dayNight flag
+uniform vec4 cameraAndRadiiAndDynamicAtmosphereColor; // camera height, outer radius, inner radius, dayNight flag
 
 const float Kr = 0.0025;
 const float Kr4PI = Kr * 4.0 * czm_pi;
@@ -48,7 +48,7 @@ const vec3 InvWavelength = vec3(
     5.60204474633241,  // Red = 1.0 / Math.pow(0.650, 4.0)
     9.473284437923038, // Green = 1.0 / Math.pow(0.570, 4.0)
     19.643802610477206); // Blue = 1.0 / Math.pow(0.475, 4.0)
-const float rayleighScaleDepth  = 0.25;
+const float rayleighScaleDepth = 0.25;
           
 const int nSamples = 2;
 const float fSamples = 2.0;
@@ -66,16 +66,16 @@ float scale(float cosAngle)
 void main(void)
 {
     // unpack attributes
-    float cameraHeight = camAndRadiiAndDayNight.x;
-    float outerRadius = camAndRadiiAndDayNight.y;
-    float innerRadius = camAndRadiiAndDayNight.z;
+    float cameraHeight = cameraAndRadiiAndDynamicAtmosphereColor.x;
+    float outerRadius = cameraAndRadiiAndDynamicAtmosphereColor.y;
+    float innerRadius = cameraAndRadiiAndDynamicAtmosphereColor.z;
 
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
-    vec3 pos3 = position.xyz;
-    vec3 ray = pos3 - czm_viewerPositionWC;
+    vec3 positionV3 = position.xyz;
+    vec3 ray = positionV3 - czm_viewerPositionWC;
     float far = length(ray);
     ray /= far;
-    float atmosScale = 1.0 / (outerRadius - innerRadius);
+    float atmosphereScale = 1.0 / (outerRadius - innerRadius);
 
 #ifdef SKY_FROM_SPACE
     // Calculate the closest intersection of the ray with the outer atmosphere (which is the near point of the ray passing through the atmosphere)
@@ -94,26 +94,26 @@ void main(void)
     // Calculate the ray's starting position, then calculate its scattering offset
     vec3 start = czm_viewerPositionWC;
     float height = length(start);
-    float depth = exp((atmosScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
+    float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - cameraHeight));
     float startAngle = dot(ray, start) / height;
     float startOffset = depth*scale(startAngle);
 #endif
 
     // Initialize the scattering loop variables
     float sampleLength = far / fSamples;
-    float scaledLength = sampleLength * atmosScale;
+    float scaledLength = sampleLength * atmosphereScale;
     vec3 sampleRay = ray * sampleLength;
     vec3 samplePoint = start + sampleRay * 0.5;
 
     // Now loop through the sample rays
     vec3 frontColor = vec3(0.0, 0.0, 0.0);
-    vec3 lightDir = (camAndRadiiAndDayNight.w > 0.0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
+    vec3 lightDir = (cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
     lightDir = normalize(lightDir);
 
     for(int i=0; i<nSamples; i++)
     {
         float height = length(samplePoint);
-        float depth = exp((atmosScale / rayleighScaleDepth ) * (innerRadius - height));
+        float depth = exp((atmosphereScale / rayleighScaleDepth ) * (innerRadius - height));
         float fLightAngle = dot(lightDir, samplePoint) / height;
         float fCameraAngle = dot(ray, samplePoint) / height;
         float fScatter = (startOffset + depth*(scale(fLightAngle) - scale(fCameraAngle)));
@@ -125,6 +125,6 @@ void main(void)
     // Finally, scale the Mie and Rayleigh colors and set up the varying variables for the pixel shader
     v_mieColor = frontColor * KmESun;
     v_rayleighColor = frontColor * (InvWavelength * KrESun);
-    v_toCamera = czm_viewerPositionWC - pos3;
+    v_toCamera = czm_viewerPositionWC - positionV3;
     gl_Position = czm_modelViewProjection * position;
 }

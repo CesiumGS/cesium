@@ -82,19 +82,19 @@ define([
         this._spSkyFromAtmosphere = undefined;
 
         // camera height, outer radius, inner radius, dayNight flag
-        this._camAndRadiiAndDayNight = new Cartesian4();
+        this._cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
 
         // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
-        this._camAndRadiiAndDayNight.w = 0;
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
 
-        this._camAndRadiiAndDayNight.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
-        this._camAndRadiiAndDayNight.z = ellipsoid.maximumRadius;
+        this._cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
+        this._cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
 
         var that = this;
 
         this._command.uniformMap = {
-            camAndRadiiAndDayNight : function() {
-                return that._camAndRadiiAndDayNight;
+            cameraAndRadiiAndDynamicAtmosphereColor : function() {
+                return that._cameraAndRadiiAndDynamicAtmosphereColor;
             }
         };
     }
@@ -118,7 +118,7 @@ define([
      * @private
      */
     SkyAtmosphere.prototype.setDayNight = function(enableLighting) {
-        this._camAndRadiiAndDayNight.w = enableLighting ? 1 : 0;
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
     };
 
     /**
@@ -188,9 +188,9 @@ define([
         var cameraPosition = frameState.camera.positionWC;
 
         var cameraHeight = Cartesian3.magnitude(cameraPosition);
-        this._camAndRadiiAndDayNight.x = cameraHeight;
+        this._cameraAndRadiiAndDynamicAtmosphereColor.x = cameraHeight;
 
-        if (cameraHeight > this._camAndRadiiAndDayNight.y) {
+        if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
             // Camera in space
             command.shaderProgram = this._spSkyFromSpace;
         } else {
