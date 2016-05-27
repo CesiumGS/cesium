@@ -1518,29 +1518,33 @@ define([
         Model : processUnsupportedGeometry
     };
 
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureTypeNames = Object.keys(featureTypes);
-        var featureTypeNamesLength = featureTypeNames.length;
 
+
+    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        var featureTypeNames = Object.keys(promisifiedFeatureTypes);
+        var featureTypeNamesLength = featureTypeNames.length;
+        var promises = [];
         for (var i = 0; i < featureTypeNamesLength; i++) {
             var featureName = featureTypeNames[i];
-            var processFeatureNode = featureTypes[featureName];
+            var processFeatureNode = promisifiedFeatureTypes[featureName];
 
             var childNodes = node.childNodes;
             var length = childNodes.length;
+
             for (var q = 0; q < length; q++) {
                 var child = childNodes[q];
                 if (child.localName === featureName &&
                     ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver);
+                    promises.push(processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver));
                 }
             }
         }
+        return when.all(promises);
     }
 
     function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
         var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        return processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceUri, uriResolver);
     }
 
     function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -1949,20 +1953,52 @@ define([
         Tour : processUnsupported
     };
 
+    var promisifiedFeatureTypes = {
+        // already promisified
+        Document : processDocument,
+        // already promisified
+        Folder : processFolder,
+        Placemark : deferAndWrapInPromise(processPlacemark),
+        NetworkLink : deferAndWrapInPromise(processNetworkLink),
+        GroundOverlay : deferAndWrapInPromise(processGroundOverlay),
+        PhotoOverlay : deferAndWrapInPromise(processUnsupported),
+        ScreenOverlay : deferAndWrapInPromise(processUnsupported),
+        Tour : deferAndWrapInPromise(processUnsupported)
+    };
+
+    function deferAndWrapInPromise(originalFunction){
+        return function(){
+            var deferred = when.defer();
+            var args = Array.prototype.slice.call(arguments);
+            var context = this;
+            setTimeout(function deferredFunc(){
+                try{
+                    var promise = originalFunction.apply(context, args);
+                    if(promise && promise.then){
+                        promise.then(deferred.resolve);
+                    }
+                    else{
+                        deferred.resolve();
+                    }
+                }catch(err){
+                    deferred.reject(err);
+                }
+            }, 0);
+            return deferred.promise;
+        };
+    };
+
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
+        var featureProocessor = promisifiedFeatureTypes[node.localName];
         if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+            return featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
 
     function loadKml(dataSource, entityCollection, kml, sourceUri, uriResolver) {
-        var deferred = when.defer();
-
         entityCollection.removeAll();
-
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
@@ -1976,26 +2012,28 @@ define([
         }
 
         var styleCollection = new EntityCollection(dataSource);
-        when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver), function() {
-            var element = kml.documentElement;
-            if (element.localName === 'kml') {
-                var childNodes = element.childNodes;
-                for (var i = 0; i < childNodes.length; i++) {
-                    var tmp = childNodes[i];
-                    if (defined(featureTypes[tmp.localName])) {
-                        element = tmp;
-                        break;
+        return when.all(processStyles(dataSource, kml, styleCollection, sourceUri, false, uriResolver))
+            .then(function() {
+                var element = kml.documentElement;
+                if (element.localName === 'kml') {
+                    var childNodes = element.childNodes;
+                    for (var i = 0; i < childNodes.length; i++) {
+                        var tmp = childNodes[i];
+                        if (defined(featureTypes[tmp.localName])) {
+                            element = tmp;
+                            break;
+                        }
                     }
                 }
-            }
-            entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
-            entityCollection.resumeEvents();
+                entityCollection.suspendEvents();
 
-            deferred.resolve(kml.documentElement);
-        });
+                return processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceUri, uriResolver);
 
-        return deferred.promise;
+            })
+            .then(function(){
+                entityCollection.resumeEvents();
+                return kml.documentElement;
+            });
     }
 
     function loadKmz(dataSource, entityCollection, blob, sourceUri) {
