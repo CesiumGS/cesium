@@ -117,6 +117,9 @@ define([
 
                 var object = context.getObjectByPickColor(colorScratch);
                 if (defined(object)) {
+                    if (object.id && (typeof object.id === 'object')) {
+                        return (object.id.selectable) ? object : undefined;
+                    }
                     return object;
                 }
             }

@@ -2252,4 +2252,18 @@ defineSuite([
             expect(error.message).toContain('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
         });
     });
+    
+    it('sets selectable according to the CZML field', function() {
+        var packet = {
+            position : {
+                cartesian : [1.0, 2.0, 3.0]
+            },
+            selectable : false
+        };
+        
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        expect(entity.selectable).toBe(false);
+    });
 });

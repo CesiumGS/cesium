@@ -92,6 +92,7 @@ define([
      * @param {String} [options.name] A human readable name to display to users. It does not have to be unique.
      * @param {TimeIntervalCollection} [options.availability] The availability, if any, associated with this object.
      * @param {Boolean} [options.show] A boolean value indicating if the entity and its children are displayed.
+     * @param {Boolean} [options.selectable] A boolean value indicating whether the entity is selectable. Default true.
      * @param {Property} [options.description] A string Property specifying an HTML description for this entity.
      * @param {PositionProperty} [options.position] A Property specifying the entity position.
      * @param {Property} [options.orientation] A Property specifying the entity orientation.
@@ -128,6 +129,7 @@ define([
         this._definitionChanged = new Event();
         this._name = options.name;
         this._show = defaultValue(options.show, true);
+        this._selectable = defaultValue(options.selectable, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
                                'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
@@ -269,6 +271,28 @@ define([
                 this._definitionChanged.raiseEvent(this, 'show', value, !value);
             }
         },
+        
+        /**
+         * Gets or sets whether this entity is selectabled or not
+         * @memberof Entity.prototype
+         * @type {Boolean}
+         */
+        selectable: {
+            get: function() {
+                return this._selectable;
+            },
+            set: function(value) {
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required');
+                }
+                
+                if (value === this._selectable) {
+                    return;
+                }
+                this._selectable = value;
+            }
+        },
+        
         /**
          * Gets whether this entity is being displayed, taking into account
          * the visibility of any ancestor entities.

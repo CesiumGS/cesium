@@ -863,6 +863,10 @@ define([
     function processName(entity, packet, entityCollection, sourceUri) {
         entity.name = defaultValue(packet.name, entity.name);
     }
+    
+    function processSelectable(entity, packet, entityCollection, sourceUri) {
+        entity.selectable = defaultValue(packet.selectable, true);    
+    }
 
     function processDescription(entity, packet, entityCollection, sourceUri) {
         var descriptionData = packet.description;
@@ -1715,6 +1719,7 @@ define([
     processLabel, //
     processModel, //
     processName, //
+    processSelectable,
     processDescription, //
     processPath, //
     processPoint, //

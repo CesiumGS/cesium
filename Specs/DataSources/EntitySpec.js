@@ -79,11 +79,13 @@ defineSuite([
         expect(entity.viewFrom).toBeUndefined();
         expect(entity.wall).toBeUndefined();
         expect(entity.entityCollection).toBeUndefined();
+        expect(entity.selectable).toBe(true);
 
         var options = {
             id : 'someId',
             name : 'bob',
             show : false,
+            selectable: false,
             availability : new TimeIntervalCollection(),
             parent : new Entity(),
             customProperty : {},
@@ -112,6 +114,7 @@ defineSuite([
         expect(entity.id).toEqual(options.id);
         expect(entity.name).toEqual(options.name);
         expect(entity.show).toBe(options.show);
+        expect(entity.selectable).toBe(options.selectable);
         expect(entity.availability).toBe(options.availability);
         expect(entity.parent).toBe(options.parent);
         expect(entity.customProperty).toBe(options.customProperty);
