@@ -1980,7 +1980,7 @@ define([
             }, 0);
             return deferred.promise;
         };
-    };
+    }
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
         var featureProcessor = promisifiedFeatureTypes[node.localName];
