@@ -6,6 +6,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryPipeline',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -15,6 +16,7 @@ defineSuite([
         Ellipsoid,
         GeometryPipeline,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -667,6 +669,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
+    var rectangle = new Rectangle(-2.1642082724729685, 0.6108652381980151, -1.9198621771937625, 0.6981317007977317);
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
@@ -674,6 +677,8 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 51);
+    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 55);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

@@ -446,8 +446,8 @@ define([
     }
 
     function computeRectangle(positions, ellipsoid) {
-        if (!defined(positions)) {
-            return undefined;
+        if (!defined(positions) || positions.length < 3) {
+            return new Rectangle();
         }
 
         var minLat = Number.POSITIVE_INFINITY;
@@ -456,7 +456,6 @@ define([
         var maxLon = Number.NEGATIVE_INFINITY;
 
         var length = positions.length;
-
         for (var i = 0; i < length; ++i) {
             var position = positions[i];
             var cartographic = ellipsoid.cartesianToCartographic(position, scratchCarto1);

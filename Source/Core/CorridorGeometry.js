@@ -676,10 +676,10 @@ define([
     var scratchCartographicMax = new Cartographic();
 
     function computeRectangle(positions, ellipsoid, width, cornerType) {
-        if (!defined(positions)) {
-            return undefined;
-        }
         var length = positions.length - 1;
+        if (length === 0) {
+            return new Rectangle();
+        }
         var halfWidth = width * 0.5;
 
         scratchCartographicMin.latitude = Number.POSITIVE_INFINITY;
