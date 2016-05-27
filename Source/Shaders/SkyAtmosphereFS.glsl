@@ -75,16 +75,17 @@ void main (void)
     
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
     rgb = vec3(1.0) - exp(-exposure * rgb);
+    // compute luminance before color correction to avoid strangely gray night skies
+    float l = czm_luminance(rgb);
 
     // convert rgb color to hsv
     vec3 hsv = rgb2hsb(rgb);
     // perform hsv shift
     hsv.x += u_hsvShift.x; // hue
     hsv.y = clamp(hsv.y + u_hsvShift.y, 0.0, 1.0); // saturation
-    hsv.z += u_hsvShift.z; // brightness
+    hsv.z = hsv.z > epsilon ? hsv.z + u_hsvShift.z : 0.0; // brightness
     // convert shifted hsv back to rgb
     rgb = hsb2rgb(hsv);
 
-    float l = czm_luminance(rgb);
     gl_FragColor = vec4(rgb, min(smoothstep(0.0, 0.1, l), 1.0) * smoothstep(0.0, 1.0, czm_morphTime));
 }
