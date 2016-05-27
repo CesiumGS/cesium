@@ -1066,9 +1066,9 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var context = scene._context;
 
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowsDirty = false;
-        var shadowsVisible = !frameState.shadowHints.outOfView;
-        if (shadowsVisible && (command.receiveShadows || command.castShadows)) {
+        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
             // Update derived commands when any shadow maps become dirty
             var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
             if (command._lastDirtyTime !== lastDirtyTime) {
@@ -1083,13 +1083,13 @@ define([
 
             var derivedCommands = command.derivedCommands;
 
-            if (shadowsVisible && (command.receiveShadows || command.castShadows)) {
+            if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (shadowsVisible && command.receiveShadows) {
+                if (shadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
@@ -1426,7 +1426,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (!scene.frameState.passes.pick && !scene.frameState.shadowHints.outOfView && command.receiveShadows) {
+        } else if (!scene.frameState.passes.pick && scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -2053,8 +2053,8 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.outOfView = true;
-        
+        frameState.shadowHints.shadowsEnabled = (length > 0);
+
         if (length === 0 || frameState.passes.pick) {
             return;
         }
@@ -2068,43 +2068,39 @@ define([
                 shadowMap.dirty = false;
             }
 
-            if (!shadowMap.outOfView) {
-                frameState.shadowHints.outOfView = false;
-
-                if (defined(globe) && globe.castShadows) {
-                    // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.
-                    // We could create some type of camera representing a point light.
-                    var passes;
-                    if (shadowMap.isPointLight) {
-                        passes = shadowMap.passes;
-                    } else {
-                        passes = scratchShadowMapPasses;
-                        passes[0].camera = shadowMap.shadowMapCamera;
-                    }
-
-                    var sceneCamera = frameState.camera;
-                    var sceneCullingVolume = frameState.cullingVolume;
-                    var sceneCommandList = frameState.commandList;
-
-                    frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
-                    frameState.commandList = shadowMap.commandList;
-                    frameState.commandList.length = 0;
-
-                    var passesLength = passes.length;
-                    for (var j = 0; j < passesLength; ++j) {
-                        // Update frame state to render from the light camera
-                        frameState.camera = passes[j].camera;
-
-                        // Update the globe again to Collect terrain commands from the light's POV.
-                        // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
-                        globe.update(frameState);
-                    }
-
-                    // Revert back to original frame state
-                    frameState.camera = sceneCamera;
-                    frameState.cullingVolume = sceneCullingVolume;
-                    frameState.commandList = sceneCommandList;
+            if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
+                // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.
+                // We could create some type of camera representing a point light.
+                var passes;
+                if (shadowMap.isPointLight) {
+                    passes = shadowMap.passes;
+                } else {
+                    passes = scratchShadowMapPasses;
+                    passes[0].camera = shadowMap.shadowMapCamera;
                 }
+
+                var sceneCamera = frameState.camera;
+                var sceneCullingVolume = frameState.cullingVolume;
+                var sceneCommandList = frameState.commandList;
+
+                frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
+                frameState.commandList = shadowMap.commandList;
+                frameState.commandList.length = 0;
+
+                var passesLength = passes.length;
+                for (var j = 0; j < passesLength; ++j) {
+                    // Update frame state to render from the light camera
+                    frameState.camera = passes[j].camera;
+
+                    // Update the globe again to Collect terrain commands from the light's POV.
+                    // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
+                    globe.update(frameState);
+                }
+
+                // Revert back to original frame state
+                frameState.camera = sceneCamera;
+                frameState.cullingVolume = sceneCullingVolume;
+                frameState.commandList = sceneCommandList;
             }
         }
     }
