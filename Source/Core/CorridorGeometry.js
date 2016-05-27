@@ -670,15 +670,16 @@ define([
         max.longitude = maxLon;
     }
 
+    var scratchCartesianOffset = new Cartesian3();
     var scratchCartesianEnds = new Cartesian3();
     var scratchCartographicMin = new Cartographic();
     var scratchCartographicMax = new Cartographic();
 
-    function computeRectangle(positions, ellipsoid, width) {
+    function computeRectangle(positions, ellipsoid, width, cornerType) {
         if (!defined(positions)) {
             return undefined;
         }
-
+        var length = positions.length - 1;
         var halfWidth = width * 0.5;
 
         scratchCartographicMin.latitude = Number.POSITIVE_INFINITY;
@@ -686,30 +687,38 @@ define([
         scratchCartographicMax.latitude = Number.NEGATIVE_INFINITY;
         scratchCartographicMax.longitude = Number.NEGATIVE_INFINITY;
 
-        // Compute first
-        var first = positions[0];
-        Cartesian3.subtract(first, positions[1], scratchCartesianEnds);
-        Cartesian3.normalize(scratchCartesianEnds, scratchCartesianEnds);
-        Cartesian3.multiplyByScalar(scratchCartesianEnds, width, scratchCartesianEnds);
-        Cartesian3.add(first, scratchCartesianEnds, scratchCartesianEnds);
-        computeOffsetPoints(scratchCartesianEnds, first, ellipsoid, halfWidth,
-            scratchCartographicMin, scratchCartographicMax);
+        if (cornerType === CornerType.ROUNDED) {
+            // Compute start cap
+            var first = positions[0];
+            Cartesian3.subtract(first, positions[1], scratchCartesianOffset);
+            Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
+            Cartesian3.multiplyByScalar(scratchCartesianOffset, width, scratchCartesianOffset);
+            Cartesian3.add(first, scratchCartesianOffset, scratchCartesianEnds);
+            computeOffsetPoints(scratchCartesianEnds, first, ellipsoid, halfWidth,
+                scratchCartographicMin, scratchCartographicMax);
+        }
 
         // Compute the rest
-        var length = positions.length - 1;
         for (var i = 0; i < length; ++i) {
             computeOffsetPoints(positions[i], positions[i+1], ellipsoid, halfWidth,
                 scratchCartographicMin, scratchCartographicMax);
         }
 
-        // Compute last
+        // Compute ending point
         var last = positions[length];
-        Cartesian3.subtract(last, positions[length-1], scratchCartesianEnds);
-        Cartesian3.normalize(scratchCartesianEnds, scratchCartesianEnds);
-        Cartesian3.multiplyByScalar(scratchCartesianEnds, width, scratchCartesianEnds);
-        Cartesian3.add(last, scratchCartesianEnds, scratchCartesianEnds);
-        computeOffsetPoints(scratchCartesianEnds, last, ellipsoid, halfWidth,
+        Cartesian3.subtract(last, positions[length-1], scratchCartesianOffset);
+        Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
+        Cartesian3.multiplyByScalar(scratchCartesianOffset, width, scratchCartesianOffset);
+        Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);
+        computeOffsetPoints(last, scratchCartesianEnds, ellipsoid, halfWidth,
             scratchCartographicMin, scratchCartographicMax);
+
+        if (cornerType === CornerType.ROUNDED) {
+            // Compute end cap using made up point in correct direction
+            Cartesian3.add(scratchCartesianEnds, scratchCartesianOffset, scratchCartesianOffset);
+            computeOffsetPoints(scratchCartesianEnds, scratchCartesianOffset, ellipsoid, halfWidth,
+                scratchCartographicMin, scratchCartographicMax);
+        }
 
         var rectangle = new Rectangle();
         rectangle.north = scratchCartographicMax.latitude;
@@ -771,7 +780,7 @@ define([
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createCorridorGeometry';
-        this._rectangle = computeRectangle(positions, this._ellipsoid, width);
+        this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
 
         /**
          * The number of elements used to pack the object into an array.
