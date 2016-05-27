@@ -80,6 +80,31 @@ define([
         });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
+        
+        // hue, saturation, and brightness shift values for color adjustment
+        /**
+         * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * @type {Number}
+         * @default 0.0
+         */
+        this.hueShift = 0.0;
+
+        /**
+         * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * @type {Number}
+         * @default 0.0
+         */
+        this.saturationShift = 0.0;
+
+        /**
+         * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * @type {Number}
+         * @default 0.0
+         */
+        this.brightnessShift = 0.0;
+
+        var hsbScratch = new Cartesian3(this.hueShift, this.saturationShift, this.brightnessShift);
+        this._hsbScratch = hsbScratch;
 
         // camera height, outer radius, inner radius, dynamic atmosphere color flag
         var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
@@ -96,6 +121,12 @@ define([
         this._command.uniformMap = {
             cameraAndRadiiAndDynamicAtmosphereColor : function() {
                 return that._cameraAndRadiiAndDynamicAtmosphereColor;
+            },
+            u_hsvShift : function() {
+                hsbScratch.x = that.hueShift;
+                hsbScratch.y = that.saturationShift;
+                hsbScratch.z = that.brightnessShift;
+                return that._hsbScratch;
             }
         };
     }
