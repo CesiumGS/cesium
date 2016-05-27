@@ -1521,22 +1521,16 @@ define([
 
 
     function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureTypeNames = Object.keys(promisifiedFeatureTypes);
-        var featureTypeNamesLength = featureTypeNames.length;
         var promises = [];
-        for (var i = 0; i < featureTypeNamesLength; i++) {
-            var featureName = featureTypeNames[i];
-            var processFeatureNode = promisifiedFeatureTypes[featureName];
+        var childNodes = node.childNodes;
+        var length = childNodes.length;
 
-            var childNodes = node.childNodes;
-            var length = childNodes.length;
-
-            for (var q = 0; q < length; q++) {
-                var child = childNodes[q];
-                if (child.localName === featureName &&
-                    ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    promises.push(processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver));
-                }
+        for (var q = 0; q < length; q++) {
+            var child = childNodes[q];
+            var featureProcessor = promisifiedFeatureTypes[child.localName];
+            if(defined(featureProcessor) &&
+                ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
+                promises.push(featureProcessor(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver));
             }
         }
         return when.all(promises);
@@ -1989,9 +1983,9 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = promisifiedFeatureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            return featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = promisifiedFeatureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            return featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
