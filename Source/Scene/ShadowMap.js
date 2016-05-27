@@ -211,7 +211,7 @@ define([
         };
 
         this._pointBias = {
-            polygonOffset : polygonOffsetSupported,
+            polygonOffset : false,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : false,
