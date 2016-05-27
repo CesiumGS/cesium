@@ -17,6 +17,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryAttributes',
@@ -73,6 +74,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -178,8 +180,16 @@ define([
         this._outOfViewPrevious = false;
         this._needsUpdate = true;
 
+        // In IE11 and Edge polygon offset is not functional.
+        var polygonOffsetSupported = true;
+        // TODO : check for Edge too
+        if (FeatureDetection.isInternetExplorer) {
+            polygonOffsetSupported = false;
+        }
+        this._polygonOffsetSupported = polygonOffsetSupported;
+
         this._terrainBias = {
-            polygonOffset : true,
+            polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
@@ -190,7 +200,7 @@ define([
         };
 
         this._primitiveBias = {
-            polygonOffset : true,
+            polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
@@ -201,7 +211,7 @@ define([
         };
 
         this._pointBias = {
-            polygonOffset : false,
+            polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : false,
