@@ -1083,7 +1083,7 @@ define([
 
             var derivedCommands = command.derivedCommands;
 
-            if (shadowsVisible && (command.receiveShadows || command.castShadows)) {
+            if (command.receiveShadows || command.castShadows) {
                 derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
