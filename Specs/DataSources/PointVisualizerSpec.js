@@ -4,7 +4,9 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defineProperties',
         'Core/Ellipsoid',
+        'Core/Event',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BoundingSphereState',
@@ -20,7 +22,9 @@ defineSuite([
         BoundingSphere,
         Cartesian3,
         Color,
+        defineProperties,
         Ellipsoid,
+        Event,
         JulianDate,
         NearFarScalar,
         BoundingSphereState,
@@ -52,6 +56,15 @@ defineSuite([
 
         scene.globe._surface.updateHeight = function() {
         };
+
+        scene.globe.terrainProviderChanged = new Event();
+        defineProperties(scene.globe, {
+            terrainProvider : {
+                set : function(value) {
+                    this.terrainProviderChanged.raiseEvent(value);
+                }
+            }
+        });
     });
 
     afterAll(function() {

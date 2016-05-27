@@ -1,10 +1,14 @@
 /*global define*/
 define([
         'Core/defaultValue',
-        'Core/Ellipsoid'
+        'Core/defineProperties',
+        'Core/Ellipsoid',
+        'Core/Event'
     ], function(
         defaultValue,
-        Ellipsoid) {
+        defineProperties,
+        Ellipsoid,
+        Event) {
     "use strict";
 
     function createGlobe(ellipsoid) {
@@ -29,6 +33,15 @@ define([
                 globe.callback = undefined;
             };
         };
+
+        globe.terrainProviderChanged = new Event();
+        defineProperties(globe, {
+            terrainProvider : {
+                set : function(value) {
+                    this.terrainProviderChanged.raiseEvent(value);
+                }
+            }
+        });
 
         return globe;
     }
