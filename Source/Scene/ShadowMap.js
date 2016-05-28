@@ -182,7 +182,6 @@ define([
 
         // In IE11 and Edge polygon offset is not functional.
         var polygonOffsetSupported = true;
-        // TODO : check for Edge too
         if (FeatureDetection.isInternetExplorer) {
             polygonOffsetSupported = false;
         }
