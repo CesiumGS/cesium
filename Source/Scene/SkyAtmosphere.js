@@ -80,10 +80,20 @@ define([
         });
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
-        
-        // hue, saturation, and brightness shift values for color adjustment
+
+        this._spSkyFromSpaceColorCorrect = undefined;
+        this._spSkyFromAtmosphereColorCorrect = undefined;
+
+        /**
+         * Use hue/saturation/brightness shifts to postprocess the sky/atmosphere color.
+         * @type (Boolean)
+         * @default false
+         */
+        this.colorCorrect = false;
+
         /**
          * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A hue shift of 1.0 indicates a complete rotation of the hues available.
          * @type {Number}
          * @default 0.0
          */
@@ -91,6 +101,7 @@ define([
 
         /**
          * The saturation shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A saturation shift of -1.0 is monochrome.
          * @type {Number}
          * @default 0.0
          */
@@ -98,13 +109,13 @@ define([
 
         /**
          * The brightness shift to apply to the atmosphere. Defaults to 0.0 (no shift).
+         * A brightness shift of -1.0 is complete darkness, which will let space show through.
          * @type {Number}
          * @default 0.0
          */
         this.brightnessShift = 0.0;
 
-        var hsbScratch = new Cartesian3(this.hueShift, this.saturationShift, this.brightnessShift);
-        this._hsbScratch = hsbScratch;
+        this._hueSaturationBrightness = new Cartesian3();
 
         // camera height, outer radius, inner radius, dynamic atmosphere color flag
         var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
@@ -122,11 +133,11 @@ define([
             cameraAndRadiiAndDynamicAtmosphereColor : function() {
                 return that._cameraAndRadiiAndDynamicAtmosphereColor;
             },
-            u_hsvShift : function() {
-                hsbScratch.x = that.hueShift;
-                hsbScratch.y = that.saturationShift;
-                hsbScratch.z = that.brightnessShift;
-                return that._hsbScratch;
+            u_hsbShift : function() {
+                that._hueSaturationBrightness.x = that.hueShift;
+                that._hueSaturationBrightness.y = that.saturationShift;
+                that._hueSaturationBrightness.z = that.brightnessShift;
+                return that._hueSaturationBrightness;
             }
         };
     }
@@ -200,10 +211,21 @@ define([
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
+
+            var fsColorCorrect = new ShaderSource({
+                defines : ['COLOR_CORRECT'],
+                sources : [SkyAtmosphereFS]
+            });
+
             this._spSkyFromSpace = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : SkyAtmosphereFS
+            });
+            this._spSkyFromSpaceColorCorrect = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fsColorCorrect
             });
 
             vs = new ShaderSource({
@@ -215,6 +237,11 @@ define([
                 vertexShaderSource : vs,
                 fragmentShaderSource : SkyAtmosphereFS
             });
+            this._spSkyFromAtmosphereColorCorrect = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fsColorCorrect
+            });
         }
 
         var cameraPosition = frameState.camera.positionWC;
@@ -224,10 +251,10 @@ define([
 
         if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
             // Camera in space
-            command.shaderProgram = this._spSkyFromSpace;
+            command.shaderProgram = this.colorCorrect ? this._spSkyFromSpaceColorCorrect : this._spSkyFromSpace;
         } else {
             // Camera in atmosphere
-            command.shaderProgram = this._spSkyFromAtmosphere;
+            command.shaderProgram = this.colorCorrect ? this._spSkyFromAtmosphereColorCorrect : this._spSkyFromAtmosphere;
         }
 
         return command;
@@ -270,6 +297,8 @@ define([
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
         this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
+        this._spSkyFromSpaceColorCorrect = this._spSkyFromSpaceColorCorrect && this._spSkyFromSpaceColorCorrect.destroy();
+        this._spSkyFromAtmosphereColorCorrect = this._spSkyFromAtmosphereColorCorrect && this._spSkyFromAtmosphereColorCorrect.destroy();
         return destroyObject(this);
     };
 

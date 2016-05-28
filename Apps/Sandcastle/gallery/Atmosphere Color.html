@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Adjust brightness, contrast, hue, saturation, and gamma of an imagery layer.">
+    <meta name="description" content="Adjust hue, saturation, and brightness of the sky/atmosphere.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -56,14 +56,17 @@
         </td>
     </tr>
 </tbody></table>
+<div id="toggleColorCorrection"></div>
 <div id="toggleLighting"></div>
+<div id="toggleFog"></div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
-var skyAtmosphere = viewer.scene.skyAtmosphere;
+var scene = viewer.scene;
+var skyAtmosphere = scene.skyAtmosphere;
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
@@ -78,7 +81,7 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-// Make the active imagery layer a subscriber of the viewModel.
+// Make the skyAtmosphere's HSB parameters subscribers of the viewModel.
 function subscribeParameter(name) {
     Cesium.knockout.getObservable(viewModel, name).subscribe(
         function(newValue) {
@@ -91,9 +94,27 @@ subscribeParameter('hueShift');
 subscribeParameter('saturationShift');
 subscribeParameter('brightnessShift');
 
+Sandcastle.addToolbarButton('Toggle Color Correction', function() {
+    skyAtmosphere.colorCorrect = !skyAtmosphere.colorCorrect;
+}, 'toggleFog');
+
 Sandcastle.addToolbarButton('Toggle Lighting', function() {
-    viewer.scene.globe.enableLighting = !viewer.scene.globe.enableLighting;
+    scene.globe.enableLighting = !scene.globe.enableLighting;
 }, 'toggleLighting');
+
+Sandcastle.addToolbarButton('Toggle Fog', function() {
+    scene.fog.enabled = !scene.fog.enabled;
+}, 'toggleFog');
+
+var camera = viewer.camera;
+camera.setView({
+    destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+    orientation: {
+        heading : -Cesium.Math.PI_OVER_TWO,
+        pitch : 0.2,
+        roll : 0.0
+    }
+});
 
 //Sandcastle_End
     Sandcastle.finishedLoading();

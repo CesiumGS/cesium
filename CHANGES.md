@@ -27,7 +27,7 @@ Change Log
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
 * Added support for rendering models in 2D and Columbus view.
 * Fixed a bug that was causing the atmosphere to disappear when only atmosphere is visible. [#3347](https://github.com/AnalyticalGraphicsInc/cesium/issues/3347) 
-* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere` [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
+* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere` [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 
 ### 1.21 - 2016-05-02
 
