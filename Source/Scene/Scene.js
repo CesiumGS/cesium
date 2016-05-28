@@ -1065,8 +1065,8 @@ define([
         var frameState = scene.frameState;
         var shadowMaps = frameState.shadowMaps;
         var context = scene._context;
-
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+
         var shadowsDirty = false;
         if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
             // Update derived commands when any shadow maps become dirty
@@ -1244,7 +1244,7 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
-        var updateShadowHints = (frameState.shadowMaps.length > 0) && !frameState.passes.pick;
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
         var shadowNear = Number.MAX_VALUE;
         var shadowFar = -Number.MAX_VALUE;
         var shadowClosestObjectSize = Number.MAX_VALUE;
@@ -1290,7 +1290,7 @@ define([
                     // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
                     // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
                     // camera isn't inside.
-                    if (updateShadowHints && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                    if (shadowsEnabled && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
                         !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
 
                         // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
@@ -1324,14 +1324,14 @@ define([
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
 
-            if (updateShadowHints) {
+            if (shadowsEnabled) {
                 shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
                 shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
             }
         }
 
         // Use the computed near and far for shadows
-        if (updateShadowHints) {
+        if (shadowsEnabled) {
             frameState.shadowHints.nearPlane = shadowNear;
             frameState.shadowHints.farPlane = shadowFar;
             frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
@@ -1426,7 +1426,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (!scene.frameState.passes.pick && scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
+        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -1746,7 +1746,7 @@ define([
         }
     }
 
-    function insertShadowCastCommands(scene, commandList, insertAll, shadowMap) {
+    function insertShadowCastCommands(scene, commandList, shadowMap) {
         var shadowVolume = shadowMap.shadowMapCullingVolume;
         var isPointLight = shadowMap.isPointLight;
         var passes = shadowMap.passes;
@@ -1758,7 +1758,7 @@ define([
             updateDerivedCommands(scene, command);
 
             // Don't insert globe commands with the rest of the scene commands since they are handled separately
-            if (command.castShadows && (insertAll || (command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT))) {
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
@@ -1786,27 +1786,12 @@ define([
         }
     }
 
-    function getTerrainShadowCommands(scene) {
-        // TODO : Temporary for testing. Globe.update doesn't work currently.
-        var terrainCommands = [];
-        var commandList = scene.frameState.commandList;
-        var length = commandList.length;
-        for (var i = 0; i < length; ++i) {
-            var command = commandList[i];
-            if (command.castShadows && command.pass === Pass.GLOBE) {
-                terrainCommands.push(command);
-            }
-        }
-
-        return terrainCommands;
-    }
-
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
         var shadowMaps = frameState.shadowMaps;
         var shadowMapLength = shadowMaps.length;
 
-        if (shadowMapLength === 0 || scene.frameState.passes.pick) {
+        if (!frameState.shadowHints.shadowsEnabled) {
             return;
         }
 
@@ -1829,12 +1814,7 @@ define([
 
             // Insert the primitive/model commands into the command lists
             var sceneCommands = scene.frameState.commandList;
-            insertShadowCastCommands(scene, sceneCommands, false, shadowMap);
-
-            // Insert the globe commands into the command lists
-            //var globeCommands = shadowMap.commandList;
-            var globeCommands = getTerrainShadowCommands(scene);
-            insertShadowCastCommands(scene, globeCommands, true, shadowMap);
+            insertShadowCastCommands(scene, sceneCommands, shadowMap);
 
             for (j = 0; j < numberOfPasses; ++j) {
                 var pass = shadowMap.passes[j];
@@ -2043,22 +2023,16 @@ define([
         }
     }
 
-    var scratchShadowMapPasses = [{
-        camera : undefined
-    }];
-
     function updateShadowMaps(scene) {
         var frameState = scene._frameState;
-        var globe = scene._globe;
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.shadowsEnabled = (length > 0);
-
-        if (length === 0 || frameState.passes.pick) {
+        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick;
+        if (!frameState.shadowHints.shadowsEnabled) {
             return;
         }
-        
+
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
@@ -2066,41 +2040,6 @@ define([
             if (shadowMap.dirty) {
                 ++frameState.shadowHints.lastDirtyTime;
                 shadowMap.dirty = false;
-            }
-
-            if (!shadowMap.outOfView && defined(globe) && globe.castShadows) {
-                // PERFORMANCE_TODO: We update the globe for each face of the shadow cube map.
-                // We could create some type of camera representing a point light.
-                var passes;
-                if (shadowMap.isPointLight) {
-                    passes = shadowMap.passes;
-                } else {
-                    passes = scratchShadowMapPasses;
-                    passes[0].camera = shadowMap.shadowMapCamera;
-                }
-
-                var sceneCamera = frameState.camera;
-                var sceneCullingVolume = frameState.cullingVolume;
-                var sceneCommandList = frameState.commandList;
-
-                frameState.cullingVolume = shadowMap.shadowMapCullingVolume;
-                frameState.commandList = shadowMap.commandList;
-                frameState.commandList.length = 0;
-
-                var passesLength = passes.length;
-                for (var j = 0; j < passesLength; ++j) {
-                    // Update frame state to render from the light camera
-                    frameState.camera = passes[j].camera;
-
-                    // Update the globe again to Collect terrain commands from the light's POV.
-                    // Primitives do not need to be updated twice because they typically aren't culled by the scene camera.
-                    globe.update(frameState);
-                }
-
-                // Revert back to original frame state
-                frameState.camera = sceneCamera;
-                frameState.cullingVolume = sceneCullingVolume;
-                frameState.commandList = sceneCommandList;
             }
         }
     }

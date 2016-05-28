@@ -266,8 +266,6 @@ define([
             this._passes[i] = new ShadowPass(context);
         }
 
-        this._commandList = [];
-
         this.debugShow = false;
         this.debugFreezeFrame = false;
         this._debugFreezeFrame = false;
@@ -439,20 +437,6 @@ define([
         },
 
         /**
-         * The camera representing the shadow volume.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {ShadowMapCamera}
-         * @readonly
-         * @private
-         */
-        shadowMapCamera : {
-            get : function() {
-                return this._shadowMapCamera;
-            }
-        },
-
-        /**
          * The culling volume of the shadow frustum.
          *
          * @memberof ShadowMap.prototype
@@ -477,20 +461,6 @@ define([
         passes : {
             get : function() {
                 return this._passes;
-            }
-        },
-
-        /**
-         * Commands that are rendered into the shadow map this frame.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {DrawCommand[]}
-         * @readonly
-         * @private
-         */
-        commandList : {
-            get : function() {
-                return this._commandList;
             }
         },
 
