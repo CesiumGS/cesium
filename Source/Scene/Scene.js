@@ -405,6 +405,15 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
+         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
+         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * @type {Number}
+         * @default 1.75e6
+         */
+        this.nearToFarDistance2D = 1.75e6;
+
+        /**
          * This property is for debugging only; it is not for production use.
          * <p>
          * A function that determines what commands are executed.  As shown in the examples below,
@@ -577,6 +586,7 @@ define([
 
             isSunVisible : false,
             isMoonVisible : false,
+            isReadyForAtmosphere : false,
             isSkyAtmosphereVisible : false,
 
             clearGlobeDepth : false,
@@ -596,7 +606,7 @@ define([
         var near = camera.frustum.near;
         var far = camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
-        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
+        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -833,6 +843,19 @@ define([
             },
             set : function(terrainProvider) {
                 this.globe.terrainProvider = terrainProvider;
+            }
+        },
+
+        /**
+         * Gets an event that's raised when the terrain provider is changed
+         * @memberof Scene.prototype
+         *
+         * @type {Event}
+         * @readonly
+         */
+        terrainProviderChanged : {
+            get : function() {
+                return this.globe.terrainProviderChanged;
             }
         },
 
@@ -1139,11 +1162,19 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
-            var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-            var curFar = Math.min(far, farToNearRatio * curNear);
+            var curNear;
+            var curFar;
+
+            if (!is2D) {
+                curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                curFar = Math.min(far, farToNearRatio * curNear);
+            } else {
+                curNear = near + m * nearToFarDistance2D;
+                curFar = Math.min(far, curNear + nearToFarDistance2D);
+            }
 
             var frustumCommands = frustumCommandsList[m];
             if (!defined(frustumCommands)) {
@@ -1261,7 +1292,7 @@ define([
 
         // Determine visibility of celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
         environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
         environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
@@ -1339,11 +1370,25 @@ define([
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
+        var is2D = scene.mode === SceneMode.SCENE2D;
         var farToNearRatio = scene.farToNearRatio;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+
+        var numFrustums;
+        if (!is2D) {
+            // The multifrustum for 3D/CV is non-uniformly distributed.
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        } else {
+            // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // to be in [1.0, nearToFarDistance2D].
+            far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+            near = Math.min(near, far);
+            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
+        }
+
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
     }
@@ -1630,6 +1675,8 @@ define([
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
 
+        var height2D = camera.position.z;
+
         // Execute commands in each frustum in back to front order
         var j;
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1642,6 +1689,7 @@ define([
             // Avoid tearing artifacts between adjacent frustums in the opaque passes
             frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
             frustum.far = frustumCommands.far;
+            us.updateFrustum(frustum);
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1650,8 +1698,6 @@ define([
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
-
-            us.updateFrustum(frustum);
 
             clearDepth.execute(context, passState);
 
@@ -1685,6 +1731,16 @@ define([
                 }
             }
 
+            if (scene.mode === SceneMode.SCENE2D) {
+                // To avoid z-fighting in 2D, move the camera to just before the frustum
+                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
+                camera.position.z = height2D - frustumCommands.near + 1.0;
+                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+                frustum.near = 1.0;
+                us.update(scene.frameState);
+                us.updateFrustum(frustum);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GROUND + 1;
@@ -1698,7 +1754,7 @@ define([
                 }
             }
 
-            if (index !== 0) {
+            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
@@ -1931,11 +1987,37 @@ define([
 
         if (x === 0.0 || windowCoordinates.x <= 0.0 || windowCoordinates.x >= context.drawingBufferWidth) {
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+        } else if (Math.abs(context.drawingBufferWidth * 0.5 - windowCoordinates.x) < 1.0) {
+            viewport.width = windowCoordinates.x;
+
+            camera.position.x *= CesiumMath.sign(camera.position.x);
+
+            camera.frustum.right = 0.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
+
+            viewport.x = viewport.width;
+
+            camera.position.x = -camera.position.x;
+
+            camera.frustum.right = -camera.frustum.left;
+            camera.frustum.left = 0.0;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
+            executeCommandsInViewport(false, scene, passState, backgroundColor, picking);
         } else if (windowCoordinates.x > context.drawingBufferWidth * 0.5) {
             viewport.width = windowCoordinates.x;
 
             var right = camera.frustum.right;
             camera.frustum.right = maxCoord.x - x;
+
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
 
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
@@ -1945,7 +2027,7 @@ define([
             camera.position.x = -camera.position.x;
 
             camera.frustum.left = -camera.frustum.right;
-            camera.frustum.right = camera.frustum.left + (right - camera.frustum.right);
+            camera.frustum.right = right - camera.frustum.right * 2.0;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
@@ -1958,6 +2040,9 @@ define([
             var left = camera.frustum.left;
             camera.frustum.left = -maxCoord.x - x;
 
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+            context.uniformState.update(frameState);
+
             executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
 
             viewport.x = 0;
@@ -1966,8 +2051,7 @@ define([
             camera.position.x = -camera.position.x;
 
             camera.frustum.right = -camera.frustum.left;
-            camera.frustum.left = camera.frustum.right + (left - camera.frustum.left);
-
+            camera.frustum.left = left - camera.frustum.left * 2.0;
 
             frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
             context.uniformState.update(frameState);
@@ -2007,13 +2091,19 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var skyAtmosphere = scene.skyAtmosphere;
+        var globe = scene.globe;
+        if (defined(skyAtmosphere) && defined(globe)) {
+            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+            environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+        }
+        environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
-        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are

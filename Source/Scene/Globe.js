@@ -11,6 +11,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidTerrainProvider',
+        '../Core/Event',
         '../Core/GeographicProjection',
         '../Core/IntersectionTests',
         '../Core/loadImage',
@@ -39,6 +40,7 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTerrainProvider,
+        Event,
         GeographicProjection,
         IntersectionTests,
         loadImage,
@@ -95,11 +97,8 @@ define([
             })
         });
 
-        /**
-         * The terrain provider providing surface geometry for this globe.
-         * @type {TerrainProvider}
-         */
-        this.terrainProvider = terrainProvider;
+        this._terrainProvider = terrainProvider;
+        this._terrainProviderChanged = new Event();
 
         /**
          * Determines if the globe will be shown.
@@ -243,6 +242,37 @@ define([
             },
             set : function(value) {
                 this._surface.tileProvider.baseColor = value;
+            }
+        },
+        /**
+         * The terrain provider providing surface geometry for this globe.
+         * @type {TerrainProvider}
+         *
+         * @memberof Globe.prototype
+         * @type {TerrainProvider}
+         *
+         */
+        terrainProvider : {
+            get : function() {
+                return this._terrainProvider;
+            },
+            set : function(value) {
+                if (value !== this._terrainProvider) {
+                    this._terrainProvider = value;
+                    this._terrainProviderChanged.raiseEvent(value);
+                }
+            }
+        },
+        /**
+         * Gets an event that's raised when the terrain provider is changed
+         *
+         * @memberof Globe.prototype
+         * @type {Event}
+         * @readonly
+         */
+        terrainProviderChanged : {
+            get: function() {
+                return this._terrainProviderChanged;
             }
         },
         /**

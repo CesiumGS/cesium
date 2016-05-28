@@ -548,7 +548,7 @@ define([
     };
 
     var fromCameraF = new Cartesian3();
-    var fromCameraS = new Cartesian3();
+    var fromCameraR = new Cartesian3();
     var fromCameraU = new Cartesian3();
 
     /**
@@ -565,57 +565,57 @@ define([
         }
         //>>includeEnd('debug');
 
-        var eye = camera.eye;
-        var target = camera.target;
+        var position = camera.position;
+        var direction = camera.direction;
         var up = camera.up;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(eye)) {
-            throw new DeveloperError('camera.eye is required.');
+        if (!defined(position)) {
+            throw new DeveloperError('camera.position is required.');
         }
-        if (!defined(target)) {
-            throw new DeveloperError('camera.target is required.');
+        if (!defined(direction)) {
+            throw new DeveloperError('camera.direction is required.');
         }
         if (!defined(up)) {
             throw new DeveloperError('camera.up is required.');
         }
         //>>includeEnd('debug');
 
-        Cartesian3.normalize(Cartesian3.subtract(target, eye, fromCameraF), fromCameraF);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraS), fromCameraS);
-        Cartesian3.normalize(Cartesian3.cross(fromCameraS, fromCameraF, fromCameraU), fromCameraU);
+        Cartesian3.normalize(direction, fromCameraF);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraF, up, fromCameraR), fromCameraR);
+        Cartesian3.normalize(Cartesian3.cross(fromCameraR, fromCameraF, fromCameraU), fromCameraU);
 
-        var sX = fromCameraS.x;
-        var sY = fromCameraS.y;
-        var sZ = fromCameraS.z;
+        var sX = fromCameraR.x;
+        var sY = fromCameraR.y;
+        var sZ = fromCameraR.z;
         var fX = fromCameraF.x;
         var fY = fromCameraF.y;
         var fZ = fromCameraF.z;
         var uX = fromCameraU.x;
         var uY = fromCameraU.y;
         var uZ = fromCameraU.z;
-        var eyeX = eye.x;
-        var eyeY = eye.y;
-        var eyeZ = eye.z;
-        var t0 = sX * -eyeX + sY * -eyeY+ sZ * -eyeZ;
-        var t1 = uX * -eyeX + uY * -eyeY+ uZ * -eyeZ;
-        var t2 = fX * eyeX + fY * eyeY + fZ * eyeZ;
+        var positionX = position.x;
+        var positionY = position.y;
+        var positionZ = position.z;
+        var t0 = sX * -positionX + sY * -positionY+ sZ * -positionZ;
+        var t1 = uX * -positionX + uY * -positionY+ uZ * -positionZ;
+        var t2 = fX * positionX + fY * positionY + fZ * positionZ;
 
-        //The code below this comment is an optimized
-        //version of the commented lines.
-        //Rather that create two matrices and then multiply,
-        //we just bake in the multiplcation as part of creation.
-        //var rotation = new Matrix4(
-        //                sX,  sY,  sZ, 0.0,
-        //                uX,  uY,  uZ, 0.0,
-        //               -fX, -fY, -fZ, 0.0,
-        //                0.0,  0.0,  0.0, 1.0);
-        //var translation = new Matrix4(
-        //                1.0, 0.0, 0.0, -eye.x,
-        //                0.0, 1.0, 0.0, -eye.y,
-        //                0.0, 0.0, 1.0, -eye.z,
-        //                0.0, 0.0, 0.0, 1.0);
-        //return rotation.multiply(translation);
+        // The code below this comment is an optimized
+        // version of the commented lines.
+        // Rather that create two matrices and then multiply,
+        // we just bake in the multiplcation as part of creation.
+        // var rotation = new Matrix4(
+        //                 sX,  sY,  sZ, 0.0,
+        //                 uX,  uY,  uZ, 0.0,
+        //                -fX, -fY, -fZ, 0.0,
+        //                 0.0,  0.0,  0.0, 1.0);
+        // var translation = new Matrix4(
+        //                 1.0, 0.0, 0.0, -position.x,
+        //                 0.0, 1.0, 0.0, -position.y,
+        //                 0.0, 0.0, 1.0, -position.z,
+        //                 0.0, 0.0, 0.0, 1.0);
+        // return rotation.multiply(translation);
         if (!defined(result)) {
             return new Matrix4(
                     sX,   sY,  sZ, t0,
@@ -640,7 +640,6 @@ define([
         result[14] = t2;
         result[15] = 1.0;
         return result;
-
     };
 
      /**

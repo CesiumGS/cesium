@@ -55,6 +55,36 @@ defineSuite([
         s.destroy();
     });
 
+    it('draws sky with setDynamicAtmosphereColor set to true', function() {
+        var s = new SkyAtmosphere();
+        s.setDynamicAtmosphereColor(true);
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.render();
+
+        var command = s.update(scene.frameState);
+        expect(command).toBeDefined();
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(1);
+        command.execute(scene.context); // Not reliable enough across browsers to test pixels
+
+        s.destroy();
+    });
+
+    it('draws sky with setDynamicAtmosphereColor set to false', function() {
+        var s = new SkyAtmosphere();
+        s.setDynamicAtmosphereColor(false);
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.render();
+
+        var command = s.update(scene.frameState);
+        expect(command).toBeDefined();
+        expect(s._cameraAndRadiiAndDynamicAtmosphereColor.w).toBe(0);
+        command.execute(scene.context); // Not reliable enough across browsers to test pixels
+
+        s.destroy();
+    });
+
     it('does not render when show is false', function() {
         var s = new SkyAtmosphere();
         s.show = false;
