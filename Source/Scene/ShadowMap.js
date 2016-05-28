@@ -623,8 +623,6 @@ define([
         } else {
             createFramebufferColor(shadowMap, context);
         }
-
-        clearFramebuffer(shadowMap, context);
     }
 
     function checkFramebuffer(shadowMap, context) {
@@ -642,6 +640,7 @@ define([
             destroyFramebuffer(shadowMap);
             createFramebuffer(shadowMap, context);
             checkFramebuffer(shadowMap, context);
+            clearFramebuffer(shadowMap, context);
         }
     }
 
