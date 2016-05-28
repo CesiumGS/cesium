@@ -171,15 +171,15 @@ define([
 
         this.shadowHints = {
             /**
-            * The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-            * @type {Number}
-            */
+             * The near plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+             * @type {Number}
+             */
             nearPlane : 1.0,
 
             /**
-            * The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
-            * @type {Number}
-            */
+             * The far plane of the scene's frustum commands. Used for fitting cascaded shadow maps.
+             * @type {Number}
+             */
             farPlane : 5000.0,
 
             /**
