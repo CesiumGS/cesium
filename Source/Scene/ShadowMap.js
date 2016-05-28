@@ -837,14 +837,14 @@ define([
     }
 
     var frustumCornersNDC = new Array(8);
-    frustumCornersNDC[0] = new Cartesian4(-1, -1, -1, 1);
-    frustumCornersNDC[1] = new Cartesian4(1, -1, -1, 1);
-    frustumCornersNDC[2] = new Cartesian4(1, 1, -1, 1);
-    frustumCornersNDC[3] = new Cartesian4(-1, 1, -1, 1);
-    frustumCornersNDC[4] = new Cartesian4(-1, -1, 1, 1);
-    frustumCornersNDC[5] = new Cartesian4(1, -1, 1, 1);
-    frustumCornersNDC[6] = new Cartesian4(1, 1, 1, 1);
-    frustumCornersNDC[7] = new Cartesian4(-1, 1, 1, 1);
+    frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, -1.0, 1.0);
+    frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, -1.0, 1.0);
+    frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, -1.0, 1.0);
+    frustumCornersNDC[3] = new Cartesian4(-1.0, 1.0, -1.0, 1.0);
+    frustumCornersNDC[4] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
+    frustumCornersNDC[5] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
+    frustumCornersNDC[6] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    frustumCornersNDC[7] = new Cartesian4(-1.0, 1.0, 1.0, 1.0);
 
     var scratchMatrix = new Matrix4();
     var scratchFrustumCorners = new Array(8);
