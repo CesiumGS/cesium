@@ -32,7 +32,9 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 7,
             closeTop : true,
-            closeBottom : true
+            closeBottom : true,
+            castShadows : false,
+            receiveShadows : false
         };
 
         var polygon = new PolygonGraphics(options);
@@ -50,6 +52,8 @@ defineSuite([
         expect(polygon.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(polygon.closeTop).toBeInstanceOf(ConstantProperty);
         expect(polygon.closeBottom).toBeInstanceOf(ConstantProperty);
+        expect(polygon.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(polygon.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -65,6 +69,8 @@ defineSuite([
         expect(polygon.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(polygon.closeTop.getValue()).toEqual(options.closeTop);
         expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
+        expect(polygon.castShadows.getValue()).toEqual(options.castShadows);
+        expect(polygon.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -83,6 +89,8 @@ defineSuite([
         source.perPositionHeight = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -101,6 +109,8 @@ defineSuite([
         expect(target.perPositionHeight).toBe(source.perPositionHeight);
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -120,6 +130,8 @@ defineSuite([
         var perPositionHeight = new ConstantProperty();
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -136,6 +148,8 @@ defineSuite([
         target.perPositionHeight = perPositionHeight;
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -153,6 +167,8 @@ defineSuite([
         expect(target.perPositionHeight).toBe(perPositionHeight);
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -171,6 +187,8 @@ defineSuite([
         source.perPositionHeight = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -187,6 +205,8 @@ defineSuite([
         expect(result.perPositionHeight).toBe(source.perPositionHeight);
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -212,5 +232,7 @@ defineSuite([
         testDefinitionChanged(property, 'perPositionHeight', false, true);
         testDefinitionChanged(property, 'closeTop', true, false);
         testDefinitionChanged(property, 'closeBottom', true, false);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

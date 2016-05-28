@@ -143,6 +143,7 @@ define([
          * casts shadows from each light source.
          * @memberof ModelGraphics.prototype
          * @type {Property}
+         * @default true
          */
         castShadows : createPropertyDescriptor('castShadows'),
 
@@ -151,6 +152,7 @@ define([
          * receives shadows from shadow casters in the scene.
          * @memberof ModelGraphics.prototype
          * @type {Property}
+         * @default true
          */
         receiveShadows : createPropertyDescriptor('receiveShadows'),
 

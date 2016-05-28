@@ -35,6 +35,8 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
+     * @param {Property} [options.castShadows=false] A boolean Property specifying whether the wall casts shadows from each light source.
+     * @param {Property} [options.receiveShadows=false] A boolean Property specifying whether the wall receives shadows from shadow casters in the scene.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
@@ -60,6 +62,10 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._castShadows = undefined;
+        this._castShadowsSubscription = undefined;
+        this._receiveShadows = undefined;
+        this._receiveShadowsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -156,7 +162,25 @@ define([
          * @type {Property}
          * @default 1.0
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth')
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        
+        /**
+         * Get or sets the boolean Property specifying whether the wall
+         * casts shadows from each light source.
+         * @memberof WallGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        castShadows : createPropertyDescriptor('castShadows'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the wall
+         * receives shadows from shadow casters in the scene.
+         * @memberof WallGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        receiveShadows : createPropertyDescriptor('receiveShadows')
     });
 
     /**
@@ -179,6 +203,8 @@ define([
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.castShadows = this.castShadows;
+        result.receiveShadows = this.receiveShadows;
         return result;
     };
 
@@ -205,6 +231,8 @@ define([
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.castShadows = defaultValue(this.castShadows, source.castShadows);
+        this.receiveShadows = defaultValue(this.receiveShadows, source.receiveShadows);
     };
 
     return WallGraphics;

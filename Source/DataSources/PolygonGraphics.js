@@ -40,6 +40,8 @@ define([
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {Property} [options.castShadows=false] A boolean Property specifying whether the polygon casts shadows from each light source.
+     * @param {Property} [options.receiveShadows=false] A boolean Property specifying whether the polygon receives shadows from shadow casters in the scene.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -74,6 +76,10 @@ define([
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
         this._closeBottomSubscription = undefined;
+        this._castShadows = undefined;
+        this._castShadowsSubscription = undefined;
+        this._receiveShadows = undefined;
+        this._receiveShadowsSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -201,7 +207,25 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        closeBottom : createPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the polygon
+         * casts shadows from each light source.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        castShadows : createPropertyDescriptor('castShadows'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the polygon
+         * receives shadows from shadow casters in the scene.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        receiveShadows : createPropertyDescriptor('receiveShadows')
     });
 
     /**
@@ -228,6 +252,8 @@ define([
         result.perPositionHeight = this.perPositionHeight;
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
+        result.castShadows = this.castShadows;
+        result.receiveShadows = this.receiveShadows;
         return result;
     };
 
@@ -258,6 +284,8 @@ define([
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
+        this.castShadows = defaultValue(this.castShadows, source.castShadows);
+        this.receiveShadows = defaultValue(this.receiveShadows, source.receiveShadows);
     };
 
     return PolygonGraphics;

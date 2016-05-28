@@ -50,6 +50,8 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultCastShadows = new ConstantProperty(false);
+    var defaultReceiveShadows = new ConstantProperty(false);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -98,6 +100,8 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._castShadowsProperty = undefined;
+        this._receiveShadowsProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
@@ -223,6 +227,32 @@ define([
         outlineWidth : {
             get : function() {
                 return this._outlineWidth;
+            }
+        },
+        /**
+         * Gets the boolean property specifying whether the geometry
+         * casts shadows from each light source.
+         * @memberof RectangleGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        castShadowsProperty : {
+            get : function() {
+                return this._castShadowsProperty;
+            }
+        },
+        /**
+         * Gets the boolean Property specifying whether the geometry
+         * receives shadows from shadow casters in the scene.
+         * @memberof RectangleGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        receiveShadowsProperty : {
+            get : function() {
+                return this._receiveShadowsProperty;
             }
         },
         /**
@@ -444,6 +474,8 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(rectangle.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(rectangle.outlineColor, defaultOutlineColor) : undefined;
+        this._castShadowsProperty = defaultValue(rectangle.castShadows, defaultCastShadows);
+        this._receiveShadowsProperty = defaultValue(rectangle.receiveShadows, defaultReceiveShadows);
 
         var height = rectangle.height;
         var extrudedHeight = rectangle.extrudedHeight;
@@ -555,6 +587,9 @@ define([
         options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
+        var castShadows = this._geometryUpdater.castShadowsProperty.getValue(time);
+        var receiveShadows = this._geometryUpdater.receiveShadowsProperty.getValue(time);
+
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
@@ -572,7 +607,9 @@ define([
                     geometry : new RectangleGeometry(options)
                 }),
                 appearance : appearance,
-                asynchronous : false
+                asynchronous : false,
+                castShadows : castShadows,
+                receiveShadows : receiveShadows
             }));
         }
 
@@ -598,7 +635,9 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                castShadows : castShadows,
+                receiveShadows : receiveShadows
             }));
         }
     };

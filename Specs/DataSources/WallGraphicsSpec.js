@@ -26,7 +26,9 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 2,
             minimumHeights : [3, 4, 5],
-            maximumHeights : [6, 7, 8]
+            maximumHeights : [6, 7, 8],
+            castShadows : false,
+            receiveShadows : false
         };
 
         var wall = new WallGraphics(options);
@@ -41,6 +43,8 @@ defineSuite([
         expect(wall.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(wall.minimumHeights).toBeInstanceOf(ConstantProperty);
         expect(wall.maximumHeights).toBeInstanceOf(ConstantProperty);
+        expect(wall.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(wall.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(wall.material.color.getValue()).toEqual(options.material);
         expect(wall.positions.getValue()).toEqual(options.positions);
@@ -53,6 +57,8 @@ defineSuite([
         expect(wall.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(wall.minimumHeights.getValue()).toEqual(options.minimumHeights);
         expect(wall.maximumHeights.getValue()).toEqual(options.maximumHeights);
+        expect(wall.castShadows.getValue()).toEqual(options.castShadows);
+        expect(wall.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -67,6 +73,8 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new WallGraphics();
         target.merge(source);
@@ -81,6 +89,8 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.minimumHeights).toBe(source.minimumHeights);
         expect(target.maximumHeights).toBe(source.maximumHeights);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -96,6 +106,8 @@ defineSuite([
         var outlineWidth = new ConstantProperty();
         var minimumHeights = new ConstantProperty();
         var maximumHeights = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new WallGraphics();
         target.material = material;
@@ -108,6 +120,8 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.minimumHeights = minimumHeights;
         target.maximumHeights = maximumHeights;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -121,6 +135,8 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.minimumHeights).toBe(minimumHeights);
         expect(target.maximumHeights).toBe(maximumHeights);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -135,6 +151,8 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -147,6 +165,8 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.minimumHeights).toBe(source.minimumHeights);
         expect(result.maximumHeights).toBe(source.maximumHeights);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -168,5 +188,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'minimumHeights', [0, 1], [2, 3]);
         testDefinitionChanged(property, 'maximumHeights', [3, 5], [7, 8]);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

@@ -108,8 +108,8 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Boolean} [options.castShadows=false] Determines whether this primitive casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=false] Determines whether this primitive receives shadows from shadow casters in the scene.
+     * @param {Boolean} [options.castShadows=false] Determines whether this primitive will cast shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=false] Determines whether this primitive will receive shadows from any shadow casters in the scene.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -284,7 +284,7 @@ define([
         //>>includeEnd('debug');
 
         /**
-         * Determines whether this primitive casts shadows from each light source.
+         * Determines whether this primitive will cast shadows from each light source.
          *
          * @type {Boolean}
          *
@@ -293,7 +293,7 @@ define([
         this.castShadows = defaultValue(options.castShadows, false);
 
         /**
-         * Determines whether this primitive receives shadows from shadow casters in the scene.
+         * Determines whether this primitive will receive shadows from any shadow casters in the scene.
          *
          * @type {Boolean}
          *

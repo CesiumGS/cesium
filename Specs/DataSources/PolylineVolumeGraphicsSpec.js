@@ -28,7 +28,9 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 2,
-            cornerType : CornerType.BEVELED
+            cornerType : CornerType.BEVELED,
+            castShadows : false,
+            receiveShadows : false
         };
 
         var polylineVolume = new PolylineVolumeGraphics(options);
@@ -42,6 +44,8 @@ defineSuite([
         expect(polylineVolume.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(polylineVolume.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(polylineVolume.cornerType).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(polylineVolume.material.color.getValue()).toEqual(options.material);
         expect(polylineVolume.positions.getValue()).toEqual(options.positions);
@@ -53,6 +57,8 @@ defineSuite([
         expect(polylineVolume.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(polylineVolume.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(polylineVolume.cornerType.getValue()).toEqual(options.cornerType);
+        expect(polylineVolume.castShadows.getValue()).toEqual(options.castShadows);
+        expect(polylineVolume.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -67,6 +73,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new PolylineVolumeGraphics();
         target.merge(source);
@@ -81,6 +89,8 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.cornerType).toBe(source.cornerType);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -96,6 +106,8 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var cornerType = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new PolylineVolumeGraphics();
         target.material = material;
@@ -108,6 +120,8 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.cornerType = cornerType;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -121,6 +135,8 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.cornerType).toBe(cornerType);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -135,6 +151,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -147,6 +165,8 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.cornerType).toBe(source.cornerType);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -168,5 +188,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'cornerType', CornerType.BEVELED, CornerType.MITERED);
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

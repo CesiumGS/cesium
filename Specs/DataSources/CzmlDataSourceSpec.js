@@ -770,7 +770,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -785,6 +787,8 @@ defineSuite([
         expect(entity.ellipse.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.ellipse.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.ellipse.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.ellipse.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.ellipse.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained ellipse.', function() {
@@ -793,7 +797,9 @@ defineSuite([
                 interval : '2000-01-01/2001-01-01',
                 semiMajorAxis : 10,
                 semiMinorAxis : 20,
-                rotation : 1.0
+                rotation : 1.0,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -810,10 +816,14 @@ defineSuite([
         expect(entity.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
         expect(entity.ellipse.semiMinorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMinorAxis);
         expect(entity.ellipse.rotation.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.rotation);
+        expect(entity.ellipse.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.ellipse.receiveShadows.getValue(validTime)).toEqual(true);
 
         expect(entity.ellipse.semiMajorAxis.getValue(invalidTime)).toBeUndefined();
         expect(entity.ellipse.semiMinorAxis.getValue(invalidTime)).toBeUndefined();
         expect(entity.ellipse.rotation.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipse.castShadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipse.receiveShadows.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite ellipsoid.', function() {
@@ -836,7 +846,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -851,6 +863,8 @@ defineSuite([
         expect(entity.ellipsoid.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.ellipsoid.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.ellipsoid.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.ellipsoid.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.ellipsoid.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained ellipsoid.', function() {
@@ -869,7 +883,9 @@ defineSuite([
                             rgbaf : [0.1, 0.1, 0.1, 0.1]
                         }
                     }
-                }
+                },
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -886,10 +902,14 @@ defineSuite([
         expect(entity.ellipsoid.radii.getValue(validTime)).toEqual(expectedRadii);
         expect(entity.ellipsoid.show.getValue(validTime)).toEqual(ellipsoidPacketInterval.ellipsoid.show);
         expect(entity.ellipsoid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(entity.ellipsoid.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.ellipsoid.receiveShadows.getValue(validTime)).toEqual(true);
 
         expect(entity.ellipsoid.radii.getValue(invalidTime)).toBeUndefined();
         expect(entity.ellipsoid.show.getValue(invalidTime)).toBeUndefined();
         expect(entity.ellipsoid.material.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipsoid.castShadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.ellipsoid.receiveShadows.getValue(invalidTime)).toBeUndefined();
     });
 
     it('CZML adds data for infinite label.', function() {
@@ -1405,7 +1425,9 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 closeTop : false,
-                closeBottom : false
+                closeBottom : false,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1425,6 +1447,8 @@ defineSuite([
         expect(entity.polygon.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
         expect(entity.polygon.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
         expect(entity.polygon.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
+        expect(entity.polygon.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polygon.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1438,7 +1462,9 @@ defineSuite([
                         }
                     }
                 },
-                show : true
+                show : true,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1454,9 +1480,14 @@ defineSuite([
         expect(entity.polygon).toBeDefined();
         expect(entity.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(entity.polygon.show.getValue(validTime)).toEqual(true);
+        expect(entity.polygon.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.polygon.receiveShadows.getValue(validTime)).toEqual(true);
 
         expect(entity.polygon.material.getValue(invalidTime)).toBeUndefined();
         expect(entity.polygon.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polygon.castShadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polygon.receiveShadows.getValue(invalidTime)).toBeUndefined();
+
     });
 
     it('CZML adds data for infinite polyline.', function() {
@@ -1474,7 +1505,9 @@ defineSuite([
                     }
                 },
                 width : 1.0,
-                show : true
+                show : true,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1488,6 +1521,8 @@ defineSuite([
         expect(entity.polyline.material.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
         expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polyline.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.polyline.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for constrained polyline.', function() {
@@ -1506,7 +1541,9 @@ defineSuite([
                     }
                 },
                 width : 1.0,
-                show : true
+                show : true,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1525,10 +1562,15 @@ defineSuite([
         expect(entity.polyline.material.getValue(validTime).outlineColor).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.polyline.material.getValue(validTime).outlineWidth).toEqual(1.0);
         expect(entity.polyline.show.getValue(validTime)).toEqual(true);
+        expect(entity.polyline.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.polyline.receiveShadows.getValue(validTime)).toEqual(true);
 
         expect(entity.polyline.material.getValue(invalidTime)).toBeUndefined();
         expect(entity.polyline.width.getValue(invalidTime)).toBeUndefined();
         expect(entity.polyline.show.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polyline.castShadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.polyline.receiveShadows.getValue(invalidTime)).toBeUndefined();
+
     });
 
     it('CZML adds data for infinite model.', function() {
@@ -1868,7 +1910,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1892,6 +1936,8 @@ defineSuite([
         expect(entity.rectangle.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.rectangle.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.rectangle.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.rectangle.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('CZML adds data for rectangle in degrees.', function() {
@@ -1931,7 +1977,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                castShadows : true,
+                receiveShadows : true
             }
         };
 
@@ -1950,6 +1998,8 @@ defineSuite([
         expect(entity.wall.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.wall.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.wall.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.wall.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
     it('Has entity collection with link to data source', function() {

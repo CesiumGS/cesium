@@ -25,7 +25,9 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 1,
-            dimensions : new Cartesian3(2, 3, 4)
+            dimensions : new Cartesian3(2, 3, 4),
+            castShadows : false,
+            receiveShadows : false
         };
 
         var box = new BoxGraphics(options);
@@ -36,6 +38,8 @@ defineSuite([
         expect(box.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(box.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(box.dimensions).toBeInstanceOf(ConstantProperty);
+        expect(box.castShadows).toBeInstanceOf(ConstantProperty);
+        expect(box.receiveShadows).toBeInstanceOf(ConstantProperty);
 
         expect(box.material.color.getValue()).toEqual(options.material);
         expect(box.show.getValue()).toEqual(options.show);
@@ -44,6 +48,8 @@ defineSuite([
         expect(box.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(box.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(box.dimensions.getValue()).toEqual(options.dimensions);
+        expect(box.castShadows.getValue()).toEqual(options.castShadows);
+        expect(box.receiveShadows.getValue()).toEqual(options.receiveShadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -55,6 +61,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.dimensions = new ConstantProperty();
+        source.castShadows = new ConstantProperty(true);
+        source.receiveShadows = new ConstantProperty(true);
 
         var target = new BoxGraphics();
         target.merge(source);
@@ -66,6 +74,8 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.dimensions).toBe(source.dimensions);
+        expect(target.castShadows).toBe(source.castShadows);
+        expect(target.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -78,6 +88,8 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var dimensions = new ConstantProperty();
+        var castShadows = new ConstantProperty();
+        var receiveShadows = new ConstantProperty();
 
         var target = new BoxGraphics();
         target.material = material;
@@ -87,6 +99,8 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.dimensions = dimensions;
+        target.castShadows = castShadows;
+        target.receiveShadows = receiveShadows;
 
         target.merge(source);
 
@@ -97,6 +111,8 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.dimensions).toBe(dimensions);
+        expect(target.castShadows).toBe(castShadows);
+        expect(target.receiveShadows).toBe(receiveShadows);
     });
 
     it('clone works', function() {
@@ -108,6 +124,8 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.dimensions = new ConstantProperty();
+        source.castShadows = new ConstantProperty();
+        source.receiveShadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -117,6 +135,8 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.dimensions).toBe(source.dimensions);
+        expect(result.castShadows).toBe(source.castShadows);
+        expect(result.receiveShadows).toBe(source.receiveShadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -135,5 +155,7 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'dimensions', new Cartesian3(0, 0, 0), new Cartesian3(1, 1, 1));
+        testDefinitionChanged(property, 'castShadows', true, false);
+        testDefinitionChanged(property, 'receiveShadows', true, false);
     });
 });

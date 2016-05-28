@@ -81,22 +81,29 @@ define([
             return;
         }
 
+        var shadowState;
+        if (updater.outlineEnabled || updater.fillEnabled) {
+            var castShadows = updater.castShadowsProperty.getValue(time);
+            var receiveShadows = updater.receiveShadowsProperty.getValue(time);
+            shadowState = castShadows ? (receiveShadows ? 0 : 1) : (receiveShadows ? 2 : 3);
+        }
+
         if (updater.outlineEnabled) {
-            that._outlineBatch.add(time, updater);
+            that._outlineBatches[shadowState].add(time, updater);
         }
 
         if (updater.fillEnabled) {
             if (updater.isClosed) {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._closedColorBatch.add(time, updater);
+                    that._closedColorBatches[shadowState].add(time, updater);
                 } else {
-                    that._closedMaterialBatch.add(time, updater);
+                    that._closedMaterialBatches[shadowState].add(time, updater);
                 }
             } else {
                 if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._openColorBatch.add(time, updater);
+                    that._openColorBatches[shadowState].add(time, updater);
                 } else {
-                    that._openMaterialBatch.add(time, updater);
+                    that._openMaterialBatches[shadowState].add(time, updater);
                 }
             }
         }
@@ -134,13 +141,28 @@ define([
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
 
-        this._outlineBatch = new StaticOutlineGeometryBatch(primitives, scene);
-        this._closedColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true);
-        this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
-        this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
-        this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
+        var numberOfShadowStates = 4;
+        var castShadowsStates = [true, true, false, false];
+        var receiveShadowsStates = [true, false, true, false];
+
+        this._outlineBatches = new Array(numberOfShadowStates);
+        this._closedColorBatches = new Array(numberOfShadowStates);
+        this._closedMaterialBatches = new Array(numberOfShadowStates);
+        this._openColorBatches = new Array(numberOfShadowStates);
+        this._openMaterialBatches = new Array(numberOfShadowStates);
+
+        for (var i = 0; i < numberOfShadowStates; ++i) {
+            var castShadows = castShadowsStates[i];
+            var receiveShadows = receiveShadowsStates[i];
+            this._outlineBatches[i] = new StaticOutlineGeometryBatch(primitives, scene, castShadows, receiveShadows);
+            this._closedColorBatches[i] = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, true, castShadows, receiveShadows);
+            this._closedMaterialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true, castShadows, receiveShadows);
+            this._openColorBatches[i] = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false, castShadows, receiveShadows);
+            this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false, castShadows, receiveShadows);
+        }
+
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
-        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
+        this._batches = [].concat(this._outlineBatches, this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
