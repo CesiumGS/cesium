@@ -154,7 +154,6 @@ define([
         }
         //>>includeEnd('debug');
 
-
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
         this._dirty = true;
