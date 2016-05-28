@@ -17,6 +17,10 @@ defineSuite([
         'Core/PixelFormat',
         'Core/Transforms',
         'Renderer/Context',
+        'Renderer/Framebuffer',
+        'Renderer/PixelDatatype',
+        'Renderer/Texture',
+        'Renderer/WebGLConstants',
         'Scene/Camera',
         'Scene/Globe',
         'Scene/Model',
@@ -44,6 +48,10 @@ defineSuite([
         PixelFormat,
         Transforms,
         Context,
+        Framebuffer,
+        PixelDatatype,
+        Texture,
+        WebGLConstants,
         Camera,
         Globe,
         Model,
@@ -225,7 +233,7 @@ defineSuite([
             // Render scene to progressively load the model
             scene.render();
             return model.ready;
-        }, { timeout: 10000 }).then(function() {
+        }, {timeout : 10000}).then(function() {
             return model;
         });
     }
@@ -424,7 +432,7 @@ defineSuite([
         verifyShadows(box, floor);
     });
 
-    it('translucent model casts shadows onto another model' , function() {
+    it('translucent model casts shadows onto another model', function() {
         boxTranslucent.show = true;
         floor.show = true;
         createCascadedShadowMap();
@@ -456,21 +464,21 @@ defineSuite([
         expect(render()).toEqual(unshadowedColor);
     });
 
-    it('primitive casts shadows onto another primitive' , function() {
+    it('primitive casts shadows onto another primitive', function() {
         primitiveBox.show = true;
         primitiveFloor.show = true;
         createCascadedShadowMap();
         verifyShadows(primitiveBox, primitiveFloor);
     });
 
-    it('RTC primitive casts shadows onto another RTC primitive' , function() {
+    it('RTC primitive casts shadows onto another RTC primitive', function() {
         primitiveBoxRTC.show = true;
         primitiveFloorRTC.show = true;
         createCascadedShadowMap();
         verifyShadows(primitiveBoxRTC, primitiveFloorRTC);
     });
 
-    it('translucent primitive casts shadows onto another primitive' , function() {
+    it('translucent primitive casts shadows onto another primitive', function() {
         primitiveBoxTranslucent.show = true;
         primitiveFloor.show = true;
         createCascadedShadowMap();
@@ -763,16 +771,40 @@ defineSuite([
         expect(darkColor).not.toEqual(shadowedColor);
     });
 
+    function depthFramebufferSupported() {
+        var framebuffer = new Framebuffer({
+            context : scene.context,
+            depthStencilTexture : new Texture({
+                context : scene.context,
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.DEPTH_STENCIL,
+                pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+            })
+        });
+
+        return framebuffer.status === WebGLConstants.FRAMEBUFFER_COMPLETE;
+    }
+
     it('defaults to color texture if depth texture extension is not supported', function() {
         box.show = true;
         floor.show = true;
-        createCascadedShadowMap();
 
+        createCascadedShadowMap();
         render();
+
         if (scene.context.depthTexture) {
-            expect(scene.shadowMap._usesDepthTexture).toBe(true);
-            expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(PixelFormat.DEPTH_STENCIL);
+            if (depthFramebufferSupported()) {
+                expect(scene.shadowMap._usesDepthTexture).toBe(true);
+                expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(PixelFormat.DEPTH_STENCIL);
+            } else {
+                // Depth texture extension is supported, but it fails to create create a depth-only FBO
+                expect(scene.shadowMap._usesDepthTexture).toBe(false);
+                expect(scene.shadowMap._shadowMapTexture.pixelFormat).toEqual(PixelFormat.RGBA);
+            }
         }
+
+        scene.shadowMap = scene.shadowMap && scene.shadowMap.destroy();
 
         // Disable extension
         var depthTexture = scene.context._depthTexture;
