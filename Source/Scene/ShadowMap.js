@@ -1083,12 +1083,13 @@ define([
         Cartesian4.unpack(splits, 1, shadowMap._cascadeSplits[1]);
         Cartesian4.unpack(cascadeDistances, 0, shadowMap._cascadeDistances);
 
-        var left = shadowMapCamera.frustum.left;
-        var right = shadowMapCamera.frustum.right;
-        var bottom = shadowMapCamera.frustum.bottom;
-        var top = shadowMapCamera.frustum.top;
-        var near = shadowMapCamera.frustum.near;
-        var far = shadowMapCamera.frustum.far;
+        var shadowFrustum = shadowMapCamera.frustum;
+        var left = shadowFrustum.left;
+        var right = shadowFrustum.right;
+        var bottom = shadowFrustum.bottom;
+        var top = shadowFrustum.top;
+        var near = shadowFrustum.near;
+        var far = shadowFrustum.far;
 
         var position = shadowMapCamera.positionWC;
         var direction = shadowMapCamera.directionWC;
@@ -1203,12 +1204,13 @@ define([
         var halfHeight = 0.5 * (max.y - min.y);
         var depth = max.z - min.z;
 
-        shadowMapCamera.frustum.left = -halfWidth;
-        shadowMapCamera.frustum.right = halfWidth;
-        shadowMapCamera.frustum.bottom = -halfHeight;
-        shadowMapCamera.frustum.top = halfHeight;
-        shadowMapCamera.frustum.near = 0.01;
-        shadowMapCamera.frustum.far = depth;
+        var frustum = shadowMapCamera.frustum;
+        frustum.left = -halfWidth;
+        frustum.right = halfWidth;
+        frustum.bottom = -halfHeight;
+        frustum.top = halfHeight;
+        frustum.near = 0.01;
+        frustum.far = depth;
 
         // 5. Update the shadow map camera
         Matrix4.clone(lightView, shadowMapCamera.viewMatrix);
@@ -1221,30 +1223,30 @@ define([
     }
 
     var directions = [
-        new Cartesian3(-1, 0, 0),
-        new Cartesian3(0, -1, 0),
-        new Cartesian3(0, 0, -1),
-        new Cartesian3(1, 0, 0),
-        new Cartesian3(0, 1, 0),
-        new Cartesian3(0, 0, 1)
+        new Cartesian3(-1.0, 0.0, 0.0),
+        new Cartesian3(0.0, -1.0, 0.0),
+        new Cartesian3(0.0, 0.0, -1.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(0.0, 1.0, 0.0),
+        new Cartesian3(0.0, 0.0, 1.0)
     ];
 
     var ups = [
-        new Cartesian3(0, -1, 0),
-        new Cartesian3(0, 0, -1),
-        new Cartesian3(0, -1, 0),
-        new Cartesian3(0, -1, 0),
-        new Cartesian3(0, 0, 1),
-        new Cartesian3(0, -1, 0)
+        new Cartesian3(0.0, -1.0, 0.0),
+        new Cartesian3(0.0, 0.0, -1.0),
+        new Cartesian3(0.0, -1.0, 0.0),
+        new Cartesian3(0.0, -1.0, 0.0),
+        new Cartesian3(0.0, 0.0, 1.0),
+        new Cartesian3(0.0, -1.0, 0.0)
     ];
 
     var rights = [
-        new Cartesian3(0, 0, 1),
-        new Cartesian3(1, 0, 0),
-        new Cartesian3(-1, 0, 0),
-        new Cartesian3(0, 0, -1),
-        new Cartesian3(1, 0, 0),
-        new Cartesian3(1, 0, 0)
+        new Cartesian3(0.0, 0.0, 1.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(-1.0, 0.0, 0.0),
+        new Cartesian3(0.0, 0.0, -1.0),
+        new Cartesian3(1.0, 0.0, 0.0),
+        new Cartesian3(1.0, 0.0, 0.0)
     ];
 
     function computeOmnidirectional(shadowMap, frameState) {
