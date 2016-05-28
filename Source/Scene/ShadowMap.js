@@ -118,6 +118,9 @@ define([
     /**
      * Creates a shadow map from the provided light camera.
      *
+     * The normalOffset bias pushes the shadows forward slightly, and may be disabled
+     * for applications that require ultra precise shadows.
+     *
      * @alias ShadowMap
      * @constructor
      *
@@ -186,9 +189,6 @@ define([
         }
         this._polygonOffsetSupported = polygonOffsetSupported;
 
-        // The normalOffset bias pushes the shadows forward slightly, and may be disabled
-        // for applications that require ultra precise shadows.
-
         this._terrainBias = {
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
@@ -208,7 +208,7 @@ define([
             normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
-            depthBias : 0.00001
+            depthBias : 0.00002
         };
 
         this._pointBias = {
