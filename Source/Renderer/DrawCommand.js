@@ -39,8 +39,9 @@ define([
         this._debugOverlappingFrustums = 0;
         this._castShadows = defaultValue(options.castShadows, false);
         this._receiveShadows = defaultValue(options.receiveShadows, false);
-        this._dirty = true;
-        this._lastDirtyTime = 0;
+        
+        this.dirty = true;
+        this.lastDirtyTime = 0;
 
         /**
          * @private
@@ -70,7 +71,7 @@ define([
             set : function(value) {
                 if (this._boundingVolume !== value) {
                     this._boundingVolume = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -91,7 +92,7 @@ define([
             set : function(value) {
                 if (this._orientedBoundingBox !== value) {
                     this._orientedBoundingBox = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -110,7 +111,7 @@ define([
             set : function(value) {
                 if (this._cull !== value) {
                     this._cull = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -131,7 +132,7 @@ define([
             set : function(value) {
                 if (this._modelMatrix !== value) {
                     this._modelMatrix = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -149,7 +150,7 @@ define([
             set : function(value) {
                 if (this._primitiveType !== value) {
                     this._primitiveType = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -167,7 +168,7 @@ define([
             set : function(value) {
                 if (this._vertexArray !== value) {
                     this._vertexArray = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -185,7 +186,7 @@ define([
             set : function(value) {
                 if (this._count !== value) {
                     this._count = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -203,7 +204,7 @@ define([
             set : function(value) {
                 if (this._offset !== value) {
                     this._offset = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -221,7 +222,7 @@ define([
             set : function(value) {
                 if (this._instanceCount !== value) {
                     this._instanceCount = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -239,7 +240,7 @@ define([
             set : function(value) {
                 if (this._shaderProgram !== value) {
                     this._shaderProgram = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -257,7 +258,7 @@ define([
             set : function(value) {
                 if (this._castShadows !== value) {
                     this._castShadows = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -275,7 +276,7 @@ define([
             set : function(value) {
                 if (this._receiveShadows !== value) {
                     this._receiveShadows = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -294,7 +295,7 @@ define([
             set : function(value) {
                 if (this._uniformMap !== value) {
                     this._uniformMap = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -312,7 +313,7 @@ define([
             set : function(value) {
                 if (this._renderState !== value) {
                     this._renderState = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -330,7 +331,7 @@ define([
             set : function(value) {
                 if (this._framebuffer !== value) {
                     this._framebuffer = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -348,7 +349,7 @@ define([
             set : function(value) {
                 if (this._pass !== value) {
                     this._pass = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -367,7 +368,7 @@ define([
             set : function(value) {
                 if (this._executeInClosestFrustum !== value) {
                     this._executeInClosestFrustum = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -390,7 +391,7 @@ define([
             set : function(value) {
                 if (this._owner !== value) {
                     this._owner = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -413,7 +414,7 @@ define([
             set : function(value) {
                 if (this._debugShowBoundingVolume !== value) {
                     this._debugShowBoundingVolume = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         },
@@ -429,7 +430,7 @@ define([
             set : function(value) {
                 if (this._debugOverlappingFrustums !== value) {
                     this._debugOverlappingFrustums = value;
-                    this._dirty = true;
+                    this.dirty = true;
                 }
             }
         }
@@ -464,8 +465,9 @@ define([
         result._owner = command._owner;
         result._debugShowBoundingVolume = command._debugShowBoundingVolume;
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
-        result._dirty = true;
-        result._lastDirtyTime = 0;
+        
+        result.dirty = true;
+        result.lastDirtyTime = 0;
 
         return result;
     };

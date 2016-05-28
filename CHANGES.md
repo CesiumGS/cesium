@@ -1,20 +1,19 @@
 Change Log
 ==========
 
-### Shadows TODO
-* Added shadows
-    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are disabled by default.
-    * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
-    * Added `castShadows` and `receiveShadows` properties to `Model`, and options to the `Model` constructor and `Model.fromGltf`.
-    * Added `castShadows` and `receiveShadows` properties to `Globe`.
-* Added `Matrix4.computeView`.
-
 ### 1.22 - 2016-06-01
 
 * Breaking changes
   *
 * Deprecated
   *
+* Added shadows
+    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
+    * Added `Viewer.shadowMap` and `Scene.shadowMap` for accessing the scene's shadow map.
+    * Added `castShadows` and `receiveShadows` properties to `Model` and `Entity.model`, and options to the `Model` constructor and `Model.fromGltf`.
+    * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
+    * Added `castShadows` and `receiveShadows` properties to `Globe`.
+* Added `Matrix4.computeView`.
 * Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
 * Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
 * Improve memory management for entity billboard/label/point/path visualization.

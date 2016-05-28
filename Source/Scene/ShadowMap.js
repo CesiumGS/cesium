@@ -116,7 +116,7 @@ define([
     'use strict';
 
     /**
-     * Creates a cascaded shadow map from the provided light camera.
+     * Creates a shadow map from the provided light camera.
      *
      * @alias ShadowMap
      * @constructor
@@ -156,7 +156,7 @@ define([
 
         this._enabled = defaultValue(options.enabled, true);
         this._softShadows = defaultValue(options.softShadows, false);
-        this._dirty = true;
+        this.dirty = true;
 
         /**
          * Determines the darkness of the shadows.
@@ -179,19 +179,22 @@ define([
         this._outOfViewPrevious = false;
         this._needsUpdate = true;
 
-        // In IE11 and Edge polygon offset is not functional.
+        // In IE11 polygon offset is not functional.
         var polygonOffsetSupported = true;
         if (FeatureDetection.isInternetExplorer) {
             polygonOffsetSupported = false;
         }
         this._polygonOffsetSupported = polygonOffsetSupported;
 
+        // The normalOffset bias pushes the shadows forward slightly, and may be disabled
+        // for applications that require ultra precise shadows.
+
         this._terrainBias = {
             polygonOffset : polygonOffsetSupported,
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 2.0,
+            normalOffsetScale : 0.5,
             normalShading : true,
             normalShadingSmooth : 0.3,
             depthBias : 0.0001
@@ -202,7 +205,7 @@ define([
             polygonOffsetFactor : 1.1,
             polygonOffsetUnits : 4.0,
             normalOffset : true,
-            normalOffsetScale : 0.2,
+            normalOffsetScale : 0.1,
             normalShading : true,
             normalShadingSmooth : 0.05,
             depthBias : 0.00001
@@ -376,7 +379,7 @@ define([
                 return this._enabled;
             },
             set : function(value) {
-                this._dirty = this._enabled !== value;
+                this.dirty = this._enabled !== value;
                 this._enabled = value;
             }
         },
@@ -393,25 +396,8 @@ define([
                 return this._softShadows;
             },
             set : function(value) {
-                this._dirty = this._softShadows !== value;
+                this.dirty = this._softShadows !== value;
                 this._softShadows = value;
-            }
-        },
-
-        /**
-         * Determines whether derived shadow commands need to update.
-         *
-         * @memberof ShadowMap.prototype
-         * @type {Boolean}
-         * @default false
-         * @private
-         */
-        dirty : {
-            get : function() {
-                return this._dirty;
-            },
-            set : function(value) {
-                this._dirty = value;
             }
         },
 
@@ -492,13 +478,14 @@ define([
          * @memberof ShadowMap.prototype
          * @type {Boolean}
          * @default false
+         * @private
          */
         debugCascadeColors : {
             get : function() {
                 return this._debugCascadeColors;
             },
             set : function(value) {
-                this._dirty = this._debugCascadeColors !== value;
+                this.dirty = this._debugCascadeColors !== value;
                 this._debugCascadeColors = value;
             }
         }

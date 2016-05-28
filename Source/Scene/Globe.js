@@ -191,7 +191,7 @@ define([
          * Determines whether the globe casts shadows from each light source. Any primitive that has
          * <code>receiveShadows</code> set to <code>true</code> will receive shadows that are casted by
          * the globe. This may impact performance since the terrain is rendered again from the light's
-         * perspective, which will also load terrain tiles that are potentially out of view.
+         * perspective. Currently only terrain that is in view casts shadows.
          *
          * @type {Boolean}
          * @default false

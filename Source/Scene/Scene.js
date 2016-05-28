@@ -554,7 +554,8 @@ define([
         this._sunCamera = new Camera(this);
 
         /**
-         * Render shadows in the scene.
+         * The shadow map in the scene. When enabled, models, primitives, and the globe may cast and receive shadows.
+         * By default the light source of the shadow map is the sun.
          * @type {ShadowMap}
          */
         this.shadowMap = new ShadowMap({
@@ -1094,15 +1095,15 @@ define([
         if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
             // Update derived commands when any shadow maps become dirty
             var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
-            if (command._lastDirtyTime !== lastDirtyTime) {
-                command._lastDirtyTime = lastDirtyTime;
-                command._dirty = true;
+            if (command.lastDirtyTime !== lastDirtyTime) {
+                command.lastDirtyTime = lastDirtyTime;
+                command.dirty = true;
                 shadowsDirty = true;
             }
         }
 
-        if (command._dirty) {
-            command._dirty = false;
+        if (command.dirty) {
+            command.dirty = false;
 
             var derivedCommands = command.derivedCommands;
 

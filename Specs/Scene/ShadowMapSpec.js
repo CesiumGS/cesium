@@ -1047,14 +1047,14 @@ defineSuite([
         scene.shadowMap._primitiveBias.normalOffsetScale = 2.1;
         scene.shadowMap._primitiveBias.normalShadingSmooth = 0.4;
         scene.shadowMap.debugCreateRenderStates();
-        scene.shadowMap._dirty = true;
+        scene.shadowMap.dirty = true;
         expect(render()).toEqual(shadowedColor);
 
         scene.shadowMap._primitiveBias.normalOffset = false;
         scene.shadowMap._primitiveBias.normalShading = false;
         scene.shadowMap._primitiveBias.polygonOffset = false;
         scene.shadowMap.debugCreateRenderStates();
-        scene.shadowMap._dirty = true;
+        scene.shadowMap.dirty = true;
         expect(render()).toEqual(shadowedColor);
     });
 
