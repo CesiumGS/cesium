@@ -230,6 +230,8 @@ define([
         if (isTerrain) {
             // Scale depth bias based on view distance to reduce z-fighting in distant terrain
             fsSource += '    shadowParameters.depthBias *= max(depth * 0.01, 1.0); \n';
+        } else {
+            fsSource += '    shadowParameters.depthBias *= mix(1.0, 100.0, depth * 0.001); \n';
         }
 
         if (isPointLight) {
