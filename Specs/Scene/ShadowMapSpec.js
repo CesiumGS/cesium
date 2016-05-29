@@ -302,7 +302,7 @@ defineSuite([
         frustum.bottom = -50.0;
         frustum.top = 50.0;
         frustum.near = 1.0;
-        frustum.far = 100;
+        frustum.far = 1000;
 
         // Create light camera pointing straight down
         var lightCamera = new Camera(scene);
@@ -324,7 +324,7 @@ defineSuite([
         lightCamera.frustum.fov = CesiumMath.PI_OVER_TWO;
         lightCamera.frustum.aspectRatio = 1.0;
         lightCamera.frustum.near = 1.0;
-        lightCamera.frustum.far = 100.0;
+        lightCamera.frustum.far = 1000.0;
         lightCamera.lookAt(center, new Cartesian3(0.0, 0.0, 20.0));
 
         scene.shadowMap = new ShadowMap({
