@@ -29,7 +29,8 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
-    selectionIndicator : false
+    selectionIndicator : false,
+    shadows : true
 });
 
 function createModel(url, height) {
