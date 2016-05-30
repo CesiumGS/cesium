@@ -241,6 +241,9 @@ define([
     };
 
     GlobeSurfaceShaderSet.prototype.destroy = function() {
+        var flags;
+        var shader;
+
         var shadersByTexturesFlags = this._shadersByTexturesFlags;
         for (var textureCount in shadersByTexturesFlags) {
             if (shadersByTexturesFlags.hasOwnProperty(textureCount)) {
@@ -249,14 +252,22 @@ define([
                     continue;
                 }
 
-                for (var flags in shadersByFlags) {
+                for (flags in shadersByFlags) {
                     if (shadersByFlags.hasOwnProperty(flags)) {
-                        var shader = shadersByFlags[flags];
+                        shader = shadersByFlags[flags];
                         if (defined(shader)) {
                             shader.shaderProgram.destroy();
                         }
                     }
                 }
+            }
+        }
+
+        var pickShaderPrograms = this._pickShaderPrograms;
+        for (flags in pickShaderPrograms) {
+            if (pickShaderPrograms.hasOwnProperty(flags)) {
+                shader = pickShaderPrograms[flags];
+                shader.destroy();
             }
         }
 
