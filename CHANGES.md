@@ -28,6 +28,7 @@ Change Log
 * Fixed infinite horizontal 2D scrolling in IE/Edge. [#3893](https://github.com/AnalyticalGraphicsInc/cesium/issues/3893)
 * Fixed a bug that would cause a crash is the camera was on the IDL in 2D. [#3951](https://github.com/AnalyticalGraphicsInc/cesium/issues/3951)
 * Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [#3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
+* Fixed `Billboard.computeScreenSpacePosition` returning the wrong y coordinate. [#3920](https://github.com/AnalyticalGraphicsInc/cesium/issues/3920)
 * Fixed issue where labels were disappearing. [#3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
 * Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [#3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
