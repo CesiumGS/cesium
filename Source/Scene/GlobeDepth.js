@@ -114,11 +114,6 @@ define([
     }
 
     function createFramebuffers(globeDepth, context, width, height) {
-        destroyTextures(globeDepth);
-        destroyFramebuffers(globeDepth);
-
-        createTextures(globeDepth, context, width, height);
-
         globeDepth.framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._colorTexture],
@@ -137,6 +132,9 @@ define([
         var colorTexture = globeDepth._colorTexture;
         var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height;
         if (!defined(globeDepth.framebuffer) || textureChanged) {
+            destroyTextures(globeDepth);
+            destroyFramebuffers(globeDepth);
+            createTextures(globeDepth, context, width, height);
             createFramebuffers(globeDepth, context, width, height);
         }
     }
