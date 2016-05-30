@@ -62,6 +62,7 @@ define([
         './SceneTransforms',
         './SceneTransitioner',
         './ScreenSpaceCameraController',
+        './ShadowMap',
         './SunPostProcess',
         './TweenCollection'
     ], function(
@@ -127,6 +128,7 @@ define([
         SceneTransforms,
         SceneTransitioner,
         ScreenSpaceCameraController,
+        ShadowMap,
         SunPostProcess,
         TweenCollection) {
     'use strict';
@@ -182,6 +184,7 @@ define([
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -402,6 +405,15 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
+         * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
+         * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
+         * @type {Number}
+         * @default 1.75e6
+         */
+        this.nearToFarDistance2D = 1.75e6;
+
+        /**
          * This property is for debugging only; it is not for production use.
          * <p>
          * A function that determines what commands are executed.  As shown in the examples below,
@@ -539,6 +551,19 @@ define([
          */
         this.fog = new Fog();
 
+        this._sunCamera = new Camera(this);
+
+        /**
+         * The shadow map in the scene. When enabled, models, primitives, and the globe may cast and receive shadows.
+         * By default the light source of the shadow map is the sun.
+         * @type {ShadowMap}
+         */
+        this.shadowMap = new ShadowMap({
+            context : context,
+            lightCamera : this._sunCamera,
+            enabled : defaultValue(options.shadows, false)
+        });
+
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
 
         this._performanceDisplay = undefined;
@@ -562,6 +587,7 @@ define([
 
             isSunVisible : false,
             isMoonVisible : false,
+            isReadyForAtmosphere : false,
             isSkyAtmosphereVisible : false,
 
             clearGlobeDepth : false,
@@ -581,7 +607,7 @@ define([
         var near = camera.frustum.near;
         var far = camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
-        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
+        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
 
         // give frameState, camera, and screen space camera controller initial state before rendering
         updateFrameState(this, 0.0, JulianDate.now());
@@ -1059,6 +1085,43 @@ define([
             Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
     }
 
+    function updateDerivedCommands(scene, command) {
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var context = scene._context;
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+
+        var shadowsDirty = false;
+        if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
+            // Update derived commands when any shadow maps become dirty
+            var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
+            if (command.lastDirtyTime !== lastDirtyTime) {
+                command.lastDirtyTime = lastDirtyTime;
+                command.dirty = true;
+                shadowsDirty = true;
+            }
+        }
+
+        if (command.dirty) {
+            command.dirty = false;
+
+            var derivedCommands = command.derivedCommands;
+
+            if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+            }
+
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                if (shadowsEnabled && command.receiveShadows) {
+                    derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
+            }
+        }
+    }
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -1086,6 +1149,7 @@ define([
 
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
+        frameState.shadowMaps.length = 0;
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
@@ -1099,11 +1163,19 @@ define([
         clearPasses(frameState.passes);
     }
 
-    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList) {
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
         frustumCommandsList.length = numFrustums;
         for (var m = 0; m < numFrustums; ++m) {
-            var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
-            var curFar = Math.min(far, farToNearRatio * curNear);
+            var curNear;
+            var curFar;
+
+            if (!is2D) {
+                curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                curFar = Math.min(far, farToNearRatio * curNear);
+            } else {
+                curNear = near + m * nearToFarDistance2D;
+                curFar = Math.min(far, curNear + nearToFarDistance2D);
+            }
 
             var frustumCommands = frustumCommandsList[m];
             if (!defined(frustumCommands)) {
@@ -1120,13 +1192,8 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
-        if (command._dirty) {
-            command._dirty = false;
-            
-            var oit = scene._oit;
-            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                oit.createDerivedCommands(command, scene._context);
-            }
+        if (!scene.frameState.passes.pick) {
+            updateDerivedCommands(scene, command);
         }
 
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1209,6 +1276,11 @@ define([
         var far = -Number.MAX_VALUE;
         var undefBV = false;
 
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowNear = Number.MAX_VALUE;
+        var shadowFar = -Number.MAX_VALUE;
+        var shadowClosestObjectSize = Number.MAX_VALUE;
+
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -1221,7 +1293,7 @@ define([
 
         // Determine visibility of celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
-        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && defined(scene.globe) && scene.globe._surface._tilesToRender.length > 0;
+        environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
         environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
         environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
 
@@ -1244,6 +1316,23 @@ define([
                     distances = boundingVolume.computePlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
+
+                    // Compute a tight near and far plane for commands that receive shadows. This helps compute
+                    // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
+                    // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
+                    // camera isn't inside.
+                    if (shadowsEnabled && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                        !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
+
+                        // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
+                        var size = distances.stop - distances.start;
+                        if ((pass !== Pass.GLOBE) && (distances.start < 100.0)) {
+                            shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
+                        }
+                        shadowNear = Math.min(shadowNear, distances.start);
+                        shadowFar = Math.max(shadowFar, distances.stop);
+                    }
                 } else {
                     // Clear commands don't need a bounding volume - just add the clear to all frustums.
                     // If another command has no bounding volume, though, we need to use the camera's
@@ -1266,15 +1355,41 @@ define([
             // This will handle the case where the computed near plane is further than the user defined far plane.
             near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
             far = Math.max(Math.min(far, camera.frustum.far), near);
+
+            if (shadowsEnabled) {
+                shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+                shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            }
+        }
+
+        // Use the computed near and far for shadows
+        if (shadowsEnabled) {
+            frameState.shadowHints.nearPlane = shadowNear;
+            frameState.shadowHints.farPlane = shadowFar;
+            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
         }
 
         // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
         // last frame, else compute the new frustums and sort them by frustum again.
+        var is2D = scene.mode === SceneMode.SCENE2D;
         var farToNearRatio = scene.farToNearRatio;
-        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+
+        var numFrustums;
+        if (!is2D) {
+            // The multifrustum for 3D/CV is non-uniformly distributed.
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        } else {
+            // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // to be in [1.0, nearToFarDistance2D].
+            far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+            near = Math.min(near, far);
+            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
+        }
+
         if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
-            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
             createPotentiallyVisibleSet(scene);
         }
     }
@@ -1357,6 +1472,8 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
+        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
+            command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
@@ -1489,6 +1606,8 @@ define([
         var context = scene.context;
         var us = context.uniformState;
 
+        us.updateCamera(camera);
+
         // Create a working frustum from the original camera frustum.
         var frustum;
         if (defined(camera.frustum.fov)) {
@@ -1557,6 +1676,8 @@ define([
         var clearDepth = scene._depthClearCommand;
         var depthPlane = scene._depthPlane;
 
+        var height2D = camera.position.z;
+
         // Execute commands in each frustum in back to front order
         var j;
         var frustumCommandsList = scene._frustumCommandsList;
@@ -1569,6 +1690,7 @@ define([
             // Avoid tearing artifacts between adjacent frustums in the opaque passes
             frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
             frustum.far = frustumCommands.far;
+            us.updateFrustum(frustum);
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1578,7 +1700,6 @@ define([
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
-            us.updateFrustum(frustum);
             clearDepth.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
@@ -1611,6 +1732,16 @@ define([
                 }
             }
 
+            if (scene.mode === SceneMode.SCENE2D) {
+                // To avoid z-fighting in 2D, move the camera to just before the frustum
+                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
+                camera.position.z = height2D - frustumCommands.near + 1.0;
+                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+                frustum.near = 1.0;
+                us.update(scene.frameState);
+                us.updateFrustum(frustum);
+            }
+
             // Execute commands in order by pass up to the translucent pass.
             // Translucent geometry needs special handling (sorting/OIT).
             var startPass = Pass.GROUND + 1;
@@ -1624,7 +1755,7 @@ define([
                 }
             }
 
-            if (index !== 0) {
+            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
                 // Do not overlap frustums in the translucent pass to avoid blending artifacts
                 frustum.near = frustumCommands.near;
                 us.updateFrustum(frustum);
@@ -1672,6 +1803,89 @@ define([
         }
     }
 
+    function insertShadowCastCommands(scene, commandList, shadowMap) {
+        var shadowVolume = shadowMap.shadowMapCullingVolume;
+        var isPointLight = shadowMap.isPointLight;
+        var passes = shadowMap.passes;
+        var numberOfPasses = passes.length;
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            updateDerivedCommands(scene, command);
+
+            // Don't insert globe commands with the rest of the scene commands since they are handled separately
+            if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
+                if (isVisible(command, shadowVolume)) {
+                    if (isPointLight) {
+                        for (var k = 0; k < numberOfPasses; ++k) {
+                            passes[k].commandList.push(command);
+                        }
+                    } else if (numberOfPasses <= 1) {
+                        passes[0].commandList.push(command);
+                    } else {
+                        var wasVisible = false;
+                        // Loop over cascades from largest to smallest
+                        for (var j = numberOfPasses - 1; j >= 0; --j) {
+                            var cascadeVolume = passes[j].cullingVolume;
+                            if (isVisible(command, cascadeVolume)) {
+                                passes[j].commandList.push(command);
+                                wasVisible = true;
+                            } else if (wasVisible) {
+                                // If it was visible in the previous cascade but now isn't
+                                // then there is no need to check any more cascades
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function executeShadowMapCastCommands(scene) {
+        var frameState = scene.frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var shadowMapLength = shadowMaps.length;
+
+        if (!frameState.shadowHints.shadowsEnabled) {
+            return;
+        }
+
+        var context = scene.context;
+        var uniformState = context.uniformState;
+
+        for (var i = 0; i < shadowMapLength; ++i) {
+            var shadowMap = shadowMaps[i];
+            if (shadowMap.outOfView) {
+                continue;
+            }
+
+            // Reset the command lists
+            var j;
+            var passes = shadowMap.passes;
+            var numberOfPasses = passes.length;
+            for (j = 0; j < numberOfPasses; ++j) {
+                passes[j].commandList.length = 0;
+            }
+
+            // Insert the primitive/model commands into the command lists
+            var sceneCommands = scene.frameState.commandList;
+            insertShadowCastCommands(scene, sceneCommands, shadowMap);
+
+            for (j = 0; j < numberOfPasses; ++j) {
+                var pass = shadowMap.passes[j];
+                uniformState.updateCamera(pass.camera);
+                shadowMap.updatePass(context, j);
+                var numberOfCommands = pass.commandList.length;
+                for (var k = 0; k < numberOfCommands; ++k) {
+                    var command = pass.commandList[k];
+                    executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, pass.passState);
+                }
+            }
+        }
+    }
+
     function updateAndExecuteCommands(scene, passState, backgroundColor, picking) {
         var context = scene._context;
 
@@ -1686,6 +1900,7 @@ define([
             createPotentiallyVisibleSet(scene);
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
 
             // Based on Calculating Stereo pairs by Paul Bourke
             // http://paulbourke.net/stereographics/stereorender/
@@ -1864,6 +2079,7 @@ define([
         if (firstViewport) {
             updateAndClearFramebuffers(scene, passState, backgroundColor, picking);
             executeComputeCommands(scene);
+            executeShadowMapCastCommands(scene);
         }
 
         executeCommands(scene, passState);
@@ -1876,13 +2092,19 @@ define([
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
         environmentState.skyBoxCommand = (renderPass && defined(scene.skyBox)) ? scene.skyBox.update(frameState) : undefined;
-        environmentState.skyAtmosphereCommand = (renderPass && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(frameState) : undefined;
+        var skyAtmosphere = scene.skyAtmosphere;
+        var globe = scene.globe;
+        if (defined(skyAtmosphere) && defined(globe)) {
+            skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
+            environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+        }
+        environmentState.skyAtmosphereCommand = (renderPass && defined(skyAtmosphere)) ? skyAtmosphere.update(frameState) : undefined;
         var sunCommands = (renderPass && defined(scene.sun)) ? scene.sun.update(scene) : undefined;
         environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
         environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
         environmentState.moonCommand = (renderPass && defined(scene.moon)) ? scene.moon.update(frameState) : undefined;
 
-        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(scene.globe) && (!scene.globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
+        var clearGlobeDepth = environmentState.clearGlobeDepth = defined(globe) && (!globe.depthTestAgainstTerrain || scene.mode === SceneMode.SCENE2D);
         var useDepthPlane = environmentState.useDepthPlane = clearGlobeDepth && scene.mode === SceneMode.SCENE3D;
         if (useDepthPlane) {
             // Update the depth plane that is rendered in 3D when the primitives are
@@ -1892,15 +2114,38 @@ define([
         }
     }
 
+    function updateShadowMaps(scene) {
+        var frameState = scene._frameState;
+        var shadowMaps = frameState.shadowMaps;
+        var length = shadowMaps.length;
+
+        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick;
+        if (!frameState.shadowHints.shadowsEnabled) {
+            return;
+        }
+
+        for (var i = 0; i < length; ++i) {
+            var shadowMap = shadowMaps[i];
+            shadowMap.update(frameState);
+
+            if (shadowMap.dirty) {
+                ++frameState.shadowHints.lastDirtyTime;
+                shadowMap.dirty = false;
+            }
+        }
+    }
+
     function updatePrimitives(scene) {
         var frameState = scene._frameState;
+
+        scene._groundPrimitives.update(frameState);
+        scene._primitives.update(frameState);
+
+        updateShadowMaps(scene);
 
         if (scene._globe) {
             scene._globe.update(frameState);
         }
-
-        scene._groundPrimitives.update(frameState);
-        scene._primitives.update(frameState);
     }
 
     function updateAndClearFramebuffers(scene, passState, clearColor, picking) {
@@ -2079,6 +2324,13 @@ define([
         scene.fog.update(frameState);
 
         us.update(frameState);
+
+        var shadowMap = scene.shadowMap;
+        if (defined(shadowMap) && shadowMap.enabled) {
+            // Update the sun's direction
+            Cartesian3.negate(us.sunDirectionWC, scene._sunCamera.direction);
+            frameState.shadowMaps.push(shadowMap);
+        }
 
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
