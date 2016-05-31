@@ -35,7 +35,7 @@
  // HSV/HSB <-> RGB conversion with minimal branching: http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 
 #ifdef COLOR_CORRECT
-uniform vec3 u_hsbShift; // Hue, saturation, value
+uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
 const float g = -0.95;
