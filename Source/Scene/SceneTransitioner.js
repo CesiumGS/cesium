@@ -129,12 +129,14 @@ define([
         var up = scratchToCVUp;
 
         if (duration > 0.0) {
+            var maxRadii = ellipsoid.maximumRadius;
             position.x = 0.0;
-            position.y = 0.0;
-            position.z = 5.0 * ellipsoid.maximumRadius;
+            position.y = -1.0;
+            position.z = 1.0;
+            position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
 
-            Cartesian3.negate(Cartesian3.UNIT_Z, direction);
-            Cartesian3.clone(Cartesian3.UNIT_Y, up);
+            Cartesian3.negate(Cartesian3.normalize(position, direction), direction);
+            Cartesian3.cross(Cartesian3.UNIT_X, direction, up);
         } else {
             var camera = scene.camera;
             if (this._previousMode === SceneMode.SCENE2D) {
@@ -688,7 +690,7 @@ define([
             update : update,
             complete : function() {
                 scene._mode = SceneMode.MORPHING;
-                morphOrthographicToPerspective(transitioner, duration, cameraCV, complete);
+                morphOrthographicToPerspective(transitioner, 0.0, cameraCV, complete);
             }
         });
         transitioner._currentTweens.push(tween);
