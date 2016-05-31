@@ -3,17 +3,12 @@ Change Log
 
 ### 1.22 - 2016-06-01
 
-* Breaking changes
-  *
-* Deprecated
-  *
 * Added shadows
     * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
     * Added `Viewer.shadowMap` and `Scene.shadowMap` for accessing the scene's shadow map.
     * Added `castShadows` and `receiveShadows` properties to `Model` and `Entity.model`, and options to the `Model` constructor and `Model.fromGltf`.
     * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
     * Added `castShadows` and `receiveShadows` properties to `Globe`.
-* Added `Matrix4.computeView`.
 * Added `heightReference` to models so they can be drawn on terrain.
 * Added support for rendering models in 2D and Columbus view.
 * Added option to enable sun position based atmosphere color when `Globe.enableLighting` is `true`. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
@@ -33,6 +28,7 @@ Change Log
 * Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [#3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
+* Added `Matrix4.computeView`.
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 
