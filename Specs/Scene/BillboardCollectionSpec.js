@@ -5,9 +5,12 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/defined',
+        'Core/defineProperties',
         'Core/Ellipsoid',
+        'Core/Event',
         'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
@@ -27,9 +30,12 @@ defineSuite([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        CesiumTerrainProvider,
         Color,
         defined,
+        defineProperties,
         Ellipsoid,
+        Event,
         loadImage,
         CesiumMath,
         NearFarScalar,
@@ -49,7 +55,6 @@ defineSuite([
     var context;
     var camera;
     var billboards;
-    var billboardsWithHeight;
 
     var greenImage;
     var blueImage;
@@ -89,11 +94,6 @@ defineSuite([
 
         billboards = new BillboardCollection();
         scene.primitives.add(billboards);
-
-        billboardsWithHeight = new BillboardCollection({
-            scene : scene
-        });
-        scene.primitives.add(billboardsWithHeight);
     });
 
     afterEach(function() {
@@ -1020,10 +1020,10 @@ defineSuite([
     it('computes screen space position with pixelOffset', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            pixelOffset : new Cartesian2(1.0, 2.0)
+            pixelOffset : new Cartesian2(0.5, 0.5)
         });
         scene.renderForSpecs();
-        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.5, 2.5), CesiumMath.EPSILON1);
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1, 1.0), CesiumMath.EPSILON1);
     });
 
     it('computes screen space position with eyeOffset', function() {
@@ -1576,6 +1576,21 @@ defineSuite([
                 destroy : function() {}
             };
 
+            globe.beginFrame = function() {
+            };
+
+            globe.endFrame = function() {
+            };
+
+            globe.terrainProviderChanged = new Event();
+            defineProperties(globe, {
+                terrainProvider : {
+                    set : function(value) {
+                        this.terrainProviderChanged.raiseEvent(value);
+                    }
+                }
+            });
+
             globe._surface.updateHeight = function(position, callback) {
                 globe.callback = callback;
                 return function() {
@@ -1587,8 +1602,16 @@ defineSuite([
             return globe;
         }
 
-        it('explicitly constructs a billboard with height reference', function() {
+        var billboardsWithHeight;
+        beforeEach(function() {
             scene.globe = createMockGlobe();
+            billboardsWithHeight = new BillboardCollection({
+                scene : scene
+            });
+            scene.primitives.add(billboardsWithHeight);
+        });
+
+        it('explicitly constructs a billboard with height reference', function() {
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
@@ -1597,7 +1620,6 @@ defineSuite([
         });
 
         it('set billboard height reference property', function() {
-            scene.globe = createMockGlobe();
             var b = billboardsWithHeight.add();
             b.heightReference = HeightReference.CLAMP_TO_GROUND;
 
@@ -1605,7 +1627,6 @@ defineSuite([
         });
 
         it('creating with a height reference creates a height update callback', function() {
-            scene.globe = createMockGlobe();
             billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1614,7 +1635,6 @@ defineSuite([
         });
 
         it('set height reference property creates a height update callback', function() {
-            scene.globe = createMockGlobe();
             var b = billboardsWithHeight.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
@@ -1623,7 +1643,6 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
-            scene.globe = createMockGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1641,7 +1660,6 @@ defineSuite([
         });
 
         it('changing the position updates the callback', function() {
-            scene.globe = createMockGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1654,7 +1672,6 @@ defineSuite([
         });
 
         it('callback updates the position', function() {
-            scene.globe = createMockGlobe();
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1667,6 +1684,44 @@ defineSuite([
             scene.globe.callback(Cartesian3.fromDegrees(-72.0, 40.0, 100.0));
             cartographic = scene.globe.ellipsoid.cartesianToCartographic(b._clampedPosition);
             expect(cartographic.height).toEqualEpsilon(100.0, CesiumMath.EPSILON9);
+        });
+
+        it('changing the terrain provider', function() {
+            var b = billboardsWithHeight.add({
+                heightReference : HeightReference.CLAMP_TO_GROUND,
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            expect(scene.globe.callback).toBeDefined();
+
+            spyOn(b, '_updateClamping').and.callThrough();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : 'made/up/url',
+                requestVertexNormals : true
+            });
+
+            scene.terrainProvider = terrainProvider;
+
+            expect(b._updateClamping).toHaveBeenCalled();
+        });
+
+        it('height reference without a scene rejects', function() {
+            expect(function() {
+                return billboards.add({
+                    heightReference : HeightReference.CLAMP_TO_GROUND,
+                    position : Cartesian3.fromDegrees(-72.0, 40.0)
+                });
+            }).toThrowDeveloperError();
+        });
+
+        it('changing height reference without a scene throws DeveloperError', function() {
+            var b = billboards.add({
+                position : Cartesian3.fromDegrees(-72.0, 40.0)
+            });
+            
+            expect(function() {
+                b.heightReference = HeightReference.CLAMP_TO_GROUND;
+            }).toThrowDeveloperError();
         });
     });
 }, 'WebGL');

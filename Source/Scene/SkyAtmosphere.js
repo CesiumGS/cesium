@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,6 +23,7 @@ define([
         './SceneMode'
     ], function(
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         defineProperties,
@@ -79,38 +81,21 @@ define([
         this._spSkyFromSpace = undefined;
         this._spSkyFromAtmosphere = undefined;
 
-        this._fCameraHeight = undefined;
-        this._fCameraHeight2 = undefined;
-        this._outerRadius = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
-        var innerRadius = ellipsoid.maximumRadius;
-        var rayleighScaleDepth = 0.25;
+        // camera height, outer radius, inner radius, dynamic atmosphere color flag
+        var cameraAndRadiiAndDynamicAtmosphereColor = new Cartesian4();
+
+        // Toggles whether the sun position is used. 0 treats the sun as always directly overhead.
+        cameraAndRadiiAndDynamicAtmosphereColor.w = 0;
+        cameraAndRadiiAndDynamicAtmosphereColor.y = Cartesian3.maximumComponent(Cartesian3.multiplyByScalar(ellipsoid.radii, 1.025, new Cartesian3()));
+        cameraAndRadiiAndDynamicAtmosphereColor.z = ellipsoid.maximumRadius;
+
+        this._cameraAndRadiiAndDynamicAtmosphereColor = cameraAndRadiiAndDynamicAtmosphereColor;
 
         var that = this;
 
         this._command.uniformMap = {
-            fCameraHeight : function() {
-                return that._fCameraHeight;
-            },
-            fCameraHeight2 : function() {
-                return that._fCameraHeight2;
-            },
-            fOuterRadius : function() {
-                return that._outerRadius;
-            },
-            fOuterRadius2 : function() {
-                return that._outerRadius * that._outerRadius;
-            },
-            fInnerRadius : function() {
-                return innerRadius;
-            },
-            fScale : function() {
-                return 1.0 / (that._outerRadius - innerRadius);
-            },
-            fScaleDepth : function() {
-                return rayleighScaleDepth;
-            },
-            fScaleOverScaleDepth : function() {
-                return (1.0 / (that._outerRadius - innerRadius)) / rayleighScaleDepth;
+            cameraAndRadiiAndDynamicAtmosphereColor : function() {
+                return that._cameraAndRadiiAndDynamicAtmosphereColor;
             }
         };
     }
@@ -129,6 +114,13 @@ define([
             }
         }
     });
+
+    /**
+     * @private
+     */
+    SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
+        this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
+    };
 
     /**
      * @private
@@ -196,10 +188,10 @@ define([
 
         var cameraPosition = frameState.camera.positionWC;
 
-        this._fCameraHeight2 = Cartesian3.magnitudeSquared(cameraPosition);
-        this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
+        var cameraHeight = Cartesian3.magnitude(cameraPosition);
+        this._cameraAndRadiiAndDynamicAtmosphereColor.x = cameraHeight;
 
-        if (this._fCameraHeight > this._outerRadius) {
+        if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
             // Camera in space
             command.shaderProgram = this._spSkyFromSpace;
         } else {

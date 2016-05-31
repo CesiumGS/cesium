@@ -159,6 +159,8 @@ define([
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
+     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -255,7 +257,8 @@ define([
                 mapProjection : options.mapProjection,
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
-                terrainExaggeration : options.terrainExaggeration
+                terrainExaggeration : options.terrainExaggeration,
+                shadows : options.shadows
             });
             this._scene = scene;
 
@@ -275,6 +278,7 @@ define([
             }
             if (globe !== false) {
                 scene.globe = globe;
+                scene.globe.castShadows = defaultValue(options.terrainShadows, false);
             }
 
             var skyBox = options.skyBox;
