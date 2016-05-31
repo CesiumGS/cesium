@@ -9,6 +9,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidGeometry',
         '../Core/GeometryPipeline',
+        '../Core/Math',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -31,6 +32,7 @@ define([
         Ellipsoid,
         EllipsoidGeometry,
         GeometryPipeline,
+        CesiumMath,
         VertexFormat,
         BufferUsage,
         DrawCommand,
@@ -85,13 +87,6 @@ define([
         this._spSkyFromAtmosphereColorCorrect = undefined;
 
         /**
-         * Use hue/saturation/brightness shifts to postprocess the sky/atmosphere color.
-         * @type (Boolean)
-         * @default false
-         */
-        this.colorCorrect = false;
-
-        /**
          * The hue shift to apply to the atmosphere. Defaults to 0.0 (no shift).
          * A hue shift of 1.0 indicates a complete rotation of the hues available.
          * @type {Number}
@@ -130,7 +125,7 @@ define([
         var that = this;
 
         this._command.uniformMap = {
-            cameraAndRadiiAndDynamicAtmosphereColor : function() {
+            u_cameraAndRadiiAndDynamicAtmosphereColor : function() {
                 return that._cameraAndRadiiAndDynamicAtmosphereColor;
             },
             u_hsbShift : function() {
@@ -162,6 +157,15 @@ define([
      */
     SkyAtmosphere.prototype.setDynamicAtmosphereColor = function(enableLighting) {
         this._cameraAndRadiiAndDynamicAtmosphereColor.w = enableLighting ? 1 : 0;
+    };
+
+    /**
+     * @private
+     */
+    SkyAtmosphere.prototype.colorCorrect = function() {
+        return !(CesiumMath.equalsEpsilon(this.hueShift, 0.0, CesiumMath.EPSILON7) &&
+               CesiumMath.equalsEpsilon(this.saturationShift, 0.0, CesiumMath.EPSILON7) &&
+               CesiumMath.equalsEpsilon(this.brightnessShift, 0.0, CesiumMath.EPSILON7));
     };
 
     /**
@@ -212,20 +216,10 @@ define([
                 sources : [SkyAtmosphereVS]
             });
 
-            var fsColorCorrect = new ShaderSource({
-                defines : ['COLOR_CORRECT'],
-                sources : [SkyAtmosphereFS]
-            });
-
             this._spSkyFromSpace = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
                 fragmentShaderSource : SkyAtmosphereFS
-            });
-            this._spSkyFromSpaceColorCorrect = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fsColorCorrect
             });
 
             vs = new ShaderSource({
@@ -237,9 +231,33 @@ define([
                 vertexShaderSource : vs,
                 fragmentShaderSource : SkyAtmosphereFS
             });
+        }
+
+        // Compile the color correcting versions of the shader on demand
+        if (this.colorCorrect() && (!defined(this._spSkyFromSpaceColorCorrect) || !defined(this._spSkyFromAtmosphereColorCorrect))) {
+            var contextColorCorrect = frameState.context;
+
+            var vsColorCorrect = new ShaderSource({
+                defines : ['SKY_FROM_SPACE'],
+                sources : [SkyAtmosphereVS]
+            });
+            var fsColorCorrect = new ShaderSource({
+                defines : ['COLOR_CORRECT'],
+                sources : [SkyAtmosphereFS]
+            });
+
+            this._spSkyFromSpaceColorCorrect = ShaderProgram.fromCache({
+                context : contextColorCorrect,
+                vertexShaderSource : vsColorCorrect,
+                fragmentShaderSource : fsColorCorrect
+            });
+            vsColorCorrect = new ShaderSource({
+                defines : ['SKY_FROM_ATMOSPHERE'],
+                sources : [SkyAtmosphereVS]
+            });
             this._spSkyFromAtmosphereColorCorrect = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : vs,
+                context : contextColorCorrect,
+                vertexShaderSource : vsColorCorrect,
                 fragmentShaderSource : fsColorCorrect
             });
         }
@@ -251,10 +269,10 @@ define([
 
         if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
             // Camera in space
-            command.shaderProgram = this.colorCorrect ? this._spSkyFromSpaceColorCorrect : this._spSkyFromSpace;
+            command.shaderProgram = this.colorCorrect() ? this._spSkyFromSpaceColorCorrect : this._spSkyFromSpace;
         } else {
             // Camera in atmosphere
-            command.shaderProgram = this.colorCorrect ? this._spSkyFromAtmosphereColorCorrect : this._spSkyFromAtmosphere;
+            command.shaderProgram = this.colorCorrect() ? this._spSkyFromAtmosphereColorCorrect : this._spSkyFromAtmosphere;
         }
 
         return command;

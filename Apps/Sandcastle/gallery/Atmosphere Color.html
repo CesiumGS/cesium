@@ -56,7 +56,6 @@
         </td>
     </tr>
 </tbody></table>
-<div id="toggleColorCorrection"></div>
 <div id="toggleLighting"></div>
 <div id="toggleFog"></div>
 </div>
@@ -93,10 +92,6 @@ function subscribeParameter(name) {
 subscribeParameter('hueShift');
 subscribeParameter('saturationShift');
 subscribeParameter('brightnessShift');
-
-Sandcastle.addToolbarButton('Toggle Color Correction', function() {
-    skyAtmosphere.colorCorrect = !skyAtmosphere.colorCorrect;
-}, 'toggleFog');
 
 Sandcastle.addToolbarButton('Toggle Lighting', function() {
     scene.globe.enableLighting = !scene.globe.enableLighting;

@@ -35,14 +35,13 @@
  // HSV/HSB <-> RGB conversion with minimal branching: http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
 
 #ifdef COLOR_CORRECT
-uniform vec3 u_hsbShift; // hue, saturation, value
+uniform vec3 u_hsbShift; // Hue, saturation, value
 #endif
 
 const float g = -0.95;
 const float g2 = g * g;
 const vec4 K_RGB2HSB = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
 const vec4 K_HSB2RGB = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-
 
 varying vec3 v_rayleighColor;
 varying vec3 v_mieColor;
@@ -77,20 +76,20 @@ void main (void)
     
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
     rgb = vec3(1.0) - exp(-exposure * rgb);
-    // compute luminance before color correction to avoid strangely gray night skies
+    // Compute luminance before color correction to avoid strangely gray night skies
     float l = czm_luminance(rgb);
 
 #ifdef COLOR_CORRECT
-    // convert rgb color to hsb
+    // Convert rgb color to hsb
     vec3 hsb = rgb2hsb(rgb);
-    // perform hsb shift
+    // Perform hsb shift
     hsb.x += u_hsbShift.x; // hue
     hsb.y = clamp(hsb.y + u_hsbShift.y, 0.0, 1.0); // saturation
     hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
-    // convert shifted hsb back to rgb
+    // Convert shifted hsb back to rgb
     rgb = hsb2rgb(hsb);
 
-    // check if correction decreased the luminance to 0
+    // Check if correction decreased the luminance to 0
     l = min(l, czm_luminance(rgb));
 #endif
 
