@@ -103,13 +103,11 @@ defineSuite([
             }
         });
 
-        expect(s.colorCorrect()).toEqual(false);
         var color = scene.renderForSpecs();
         expect(color).not.toEqual([0, 0, 0, 255]);
 
         // Expect color correction to change the color output.
         s.hueShift = 0.5;
-        expect(s.colorCorrect()).toEqual(true);
         var hueColor = scene.renderForSpecs();
         expect(hueColor).not.toEqual([0, 0, 0, 255]);
         expect(hueColor).not.toEqual(color);

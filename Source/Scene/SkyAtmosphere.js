@@ -162,15 +162,6 @@ define([
     /**
      * @private
      */
-    SkyAtmosphere.prototype.colorCorrect = function() {
-        return !(CesiumMath.equalsEpsilon(this.hueShift, 0.0, CesiumMath.EPSILON7) &&
-               CesiumMath.equalsEpsilon(this.saturationShift, 0.0, CesiumMath.EPSILON7) &&
-               CesiumMath.equalsEpsilon(this.brightnessShift, 0.0, CesiumMath.EPSILON7));
-    };
-
-    /**
-     * @private
-     */
     SkyAtmosphere.prototype.update = function(frameState) {
         if (!this.show) {
             return undefined;
@@ -234,7 +225,8 @@ define([
         }
 
         // Compile the color correcting versions of the shader on demand
-        if (this.colorCorrect() && (!defined(this._spSkyFromSpaceColorCorrect) || !defined(this._spSkyFromAtmosphereColorCorrect))) {
+        var useColorCorrect = colorCorrect(this);
+        if (useColorCorrect && (!defined(this._spSkyFromSpaceColorCorrect) || !defined(this._spSkyFromAtmosphereColorCorrect))) {
             var contextColorCorrect = frameState.context;
 
             var vsColorCorrect = new ShaderSource({
@@ -269,14 +261,20 @@ define([
 
         if (cameraHeight > this._cameraAndRadiiAndDynamicAtmosphereColor.y) {
             // Camera in space
-            command.shaderProgram = this.colorCorrect() ? this._spSkyFromSpaceColorCorrect : this._spSkyFromSpace;
+            command.shaderProgram = useColorCorrect ? this._spSkyFromSpaceColorCorrect : this._spSkyFromSpace;
         } else {
             // Camera in atmosphere
-            command.shaderProgram = this.colorCorrect() ? this._spSkyFromAtmosphereColorCorrect : this._spSkyFromAtmosphere;
+            command.shaderProgram = useColorCorrect ? this._spSkyFromAtmosphereColorCorrect : this._spSkyFromAtmosphere;
         }
 
         return command;
     };
+
+    function colorCorrect(skyAtmosphere) {
+        return !(CesiumMath.equalsEpsilon(skyAtmosphere.hueShift, 0.0, CesiumMath.EPSILON7) &&
+                 CesiumMath.equalsEpsilon(skyAtmosphere.saturationShift, 0.0, CesiumMath.EPSILON7) &&
+                 CesiumMath.equalsEpsilon(skyAtmosphere.brightnessShift, 0.0, CesiumMath.EPSILON7));
+    }
 
     /**
      * Returns true if this object was destroyed; otherwise, false.
