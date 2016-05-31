@@ -1710,10 +1710,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
-            //zoomTarget is now an EntityCollection, this will retrieve the array
+            //Zoom target is already an array, just copy it and return.
+            if (isArray(zoomTarget)) {
+                that._zoomTarget = zoomTarget.slice(0);
+                return;
+            }
+
+            //If zoomTarget is an EntityCollection, this will retrieve the array
             zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
 
-            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            //If zoomTarget is a DataSource, this will retrieve the array.
             if (defined(zoomTarget.entities)) {
                 zoomTarget = zoomTarget.entities.values;
             }
