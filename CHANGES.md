@@ -4,7 +4,7 @@ Change Log
 ### 1.22 - 2016-06-01
 
 * Added shadows
-    * See the Sandcastle demo: [Shadows](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html&label=Showcases)
+    * See the Sandcastle demo: [Shadows](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html&label=Showcases).
     * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
     * Added `Viewer.shadowMap` and `Scene.shadowMap` for accessing the scene's shadow map.
     * Added `castShadows` and `receiveShadows` properties to `Model` and `Entity.model`, and options to the `Model` constructor and `Model.fromGltf`.
