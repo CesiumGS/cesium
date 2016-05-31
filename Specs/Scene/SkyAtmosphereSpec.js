@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SkyAtmosphere',
+        'Core/Math',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Renderer/ClearCommand',
@@ -8,6 +9,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         SkyAtmosphere,
+        CesiumMath,
         Cartesian3,
         Ellipsoid,
         ClearCommand,
@@ -83,6 +85,34 @@ defineSuite([
         command.execute(scene.context); // Not reliable enough across browsers to test pixels
 
         s.destroy();
+    });
+
+    it('draws sky with color correction active', function() {
+        var oldSkyAtmosphere = scene.skyAtmosphere;
+        var s = new SkyAtmosphere();
+
+        scene.skyAtmosphere = s;
+        scene._environmentState.isReadyForAtmosphere = true;
+
+        scene.camera.setView({
+            destination : Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+            orientation: {
+                heading : -CesiumMath.PI_OVER_TWO,
+                pitch : 0.2,
+                roll : 0.0
+            }
+        });
+
+        var color = scene.renderForSpecs();
+        expect(color).not.toEqual([0, 0, 0, 255]);
+
+        // Expect color correction to change the color output.
+        s.hueShift = 0.5;
+        var hueColor = scene.renderForSpecs();
+        expect(hueColor).not.toEqual([0, 0, 0, 255]);
+        expect(hueColor).not.toEqual(color);
+
+        scene.skyAtmosphere = oldSkyAtmosphere;
     });
 
     it('does not render when show is false', function() {

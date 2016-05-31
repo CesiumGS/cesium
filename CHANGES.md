@@ -29,6 +29,7 @@ Change Log
 * Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [#3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
+* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere`. See the new Sandcastle example: [Atmosphere Color](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Atmosphere%20Color.html&label=Showcases). [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Added `Matrix4.computeView`.
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
