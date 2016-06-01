@@ -1188,7 +1188,7 @@ define([
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
                 curFar = Math.min(far, farToNearRatio * curNear);
             } else {
-                curNear = near + m * nearToFarDistance2D;
+                curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
                 curFar = Math.min(far, curNear + nearToFarDistance2D);
             }
 
