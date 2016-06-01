@@ -48,6 +48,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './MapMode2D',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -114,6 +115,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        MapMode2D,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -185,7 +187,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {Boolean} [options.rotatable2D=false] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -574,7 +576,7 @@ define([
         this._camera = camera;
         this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
-        this._rotatable2D = defaultValue(options.rotatable2D, false);
+        this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -1071,9 +1073,9 @@ define([
          * @memberof Scene.prototype
          * @type {Boolean}
          */
-        rotatable2D : {
+        mapMode2D : {
             get : function() {
-                return this._rotatable2D;
+                return this._mapMode2D;
             }
         }
     });
@@ -1953,7 +1955,7 @@ define([
             viewport.width = context.drawingBufferWidth;
             viewport.height = context.drawingBufferHeight;
 
-            if (mode !== SceneMode.SCENE2D || scene._rotatable2D) {
+            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
                 executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
             } else {
                 execute2DViewportCommands(scene, passState, backgroundColor, picking);

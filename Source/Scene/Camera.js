@@ -24,6 +24,7 @@ define([
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
+        './MapMode2D',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
@@ -51,6 +52,7 @@ define([
         Rectangle,
         Transforms,
         CameraFlightPath,
+        MapMode2D,
         PerspectiveFrustum,
         SceneMode) {
     'use strict';
@@ -1158,7 +1160,7 @@ define([
     };
 
     function clampMove2D(camera, position) {
-        var rotatable2D = camera._scene.rotatable2D;
+        var rotatable2D = camera._scene.mapMode2D === MapMode2D.ROTATE;
         var maxProjectedX = camera._maxCoord.x;
         var maxProjectedY = camera._maxCoord.y;
 
@@ -1541,7 +1543,7 @@ define([
         var newLeft = frustum.left + amount;
 
         var maxRight = camera._maxCoord.x;
-        if (camera._scene.rotatable2D) {
+        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
             maxRight *= camera.maximumZoomFactor;
         }
 

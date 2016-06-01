@@ -278,7 +278,7 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
-     * @param {Boolean} [options.rotatable2D=false] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -414,7 +414,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             terrainExaggeration : options.terrainExaggeration,
             shadows : options.shadows,
             terrainShadows : options.terrainShadows,
-            rotatable2D : options.rotatable2D
+            mapMode2D : options.mapMode2D
         });
 
         var dataSourceCollection = options.dataSources;

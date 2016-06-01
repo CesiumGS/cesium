@@ -21,6 +21,7 @@ define([
         '../Core/Transforms',
         './CameraEventAggregator',
         './CameraEventType',
+        './MapMode2D',
         './SceneMode',
         './SceneTransforms',
         './TweenCollection'
@@ -46,6 +47,7 @@ define([
         Transforms,
         CameraEventAggregator,
         CameraEventType,
+        MapMode2D,
         SceneMode,
         SceneTransforms,
         TweenCollection) {
@@ -656,7 +658,7 @@ define([
     }
 
     function update2D(controller) {
-        var rotatable2D = controller._scene.rotatable2D;
+        var rotatable2D = controller._scene.mapMode2D === MapMode2D.ROTATE;
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._scene.camera.transform)) {
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
             if (rotatable2D) {

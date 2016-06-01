@@ -14,6 +14,7 @@ defineSuite([
         'Core/Ray',
         'Core/Transforms',
         'Scene/CameraEventType',
+        'Scene/MapMode2D',
         'Scene/OrthographicFrustum',
         'Scene/SceneMode',
         'Specs/createCamera',
@@ -35,6 +36,7 @@ defineSuite([
         Ray,
         Transforms,
         CameraEventType,
+        MapMode2D,
         OrthographicFrustum,
         SceneMode,
         createCamera,
@@ -87,7 +89,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        scene.rotatable2D = false;
+        scene.mapMode2D = MapMode2D.INFINITE_SCROLL;
         controller = controller && !controller.isDestroyed() && controller.destroy();
     });
 
@@ -449,7 +451,7 @@ defineSuite([
 
     it('rotate counter-clockwise in 2D', function() {
         setUp2D();
-        scene.rotatable2D = true;
+        scene.mapMode2D = MapMode2D.ROTATE;
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 4, canvas.clientHeight / 2);
@@ -468,7 +470,7 @@ defineSuite([
 
     it('rotate clockwise in 2D', function() {
         setUp2D();
-        scene.rotatable2D = true;
+        scene.mapMode2D = MapMode2D.ROTATE;
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(canvas.clientWidth / 2, canvas.clientHeight / 4);
@@ -487,7 +489,7 @@ defineSuite([
 
     it('rotates counter-clockwise with mouse position at bottom of the screen', function() {
         setUp2D();
-        scene.rotatable2D = true;
+        scene.mapMode2D = MapMode2D.ROTATE;
 
         var position = Cartesian3.clone(camera.position);
         var startPosition = new Cartesian2(3 * canvas.clientWidth / 4, 3 * canvas.clientHeight / 4);
