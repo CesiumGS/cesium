@@ -1,150 +1,154 @@
 /*global define*/
 define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/ClockRange',
-        '../Core/ClockStep',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/Event',
-        '../Core/ExtrapolationType',
-        '../Core/getAbsoluteUri',
-        '../Core/getFilenameFromUri',
-        '../Core/HermitePolynomialApproximation',
-        '../Core/isArray',
-        '../Core/Iso8601',
-        '../Core/JulianDate',
-        '../Core/LagrangePolynomialApproximation',
-        '../Core/LinearApproximation',
-        '../Core/loadJson',
-        '../Core/Math',
-        '../Core/Quaternion',
-        '../Core/Rectangle',
-        '../Core/ReferenceFrame',
-        '../Core/RuntimeError',
-        '../Core/Spherical',
-        '../Core/TimeInterval',
-        '../Core/TimeIntervalCollection',
-        '../Scene/HorizontalOrigin',
-        '../Scene/LabelStyle',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './BillboardGraphics',
-        './ColorMaterialProperty',
-        './CompositeMaterialProperty',
-        './CompositePositionProperty',
-        './CompositeProperty',
-        './ConstantPositionProperty',
-        './ConstantProperty',
-        './DataSource',
-        './DataSourceClock',
-        './EllipseGraphics',
-        './EllipsoidGraphics',
-        './EntityCollection',
-        './GridMaterialProperty',
-        './ImageMaterialProperty',
-        './LabelGraphics',
-        './ModelGraphics',
-        './NodeTransformationProperty',
-        './PathGraphics',
-        './PointGraphics',
-        './PolygonGraphics',
-        './PolylineArrowMaterialProperty',
-        './PolylineGlowMaterialProperty',
-        './PolylineGraphics',
-        './PolylineOutlineMaterialProperty',
-        './PositionPropertyArray',
-        './PropertyBag',
-        './RectangleGraphics',
-        './ReferenceProperty',
-        './Rotation',
-        './SampledPositionProperty',
-        './SampledProperty',
-        './StripeMaterialProperty',
-        './StripeOrientation',
-        './TimeIntervalCollectionPositionProperty',
-        './TimeIntervalCollectionProperty',
-        './WallGraphics'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        ClockRange,
-        ClockStep,
-        Color,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        Event,
-        ExtrapolationType,
-        getAbsoluteUri,
-        getFilenameFromUri,
-        HermitePolynomialApproximation,
-        isArray,
-        Iso8601,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        loadJson,
-        CesiumMath,
-        Quaternion,
-        Rectangle,
-        ReferenceFrame,
-        RuntimeError,
-        Spherical,
-        TimeInterval,
-        TimeIntervalCollection,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin,
-        Uri,
-        when,
-        BillboardGraphics,
-        ColorMaterialProperty,
-        CompositeMaterialProperty,
-        CompositePositionProperty,
-        CompositeProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        DataSource,
-        DataSourceClock,
-        EllipseGraphics,
-        EllipsoidGraphics,
-        EntityCollection,
-        GridMaterialProperty,
-        ImageMaterialProperty,
-        LabelGraphics,
-        ModelGraphics,
-        NodeTransformationProperty,
-        PathGraphics,
-        PointGraphics,
-        PolygonGraphics,
-        PolylineArrowMaterialProperty,
-        PolylineGlowMaterialProperty,
-        PolylineGraphics,
-        PolylineOutlineMaterialProperty,
-        PositionPropertyArray,
-        PropertyBag,
-        RectangleGraphics,
-        ReferenceProperty,
-        Rotation,
-        SampledPositionProperty,
-        SampledProperty,
-        StripeMaterialProperty,
-        StripeOrientation,
-        TimeIntervalCollectionPositionProperty,
-        TimeIntervalCollectionProperty,
-        WallGraphics) {
+    '../Core/Cartesian2',
+    '../Core/Cartesian3',
+    '../Core/Cartographic',
+    '../Core/ClockRange',
+    '../Core/ClockStep',
+    '../Core/Color',
+    '../Core/createGuid',
+    '../Core/defaultValue',
+    '../Core/defined',
+    '../Core/defineProperties',
+    '../Core/DeveloperError',
+    '../Core/Ellipsoid',
+    '../Core/Event',
+    '../Core/ExtrapolationType',
+    '../Core/getAbsoluteUri',
+    '../Core/getFilenameFromUri',
+    '../Core/HermitePolynomialApproximation',
+    '../Core/isArray',
+    '../Core/Iso8601',
+    '../Core/JulianDate',
+    '../Core/LagrangePolynomialApproximation',
+    '../Core/LinearApproximation',
+    '../Core/loadJson',
+    '../Core/Math',
+    '../Core/Quaternion',
+    '../Core/Rectangle',
+    '../Core/ReferenceFrame',
+    '../Core/RuntimeError',
+    '../Core/Spherical',
+    '../Core/TimeInterval',
+    '../Core/TimeIntervalCollection',
+    '../Scene/HorizontalOrigin',
+    '../Scene/LabelStyle',
+    '../Scene/VerticalOrigin',
+    '../ThirdParty/Uri',
+    '../ThirdParty/when',
+    './BillboardGraphics',
+    './BoxGraphics',
+    './ColorMaterialProperty',
+    './CompositeMaterialProperty',
+    './CompositePositionProperty',
+    './CompositeProperty',
+    './ConstantPositionProperty',
+    './ConstantProperty',
+    './CylinderGraphics',
+    './DataSource',
+    './DataSourceClock',
+    './EllipseGraphics',
+    './EllipsoidGraphics',
+    './EntityCollection',
+    './GridMaterialProperty',
+    './ImageMaterialProperty',
+    './LabelGraphics',
+    './ModelGraphics',
+    './NodeTransformationProperty',
+    './PathGraphics',
+    './PointGraphics',
+    './PolygonGraphics',
+    './PolylineArrowMaterialProperty',
+    './PolylineGlowMaterialProperty',
+    './PolylineGraphics',
+    './PolylineOutlineMaterialProperty',
+    './PositionPropertyArray',
+    './PropertyBag',
+    './RectangleGraphics',
+    './ReferenceProperty',
+    './Rotation',
+    './SampledPositionProperty',
+    './SampledProperty',
+    './StripeMaterialProperty',
+    './StripeOrientation',
+    './TimeIntervalCollectionPositionProperty',
+    './TimeIntervalCollectionProperty',
+    './WallGraphics'
+], function(
+    Cartesian2,
+    Cartesian3,
+    Cartographic,
+    ClockRange,
+    ClockStep,
+    Color,
+    createGuid,
+    defaultValue,
+    defined,
+    defineProperties,
+    DeveloperError,
+    Ellipsoid,
+    Event,
+    ExtrapolationType,
+    getAbsoluteUri,
+    getFilenameFromUri,
+    HermitePolynomialApproximation,
+    isArray,
+    Iso8601,
+    JulianDate,
+    LagrangePolynomialApproximation,
+    LinearApproximation,
+    loadJson,
+    CesiumMath,
+    Quaternion,
+    Rectangle,
+    ReferenceFrame,
+    RuntimeError,
+    Spherical,
+    TimeInterval,
+    TimeIntervalCollection,
+    HorizontalOrigin,
+    LabelStyle,
+    VerticalOrigin,
+    Uri,
+    when,
+    BillboardGraphics,
+    BoxGraphics,
+    ColorMaterialProperty,
+    CompositeMaterialProperty,
+    CompositePositionProperty,
+    CompositeProperty,
+    ConstantPositionProperty,
+    ConstantProperty,
+    CylinderGraphics,
+    DataSource,
+    DataSourceClock,
+    EllipseGraphics,
+    EllipsoidGraphics,
+    EntityCollection,
+    GridMaterialProperty,
+    ImageMaterialProperty,
+    LabelGraphics,
+    ModelGraphics,
+    NodeTransformationProperty,
+    PathGraphics,
+    PointGraphics,
+    PolygonGraphics,
+    PolylineArrowMaterialProperty,
+    PolylineGlowMaterialProperty,
+    PolylineGraphics,
+    PolylineOutlineMaterialProperty,
+    PositionPropertyArray,
+    PropertyBag,
+    RectangleGraphics,
+    ReferenceProperty,
+    Rotation,
+    SampledPositionProperty,
+    SampledProperty,
+    StripeMaterialProperty,
+    StripeOrientation,
+    TimeIntervalCollectionPositionProperty,
+    TimeIntervalCollectionProperty,
+    WallGraphics) {
     'use strict';
 
     var currentId;
@@ -338,42 +342,42 @@ define([
     function unwrapInterval(type, czmlInterval, sourceUri) {
         /*jshint sub:true*/
         switch (type) {
-        case Boolean:
-            return defaultValue(czmlInterval['boolean'], czmlInterval);
-        case Cartesian2:
-            return czmlInterval.cartesian2;
-        case Cartesian3:
-            return unwrapCartesianInterval(czmlInterval);
-        case Color:
-            return unwrapColorInterval(czmlInterval);
-        case StripeOrientation:
-            return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
-        case HorizontalOrigin:
-            return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
-        case Image:
-            return unwrapUriInterval(czmlInterval, sourceUri);
-        case JulianDate:
-            return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
-        case LabelStyle:
-            return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
-        case Rotation:
-            return defaultValue(czmlInterval.number, czmlInterval);
-        case Number:
-            return defaultValue(czmlInterval.number, czmlInterval);
-        case String:
-            return defaultValue(czmlInterval.string, czmlInterval);
-        case Array:
-            return czmlInterval.array;
-        case Quaternion:
-            return unwrapQuaternionInterval(czmlInterval);
-        case Rectangle:
-            return unwrapRectangleInterval(czmlInterval);
-        case Uri:
-            return unwrapUriInterval(czmlInterval, sourceUri);
-        case VerticalOrigin:
-            return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
-        default:
-            throw new RuntimeError(type);
+            case Boolean:
+                return defaultValue(czmlInterval['boolean'], czmlInterval);
+            case Cartesian2:
+                return czmlInterval.cartesian2;
+            case Cartesian3:
+                return unwrapCartesianInterval(czmlInterval);
+            case Color:
+                return unwrapColorInterval(czmlInterval);
+            case StripeOrientation:
+                return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
+            case HorizontalOrigin:
+                return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+            case Image:
+                return unwrapUriInterval(czmlInterval, sourceUri);
+            case JulianDate:
+                return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
+            case LabelStyle:
+                return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+            case Rotation:
+                return defaultValue(czmlInterval.number, czmlInterval);
+            case Number:
+                return defaultValue(czmlInterval.number, czmlInterval);
+            case String:
+                return defaultValue(czmlInterval.string, czmlInterval);
+            case Array:
+                return czmlInterval.array;
+            case Quaternion:
+                return unwrapQuaternionInterval(czmlInterval);
+            case Rectangle:
+                return unwrapRectangleInterval(czmlInterval);
+            case Uri:
+                return unwrapUriInterval(czmlInterval, sourceUri);
+            case VerticalOrigin:
+                return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+            default:
+                throw new RuntimeError(type);
         }
     }
 
@@ -1023,6 +1027,62 @@ define([
         processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
+    }
+
+    function processBox(entity, packet, entityCollection, sourceUri) {
+        var boxData = packet.box;
+        if (!defined(boxData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = boxData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var box = entity.box;
+        if (!defined(box)) {
+            entity.box = box = new BoxGraphics();
+        }
+
+        processPacketData(Cartesian3, box, 'dimensions', boxData.dimensions, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'show', boxData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(box, 'material', boxData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'fill', boxData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'outline', boxData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, box, 'outlineColor', boxData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, box, 'outlineWidth', boxData.outlineWidth, interval, sourceUri, entityCollection);
+    }
+
+    function processCylinder(entity, packet, entityCollection, sourceUri) {
+        var cylinderData = packet.cylinder;
+        if (!defined(cylinderData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = cylinderData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var cylinder = entity.cylinder;
+        if (!defined(cylinder)) {
+            entity.cylinder = cylinder = new CylinderGraphics();
+        }
+
+        processPacketData(Number, cylinder, 'length', cylinderData.length, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'topRadius', cylinderData.topRadius, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'bottomRadius', cylinderData.bottomRadius, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'show', cylinderData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(cylinder, 'material', cylinderData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'fill', cylinderData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'outline', cylinderData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, cylinder, 'outlineColor', cylinderData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'outlineWidth', cylinderData.outlineWidth, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1711,23 +1771,25 @@ define([
      * @type Array
      */
     CzmlDataSource.updaters = [
-    processBillboard, //
-    processEllipse, //
-    processEllipsoid, //
-    processLabel, //
-    processModel, //
-    processName, //
-    processDescription, //
-    processPath, //
-    processPoint, //
-    processPolygon, //
-    processPolyline, //
-    processRectangle, //
-    processPosition, //
-    processViewFrom, //
-    processWall, //
-    processOrientation, //
-    processAvailability];
+        processBillboard, //
+        processBox, //
+        processCylinder, //
+        processEllipse, //
+        processEllipsoid, //
+        processLabel, //
+        processModel, //
+        processName, //
+        processDescription, //
+        processPath, //
+        processPoint, //
+        processPolygon, //
+        processPolyline, //
+        processRectangle, //
+        processPosition, //
+        processViewFrom, //
+        processWall, //
+        processOrientation, //
+        processAvailability];
 
     /**
      * Processes the provided url or CZML object without clearing any existing data.
