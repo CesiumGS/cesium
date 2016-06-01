@@ -9,6 +9,7 @@ define([
         'Cesium/Core/queryToObject',
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
+        'Cesium/DataSources/GmlDataSource',
         'Cesium/DataSources/KmlDataSource',
         'Cesium/Scene/createTileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
@@ -25,6 +26,7 @@ define([
         queryToObject,
         CzmlDataSource,
         GeoJsonDataSource,
+        GmlDataSource,
         KmlDataSource,
         createTileMapServiceImageryProvider,
         Viewer,
@@ -105,6 +107,8 @@ define([
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
             loadPromise = KmlDataSource.load(source);
+        } else if (/\.gml$/i.test(source)) {
+            loadPromise = GmlDataSource.load(source);
         } else {
             showLoadError(source, 'Unknown format.');
         }
