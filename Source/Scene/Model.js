@@ -1125,8 +1125,8 @@ define([
             }
         }
         return {
-            'min': accessorMin,
-            'max': accessorMax
+            min : accessorMin,
+            max : accessorMax
         };
     }
 
@@ -1483,7 +1483,7 @@ define([
             cachedExtensionsUsed = {};
             var extensionsLength = extensionsUsed.length;
             for (var i = 0; i < extensionsLength; i++) {
-                cachedExtensionsUsed[extensionsUsed[i]] = i;
+                cachedExtensionsUsed[extensionsUsed[i]] = true;
             }
         }
         return defined(cachedExtensionsUsed[extension]);
@@ -1655,8 +1655,8 @@ define([
                                              '    ' + newMain + '();\n' +
                                              '}\n';
 
-                                    quantizedUniforms[decodeUniformVarNameScale] = {'mat': 4};
-                                    quantizedUniforms[decodeUniformVarNameTranslate] = {'vec': 4};
+                                    quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
+                                    quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
                                 }
                                 else {
                                     shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
@@ -1666,7 +1666,7 @@ define([
                                              '    ' + newMain + '();\n' +
                                              '}\n';
 
-                                    quantizedUniforms[decodeUniformVarName] = {'mat': size};
+                                    quantizedUniforms[decodeUniformVarName] = {mat : size};
                                 }
                                 shader = ShaderSource.replaceMain(shader, newMain);
                                 shader += decode;
@@ -2770,8 +2770,7 @@ define([
                     if (defined(properties.mat)) {
                         if (properties.mat === 3) {
                             uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
-                        }
-                        else if (properties.mat === 4) {
+                        } else if (properties.mat === 4) {
                             uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
                         }
                     }
