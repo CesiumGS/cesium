@@ -28,10 +28,16 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    //sceneMode : Cesium.SceneMode.SCENE2D,
+    sceneMode : Cesium.SceneMode.SCENE2D,
     mapMode2D : Cesium.MapMode2D.ROTATE
 });
-// Middle mouse button drag or left mouse button drag while holding the contol key to rotate the map.
+
+viewer.scene.camera.setView({
+    destination : Cesium.Cartesian3.fromDegrees(-73.0, 42.0, 50000000.0),
+    orientation : {
+        heading : Cesium.Math.toRadians(-45.0)
+    }
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
