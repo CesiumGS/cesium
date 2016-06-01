@@ -6,6 +6,7 @@ define([
     '../Core/ClockRange',
     '../Core/ClockStep',
     '../Core/Color',
+    '../Core/CornerType',
     '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
@@ -44,6 +45,7 @@ define([
     './CompositeProperty',
     './ConstantPositionProperty',
     './ConstantProperty',
+    './CorridorGraphics',
     './CylinderGraphics',
     './DataSource',
     './DataSourceClock',
@@ -81,6 +83,7 @@ define([
     ClockRange,
     ClockStep,
     Color,
+    CornerType,
     createGuid,
     defaultValue,
     defined,
@@ -119,6 +122,7 @@ define([
     CompositeProperty,
     ConstantPositionProperty,
     ConstantProperty,
+    CorridorGraphics,
     CylinderGraphics,
     DataSource,
     DataSourceClock,
@@ -354,6 +358,8 @@ define([
                 return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
             case HorizontalOrigin:
                 return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+            case CornerType:
+                return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
             case Image:
                 return unwrapUriInterval(czmlInterval, sourceUri);
             case JulianDate:
@@ -566,7 +572,6 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
-        return;
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri, entityCollection) {
@@ -1428,6 +1433,38 @@ define([
         processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
     }
 
+    function processCorridor(entity, packet, entityCollection, sourceUri) {
+        var corridorData = packet.corridor;
+        if (!defined(corridorData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = corridorData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var corridor = entity.corridor;
+        if (!defined(corridor)) {
+            entity.corridor = corridor = new CorridorGraphics();
+        }
+
+        processPositions(corridor, 'positions', corridorData.positions, entityCollection);
+        processPacketData(Number, corridor, 'width', corridorData.width, interval, sourceUri, entityCollection);
+        processPacketData(CornerType, corridor, 'cornerType', corridorData.cornerType, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'height', corridorData.height, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'show', corridorData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(corridor, 'material', corridorData.material, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'granularity', corridorData.granularity, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'fill', corridorData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'outline', corridorData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, corridor, 'outlineColor', corridorData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
+    }
+
     function processWall(entity, packet, entityCollection, sourceUri) {
         var wallData = packet.wall;
         if (!defined(wallData)) {
@@ -1773,6 +1810,7 @@ define([
     CzmlDataSource.updaters = [
         processBillboard, //
         processBox, //
+        processCorridor, //
         processCylinder, //
         processEllipse, //
         processEllipsoid, //
