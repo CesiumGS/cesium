@@ -1493,41 +1493,21 @@ define([
         }
     }
 
-    function getPositionAttribute(model) {
-        var techniques = model.gltf.techniques;
-        for (var techniqueId in techniques) {
-            if (techniques.hasOwnProperty(techniqueId)) {
-                var technique = techniques[techniqueId];
-                var attributes = technique.attributes;
-                for (var attributeId in attributes) {
-                    if (attributes.hasOwnProperty(attributeId)) {
-                        var attribute = attributes[attributeId];
-                        var semantic = technique.parameters[attribute].semantic;
-                        if (defined(semantic) && semantic === 'POSITION') {
-                            return attributeId;
-                        }
-                    }
-                }
-            }
-        }
-        return undefined;
-    }
-
     function createAttributeLocations(model, attributes) {
         var attributeLocations = {};
         var length = attributes.length;
+        var i;
 
         // Set the position attribute to the 0th index
-        var positionAttribute = getPositionAttribute(model);
-        if (defined(positionAttribute)) {
-            var index = attributes.indexOf(positionAttribute);
-            if (index > 0) {
-                attributes[index] = attributes[0];
-                attributes[0] = positionAttribute;
+        for (i = 1; i < length; ++i) {
+            var attribute = attributes[i];
+            if (attribute.toLowerCase().indexOf('position') > -1) {
+                attributes[i] = attributes[0];
+                attributes[0] = attribute;
             }
         }
 
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             attributeLocations[attributes[i]] = i;
         }
 
