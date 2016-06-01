@@ -2844,7 +2844,7 @@ define([
                 var boundingSphere;
                 var positionAccessor = primitive.attributes.POSITION;
                 if (defined(positionAccessor)) {
-                    var minMax = getAccessorMinMax(gltf, positionAccessor)
+                    var minMax = getAccessorMinMax(gltf, positionAccessor);
                     boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
                 }
 
