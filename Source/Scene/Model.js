@@ -1493,9 +1493,39 @@ define([
         }
     }
 
-    function createAttributeLocations(attributes) {
+    function getPositionAttribute(model) {
+        var techniques = model.gltf.techniques;
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var technique = techniques[techniqueId];
+                var attributes = technique.attributes;
+                for (var attributeId in attributes) {
+                    if (attributes.hasOwnProperty(attributeId)) {
+                        var attribute = attributes[attributeId];
+                        var semantic = technique.parameters[attribute].semantic;
+                        if (defined(semantic) && semantic === 'POSITION') {
+                            return attributeId;
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    function createAttributeLocations(model, attributes) {
         var attributeLocations = {};
         var length = attributes.length;
+
+        // Set the position attribute to the 0th index
+        var positionAttribute = getPositionAttribute(model);
+        if (defined(positionAttribute)) {
+            var index = attributes.indexOf(positionAttribute);
+            if (index > 0) {
+                attributes[index] = attributes[0];
+                attributes[0] = positionAttribute;
+            }
+        }
 
         for (var i = 0; i < length; ++i) {
             attributeLocations[attributes[i]] = i;
@@ -1528,7 +1558,7 @@ define([
         var shaders = model._loadResources.shaders;
         var program = programs[id];
 
-        var attributeLocations = createAttributeLocations(program.attributes);
+        var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
