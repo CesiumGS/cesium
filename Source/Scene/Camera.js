@@ -854,11 +854,13 @@ define([
             }
         }
 
-        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+        if (camera._scene.mapMode2D === MapMode2D.ROTATE) {
+            var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+            var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
 
-        Matrix3.getColumn(rotMat, 2, camera.up);
-        Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Matrix3.getColumn(rotMat, 2, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+        }
 
         camera._setTransform(currentTransform);
     }
