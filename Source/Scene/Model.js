@@ -1498,10 +1498,13 @@ define([
         var length = attributes.length;
         var i;
 
-        // Set the position attribute to the 0th index
+        // Set the position attribute to the 0th index. In some WebGL implementations the shader
+        // will not work correctly if the 0th attribute is not active. For example, some glTF models
+        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+        // the normal attribute.
         for (i = 1; i < length; ++i) {
             var attribute = attributes[i];
-            if (attribute.toLowerCase().indexOf('position') > -1) {
+            if (/position/i.test(attribute)) {
                 attributes[i] = attributes[0];
                 attributes[0] = attribute;
                 break;
