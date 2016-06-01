@@ -186,18 +186,11 @@ define([
         this.constrainedAxis = undefined;
         /**
          * The factor multiplied by the the map size used to determine where to clamp the camera position
-         * when translating across the surface. The default is 1.5. Only valid for 2D and Columbus view.
+         * when zooming out from the surface. The default is 1.5. Only valid for 2D and the map is rotatable.
          * @type {Number}
          * @default 1.5
          */
-        this.maximumTranslateFactor = 1.5;
-        /**
-         * The factor multiplied by the the map size used to determine where to clamp the camera position
-         * when zooming out from the surface. The default is 2.5. Only valid for 2D.
-         * @type {Number}
-         * @default 2.5
-         */
-        this.maximumZoomFactor = 2.5;
+        this.maximumZoomFactor = 1.5;
 
         this._moveStart = new Event();
         this._moveEnd = new Event();
@@ -1165,20 +1158,32 @@ define([
     };
 
     function clampMove2D(camera, position) {
-        var maxX = camera._maxCoord.x;
-        if (position.x > maxX) {
-            position.x = position.x - maxX * 2.0;
-        }
-        if (position.x < -maxX) {
-            position.x = position.x + maxX * 2.0;
+        var rotatable2D = camera._scene.rotatable2D;
+        var maxProjectedX = camera._maxCoord.x;
+        var maxProjectedY = camera._maxCoord.y;
+
+        var minX;
+        var maxX;
+        if (rotatable2D) {
+            maxX = maxProjectedX;
+            minX = -maxX;
+        } else {
+            maxX = position.x - maxProjectedX * 2.0;
+            minX = position.x + maxProjectedX * 2.0;
         }
 
-        var maxY = camera._maxCoord.y;
-        if (position.y > maxY) {
-            position.y = maxY;
+        if (position.x > maxProjectedX) {
+            position.x = maxX;
         }
-        if (position.y < -maxY) {
-            position.y = -maxY;
+        if (position.x < -maxProjectedX) {
+            position.x = minX;
+        }
+
+        if (position.y > maxProjectedY) {
+            position.y = maxProjectedY;
+        }
+        if (position.y < -maxProjectedY) {
+            position.y = -maxProjectedY;
         }
     }
 
@@ -1536,6 +1541,10 @@ define([
         var newLeft = frustum.left + amount;
 
         var maxRight = camera._maxCoord.x;
+        if (camera._scene.rotatable2D) {
+            maxRight *= camera.maximumZoomFactor;
+        }
+
         if (newRight > maxRight) {
             newRight = maxRight;
             newLeft = -maxRight;

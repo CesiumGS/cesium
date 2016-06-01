@@ -594,12 +594,80 @@ define([
         handleZoom(controller, startPosition, movement, controller._zoomFactor, camera.getMagnitude());
     }
 
+    var twist2DStart = new Cartesian2();
+    var twist2DEnd = new Cartesian2();
+
+    function twist2D(controller, startPosition, movement) {
+        if (defined(movement.angleAndHeight)) {
+            singleAxisTwist2D(controller, startPosition, movement.angleAndHeight);
+            return;
+        }
+
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+
+        var start = twist2DStart;
+        start.x = (2.0 / width) * movement.startPosition.x - 1.0;
+        start.y = (2.0 / height) * (height - movement.startPosition.y) - 1.0;
+        start = Cartesian2.normalize(start, start);
+
+        var end = twist2DEnd;
+        end.x = (2.0 / width) * movement.endPosition.x - 1.0;
+        end.y = (2.0 / height) * (height - movement.endPosition.y) - 1.0;
+        end = Cartesian2.normalize(end, end);
+
+        var startTheta = CesiumMath.acosClamped(start.x);
+        if (start.y < 0) {
+            startTheta = CesiumMath.TWO_PI - startTheta;
+        }
+        var endTheta = CesiumMath.acosClamped(end.x);
+        if (end.y < 0) {
+            endTheta = CesiumMath.TWO_PI - endTheta;
+        }
+        var theta = endTheta - startTheta;
+
+        camera.twistRight(theta);
+    }
+
+    function singleAxisTwist2D(controller, startPosition, movement) {
+        var rotateRate = controller._rotateFactor * controller._rotateRateRangeAdjustment;
+
+        if (rotateRate > controller._maximumRotateRate) {
+            rotateRate = controller._maximumRotateRate;
+        }
+
+        if (rotateRate < controller._minimumRotateRate) {
+            rotateRate = controller._minimumRotateRate;
+        }
+
+        var scene = controller._scene;
+        var camera = scene.camera;
+        var canvas = scene.canvas;
+
+        var phiWindowRatio = (movement.endPosition.x - movement.startPosition.x) / canvas.clientWidth;
+        phiWindowRatio = Math.min(phiWindowRatio, controller.maximumMovementRatio);
+
+        var deltaPhi = rotateRate * phiWindowRatio * Math.PI * 4.0;
+
+        camera.twistRight(deltaPhi);
+    }
+
     function update2D(controller) {
+        var rotatable2D = controller._scene.rotatable2D;
         if (!Matrix4.equals(Matrix4.IDENTITY, controller._scene.camera.transform)) {
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            if (rotatable2D) {
+                reactToInput(controller, controller.enableRotate, controller.translateEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaSpinMovement');
+            }
         } else {
             reactToInput(controller, controller.enableTranslate, controller.translateEventTypes, translate2D, controller.inertiaTranslate, '_lastInertiaTranslateMovement');
             reactToInput(controller, controller.enableZoom, controller.zoomEventTypes, zoom2D, controller.inertiaZoom, '_lastInertiaZoomMovement');
+            if (rotatable2D) {
+                reactToInput(controller, controller.enableRotate, controller.tiltEventTypes, twist2D, controller.inertiaSpin, '_lastInertiaTiltMovement');
+            }
         }
     }
 
@@ -1821,7 +1889,7 @@ define([
      *
      * @example
      * controller = controller && controller.destroy();
-     * 
+     *
      * @see ScreenSpaceCameraController#isDestroyed
      */
     ScreenSpaceCameraController.prototype.destroy = function() {
