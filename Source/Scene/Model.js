@@ -1493,11 +1493,25 @@ define([
         }
     }
 
-    function createAttributeLocations(attributes) {
+    function createAttributeLocations(model, attributes) {
         var attributeLocations = {};
         var length = attributes.length;
+        var i;
 
-        for (var i = 0; i < length; ++i) {
+        // Set the position attribute to the 0th index. In some WebGL implementations the shader
+        // will not work correctly if the 0th attribute is not active. For example, some glTF models
+        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+        // the normal attribute.
+        for (i = 1; i < length; ++i) {
+            var attribute = attributes[i];
+            if (/position/i.test(attribute)) {
+                attributes[i] = attributes[0];
+                attributes[0] = attribute;
+                break;
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
             attributeLocations[attributes[i]] = i;
         }
 
@@ -1528,7 +1542,7 @@ define([
         var shaders = model._loadResources.shaders;
         var program = programs[id];
 
-        var attributeLocations = createAttributeLocations(program.attributes);
+        var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
 
