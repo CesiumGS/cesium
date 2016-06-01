@@ -78,7 +78,7 @@ defineSuite([
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
         };
-        this.mapMode2D = MapMode2D.INFINITE_2D
+        this.mapMode2D = MapMode2D.INFINITE_2D;
     }
 
     beforeEach(function() {
@@ -98,7 +98,7 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
-        scene.mapMode2D = MapMode2D.INFINITE_2D
+        scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 
     it('constructor throws an exception when there is no canvas', function() {
