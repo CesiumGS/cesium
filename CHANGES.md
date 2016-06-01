@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.23 - 2016-07-01
+
+* Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
+
 ### 1.22 - 2016-06-01
 
 * Breaking changes
