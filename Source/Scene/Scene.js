@@ -1687,10 +1687,20 @@ define([
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
 
-            // Avoid tearing artifacts between adjacent frustums in the opaque passes
-            frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
-            frustum.far = frustumCommands.far;
-            us.updateFrustum(frustum);
+            if (scene.mode === SceneMode.SCENE2D) {
+                // To avoid z-fighting in 2D, move the camera to just before the frustum
+                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
+                camera.position.z = height2D - frustumCommands.near + 1.0;
+                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
+                frustum.near = 1.0;
+                us.update(scene.frameState);
+                us.updateFrustum(frustum);
+            } else {
+                // Avoid tearing artifacts between adjacent frustums in the opaque passes
+                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
+                frustum.far = frustumCommands.far;
+                us.updateFrustum(frustum);
+            }
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
@@ -1730,16 +1740,6 @@ define([
                 if (useDepthPlane) {
                     depthPlane.execute(context, passState);
                 }
-            }
-
-            if (scene.mode === SceneMode.SCENE2D) {
-                // To avoid z-fighting in 2D, move the camera to just before the frustum
-                // and scale the frustum depth to be in [1.0, nearToFarDistance2D].
-                camera.position.z = height2D - frustumCommands.near + 1.0;
-                frustum.far = Math.max(1.0, frustumCommands.far - frustumCommands.near);
-                frustum.near = 1.0;
-                us.update(scene.frameState);
-                us.updateFrustum(frustum);
             }
 
             // Execute commands in order by pass up to the translucent pass.
