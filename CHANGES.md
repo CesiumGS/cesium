@@ -3,6 +3,8 @@ Change Log
 
 ### 1.22 - 2016-06-01
 
+* Breaking changes
+    * `KmlDataSource` now requires `options.camera` and `options.canvas`.
 * Added shadows
     * See the Sandcastle demo: [Shadows](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html&label=Showcases).
     * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
