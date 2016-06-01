@@ -2133,13 +2133,13 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(camera)) {
-            throw new DeveloperError('camera is required.');
+            throw new DeveloperError('options.camera is required.');
         }
         if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
+            throw new DeveloperError('options.canvas is required.');
         }
         //>>includeEnd('debug');
-        
+
         this._changed = new Event();
         this._error = new Event();
         this._loading = new Event();
