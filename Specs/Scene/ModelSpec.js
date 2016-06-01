@@ -1632,9 +1632,8 @@ defineSuite([
 
         // Each side of the cube should be a different color
         var oldPixelColor = scene.renderForSpecs();
+        expect(oldPixelColor).not.toEqual([0, 0, 0, 255]);
         for(var i = 0; i < 6; i++) {
-            expect(oldPixelColor).not.toEqual([0, 0, 0, 255]);
-
             var rotate = rotateZ;
             if (i % 3 === 0) {
                 rotate = rotateX;
@@ -1645,6 +1644,7 @@ defineSuite([
             Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
 
             var pixelColor = scene.renderForSpecs();
+            expect(pixelColor).not.toEqual([0, 0, 0, 255]);
             expect(pixelColor).not.toEqual(oldPixelColor);
             oldPixelColor = pixelColor;
         }
