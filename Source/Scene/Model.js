@@ -2768,20 +2768,16 @@ define([
                 if (setUniforms.indexOf(quantizedUniform) < 0) {
                     var properties = quantizedUniforms[quantizedUniform];
                     if (defined(properties.mat)) {
-                        switch (properties.mat) {
-                            case 3:
-                                uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
-                                break;
-                            case 4:
-                                uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
-                                break;
+                        if (properties.mat === 3) {
+                            uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
+                        }
+                        else if (properties.mat === 4) {
+                            uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
                         }
                     }
                     if (defined(properties.vec)) {
-                        switch (properties.vec) {
-                            case 4:
-                                uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 1], model).func;
-                                break;
+                        if (properties.vec === 4) {
+                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 1], model).func;
                         }
                     }
                 }
