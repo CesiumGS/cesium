@@ -1504,6 +1504,7 @@ define([
             if (attribute.toLowerCase().indexOf('position') > -1) {
                 attributes[i] = attributes[0];
                 attributes[0] = attribute;
+                break;
             }
         }
 
