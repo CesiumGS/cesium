@@ -590,9 +590,11 @@ define([
             materialsById : undefined     // Indexed with the material's property name
         };
 
-        this._uniformMaps = {};       // Not cached since it can be targeted by glTF animation
-        this._quantizedUniforms = {}; // Quantized uniforms for each program for WEB3D_quantized_attributes
-        this._rendererResources = {   // Cached between models with the same url/cache-key
+        this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
+        this._extensionsUsed = undefined; // Cached used extensions in a hash-map so we don't have to search the gltf array
+        this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
+        this._programPrimitives = {};
+        this._rendererResources = {       // Cached between models with the same url/cache-key
             buffers : {},
             vertexArrays : {},
             programs : {},
@@ -1109,10 +1111,28 @@ define([
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
 
+    function getAccessorMinMax(gltf, accessorId) {
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        var accessorMin = accessor.min;
+        var accessorMax = accessor.max;
+        // If this accessor is quantized, we should use the decoded min and max
+        if (defined(extensions)) {
+            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+            if (defined(quantizedAttributes)) {
+                accessorMin = quantizedAttributes.decodedMin;
+                accessorMax = quantizedAttributes.decodedMax;
+            }
+        }
+        return {
+            'min': accessorMin,
+            'max': accessorMax
+        };
+    }
+
     function computeBoundingSphere(gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
-        var gltfAccessors = gltf.accessors;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
         var rootNodesLength = rootNodes.length;
 
@@ -1137,24 +1157,11 @@ define([
                         var primitives = gltfMeshes[meshes[j]].primitives;
                         var primitivesLength = primitives.length;
                         for (var m = 0; m < primitivesLength; ++m) {
-                            var position = primitives[m].attributes.POSITION;
-                            if (defined(position)) {
-                                var accessor = gltfAccessors[position];
-                                var extensions = accessor.extensions;
-                                var accessorMin = accessor.min;
-                                var accessorMax = accessor.max;
-                                
-                                // If this accessor is quantized, we should use the decoded min and max
-                                if (defined(extensions)) {
-                                    var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                                    // The decodeMin and decodeMax attributes are required for POSITION attributes
-                                    if (defined(quantizedAttributes)) {
-                                        accessorMin = quantizedAttributes.decodedMin;
-                                        accessorMax = quantizedAttributes.decodedMax;
-                                    }
-                                }
-                                var aMin = Cartesian3.fromArray(accessorMin, 0, aMinScratch);
-                                var aMax = Cartesian3.fromArray(accessorMax, 0, aMaxScratch);
+                            var positionAccessor = primitives[m].attributes.POSITION;
+                            if (defined(positionAccessor)) {
+                                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
@@ -1429,11 +1436,27 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
+        var usesQuantizedAttributes = usesExtension(model, 'WEB3D_quantized_attributes');
 
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
                 var mesh = meshes[id];
                 runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+                if (usesQuantizedAttributes) {
+                    // Cache primitives according to their program
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var i = 0; i < primitivesLength; i++) {
+                        var primitive = primitives[i];
+                        var programId = getProgramForPrimitive(model, primitive);
+                        var programPrimitives = model._programPrimitives[programId];
+                        if (!defined(programPrimitives)) {
+                            programPrimitives = [];
+                            model._programPrimitives[programId] = programPrimitives;
+                        }
+                        programPrimitives.push(primitive);
+                    }
+                }
             }
         }
 
@@ -1448,18 +1471,22 @@ define([
             parsePrograms(model);
             parseTextures(model);
         }
-
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
     }
 
     function usesExtension(model, extension) {
-        var extensionsUsed = model.gltf.extensionsUsed;
-        if (defined(extensionsUsed)) {
-            return extensionsUsed.indexOf(extension) >= 0;
+        var cachedExtensionsUsed = model._extensionsUsed;
+        if (!defined(cachedExtensionsUsed)) {
+            var extensionsUsed = model.gltf.extensionsUsed;
+            cachedExtensionsUsed = {};
+            var extensionsLength = extensionsUsed.length;
+            for (var i = 0; i < extensionsLength; i++) {
+                cachedExtensionsUsed[extensionsUsed[i]] = i;
+            }
         }
-        return false;
+        return defined(cachedExtensionsUsed[extension]);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1573,9 +1600,10 @@ define([
             if (technique.parameters.hasOwnProperty(parameter)) {
                 var semantic = technique.parameters[parameter].semantic;
                 if (semantic === attributeSemantic) {
-                    for (var attributeVarName in technique.attributes) {
-                        if (technique.attributes.hasOwnProperty(attributeVarName)) {
-                            var name = technique.attributes[attributeVarName];
+                    var attributes = technique.attributes;
+                    for (var attributeVarName in attributes) {
+                        if (attributes.hasOwnProperty(attributeVarName)) {
+                            var name = attributes[attributeVarName];
                             if (name === parameter) {
                                 return attributeVarName;
                             }
@@ -1588,70 +1616,68 @@ define([
     }
     
     function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
-        var gltf = model.gltf;
         var quantizedUniforms = {};
         model._quantizedUniforms[programName] = quantizedUniforms;
 
-        for (var meshId in gltf.meshes) {
-            if (gltf.meshes.hasOwnProperty(meshId)) {
-                var primitives = gltf.meshes[meshId].primitives;
-                for (var i = 0; i < primitives.length; i++) {
-                    var primitive = primitives[i];
-                    if (getProgramForPrimitive(model, primitive) === programName) {
-                        for (var attributeSemantic in primitive.attributes) {
-                            if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
-                                var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
-                                if (!defined(quantizedUniforms[decodeUniformVarName])) {
-                                    var accessorId = primitive.attributes[attributeSemantic];
-                                    var quantizedAttributes = getQuantizedAttributes(model, accessorId);
-                                    if (defined(quantizedAttributes)) {
-                                        var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
-                                        var decodeMatrix = quantizedAttributes.decodeMatrix;
-                                        var newMain = 'czm_decoded_' + attributeSemantic;
-                                        var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
-                                        var size = Math.floor(Math.sqrt(decodeMatrix.length));
+        var primitives = model._programPrimitives[programName];
+        for (var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            if (getProgramForPrimitive(model, primitive) === programName) {
+                for (var attributeSemantic in primitive.attributes) {
+                    if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        if (!defined(quantizedUniforms[decodeUniformVarName])) {
+                            var accessorId = primitive.attributes[attributeSemantic];
+                            var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                            if (defined(quantizedAttributes)) {
+                                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                                var decodeMatrix = quantizedAttributes.decodeMatrix;
+                                var newMain = 'czm_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
 
-                                        // replace usages of the original attribute with the decoded version, but not the declaration
-                                        shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
-                                        // declare decoded attribute
-                                        shader = 'vec' + (size - 1) + ' ' + decodedAttributeVarName + ';\n' + shader;
-                                        // splice decode function into the shader
-                                        var decode = '';
-                                        if (size === 5) {
-                                            // separate scale and translate since glsl doesn't have mat5
-                                            var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
-                                            var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
-                                            shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
-                                            shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
-                                            decode = '\n' +
-                                                     'void main() {\n' +
-                                                     '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
-                                                     '    ' + newMain + '();\n' +
-                                                     '}\n';
-                                            
-                                            quantizedUniforms[decodeUniformVarNameScale] = {'mat': 4};
-                                            quantizedUniforms[decodeUniformVarNameTranslate] = {'vec': 4};
-                                        }
-                                        else {
-                                            shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
-                                            decode = '\n' +
-                                                     'void main() {\n' +
-                                                     '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
-                                                     '    ' + newMain + '();\n' +
-                                                     '}\n';
+                                // replace usages of the original attribute with the decoded version, but not the declaration
+                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                                // declare decoded attribute
+                                shader = 'vec' + (size - 1) + ' ' + decodedAttributeVarName + ';\n' + shader;
+                                // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
+                                // uniform in the shader (32-bit floating point)
+                                var decode = '';
+                                if (size === 5) {
+                                    // separate scale and translate since glsl doesn't have mat5
+                                    var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                                    var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                                    shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
+                                    shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
 
-                                            quantizedUniforms[decodeUniformVarName] = {'mat': size};
-                                        }
-                                        shader = ShaderSource.replaceMain(shader, newMain);
-                                        shader += decode;
-                                    }
+                                    quantizedUniforms[decodeUniformVarNameScale] = {'mat': 4};
+                                    quantizedUniforms[decodeUniformVarNameTranslate] = {'vec': 4};
                                 }
+                                else {
+                                    shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
+
+                                    quantizedUniforms[decodeUniformVarName] = {'mat': size};
+                                }
+                                shader = ShaderSource.replaceMain(shader, newMain);
+                                shader += decode;
                             }
                         }
                     }
                 }
             }
         }
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
         return shader;
     }
 
@@ -2816,23 +2842,10 @@ define([
                 var programId = technique.program;
 
                 var boundingSphere;
-                var positionAttribute = primitive.attributes.POSITION;
-                if (defined(positionAttribute)) {
-                    var a = accessors[positionAttribute];
-                    var extensions = a.extensions;
-                    var accessorMin = a.min;
-                    var accessorMax = a.max;
-
-                    // If this accessor is quantized, we should use the decoded min and max
-                    if (defined(extensions)) {
-                        var quantizedAttributes = extensions.WEB3D_quantized_attributes;
-                        // The decodeMin and decodeMax attributes are required for POSITION attributes
-                        if (defined(quantizedAttributes)) {
-                            accessorMin = quantizedAttributes.decodedMin;
-                            accessorMax = quantizedAttributes.decodedMax;
-                        }
-                    }
-                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(accessorMin), Cartesian3.fromArray(accessorMax));
+                var positionAccessor = primitive.attributes.POSITION;
+                if (defined(positionAccessor)) {
+                    var minMax = getAccessorMinMax(gltf, positionAccessor)
+                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
                 }
 
                 var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
