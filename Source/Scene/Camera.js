@@ -619,7 +619,7 @@ define([
          * @readonly
          */
         heading : {
-            get : function () {
+            get : function() {
                 if (this._mode !== SceneMode.MORPHING) {
                     var ellipsoid = this._projection.ellipsoid;
 
@@ -738,8 +738,7 @@ define([
             var frustum = this._max2Dfrustum = this.frustum.clone();
 
             //>>includeStart('debug', pragmas.debug);
-            if (!defined(frustum.left) || !defined(frustum.right) ||
-               !defined(frustum.top) || !defined(frustum.bottom)) {
+            if (!defined(frustum.left) || !defined(frustum.right) || !defined(frustum.top) || !defined(frustum.bottom)) {
                 throw new DeveloperError('The camera frustum is expected to be orthographic for 2D camera control.');
             }
             //>>includeEnd('debug');
@@ -826,7 +825,10 @@ define([
         camera._setTransform(currentTransform);
     }
 
-    function setView2D(camera, position, convert) {
+    function setView2D(camera, position, heading, convert) {
+        var pitch = -CesiumMath.PI_OVER_TWO;
+        var roll = 0.0;
+
         var currentTransform = Matrix4.clone(camera.transform, scratchSetViewTransform1);
         camera._setTransform(Matrix4.IDENTITY);
 
@@ -851,6 +853,12 @@ define([
                 frustum.bottom = -frustum.top;
             }
         }
+
+        var rotQuat = Quaternion.fromHeadingPitchRoll(heading - CesiumMath.PI_OVER_TWO, pitch, roll, scratchSetViewQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, scratchSetViewMatrix3);
+
+        Matrix3.getColumn(rotMat, 2, camera.up);
+        Cartesian3.cross(camera.direction, camera.up, camera.right);
 
         camera._setTransform(currentTransform);
     }
@@ -890,7 +898,7 @@ define([
             pitch : undefined,
             roll : undefined
         },
-        convert: undefined,
+        convert : undefined,
         endTransform : undefined
     };
 
@@ -901,7 +909,7 @@ define([
      * @param {Cartesian3|Rectangle} [options.destination] The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
-     * y direction in Columbus view. Orientation is not used in 2D.
+     * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
      *
      * @example
@@ -975,7 +983,7 @@ define([
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
         } else if (mode === SceneMode.SCENE2D) {
-            setView2D(this, destination, convert);
+            setView2D(this, destination, heading, convert);
         } else {
             setViewCV(this, destination, heading, pitch, roll, convert);
         }
@@ -1047,7 +1055,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian4();
         }
         updateMembers(this);
@@ -1068,7 +1076,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian3();
         }
         updateMembers(this);
@@ -1089,7 +1097,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian3();
         }
         updateMembers(this);
@@ -1110,7 +1118,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian4();
         }
         updateMembers(this);
@@ -1131,7 +1139,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian3();
         }
         updateMembers(this);
@@ -1152,7 +1160,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!defined(result)){
+        if (!defined(result)) {
             result = new Cartesian3();
         }
         updateMembers(this);
@@ -1613,7 +1621,7 @@ define([
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return Math.abs(this.position.z);
         } else if (this._mode === SceneMode.SCENE2D) {
-            return  Math.max(this.frustum.right - this.frustum.left, this.frustum.top - this.frustum.bottom);
+            return Math.max(this.frustum.right - this.frustum.left, this.frustum.top - this.frustum.bottom);
         }
     };
 
@@ -1790,7 +1798,11 @@ define([
     var viewRectangle3DSouthCenter = new Cartesian3();
     var viewRectangle3DCenter = new Cartesian3();
     var viewRectangle3DEquator = new Cartesian3();
-    var defaultRF = {direction: new Cartesian3(), right: new Cartesian3(), up: new Cartesian3()};
+    var defaultRF = {
+        direction : new Cartesian3(),
+        right : new Cartesian3(),
+        up : new Cartesian3()
+    };
     var viewRectangle3DEllipsoidGeodesic;
 
     function computeD(direction, upOrRight, corner, tanThetaOrPhi) {
@@ -1798,7 +1810,7 @@ define([
         return opposite / tanThetaOrPhi - Cartesian3.dot(direction, corner);
     }
 
-    function rectangleCameraPosition3D (camera, rectangle, result, updateCamera) {
+    function rectangleCameraPosition3D(camera, rectangle, result, updateCamera) {
         var ellipsoid = camera._projection.ellipsoid;
         var cameraRF = updateCamera ? camera : defaultRF;
 
@@ -1955,7 +1967,7 @@ define([
     var viewRectangle2DCartographic = new Cartographic();
     var viewRectangle2DNorthEast = new Cartesian3();
     var viewRectangle2DSouthWest = new Cartesian3();
-    function rectangleCameraPosition2D (camera, rectangle, result) {
+    function rectangleCameraPosition2D(camera, rectangle, result) {
         var projection = camera._projection;
         if (rectangle.west > rectangle.east) {
             rectangle = Rectangle.MAX_VALUE;
@@ -2061,7 +2073,7 @@ define([
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < - Math.PI || cart.longitude > Math.PI) {
+                cart.longitude < -Math.PI || cart.longitude > Math.PI) {
             return undefined;
         }
 
@@ -2327,7 +2339,6 @@ define([
         return undefined;
     };
 
-
     var scratchFlyToDestination = new Cartesian3();
     var scratchFlyToCarto = new Cartographic();
     var newOptions = {
@@ -2350,7 +2361,7 @@ define([
      * @param {Cartesian3|Rectangle} options.destination The final position of the camera in WGS84 (world) coordinates or a rectangle that would be visible from a top-down view.
      * @param {Object} [options.orientation] An object that contains either direction and up properties or heading, pith and roll properties. By default, the direction will point
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
-     * y direction in Columbus view.  Orientation is not used in 2D.
+     * y direction in Columbus view.  Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Number} [options.duration] The duration of the flight in seconds. If omitted, Cesium attempts to calculate an ideal duration based on the distance to be traveled by the flight.
      * @param {Camera~FlightCompleteCallback} [options.complete] The function to execute when the flight is complete.
      * @param {Camera~FlightCancelledCallback} [options.cancel] The function to execute if the flight is cancelled.
@@ -2418,7 +2429,7 @@ define([
             setViewOptions.convert = options.convert;
             setViewOptions.endTransform = options.endTransform;
             this.setView(setViewOptions);
-            if (typeof options.complete === 'function'){
+            if (typeof options.complete === 'function') {
                 options.complete();
             }
             return;
