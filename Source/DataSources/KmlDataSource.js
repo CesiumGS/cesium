@@ -12,7 +12,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -70,7 +69,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -2129,21 +2127,18 @@ define([
      *      });
      */
     function KmlDataSource(options) {
-        var showWarning = false;
         options = defaultValue(options, {});
-        if (defined(options.getURL)) {
-            showWarning = true;
-            var proxy = options;
-            options = {
-                proxy: proxy
-            };
-        } else if (!defined(options.camera) || !defined(options.canvas)) {
-            showWarning = true;
-        }
+        var camera = options.camera;
+        var canvas = options.canvas;
 
-        if (showWarning) {
-            deprecationWarning('KmlDataSource', 'KmlDataSource now longer takes a proxy object. It takes an options object with camera and canvas as required properties. This will throw in Cesium 1.22.');
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(camera)) {
+            throw new DeveloperError('options.camera is required.');
         }
+        if (!defined(canvas)) {
+            throw new DeveloperError('options.canvas is required.');
+        }
+        //>>includeEnd('debug');
 
         this._changed = new Event();
         this._error = new Event();
@@ -2157,9 +2152,6 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
-
-        var camera = options.camera;
-        var canvas = options.canvas;
 
         this._canvas = canvas;
         this._camera = camera;

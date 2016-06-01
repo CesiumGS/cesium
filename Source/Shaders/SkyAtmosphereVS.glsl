@@ -35,7 +35,7 @@
   
 attribute vec4 position;
 
-uniform vec4 cameraAndRadiiAndDynamicAtmosphereColor; // camera height, outer radius, inner radius, dynamic atmosphere color flag
+uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
 
 const float Kr = 0.0025;
 const float Kr4PI = Kr * 4.0 * czm_pi;
@@ -65,10 +65,10 @@ float scale(float cosAngle)
 
 void main(void)
 {
-    // unpack attributes
-    float cameraHeight = cameraAndRadiiAndDynamicAtmosphereColor.x;
-    float outerRadius = cameraAndRadiiAndDynamicAtmosphereColor.y;
-    float innerRadius = cameraAndRadiiAndDynamicAtmosphereColor.z;
+    // Unpack attributes
+    float cameraHeight = u_cameraAndRadiiAndDynamicAtmosphereColor.x;
+    float outerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.y;
+    float innerRadius = u_cameraAndRadiiAndDynamicAtmosphereColor.z;
 
     // Get the ray from the camera to the vertex and its length (which is the far point of the ray passing through the atmosphere)
     vec3 positionV3 = position.xyz;
@@ -107,7 +107,7 @@ void main(void)
 
     // Now loop through the sample rays
     vec3 frontColor = vec3(0.0, 0.0, 0.0);
-    vec3 lightDir = (cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
+    vec3 lightDir = (u_cameraAndRadiiAndDynamicAtmosphereColor.w > 0.0) ? czm_sunPositionWC - czm_viewerPositionWC : czm_viewerPositionWC;
     lightDir = normalize(lightDir);
 
     for(int i=0; i<nSamples; i++)
