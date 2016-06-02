@@ -764,6 +764,7 @@ define([
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
 
+        /*
         var walls;
         var topAndBottom;
         var outerPositions;
@@ -847,6 +848,51 @@ define([
                 geometries.push(geometry);
             }
         }
+        */
+
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
+        var polygons = results.polygons;
+        var outerPositions;
+
+        if (polygons.length === 0) {
+            return;
+        }
+
+        if (perPositionHeight) {
+            outerPositions = polygons[0].slice();
+            for (var i = 0; i < outerPositions.length; i++) {
+                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
+            }
+        } else {
+            outerPositions = polygons[0];
+        }
+
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
+
+        var options = {
+                perPositionHeight: perPositionHeight,
+                vertexFormat: vertexFormat,
+                geometry: undefined,
+                tangentPlane: tangentPlane,
+                boundingRectangle: boundingRectangle,
+                ellipsoid: ellipsoid,
+                stRotation: stRotation,
+                bottom: false,
+                top: true,
+                wall: false
+            };
+
+        var geometries = PolygonGeometryLibrary.createGeometryUsingEarcut(polygonHierarchy, ellipsoid, granularity, perPositionHeight);
+        //var geometries = PolygonGeometryLibrary.createGeometryUsingRandom(polygonHierarchy, ellipsoid, granularity, perPositionHeight);
+        var geometry = new GeometryInstance({
+            geometry : geometries[0]
+        });
+        geometry.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
+        options.geometry = geometry.geometry;
+        geometry.geometry = computeAttributes(options);
+        //geometries.push(geometry);
+        geometries = [geometry];
 
         geometry = GeometryPipeline.combineInstances(geometries)[0];
         geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
