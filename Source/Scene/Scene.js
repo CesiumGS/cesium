@@ -48,6 +48,7 @@ define([
         './FrustumCommands',
         './FXAA',
         './GlobeDepth',
+        './MapMode2D',
         './OIT',
         './OrthographicFrustum',
         './Pass',
@@ -114,6 +115,7 @@ define([
         FrustumCommands,
         FXAA,
         GlobeDepth,
+        MapMode2D,
         OIT,
         OrthographicFrustum,
         Pass,
@@ -185,6 +187,7 @@ define([
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -573,6 +576,7 @@ define([
         this._camera = camera;
         this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
+        this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
         // Keeps track of the state of a frame. FrameState is the state across
         // the primitives of the scene. This state is for internally keeping track
@@ -1062,6 +1066,17 @@ define([
                     this._camera.frustum.xOffset = 0.0;
                 }
             }
+        },
+
+        /**
+         * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         */
+        mapMode2D : {
+            get : function() {
+                return this._mapMode2D;
+            }
         }
     });
 
@@ -1173,7 +1188,7 @@ define([
                 curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
                 curFar = Math.min(far, farToNearRatio * curNear);
             } else {
-                curNear = near + m * nearToFarDistance2D;
+                curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
                 curFar = Math.min(far, curNear + nearToFarDistance2D);
             }
 
@@ -1940,7 +1955,7 @@ define([
             viewport.width = context.drawingBufferWidth;
             viewport.height = context.drawingBufferHeight;
 
-            if (mode !== SceneMode.SCENE2D) {
+            if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
                 executeCommandsInViewport(true, scene, passState, backgroundColor, picking);
             } else {
                 execute2DViewportCommands(scene, passState, backgroundColor, picking);
