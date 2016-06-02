@@ -279,11 +279,11 @@ define([
         return url;
     }
 
-    // an optional context is passed to allow for some malformed kmls (thos with multiple geometries with same ids) to still parse
+    // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
     // correctly, as they do in Google Earth.
     function getOrCreateEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
-        id = defined(id) && id !=="" ? id : createGuid();
+        id = defined(id) && id.length !== 0 ? id : createGuid();
         if(defined(context)){
             id = context + id;
         }
