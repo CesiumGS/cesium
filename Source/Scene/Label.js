@@ -722,11 +722,10 @@ define([
 
         var labelCollection = this._labelCollection;
         var modelMatrix = labelCollection.modelMatrix;
-        var actualPosition = Billboard._computeActualPosition(this, this._position, scene.frameState, modelMatrix);
+        var actualPosition = defined(this._actualClampedPosition) ? this._actualClampedPosition : this._position;
 
         var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
                 this._eyeOffset, this._pixelOffset, scene, result);
-        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };
 
