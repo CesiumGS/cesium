@@ -4,6 +4,7 @@ Change Log
 ### 1.23 - 2016-07-01
 
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* Defer processing of KML to allow for smoother performance when processing large files
 * `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
 
 ### 1.22 - 2016-06-01
@@ -21,7 +22,7 @@ Change Log
 * Added support for rendering models in 2D and Columbus view.
 * Added option to enable sun position based atmosphere color when `Globe.enableLighting` is `true`. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
-* Defer processing of KML to allow for smoother performance when processing large files
+
 * Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
 * Improve memory management for entity billboard/label/point/path visualization.
 * Added `terrainProviderChanged` event to `Scene` and `Globe`
