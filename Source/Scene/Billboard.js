@@ -1099,7 +1099,6 @@ define([
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
-        pixelOffset.y = -pixelOffset.y;
         var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
@@ -1150,7 +1149,6 @@ define([
 
         var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
                 this._eyeOffset, scratchPixelOffset, scene, result);
-        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };
 

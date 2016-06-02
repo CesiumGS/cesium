@@ -162,7 +162,7 @@ defineSuite([
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
-                 expect(upsampled._buffer).toEqual([1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5]);
+                 expect(upsampled._buffer).toEqual([1, 1, 1, 2, 3, 3, 4, 4, 4, 5, 5, 6, 7, 7, 8, 8]);
              });
          });
 
@@ -222,7 +222,7 @@ defineSuite([
                  expect(upsampled.wasCreatedByUpsampling()).toBe(true);
                  expect(upsampled._width).toBe(4);
                  expect(upsampled._height).toBe(4);
-                 expect(upsampled._buffer).toEqual([2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0]);
+                 expect(upsampled._buffer).toEqual([2, 3, 3, 4, 4, 5, 5, 6, 6, 6, 7, 7, 8, 9, 9, 10]);
              });
          });
 
