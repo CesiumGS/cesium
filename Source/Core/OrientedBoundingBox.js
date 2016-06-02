@@ -177,9 +177,9 @@ define([
             l3 = Math.min(Cartesian3.dot(v3, p), l3);
         }
 
-        v1 = Cartesian3.multiplyByScalar(v1, 0.5*(l1 + u1), v1);
-        v2 = Cartesian3.multiplyByScalar(v2, 0.5*(l2 + u2), v2);
-        v3 = Cartesian3.multiplyByScalar(v3, 0.5*(l3 + u3), v3);
+        v1 = Cartesian3.multiplyByScalar(v1, 0.5 * (l1 + u1), v1);
+        v2 = Cartesian3.multiplyByScalar(v2, 0.5 * (l2 + u2), v2);
+        v3 = Cartesian3.multiplyByScalar(v3, 0.5 * (l3 + u3), v3);
 
         var center = Cartesian3.add(v1, v2, result.center);
         center = Cartesian3.add(center, v3, center);
