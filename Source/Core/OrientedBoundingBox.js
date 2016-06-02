@@ -75,6 +75,7 @@ define([
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
     var scratchCartesian5 = new Cartesian3();
+    var scratchCartesian6 = new Cartesian3();
     var scratchCovarianceResult = new Matrix3();
     var scratchEigenResult = {
         unitary : new Matrix3(),
@@ -154,9 +155,9 @@ define([
         var eigenDecomposition = Matrix3.computeEigenDecomposition(covarianceMatrix, scratchEigenResult);
         var rotation = Matrix3.clone(eigenDecomposition.unitary, result.halfAxes);
 
-        var v1 = Matrix3.getColumn(rotation, 0, new Cartesian3());
-        var v2 = Matrix3.getColumn(rotation, 1, new Cartesian3());
-        var v3 = Matrix3.getColumn(rotation, 2, new Cartesian3());
+        var v1 = Matrix3.getColumn(rotation, 0, scratchCartesian4);
+        var v2 = Matrix3.getColumn(rotation, 1, scratchCartesian5);
+        var v3 = Matrix3.getColumn(rotation, 2, scratchCartesian6);
 
         var u1 = -Number.MAX_VALUE;
         var u2 = -Number.MAX_VALUE;
@@ -180,13 +181,13 @@ define([
         v2 = Cartesian3.multiplyByScalar(v2, 0.5*(l2 + u2), v2);
         v3 = Cartesian3.multiplyByScalar(v3, 0.5*(l3 + u3), v3);
 
-        var center = Cartesian3.add(v1, v2, new Cartesian3());
+        var center = Cartesian3.add(v1, v2, result.center);
         center = Cartesian3.add(center, v3, center);
-        Cartesian3.clone(center, result.center);
 
-        var maxPoint = new Cartesian3(u1, u2, u3);
-        var minPoint = new Cartesian3(l1, l2, l3);
-        var scale = Cartesian3.subtract(maxPoint, minPoint, scratchCartesian3);
+        var scale = scratchCartesian3;
+        scale.x = u1 - l1;
+        scale.y = u2 - l2;
+        scale.z = u3 - l3;
         Cartesian3.multiplyByScalar(scale, 0.5, scale);
         Matrix3.multiplyByScale(result.halfAxes, scale, result.halfAxes);
 
