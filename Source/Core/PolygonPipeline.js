@@ -675,51 +675,5 @@ define([
         return positions;
     };
 
-    /**
-     * Given a polygon defined by an outer ring with one or more inner rings (holes), return a single list of points representing
-     * a polygon defined by the outer ring with the inner holes removed.
-     *
-     * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
-     * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-     * @returns {Cartesian2[]} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
-     *
-     * @exception {DeveloperError} <code>outerRing</code> must not be empty.
-     *
-     * @example
-     * // Simplifying a polygon with multiple holes.
-     * outerRing = Cesium.PolygonPipeline.eliminateHoles(outerRing, innerRings);
-     * polygon.positions = outerRing;
-     */
-    PolygonPipeline.eliminateHoles = function(outerRing, innerRings, ellipsoid) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(outerRing)) {
-            throw new DeveloperError('outerRing is required.');
-        }
-        if (outerRing.length === 0) {
-            throw new DeveloperError('outerRing must not be empty.');
-        }
-        if (!defined(innerRings)) {
-            throw new DeveloperError('innerRings is required.');
-        }
-        //>>includeEnd('debug');
-
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        var innerRingsCopy = [];
-        for ( var i = 0; i < innerRings.length; i++) {
-            var innerRing = [];
-            for ( var j = 0; j < innerRings[i].length; j++) {
-                innerRing.push(Cartesian3.clone(innerRings[i][j]));
-            }
-            innerRingsCopy.push(innerRing);
-        }
-
-        var newPolygonVertices = outerRing;
-        while (innerRingsCopy.length > 0) {
-            newPolygonVertices = eliminateHole(newPolygonVertices, innerRingsCopy, ellipsoid);
-        }
-        return newPolygonVertices;
-    };
-
     return PolygonPipeline;
 });
