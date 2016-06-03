@@ -11,18 +11,24 @@ define([
         when,
         createTaskProcessorWorker,
         require) {
-    "use strict";
+    'use strict';
 
     var moduleCache = {};
 
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
         if (!defined(module)) {
-            // in web workers, require is synchronous
-            require(['./' + moduleName], function(f) {
-                module = f;
-                moduleCache[module] = f;
-            });
+            if (typeof exports === 'object') {
+                // Use CommonJS-style require.
+                moduleCache[module] = module = require('Workers/' + moduleName);
+            } else {
+                // Use AMD-style require.
+                // in web workers, require is synchronous
+                require(['./' + moduleName], function(f) {
+                    module = f;
+                    moduleCache[module] = f;
+                });
+            }
         }
         return module;
     }

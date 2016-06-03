@@ -1,35 +1,36 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Moon',
+        'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Matrix3',
         'Core/Matrix4',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
-        'Specs/createCamera',
-        'Specs/createFrameState',
         'Specs/createScene'
     ], function(
         Moon,
+        BoundingSphere,
         Cartesian3,
+        Color,
         defined,
         Ellipsoid,
         Matrix3,
         Matrix4,
         Simon1994PlanetaryPositions,
         Transforms,
-        createCamera,
-        createFrameState,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
+    var backgroundColor = [255, 0, 0, 255];
 
     beforeAll(function() {
         scene = createScene();
+        Color.unpack(backgroundColor, 0, scene.backgroundColor);
     });
 
     afterAll(function() {
@@ -45,10 +46,10 @@ defineSuite([
         var moonPosition = Simon1994PlanetaryPositions.computeMoonPositionInEarthInertialFrame(date);
         Matrix3.multiplyByVector(icrfToFixed, moonPosition, moonPosition);
 
-        var radius = Ellipsoid.MOON.maximumRadius;
-        var offset = Cartesian3.multiplyByScalar(Cartesian3.normalize(moonPosition, new Cartesian3()), radius + 100.0, new Cartesian3());
-
-        camera.lookAt(moonPosition, offset);
+        camera.viewBoundingSphere(new BoundingSphere(
+            moonPosition,
+            Ellipsoid.MOON.maximumRadius
+        ));
     }
 
     it('default constructs the moon', function() {
@@ -60,37 +61,26 @@ defineSuite([
     });
 
     it('draws in 3D', function() {
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
         scene.moon = new Moon();
-        scene.renderForSpecs();
 
-        var date = scene.frameState.time;
-        var camera = scene.camera;
-        lookAtMoon(camera, date);
+        lookAtMoon(scene.camera, scene.frameState.time);
 
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        scene.moon = scene.moon.destroy();
     });
 
     it('does not render when show is false', function() {
-        var moon = new Moon();
-        moon.show = false;
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        scene.moon = new Moon();
 
-        var frameState = createFrameState(createCamera({
-            near : 1.0,
-            far : 1.0e10
-        }));
-        var context = scene.context;
-        var us = context.uniformState;
-        us.update(context, frameState);
+        lookAtMoon(scene.camera, scene.frameState.time);
 
-        lookAtMoon(scene.camera, frameState.time);
+        expect(scene.renderForSpecs()).not.toEqual(backgroundColor);
+        scene.moon.show = false;
 
-        us.update(context, frameState);
-
-        var commandList = [];
-        moon.update(context, frameState, commandList);
-        expect(commandList.length).toEqual(0);
-
-        moon.destroy();
+        expect(scene.renderForSpecs()).toEqual(backgroundColor);
+        scene.moon = scene.moon.destroy();
     });
 
     it('isDestroyed', function() {

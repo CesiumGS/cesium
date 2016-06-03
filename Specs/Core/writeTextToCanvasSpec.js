@@ -1,12 +1,11 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'Core/writeTextToCanvas',
         'Core/Color'
     ], function(
         writeTextToCanvas,
         Color) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('returns undefined when text is blank', function() {
         var canvas = writeTextToCanvas('');

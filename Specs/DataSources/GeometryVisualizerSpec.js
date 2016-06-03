@@ -8,6 +8,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'DataSources/BoundingSphereState',
+        'DataSources/CallbackProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -17,7 +18,9 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
+        'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
+        'DataSources/StaticOutlineGeometryBatch',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -30,6 +33,7 @@ defineSuite([
         JulianDate,
         ShowGeometryInstanceAttribute,
         BoundingSphereState,
+        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
@@ -39,12 +43,13 @@ defineSuite([
         EntityCollection,
         GridMaterialProperty,
         SampledProperty,
+        StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticOutlineGeometryBatch,
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = JulianDate.now();
 
@@ -473,6 +478,101 @@ defineSuite([
                 return isUpdated;
             }).then(function() {
                 expect(scene.primitives.length).toEqual(2);
+                batch.removeAllPrimitives();
+            });
+        });
+    });
+
+    it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
+        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+
+        var entity = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                material : Color.RED
+            }
+        });
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(time, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.color).toEqual([255, 0, 0, 255]);
+
+            entity.ellipse.material = Color.GREEN;
+            batch.remove(updater);
+            batch.add(time, updater);
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = batch.update(time);
+                scene.render(time);
+                return isUpdated;
+            }).then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity);
+                expect(attributes.color).toEqual([0, 128, 0, 255]);
+                batch.removeAllPrimitives();
+            });
+        });
+    });
+
+    it('StaticOutlineGeometryBatch updates color attribute after rebuilding primitive', function() {
+        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false);
+
+        var entity = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                outline : true,
+                outlineColor : Color.RED
+            }
+        });
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(time, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.color).toEqual([255, 0, 0, 255]);
+
+            entity.ellipse.outlineColor = Color.GREEN;
+            batch.remove(updater);
+            batch.add(time, updater);
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = batch.update(time);
+                scene.render(time);
+                return isUpdated;
+            }).then(function() {
+                expect(scene.primitives.length).toEqual(1);
+                var primitive = scene.primitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity);
+                expect(attributes.color).toEqual([0, 128, 0, 255]);
                 batch.removeAllPrimitives();
             });
         });

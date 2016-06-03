@@ -11,7 +11,7 @@ define([
         defined,
         DeveloperError,
         EllipsoidOutlineGeometry) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a sphere.
@@ -29,8 +29,6 @@ define([
      * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
      * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sphere%20Outline.html|Cesium Sandcastle Sphere Outline Demo}
-     *
      * @example
      * var sphere = new Cesium.SphereOutlineGeometry({
      *   radius : 100.0,
@@ -39,7 +37,7 @@ define([
      * });
      * var geometry = Cesium.SphereOutlineGeometry.createGeometry(sphere);
      */
-    var SphereOutlineGeometry = function(options) {
+    function SphereOutlineGeometry(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
@@ -51,7 +49,7 @@ define([
 
         this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
         this._workerName = 'createSphereOutlineGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -61,9 +59,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {SphereOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -92,6 +89,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {SphereOutlineGeometry} [result] The object into which to store the result.
+     * @returns {SphereOutlineGeometry} The modified result parameter or a new SphereOutlineGeometry instance if one was not provided.
      */
     SphereOutlineGeometry.unpack = function(array, startingIndex, result) {
         var ellipsoidGeometry = EllipsoidOutlineGeometry.unpack(array, startingIndex, scratchEllipsoidGeometry);

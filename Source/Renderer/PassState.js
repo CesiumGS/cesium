@@ -1,6 +1,9 @@
 /*global define*/
-define(function() {
-    "use strict";
+define([
+        '../Core/BoundingRectangle'
+    ], function(
+        BoundingRectangle) {
+    'use strict';
 
     /**
      * The state for a particular rendering pass.  This is used to supplement the state
@@ -8,7 +11,7 @@ define(function() {
      *
      * @private
      */
-    var PassState = function(context) {
+    function PassState(context) {
         /**
          * The context used to execute commands for this pass.
          *
@@ -49,7 +52,14 @@ define(function() {
          * @default undefined
          */
         this.scissorTest = undefined;
-    };
+
+        /**
+         * The viewport used when one is not defined by a {@link DrawCommand}'s render state.
+         * @type {BoundingRectangle}
+         * @default undefined
+         */
+        this.viewport = undefined;
+    }
 
     return PassState;
 });

@@ -5,9 +5,9 @@ define([
     ], function(
         Event,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
-    var MockDataSource = function() {
+    function MockDataSource() {
         //Values to be fiddled with by the test
         this.changedEvent = new Event();
         this.errorEvent = new Event();
@@ -18,8 +18,7 @@ define([
         this.isLoading = false;
         this.loadingEvent = new Event();
         this.destroyed = false;
-    };
-
+    }
     MockDataSource.prototype.update = function() {
         return true;
     };

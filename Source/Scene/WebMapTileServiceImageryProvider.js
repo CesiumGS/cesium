@@ -13,6 +13,7 @@ define([
         '../Core/Rectangle',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/Uri',
+        '../ThirdParty/when',
         './ImageryProvider'
     ], function(
         combine,
@@ -28,8 +29,9 @@ define([
         Rectangle,
         WebMercatorTilingScheme,
         Uri,
+        when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
@@ -39,7 +41,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server.
+     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
      * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
@@ -51,14 +53,13 @@ define([
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
-     * @param {Number} [options.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
+     * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
+     *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
+     *                          an array, each element in the array is a subdomain.
      *
-     * @see ArcGisMapServerImageryProvider
-     * @see BingMapsImageryProvider
-     * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
-     * @see WebMapServiceImageryProvider
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -86,8 +87,17 @@ define([
      *     credit : new Cesium.Credit('U. S. Geological Survey')
      * });
      * viewer.imageryLayers.addImageryProvider(shadedRelief2);
+     * 
+     * @see ArcGisMapServerImageryProvider
+     * @see BingMapsImageryProvider
+     * @see GoogleEarthImageryProvider
+     * @see createOpenStreetMapImageryProvider
+     * @see SingleTileImageryProvider
+     * @see createTileMapServiceImageryProvider
+     * @see WebMapServiceImageryProvider
+     * @see UrlTemplateImageryProvider
      */
-    var WebMapTileServiceImageryProvider = function WebMapTileServiceImageryProvider(options) {
+    function WebMapTileServiceImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(options.url)) {
@@ -112,14 +122,16 @@ define([
         this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
 
         this._minimumLevel = defaultValue(options.minimumLevel, 0);
-        this._maximumLevel = defaultValue(options.maximumLevel, 18);
+        this._maximumLevel = options.maximumLevel;
 
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
+
+        this._readyPromise = when.resolve(true);
 
         // Check the number of tiles at the minimum level.  If it's more than four,
         // throw an exception, because starting at the higher minimum
@@ -135,7 +147,16 @@ define([
 
         var credit = options.credit;
         this._credit = typeof credit === 'string' ? new Credit(credit) : credit;
-    };
+
+        this._subdomains = options.subdomains;
+        if (Array.isArray(this._subdomains)) {
+            this._subdomains = this._subdomains.slice();
+        } else if (defined(this._subdomains) && this._subdomains.length > 0) {
+            this._subdomains = this._subdomains.split('');
+        } else {
+            this._subdomains = ['a', 'b', 'c'];
+        }
+    }
 
     var defaultParameters = freezeObject({
         service : 'WMTS',
@@ -146,6 +167,7 @@ define([
     function buildImageUrl(imageryProvider, col, row, level) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
+        var subdomains = imageryProvider._subdomains;
         var url;
 
         if (imageryProvider._url.indexOf('{') >= 0) {
@@ -156,7 +178,8 @@ define([
                 .replace('{TileMatrixSet}', imageryProvider._tileMatrixSetID)
                 .replace('{TileMatrix}', tileMatrix)
                 .replace('{TileRow}', row.toString())
-                .replace('{TileCol}', col.toString());
+                .replace('{TileCol}', col.toString())
+                .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
         }
         else {
             // build KVP request
@@ -341,6 +364,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof WebMapTileServiceImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link WebMapTileServiceImageryProvider#ready} returns true.
          * @memberof WebMapTileServiceImageryProvider.prototype
@@ -391,7 +426,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -412,7 +447,7 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.

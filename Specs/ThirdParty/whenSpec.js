@@ -1,10 +1,9 @@
-/*global defineSuite */
+/*global defineSuite*/
 defineSuite([
         'ThirdParty/when'
     ], function(
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     // These tests are from my original attempt to write my own promise implementation.
     // When I switched to cujojs/when, I figured I may as well leave these here since

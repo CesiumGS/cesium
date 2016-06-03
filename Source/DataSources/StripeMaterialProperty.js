@@ -17,7 +17,7 @@ define([
         createPropertyDescriptor,
         Property,
         StripeOrientation) {
-    "use strict";
+    'use strict';
 
     var defaultOrientation = StripeOrientation.HORIZONTAL;
     var defaultEvenColor = Color.WHITE;
@@ -37,7 +37,7 @@ define([
      * @param {Property} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
      * @param {Property} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
      */
-    var StripeMaterialProperty = function(options) {
+    function StripeMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
@@ -62,7 +62,7 @@ define([
         this.oddColor = options.oddColor;
         this.offset = options.offset;
         this.repeat = options.repeat;
-    };
+    }
 
     defineProperties(StripeMaterialProperty.prototype, {
         /**

@@ -5,7 +5,7 @@ define([
     ], function(
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile.  This type describes an
@@ -17,9 +17,9 @@ define([
      * @see HeightmapTerrainData
      * @see QuantizedMeshTerrainData
      */
-    var TerrainData = function TerrainData() {
+    function TerrainData() {
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     defineProperties(TerrainData.prototype, {
         /**
@@ -66,11 +66,13 @@ define([
      * Creates a {@link TerrainMesh} from this terrain data.
      * @function
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
@@ -87,7 +89,7 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise|TerrainData} A promise for upsampled terrain data for the descendant tile,
+     * @returns {Promise.<TerrainData>|undefined} A promise for upsampled terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */

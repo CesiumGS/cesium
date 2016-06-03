@@ -37,3 +37,16 @@
     fill: #999; /* For SVG buttons */
     box-shadow: none;
 }
+
+.cesium-lighter .cesium-performanceDisplay {
+    background-color: #e2f0ff;
+    border-color: #759dc0;
+}
+
+.cesium-lighter .cesium-performanceDisplay-fps {
+    color: #e52;
+}
+
+.cesium-lighter .cesium-performanceDisplay-ms {
+    color: #ea4;
+}

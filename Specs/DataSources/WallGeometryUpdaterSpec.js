@@ -43,8 +43,7 @@ defineSuite([
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time;
     var time2;
@@ -64,11 +63,11 @@ defineSuite([
 
     function createBasicWall() {
         var wall = new WallGraphics();
-        wall.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
-            1, 1,
-            0, 1
+        wall.positions = new ConstantProperty(Cartesian3.fromRadiansArrayHeights([
+            0, 0, 1,
+            1, 0, 1,
+            1, 1, 1,
+            0, 1, 1
         ]));
         var entity = new Entity();
         entity.wall = wall;
@@ -331,6 +330,26 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)));
     });
 
+    it('createFillGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicWall();
+        entity.show = false;
+        entity.wall.fill = true;
+        var updater = new WallGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+    });
+
+    it('createOutlineGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicWall();
+        entity.show = false;
+        entity.wall.outline = true;
+        var updater = new WallGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+    });
+
     it('dynamic updater sets properties', function() {
         var wall = new WallGraphics();
         wall.positions = createDynamicProperty(Cartesian3.fromRadiansArray([0, 0, 1, 0, 1, 1, 0, 1]));
@@ -491,4 +510,4 @@ defineSuite([
     createDynamicGeometryBoundingSphereSpecs(WallGeometryUpdater, entity, entity.wall, function() {
         return scene;
     });
-});
+}, 'WebGL');

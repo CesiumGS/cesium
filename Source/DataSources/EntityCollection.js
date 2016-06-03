@@ -23,22 +23,36 @@ define([
         RuntimeError,
         TimeInterval,
         Entity) {
-    "use strict";
+    'use strict';
 
     var entityOptionsScratch = {
         id : undefined
     };
 
     function fireChangedEvent(collection) {
+        if (collection._firing) {
+            collection._refire = true;
+            return;
+        }
+
         if (collection._suspendCount === 0) {
             var added = collection._addedEntities;
             var removed = collection._removedEntities;
             var changed = collection._changedEntities;
             if (changed.length !== 0 || added.length !== 0 || removed.length !== 0) {
-                collection._collectionChanged.raiseEvent(collection, added.values, removed.values, changed.values);
-                added.removeAll();
-                removed.removeAll();
-                changed.removeAll();
+                collection._firing = true;
+                do {
+                    collection._refire = false;
+                    var addedArray = added.values.slice(0);
+                    var removedArray = removed.values.slice(0);
+                    var changedArray = changed.values.slice(0);
+
+                    added.removeAll();
+                    removed.removeAll();
+                    changed.removeAll();
+                    collection._collectionChanged.raiseEvent(collection, addedArray, removedArray, changedArray);
+                } while (collection._refire);
+                collection._firing = false;
             }
         }
     }
@@ -47,8 +61,11 @@ define([
      * An observable collection of {@link Entity} instances where each entity has a unique id.
      * @alias EntityCollection
      * @constructor
+     *
+     * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
      */
-    var EntityCollection = function() {
+    function EntityCollection(owner) {
+        this._owner = owner;
         this._entities = new AssociativeArray();
         this._addedEntities = new AssociativeArray();
         this._removedEntities = new AssociativeArray();
@@ -56,7 +73,10 @@ define([
         this._suspendCount = 0;
         this._collectionChanged = new Event();
         this._id = createGuid();
-    };
+        this._show = true;
+        this._firing = false;
+        this._refire  = false;
+    }
 
     /**
      * Prevents {@link EntityCollection#collectionChanged} events from being raised
@@ -136,6 +156,67 @@ define([
             get : function() {
                 return this._entities.values;
             }
+        },
+        /**
+         * Gets whether or not this entity collection should be
+         * displayed.  When true, each entity is only displayed if
+         * its own show property is also true.
+         * @memberof EntityCollection.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._show;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                if (value === this._show) {
+                    return;
+                }
+
+                //Since entity.isShowing includes the EntityCollection.show state
+                //in its calculation, we need to loop over the entities array
+                //twice, once to get the old showing value and a second time
+                //to raise the changed event.
+                this.suspendEvents();
+
+                var i;
+                var oldShows = [];
+                var entities = this._entities.values;
+                var entitiesLength = entities.length;
+
+                for (i = 0; i < entitiesLength; i++) {
+                    oldShows.push(entities[i].isShowing);
+                }
+
+                this._show = value;
+
+                for (i = 0; i < entitiesLength; i++) {
+                    var oldShow = oldShows[i];
+                    var entity = entities[i];
+                    if (oldShow !== entity.isShowing) {
+                        entity.definitionChanged.raiseEvent(entity, 'isShowing', entity.isShowing, oldShow);
+                    }
+                }
+
+                this.resumeEvents();
+            }
+        },
+        /**
+         * Gets the owner of this entity collection, ie. the data source or composite entity collection which created it.
+         * @memberof EntityCollection.prototype
+         * @readonly
+         * @type {DataSource|CompositeEntityCollection}
+         */
+        owner : {
+            get : function() {
+                return this._owner;
+            }
         }
     });
 
@@ -182,6 +263,7 @@ define([
      * Add an entity to the collection.
      *
      * @param {Entity} entity The entity to be added.
+     * @returns {Entity} The entity that was added.
      * @exception {DeveloperError} An entity with <entity.id> already exists in this collection.
      */
     EntityCollection.prototype.add = function(entity) {
@@ -201,9 +283,9 @@ define([
             throw new RuntimeError('An entity with id ' + id + ' already exists in this collection.');
         }
 
+        entity.entityCollection = this;
         entities.set(id, entity);
 
-        var removedEntities = this._removedEntities;
         if (!this._removedEntities.remove(id)) {
             this._addedEntities.set(id, entity);
         }
@@ -229,7 +311,7 @@ define([
     /**
      * Returns true if the provided entity is in this collection, false otherwise.
      *
-     * @param entity The entity.
+     * @param {Entity} entity The entity.
      * @returns {Boolean} true if the provided entity is in this collection, false otherwise.
      */
     EntityCollection.prototype.contains = function(entity) {

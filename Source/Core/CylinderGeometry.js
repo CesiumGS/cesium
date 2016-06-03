@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var radiusScratch = new Cartesian2();
     var normalScratch = new Cartesian3();
@@ -61,8 +61,6 @@ define([
      *
      * @see CylinderGeometry.createGeometry
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cylinder.html|Cesium Sandcastle Cylinder Demo}
-     *
      * @example
      * // create cylinder geometry
      * var cylinder = new Cesium.CylinderGeometry({
@@ -72,7 +70,7 @@ define([
      * });
      * var geometry = Cesium.CylinderGeometry.createGeometry(cylinder);
      */
-    var CylinderGeometry = function(options) {
+    function CylinderGeometry(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
@@ -82,17 +80,14 @@ define([
         var slices = defaultValue(options.slices, 128);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length) || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0.');
+        if (!defined(length)) {
+            throw new DeveloperError('options.length must be defined.');
         }
-        if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0.');
+        if (!defined(topRadius)) {
+            throw new DeveloperError('options.topRadius must be defined.');
         }
-        if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0.');
-        }
-        if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
+        if (!defined(bottomRadius)) {
+            throw new DeveloperError('options.bottomRadius must must be defined.');
         }
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
@@ -105,7 +100,7 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._slices = slices;
         this._workerName = 'createCylinderGeometry';
-    };
+    }
 
     /**
      * The number of elements used to pack the object into an array.
@@ -115,9 +110,8 @@ define([
 
     /**
      * Stores the provided instance into the provided array.
-     * @function
      *
-     * @param {Object} value The value to pack.
+     * @param {CylinderGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
      */
@@ -157,6 +151,7 @@ define([
      * @param {Number[]} array The packed array.
      * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
      * @param {CylinderGeometry} [result] The object into which to store the result.
+     * @returns {CylinderGeometry} The modified result parameter or a new CylinderGeometry instance if one was not provided.
      */
     CylinderGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -196,7 +191,7 @@ define([
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CylinderGeometry.createGeometry = function(cylinderGeometry) {
         var length = cylinderGeometry._length;
@@ -204,6 +199,10 @@ define([
         var bottomRadius = cylinderGeometry._bottomRadius;
         var vertexFormat = cylinderGeometry._vertexFormat;
         var slices = cylinderGeometry._slices;
+
+        if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
+            return;
+        }
 
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;

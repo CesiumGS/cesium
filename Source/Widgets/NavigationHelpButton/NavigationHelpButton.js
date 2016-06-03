@@ -21,7 +21,7 @@ define([
         knockout,
         getElement,
         NavigationHelpButtonViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * <p>The NavigationHelpButton is a single button widget for displaying instructions for
@@ -44,7 +44,7 @@ define([
      *     container : 'navigationHelpButtonContainer'
      * });
      */
-    var NavigationHelpButton = function(options) {
+    function NavigationHelpButton(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.container)) {
             throw new DeveloperError('options.container is required.');
@@ -79,6 +79,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         wrapper.appendChild(instructionContainer);
 
         var mouseButton = document.createElement('button');
+        mouseButton.type = 'button';
         mouseButton.className = 'cesium-navigation-button cesium-navigation-button-left';
         mouseButton.setAttribute('data-bind', 'click: showClick, css: {"cesium-navigation-button-selected": !_touch, "cesium-navigation-button-unselected": _touch}');
         var mouseIcon = document.createElement('img');
@@ -90,6 +91,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
         mouseButton.appendChild(document.createTextNode('Mouse'));
 
         var touchButton = document.createElement('button');
+        touchButton.type = 'button';
         touchButton.className = 'cesium-navigation-button cesium-navigation-button-right';
         touchButton.setAttribute('data-bind', 'click: showTouch, css: {"cesium-navigation-button-selected": _touch, "cesium-navigation-button-unselected": !_touch}');
         var touchIcon = document.createElement('img');
@@ -102,7 +104,6 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
 
         instructionContainer.appendChild(mouseButton);
         instructionContainer.appendChild(touchButton);
-
 
         var clickInstructions = document.createElement('div');
         clickInstructions.className = 'cesium-click-navigation-help cesium-navigation-help-instructions';
@@ -129,7 +130,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
                     <td>\
                         <div class="cesium-navigation-help-rotate">Rotate view</div>\
                         <div class="cesium-navigation-help-details">Middle click + drag, or</div>\
-                        <div class="cesium-navigation-help-details">CTRL + Left click + drag</div>\
+                        <div class="cesium-navigation-help-details">CTRL + Left/Right click + drag</div>\
                     </td>\
                 </tr>\
             </table>';
@@ -191,7 +192,7 @@ cesiumSvgPath: { path: _svgPath, width: 32, height: 32 }');
             document.addEventListener('mousedown', this._closeInstructions, true);
             document.addEventListener('touchstart', this._closeInstructions, true);
         }
-    };
+    }
 
     defineProperties(NavigationHelpButton.prototype, {
         /**

@@ -19,7 +19,7 @@ define([
         Matrix4,
         PerInstanceColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates a {@link Primitive} to visualize well-known vector vertex attributes:
@@ -42,7 +42,7 @@ define([
      *    modelMatrix : instance.modelMatrix
      * }));
      */
-    var createTangentSpaceDebugPrimitive = function(options) {
+    function createTangentSpaceDebugPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var instances = [];
         var geometry = options.geometry;
@@ -105,7 +105,7 @@ define([
         }
 
         return undefined;
-    };
+    }
 
     return createTangentSpaceDebugPrimitive;
 });

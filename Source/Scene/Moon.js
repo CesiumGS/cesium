@@ -29,7 +29,7 @@ define([
         Transforms,
         EllipsoidPrimitive,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * Draws the Moon in 3D.
@@ -42,12 +42,13 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.MOON] The moon ellipsoid.
      * @param {Boolean} [options.onlySunLighting=true] Use the sun as the only light source.
      *
-     * @see Scene#moon
      *
      * @example
      * scene.moon = new Cesium.Moon();
+     * 
+     * @see Scene#moon
      */
-    var Moon = function(options) {
+    function Moon(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var url = options.textureUrl;
@@ -82,12 +83,13 @@ define([
         this._ellipsoidPrimitive = new EllipsoidPrimitive({
             radii : this.ellipsoid.radii,
             material : Material.fromType(Material.ImageType),
+            depthTestEnabled : false,
             _owner : this
         });
         this._ellipsoidPrimitive.material.translucent = false;
 
         this._axes = new IauOrientationAxes();
-    };
+    }
 
     defineProperties(Moon.prototype, {
         /**
@@ -110,11 +112,12 @@ define([
     var icrfToFixed = new Matrix3();
     var rotationScratch = new Matrix3();
     var translationScratch = new Cartesian3();
+    var scratchCommandList = [];
 
     /**
      * @private
      */
-    Moon.prototype.update = function(context, frameState, commandList) {
+    Moon.prototype.update = function(frameState) {
         if (!this.show) {
             return;
         }
@@ -136,7 +139,13 @@ define([
         Matrix3.multiplyByVector(icrfToFixed, translation, translation);
 
         Matrix4.fromRotationTranslation(rotation, translation, ellipsoidPrimitive.modelMatrix);
-        ellipsoidPrimitive.update(context, frameState, commandList);
+
+        var savedCommandList = frameState.commandList;
+        frameState.commandList = scratchCommandList;
+        scratchCommandList.length = 0;
+        ellipsoidPrimitive.update(frameState);
+        frameState.commandList = savedCommandList;
+        return (scratchCommandList.length === 1) ? scratchCommandList[0] : undefined;
     };
 
     /**
@@ -165,10 +174,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Moon#isDestroyed
      *
      * @example
      * moon = moon && moon.destroy();
+     * 
+     * @see Moon#isDestroyed
      */
     Moon.prototype.destroy = function() {
         this._ellipsoidPrimitive = this._ellipsoidPrimitive && this._ellipsoidPrimitive.destroy();

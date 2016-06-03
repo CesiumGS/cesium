@@ -31,7 +31,7 @@ define([
         PrimitiveType,
         Queue,
         WindingOrder) {
-    "use strict";
+    'use strict';
 
     var uScratch = new Cartesian2();
     var vScratch = new Cartesian2();
@@ -545,7 +545,6 @@ define([
      *
      * @private
      */
-    var intersectionScratch = new Cartesian2();
     var aDirectionScratch = new Cartesian2();
     var bDirectionScratch = new Cartesian2();
 
@@ -704,33 +703,6 @@ define([
      * @private
      */
     var PolygonPipeline = {};
-
-    /**
-     * Cleans up a simple polygon by removing duplicate adjacent positions and making
-     * the first position not equal the last position.
-     *
-     * @exception {DeveloperError} At least three positions are required.
-     */
-    PolygonPipeline.removeDuplicates = function(positions) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(positions)) {
-            throw new DeveloperError('positions is required.');
-        }
-        //>>includeEnd('debug');
-
-        var length = positions.length;
-        var cleanedPositions = [];
-        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
-            var v0 = positions[i0];
-            var v1 = positions[i1];
-
-            if (!Cartesian3.equals(v0, v1)) {
-                cleanedPositions.push(v1); // Shallow copy!
-            }
-        }
-
-        return cleanedPositions;
-    };
 
     /**
      * @exception {DeveloperError} At least three positions are required.
@@ -958,13 +930,13 @@ define([
     /**
      * Scales each position of a geometry's position attribute to a height, in place.
      *
-     * @param {Geometry} geometry The geometry whose positions are to be scaled.
-     * @param {Number} [height=0.0] The desired height to add to the positions of the geometry.
+     * @param {Number[]} positions The array of numbers representing the positions to be scaled
+     * @param {Number} [height=0.0] The desired height to add to the positions
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      * @param {Boolean} [scaleToSurface=true] <code>true</code> if the positions need to be scaled to the surface before the height is added.
-     * @returns {Geometry} The same geometry whose positions where scaled.
+     * @returns {Number[]} The input array of positions, scaled to height
      */
-    PolygonPipeline.scaleToGeodeticHeight = function(geometry, height, ellipsoid, scaleToSurface) {
+    PolygonPipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, scaleToSurface) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var n = scaleToGeodeticHeightN;
@@ -973,8 +945,7 @@ define([
         height = defaultValue(height, 0.0);
         scaleToSurface = defaultValue(scaleToSurface, true);
 
-        if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
-            var positions = geometry.attributes.position.values;
+        if (defined(positions)) {
             var length = positions.length;
 
             for ( var i = 0; i < length; i += 3) {
@@ -984,10 +955,12 @@ define([
                     p = ellipsoid.scaleToGeodeticSurface(p, p);
                 }
 
-                n = ellipsoid.geodeticSurfaceNormal(p, n);
+                if (height !== 0) {
+                    n = ellipsoid.geodeticSurfaceNormal(p, n);
 
-                Cartesian3.multiplyByScalar(n, height, n);
-                Cartesian3.add(p, n, p);
+                    Cartesian3.multiplyByScalar(n, height, n);
+                    Cartesian3.add(p, n, p);
+                }
 
                 positions[i] = p.x;
                 positions[i + 1] = p.y;
@@ -995,7 +968,7 @@ define([
             }
         }
 
-        return geometry;
+        return positions;
     };
 
     /**
@@ -1004,7 +977,7 @@ define([
      *
      * @param {Cartesian2[]} outerRing An array of Cartesian points defining the outer boundary of the polygon.
      * @param {Cartesian2[]} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
-     * @returns A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     * @returns {Cartesian2[]} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
      *
      * @exception {DeveloperError} <code>outerRing</code> must not be empty.
      *

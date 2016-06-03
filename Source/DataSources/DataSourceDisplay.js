@@ -51,7 +51,7 @@ define([
         PolylineVolumeGeometryUpdater,
         RectangleGeometryUpdater,
         WallGeometryUpdater) {
-    "use strict";
+    'use strict';
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -65,7 +65,7 @@ define([
      *        A function which creates an array of visualizers used for visualization.
      *        If undefined, all standard visualizers are used.
      */
-    var DataSourceDisplay = function(options) {
+    function DataSourceDisplay(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -96,7 +96,9 @@ define([
         var defaultDataSource = new CustomDataSource();
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
-    };
+
+        this._ready = false;
+    }
 
     /**
      * Gets or sets the default function which creates an array of visualizers used for visualization.
@@ -157,6 +159,18 @@ define([
             get : function() {
                 return this._defaultDataSource;
             }
+        },
+
+        /**
+         * Gets a value indicating whether or not all entities in the data source are ready
+         * @memberof DataSourceDisplay.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
         }
     });
 
@@ -186,10 +200,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceDisplay#isDestroyed
      *
      * @example
      * dataSourceDisplay = dataSourceDisplay.destroy();
+     *
+     * @see DataSourceDisplay#isDestroyed
      */
     DataSourceDisplay.prototype.destroy = function() {
         this._eventHelper.removeAll();
@@ -242,6 +257,8 @@ define([
         for (x = 0; x < vLength; x++) {
             result = visualizers[x].update(time) && result;
         }
+
+        this._ready = result;
 
         return result;
     };
@@ -300,7 +317,6 @@ define([
         var tmp = getBoundingSphereBoundingSphereScratch;
 
         var count = 0;
-        var resultState;
         var state = BoundingSphereState.DONE;
         var visualizers = dataSource._visualizers;
         var visualizersLength = visualizers.length;
@@ -351,7 +367,7 @@ define([
      *
      * @example
      * function createVisualizers(scene, dataSource) {
-     *     return [new BillboardVisualizer(scene, dataSource.entities)];
+     *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
 

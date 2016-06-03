@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         formatError) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.
@@ -24,11 +24,12 @@ define([
      * @param {Number} [level] The level of the tile that experienced the error, or undefined if the error
      *        is not specific to a particular tile.
      * @param {Number} [timesRetried=0] The number of times this operation has been retried.
+     * @param {Error} [error] The error or exception that occurred, if any.
      */
-    var TileProviderError = function TileProviderError(provider, message, x, y, level, timesRetried) {
+    function TileProviderError(provider, message, x, y, level, timesRetried, error) {
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
-         * @type {ImageryProvider|TerainProvider}
+         * @type {ImageryProvider|TerrainProvider}
          */
         this.provider = provider;
 
@@ -74,7 +75,13 @@ define([
          * @default false
          */
         this.retry = false;
-    };
+
+        /**
+         * The error or exception that occurred, if any.
+         * @type {Error}
+         */
+        this.error = error;
+    }
 
     /**
      * Handles an error in an {@link ImageryProvider} or {@link TerrainProvider} by raising an event if it has any listeners, or by
@@ -96,14 +103,15 @@ define([
      *        error is not specific to a particular tile.
      * @param {TileProviderError~RetryFunction} retryFunction The function to call to retry the operation.  If undefined, the
      *        operation will not be retried.
+     * @param {Error} [errorDetails] The error or exception that occurred, if any.
      * @returns {TileProviderError} The error instance that was passed to the event listeners and that
      *          should be passed to this function the next time it is called for the same error in order
      *          to track retry counts.
      */
-    TileProviderError.handleError = function(previousError, provider, event, message, x, y, level, retryFunction) {
+    TileProviderError.handleError = function(previousError, provider, event, message, x, y, level, retryFunction, errorDetails) {
         var error = previousError;
         if (!defined(previousError)) {
-            error = new TileProviderError(provider, message, x, y, level, 0);
+            error = new TileProviderError(provider, message, x, y, level, 0, errorDetails);
         } else {
             error.provider = provider;
             error.message = message;
@@ -111,13 +119,13 @@ define([
             error.y = y;
             error.level = level;
             error.retry = false;
+            error.error = errorDetails;
             ++error.timesRetried;
         }
 
         if (event.numberOfListeners > 0) {
             event.raiseEvent(error);
         } else {
-            /*global console*/
             console.log('An error occurred in "' + provider.constructor.name + '": ' + formatError(message));
         }
 

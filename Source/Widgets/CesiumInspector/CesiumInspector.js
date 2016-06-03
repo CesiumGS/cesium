@@ -15,7 +15,7 @@ define([
         knockout,
         getElement,
         CesiumInspectorViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * Inspector widget to aid in debugging
@@ -31,7 +31,7 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      */
-    var CesiumInspector = function(container, scene) {
+    function CesiumInspector(container, scene) {
         if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
@@ -100,6 +100,56 @@ define([
 
         performanceContainer.className = 'cesium-cesiumInspector-performanceDisplay';
         generalSection.appendChild(performanceContainer);
+
+        var shaderCacheDisplay = document.createElement('div');
+        shaderCacheDisplay.className = 'cesium-cesiumInspector-shaderCache';
+        shaderCacheDisplay.setAttribute('data-bind', 'html: shaderCacheText');
+        generalSection.appendChild(shaderCacheDisplay);
+
+        var globeDepth = document.createElement('div');
+        generalSection.appendChild(globeDepth);
+        var gCheckbox = document.createElement('input');
+        gCheckbox.type = 'checkbox';
+        gCheckbox.setAttribute('data-bind', 'checked: globeDepth, click: showGlobeDepth');
+        globeDepth.appendChild(gCheckbox);
+        globeDepth.appendChild(document.createTextNode('Show globe depth'));
+
+        var globeDepthFrustum = document.createElement('div');
+        globeDepth.appendChild(globeDepthFrustum);
+
+        var pickDepth = document.createElement('div');
+        generalSection.appendChild(pickDepth);
+        var pCheckbox = document.createElement('input');
+        pCheckbox.type = 'checkbox';
+        pCheckbox.setAttribute('data-bind', 'checked: pickDepth, click: showPickDepth');
+        pickDepth.appendChild(pCheckbox);
+        pickDepth.appendChild(document.createTextNode('Show pick depth'));
+
+        var depthFrustum = document.createElement('div');
+        generalSection.appendChild(depthFrustum);
+
+        // Use a span with HTML binding so that we can indent with non-breaking spaces.
+        var gLabel = document.createElement('span');
+        gLabel.setAttribute('data-bind', 'html: "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Frustum:"');
+        depthFrustum.appendChild(gLabel);
+
+        var gText = document.createElement('span');
+        gText.setAttribute('data-bind', 'text: depthFrustumText');
+        depthFrustum.appendChild(gText);
+
+        var gMinusButton = document.createElement('input');
+        gMinusButton.type = 'button';
+        gMinusButton.value = '-';
+        gMinusButton.className = 'cesium-cesiumInspector-pickButton';
+        gMinusButton.setAttribute('data-bind', 'click: decrementDepthFrustum');
+        depthFrustum.appendChild(gMinusButton);
+
+        var gPlusButton = document.createElement('input');
+        gPlusButton.type = 'button';
+        gPlusButton.value = '+';
+        gPlusButton.className = 'cesium-cesiumInspector-pickButton';
+        gPlusButton.setAttribute('data-bind', 'click: incrementDepthFrustum');
+        depthFrustum.appendChild(gPlusButton);
 
         // Primitives
         var prim = document.createElement('div');
@@ -251,7 +301,7 @@ define([
         tbsCheck.type = 'checkbox';
         tbsCheck.setAttribute('data-bind', 'checked: tileBoundingSphere, enable: hasPickedTile, click: showTileBoundingSphere');
         tileBoundingSphere.appendChild(tbsCheck);
-        tileBoundingSphere.appendChild(document.createTextNode('Show bounding sphere'));
+        tileBoundingSphere.appendChild(document.createTextNode('Show bounding volume'));
 
         var renderTile = document.createElement('div');
         pickTileRequired.appendChild(renderTile);
@@ -286,7 +336,7 @@ define([
         tileCoords.appendChild(document.createTextNode('Show tile coordinates'));
 
         knockout.applyBindings(viewModel, this._element);
-    };
+    }
 
     defineProperties(CesiumInspector.prototype, {
         /**
@@ -328,6 +378,7 @@ define([
     CesiumInspector.prototype.destroy = function() {
         knockout.cleanNode(this._element);
         this._container.removeChild(this._element);
+        this.viewModel.destroy();
 
         return destroyObject(this);
     };

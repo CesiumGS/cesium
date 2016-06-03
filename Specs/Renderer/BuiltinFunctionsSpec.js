@@ -13,8 +13,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var context;
 
@@ -68,7 +67,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -94,7 +93,7 @@ defineSuite([
         var height = canvas.clientHeight;
         var vp = new BoundingRectangle(0.0, 0.0, width, height);
         context.uniformState.viewport = vp;
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var fs =
             'void main() { ' +
@@ -128,7 +127,7 @@ defineSuite([
         var camera = createCamera({
             offset : new Cartesian3(1.0, 2.0, 3.0)
         });
-        context.uniformState.update(context, createFrameState(camera));
+        context.uniformState.update(createFrameState(context, camera));
 
         var p = new Cartesian3(6.0, 5.0, 4.0);
         var encoded = EncodedCartesian3.fromCartesian(p);
@@ -278,6 +277,26 @@ defineSuite([
             '                      isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(czm_pi - czm_piOverFour).y, 0.707106, 0.707107), ' +
             '                      isBounded(czm_cosineAndSine(-czm_piOverFour).x, 0.707106, 0.707107) && isBounded(czm_cosineAndSine(-czm_piOverFour).y, -0.707107, -0.707106), ' +
             '                      isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).x, -0.707107, -0.707106) && isBounded(czm_cosineAndSine(-czm_pi + czm_piOverFour).y, -0.707107, -0.707106)); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('can calculate nearFarScalar', function() {
+        var fs =
+            'vec4 testNearFarScalar = vec4(10.0, 1.0, 20.0, 0.0);' +
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_nearFarScalar(testNearFarScalar, 5.0 * 5.0) == 1.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 10.0 * 10.0) == 1.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 20.0 * 20.0) == 0.0, ' +
+            '                      czm_nearFarScalar(testNearFarScalar, 50.0 * 50.0) == 0.0); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_cascadeColor', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));' +
             '}';
         context.verifyDrawForSpecs(fs);
     });

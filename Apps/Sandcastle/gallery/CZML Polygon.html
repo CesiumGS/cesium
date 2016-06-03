@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Polygon">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Geometries: Polygon",
+    "version" : "1.0"
+}, {
+    "id" : "redPolygon",
+    "name" : "Red polygon on surface",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -115.0, 37.0, 0,
+                -115.0, 32.0, 0,
+                -107.0, 33.0, 0,
+                -102.0, 31.0, 0,
+                -102.0, 35.0, 0
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [255, 0, 0, 255]
+                }
+            }
+        }
+    }
+}, {
+    "id" : "greenPolygon",
+    "name" : "Green extruded polygon",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -108.0, 42.0, 0,
+                -100.0, 42.0, 0,
+                -104.0, 40.0, 0
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [0, 255, 0, 255]
+                }
+            }
+        },
+        "extrudedHeight" : 500000.0,
+        "closeTop" : false,
+        "closeBottom" : false
+    }
+}, {
+    "id" : "orangePolygon",
+    "name" : "Orange polygon with per-position heights and outline",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -108.0, 25.0, 100000,
+                -100.0, 25.0, 100000,
+                -100.0, 30.0, 100000,
+                -108.0, 30.0, 300000
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [255, 100, 0, 100]
+                }
+            }
+        },
+        "extrudedHeight" : 0,
+        "perPositionHeight" : true,
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
+        }
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+var dataSource = Cesium.CzmlDataSource.load(czml);
+viewer.dataSources.add(dataSource);
+viewer.zoomTo(dataSource);
+
+  //Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

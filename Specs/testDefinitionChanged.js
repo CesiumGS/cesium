@@ -3,8 +3,7 @@ define([
         'DataSources/ConstantProperty'
     ], function(
         ConstantProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     function testDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');

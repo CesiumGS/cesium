@@ -17,7 +17,7 @@ define([
         Event,
         ReferenceFrame,
         PositionProperty) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link PositionProperty} whose value does not change in respect to the
@@ -29,11 +29,11 @@ define([
      * @param {Cartesian3} [value] The property value.
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
-    var ConstantPositionProperty = function(value, referenceFrame) {
+    function ConstantPositionProperty(value, referenceFrame) {
         this._definitionChanged = new Event();
         this._value = Cartesian3.clone(value);
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
-    };
+    }
 
     defineProperties(ConstantPositionProperty.prototype, {
         /**

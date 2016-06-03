@@ -11,8 +11,7 @@ defineSuite([
         Cartographic,
         CesiumMath,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var radii = new Cartesian3(1.0, 2.0, 3.0);
     var radiiSquared = Cartesian3.multiplyComponents(radii, radii, new Cartesian3());

@@ -1,4 +1,4 @@
-@import url('../../ThirdParty/dojo-release-1.9.3/dijit/themes/claro/claro.css');
+@import url('../../ThirdParty/dojo-release-1.10.4/dijit/themes/claro/claro.css');
 
 html, body {
     height: 100%;
@@ -253,4 +253,18 @@ a.linkButton:focus, a.linkButton:hover {
 
 .CodeMirror-gutter-text {
     cursor: default;
+}
+
+.gitHubIcon {
+    background-image: url('./images/gitHub16px.png');
+    width: 16px;
+    height: 16px;
+    text-align: center;
+}
+
+.shareIcon {
+    background-image: url('./images/share16px.png');
+    width: 16px;
+    height: 16px;
+    text-align: center;
 }

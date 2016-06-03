@@ -21,7 +21,7 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         CameraEventType) {
-    "use strict";
+    'use strict';
 
     function getKey(type, modifier) {
         var key = type;
@@ -71,7 +71,6 @@ define([
             aggregator._buttonsDown++;
             isDown[key] = true;
             pressTime[key] = new Date();
-            Cartesian2.clone(event.position, eventStartPosition[key]);
         }, ScreenSpaceEventType.PINCH_START, modifier);
 
         aggregator._eventHandler.setInputAction(function() {
@@ -255,7 +254,7 @@ define([
      *
      * @see ScreenSpaceEventHandler
      */
-    var CameraEventAggregator = function(canvas) {
+    function CameraEventAggregator(canvas) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
@@ -296,7 +295,7 @@ define([
                 }
             }
         }
-    };
+    }
 
     defineProperties(CameraEventAggregator.prototype, {
         /**
@@ -418,7 +417,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (type === CameraEventType.WHEEL) {
+        if (type === CameraEventType.WHEEL || type === CameraEventType.PINCH) {
             return this._currentMousePosition;
         }
 
@@ -498,10 +497,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see CameraEventAggregator#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     *
+     * @see CameraEventAggregator#isDestroyed
      */
     CameraEventAggregator.prototype.destroy = function() {
         this._eventHandler = this._eventHandler && this._eventHandler.destroy();

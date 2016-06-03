@@ -1,3 +1,4 @@
+@import url(../shared.css);
 body {
     margin: 0;
     padding: 0;
@@ -74,4 +75,16 @@ body {
 
 .cesium-infoBox-defaultTable-lighter tr:nth-child(even) {
     background-color: rgba(179, 179, 179, 0.25);
+}
+
+.cesium-infoBox-loadingContainer {
+    margin: 5px;
+    text-align: center;
+}
+
+.cesium-infoBox-loading {
+    display: inline-block;
+    background-image: url(../Images/info-loading.gif);
+    width: 16px;
+    height: 11px;
 }

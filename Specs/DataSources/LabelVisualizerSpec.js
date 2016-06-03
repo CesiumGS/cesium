@@ -33,8 +33,7 @@ defineSuite([
         LabelStyle,
         VerticalOrigin,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var visualizer;
@@ -260,6 +259,7 @@ defineSuite([
         entityCollection.removeAll();
         visualizer.update(time);
         expect(l.show).toEqual(false);
+        expect(l.id).toBeUndefined();
     });
 
     it('Visualizer sets entity property.', function() {

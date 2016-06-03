@@ -3,15 +3,14 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * The vertical location of an origin relative to an object, e.g., a {@link Billboard}.
      * For example, the vertical origin is used to display a billboard above or below (in
      * screen space) of the actual position.
      *
-     * @namespace
-     * @alias VerticalOrigin
+     * @exports VerticalOrigin
      *
      * @see Billboard#verticalOrigin
      */

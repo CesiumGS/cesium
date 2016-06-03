@@ -19,7 +19,7 @@ define([
         FeatureDetection,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
-    "use strict";
+    'use strict';
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;
@@ -62,10 +62,9 @@ define([
     };
 
     function registerListener(screenSpaceEventHandler, domType, element, callback) {
-        var listener = function(e) {
+        function listener(e) {
             callback(screenSpaceEventHandler, e);
-        };
-
+        }
         element.addEventListener(domType, listener, false);
 
         screenSpaceEventHandler._removalFunctions.push(function() {
@@ -101,7 +100,7 @@ define([
         if ('onwheel' in element) {
             // spec event type
             wheelEvent = 'wheel';
-        } else if (defined(document.onmousewheel)) {
+        } else if (document.onmousewheel !== undefined) {
             // legacy event type
             wheelEvent = 'mousewheel';
         } else {
@@ -641,7 +640,7 @@ define([
      *
      * @constructor
      */
-    var ScreenSpaceEventHandler = function(element) {
+    function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
@@ -663,7 +662,7 @@ define([
         this._element = defaultValue(element, document);
 
         registerListeners(this);
-    };
+    }
 
     /**
      * Set a function to be executed on an input event.
@@ -757,10 +756,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ScreenSpaceEventHandler#isDestroyed
      *
      * @example
      * handler = handler && handler.destroy();
+     * 
+     * @see ScreenSpaceEventHandler#isDestroyed
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
         unregisterListeners(this);

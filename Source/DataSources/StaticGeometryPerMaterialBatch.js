@@ -13,9 +13,9 @@ define([
         Primitive,
         BoundingSphereState,
         MaterialProperty) {
-    "use strict";
+    'use strict';
 
-    var Batch = function(primitives, appearanceType, materialProperty, closed) {
+    function Batch(primitives, appearanceType, materialProperty, closed) {
         this.primitives = primitives;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
@@ -32,8 +32,7 @@ define([
         this.removeMaterialSubscription = materialProperty.definitionChanged.addEventListener(Batch.prototype.onMaterialChanged, this);
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
-    };
-
+    }
     Batch.prototype.onMaterialChanged = function() {
         this.invalidated = true;
     };
@@ -89,15 +88,35 @@ define([
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
+        var attributes;
+        var i;
+
         if (this.createPrimitive) {
-            if (defined(primitive)) {
-                if (!defined(this.oldPrimitive)) {
-                    this.oldPrimitive = primitive;
-                } else {
-                    primitives.remove(primitive);
+            var geometriesLength = geometries.length;
+            if (geometriesLength > 0) {
+                if (defined(primitive)) {
+                    if (!defined(this.oldPrimitive)) {
+                        this.oldPrimitive = primitive;
+                    } else {
+                        primitives.remove(primitive);
+                    }
                 }
-            }
-            if (geometries.length > 0) {
+
+                for (i = 0; i < geometriesLength; i++) {
+                    var geometry = geometries[i];
+                    var originalAttributes = geometry.attributes;
+                    attributes = this.attributes.get(geometry.id.id);
+
+                    if (defined(attributes)) {
+                        if (defined(originalAttributes.show)) {
+                            originalAttributes.show.value = attributes.show;
+                        }
+                        if (defined(originalAttributes.color)) {
+                            originalAttributes.color.value = attributes.color;
+                        }
+                    }
+                }
+
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
                 primitive = new Primitive({
                     asynchronous : true,
@@ -111,7 +130,19 @@ define([
 
                 primitives.add(primitive);
                 isUpdated = false;
+            } else {
+                if (defined(primitive)) {
+                    primitives.remove(primitive);
+                    primitive = undefined;
+                }
+                var oldPrimitive = this.oldPrimitive;
+                if (defined(oldPrimitive)) {
+                    primitives.remove(oldPrimitive);
+                    this.oldPrimitive = undefined;
+                }
             }
+
+            this.attributes.removeAll();
             this.primitive = primitive;
             this.createPrimitive = false;
         } else if (defined(primitive) && primitive.ready) {
@@ -125,12 +156,12 @@ define([
 
             var updatersWithAttributes = this.updatersWithAttributes.values;
             var length = updatersWithAttributes.length;
-            for (var i = 0; i < length; i++) {
+            for (i = 0; i < length; i++) {
                 var updater = updatersWithAttributes[i];
                 var entity = updater.entity;
                 var instance = this.geometry.get(entity.id);
 
-                var attributes = this.attributes.get(instance.id.id);
+                attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -207,13 +238,12 @@ define([
     /**
      * @private
      */
-    var StaticGeometryPerMaterialBatch = function(primitives, appearanceType, closed) {
+    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
         this._closed = closed;
-    };
-
+    }
     StaticGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
         var length = items.length;

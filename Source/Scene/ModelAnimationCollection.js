@@ -23,7 +23,7 @@ define([
         ModelAnimation,
         ModelAnimationLoop,
         ModelAnimationState) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of active model animations.  Access this using {@link Model#activeAnimations}.
@@ -33,7 +33,7 @@ define([
      *
      * @see Model#activeAnimations
      */
-    var ModelAnimationCollection = function(model) {
+    function ModelAnimationCollection(model) {
         /**
          * The event fired when an animation is added to the collection.  This can be used, for
          * example, to keep a UI in sync.
@@ -65,7 +65,7 @@ define([
         this._model = model;
         this._scheduledAnimations = [];
         this._previousTime = undefined;
-    };
+    }
 
     defineProperties(ModelAnimationCollection.prototype, {
         /**
@@ -330,6 +330,15 @@ define([
      * @private
      */
     ModelAnimationCollection.prototype.update = function(frameState) {
+        var scheduledAnimations = this._scheduledAnimations;
+        var length = scheduledAnimations.length;
+
+        if (length === 0) {
+            // No animations - quick return for performance
+            this._previousTime = undefined;
+            return false;
+        }
+
         if (JulianDate.equals(frameState.time, this._previousTime)) {
             // Animations are currently only time-dependent so do not animate when paused or picking
             return false;
@@ -338,10 +347,7 @@ define([
 
         var animationOccured = false;
         var sceneTime = frameState.time;
-
         var model = this._model;
-        var scheduledAnimations = this._scheduledAnimations;
-        var length = scheduledAnimations.length;
 
         for (var i = 0; i < length; ++i) {
             var scheduledAnimation = scheduledAnimations[i];
@@ -364,13 +370,15 @@ define([
             var pastStartTime = (delta >= 0.0);
 
             // Play animation if
-            // * we are after the start time, and
+            // * we are after the start time or the animation is being repeated, and
             // * before the end of the animation's duration or the animation is being repeated, and
             // * we did not reach a user-provided stop time.
-            var play = pastStartTime &&
-                       ((delta <= 1.0) ||
-                        ((scheduledAnimation.loop === ModelAnimationLoop.REPEAT) ||
-                         (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT))) &&
+
+            var repeat = ((scheduledAnimation.loop === ModelAnimationLoop.REPEAT) ||
+                          (scheduledAnimation.loop === ModelAnimationLoop.MIRRORED_REPEAT));
+
+            var play = (pastStartTime || (repeat && !defined(scheduledAnimation.startTime))) &&
+                       ((delta <= 1.0) || repeat) &&
                        (!defined(stopTime) || JulianDate.lessThanOrEquals(sceneTime, stopTime));
 
             if (play) {

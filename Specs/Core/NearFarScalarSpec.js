@@ -5,8 +5,7 @@ defineSuite([
     ], function(
         NearFarScalar,
         createPackableSpecs) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructs without arguments', function() {
         var scalar = new NearFarScalar();

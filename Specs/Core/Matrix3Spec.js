@@ -9,8 +9,7 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();
@@ -530,6 +529,25 @@ defineSuite([
         expect(left).toEqual(expected);
     });
 
+    it('multiplyByScale works', function() {
+        var m = new Matrix3(2, 3, 4, 6, 7, 8, 10, 11, 12);
+        var scale = new Cartesian3(2.0, 3.0, 4.0);
+        var expected = Matrix3.multiply(m, Matrix3.fromScale(scale), new Matrix3());
+        var result = new Matrix3();
+        var returnedResult = Matrix3.multiplyByScale(m, scale, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expected);
+    });
+
+    it('multiplyByScale works with "this" result parameter', function() {
+        var m = new Matrix3(1, 2, 3, 5, 6, 7, 9, 10, 11);
+        var scale = new Cartesian3(1.0, 2.0, 3.0);
+        var expected = Matrix3.multiply(m, Matrix3.fromScale(scale), new Matrix3());
+        var returnedResult = Matrix3.multiplyByScale(m, scale, m);
+        expect(returnedResult).toBe(m);
+        expect(m).toEqual(expected);
+    });
+
     it('multiplyByVector works', function() {
         var left = new Matrix3(1, 2, 3, 4, 5, 6, 7, 8, 9);
         var right = new Cartesian3(10, 11, 12);
@@ -937,6 +955,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('multiplyByScale throws with no matrix parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByScale(undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('multiplyByScale throws with no scale parameter', function() {
+        var m = new Matrix3();
+        expect(function() {
+            Matrix3.multiplyByScale(m, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyByVector throws with no matrix parameter', function() {
         var cartesian = new Cartesian3();
         expect(function() {
@@ -1054,6 +1085,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('multiplyByScale throws without result parameter', function() {
+        expect(function() {
+            Matrix3.multiplyByScale(new Matrix3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
     it('multiplyByVector throws without result parameter', function() {
         expect(function() {
             Matrix3.multiplyByVector(new Matrix3(), new Cartesian3());
@@ -1088,5 +1125,18 @@ defineSuite([
         expect(function() {
             Matrix3.inverse(new Matrix3());
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix3 objects can be used as array like objects', function() {
+        var matrix = new Matrix3(
+                1, 4, 7,
+                2, 5, 8,
+                3, 6, 9);
+        expect(matrix.length).toEqual(9);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

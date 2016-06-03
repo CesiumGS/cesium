@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates a curve parameterized and evaluated by time. This type describes an interface
@@ -21,7 +21,7 @@ define([
      * @see LinearSpline
      * @see QuaternionSpline
      */
-    var Spline = function() {
+    function Spline() {
         /**
          * An array of times for the control points.
          * @type {Number[]}
@@ -37,7 +37,7 @@ define([
         this.points = undefined;
 
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     /**
      * Evaluates the curve at a given time.

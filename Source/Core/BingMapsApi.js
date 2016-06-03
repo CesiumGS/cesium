@@ -1,10 +1,15 @@
-/*global define,console*/
+/*global define*/
 define([
         './defined'
     ], function(
         defined) {
-    "use strict";
+    'use strict';
 
+    /**
+     * Object for setting and retrieving the default BingMaps API key.
+     *
+     * @exports BingMapsApi
+     */
     var BingMapsApi = {
     };
 

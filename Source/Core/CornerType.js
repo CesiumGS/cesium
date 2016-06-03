@@ -3,34 +3,28 @@ define([
         './freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Style options for corners.
      *
-     * @namespace
-     * @alias CornerType
+     * @demo The {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html&label=Geometries|Corridor Demo}
+     * demonstrates the three corner types, as used by {@link CorridorGraphics}.
+     *
+     * @exports CornerType
      */
     var CornerType = {
         /**
-         * <pre>
-         *  _____
-         * (  ___
-         * | |
-         * </pre>
+         * <img src="images/CornerTypeRounded.png" style="vertical-align: middle;" width="186" height="189" />
          *
-         * Corner is circular.
+         * Corner has a smooth edge.
          * @type {Number}
          * @constant
          */
         ROUNDED : 0,
 
         /**
-         * <pre>
-         *  ______
-         * |  ____
-         * | |
-         * </pre>
+         * <img src="images/CornerTypeMitered.png" style="vertical-align: middle;" width="186" height="189" />
          *
          * Corner point is the intersection of adjacent edges.
          * @type {Number}
@@ -39,11 +33,7 @@ define([
         MITERED : 1,
 
         /**
-         * <pre>
-         *  _____
-         * /  ___
-         * | |
-         * </pre>
+         * <img src="images/CornerTypeBeveled.png" style="vertical-align: middle;" width="186" height="189" />
          *
          * Corner is clipped.
          * @type {Number}

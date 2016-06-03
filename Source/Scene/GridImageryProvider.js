@@ -5,15 +5,17 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event',
-        '../Core/GeographicTilingScheme'
+        '../Core/GeographicTilingScheme',
+        '../ThirdParty/when'
     ], function(
         Color,
         defaultValue,
         defined,
         defineProperties,
         Event,
-        GeographicTilingScheme) {
-    "use strict";
+        GeographicTilingScheme,
+        when) {
+    'use strict';
 
     var defaultColor = new Color(1.0, 1.0, 1.0, 0.4);
     var defaultGlowColor = new Color(0.0, 1.0, 0.0, 0.05);
@@ -28,6 +30,9 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {TilingScheme} [options.tilingScheme=new GeographicTilingScheme()] The tiling scheme for which to draw tiles.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
+     *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
+     *                    parameter is specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.cells=8] The number of grids cells.
      * @param {Color} [options.color=Color(1.0, 1.0, 1.0, 0.4)] The color to draw grid lines.
      * @param {Color} [options.glowColor=Color(0.0, 1.0, 0.0, 0.05)] The color to draw glow for grid lines.
@@ -37,10 +42,10 @@ define([
      * @param {Number} [options.tileHeight=256] The height of the tile for level-of-detail selection purposes.
      * @param {Number} [options.canvasSize=256] The size of the canvas used for rendering.
      */
-    var GridImageryProvider = function GridImageryProvider(options) {
+    function GridImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme();
+        this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new GeographicTilingScheme({ ellipsoid : options.ellipsoid });
         this._cells = defaultValue(options.cells, 8);
         this._color = defaultValue(options.color, defaultColor);
         this._glowColor = defaultValue(options.glowColor, defaultGlowColor);
@@ -57,7 +62,9 @@ define([
 
         // We only need a single canvas since all tiles will be the same
         this._canvas = this._createGridCanvas();
-    };
+
+        this._readyPromise = when.resolve(true);
+    }
 
     defineProperties(GridImageryProvider.prototype, {
         /**
@@ -192,6 +199,18 @@ define([
         },
 
         /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof GridImageryProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise;
+            }
+        },
+
+        /**
          * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
          * the source of the imagery.  This function should not be called before {@link GridImageryProvider#ready} returns true.
          * @memberof GridImageryProvider.prototype
@@ -302,7 +321,7 @@ define([
      * @param {Number} x The tile X coordinate.
      * @param {Number} y The tile Y coordinate.
      * @param {Number} level The tile level.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
@@ -320,7 +339,7 @@ define([
      * @param {Number} level The tile level.
      * @param {Number} longitude The longitude at which to pick features.
      * @param {Number} latitude  The latitude at which to pick features.
-     * @return {Promise} A promise for the picked features that will resolve when the asynchronous
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise for the picked features that will resolve when the asynchronous
      *                   picking completes.  The resolved value is an array of {@link ImageryLayerFeatureInfo}
      *                   instances.  The array may be empty if no features are found at the given location.
      *                   It may also be undefined if picking is not supported.

@@ -17,7 +17,7 @@ define([
         FrameRateMonitor,
         knockout,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for {@link PerformanceWatchdog}.
@@ -31,7 +31,7 @@ define([
      *        message to display when a low frame rate is detected.  The message is interpeted as HTML, so make sure
      *        it comes from a trusted source so that your application is not vulnerable to cross-site scripting attacks.
      */
-    var PerformanceWatchdogViewModel = function(options) {
+    function PerformanceWatchdogViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
@@ -78,7 +78,7 @@ define([
         this._unsubscribeNominalFrameRate = monitor.nominalFrameRate.addEventListener(function() {
             that.showingLowFrameRateMessage = false;
         });
-    };
+    }
 
     defineProperties(PerformanceWatchdogViewModel.prototype, {
         /**

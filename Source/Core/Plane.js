@@ -2,12 +2,14 @@
 define([
         './Cartesian3',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './freezeObject'
     ], function(
         Cartesian3,
         defined,
-        DeveloperError) {
-    "use strict";
+        DeveloperError,
+        freezeObject) {
+    'use strict';
 
     /**
      * A plane in Hessian Normal Form defined by
@@ -32,7 +34,7 @@ define([
      * // The plane x=0
      * var plane = new Cesium.Plane(Cesium.Cartesian3.UNIT_X, 0.0);
      */
-    var Plane = function(normal, distance) {
+    function Plane(normal, distance) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(normal))  {
             throw new DeveloperError('normal is required.');
@@ -59,7 +61,7 @@ define([
          * @type {Number}
          */
         this.distance = distance;
-    };
+    }
 
     /**
      * Creates a plane from a normal and a point on the plane.
@@ -95,6 +97,33 @@ define([
         return result;
     };
 
+    var scratchNormal = new Cartesian3();
+    /**
+     * Creates a plane from the general equation
+     *
+     * @param {Cartesian4} coefficients The plane's normal (normalized).
+     * @param {Plane} [result] The object onto which to store the result.
+     * @returns {Plane} A new plane instance or the modified result parameter.
+     */
+    Plane.fromCartesian4 = function(coefficients, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(coefficients)) {
+            throw new DeveloperError('coefficients is required.');
+        }
+        //>>includeEnd('debug');
+
+        var normal = Cartesian3.fromCartesian4(coefficients, scratchNormal);
+        var distance = coefficients.w;
+
+        if (!defined(result)) {
+            return new Plane(normal, distance);
+        } else {
+            Cartesian3.clone(normal, result.normal);
+            result.distance = distance;
+            return result;
+        }
+    };
+
     /**
      * Computes the signed shortest distance of a point to a plane.
      * The sign of the distance determines which side of the plane the point
@@ -118,6 +147,30 @@ define([
 
         return Cartesian3.dot(plane.normal, point) + plane.distance;
     };
+
+    /**
+     * A constant initialized to the XY plane passing through the origin, with normal in positive Z.
+     *
+     * @type {Plane}
+     * @constant
+     */
+    Plane.ORIGIN_XY_PLANE = freezeObject(new Plane(Cartesian3.UNIT_Z, 0.0));
+
+    /**
+     * A constant initialized to the YZ plane passing through the origin, with normal in positive X.
+     *
+     * @type {Plane}
+     * @constant
+     */
+    Plane.ORIGIN_YZ_PLANE = freezeObject(new Plane(Cartesian3.UNIT_X, 0.0));
+
+    /**
+     * A constant initialized to the ZX plane passing through the origin, with normal in positive Y.
+     *
+     * @type {Plane}
+     * @constant
+     */
+    Plane.ORIGIN_ZX_PLANE = freezeObject(new Plane(Cartesian3.UNIT_Y, 0.0));
 
     return Plane;
 });

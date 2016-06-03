@@ -2,7 +2,6 @@
 define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './appendForwardSlash',
         './BoundingSphere',
         './Cartesian3',
         './Credit',
@@ -14,8 +13,12 @@ define([
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './IndexDatatype',
+        './joinUrls',
         './loadArrayBuffer',
         './loadJson',
+        './Math',
+        './Matrix3',
+        './OrientedBoundingBox',
         './QuantizedMeshTerrainData',
         './RuntimeError',
         './TerrainProvider',
@@ -24,7 +27,6 @@ define([
     ], function(
         Uri,
         when,
-        appendForwardSlash,
         BoundingSphere,
         Cartesian3,
         Credit,
@@ -36,14 +38,18 @@ define([
         GeographicTilingScheme,
         HeightmapTerrainData,
         IndexDatatype,
+        joinUrls,
         loadArrayBuffer,
         loadJson,
+        CesiumMath,
+        Matrix3,
+        OrientedBoundingBox,
         QuantizedMeshTerrainData,
         RuntimeError,
         TerrainProvider,
         throttleRequestByServer,
         TileProviderError) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TerrainProvider} that access terrain data in a Cesium terrain format.
@@ -58,21 +64,21 @@ define([
      * @param {Proxy} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Boolean} [options.requestVertexNormals=false] Flag that indicates if the client should request additional lighting information from the server, in the form of per vertex normals if available.
      * @param {Boolean} [options.requestWaterMask=false] Flag that indicates if the client should request per tile water masks from the server,  if available.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
-     * @see TerrainProvider
      *
      * @example
      * // Construct a terrain provider that uses per vertex normals for lighting
      * // to add shading detail to an imagery provider.
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//assets.agi.com/stk-terrain/world',
+     *     url : 'https://assets.agi.com/stk-terrain/world',
      *     requestVertexNormals : true
      * });
-     *
+     * 
      * // Terrain geometry near the surface of the globe is difficult to view when using NaturalEarthII imagery,
      * // unless the TerrainProvider provides additional lighting information to shade the terrain (as shown above).
-     * var imageryProvider = new Cesium.TileMapServiceImageryProvider({
+     * var imageryProvider = Cesium.createTileMapServiceImageryProvider({
      *        url : 'http://localhost:8080/Source/Assets/Textures/NaturalEarthII',
      *        fileExtension : 'jpg'
      *    });
@@ -85,20 +91,23 @@ define([
      *
      * // The globe must enable lighting to make use of the terrain's vertex normals
      * viewer.scene.globe.enableLighting = true;
+     * 
+     * @see TerrainProvider
      */
-    var CesiumTerrainProvider = function CesiumTerrainProvider(options) {
+    function CesiumTerrainProvider(options) {
         //>>includeStart('debug', pragmas.debug)
         if (!defined(options) || !defined(options.url)) {
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = appendForwardSlash(options.url);
+        this._url = options.url;
         this._proxy = options.proxy;
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 1
+            numberOfLevelZeroTilesY : 1,
+            ellipsoid : options.ellipsoid
         });
 
         this._heightmapWidth = 65;
@@ -139,8 +148,9 @@ define([
         this._credit = credit;
 
         this._ready = false;
+        this._readyPromise = when.defer();
 
-        var metadataUrl = this._url + 'layer.json';
+        var metadataUrl = joinUrls(this._url, 'layer.json');
         if (defined(this._proxy)) {
             metadataUrl = this._proxy.getURL(metadataUrl);
         }
@@ -180,11 +190,15 @@ define([
                 return;
             }
 
-            var baseUri = new Uri(metadataUrl);
-
             that._tileUrlTemplates = data.tiles;
             for (var i = 0; i < that._tileUrlTemplates.length; ++i) {
-                that._tileUrlTemplates[i] = new Uri(that._tileUrlTemplates[i]).resolve(baseUri).toString().replace('{version}', data.version);
+                var template = new Uri(that._tileUrlTemplates[i]);
+                var baseUri = new Uri(that._url);
+                if (template.authority && !baseUri.authority) {
+                    baseUri.authority = template.authority;
+                    baseUri.scheme = template.scheme;
+                }
+                that._tileUrlTemplates[i] = joinUrls(baseUri, template).toString().replace('{version}', data.version);
             }
 
             that._availableTiles = data.available;
@@ -210,6 +224,7 @@ define([
             }
 
             that._ready = true;
+            that._readyPromise.resolve(true);
         }
 
         function metadataFailure(data) {
@@ -236,14 +251,13 @@ define([
         }
 
         requestMetadata();
-    };
+    }
 
     /**
      * When using the Quantized-Mesh format, a tile may be returned that includes additional extensions, such as PerVertexNormals, watermask, etc.
      * This enumeration defines the unique identifiers for each type of extension data that has been appended to the standard mesh data.
      *
-     * @namespace
-     * @alias QuantizedMeshExtensionIds
+     * @exports QuantizedMeshExtensionIds
      * @see CesiumTerrainProvider
      * @private
      */
@@ -415,11 +429,26 @@ define([
 
         var skirtHeight = provider.getLevelMaximumGeometricError(level) * 5.0;
 
+        var rectangle = provider._tilingScheme.tileXYToRectangle(x, y, level);
+        var orientedBoundingBox;
+        if (rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+            // Here, rectangle.width < pi/2, and rectangle.height < pi
+            // (though it would still work with rectangle.width up to pi)
+
+            // The skirt is not included in the OBB computation. If this ever
+            // causes any rendering artifacts (cracks), they are expected to be
+            // minor and in the corners of the screen. It's possible that this
+            // might need to be changed - just change to `minimumHeight - skirtHeight`
+            // A similar change might also be needed in `upsampleQuantizedTerrainMesh.js`.
+            orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, provider._tilingScheme.ellipsoid);
+        }
+
         return new QuantizedMeshTerrainData({
             center : center,
             minimumHeight : minimumHeight,
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
+            orientedBoundingBox : orientedBoundingBox,
             horizonOcclusionPoint : horizonOcclusionPoint,
             quantizedVertices : encodedVertexBuffer,
             encodedNormals : encodedNormalBuffer,
@@ -448,7 +477,7 @@ define([
      * @param {Boolean} [throttleRequests=true] True if the number of simultaneous requests should be limited,
      *                  or false if the request should be initiated regardless of the number of requests
      *                  already in progress.
-     * @returns {Promise|TerrainData} A promise for the requested geometry.  If this method
+     * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      *
@@ -471,8 +500,7 @@ define([
 
         var tmsY = (yTiles - y - 1);
 
-        // Use the first URL template.  In the future we should use them all.
-        var url = urlTemplates[0].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
+        var url = urlTemplates[(x + tmsY + level) % urlTemplates.length].replace('{z}', level).replace('{x}', x).replace('{y}', tmsY);
 
         var proxy = this._proxy;
         if (defined(proxy)) {
@@ -489,10 +517,9 @@ define([
             extensionList.push("watermask");
         }
 
-        var tileLoader = function(tileUrl) {
+        function tileLoader(tileUrl) {
             return loadArrayBuffer(tileUrl, getRequestHeader(extensionList));
-        };
-
+        }
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, tileLoader);
@@ -571,6 +598,18 @@ define([
         ready : {
             get : function() {
                 return this._ready;
+            }
+        },
+
+        /**
+         * Gets a promise that resolves to true when the provider is ready for use.
+         * @memberof CesiumTerrainProvider.prototype
+         * @type {Promise.<Boolean>}
+         * @readonly
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         },
 

@@ -21,7 +21,7 @@ define([
         Rectangle,
         when,
         ImageryLayer) {
-    "use strict";
+    'use strict';
 
     /**
      * An ordered collection of imagery layers.
@@ -32,7 +32,7 @@ define([
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
-    var ImageryLayerCollection = function ImageryLayerCollection() {
+    function ImageryLayerCollection() {
         this._layers = [];
 
         /**
@@ -69,7 +69,7 @@ define([
          * @default Event()
          */
         this.layerShownOrHidden = new Event();
-    };
+    }
 
     defineProperties(ImageryLayerCollection.prototype, {
         /**
@@ -217,7 +217,7 @@ define([
      *
      * @param {Number} index the index to retrieve.
      *
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @returns {ImageryLayer} The imagery layer at the given index.
      */
     ImageryLayerCollection.prototype.get = function(index) {
         //>>includeStart('debug', pragmas.debug);
@@ -333,6 +333,8 @@ define([
         this.layerMoved.raiseEvent(layer, 0, index);
     };
 
+    var applicableRectangleScratch = new Rectangle();
+
     /**
      * Asynchronously determines the imagery layer features that are intersected by a pick ray.  The intersected imagery
      * layer features are found by invoking {@link ImageryProvider#pickFeatures} for each imagery layer tile intersected
@@ -340,7 +342,7 @@ define([
      *
      * @param {Ray} ray The ray to test for intersection.
      * @param {Scene} scene The scene.
-     * @return {Promise|ImageryLayerFeatureInfo[]} A promise that resolves to an array of features intersected by the pick ray.
+     * @return {Promise.<ImageryLayerFeatureInfo[]>|undefined} A promise that resolves to an array of features intersected by the pick ray.
      *                                             If it can be quickly determined that no features are intersected (for example,
      *                                             because no active imagery providers support {@link ImageryProvider#pickFeatures}
      *                                             or because the pick ray does not intersect the surface), this function will
@@ -357,8 +359,7 @@ define([
      *         console.log('Number of features: ' + features.length);
      *         if (features.length > 0) {
      *             console.log('First feature name: ' + features[0].name);
-     *             }
-     *         });
+     *         }
      *     });
      * }
      */
@@ -373,7 +374,6 @@ define([
 
         // Find the terrain tile containing the picked location.
         var tilesToRender = scene.globe._surface._tilesToRender;
-        var length = tilesToRender.length;
         var pickedTile;
 
         for (var textureIndex = 0; !defined(pickedTile) && textureIndex < tilesToRender.length; ++textureIndex) {
@@ -388,10 +388,10 @@ define([
         }
 
         // Pick against all attached imagery tiles containing the pickedLocation.
-        var tileExtent = pickedTile.rectangle;
         var imageryTiles = pickedTile.data.imagery;
 
         var promises = [];
+        var imageryLayers = [];
         for (var i = imageryTiles.length - 1; i >= 0; --i) {
             var terrainImagery = imageryTiles[i];
             var imagery = terrainImagery.readyImagery;
@@ -407,12 +407,26 @@ define([
                 continue;
             }
 
+            // If this imagery came from a parent, it may not be applicable to its entire rectangle.
+            // Check the textureCoordinateRectangle.
+            var applicableRectangle = applicableRectangleScratch;
+
+            var epsilon = 1 / 1024; // 1/4 of a pixel in a typical 256x256 tile.
+            applicableRectangle.west = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.x - epsilon);
+            applicableRectangle.east = CesiumMath.lerp(pickedTile.rectangle.west, pickedTile.rectangle.east, terrainImagery.textureCoordinateRectangle.z + epsilon);
+            applicableRectangle.south = CesiumMath.lerp(pickedTile.rectangle.south, pickedTile.rectangle.north, terrainImagery.textureCoordinateRectangle.y - epsilon);
+            applicableRectangle.north = CesiumMath.lerp(pickedTile.rectangle.south, pickedTile.rectangle.north, terrainImagery.textureCoordinateRectangle.w + epsilon);
+            if (!Rectangle.contains(applicableRectangle, pickedLocation)) {
+                continue;
+            }
+
             var promise = provider.pickFeatures(imagery.x, imagery.y, imagery.level, pickedLocation.longitude, pickedLocation.latitude);
             if (!defined(promise)) {
                 continue;
             }
 
             promises.push(promise);
+            imageryLayers.push(imagery.imageryLayer);
         }
 
         if (promises.length === 0) {
@@ -424,10 +438,12 @@ define([
 
             for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {
                 var result = results[resultIndex];
+                var image = imageryLayers[resultIndex];
 
                 if (defined(result) && result.length > 0) {
                     for (var featureIndex = 0; featureIndex < result.length; ++featureIndex) {
                         var feature = result[featureIndex];
+                        feature.imageryLayer = image;
 
                         // For features without a position, use the picked location.
                         if (!defined(feature.position)) {
@@ -441,6 +457,32 @@ define([
 
             return features;
         });
+    };
+
+    /**
+     * Updates frame state to execute any queued texture re-projections.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     */
+    ImageryLayerCollection.prototype.queueReprojectionCommands = function(frameState) {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].queueReprojectionCommands(frameState);
+        }
+    };
+
+    /**
+     * Cancels re-projection commands queued for the next frame.
+     *
+     * @private
+     */
+    ImageryLayerCollection.prototype.cancelReprojections = function() {
+        var layers = this._layers;
+        for (var i = 0, len = layers.length; i < len; ++i) {
+            layers[i].cancelReprojections();
+        }
     };
 
     /**
@@ -470,10 +512,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see ImageryLayerCollection#isDestroyed
      *
      * @example
      * layerCollection = layerCollection && layerCollection.destroy();
+     * 
+     * @see ImageryLayerCollection#isDestroyed
      */
     ImageryLayerCollection.prototype.destroy = function() {
         this.removeAll(true);

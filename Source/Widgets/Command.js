@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A Command is a function with an extra <code>canExecute</code> observable property to determine
@@ -16,7 +16,7 @@ define([
      * @alias Command
      * @constructor
      */
-    var Command = function() {
+    function Command() {
         /**
          * Gets whether this command can currently be executed.  This property is observable.
          * @type {Boolean}
@@ -43,7 +43,7 @@ define([
         this.afterExecute = undefined;
 
         DeveloperError.throwInstantiationError();
-    };
+    }
 
     return Command;
 });

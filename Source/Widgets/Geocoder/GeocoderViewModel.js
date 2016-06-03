@@ -6,9 +6,11 @@ define([
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
-        '../../Core/jsonp',
+        '../../Core/Event',
+        '../../Core/loadJsonp',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
+        '../../Scene/SceneMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand'
@@ -19,13 +21,15 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        jsonp,
+        Event,
+        loadJsonp,
         Matrix4,
         Rectangle,
+        SceneMode,
         knockout,
         when,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -34,7 +38,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -42,26 +46,27 @@ define([
      *        written to the console reminding you that you must create and supply a Bing Maps
      *        key as soon as possible.  Please do not deploy an application that uses
      *        this widget without creating a separate key for your application.
-     * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+     * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
      */
-    var GeocoderViewModel = function(options) {
+    function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.scene)) {
             throw new DeveloperError('options.scene is required.');
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(options.url, '//dev.virtualearth.net/');
+        this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
 
         this._key = BingMapsApi.getKey(options.key);
         this._scene = options.scene;
-        this._flightDuration = defaultValue(options.flightDuration, 1.5);
+        this._flightDuration = options.flightDuration;
         this._searchText = '';
         this._isSearchInProgress = false;
         this._geocodeInProgress = undefined;
+        this._complete = new Event();
 
         var that = this;
         this._searchCommand = createCommand(function() {
@@ -114,9 +119,10 @@ define([
         /**
          * Gets or sets the the duration of the camera flight in seconds.
          * A value of zero causes the camera to instantly switch to the geocoding location.
+         * The duration will be computed based on the distance when undefined.
          *
-         * @type {Number}
-         * @default 1.5
+         * @type {Number|undefined}
+         * @default undefined
          */
         this.flightDuration = undefined;
         knockout.defineProperty(this, 'flightDuration', {
@@ -125,7 +131,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                if (value < 0) {
+                if (defined(value) && value < 0) {
                     throw new DeveloperError('value must be positive.');
                 }
                 //>>includeEnd('debug');
@@ -133,7 +139,7 @@ define([
                 this._flightDuration = value;
             }
         });
-    };
+    }
 
     defineProperties(GeocoderViewModel.prototype, {
         /**
@@ -157,6 +163,18 @@ define([
         key : {
             get : function() {
                 return this._key;
+            }
+        },
+
+        /**
+         * Gets the event triggered on flight completion.
+         * @memberof GeocoderViewModel.prototype
+         *
+         * @type {Event}
+         */
+        complete : {
+            get : function() {
+                return this._complete;
             }
         },
 
@@ -185,6 +203,17 @@ define([
         }
     });
 
+    function updateCamera(viewModel, destination) {
+        viewModel._scene.camera.flyTo({
+            destination : destination,
+            complete: function() {
+                viewModel._complete.raiseEvent();
+            },
+            duration : viewModel._flightDuration,
+            endTransform : Matrix4.IDENTITY
+        });
+    }
+
     function geocode(viewModel) {
         var query = viewModel.searchText;
 
@@ -202,18 +231,13 @@ define([
             var height = (splitQuery.length === 3) ? +splitQuery[2] : 300.0;
 
             if (!isNaN(longitude) && !isNaN(latitude) && !isNaN(height)) {
-                viewModel._scene.camera.flyTo({
-                    destination : Cartesian3.fromDegrees(longitude, latitude, height),
-                    duration : viewModel._flightDuration,
-                    endTransform : Matrix4.IDENTITY,
-                    convert : false
-                });
+                updateCamera(viewModel, Cartesian3.fromDegrees(longitude, latitude, height));
                 return;
             }
         }
         viewModel._isSearchInProgress = true;
 
-        var promise = jsonp(viewModel._url + 'REST/v1/Locations', {
+        var promise = loadJsonp(viewModel._url + 'REST/v1/Locations', {
             parameters : {
                 query : query,
                 key : viewModel._key
@@ -247,21 +271,8 @@ define([
             var west = bbox[1];
             var north = bbox[2];
             var east = bbox[3];
-            var rectangle = Rectangle.fromDegrees(west, south, east, north);
 
-            var camera = viewModel._scene.camera;
-            var position = camera.getRectangleCameraCoordinates(rectangle);
-            if (!defined(position)) {
-                // This can happen during a scene mode transition.
-                return;
-            }
-
-            viewModel._scene.camera.flyTo({
-                destination : position,
-                duration : viewModel._flightDuration,
-                endTransform : Matrix4.IDENTITY,
-                convert : false
-            });
+            updateCamera(viewModel, Rectangle.fromDegrees(west, south, east, north));
         }, function() {
             if (geocodeInProgress.cancel) {
                 return;

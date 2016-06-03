@@ -3,10 +3,10 @@ require({
     baseUrl : '../..',
     packages : [{
         name : 'dojo',
-        location : 'ThirdParty/dojo-release-1.9.3/dojo'
+        location : 'ThirdParty/dojo-release-1.10.4/dojo'
     }, {
         name : 'dijit',
-        location : 'ThirdParty/dojo-release-1.9.3/dijit'
+        location : 'ThirdParty/dojo-release-1.10.4/dijit'
     }, {
         name : 'Core',
         location : 'Source/Core'
@@ -37,7 +37,7 @@ require({
         win,
         domClass,
         parser) {
-    "use strict";
+    'use strict';
 
     parser.parse();
     domClass.remove(win.body(), 'loading');

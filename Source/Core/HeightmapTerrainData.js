@@ -10,6 +10,7 @@ define([
         './Math',
         './Rectangle',
         './TaskProcessor',
+        './TerrainEncoding',
         './TerrainMesh',
         './TerrainProvider'
     ], function(
@@ -23,9 +24,10 @@ define([
         CesiumMath,
         Rectangle,
         TaskProcessor,
+        TerrainEncoding,
         TerrainMesh,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -74,25 +76,24 @@ define([
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
-     * @see TerrainData
-     * @see QuantizedMeshTerrainData
      *
      * @example
      * var buffer = ...
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
      * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
      *   childTileMask : childTileMask,
-     *   structure : structure,
      *   waterMask : waterMask
      * });
+     * 
+     * @see TerrainData
+     * @see QuantizedMeshTerrainData
      */
-    var HeightmapTerrainData = function HeightmapTerrainData(options) {
+    function HeightmapTerrainData(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.buffer)) {
             throw new DeveloperError('options.buffer is required.');
@@ -126,7 +127,11 @@ define([
         this._structure = structure;
         this._createdByUpsampling = defaultValue(options.createdByUpsampling, false);
         this._waterMask = options.waterMask;
-    };
+
+        this._skirtHeight = undefined;
+        this._bufferType = this._buffer.constructor;
+        this._mesh = undefined;
+    }
 
     defineProperties(HeightmapTerrainData.prototype, {
         /**
@@ -149,15 +154,18 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
      * @param {Number} level The level of the tile for which to create the terrain data.
-     * @returns {Promise|TerrainMesh} A promise for the terrain mesh, or undefined if too many
+     * @param {Number} [exaggeration=1.0] The scale used to exaggerate the terrain.
+     * @returns {Promise.<TerrainMesh>|undefined} A promise for the terrain mesh, or undefined if too many
      *          asynchronous mesh creations are already in progress and the operation should
      *          be retried later.
      */
-    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
+    HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level, exaggeration) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
@@ -176,6 +184,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
         var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
         var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
 
         // Compute the center of the tile for RTC rendering.
         var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
@@ -184,6 +193,7 @@ define([
 
         var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
 
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
@@ -194,8 +204,9 @@ define([
             rectangle : rectangle,
             relativeToCenter : center,
             ellipsoid : ellipsoid,
-            skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
-            isGeographic : tilingScheme instanceof GeographicTilingScheme
+            skirtHeight : this._skirtHeight,
+            isGeographic : tilingScheme instanceof GeographicTilingScheme,
+            exaggeration : exaggeration
         });
 
         if (!defined(verticesPromise)) {
@@ -203,15 +214,24 @@ define([
             return undefined;
         }
 
+        var that = this;
         return when(verticesPromise, function(result) {
-            return new TerrainMesh(
+            that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
                     result.minimumHeight,
                     result.maximumHeight,
                     result.boundingSphere3D,
-                    result.occludeePointInScaledSpace);
+                    result.occludeePointInScaledSpace,
+                    6,
+                    result.orientedBoundingBox,
+                    TerrainEncoding.clone(result.encoding),
+                    exaggeration);
+
+            // Free memory received from server after mesh is created.
+            that._buffer = undefined;
+            return that._mesh;
         });
     };
 
@@ -229,21 +249,27 @@ define([
         var width = this._width;
         var height = this._height;
 
-        var heightSample;
-
         var structure = this._structure;
         var stride = structure.stride;
-        if (stride > 1) {
-            var elementsPerHeight = structure.elementsPerHeight;
-            var elementMultiplier = structure.elementMultiplier;
-            var isBigEndian = structure.isBigEndian;
+        var elementsPerHeight = structure.elementsPerHeight;
+        var elementMultiplier = structure.elementMultiplier;
+        var isBigEndian = structure.isBigEndian;
+        var heightOffset = structure.heightOffset;
+        var heightScale = structure.heightScale;
 
-            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
+        var heightSample;
+        if (defined(this._mesh)) {
+            var buffer = this._mesh.vertices;
+            var encoding = this._mesh.encoding;
+            var skirtHeight = this._skirtHeight;
+            var exaggeration = this._mesh.exaggeration;
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude, exaggeration);
         } else {
-            heightSample = interpolateHeight(this._buffer, rectangle, width, height, longitude, latitude);
+            heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
+            heightSample = heightSample * heightScale + heightOffset;
         }
 
-        return heightSample * structure.heightScale + structure.heightOffset;
+        return heightSample;
     };
 
     /**
@@ -257,7 +283,7 @@ define([
      * @param {Number} descendantX The X coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantY The Y coordinate within the tiling scheme of the descendant tile for which we are upsampling.
      * @param {Number} descendantLevel The level within the tiling scheme of the descendant tile for which we are upsampling.
-     * @returns {Promise|HeightmapTerrainData} A promise for upsampled heightmap terrain data for the descendant tile,
+     * @returns {Promise.<HeightmapTerrainData>|undefined} A promise for upsampled heightmap terrain data for the descendant tile,
      *          or undefined if too many asynchronous upsample operations are in progress and the request has been
      *          deferred.
      */
@@ -290,19 +316,52 @@ define([
         }
         //>>includeEnd('debug');
 
-        var result;
+        var width = this._width;
+        var height = this._height;
+        var structure = this._structure;
+        var skirtHeight = this._skirtHeight;
+        var stride = structure.stride;
 
-        if ((this._width % 2) === 1 && (this._height % 2) === 1) {
-            // We have an odd number of posts greater than 2 in each direction,
-            // so we can upsample by simply dropping half of the posts in each direction.
-            result = upsampleBySubsetting(this, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
-        } else {
-            // The number of posts in at least one direction is even, so we must upsample
-            // by interpolating heights.
-            result = upsampleByInterpolating(this, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
+        var heights = new this._bufferType(width * height * stride);
+        var meshData = this._mesh;
+        if (!defined(meshData)) {
+            return undefined;
         }
 
-        return result;
+        var buffer = meshData.vertices;
+        var encoding = meshData.encoding;
+
+        // PERFORMANCE_IDEA: don't recompute these rectangles - the caller already knows them.
+        var sourceRectangle = tilingScheme.tileXYToRectangle(thisX, thisY, thisLevel);
+        var destinationRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
+
+        var heightOffset = structure.heightOffset;
+        var heightScale = structure.heightScale;
+        var exaggeration = meshData.exaggeration;
+
+        var elementsPerHeight = structure.elementsPerHeight;
+        var elementMultiplier = structure.elementMultiplier;
+        var isBigEndian = structure.isBigEndian;
+
+        var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
+
+        for (var j = 0; j < height; ++j) {
+            var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
+            for (var i = 0; i < width; ++i) {
+                var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
+                setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
+            }
+        }
+
+        return new HeightmapTerrainData({
+            buffer : heights,
+            width : width,
+            height : height,
+            childTileMask : 0,
+            structure : this._structure,
+            createdByUpsampling : true
+        });
     };
 
     /**
@@ -356,162 +415,7 @@ define([
         return this._createdByUpsampling;
     };
 
-    function upsampleBySubsetting(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        var levelDifference = 1;
-
-        var width = terrainData._width;
-        var height = terrainData._height;
-
-        // Compute the post indices of the corners of this tile within its own level.
-        var leftPostIndex = descendantX * (width - 1);
-        var rightPostIndex = leftPostIndex + width - 1;
-        var topPostIndex = descendantY * (height - 1);
-        var bottomPostIndex = topPostIndex + height - 1;
-
-        // Transform the post indices to the ancestor's level.
-        var twoToTheLevelDifference = 1 << levelDifference;
-        leftPostIndex /= twoToTheLevelDifference;
-        rightPostIndex /= twoToTheLevelDifference;
-        topPostIndex /= twoToTheLevelDifference;
-        bottomPostIndex /= twoToTheLevelDifference;
-
-        // Adjust the indices to be relative to the northwest corner of the source tile.
-        var sourceLeft = thisX * (width - 1);
-        var sourceTop = thisY * (height - 1);
-        leftPostIndex -= sourceLeft;
-        rightPostIndex -= sourceLeft;
-        topPostIndex -= sourceTop;
-        bottomPostIndex -= sourceTop;
-
-        var leftInteger = leftPostIndex | 0;
-        var rightInteger = rightPostIndex | 0;
-        var topInteger = topPostIndex | 0;
-        var bottomInteger = bottomPostIndex | 0;
-
-        var upsampledWidth = (rightInteger - leftInteger + 1);
-        var upsampledHeight = (bottomInteger - topInteger + 1);
-
-        var sourceHeights = terrainData._buffer;
-        var structure = terrainData._structure;
-
-        // Copy the relevant posts.
-        var numberOfHeights = upsampledWidth * upsampledHeight;
-        var numberOfElements = numberOfHeights * structure.stride;
-        var heights = new sourceHeights.constructor(numberOfElements);
-
-        var outputIndex = 0;
-        var i, j;
-        var stride = structure.stride;
-        if (stride > 1) {
-            for (j = topInteger; j <= bottomInteger; ++j) {
-                for (i = leftInteger; i <= rightInteger; ++i) {
-                    var index = (j * width + i) * stride;
-                    for (var k = 0; k < stride; ++k) {
-                        heights[outputIndex++] = sourceHeights[index + k];
-                    }
-                }
-            }
-        } else {
-            for (j = topInteger; j <= bottomInteger; ++j) {
-                for (i = leftInteger; i <= rightInteger; ++i) {
-                    heights[outputIndex++] = sourceHeights[j * width + i];
-                }
-            }
-        }
-
-        return new HeightmapTerrainData({
-            buffer : heights,
-            width : upsampledWidth,
-            height : upsampledHeight,
-            childTileMask : 0,
-            structure : terrainData._structure,
-            createdByUpsampling : true
-        });
-    }
-
-    function upsampleByInterpolating(terrainData, tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        var width = terrainData._width;
-        var height = terrainData._height;
-        var structure = terrainData._structure;
-        var stride = structure.stride;
-
-        var sourceHeights = terrainData._buffer;
-        var heights = new sourceHeights.constructor(width * height * stride);
-
-        // PERFORMANCE_IDEA: don't recompute these rectangles - the caller already knows them.
-        var sourceRectangle = tilingScheme.tileXYToRectangle(thisX, thisY, thisLevel);
-        var destinationRectangle = tilingScheme.tileXYToRectangle(descendantX, descendantY, descendantLevel);
-
-        var i, j, latitude, longitude;
-
-        if (stride > 1) {
-            var elementsPerHeight = structure.elementsPerHeight;
-            var elementMultiplier = structure.elementMultiplier;
-            var isBigEndian = structure.isBigEndian;
-
-            var divisor = Math.pow(elementMultiplier, elementsPerHeight - 1);
-
-            for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
-                for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                    var heightSample = interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude);
-                    setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
-                }
-            }
-        } else {
-            for (j = 0; j < height; ++j) {
-                latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
-                for (i = 0; i < width; ++i) {
-                    longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                    heights[j * width + i] = interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude);
-                }
-            }
-        }
-
-        return new HeightmapTerrainData({
-            buffer : heights,
-            width : width,
-            height : height,
-            childTileMask : 0,
-            structure : terrainData._structure,
-            createdByUpsampling : true
-        });
-    }
-
-    function interpolateHeight(sourceHeights, sourceRectangle, width, height, longitude, latitude) {
-        var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
-        var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
-
-        var westInteger = fromWest | 0;
-        var eastInteger = westInteger + 1;
-        if (eastInteger >= width) {
-            eastInteger = width - 1;
-            westInteger = width - 2;
-        }
-
-        var southInteger = fromSouth | 0;
-        var northInteger = southInteger + 1;
-        if (northInteger >= height) {
-            northInteger = height - 1;
-            southInteger = height - 2;
-        }
-
-        var dx = fromWest - westInteger;
-        var dy = fromSouth - southInteger;
-
-        southInteger = height - 1 - southInteger;
-        northInteger = height - 1 - northInteger;
-
-        var southwestHeight = sourceHeights[southInteger * width + westInteger];
-        var southeastHeight = sourceHeights[southInteger * width + eastInteger];
-        var northwestHeight = sourceHeights[northInteger * width + westInteger];
-        var northeastHeight = sourceHeights[northInteger * width + eastInteger];
-
-        return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
-    }
-
-    function interpolateHeightWithStride(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude) {
+    function interpolateHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, sourceRectangle, width, height, longitude, latitude) {
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -539,6 +443,48 @@ define([
         var southeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, southInteger * width + eastInteger);
         var northwestHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + westInteger);
         var northeastHeight = getHeight(sourceHeights, elementsPerHeight, elementMultiplier, stride, isBigEndian, northInteger * width + eastInteger);
+
+        return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
+    }
+
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
+        var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
+        var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
+
+        if (skirtHeight > 0) {
+            fromWest += 1.0;
+            fromSouth += 1.0;
+
+            width += 2;
+            height += 2;
+        }
+
+        var widthEdge = (skirtHeight > 0) ? width - 1 : width;
+        var westInteger = fromWest | 0;
+        var eastInteger = westInteger + 1;
+        if (eastInteger >= widthEdge) {
+            eastInteger = width - 1;
+            westInteger = width - 2;
+        }
+
+        var heightEdge = (skirtHeight > 0) ? height - 1 : height;
+        var southInteger = fromSouth | 0;
+        var northInteger = southInteger + 1;
+        if (northInteger >= heightEdge) {
+            northInteger = height - 1;
+            southInteger = height - 2;
+        }
+
+        var dx = fromWest - westInteger;
+        var dy = fromSouth - southInteger;
+
+        southInteger = height - 1 - southInteger;
+        northInteger = height - 1 - northInteger;
+
+        var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
+        var northwestHeight = (encoding.decodeHeight(buffer, northInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var northeastHeight = (encoding.decodeHeight(buffer, northInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
 
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }

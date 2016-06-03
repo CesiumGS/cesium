@@ -27,7 +27,12 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
+define([
+        '../Core/buildModuleUrl',
+        '../Core/defineProperties'
+    ], function(
+        buildModuleUrl,
+        defineProperties) {
     var tmp = {};
 
 (function(obj) {
@@ -798,9 +803,21 @@ define(['../Core/buildModuleUrl'], function(buildModuleUrl) {
 				callback(createZipWriter(writer, onerror, dontDeflate));
 			}, onerror);
 		},
-		workerScriptsPath : buildModuleUrl('ThirdParty/Workers/'),
 		useWebWorkers : true
 	};
+
+	var workerScriptsPath;
+
+	defineProperties(obj.zip, {
+        'workerScriptsPath' : {
+            get : function() {
+                if (typeof workerScriptsPath === 'undefined') {
+                    workerScriptsPath = buildModuleUrl('ThirdParty/Workers/');
+                }
+                return workerScriptsPath;
+            }
+        }
+    });
 
 })(tmp);
 

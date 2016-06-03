@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/GridImageryProvider',
+        'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryProvider',
@@ -8,16 +9,25 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         GridImageryProvider,
+        Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
         ImageryProvider,
         pollToPromise,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('conforms to ImageryProvider interface', function() {
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);
+    });
+
+    it('resolves readyPromise', function() {
+        var provider = new GridImageryProvider();
+
+        return provider.readyPromise.then(function (result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
     });
 
     it('returns valid value for hasAlphaChannel', function() {
@@ -27,6 +37,19 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             expect(typeof provider.hasAlphaChannel).toBe('boolean');
+        });
+    });
+
+    it('can use a custom ellipsoid', function() {
+        var ellipsoid = new Ellipsoid(1, 2, 3);
+        var provider = new GridImageryProvider({
+            ellipsoid : ellipsoid
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tilingScheme.ellipsoid).toEqual(ellipsoid);
         });
     });
 

@@ -1,0 +1,55 @@
+<kml:kml xmlns:kml="http://www.opengis.net/kml/2.2">
+    <kml:Document id="docid">
+        <kml:name>Namespaced</kml:name>
+        <kml:description>Test that Cesium is able to load a KML document with explicit namespaces.</kml:description>
+		<kml:StyleMap id="polylinestyle">
+			<kml:Pair>
+				<kml:key>normal</kml:key>
+				<kml:styleUrl>#normalstyle</kml:styleUrl>
+			</kml:Pair>
+		</kml:StyleMap>
+		<kml:Style id="normalstyle">
+			<kml:LineStyle>
+				<kml:color>00FF00FF</kml:color>
+				<kml:width>10</kml:width>
+			</kml:LineStyle>
+		</kml:Style>
+        <kml:visibility>1</kml:visibility>
+        <kml:Placemark>
+            <kml:name>Foo</kml:name>
+            <kml:description>Bar</kml:description>
+            <kml:visibility>1</kml:visibility>
+            <kml:Polygon>
+                <kml:outerBoundaryIs>
+                    <kml:LinearRing>
+                        <kml:coordinates>129.129819,-25.311793 129.130142,-25.311992 129.129671,-25.312533 129.129341,-25.312338 129.129633,-25.312009 129.129555,-25.311964 129.129717,-25.311790 129.129789,-25.311830 129.129819,-25.311793</kml:coordinates>
+                    </kml:LinearRing>
+                </kml:outerBoundaryIs>
+            </kml:Polygon>
+        </kml:Placemark>
+        <kml:Placemark>
+            <kml:name>Another</kml:name>
+            <kml:description>Test</kml:description>
+            <kml:visibility>1</kml:visibility>
+            <kml:Polygon>
+                <kml:outerBoundaryIs>
+                    <kml:LinearRing>
+                        <kml:coordinates>129.129580,-25.311670 129.129205,-25.312091 129.128890,-25.311903 129.129043,-25.311721 129.128839,-25.311598 129.129053,-25.311358 129.129580,-25.311670</kml:coordinates>
+                    </kml:LinearRing>
+                </kml:outerBoundaryIs>
+            </kml:Polygon>
+        </kml:Placemark>
+		<kml:Placemark>
+			<kml:name>La Drôme</kml:name>
+			<kml:visibility>1</kml:visibility>
+			<kml:styleUrl>#polylinestyle</kml:styleUrl>
+			<kml:LineString>
+				<kml:extrude>1</kml:extrude>
+				<kml:tessellate>1</kml:tessellate>
+				<kml:coordinates>
+				4.788577,44.76933,0 4.78788,44.769301,0 4.787056,44.769228,0 4.786352,44.769019,0 4.785664,44.769169,0 4.785168,44.769361,0 4.784936,44.769861,0 4.784028,44.770781,0 4.783345,44.771021,0 4.781895,44.771367,0 4.780828,44.771526,0 4.779644,44.771868,0 4.778727,44.772608,0 4.778111,44.772928,0 4.777111,44.77322,0 4.776481,44.773234,0 4.773988,44.772568,0 4.772586,44.772285,0 4.766804,44.771503,0 4.763315,44.771537,0 4.763269,44.771536,0 4.761774,44.771375,0 4.761725,44.771371,0 4.761111,44.771305,0 4.75966,44.771383,0 
+				</kml:coordinates>
+			</kml:LineString>
+		</kml:Placemark>
+    </kml:Document>
+</kml:kml>

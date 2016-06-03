@@ -11,8 +11,7 @@ define([
         CesiumMath,
         BoundingSphereState,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var time = new JulianDate();
     function createDynamicGeometryBoundingSphereSpecs(Updater, entity, graphics, getScene) {

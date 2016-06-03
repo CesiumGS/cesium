@@ -3,13 +3,15 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/loadImage',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './CubeMap'
     ], function(
         defined,
         DeveloperError,
         loadImage,
-        when) {
-    "use strict";
+        when,
+        CubeMap) {
+    'use strict';
 
     /**
      * Asynchronously loads six images and creates a cube map.  Returns a promise that
@@ -22,13 +24,11 @@ define([
      * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
      *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
      *        Data URIs are never requested using CORS.
-     * @returns {Promise} a promise that will resolve to the requested {@link CubeMap} when loaded.
+     * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} urls is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * Cesium.loadCubeMap(context, {
@@ -43,10 +43,13 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @private
      */
-    var loadCubeMap = function(context, urls, allowCrossOrigin) {
+    function loadCubeMap(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(context)) {
             throw new DeveloperError('context is required.');
@@ -78,7 +81,8 @@ define([
         ];
 
         return when.all(facePromises, function(images) {
-            return context.createCubeMap({
+            return new CubeMap({
+                context : context,
                 source : {
                     positiveX : images[0],
                     negativeX : images[1],
@@ -89,7 +93,7 @@ define([
                 }
             });
         });
-    };
+    }
 
     return loadCubeMap;
 });

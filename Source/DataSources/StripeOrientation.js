@@ -3,13 +3,12 @@ define([
         '../Core/freezeObject'
     ], function(
         freezeObject) {
-    "use strict";
+    'use strict';
 
     /**
      * Defined the orientation of stripes in {@link StripeMaterialProperty}.
      *
-     * @namespace
-     * @alias StripeOrientation
+     * @exports StripeOrientation
      */
     var StripeOrientation = {
         /**

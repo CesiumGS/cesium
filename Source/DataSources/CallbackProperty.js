@@ -9,7 +9,7 @@ define([
         defineProperties,
         DeveloperError,
         Event) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link Property} whose value is lazily evaluated by a callback function.
@@ -20,12 +20,12 @@ define([
      * @param {CallbackProperty~Callback} callback The function to be called when the property is evaluated.
      * @param {Boolean} isConstant <code>true</code> when the callback function returns the same value every time, <code>false</code> if the value will change.
      */
-    var CallbackProperty = function(callback, isConstant) {
+    function CallbackProperty(callback, isConstant) {
         this._callback = undefined;
         this._isConstant = undefined;
         this._definitionChanged = new Event();
         this.setCallback(callback, isConstant);
-    };
+    }
 
     defineProperties(CallbackProperty.prototype, {
         /**

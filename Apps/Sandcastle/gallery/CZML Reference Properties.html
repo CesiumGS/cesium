@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="CZML Reference Properties">
+    <meta name="cesium-sandcastle-labels" content="CZML">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+@import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var czml = [{
+    "id" : "document",
+    "name" : "CZML Reference Properties",
+    "version" : "1.0"
+}, {
+    "id" : "position-reference",
+    "position" : {
+        "cartographicDegrees" : [-110.0, 50.0, 0]
+    }
+}, {
+    "id" : "outlineColor-reference",
+    "name" : "Referencing Position",
+    "description" : "<p>For more examples of reference properties, see CZML Polygon - Interpolating References.</p>",
+    "billboard" : {
+        "image" : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAACvSURBVDhPrZDRDcMgDAU9GqN0lIzijw6SUbJJygUeNQgSqepJTyHG91LVVpwDdfxM3T9TSl1EXZvDwii471fivK73cBFFQNTT/d2KoGpfGOpSIkhUpgUMxq9DFEsWv4IXhlyCnhBFnZcFEEuYqbiUlNwWgMTdrZ3JbQFoEVG53rd8ztG9aPJMnBUQf/VFraBJeWnLS0RfjbKyLJA8FkT5seDYS1Qwyv8t0B/5C2ZmH2/eTGNNBgMmAAAAAElFTkSuQmCC",
+        "scale" : 1.5
+    },
+    "label" : {
+        "fillColor" : {
+            "rgba" : [255, 255, 255, 255]
+        },
+        "font" : "11pt Lucida Console",
+        "horizontalOrigin" : "LEFT",
+        "outlineColor" : {
+            "rgba":[150, 0, 150, 255]
+        },
+        "outlineWidth" : 3,
+        "pixelOffset" : {
+            "cartesian2" : [20, 0]
+        },
+        "style" : "FILL_AND_OUTLINE",
+        "text" : "referencing position"
+    },
+    "position" : {
+          "reference" : "position-reference#position"
+    }
+}, {
+    "id" : "polygon",
+    "name" : "Referencing Outline Color",
+    "description" : "<p>For more examples of reference properties, see CZML Polygon - Interpolating References.</p>",
+    "label" : {
+        "fillColor" : {
+            "rgba" : [255, 255, 255, 255]
+        },
+        "font" : "11pt Lucida Console",
+        "horizontalOrigin" : "LEFT",
+        "pixelOffset" : {
+            "cartesian2" : [20, 0]
+        },
+        "style" : "FILL_AND_OUTLINE",
+        "text" : "referencing outlineColor"
+    },
+    "position" : {
+        "cartographicDegrees" : [-105, 35, 0]
+    },
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -115.0, 37.0, 0,
+                -115.0, 32.0, 0,
+                -107.0, 33.0, 0,
+                -102.0, 31.0, 0,
+                -102.0, 35.0, 0
+            ]
+        },
+        "outline" : true,
+        "outlineColor" : {
+            "reference" : "outlineColor-reference#label.outlineColor"
+        },
+        "outlineWidth" : 5
+    }
+}];
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
+
+  //Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>

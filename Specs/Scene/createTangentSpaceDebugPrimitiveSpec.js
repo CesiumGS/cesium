@@ -13,8 +13,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
 
     it('computes all attributes', function() {

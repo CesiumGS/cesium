@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <title>Cesium Sandcastle</title>
     <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/lib/codemirror.css">
@@ -16,7 +16,7 @@
     </script>
     <script src="../../ThirdParty/jshint-2.1.10/jshint.js"></script>
 
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.3/dojo/dojo.js"></script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.10.4/dojo/dojo.js"></script>
 
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
@@ -76,6 +76,26 @@
                             Save *.html file
                         </span>
                     </a>
+                </div>
+            </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonShareDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'shareIcon', showLabel: true">
+                <span>Share</span>
+                <div id="dropDownShare" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    Be sure to re-share if you make any changes.<br />
+                        <textarea data-dojo-type="dijit.form.Textarea" id="link"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                </div>
+            <span data-dojo-type="dijit.ToolbarSeparator"></span>
+            <div id="buttonImportDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'gitHubIcon', showLabel: true">
+                <span>Import Gist</span>
+                <div id="dropDownImport" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
+                    <div>Gist Id or Url:<br/>
+                        <textarea data-dojo-type="dijit.form.Textarea" id="gistId"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
+                    <div id="buttonImport" data-dojo-type="dijit.form.Button">Import</div>
                 </div>
             </div>
             <!--

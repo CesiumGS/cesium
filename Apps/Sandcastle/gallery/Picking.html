@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Use the mouse to select and manipulate objects in the scene.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     selectionIndicator : false,
@@ -36,7 +36,6 @@ var scene = viewer.scene;
 var handler;
 
 Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', function() {
-    var ellipsoid = scene.globe.ellipsoid;
     var entity = viewer.entities.add({
         label : {
             show : false
@@ -46,9 +45,9 @@ Sandcastle.addDefaultToolbarButton('Show Cartographic Position on Mouse Over', f
     // Mouse over the globe to see the cartographic position
     handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
-        var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, ellipsoid);
+        var cartesian = viewer.camera.pickEllipsoid(movement.endPosition, scene.globe.ellipsoid);
         if (cartesian) {
-            var cartographic = ellipsoid.cartesianToCartographic(cartesian);
+            var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
             var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
             var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
 
@@ -141,6 +140,56 @@ Sandcastle.addToolbarButton('Drill-Down Picking', function() {
             }
         }
 
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+});
+
+Sandcastle.addToolbarButton('Pick position', function() {
+    var modelEntity = viewer.entities.add({
+        name : 'milktruck',
+        position : Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706),
+        model : {
+            uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.gltf'
+        }
+    });
+    viewer.zoomTo(modelEntity);
+    
+    var labelEntity = viewer.entities.add({
+        label : {
+            show : false,
+            horizontalOrigin : Cesium.HorizontalOrigin.LEFT
+        }
+    });
+
+    // Mouse over the globe to see the cartographic position
+    handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var foundPosition = false;
+        
+        var scene = viewer.scene;
+        var pickedObject = scene.pick(movement.endPosition);
+        if (scene.pickPositionSupported && Cesium.defined(pickedObject) && pickedObject.id === modelEntity) {
+            var cartesian = viewer.scene.pickPosition(movement.endPosition);
+            
+            if (Cesium.defined(cartesian)) {
+                var cartographic = Cesium.Cartographic.fromCartesian(cartesian);
+                var longitudeString = Cesium.Math.toDegrees(cartographic.longitude).toFixed(2);
+                var latitudeString = Cesium.Math.toDegrees(cartographic.latitude).toFixed(2);
+                var heightString = cartographic.height.toFixed(2);
+    
+                labelEntity.position = cartesian;
+                labelEntity.label.show = true;
+                labelEntity.label.text = '(' + longitudeString + ', ' + latitudeString + ', ' + heightString + ')';
+                
+                var camera = scene.camera;
+                labelEntity.label.eyeOffset = new Cesium.Cartesian3(0.0, 0.0, camera.frustum.near * 1.5 - Cesium.Cartesian3.distance(cartesian, camera.position));
+                
+                foundPosition = true;
+            }
+        }
+        
+        if (!foundPosition) {
+            labelEntity.label.show = false;
+        }
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 });
 

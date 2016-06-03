@@ -1,12 +1,13 @@
 /*global defineSuite*/
 defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
+        'Core/FeatureDetection',
         'Specs/DomEventSimulator'
     ], function(
         NavigationHelpButton,
+        FeatureDetection,
         DomEventSimulator) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('can create and destroy', function() {
         var container = document.createElement('span');
@@ -42,47 +43,35 @@ defineSuite([
         widget.destroy();
     });
 
-    it('mousedown event closes dropdown if target is not inside container', function() {
-        var container = document.createElement('span');
-        container.id = 'testContainer';
-        document.body.appendChild(container);
+    function addCloseOnInputSpec(name, func) {
+        it(name + ' event closes dropdown if target is not inside container', function() {
+            var container = document.createElement('span');
+            container.id = 'testContainer';
+            document.body.appendChild(container);
 
-        var widget = new NavigationHelpButton({
-            container : 'testContainer'
+            var widget = new NavigationHelpButton({
+                container : 'testContainer'
+            });
+
+            widget.viewModel.showInstructions = true;
+            func(document.body);
+            expect(widget.viewModel.showInstructions).toEqual(false);
+
+            widget.viewModel.showInstructions = true;
+            func(container.firstChild);
+            expect(widget.viewModel.showInstructions).toEqual(true);
+
+            widget.destroy();
+            document.body.removeChild(container);
         });
+    }
 
-        widget.viewModel.showInstructions = true;
-        DomEventSimulator.fireMouseDown(document.body);
-        expect(widget.viewModel.showInstructions).toEqual(false);
-
-        widget.viewModel.showInstructions = true;
-        DomEventSimulator.fireMouseDown(container.firstChild);
-        expect(widget.viewModel.showInstructions).toEqual(true);
-
-        widget.destroy();
-        document.body.removeChild(container);
-    });
-
-    it('touchstart event closes dropdown if target is not inside container', function() {
-        var container = document.createElement('span');
-        container.id = 'testContainer';
-        document.body.appendChild(container);
-
-        var widget = new NavigationHelpButton({
-            container : 'testContainer'
-        });
-
-        widget.viewModel.showInstructions = true;
-        DomEventSimulator.fireTouchStart(document.body);
-        expect(widget.viewModel.showInstructions).toEqual(false);
-
-        widget.viewModel.showInstructions = true;
-        DomEventSimulator.fireTouchStart(container.firstChild);
-        expect(widget.viewModel.showInstructions).toEqual(true);
-
-        widget.destroy();
-        document.body.removeChild(container);
-    });
+    if (FeatureDetection.supportsPointerEvents()) {
+        addCloseOnInputSpec('pointerDown', DomEventSimulator.firePointerDown);
+    } else {
+        addCloseOnInputSpec('mousedown', DomEventSimulator.fireMouseDown);
+        addCloseOnInputSpec('touchstart', DomEventSimulator.fireTouchStart);
+    }
 
     it('throws if container is undefined', function() {
         expect(function() {

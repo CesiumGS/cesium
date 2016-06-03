@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Draw a polygon or extruded polygon on the globe surface.">
     <meta name="cesium-sandcastle-labels" content="Geometries">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -48,7 +48,9 @@ var greenPolygon = viewer.entities.add({
                                                         -100.0, 42.0,
                                                         -104.0, 40.0]),
         extrudedHeight: 500000.0,
-        material : Cesium.Color.GREEN
+        material : Cesium.Color.GREEN,
+        closeTop : false,
+        closeBottom : false
     }
 });
 
@@ -61,7 +63,7 @@ var orangePolygon = viewer.entities.add({
                                                                -108.0, 30.0, 300000]),
         extrudedHeight: 0,
         perPositionHeight : true,
-        material : Cesium.Color.ORANGE,
+        material : Cesium.Color.ORANGE.withAlpha(0.5),
         outline : true,
         outlineColor : Cesium.Color.BLACK
     }
@@ -100,7 +102,7 @@ var bluePolygon = viewer.entities.add({
                 }]
             }]
         },
-        material : Cesium.Color.BLUE,
+        material : Cesium.Color.BLUE.withAlpha(0.5),
         outline : true,
         outlineColor : Cesium.Color.BLACK
     }

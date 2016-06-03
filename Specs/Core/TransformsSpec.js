@@ -8,6 +8,7 @@ defineSuite([
         'Core/DeveloperError',
         'Core/EarthOrientationParameters',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/Iau2006XysData',
         'Core/JulianDate',
         'Core/loadJson',
@@ -27,6 +28,7 @@ defineSuite([
         DeveloperError,
         EarthOrientationParameters,
         Ellipsoid,
+        GeographicProjection,
         Iau2006XysData,
         JulianDate,
         loadJson,
@@ -37,8 +39,7 @@ defineSuite([
         TimeConstants,
         TimeInterval,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeZ = new Cartesian4(0, 0, -1, 0);
@@ -273,10 +274,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works before noon', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff, new JulianDate());
-
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
         // rotation matrix determinants are 1.0
@@ -295,9 +293,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works after noon', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff + TimeConstants.SECONDS_PER_DAY * 0.5, new JulianDate());
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
 
         var t = Transforms.computeTemeToPseudoFixedMatrix(time);
 
@@ -317,9 +313,7 @@ defineSuite([
     });
 
     it('computeTemeToPseudoFixedMatrix works with a result parameter', function() {
-        var time = JulianDate.now();
-        var secondsDiff = TimeConstants.SECONDS_PER_DAY - time.secondsOfDay;
-        time = JulianDate.addSeconds(time, secondsDiff, new JulianDate());
+        var time = JulianDate.fromDate(new Date('June 29, 2015 12:00:00 UTC'));
 
         var resultT = new Matrix3();
         var t = Transforms.computeTemeToPseudoFixedMatrix(time, resultT);
@@ -344,9 +338,6 @@ defineSuite([
 
     describe('computeIcrfToFixedMatrix', function() {
         function preloadTransformationData(start, stop, eopDescription) {
-            var ready = false;
-            var failed = false;
-
             Transforms.earthOrientationParameters = new EarthOrientationParameters(eopDescription);
             var preloadInterval = new TimeInterval({
                 start : start,
@@ -619,8 +610,8 @@ defineSuite([
 
     it('pointToGLWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -632,8 +623,8 @@ defineSuite([
 
     it('pointToGLWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -669,8 +660,8 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -682,8 +673,8 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
-            target : Cartesian3.ZERO,
+            position : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0, new Cartesian3()),
+            direction : Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3()),
             up : Cartesian3.UNIT_Z
         });
         var mvpMatrix = Matrix4.multiply(perspective, view, new Matrix4());
@@ -715,6 +706,57 @@ defineSuite([
 
         var returnedResult = Transforms.pointToWindowCoordinates(perspective, vpTransform, point);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON12);
+    });
+
+    it('basisTo2D projects translation', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
+        var heading = CesiumMath.toRadians(90.0);
+        var pitch = CesiumMath.toRadians(45.0);
+        var roll = 0.0;
+
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
+
+        var translation2D = Cartesian3.fromCartesian4(Matrix4.getColumn(modelMatrix2D, 3, new Cartesian4()));
+
+        var carto = ellipsoid.cartesianToCartographic(origin);
+        var expected = projection.project(carto);
+        Cartesian3.fromElements(expected.z, expected.x, expected.y, expected);
+
+        expect(translation2D).toEqual(expected);
+    });
+
+    it('basisTo2D transforms rotation', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var projection = new GeographicProjection(ellipsoid);
+        var origin = Cartesian3.fromDegrees(-72.0, 40.0, 100.0, ellipsoid);
+        var heading = CesiumMath.toRadians(90.0);
+        var pitch = CesiumMath.toRadians(45.0);
+        var roll = 0.0;
+
+        var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, heading, pitch, roll, ellipsoid);
+        var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
+
+        var rotation2D = Matrix4.getRotation(modelMatrix2D, new Matrix3());
+
+        var enu = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
+        var enuInverse = Matrix4.inverseTransformation(enu, enu);
+
+        var hprPlusTranslate = Matrix4.multiply(enuInverse, modelMatrix, new Matrix4());
+        var hpr = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
+
+        var row0 = Matrix3.getRow(hpr, 0, new Cartesian3());
+        var row1 = Matrix3.getRow(hpr, 1, new Cartesian3());
+        var row2 = Matrix3.getRow(hpr, 2, new Cartesian3());
+
+        var expected = new Matrix3();
+        Matrix3.setRow(expected, 0, row2, expected);
+        Matrix3.setRow(expected, 1, row0, expected);
+        Matrix3.setRow(expected, 2, row1, expected);
+
+        expect(rotation2D).toEqualEpsilon(expected, CesiumMath.EPSILON3);
     });
 
     it('eastNorthUpToFixedFrame throws without an origin', function() {
@@ -774,6 +816,24 @@ defineSuite([
     it('pointToWindowCoordinates throws without a point', function() {
         expect(function() {
             Transforms.pointToWindowCoordinates(Matrix4.IDENTITY, Matrix4.IDENTITY, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('basisTo2D throws without projection', function() {
+        expect(function() {
+            Transforms.basisTo2D(undefined, Matrix4.IDENTITY, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('basisTo2D throws without matrix', function() {
+        expect(function() {
+            Transforms.basisTo2D(new GeographicProjection(), undefined, new Matrix4());
+        }).toThrowDeveloperError();
+    });
+
+    it('basisTo2D throws without result', function() {
+        expect(function() {
+            Transforms.basisTo2D(new GeographicProjection(), Matrix4.IDENTITY, undefined);
         }).toThrowDeveloperError();
     });
 });

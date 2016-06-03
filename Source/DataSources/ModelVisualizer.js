@@ -2,7 +2,6 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -14,7 +13,6 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
-        Cartesian3,
         defined,
         destroyObject,
         DeveloperError,
@@ -23,11 +21,16 @@ define([
         ModelAnimationLoop,
         BoundingSphereState,
         Property) {
-    "use strict";
-    /*global console*/
+    'use strict';
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
+    var defaultIncrementallyLoadTextures = true;
+    var defaultCastShadows = true;
+    var defaultReceiveShadows = true;
+
+    var modelMatrixScratch = new Matrix4();
+    var nodeMatrixScratch = new Matrix4();
 
     /**
      * A {@link Visualizer} which maps {@link Entity#model} to a {@link Model}.
@@ -37,7 +40,7 @@ define([
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    var ModelVisualizer = function(scene, entityCollection) {
+    function ModelVisualizer(scene, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -54,9 +57,8 @@ define([
         this._entityCollection = entityCollection;
         this._modelHash = {};
         this._entitiesToVisualize = new AssociativeArray();
-        this._modelMatrixScratch = new Matrix4();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
-    };
+    }
 
     /**
      * Updates models created this visualizer to match their
@@ -72,11 +74,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var context = this._scene.context;
         var entities = this._entitiesToVisualize.values;
         var modelHash = this._modelHash;
         var primitives = this._primitives;
-        var scene = this._scene;
 
         for (var i = 0, len = entities.length; i < len; i++) {
             var entity = entities[i];
@@ -88,7 +88,7 @@ define([
 
             var modelMatrix;
             if (show) {
-                modelMatrix = entity._getModelMatrix(time, this._modelMatrixScratch);
+                modelMatrix = entity._getModelMatrix(time, modelMatrixScratch);
                 uri = Property.getValueOrUndefined(modelGraphics._uri, time);
                 show = defined(modelMatrix) && defined(uri);
             }
@@ -107,17 +107,21 @@ define([
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri
+                    url : uri,
+                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
                 });
 
-                model.readyPromise.then(onModelReady).otherwise(onModelError);
+                model.readyPromise.otherwise(onModelError);
 
                 model.id = entity;
                 primitives.add(model);
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri
+                    uri : uri,
+                    animationsRunning : false,
+                    nodeTransformationsScratch : {},
+                    originalNodeMatrixHash : {}
                 };
                 modelHash[entity.id] = modelData;
             }
@@ -125,8 +129,55 @@ define([
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
+            model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
+            model.castShadows = Property.getValueOrDefault(modelGraphics._castShadows, time, defaultCastShadows);
+            model.receiveShadows = Property.getValueOrDefault(modelGraphics._receiveShadows, time, defaultReceiveShadows);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+
+            if (model.ready) {
+                var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
+                if (modelData.animationsRunning !== runAnimations) {
+                    if (runAnimations) {
+                        model.activeAnimations.addAll({
+                            loop : ModelAnimationLoop.REPEAT
+                        });
+                    } else {
+                        model.activeAnimations.removeAll();
+                    }
+                    modelData.animationsRunning = runAnimations;
+                }
+
+                // Apply node transformations
+                var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
+                if (defined(nodeTransformations)) {
+                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
+                    var nodeNames = Object.keys(nodeTransformations);
+                    for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
+                        var nodeName = nodeNames[nodeIndex];
+
+                        var nodeTransformation = nodeTransformations[nodeName];
+                        if (!defined(nodeTransformation)) {
+                            continue;
+                        }
+
+                        var modelNode = model.getNode(nodeName);
+                        if (!defined(modelNode)) {
+                            continue;
+                        }
+
+                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
+                        if (!defined(originalNodeMatrix)) {
+                            originalNodeMatrix = modelNode.matrix.clone();
+                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
+                        }
+
+                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                    }
+                }
+            }
         }
+
         return true;
     };
 
@@ -212,6 +263,7 @@ define([
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._model) && defined(entity._position)) {
+                clearNodeTransformationsScratch(entity, modelHash);
                 entities.set(entity.id, entity);
             } else {
                 removeModel(this, entity, modelHash, primitives);
@@ -234,10 +286,11 @@ define([
         }
     }
 
-    function onModelReady(model) {
-        model.activeAnimations.addAll({
-            loop : ModelAnimationLoop.REPEAT
-        });
+    function clearNodeTransformationsScratch(entity, modelHash) {
+        var modelData = modelHash[entity.id];
+        if (defined(modelData)) {
+            modelData.nodeTransformationsScratch = {};
+        }
     }
 
     function onModelError(error) {

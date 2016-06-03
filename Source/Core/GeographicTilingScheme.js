@@ -19,7 +19,7 @@ define([
         GeographicProjection,
         CesiumMath,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * A tiling scheme for geometry referenced to a simple {@link GeographicProjection} where
@@ -38,7 +38,7 @@ define([
      * @param {Number} [options.numberOfLevelZeroTilesY=1] The number of tiles in the Y direction at level zero of
      * the tile tree.
      */
-    var GeographicTilingScheme = function GeographicTilingScheme(options) {
+    function GeographicTilingScheme(options) {
         options = defaultValue(options, {});
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -46,8 +46,7 @@ define([
         this._projection = new GeographicProjection(this._ellipsoid);
         this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 2);
         this._numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
-    };
-
+    }
 
     defineProperties(GeographicTilingScheme.prototype, {
         /**
@@ -75,7 +74,7 @@ define([
         /**
          * Gets the map projection used by this tiling scheme.
          * @memberof GeographicTilingScheme.prototype
-         * @type {Projection}
+         * @type {MapProjection}
          */
         projection : {
             get : function() {
@@ -200,7 +199,7 @@ define([
      *
      * @param {Cartographic} position The position.
      * @param {Number} level The tile level-of-detail.  Zero is the least detailed.
-     * @param {Cartesian} [result] The instance to which to copy the result, or undefined if a new instance
+     * @param {Cartesian2} [result] The instance to which to copy the result, or undefined if a new instance
      *        should be created.
      * @returns {Cartesian2} The specified 'result', or a new object containing the tile x, y coordinates
      *          if 'result' is undefined.

@@ -47,8 +47,7 @@ defineSuite([
         PrimitiveCollection,
         createDynamicProperty,
         createScene) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     beforeAll(function(){
@@ -272,12 +271,22 @@ defineSuite([
         expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(show.getValue(time2)));
     });
 
+    it('createFillGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicPolyline();
+        entity.show = false;
+        entity.polyline.fill = true;
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+    });
+
     it('dynamic updater sets properties', function() {
         var entity = new Entity();
         var polyline = new PolylineGraphics();
         entity.polyline = polyline;
 
-        var time1 = new JulianDate(0, 0);
+        var time = new JulianDate(0, 0);
         var time2 = new JulianDate(10, 0);
         var time3 = new JulianDate(20, 0);
 
@@ -485,4 +494,4 @@ defineSuite([
         updater.destroy();
         scene.primitives.removeAll();
     });
-});
+}, 'WebGL');

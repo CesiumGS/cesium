@@ -5,8 +5,7 @@ defineSuite([
     ], function(
         loadWithXhr,
         loadImage) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     describe('data URI loading', function() {
         it('can load URI escaped text with default response type', function() {
@@ -131,6 +130,20 @@ defineSuite([
                     expect(image.width).toEqual(24);
                     expect(image.height).toEqual(24);
                 });
+            });
+        });
+
+        xit('can support 2xx HTTP status (other than 200)', function(){
+            return loadWithXhr({
+                method: 'POST',
+                url: 'http://jsonplaceholder.typicode.com/posts',
+                data: {
+                    title: 'foo',
+                    body: 'bar',
+                    userId: 1
+                }
+            }).then(function(result){
+                expect(JSON.parse(result).id).toEqual(101);
             });
         });
     });

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
@@ -9,14 +10,17 @@ define([
         '../Core/Ellipsoid',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/Ray',
         '../Core/ScreenSpaceEventHandler',
         '../Core/ScreenSpaceEventType',
+        '../Core/Transforms',
         './Camera',
         './OrthographicFrustum',
         './PerspectiveFrustum',
         './SceneMode'
     ], function(
         Cartesian3,
+        Cartographic,
         defaultValue,
         defined,
         destroyObject,
@@ -25,18 +29,20 @@ define([
         Ellipsoid,
         CesiumMath,
         Matrix4,
+        Ray,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
+        Transforms,
         Camera,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
      */
-    var SceneTransitioner = function(scene, ellipsoid) {
+    function SceneTransitioner(scene, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
@@ -44,85 +50,11 @@ define([
         //>>includeEnd('debug');
 
         this._scene = scene;
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        // Position camera and size frustum so the entire 2D map is visible
-        var maxRadii = ellipsoid.maximumRadius;
-        var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        var direction = new Cartesian3();
-        direction = Cartesian3.normalize(Cartesian3.negate(position, direction), direction);
-        var up = Cartesian3.clone(Cartesian3.UNIT_Y);
-
-        var position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
-        var direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
-        var up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, new Cartesian3());
-
-        var frustum = new OrthographicFrustum();
-        frustum.right = maxRadii * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-        frustum.bottom = -frustum.top;
-
-        this._camera2D = {
-            position : position,
-            direction : direction,
-            up : up,
-            position2D : position2D,
-            direction2D : direction2D,
-            up2D : up2D,
-            frustum : frustum
-        };
-
-        position = new Cartesian3(0.0, -1.0, 1.0);
-        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(position, position), 5.0 * maxRadii, position);
-        direction = new Cartesian3();
-        direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
-        var right = new Cartesian3();
-        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
-        up = new Cartesian3();
-        up = Cartesian3.normalize(Cartesian3.cross(right, direction, up), up);
-
-        position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, new Cartesian3());
-        direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, new Cartesian3());
-        var right2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, right, new Cartesian3());
-        up2D = new Cartesian3();
-        up2D = Cartesian3.normalize(Cartesian3.cross(right2D, direction2D, up2D), up2D);
-
-        frustum = new PerspectiveFrustum();
-        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
-        frustum.fov = CesiumMath.toRadians(60.0);
-
-        this._cameraCV = {
-            position : position,
-            direction : direction,
-            up : up,
-            position2D : position2D,
-            direction2D : direction2D,
-            up2D : up2D,
-            frustum : frustum
-        };
-
-        position = new Cartesian3();
-        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0), position), 2.0 * maxRadii, position);
-        direction = new Cartesian3();
-        direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position, direction), direction);
-        right = new Cartesian3();
-        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z, right), right);
-        up = new Cartesian3();
-        up = Cartesian3.normalize(Cartesian3.cross(right, direction, up), up);
-
-        this._camera3D = {
-            position : position,
-            direction : direction,
-            up : up,
-            frustum : frustum
-        };
-
         this._currentTweens = [];
         this._morphHandler = undefined;
         this._morphCancelled = false;
         this._completeMorph = undefined;
-    };
+    }
 
     SceneTransitioner.prototype.completeMorph = function() {
         if (defined(this._completeMorph)) {
@@ -143,19 +75,38 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
-        updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
-        createMorphHandler(this, complete2DCallback);
+        scene._mode = SceneMode.MORPHING;
+        scene.camera._setTransform(Matrix4.IDENTITY);
 
         if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
-            morphFromColumbusViewTo2D(this, duration, ellipsoid, complete2DCallback);
+            morphFromColumbusViewTo2D(this, duration);
         } else {
-            morphFrom3DTo2D(this, duration, ellipsoid, complete2DCallback);
+            morphFrom3DTo2D(this, duration, ellipsoid);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
             this._completeMorph();
         }
+    };
+
+    var scratchToCVPosition = new Cartesian3();
+    var scratchToCVDirection = new Cartesian3();
+    var scratchToCVUp = new Cartesian3();
+    var scratchToCVPosition2D = new Cartesian3();
+    var scratchToCVDirection2D = new Cartesian3();
+    var scratchToCVUp2D = new Cartesian3();
+    var scratchToCVSurfacePosition = new Cartesian3();
+    var scratchToCVCartographic = new Cartographic();
+    var scratchToCVToENU = new Matrix4();
+    var scratchToCVFrustum = new PerspectiveFrustum();
+    var scratchToCVCamera = {
+        position : undefined,
+        direction : undefined,
+        up : undefined,
+        position2D : undefined,
+        direction2D : undefined,
+        up2D : undefined,
+        frustum : undefined
     };
 
     SceneTransitioner.prototype.morphToColumbusView = function(duration, ellipsoid) {
@@ -171,14 +122,63 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
-        updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
-        createMorphHandler(this, completeColumbusViewCallback);
+        scene.camera._setTransform(Matrix4.IDENTITY);
+
+        var position = scratchToCVPosition;
+        var direction = scratchToCVDirection;
+        var up = scratchToCVUp;
+
+        if (duration > 0.0) {
+            position.x = 0.0;
+            position.y = 0.0;
+            position.z = 5.0 * ellipsoid.maximumRadius;
+
+            Cartesian3.negate(Cartesian3.UNIT_Z, direction);
+            Cartesian3.clone(Cartesian3.UNIT_Y, up);
+        } else {
+            var camera = scene.camera;
+            if (this._previousMode === SceneMode.SCENE2D) {
+                Cartesian3.clone(camera.position, position);
+                position.z = camera.frustum.right - camera.frustum.left;
+                Cartesian3.negate(Cartesian3.UNIT_Z, direction);
+                Cartesian3.clone(Cartesian3.UNIT_Y, up);
+            } else {
+                Cartesian3.clone(camera.positionWC, position);
+                Cartesian3.clone(camera.directionWC, direction);
+                Cartesian3.clone(camera.upWC, up);
+
+                var surfacePoint = ellipsoid.scaleToGeodeticSurface(position, scratchToCVSurfacePosition);
+                var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratchToCVToENU);
+                Matrix4.inverseTransformation(toENU, toENU);
+
+                scene.mapProjection.project(ellipsoid.cartesianToCartographic(position, scratchToCVCartographic), position);
+                Matrix4.multiplyByPointAsVector(toENU, direction, direction);
+                Matrix4.multiplyByPointAsVector(toENU, up, up);
+            }
+        }
+
+        var frustum = scratchToCVFrustum;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.fov = CesiumMath.toRadians(60.0);
+
+        var cameraCV = scratchToCVCamera;
+        cameraCV.position = position;
+        cameraCV.direction = direction;
+        cameraCV.up = up;
+        cameraCV.frustum = frustum;
+
+        var complete = completeColumbusViewCallback(cameraCV);
+        createMorphHandler(this, complete);
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DToColumbusView(this, duration, ellipsoid, completeColumbusViewCallback);
+            morphFrom2DToColumbusView(this, duration, cameraCV, complete);
         } else {
-            morphFrom3DToColumbusView(this, duration, this._cameraCV, completeColumbusViewCallback);
+            cameraCV.position2D = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, position, scratchToCVPosition2D);
+            cameraCV.direction2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, direction, scratchToCVDirection2D);
+            cameraCV.up2D = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, up, scratchToCVUp2D);
+
+            scene._mode = SceneMode.MORPHING;
+            morphFrom3DToColumbusView(this, duration, cameraCV, complete);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
@@ -199,14 +199,26 @@ define([
         }
         this._scene.morphStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
 
-        updateFrustums(this);
-        scene.mode = SceneMode.MORPHING;
-        createMorphHandler(this, complete3DCallback);
+        scene._mode = SceneMode.MORPHING;
+        scene.camera._setTransform(Matrix4.IDENTITY);
 
         if (this._previousMode === SceneMode.SCENE2D) {
-            morphFrom2DTo3D(this, duration, ellipsoid, complete3DCallback);
+            morphFrom2DTo3D(this, duration, ellipsoid);
         } else {
-            morphFromColumbusViewTo3D(this, duration, ellipsoid, complete3DCallback);
+            var camera3D;
+            if (duration > 0.0) {
+                camera3D = scratchCVTo3DCamera;
+                Cartesian3.fromDegrees(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, ellipsoid, camera3D.position);
+                Cartesian3.negate(camera3D.position, camera3D.direction);
+                Cartesian3.normalize(camera3D.direction, camera3D.direction);
+                Cartesian3.clone(Cartesian3.UNIT_Z, camera3D.up);
+            } else {
+                camera3D = getColumbusViewTo3DCamera(this, ellipsoid);
+            }
+            var complete = complete3DCallback(camera3D);
+            createMorphHandler(this, complete);
+
+            morphFromColumbusViewTo3D(this, duration, camera3D, complete);
         }
 
         if (duration === 0.0 && defined(this._completeMorph)) {
@@ -249,7 +261,6 @@ define([
                 transitioner._morphCancelled = true;
                 completeMorphFunction(transitioner);
             };
-
             transitioner._completeMorph = completeMorph;
             transitioner._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.LEFT_DOWN);
             transitioner._morphHandler.setInputAction(completeMorph, ScreenSpaceEventType.MIDDLE_DOWN);
@@ -267,78 +278,65 @@ define([
         transitioner._morphHandler = transitioner._morphHandler && transitioner._morphHandler.destroy();
     }
 
-    function morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete) {
+    var scratchCVTo3DCartographic = new Cartographic();
+    var scratchCVTo3DSurfacePoint = new Cartesian3();
+    var scratchCVTo3DFromENU = new Matrix4();
+    var scratchCVTo3DCamera = {
+        position : new Cartesian3(),
+        direction : new Cartesian3(),
+        up : new Cartesian3(),
+        frustum : undefined
+    };
+
+    function getColumbusViewTo3DCamera(transitioner, ellipsoid) {
         var scene = transitioner._scene;
-
         var camera = scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
 
-        var startPos = camera.position;
-        var startDir = camera.direction;
-        var startUp = camera.up;
+        var camera3D = scratchCVTo3DCamera;
+        var position = camera3D.position;
+        var direction = camera3D.direction;
+        var up = camera3D.up;
 
-        var endPos = Cartesian3.clone(transitioner._camera2D.position);
-        var endDir = Cartesian3.clone(transitioner._camera2D.direction);
-        var endUp = Cartesian3.clone(transitioner._camera2D.up);
+        var positionCarto = scene.mapProjection.unproject(camera.position, scratchCVTo3DCartographic);
+        ellipsoid.cartographicToCartesian(positionCarto, position);
+        var surfacePoint = ellipsoid.scaleToGeodeticSurface(position, scratchCVTo3DSurfacePoint);
 
-        var update = function(value) {
-            camera.position = columbusViewMorph(startPos, endPos, value.time);
-            camera.direction = columbusViewMorph(startDir, endDir, value.time);
-            camera.up = columbusViewMorph(startUp, endUp, value.time);
-            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.normalize(camera.right, camera.right);
-        };
+        var fromENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratchCVTo3DFromENU);
 
-        var tween = scene.tweens.add({
-            duration : duration,
-            easingFunction : EasingFunction.QUARTIC_OUT,
-            startObject : {
-                time : 0.0
-            },
-            stopObject : {
-                time : 1.0
-            },
-            update : update
-        });
-        transitioner._currentTweens.push(tween);
+        Matrix4.multiplyByPointAsVector(fromENU, camera.direction, direction);
+        Matrix4.multiplyByPointAsVector(fromENU, camera.up, up);
 
-        addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
+        return camera3D;
     }
 
-    function morphFrom2DTo3D(transitioner, duration, ellipsoid, complete) {
+    var scratchCVTo3DStartPos = new Cartesian3();
+    var scratchCVTo3DStartDir = new Cartesian3();
+    var scratchCVTo3DStartUp = new Cartesian3();
+    var scratchCVTo3DEndPos = new Cartesian3();
+    var scratchCVTo3DEndDir = new Cartesian3();
+    var scratchCVTo3DEndUp = new Cartesian3();
+
+    function morphFromColumbusViewTo3D(transitioner, duration, endCamera, complete) {
         duration *= 0.5;
 
-        var camera = transitioner._scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
-
-        morphOrthographicToPerspective(transitioner, duration, ellipsoid, function() {
-            camera.frustum = transitioner._cameraCV.frustum.clone();
-            morphFromColumbusViewTo3D(transitioner, duration, ellipsoid, complete);
-        });
-    }
-
-    function columbusViewMorph(startPosition, endPosition, time) {
-        // Just linear for now.
-        return Cartesian3.lerp(startPosition, endPosition, time, new Cartesian3());
-    }
-
-    function morphPerspectiveToOrthographic(transitioner, duration, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
 
-        var startPos = camera.position;
-        var startFOV = camera.frustum.fov;
-        var endFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = Cartesian3.magnitude(startPos) * Math.tan(startFOV * 0.5);
-        camera.frustum.far = d / Math.tan(endFOV * 0.5) + 10000000.0;
+        var startPos = Cartesian3.clone(camera.position, scratchCVTo3DStartPos);
+        var startDir = Cartesian3.clone(camera.direction, scratchCVTo3DStartDir);
+        var startUp = Cartesian3.clone(camera.up, scratchCVTo3DStartUp);
 
-        var update = function(value) {
-            camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
+        var endPos = Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, endCamera.position, scratchCVTo3DEndPos);
+        var endDir = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endCamera.direction, scratchCVTo3DEndDir);
+        var endUp = Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D_INVERSE, endCamera.up, scratchCVTo3DEndUp);
 
-            var distance = d / Math.tan(camera.frustum.fov * 0.5);
-            var pos = new Cartesian3();
-            camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, pos), distance, pos);
-        };
+        function update(value) {
+            columbusViewMorph(startPos, endPos, value.time, camera.position);
+            columbusViewMorph(startDir, endDir, value.time, camera.direction);
+            columbusViewMorph(startUp, endUp, value.time, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.normalize(camera.right, camera.right);
+        }
 
         var tween = scene.tweens.add({
             duration : duration,
@@ -351,41 +349,161 @@ define([
             },
             update : update,
             complete : function() {
-                camera.frustum = transitioner._camera2D.frustum.clone();
+                addMorphTimeAnimations(transitioner, scene, 0.0, 1.0, duration, complete);
+            }
+        });
+        transitioner._currentTweens.push(tween);
+    }
+
+    var scratch2DTo3DFrustum = new PerspectiveFrustum();
+
+    function morphFrom2DTo3D(transitioner, duration, ellipsoid) {
+        duration *= 0.5;
+
+        var scene = transitioner._scene;
+        var frustum = scratch2DTo3DFrustum;
+        frustum.aspectRatio = scene.drawingBufferWidth / scene.drawingBufferHeight;
+        frustum.fov = CesiumMath.toRadians(60.0);
+
+        var camera3D;
+        if (duration > 0.0) {
+            camera3D = scratchCVTo3DCamera;
+            Cartesian3.fromDegrees(0.0, 0.0, 5.0 * ellipsoid.maximumRadius, ellipsoid, camera3D.position);
+            Cartesian3.negate(camera3D.position, camera3D.direction);
+            Cartesian3.normalize(camera3D.direction, camera3D.direction);
+            Cartesian3.clone(Cartesian3.UNIT_Z, camera3D.up);
+        } else {
+            var camera = scene.camera;
+            camera.position.z = camera.frustum.right - camera.frustum.left;
+
+            camera3D = getColumbusViewTo3DCamera(transitioner, ellipsoid);
+        }
+
+        camera3D.frustum = frustum;
+
+        var complete = complete3DCallback(camera3D);
+        createMorphHandler(transitioner, complete);
+
+        morphOrthographicToPerspective(transitioner, duration, camera3D, function() {
+            morphFromColumbusViewTo3D(transitioner, duration, camera3D, complete);
+        });
+    }
+
+    function columbusViewMorph(startPosition, endPosition, time, result) {
+        // Just linear for now.
+        return Cartesian3.lerp(startPosition, endPosition, time, result);
+    }
+
+    function morphPerspectiveToOrthographic(transitioner, duration, endCamera, updateHeight, complete) {
+        var scene = transitioner._scene;
+        var camera = scene.camera;
+
+        var startFOV = camera.frustum.fov;
+        var endFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
+        var d = endCamera.position.z * Math.tan(startFOV * 0.5);
+        camera.frustum.far = d / Math.tan(endFOV * 0.5) + 10000000.0;
+
+        function update(value) {
+            camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
+            var height = d / Math.tan(camera.frustum.fov * 0.5);
+            updateHeight(camera, height);
+        }
+        var tween = scene.tweens.add({
+            duration : duration,
+            easingFunction : EasingFunction.QUARTIC_OUT,
+            startObject : {
+                time : 0.0
+            },
+            stopObject : {
+                time : 1.0
+            },
+            update : update,
+            complete : function() {
+                camera.frustum = endCamera.frustum.clone();
                 complete(transitioner);
             }
         });
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFromColumbusViewTo2D(transitioner, duration, ellipsoid, complete) {
+    var scratchCVTo2DStartPos = new Cartesian3();
+    var scratchCVTo2DStartDir = new Cartesian3();
+    var scratchCVTo2DStartUp = new Cartesian3();
+    var scratchCVTo2DEndPos = new Cartesian3();
+    var scratchCVTo2DEndDir = new Cartesian3();
+    var scratchCVTo2DEndUp = new Cartesian3();
+    var scratchCVTo2DFrustum = new OrthographicFrustum();
+    var scratchCVTo2DRay = new Ray();
+    var scratchCVTo2DPickPos = new Cartesian3();
+    var scratchCVTo2DCamera = {
+        position : undefined,
+        direction : undefined,
+        up : undefined,
+        frustum : undefined
+    };
+
+    function morphFromColumbusViewTo2D(transitioner, duration) {
+        duration *= 0.5;
+
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
-        var maxRadii = ellipsoid.maximumRadius;
 
-        var startPos = Cartesian3.clone(camera.position);
-        var startDir = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
+        var startPos = Cartesian3.clone(camera.position, scratchCVTo2DStartPos);
+        var startDir = Cartesian3.clone(camera.direction, scratchCVTo2DStartDir);
+        var startUp = Cartesian3.clone(camera.up, scratchCVTo2DStartUp);
 
-        var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
-        var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
-        var d = (maxRadii * Math.PI) / tanTheta;
+        var endDir = Cartesian3.negate(Cartesian3.UNIT_Z, scratchCVTo2DEndDir);
+        var endUp = Cartesian3.clone(Cartesian3.UNIT_Y, scratchCVTo2DEndUp);
 
-        var endPos = new Cartesian3();
-        endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position, endPos), d, endPos);
-        var endDir = Cartesian3.clone(transitioner._camera2D.direction);
-        var endUp = Cartesian3.clone(transitioner._camera2D.up);
+        var endPos = scratchCVTo2DEndPos;
 
-        var updateCV = function(value) {
-            camera.position = columbusViewMorph(startPos, endPos, value.time);
-            camera.direction = columbusViewMorph(startDir, endDir, value.time);
-            camera.up = columbusViewMorph(startUp, endUp, value.time);
-            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
+        if (duration > 0.0) {
+            Cartesian3.clone(Cartesian3.ZERO, scratchCVTo2DEndPos);
+            endPos.z = 5.0 * scene.mapProjection.ellipsoid.maximumRadius;
+        } else {
+            Cartesian3.clone(startPos, scratchCVTo2DEndPos);
+
+            var ray = scratchCVTo2DRay;
+            Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, startPos, ray.origin);
+            Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, startDir, ray.direction);
+
+            var globe = scene.globe;
+            if (defined(globe)) {
+                var pickPos = globe.pick(ray, scene, scratchCVTo2DPickPos);
+                if (defined(pickPos)) {
+                    Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, pickPos, endPos);
+                    endPos.z += Cartesian3.distance(startPos, endPos);
+                }
+            }
+        }
+
+        var frustum = scratchCVTo2DFrustum;
+        frustum.right = endPos.z * 0.5;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
+        frustum.bottom = -frustum.top;
+
+        var camera2D = scratchCVTo2DCamera;
+        camera2D.position = endPos;
+        camera2D.direction = endDir;
+        camera2D.up = endUp;
+        camera2D.frustum = frustum;
+
+        var complete = complete2DCallback(camera2D);
+        createMorphHandler(transitioner, complete);
+
+        function updateCV(value) {
+            columbusViewMorph(startPos, endPos, value.time, camera.position);
+            columbusViewMorph(startDir, endDir, value.time, camera.direction);
+            columbusViewMorph(startUp, endUp, value.time, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
-        };
+        }
 
-        duration *= 0.5;
+        function updateHeight(camera, height) {
+            camera.position.z = height;
+        }
+
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -397,168 +515,118 @@ define([
             },
             update : updateCV,
             complete : function() {
-                morphPerspectiveToOrthographic(transitioner, duration, complete);
+                morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
             }
         });
         transitioner._currentTweens.push(tween);
     }
 
-    function morphFrom3DTo2D(transitioner, duration, ellipsoid, complete) {
+    var scratch3DTo2DCartographic = new Cartographic();
+    var scratch3DTo2DCamera = {
+        position : new Cartesian3(),
+        direction : new Cartesian3(),
+        up : new Cartesian3(),
+        position2D : new Cartesian3(),
+        direction2D : new Cartesian3(),
+        up2D : new Cartesian3(),
+        frustum : new OrthographicFrustum()
+    };
+    var scratch3DTo2DEndCamera = {
+        position : new Cartesian3(),
+        direction : new Cartesian3(),
+        up : new Cartesian3(),
+        frustum : undefined
+    };
+    var scratch3DTo2DPickPosition = new Cartesian3();
+    var scratch3DTo2DRay = new Ray();
+    var scratch3DTo2DToENU = new Matrix4();
+    var scratch3DTo2DSurfacePoint = new Cartesian3();
+
+    function morphFrom3DTo2D(transitioner, duration, ellipsoid) {
         duration *= 0.5;
 
-        var maxRadii = ellipsoid.maximumRadius;
-
-        var tanPhi = Math.tan(transitioner._camera3D.frustum.fovy * 0.5);
-        var tanTheta = transitioner._camera3D.frustum.aspectRatio * tanPhi;
-        var d = (maxRadii * Math.PI) / tanTheta;
-
-        var camera3DTo2D = {};
-        var pos2D = new Cartesian3();
-        camera3DTo2D.position2D = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position2D, pos2D), d, pos2D);
-        camera3DTo2D.direction2D = Cartesian3.clone(transitioner._camera2D.direction2D);
-        camera3DTo2D.up2D = Cartesian3.clone(transitioner._camera2D.up2D);
-
-        var completeCallback = function() {
-            morphPerspectiveToOrthographic(transitioner, duration, complete);
-        };
-        morphFrom3DToColumbusView(transitioner, duration, camera3DTo2D, completeCallback);
-    }
-
-    function morphOrthographicToPerspective(transitioner, duration, ellipsoid, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        var maxRadii = ellipsoid.maximumRadius;
+        var camera2D = scratch3DTo2DCamera;
 
-        var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
-        var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
-        var d = (maxRadii * Math.PI) / tanTheta;
-        var endPos2D = new Cartesian3();
-        endPos2D = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position, endPos2D), d, endPos2D);
+        if (duration > 0.0) {
+            Cartesian3.clone(Cartesian3.ZERO, camera2D.position);
+            camera2D.position.z = 5.0 * ellipsoid.maximumRadius;
+            Cartesian3.negate(Cartesian3.UNIT_Z, camera2D.direction);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera2D.up);
+        } else {
+            ellipsoid.cartesianToCartographic(camera.positionWC, scratch3DTo2DCartographic);
+            scene.mapProjection.project(scratch3DTo2DCartographic, camera2D.position);
 
-        var top = camera.frustum.top;
-        var bottom = camera.frustum.bottom;
-        var right = camera.frustum.right;
-        var left = camera.frustum.left;
+            Cartesian3.negate(Cartesian3.UNIT_Z, camera2D.direction);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera2D.up);
 
-        var frustum2D = transitioner._camera2D.frustum;
-        var frustumCV = transitioner._cameraCV.frustum;
+            var ray = scratch3DTo2DRay;
+            Cartesian3.clone(camera2D.position2D, ray.origin);
+            var rayDirection = Cartesian3.clone(camera.directionWC, ray.direction);
+            var surfacePoint = ellipsoid.scaleToGeodeticSurface(camera.positionWC, scratch3DTo2DSurfacePoint);
+            var toENU = Transforms.eastNorthUpToFixedFrame(surfacePoint, ellipsoid, scratch3DTo2DToENU);
+            Matrix4.inverseTransformation(toENU, toENU);
+            Matrix4.multiplyByPointAsVector(toENU, rayDirection, rayDirection);
+            Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, rayDirection, rayDirection);
 
-        var startPos = Cartesian3.clone(camera.position);
-
-        var update2D = function(value) {
-            camera.position = columbusViewMorph(startPos, endPos2D, value.time);
-            camera.frustum.top = CesiumMath.lerp(top, frustum2D.top, value.time);
-            camera.frustum.bottom = CesiumMath.lerp(bottom, frustum2D.bottom, value.time);
-            camera.frustum.right = CesiumMath.lerp(right, frustum2D.right, value.time);
-            camera.frustum.left = CesiumMath.lerp(left, frustum2D.left, value.time);
-        };
-
-        var startTime = (right - left) / (2.0 * maxRadii * Math.PI);
-        var endTime = 1.0;
-        if (startTime > endTime) {
-            startTime = 0.0;
-        }
-
-        var partialDuration = (endTime - startTime) * duration;
-        if (partialDuration < CesiumMath.EPSILON6) {
-            if (!Cartesian3.equalsEpsilon(startPos, endPos2D, CesiumMath.EPSILON6)) {
-                partialDuration = duration;
-                startTime = 0.0;
-                endTime = 1.0;
-            } else {
-                // If the camera and frustum are already in position for the switch to
-                // a perspective projection, nothing needs to be animated.
-                camera.position = endPos2D;
-                camera.frustum = frustumCV.clone();
-                complete(transitioner);
-                return;
-            }
-        }
-
-        var tween = scene.tweens.add({
-            easingFunction : EasingFunction.QUARTIC_OUT,
-            duration : partialDuration,
-            startObject : {
-                time : startTime
-            },
-            stopObject : {
-                time : endTime
-            },
-            update : update2D,
-            complete : function() {
-                camera.frustum = frustumCV.clone();
-                complete(transitioner);
-            }
-        });
-        transitioner._currentTweens.push(tween);
-    }
-
-    function morphFrom2DToColumbusView(transitioner, duration, ellipsoid, complete) {
-        var scene = transitioner._scene;
-        var camera = scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
-
-        duration *= 0.5;
-
-        var completeFrustumChange = function() {
-            var startPos = Cartesian3.clone(camera.position);
-            var startDir = Cartesian3.clone(camera.direction);
-            var startUp = Cartesian3.clone(camera.up);
-
-            var endPos = Cartesian3.clone(transitioner._cameraCV.position);
-            var endDir = Cartesian3.clone(transitioner._cameraCV.direction);
-            var endUp = Cartesian3.clone(transitioner._cameraCV.up);
-
-            var updateCV = function(value) {
-                camera.position = columbusViewMorph(startPos, endPos, value.time);
-                camera.direction = columbusViewMorph(startDir, endDir, value.time);
-                camera.up = columbusViewMorph(startUp, endUp, value.time);
-                camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-                Cartesian3.normalize(camera.right, camera.right);
-            };
-
-            var tween = scene.tweens.add({
-                duration : duration,
-                easingFunction : EasingFunction.QUARTIC_OUT,
-                startObject : {
-                    time : 0.0
-                },
-                stopObject : {
-                    time : 1.0
-                },
-                update : updateCV,
-                complete : function() {
-                    complete(transitioner);
+            var globe = scene.globe;
+            if (defined(globe)) {
+                var pickedPos = globe.pick(ray, scene, scratch3DTo2DPickPosition);
+                if (defined(pickedPos)) {
+                    var height = Cartesian3.distance(camera2D.position2D, pickedPos);
+                    pickedPos.x += height;
+                    Cartesian3.clone(pickedPos, camera2D.position2D);
                 }
-            });
+            }
+        }
 
-            transitioner._currentTweens.push(tween);
-        };
+        function updateHeight(camera, height) {
+            camera.position.x = height;
+        }
 
-        morphOrthographicToPerspective(transitioner, duration, ellipsoid, completeFrustumChange);
+        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D, camera2D.position, camera2D.position2D);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, camera2D.direction, camera2D.direction2D);
+        Matrix4.multiplyByPointAsVector(Camera.TRANSFORM_2D, camera2D.up, camera2D.up2D);
+
+        var frustum = camera2D.frustum;
+        frustum.right = camera2D.position.z * 0.5;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
+        frustum.bottom = -frustum.top;
+
+        var endCamera = scratch3DTo2DEndCamera;
+        Matrix4.multiplyByPoint(Camera.TRANSFORM_2D_INVERSE, camera2D.position2D, endCamera.position);
+        Cartesian3.clone(camera2D.direction, endCamera.direction);
+        Cartesian3.clone(camera2D.up, endCamera.up);
+        endCamera.frustum = frustum;
+
+        var complete = complete2DCallback(endCamera);
+        createMorphHandler(transitioner, complete);
+
+        function completeCallback() {
+            morphPerspectiveToOrthographic(transitioner, duration, camera2D, updateHeight, complete);
+        }
+        morphFrom3DToColumbusView(transitioner, duration, camera2D, completeCallback);
     }
 
-    function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
+    function morphOrthographicToPerspective(transitioner, duration, cameraCV, complete) {
         var scene = transitioner._scene;
         var camera = scene.camera;
-        camera._setTransform(Matrix4.IDENTITY);
 
-        var startPos = Cartesian3.clone(camera.position);
-        var startDir = Cartesian3.clone(camera.direction);
-        var startUp = Cartesian3.clone(camera.up);
+        var height = camera.frustum.right - camera.frustum.left;
+        camera.frustum = cameraCV.frustum.clone();
 
-        var endPos = Cartesian3.clone(endCamera.position2D);
-        var endDir = Cartesian3.clone(endCamera.direction2D);
-        var endUp = Cartesian3.clone(endCamera.up2D);
+        var endFOV = camera.frustum.fov;
+        var startFOV = CesiumMath.RADIANS_PER_DEGREE * 0.5;
+        var d = height * Math.tan(endFOV * 0.5);
+        camera.frustum.far = d / Math.tan(startFOV * 0.5) + 10000000.0;
+        camera.frustum.fov = startFOV;
 
-        var update = function(value) {
-            camera.position = columbusViewMorph(startPos, endPos, value.time);
-            camera.direction = columbusViewMorph(startDir, endDir, value.time);
-            camera.up = columbusViewMorph(startUp, endUp, value.time);
-            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.normalize(camera.right, camera.right);
-        };
-
+        function update(value) {
+            camera.frustum.fov = CesiumMath.lerp(startFOV, endFOV, value.time);
+            camera.position.z = d / Math.tan(camera.frustum.fov * 0.5);
+        }
         var tween = scene.tweens.add({
             duration : duration,
             easingFunction : EasingFunction.QUARTIC_OUT,
@@ -570,16 +638,103 @@ define([
             },
             update : update,
             complete : function() {
-                camera.position = endPos;
-                camera.direction = endDir;
-                camera.up = endUp;
-                camera.right = Cartesian3.cross(endDir, endUp, camera.right);
-                Cartesian3.normalize(camera.right, camera.right);
+                complete(transitioner);
             }
         });
         transitioner._currentTweens.push(tween);
+    }
 
-        addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, complete);
+    function morphFrom2DToColumbusView(transitioner, duration, cameraCV, complete) {
+        duration *= 0.5;
+
+        var scene = transitioner._scene;
+        var camera = scene.camera;
+
+        var startPos = Cartesian3.clone(camera.position, scratch3DToCVStartPos);
+        var startDir = Cartesian3.clone(camera.direction, scratch3DToCVStartDir);
+        var startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
+
+        var endPos = Cartesian3.clone(cameraCV.position, scratch3DToCVEndPos);
+        var endDir = Cartesian3.clone(cameraCV.direction, scratch3DToCVEndDir);
+        var endUp = Cartesian3.clone(cameraCV.up, scratch3DToCVEndUp);
+
+        var startRight = camera.frustum.right;
+        var endRight = endPos.z * 0.5;
+
+        function update(value) {
+            columbusViewMorph(startPos, endPos, value.time, camera.position);
+            columbusViewMorph(startDir, endDir, value.time, camera.direction);
+            columbusViewMorph(startUp, endUp, value.time, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.normalize(camera.right, camera.right);
+
+            var frustum = camera.frustum;
+            frustum.right = CesiumMath.lerp(startRight, endRight, value.time);
+            frustum.left = -frustum.right;
+            frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
+            frustum.bottom = -frustum.top;
+
+            camera.position.z = 2.0 * scene.mapProjection.ellipsoid.maximumRadius;
+        }
+        var tween = scene.tweens.add({
+            duration : duration,
+            easingFunction : EasingFunction.QUARTIC_OUT,
+            startObject : {
+                time : 0.0
+            },
+            stopObject : {
+                time : 1.0
+            },
+            update : update,
+            complete : function() {
+                scene._mode = SceneMode.MORPHING;
+                morphOrthographicToPerspective(transitioner, duration, cameraCV, complete);
+            }
+        });
+        transitioner._currentTweens.push(tween);
+    }
+
+    var scratch3DToCVStartPos = new Cartesian3();
+    var scratch3DToCVStartDir = new Cartesian3();
+    var scratch3DToCVStartUp = new Cartesian3();
+    var scratch3DToCVEndPos = new Cartesian3();
+    var scratch3DToCVEndDir = new Cartesian3();
+    var scratch3DToCVEndUp = new Cartesian3();
+
+    function morphFrom3DToColumbusView(transitioner, duration, endCamera, complete) {
+        var scene = transitioner._scene;
+        var camera = scene.camera;
+
+        var startPos = Cartesian3.clone(camera.position, scratch3DToCVStartPos);
+        var startDir = Cartesian3.clone(camera.direction, scratch3DToCVStartDir);
+        var startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
+
+        var endPos = Cartesian3.clone(endCamera.position2D, scratch3DToCVEndPos);
+        var endDir = Cartesian3.clone(endCamera.direction2D, scratch3DToCVEndDir);
+        var endUp = Cartesian3.clone(endCamera.up2D, scratch3DToCVEndUp);
+
+        function update(value) {
+            columbusViewMorph(startPos, endPos, value.time, camera.position);
+            columbusViewMorph(startDir, endDir, value.time, camera.direction);
+            columbusViewMorph(startUp, endUp, value.time, camera.up);
+            Cartesian3.cross(camera.direction, camera.up, camera.right);
+            Cartesian3.normalize(camera.right, camera.right);
+        }
+        var tween = scene.tweens.add({
+            duration : duration,
+            easingFunction : EasingFunction.QUARTIC_OUT,
+            startObject : {
+                time : 0.0
+            },
+            stopObject : {
+                time : 1.0
+            },
+            update : update,
+            complete : function() {
+                addMorphTimeAnimations(transitioner, scene, 1.0, 0.0, duration, complete);
+            }
+        });
+        transitioner._currentTweens.push(tween);
     }
 
     function addMorphTimeAnimations(transitioner, scene, start, stop, duration, complete) {
@@ -603,107 +758,86 @@ define([
         transitioner._currentTweens.push(tween);
     }
 
-    function updateFrustums(transitioner) {
-        var scene = transitioner._scene;
+    function complete3DCallback(camera3D) {
+        return function(transitioner) {
+            var scene = transitioner._scene;
+            scene._mode = SceneMode.SCENE3D;
+            scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
 
-        var ratio = scene.drawingBufferHeight / scene.drawingBufferWidth;
+            destroyMorphHandler(transitioner);
 
-        var frustum = transitioner._camera2D.frustum;
-        frustum.top = frustum.right * ratio;
-        frustum.bottom = -frustum.top;
+            if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
+                transitioner._morphCancelled = false;
 
-        ratio = 1.0 / ratio;
+                var camera = scene.camera;
+                Cartesian3.clone(camera3D.position, camera.position);
+                Cartesian3.clone(camera3D.direction, camera.direction);
+                Cartesian3.clone(camera3D.up, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.normalize(camera.right, camera.right);
 
-        frustum = transitioner._cameraCV.frustum;
-        frustum.aspectRatio = ratio;
+                if (defined(camera3D.frustum)) {
+                    camera.frustum = camera3D.frustum.clone();
+                }
+            }
 
-        frustum = transitioner._camera3D.frustum;
-        frustum.aspectRatio = ratio;
-
-        var camera = scene.camera;
-        switch (scene.mode) {
-        case SceneMode.SCENE3D:
-            camera.frustum = transitioner._camera3D.frustum.clone();
-            break;
-        case SceneMode.COLUMBUS_VIEW:
-            camera.frustum = transitioner._cameraCV.frustum.clone();
-            break;
-        case SceneMode.SCENE2D:
-            camera.frustum = transitioner._camera2D.frustum.clone();
-            break;
-        }
+            var wasMorphing = defined(transitioner._completeMorph);
+            transitioner._completeMorph = undefined;
+            scene.camera.update(scene.mode);
+            transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
+        };
     }
 
-    function complete3DCallback(transitioner) {
-        var scene = transitioner._scene;
-        scene.mode = SceneMode.SCENE3D;
-        scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE3D);
+    function complete2DCallback(camera2D) {
+        return function(transitioner) {
+            var scene = transitioner._scene;
 
-        destroyMorphHandler(transitioner);
-        updateFrustums(transitioner);
+            scene._mode = SceneMode.SCENE2D;
+            scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE2D);
 
-        if (transitioner._previousMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
-            transitioner._morphCancelled = false;
+            destroyMorphHandler(transitioner);
 
-            // TODO: Match incoming columbus-view or 2D position
             var camera = scene.camera;
-            camera.position = Cartesian3.clone(transitioner._camera3D.position);
-            camera.direction = Cartesian3.clone(transitioner._camera3D.direction);
-            camera.up = Cartesian3.clone(transitioner._camera3D.up);
-            camera.right = Cartesian3.cross(camera.direction, camera.up, camera.right);
-            Cartesian3.normalize(camera.right, camera.right);
-        }
-
-        var wasMorphing = defined(transitioner._completeMorph);
-        transitioner._completeMorph = undefined;
-        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
-    }
-
-    function complete2DCallback(transitioner) {
-        var scene = transitioner._scene;
-
-        scene.mode = SceneMode.SCENE2D;
-        scene.morphTime = SceneMode.getMorphTime(SceneMode.SCENE2D);
-
-        destroyMorphHandler(transitioner);
-        updateFrustums(transitioner);
-
-        // TODO: Match incoming columbus-view or 3D position
-        var camera = scene.camera;
-        Cartesian3.clone(transitioner._camera2D.position, camera.position);
-        Cartesian3.clone(transitioner._camera2D.direction, camera.direction);
-        Cartesian3.clone(transitioner._camera2D.up, camera.up);
-        Cartesian3.cross(camera.direction, camera.up, camera.right);
-        Cartesian3.normalize(camera.right, camera.right);
-
-        var wasMorphing = defined(transitioner._completeMorph);
-        transitioner._completeMorph = undefined;
-        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
-    }
-
-    function completeColumbusViewCallback(transitioner) {
-        var scene = transitioner._scene;
-        scene.mode = SceneMode.COLUMBUS_VIEW;
-        scene.morphTime = SceneMode.getMorphTime(SceneMode.COLUMBUS_VIEW);
-
-        destroyMorphHandler(transitioner);
-        updateFrustums(transitioner);
-
-        if (transitioner._previousModeMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
-            transitioner._morphCancelled = false;
-
-            // TODO: Match incoming 2D or 3D position
-            var camera = scene.camera;
-            Cartesian3.clone(transitioner._cameraCV.position, camera.position);
-            Cartesian3.clone(transitioner._cameraCV.direction, camera.direction);
-            Cartesian3.clone(transitioner._cameraCV.up, camera.up);
+            Cartesian3.clone(camera2D.position, camera.position);
+            camera.position.z = scene.mapProjection.ellipsoid.maximumRadius * 2.0;
+            Cartesian3.clone(camera2D.direction, camera.direction);
+            Cartesian3.clone(camera2D.up, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
-        }
+            camera.frustum = camera2D.frustum.clone();
 
-        var wasMorphing = defined(transitioner._completeMorph);
-        transitioner._completeMorph = undefined;
-        transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
+            var wasMorphing = defined(transitioner._completeMorph);
+            transitioner._completeMorph = undefined;
+            scene.camera.update(scene.mode);
+            transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
+        };
+    }
+
+    function completeColumbusViewCallback(cameraCV) {
+        return function(transitioner) {
+            var scene = transitioner._scene;
+            scene._mode = SceneMode.COLUMBUS_VIEW;
+            scene.morphTime = SceneMode.getMorphTime(SceneMode.COLUMBUS_VIEW);
+
+            destroyMorphHandler(transitioner);
+            scene.camera.frustum = cameraCV.frustum.clone();
+
+            if (transitioner._previousModeMode !== SceneMode.MORPHING || transitioner._morphCancelled) {
+                transitioner._morphCancelled = false;
+
+                var camera = scene.camera;
+                Cartesian3.clone(cameraCV.position, camera.position);
+                Cartesian3.clone(cameraCV.direction, camera.direction);
+                Cartesian3.clone(cameraCV.up, camera.up);
+                Cartesian3.cross(camera.direction, camera.up, camera.right);
+                Cartesian3.normalize(camera.right, camera.right);
+            }
+
+            var wasMorphing = defined(transitioner._completeMorph);
+            transitioner._completeMorph = undefined;
+            scene.camera.update(scene.mode);
+            transitioner._scene.morphComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
+        };
     }
 
     return SceneTransitioner;

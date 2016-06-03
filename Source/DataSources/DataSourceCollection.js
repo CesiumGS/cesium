@@ -15,18 +15,18 @@ define([
         DeveloperError,
         Event,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of {@link DataSource} instances.
      * @alias DataSourceCollection
      * @constructor
      */
-    var DataSourceCollection = function() {
+    function DataSourceCollection() {
         this._dataSources = [];
         this._dataSourceAdded = new Event();
         this._dataSourceRemoved = new Event();
-    };
+    }
 
     defineProperties(DataSourceCollection.prototype, {
         /**
@@ -71,10 +71,10 @@ define([
     /**
      * Adds a data source to the collection.
      *
-     * @param {DataSource|Promise} dataSource A data source or a promise to a data source to add to the collection.
+     * @param {DataSource|Promise.<DataSource>} dataSource A data source or a promise to a data source to add to the collection.
      *                                        When passing a promise, the data source will not actually be added
      *                                        to the collection until the promise resolves successfully.
-     * @returns {Promise} A Promise that resolves once the data source has been added to the collection.
+     * @returns {Promise.<DataSource>} A Promise that resolves once the data source has been added to the collection.
      */
     DataSourceCollection.prototype.add = function(dataSource) {
         //>>includeStart('debug', pragmas.debug);
@@ -201,10 +201,11 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see DataSourceCollection#isDestroyed
      *
      * @example
      * dataSourceCollection = dataSourceCollection && dataSourceCollection.destroy();
+     * 
+     * @see DataSourceCollection#isDestroyed
      */
     DataSourceCollection.prototype.destroy = function() {
         this.removeAll(true);

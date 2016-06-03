@@ -3,13 +3,15 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Rectangle',
         './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
+        Rectangle,
         QuadtreeTileLoadState) {
-    "use strict";
+    'use strict';
 
     /**
      * A single tile in a {@link QuadtreePrimitive}.
@@ -24,7 +26,7 @@ define([
      * @param {TilingScheme} options.tilingScheme The tiling scheme in which this tile exists.
      * @param {QuadtreeTile} [options.parent] This tile's parent, or undefined if this is a root tile.
      */
-    var QuadtreeTile = function QuadtreeTile(options) {
+    function QuadtreeTile(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options)) {
             throw new DeveloperError('options is required.');
@@ -62,6 +64,10 @@ define([
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
 
+        this._customData = [];
+        this._frameUpdated = undefined;
+        this._frameRendered = undefined;
+
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
          * @type {QuadtreeTileLoadState}
@@ -93,7 +99,7 @@ define([
          * @default undefined
          */
         this.data = undefined;
-    };
+    }
 
     /**
      * Creates a rectangular set of tiles for level of detail zero, the coarsest, least detailed level.
@@ -127,6 +133,54 @@ define([
         }
 
         return result;
+    };
+
+    QuadtreeTile.prototype._updateCustomData = function(frameNumber, added, removed) {
+        var customData = this.customData;
+
+        var i;
+        var data;
+        var rectangle;
+
+        if (defined(added) && defined(removed)) {
+            // level zero tile
+            for (i = 0; i < removed.length; ++i) {
+                data = removed[i];
+                for (var j = 0; j < customData.length; ++j) {
+                    if (customData[j] === data) {
+                        customData.splice(j, 1);
+                        break;
+                    }
+                }
+            }
+
+            rectangle = this._rectangle;
+            for (i = 0; i < added.length; ++i) {
+                data = added[i];
+                if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                    customData.push(data);
+                }
+            }
+
+            this._frameUpdated = frameNumber;
+        } else {
+            // interior or leaf tile, update from parent
+            var parent = this._parent;
+            if (defined(parent) && this._frameUpdated !== parent._frameUpdated) {
+                customData.length = 0;
+
+                rectangle = this._rectangle;
+                var parentCustomData = parent.customData;
+                for (i = 0; i < parentCustomData.length; ++i) {
+                    data = parentCustomData[i];
+                    if (Rectangle.contains(rectangle, data.positionCartographic)) {
+                        customData.push(data);
+                    }
+                }
+
+                this._frameUpdated = parent._frameUpdated;
+            }
+        }
     };
 
     defineProperties(QuadtreeTile.prototype, {
@@ -241,6 +295,17 @@ define([
         },
 
         /**
+         * An array of objects associated with this tile.
+         * @memberof QuadtreeTile.prototype
+         * @type {Array}
+         */
+        customData : {
+            get : function() {
+                return this._customData;
+            }
+        },
+
+        /**
          * Gets a value indicating whether or not this tile needs further loading.
          * This property will return true if the {@link QuadtreeTile#state} is
          * <code>START</code> or <code>LOADING</code>.
@@ -281,7 +346,7 @@ define([
     });
 
     /**
-     * Frees the resources assocated with this tile and returns it to the <code>START</code>
+     * Frees the resources associated with this tile and returns it to the <code>START</code>
      * {@link QuadtreeTileLoadState}.  If the {@link QuadtreeTile#data} property is defined and it
      * has a <code>freeResources</code> method, the method will be invoked.
      *

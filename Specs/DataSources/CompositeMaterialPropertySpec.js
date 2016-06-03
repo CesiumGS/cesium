@@ -15,8 +15,7 @@ defineSuite([
         TimeIntervalCollection,
         ColorMaterialProperty,
         GridMaterialProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();

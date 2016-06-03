@@ -7,7 +7,7 @@ define([
         when,
         loadBlob,
         loadImage) {
-    "use strict";
+    'use strict';
 
     var dataUriRegex = /^data:/;
 
@@ -25,11 +25,9 @@ define([
      *
      * @exports loadImageViaBlob
      *
-     * @param {String|Promise} url The source of the image, or a promise for the URL.
-     * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     * @param {String|Promise.<String>} url The source of the image, or a promise for the URL.
+     * @returns {Promise.<Image>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a single image asynchronously
@@ -44,8 +42,11 @@ define([
      * when.all([loadImageViaBlob('image1.png'), loadImageViaBlob('image2.png')]).then(function(images) {
      *     // images is an array containing all the loaded images
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var loadImageViaBlob = function(url) {
+    function loadImageViaBlob(url) {
         if (dataUriRegex.test(url)) {
             return loadImage(url);
         }
@@ -62,7 +63,7 @@ define([
                 return when.reject(error);
             });
         });
-    };
+    }
 
     var xhrBlobSupported = (function() {
         try {

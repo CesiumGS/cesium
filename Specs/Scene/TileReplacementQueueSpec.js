@@ -11,8 +11,7 @@ defineSuite([
         GeographicTilingScheme,
         QuadtreeTile,
         QuadtreeTileLoadState) {
-    "use strict";
-    /*global describe,it,expect,beforeEach*/
+    'use strict';
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;

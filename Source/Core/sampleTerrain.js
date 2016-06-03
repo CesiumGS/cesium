@@ -7,7 +7,7 @@ define([
         when,
         defined,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -26,12 +26,12 @@ define([
      * @param {TerrainProvider} terrainProvider The terrain provider from which to query heights.
      * @param {Number} level The terrain level-of-detail from which to query terrain heights.
      * @param {Cartographic[]} positions The positions to update with terrain heights.
-     * @returns {Promise} A promise that resolves to the provided list of positions when terrain the query has completed.
+     * @returns {Promise.<Cartographic[]>} A promise that resolves to the provided list of positions when terrain the query has completed.
      *
      * @example
      * // Query the terrain height of two Cartographic positions
      * var terrainProvider = new Cesium.CesiumTerrainProvider({
-     *     url : '//assets.agi.com/stk-terrain/world'
+     *     url : 'https://assets.agi.com/stk-terrain/world'
      * });
      * var positions = [
      *     Cesium.Cartographic.fromDegrees(86.925145, 27.988257),
@@ -43,7 +43,7 @@ define([
      *     // updatedPositions is just a reference to positions.
      * });
      */
-    var sampleTerrain = function(terrainProvider, level, positions) {
+    function sampleTerrain(terrainProvider, level, positions) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
@@ -71,7 +71,7 @@ define([
         doSamplingWhenReady();
 
         return deferred.promise;
-    };
+    }
 
     function doSampling(terrainProvider, level, positions) {
         var tilingScheme = terrainProvider.tilingScheme;

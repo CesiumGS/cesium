@@ -7,9 +7,12 @@ defineSuite([
         'Core/Math',
         'Core/PixelFormat',
         'Core/PrimitiveType',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/ClearCommand',
         'Renderer/DrawCommand',
+        'Renderer/ShaderProgram',
+        'Renderer/VertexArray',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
@@ -20,13 +23,15 @@ defineSuite([
         CesiumMath,
         PixelFormat,
         PrimitiveType,
+        Buffer,
         BufferUsage,
         ClearCommand,
         DrawCommand,
+        ShaderProgram,
+        VertexArray,
         createScene,
         when) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     var atlas;
@@ -85,16 +90,30 @@ uniform sampler2D u_texture;\n\
 void main() {\n\
   gl_FragColor = texture2D(u_texture, vec2(' + x + ', ' + y + '));\n\
 }';
-        var sp = context.createShaderProgram(vs, fs, {
-            position : 0
+
+        var sp = ShaderProgram.fromCache({
+            context: context,
+            vertexShaderSource: vs,
+            fragmentShaderSource: fs,
+            attributeLocations: {
+                position: 0
+            }
         });
+
         sp.allUniforms.u_texture.value = texture;
 
-        var va = context.createVertexArray([{
-            index : sp.vertexAttributes.position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        var va = new VertexArray({
+            context : context,
+            attributes : [{
+                index : sp.vertexAttributes.position.index,
+                vertexBuffer : Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : new Float32Array([0, 0, 0, 1]),
+                    usage : BufferUsage.STATIC_DRAW
+                }),
+                componentsPerAttribute : 4
+            }]
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 255]);
@@ -126,8 +145,8 @@ void main() {\n\
             expect(atlas.borderWidthInPixels).toEqual(0);
 
             var texture = atlas.texture;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
@@ -209,8 +228,8 @@ void main() {\n\
 
             var texture = atlas.texture;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 5.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 8.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -432,8 +451,8 @@ void main() {\n\
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
 
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
             expect(texture.width).toEqual(atlasWidth);
             expect(texture.height).toEqual(atlasHeight);
 
@@ -450,8 +469,8 @@ void main() {\n\
                 var texture = atlas.texture;
                 var coordinates = atlas.textureCoordinates;
 
-                var atlasWidth = 10.0;
-                var atlasHeight = 10.0;
+                var atlasWidth = 12.0;
+                var atlasHeight = 12.0;
                 expect(texture.width).toEqual(atlasWidth);
                 expect(texture.height).toEqual(atlasHeight);
 
@@ -463,7 +482,7 @@ void main() {\n\
 
                 // big green image
                 expect(coordinates[greenIndex].x).toEqual(0.0 / atlasWidth);
-                expect(coordinates[greenIndex].y).toEqual(1.0 / atlasHeight);
+                expect(coordinates[greenIndex].y).toEqual(2.0 / atlasHeight);
                 expect(coordinates[greenIndex].width).toEqual(4.0 / atlasWidth);
                 expect(coordinates[greenIndex].height).toEqual(4.0 / atlasHeight);
             });
@@ -558,8 +577,8 @@ void main() {\n\
             var texture = atlas.texture;
             var coordinates = atlas.textureCoordinates;
 
-            var atlasWidth = 10.0;
-            var atlasHeight = 10.0;
+            var atlasWidth = 6.0;
+            var atlasHeight = 6.0;
             expect(atlas.borderWidthInPixels).toEqual(2);
             expect(atlas.numberOfImages).toEqual(2);
             expect(texture.width).toEqual(atlasWidth);
@@ -570,7 +589,7 @@ void main() {\n\
             expect(coordinates[greenIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[greenIndex].height).toEqual(1.0 / atlasHeight);
 
-            expect(coordinates[blueIndex].x).toEqual(4.0 / atlasWidth);
+            expect(coordinates[blueIndex].x).toEqual(3.0 / atlasWidth);
             expect(coordinates[blueIndex].y).toEqual(0.0 / atlasHeight);
             expect(coordinates[blueIndex].width).toEqual(1.0 / atlasWidth);
             expect(coordinates[blueIndex].height).toEqual(1.0 / atlasHeight);
@@ -723,8 +742,8 @@ void main() {\n\
             expect(atlas.numberOfImages).toEqual(5);
 
             var coordinates = atlas.textureCoordinates;
-            var atlasWidth = 1.0;
-            var atlasHeight = 1.0;
+            var atlasWidth = 2.0;
+            var atlasHeight = 2.0;
 
             expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
             expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);
@@ -774,8 +793,8 @@ void main() {\n\
                 expect(atlas.numberOfImages).toEqual(6);
 
                 var coordinates = atlas.textureCoordinates;
-                var atlasWidth = 4.0;
-                var atlasHeight = 4.0;
+                var atlasWidth = 2.0;
+                var atlasHeight = 2.0;
 
                 expect(coordinates[index1].x).toEqual(0.0 / atlasWidth);
                 expect(coordinates[index1].y).toEqual(0.0 / atlasHeight);

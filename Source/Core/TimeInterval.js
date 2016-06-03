@@ -13,7 +13,7 @@ define([
         DeveloperError,
         freezeObject,
         JulianDate) {
-    "use strict";
+    'use strict';
 
     /**
      * An interval defined by a start and a stop time; optionally including those times as part of the interval.
@@ -35,8 +35,8 @@ define([
      * var timeInterval = new Cesium.TimeInterval({
      *     start : Cesium.JulianDate.fromIso8601('1980-08-01T00:00:00Z'),
      *     stop : Cesium.JulianDate.fromIso8601('1980-08-02T00:00:00Z'),
-     *     isStartTimeIncluded : true,
-     *     iSStopTimeIncluded : false,
+     *     isStartIncluded : true,
+     *     isStopIncluded : false,
      *     data : Cesium.Cartesian3.fromDegrees(39.921037, -75.170082)
      * });
      *
@@ -68,7 +68,7 @@ define([
      * var dateToCheck = Cesium.JulianDate.fromIso8601('1982-09-08T11:30:00Z');
      * var containsDate = Cesium.TimeInterval.contains(timeInterval, dateToCheck);
      */
-    var TimeInterval = function(options) {
+    function TimeInterval(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         /**
          * Gets or sets the start time of this interval.
@@ -101,7 +101,7 @@ define([
          * @default true
          */
         this.isStopIncluded = defaultValue(options.isStopIncluded, true);
-    };
+    }
 
     defineProperties(TimeInterval.prototype, {
         /**

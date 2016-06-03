@@ -12,9 +12,13 @@ define([
         '../Core/PixelFormat',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
+        '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
+        '../Renderer/Renderbuffer',
         '../Renderer/RenderbufferFormat',
+        '../Renderer/RenderState',
+        '../Renderer/Texture',
         '../Shaders/PostProcessFilters/AdditiveBlend',
         '../Shaders/PostProcessFilters/BrightPass',
         '../Shaders/PostProcessFilters/GaussianBlur1D',
@@ -32,16 +36,20 @@ define([
         PixelFormat,
         Transforms,
         ClearCommand,
+        Framebuffer,
         PassState,
         PixelDatatype,
+        Renderbuffer,
         RenderbufferFormat,
+        RenderState,
+        Texture,
         AdditiveBlend,
         BrightPass,
         GaussianBlur1D,
         PassThrough) {
-    "use strict";
+    'use strict';
 
-    var SunPostProcess = function() {
+    function SunPostProcess() {
         this._fbo = undefined;
 
         this._downSampleFBO1 = undefined;
@@ -73,7 +81,7 @@ define([
         this._uRadius = undefined;
 
         this._blurStep = new Cartesian2();
-    };
+    }
 
     SunPostProcess.prototype.clear = function(context, color) {
         var clear = this._clearFBO1Command;
@@ -104,7 +112,10 @@ define([
     var sunPositionWCScratch = new Cartesian2();
     var sizeScratch = new Cartesian2();
     var postProcessMatrix4Scratch= new Matrix4();
-    SunPostProcess.prototype.update = function(context) {
+
+    SunPostProcess.prototype.update = function(passState) {
+        var context = passState.context;
+        var viewport = passState.viewport;
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
 
@@ -118,11 +129,9 @@ define([
                 color : new Color()
             });
 
-            var rs;
             var uniformMap = {};
 
             this._downSampleCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -141,7 +150,6 @@ define([
             };
 
             this._brightPassCommand = context.createViewportQuadCommand(BrightPass, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -162,7 +170,6 @@ define([
             };
 
             this._blurXCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -180,7 +187,6 @@ define([
             };
 
             this._blurYCommand = context.createViewportQuadCommand(GaussianBlur1D, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -195,7 +201,6 @@ define([
             };
 
             this._blendCommand = context.createViewportQuadCommand(AdditiveBlend, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -203,7 +208,6 @@ define([
             uniformMap = {};
 
             this._fullScreenCommand = context.createViewportQuadCommand(PassThrough, {
-                renderState : rs,
                 uniformMap : uniformMap,
                 owner : this
             });
@@ -211,11 +215,11 @@ define([
 
         var downSampleWidth = Math.pow(2.0, Math.ceil(Math.log(width) / Math.log(2)) - 2.0);
         var downSampleHeight = Math.pow(2.0, Math.ceil(Math.log(height) / Math.log(2)) - 2.0);
-        var downSampleSize = Math.max(downSampleWidth, downSampleHeight);
 
-        var viewport = viewportBoundingRectangle;
-        viewport.width = width;
-        viewport.height = height;
+        // The size computed above can be less than 1.0 if size < 4.0. This will probably
+        // never happen in practice, but does in the tests. Clamp to 1.0 to prevent WebGL
+        // errors in the tests.
+        var downSampleSize = Math.max(1.0, downSampleWidth, downSampleHeight);
 
         var downSampleViewport = downSampleViewportBoundingRectangle;
         downSampleViewport.width = downSampleSize;
@@ -230,15 +234,18 @@ define([
 
             this._blurStep.x = this._blurStep.y = 1.0 / downSampleSize;
 
-            var colorTextures = [context.createTexture2D({
+            var colorTextures = [new Texture({
+                context : context,
                 width : width,
                 height : height
             })];
 
             if (context.depthTexture) {
-                fbo = this._fbo = context.createFramebuffer({
+                fbo = this._fbo = new Framebuffer({
+                    context : context,
                     colorTextures :colorTextures,
-                    depthTexture : context.createTexture2D({
+                    depthTexture : new Texture({
+                        context : context,
                         width : width,
                         height : height,
                         pixelFormat : PixelFormat.DEPTH_COMPONENT,
@@ -246,22 +253,28 @@ define([
                     })
                 });
             } else {
-                fbo = this._fbo = context.createFramebuffer({
+                fbo = this._fbo = new Framebuffer({
+                    context : context,
                     colorTextures : colorTextures,
-                    depthRenderbuffer : context.createRenderbuffer({
+                    depthRenderbuffer : new Renderbuffer({
+                        context : context,
                         format : RenderbufferFormat.DEPTH_COMPONENT16
                     })
                 });
             }
 
-            this._downSampleFBO1 = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
+            this._downSampleFBO1 = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
                     width : downSampleSize,
                     height : downSampleSize
                 })]
             });
-            this._downSampleFBO2 = context.createFramebuffer({
-                colorTextures : [context.createTexture2D({
+            this._downSampleFBO2 = new Framebuffer({
+                context : context,
+                colorTextures : [new Texture({
+                    context : context,
                     width : downSampleSize,
                     height : downSampleSize
                 })]
@@ -274,10 +287,9 @@ define([
             this._blurXCommand.framebuffer = this._downSampleFBO1;
             this._blurYCommand.framebuffer = this._downSampleFBO2;
 
-            var downSampleRenderState = context.createRenderState({
+            var downSampleRenderState = RenderState.fromCache({
                 viewport : downSampleViewport
             });
-            var upSampleRenderState = context.createRenderState();
 
             this._downSampleCommand.uniformMap.u_texture = function() {
                 return fbo.getColorTexture(0);
@@ -304,6 +316,12 @@ define([
                 return that._blurStep;
             };
             this._blurYCommand.renderState = downSampleRenderState;
+
+            var upSampledViewport = viewportBoundingRectangle;
+            upSampledViewport.width = width;
+            upSampledViewport.height = height;
+
+            var upSampleRenderState = RenderState.fromCache({ viewport : upSampledViewport });
 
             this._blendCommand.uniformMap.u_texture0 = function() {
                 return fbo.getColorTexture(0);

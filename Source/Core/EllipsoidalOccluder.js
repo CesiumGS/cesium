@@ -15,7 +15,7 @@ define([
         defineProperties,
         DeveloperError,
         Rectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
@@ -40,7 +40,7 @@ define([
      *
      * @private
      */
-    var EllipsoidalOccluder = function(ellipsoid, cameraPosition) {
+    function EllipsoidalOccluder(ellipsoid, cameraPosition) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
@@ -56,7 +56,7 @@ define([
         if (defined(cameraPosition)) {
             this.cameraPosition = cameraPosition;
         }
-    };
+    }
 
     defineProperties(EllipsoidalOccluder.prototype, {
         /**
@@ -134,8 +134,10 @@ define([
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
         var vtDotVc = -Cartesian3.dot(vt, cv);
-        var isOccluded = vtDotVc > vhMagnitudeSquared &&
-                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared;
+        // If vhMagnitudeSquared < 0 then we are below the surface of the ellipsoid and
+        // in this case, set the culling plane to be on V.
+        var isOccluded = vhMagnitudeSquared < 0 ? vtDotVc > 0 : (vtDotVc > vhMagnitudeSquared &&
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared);
         return !isOccluded;
     };
 

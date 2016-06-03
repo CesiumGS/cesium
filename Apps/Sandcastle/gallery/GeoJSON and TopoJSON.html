@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Load GeoJSON or TopoJSON data and apply custom styling.">
     <meta name="cesium-sandcastle-labels" content="Showcases, Tutorials, DataSources">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.9/require.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
     require.config({
         baseUrl : '../../../Source',
@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -38,7 +38,7 @@ Sandcastle.addDefaultToolbarButton('Default styling', function() {
 Sandcastle.addToolbarButton('Basic styling', function() {
     viewer.dataSources.add(Cesium.GeoJsonDataSource.load('../../SampleData/ne_10m_us_states.topojson', {
         stroke: Cesium.Color.HOTPINK,
-        fill: Cesium.Color.PINK,
+        fill: Cesium.Color.PINK.withAlpha(0.5),
         strokeWidth: 3
     }));
 });
@@ -72,8 +72,8 @@ Sandcastle.addToolbarButton('Custom styling', function() {
             
             //Set the polygon material to our random color.
             entity.polygon.material = color;
-            //Outline each polygon in black.
-            entity.polygon.outlineColor = Cesium.Color.BLACK;
+            //Remove the outlines.
+            entity.polygon.outline = false;
 
             //Extrude the polygon based on the state's population.  Each entity
             //stores the properties for the GeoJSON feature it was created from

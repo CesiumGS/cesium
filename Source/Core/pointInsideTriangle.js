@@ -5,7 +5,7 @@ define([
     ], function(
         barycentricCoordinates,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     var coords = new Cartesian3();
 
@@ -28,10 +28,10 @@ define([
      *   new Cesium.Cartesian2(1.0, 0.0),
      *   new Cesium.Cartesian2(0.0, 1.0));
      */
-    var pointInsideTriangle = function(point, p0, p1, p2) {
+    function pointInsideTriangle(point, p0, p1, p2) {
         barycentricCoordinates(point, p0, p1, p2, coords);
         return (coords.x > 0.0) && (coords.y > 0.0) && (coords.z > 0);
-    };
+    }
 
     return pointInsideTriangle;
 });

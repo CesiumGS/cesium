@@ -17,8 +17,7 @@ defineSuite([
         LinearApproximation,
         ReferenceFrame,
         PositionProperty) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();

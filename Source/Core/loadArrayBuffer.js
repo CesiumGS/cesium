@@ -3,7 +3,7 @@ define([
         './loadWithXhr'
     ], function(
         loadWithXhr) {
-    "use strict";
+    'use strict';
 
     /**
      * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
@@ -13,12 +13,10 @@ define([
      *
      * @exports loadArrayBuffer
      *
-     * @param {String|Promise} url The URL of the binary data, or a promise for the URL.
+     * @param {String|Promise.<String>} url The URL of the binary data, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the requests.
-     * @returns {Promise} a promise that will resolve to the requested data when loaded.
+     * @returns {Promise.<ArrayBuffer>} a promise that will resolve to the requested data when loaded.
      *
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      *
      * @example
      * // load a single URL asynchronously
@@ -27,14 +25,17 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
+     * 
+     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
+     * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    var loadArrayBuffer = function(url, headers) {
+    function loadArrayBuffer(url, headers) {
         return loadWithXhr({
             url : url,
             responseType : 'arraybuffer',
             headers : headers
         });
-    };
+    }
 
     return loadArrayBuffer;
 });

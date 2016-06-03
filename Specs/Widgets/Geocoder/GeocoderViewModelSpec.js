@@ -11,8 +11,7 @@ defineSuite([
         Camera,
         createScene,
         pollToPromise) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     var scene;
     beforeAll(function() {
@@ -103,5 +102,29 @@ defineSuite([
         expect(function() {
             return new GeocoderViewModel();
         }).toThrowDeveloperError();
+    });
+
+    it('raises the complete event camera finished', function() {
+        var viewModel = new GeocoderViewModel({
+            scene : scene,
+            flightDuration : 0
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        viewModel.complete.addEventListener(spyListener);
+
+        viewModel.searchText = '-1.0, -2.0';
+        viewModel.search();
+
+        expect(spyListener.calls.count()).toBe(1);
+
+        viewModel.flightDuration = 1.5;
+        viewModel.serachText = '2.0, 2.0';
+        viewModel.search();
+
+        return pollToPromise(function() {
+            scene.tweens.update();
+            return spyListener.calls.count() === 2;
+        });
     });
 }, 'WebGL');

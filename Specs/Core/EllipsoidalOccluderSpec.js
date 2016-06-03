@@ -17,8 +17,7 @@ defineSuite([
         CesiumMath,
         Ray,
         Rectangle) {
-    "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn*/
+    'use strict';
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
@@ -54,6 +53,15 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var occluder = new EllipsoidalOccluder(ellipsoid);
         occluder.cameraPosition = new Cartesian3(7000000.0, 0.0, 0.0);
+
+        var point = new Cartesian3(-7000000, 0.0, 0.0);
+        expect(occluder.isPointVisible(point)).toEqual(false);
+    });
+
+    it('reports not visible when point is directly behind ellipsoid and camera is inside the ellispoid', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var occluder = new EllipsoidalOccluder(ellipsoid);
+        occluder.cameraPosition = new Cartesian3(ellipsoid.minimumRadius - 100, 0.0, 0.0);
 
         var point = new Cartesian3(-7000000, 0.0, 0.0);
         expect(occluder.isPointVisible(point)).toEqual(false);

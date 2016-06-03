@@ -13,7 +13,7 @@ define([
         DeveloperError,
         loadImage,
         writeTextToCanvas) {
-    "use strict";
+    'use strict';
 
     /**
      * A utility class for generating custom map pins as canvas elements.
@@ -28,9 +28,9 @@ define([
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Pins.html|Cesium Sandcastle PinBuilder Demo}
      */
-    var PinBuilder = function() {
+    function PinBuilder() {
         this._cache = {};
-    };
+    }
 
     /**
      * Creates an empty pin of the specified color and size.
@@ -57,7 +57,7 @@ define([
      * @param {String} url The url of the image to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas|Promise} The canvas element or a Promise to the canvas element that represents the generated pin.
+     * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromUrl = function(url, color, size) {
         //>>includeStart('debug', pragmas.debug);
@@ -80,7 +80,7 @@ define([
      * @param {String} id The id of the maki icon to be stamped onto the pin.
      * @param {Color} color The color of the pin.
      * @param {Number} size The size of the pin, in pixels.
-     * @returns {Canvas|Promise} The canvas element or a Promise to the canvas element that represents the generated pin.
+     * @returns {Canvas|Promise.<Canvas>} The canvas element or a Promise to the canvas element that represents the generated pin.
      */
     PinBuilder.prototype.fromMakiIconId = function(id, color, size) {
         //>>includeStart('debug', pragmas.debug);

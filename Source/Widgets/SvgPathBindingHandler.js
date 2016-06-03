@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     var svgNS = 'http://www.w3.org/2000/svg';
     var svgClassName = 'cesium-svgPath-svg';
@@ -20,8 +20,7 @@ define(function() {
      * <li>css: Optional. A string containing additional CSS classes to apply to the SVG. 'cesium-svgPath-svg' is always applied.</li>
      * </ul>
      *
-     * @namespace
-     * @alias SvgPathBindingHandler
+     * @exports SvgPathBindingHandler
      *
      * @example
      * // Create an SVG as a child of a div
