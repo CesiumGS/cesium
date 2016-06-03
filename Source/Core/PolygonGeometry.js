@@ -764,18 +764,18 @@ define([
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
 
-        var walls;
-        var topAndBottom;
-
         var outerPositions = polygonHierarchy.positions;
+        if (outerPositions.length < 3) {
+            return;
+        }
+
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
         var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
-        var i;
 
-        if (polygons.length === 0) {
+        if (hierarchy.length === 0) {
             return;
         }
 
@@ -798,11 +798,15 @@ define([
             wall: false
         };
 
+        var i;
+
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+
+                var topAndBottom;
                 if (closeTop && closeBottom) {
                     topAndBottom = geometry.topAndBottom;
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
@@ -821,7 +825,7 @@ define([
                     geometries.push(topAndBottom);
                 }
 
-                walls = geometry.walls;
+                var walls = geometry.walls;
                 options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
