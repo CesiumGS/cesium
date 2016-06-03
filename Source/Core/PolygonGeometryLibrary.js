@@ -17,8 +17,7 @@ define([
         './PolygonPipeline',
         './PrimitiveType',
         './Queue',
-        './WindingOrder',
-        '../ThirdParty/earcut-2.0.8'
+        './WindingOrder'
     ], function(
         arrayRemoveDuplicates,
         Cartesian2,
@@ -37,8 +36,7 @@ define([
         PolygonPipeline,
         PrimitiveType,
         Queue,
-        WindingOrder,
-        earcut) {
+        WindingOrder) {
     'use strict';
 
     /**
@@ -238,8 +236,6 @@ define([
                 outerRing = outerRing.slice().reverse();
             }
 
-            positions2D = Cartesian2.packArray(positions2D);
-
             var positions = outerRing.slice();
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
@@ -264,7 +260,7 @@ define([
                 polygonHoles.push(holePositions);
                 holeIndices.push(positions.length);
                 positions = positions.concat(holePositions);
-                positions2D = positions2D.concat(Cartesian2.packArray(holePositions2D));
+                positions2D = positions2D.concat(holePositions2D);
 
                 var numGrandchildren = 0;
                 if (defined(hole.holes)) {
@@ -306,7 +302,7 @@ define([
     };
 
     PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {
-        var indices = earcut(polygon.positions2D, polygon.holes, 2);
+        var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
         /* If polygon is completely unrenderable, just use the first three vertices */
         if (indices.length < 3) {

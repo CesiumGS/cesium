@@ -14,7 +14,8 @@ define([
         './pointInsideTriangle',
         './PrimitiveType',
         './Queue',
-        './WindingOrder'
+        './WindingOrder',
+        '../ThirdParty/earcut-2.0.8'
     ], function(
         Cartesian2,
         Cartesian3,
@@ -30,7 +31,8 @@ define([
         pointInsideTriangle,
         PrimitiveType,
         Queue,
-        WindingOrder) {
+        WindingOrder,
+        earcut) {
     'use strict';
 
     var scaleToGeodeticHeightN = new Cartesian3();
@@ -75,6 +77,27 @@ define([
     PolygonPipeline.computeWindingOrder2D = function(positions) {
         var area = PolygonPipeline.computeArea2D(positions);
         return (area > 0.0) ? WindingOrder.COUNTER_CLOCKWISE : WindingOrder.CLOCKWISE;
+    };
+
+    /**
+     * Triangulate a polygon.
+     *
+     * @param {Cartesian2[]} positions Cartesian2 array containing the vertices of the polygon
+     * @param {Number[]} holes An array of the staring indices of the holes.
+     * @returns {Number[]} Index array representing triangles that fill the polygon
+     */
+    PolygonPipeline.triangulate = function(positions, holes) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('positions is required.');
+        }
+        if (!defined(holes)) {
+            throw new DeveloperError('holes is required.');
+        }
+        //>>includeEnd('debug');
+
+        var flattenedPositions = Cartesian2.packArray(positions);
+        return earcut(flattenedPositions, holes, 2);
     };
 
     var subdivisionV0Scratch = new Cartesian3();
