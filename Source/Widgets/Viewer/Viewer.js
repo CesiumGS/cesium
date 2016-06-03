@@ -301,13 +301,13 @@ define([
      *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
      *     terrainProvider : new Cesium.CesiumTerrainProvider({
-     *         url : '//assets.agi.com/stk-terrain/world'
+     *         url : 'https://assets.agi.com/stk-terrain/world'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
      *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
-     *         url : '//a.tile.openstreetmap.org/'
+     *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({

@@ -83,7 +83,7 @@ define([
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
-     *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+     *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });

@@ -36,8 +36,10 @@ defineSuite([
             stackPartitions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 12);
+        var numVertices = 16; // 4 rows * 4 positions
+        var numTriangles = 12; //3 top + 3 bottom + 6 around the sides
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -48,12 +50,14 @@ defineSuite([
             stackPartitions: 3
         }));
 
-        expect(m.attributes.position.values.length).toEqual(3 * 16);
-        expect(m.attributes.st.values.length).toEqual(2 * 16);
-        expect(m.attributes.normal.values.length).toEqual(3 * 16);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 16);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 16);
-        expect(m.indices.length).toEqual(3 * 12);
+        var numVertices = 16;
+        var numTriangles = 12;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.st.values.length).toEqual(numVertices * 2);
+        expect(m.attributes.normal.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.tangent.values.length).toEqual(numVertices * 3);
+        expect(m.attributes.binormal.values.length).toEqual(numVertices * 3);
+        expect(m.indices.length).toEqual(numTriangles * 3);
     });
 
     it('computes attributes for a unit sphere', function() {

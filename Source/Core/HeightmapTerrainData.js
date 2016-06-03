@@ -82,13 +82,11 @@ define([
      * var heightBuffer = new Uint16Array(buffer, 0, that._heightmapWidth * that._heightmapWidth);
      * var childTileMask = new Uint8Array(buffer, heightBuffer.byteLength, 1)[0];
      * var waterMask = new Uint8Array(buffer, heightBuffer.byteLength + 1, buffer.byteLength - heightBuffer.byteLength - 1);
-     * var structure = Cesium.HeightmapTessellator.DEFAULT_STRUCTURE;
      * var terrainData = new Cesium.HeightmapTerrainData({
      *   buffer : heightBuffer,
      *   width : 65,
      *   height : 65,
      *   childTileMask : childTileMask,
-     *   structure : structure,
      *   waterMask : waterMask
      * });
      * 
@@ -155,6 +153,8 @@ define([
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
+     *
+     * @private
      *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
@@ -226,7 +226,8 @@ define([
                     result.occludeePointInScaledSpace,
                     6,
                     result.orientedBoundingBox,
-                    TerrainEncoding.clone(result.encoding));
+                    TerrainEncoding.clone(result.encoding),
+                    exaggeration);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
@@ -261,7 +262,8 @@ define([
             var buffer = this._mesh.vertices;
             var encoding = this._mesh.encoding;
             var skirtHeight = this._skirtHeight;
-            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude);
+            var exaggeration = this._mesh.exaggeration;
+            heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, rectangle, width, height, longitude, latitude, exaggeration);
         } else {
             heightSample = interpolateHeight(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, rectangle, width, height, longitude, latitude);
             heightSample = heightSample * heightScale + heightOffset;
@@ -335,6 +337,7 @@ define([
 
         var heightOffset = structure.heightOffset;
         var heightScale = structure.heightScale;
+        var exaggeration = meshData.exaggeration;
 
         var elementsPerHeight = structure.elementsPerHeight;
         var elementMultiplier = structure.elementMultiplier;
@@ -346,7 +349,7 @@ define([
             var latitude = CesiumMath.lerp(destinationRectangle.north, destinationRectangle.south, j / (height - 1));
             for (var i = 0; i < width; ++i) {
                 var longitude = CesiumMath.lerp(destinationRectangle.west, destinationRectangle.east, i / (width - 1));
-                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude);
+                var heightSample = interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration);
                 setHeight(heights, elementsPerHeight, elementMultiplier, divisor, stride, isBigEndian, j * width + i, heightSample);
             }
         }
@@ -444,7 +447,7 @@ define([
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }
 
-    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude) {
+    function interpolateMeshHeight(buffer, encoding, heightOffset, heightScale, skirtHeight, sourceRectangle, width, height, longitude, latitude, exaggeration) {
         var fromWest = (longitude - sourceRectangle.west) * (width - 1) / (sourceRectangle.east - sourceRectangle.west);
         var fromSouth = (latitude - sourceRectangle.south) * (height - 1) / (sourceRectangle.north - sourceRectangle.south);
 
@@ -478,10 +481,10 @@ define([
         southInteger = height - 1 - southInteger;
         northInteger = height - 1 - northInteger;
 
-        var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) - heightOffset) / heightScale;
-        var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) - heightOffset) / heightScale;
-        var northwestHeight = (encoding.decodeHeight(buffer, northInteger * width + westInteger) - heightOffset) / heightScale;
-        var northeastHeight = (encoding.decodeHeight(buffer, northInteger * width + eastInteger) - heightOffset) / heightScale;
+        var southwestHeight = (encoding.decodeHeight(buffer, southInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var southeastHeight = (encoding.decodeHeight(buffer, southInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
+        var northwestHeight = (encoding.decodeHeight(buffer, northInteger * width + westInteger) / exaggeration - heightOffset) / heightScale;
+        var northeastHeight = (encoding.decodeHeight(buffer, northInteger * width + eastInteger) / exaggeration - heightOffset) / heightScale;
 
         return triangleInterpolateHeight(dx, dy, southwestHeight, southeastHeight, northwestHeight, northeastHeight);
     }

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './arrayRemoveDuplicates',
         './Cartesian3',
         './ComponentDatatype',
         './defaultValue',
@@ -16,6 +17,7 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        arrayRemoveDuplicates,
         Cartesian3,
         ComponentDatatype,
         defaultValue,
@@ -216,7 +218,7 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            outerRing = PolygonPipeline.removeDuplicates(outerRing);
+            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
@@ -226,7 +228,7 @@ define([
             var i;
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                hole.positions = PolygonPipeline.removeDuplicates(hole.positions);
+                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (hole.positions.length < 3) {
                     continue;
                 }
