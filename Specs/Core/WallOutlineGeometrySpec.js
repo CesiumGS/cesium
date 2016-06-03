@@ -81,7 +81,7 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
+        expect(positions.length).toEqual(4 * 3);
         expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
@@ -103,7 +103,7 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
+        expect(positions.length).toEqual(4 * 3);
         expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
@@ -133,8 +133,8 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(3 * 2 * 3);
-        expect(w.indices.length).toEqual(7 * 2);
+        expect(positions.length).toEqual(6 * 3);
+        expect(w.indices.length).toEqual(7 * 2); //3 vertical + 4 horizontal
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
@@ -163,8 +163,8 @@ defineSuite([
         }));
 
         var positions = w.attributes.position.values;
-        expect(positions.length).toEqual(2 * 2 * 3);
-        expect(w.indices.length).toEqual(2 * 4);
+        expect(positions.length).toEqual(4 * 3);
+        expect(w.indices.length).toEqual(4 * 2);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
         expect(cartographic.height).toEqualEpsilon(min, CesiumMath.EPSILON8);
@@ -188,4 +188,3 @@ defineSuite([
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
     createPackableSpecs(WallOutlineGeometry, wall, packedInstance);
 });
-

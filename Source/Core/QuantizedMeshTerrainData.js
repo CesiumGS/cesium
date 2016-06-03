@@ -237,6 +237,8 @@ define([
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
      *
+     * @private
+     *
      * @param {TilingScheme} tilingScheme The tiling scheme to which this tile belongs.
      * @param {Number} x The X coordinate of the tile for which to create the terrain data.
      * @param {Number} y The Y coordinate of the tile for which to create the terrain data.
@@ -320,7 +322,8 @@ define([
                     occlusionPoint,
                     stride,
                     obb,
-                    terrainEncoding);
+                    terrainEncoding,
+                    exaggeration);
 
             // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;
@@ -408,7 +411,8 @@ define([
             isEastChild : isEastChild,
             isNorthChild : isNorthChild,
             childRectangle : childRectangle,
-            ellipsoid : ellipsoid
+            ellipsoid : ellipsoid,
+            exaggeration : mesh.exaggeration
         });
 
         if (!defined(upsamplePromise)) {
