@@ -246,7 +246,7 @@ define([
         this._interleave = defaultValue(options.interleave, false);
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         this._allowPicking = defaultValue(options.allowPicking, true);
-        this._asynchronous = false;//defaultValue(options.asynchronous, true);
+        this._asynchronous = defaultValue(options.asynchronous, true);
         this._compressVertices = defaultValue(options.compressVertices, true);
 
         /**

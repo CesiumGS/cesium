@@ -321,21 +321,6 @@ define([
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
     };
 
-    window.PolygonGeometryLibrary = PolygonGeometryLibrary;
-    PolygonGeometryLibrary.times = [];
-
-    PolygonGeometryLibrary.averageTime = function() {
-        var times = PolygonGeometryLibrary.times;
-        var length = times.length;
-        var sum = 0;
-
-        for (var i = 0; i < length; ++i) {
-            sum += times[i];
-        }
-
-        return sum / length;
-    };
-
     PolygonGeometryLibrary.createGeometryUsingEarcut = function(hierarchy, ellipsoid, granularity, perPositionHeight) {
         var startTime = window.performance.now();
 
@@ -427,83 +412,6 @@ define([
 
             var indices = earcut(flattenedPositions, holeIndices, 2);
             geometries.push(PolygonPipeline.computeSubdivision(ellipsoid, vertices, indices, granularity));
-        }
-
-        PolygonGeometryLibrary.times.push(window.performance.now() - startTime);
-
-        return geometries;
-    };
-
-    PolygonGeometryLibrary.createGeometryUsingRandom = function(hierarchy, ellipsoid, granularity, perPositionHeight) {
-        var startTime = window.performance.now();
-
-        //var polygons = [];
-        //var hierarchy = [];
-
-        var geometries = [];
-
-        var queue = new Queue();
-        queue.enqueue(hierarchy);
-
-        while (queue.length !== 0) {
-            var outerNode = queue.dequeue();
-            var outerRing = outerNode.positions;
-            var holes = outerNode.holes;
-
-            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
-            if (outerRing.length < 3) {
-                continue;
-            }
-
-            var numChildren = defined(holes) ? holes.length : 0;
-            var polygonHoles = [];
-            var i;
-            for (i = 0; i < numChildren; i++) {
-                var hole = holes[i];
-                hole.positions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
-                if (hole.positions.length < 3) {
-                    continue;
-                }
-                polygonHoles.push(hole.positions);
-
-                var numGrandchildren = 0;
-                if (defined(hole.holes)) {
-                    numGrandchildren = hole.holes.length;
-                }
-
-                for ( var j = 0; j < numGrandchildren; j++) {
-                    queue.enqueue(hole.holes[j]);
-                }
-            }
-
-            if (!perPositionHeight) {
-                for (i = 0; i < outerRing.length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
-                }
-                for (i = 0; i < polygonHoles.length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(polygonHoles[i], polygonHoles[i]);
-                }
-            }
-
-            var combinedPolygon = polygonHoles.length > 0 ? PolygonPipeline.eliminateHoles(outerRing, polygonHoles) : outerRing;
-            //polygons.push(combinedPolygon);
-
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(combinedPolygon, ellipsoid);
-            var positions2D = tangentPlane.projectPointsOntoPlane(combinedPolygon, createGeometryFromPositionsPositions);
-
-            var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-            if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-                positions2D.reverse();
-                combinedPolygon = combinedPolygon.slice().reverse();
-            }
-
-            var indices = PolygonPipeline.triangulate(positions2D);
-            /* If polygon is completely unrenderable, just use the first three vertices */
-            if (indices.length < 3) {
-                indices = [0, 1, 2];
-            }
-
-            geometries.push(PolygonPipeline.computeSubdivision(ellipsoid, combinedPolygon, indices, granularity));
         }
 
         PolygonGeometryLibrary.times.push(window.performance.now() - startTime);
