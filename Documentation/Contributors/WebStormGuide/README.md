@@ -13,7 +13,7 @@ will get their own output tab that automatically updates.
 
 ### WebStorm Plugins
 
-[Jump Source Spec](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin) is a plugin that allows users to easily jump between source and spec files.
+The [Cesium WebStorm plugin](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin) allows users to easily jump between source and spec files.
 
 ### WebStorm Shortcuts
 
@@ -21,4 +21,4 @@ will get their own output tab that automatically updates.
 * `Ctrl-Shift-N` - search and open files in the workspace.
 * `Ctrl-ALT-L` - auto-format an entire file or the selected block of code.
 * `Ctrl-Shift-F` - bring up the global find dialog.
-* `ALT-Shift-K` - jump between source and spec file.
+* `ALT-Shift-K` - jump between source and spec file (using the Cesium WebStorm plugin).
