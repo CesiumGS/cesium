@@ -8,6 +8,7 @@ Change Log
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library.
+* Added CZML support for Box, Corridor and Cylinder
 
 ### 1.22 - 2016-06-01
 

@@ -20,6 +20,10 @@ require({
         location : '../ThirdParty/codemirror-4.6'
     }]
 }, [
+        "dijit/Dialog",
+        "dijit/form/Button",
+        "dijit/form/Form",
+        "dijit/form/Textarea",
         'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
@@ -38,10 +42,6 @@ require({
         'dojo/query',
         'dojo/when',
         'Sandcastle/LinkButton',
-        "dijit/Dialog",
-        "dijit/form/Form",
-        "dijit/form/Textarea",
-        "dijit/form/Button",
         'Source/Cesium',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
@@ -63,6 +63,10 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        Dialog,
+        Button,
+        Form,
+        TextArea,
         CodeMirror,
         ContentPane,
         popup,
@@ -81,10 +85,6 @@ require({
         query,
         when,
         LinkButton,
-        Dialog,
-        Form,
-        TextArea,
-        Button,
         Cesium) {
     'use strict';
 
