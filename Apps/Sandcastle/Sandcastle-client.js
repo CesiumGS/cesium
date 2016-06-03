@@ -5,7 +5,7 @@
     window.parent.postMessage('reload', '*');
 
     function defined(value) {
-        return value !== undefined;
+        return value !== undefined && value !== null;
     }
 
     console.originalLog = console.log;
