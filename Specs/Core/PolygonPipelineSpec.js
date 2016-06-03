@@ -99,13 +99,6 @@ defineSuite([
             }).toThrowDeveloperError();
         });
 
-        it('throws without holes', function() {
-            expect(function() {
-                var positions = [new Cartesian2(0,0), new Cartesian2(5,0), new Cartesian2(5,2)];
-                PolygonPipeline.triangulate(positions, undefined);
-            }).toThrowDeveloperError();
-        });
-
         it('a triangle', function() {
             var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)];
             var indices = PolygonPipeline.triangulate(positions, []);

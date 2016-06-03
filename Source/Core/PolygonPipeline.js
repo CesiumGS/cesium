@@ -83,16 +83,13 @@ define([
      * Triangulate a polygon.
      *
      * @param {Cartesian2[]} positions Cartesian2 array containing the vertices of the polygon
-     * @param {Number[]} holes An array of the staring indices of the holes.
+     * @param {Number[]} [holes] An array of the staring indices of the holes.
      * @returns {Number[]} Index array representing triangles that fill the polygon
      */
     PolygonPipeline.triangulate = function(positions, holes) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
-        }
-        if (!defined(holes)) {
-            throw new DeveloperError('holes is required.');
         }
         //>>includeEnd('debug');
 

@@ -223,7 +223,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -259,7 +259,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
