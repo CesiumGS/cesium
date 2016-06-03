@@ -347,14 +347,14 @@ define([
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight, vertexFormat);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -766,9 +766,11 @@ define([
 
         var walls;
         var topAndBottom;
-        var outerPositions;
 
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
+        var outerPositions = polygonHierarchy.positions;
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
         var i;
@@ -777,16 +779,7 @@ define([
             return;
         }
 
-        if (perPositionHeight) {
-            outerPositions = polygons[0].slice();
-            for (i = 0; i < outerPositions.length; i++) {
-                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
-            }
-        } else {
-            outerPositions = polygons[0];
-        }
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        outerPositions = hierarchy[0].outerRing;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometry;
@@ -804,6 +797,7 @@ define([
             top: true,
             wall: false
         };
+
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
