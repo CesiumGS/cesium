@@ -1,9 +1,17 @@
 Change Log
 ==========
 
+### 1.23 - 2016-07-01
+
+* Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
+
 ### 1.22 - 2016-06-01
 
+* Breaking changes
+    * `KmlDataSource` now requires `options.camera` and `options.canvas`.
 * Added shadows
+    * See the Sandcastle demo: [Shadows](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html&label=Showcases).
     * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
     * Added `Viewer.shadowMap` and `Scene.shadowMap` for accessing the scene's shadow map.
     * Added `castShadows` and `receiveShadows` properties to `Model` and `Entity.model`, and options to the `Model` constructor and `Model.fromGltf`.
@@ -16,6 +24,7 @@ Change Log
 * Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
 * Improve memory management for entity billboard/label/point/path visualization.
 * Added `terrainProviderChanged` event to `Scene` and `Globe`
+* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere`. See the new Sandcastle example: [Atmosphere Color](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Atmosphere%20Color.html&label=Showcases). [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
 * Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
@@ -31,6 +40,7 @@ Change Log
 * Added `Matrix4.computeView`.
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
+* Fix issue with disappearing tiles on Linux. [#3889](https://github.com/AnalyticalGraphicsInc/cesium/issues/3889)
 
 ### 1.21 - 2016-05-02
 

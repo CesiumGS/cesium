@@ -17,6 +17,7 @@ defineSuite([
         'Core/Transforms',
         'Core/WebMercatorProjection',
         'Scene/CameraFlightPath',
+        'Scene/MapMode2D',
         'Scene/OrthographicFrustum',
         'Scene/PerspectiveFrustum',
         'Scene/SceneMode',
@@ -39,6 +40,7 @@ defineSuite([
         Transforms,
         WebMercatorProjection,
         CameraFlightPath,
+        MapMode2D,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
@@ -76,7 +78,9 @@ defineSuite([
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
         };
+        this.mapMode2D = MapMode2D.INFINITE_2D;
     }
+
     beforeEach(function() {
         position = Cartesian3.clone(Cartesian3.UNIT_Z);
         up = Cartesian3.clone(Cartesian3.UNIT_Y);
@@ -94,6 +98,7 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
+        scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 
     it('constructor throws an exception when there is no canvas', function() {
@@ -218,7 +223,26 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON8);
     });
 
-    it('does not set heading in 2D', function() {
+    it('sets heading in 2D when the map can be rotated', function() {
+        scene.mapMode2D = MapMode2D.ROTATE;
+        camera._mode = SceneMode.SCENE2D;
+
+        var heading = camera.heading;
+        var positionCartographic = camera.positionCartographic;
+
+        var newHeading = CesiumMath.toRadians(45.0);
+        camera.setView({
+            orientation: {
+                heading : newHeading
+            }
+        });
+
+        expect(camera.positionCartographic).toEqual(positionCartographic);
+        expect(camera.heading).not.toEqual(heading);
+        expect(camera.heading).toEqualEpsilon(newHeading, CesiumMath.EPSILON14);
+    });
+
+    it('does not set heading in 2D for infinite scrolling mode', function() {
         camera._mode = SceneMode.SCENE2D;
 
         var heading = camera.heading;

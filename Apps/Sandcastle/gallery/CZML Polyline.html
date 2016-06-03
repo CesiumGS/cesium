@@ -28,99 +28,93 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var czml = [
-  {
+var czml = [{
     "id" : "document",
     "name" : "CZML Geometries: Polyline",
     "version" : "1.0"
-  },
-  {
+}, {
     "id" : "redLine",
     "name" : "Red line on the surface",
     "polyline" : {
-      "positions" : {
-        "cartographicDegrees" : [
-          -75, 35, 0,
-          -125, 35, 0
-        ]
-      },
-      "material" : {
-        "solidColor" : {
-          "color" : {
-            "rgba" : [255, 0, 0, 255]
-          }
-        }
-      },
-      "width" : 5
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 35, 0,
+                -125, 35, 0
+            ]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [255, 0, 0, 255]
+                }
+            }
+        },
+        "width" : 5
     }
-  },
-  {
+}, {
     "id" : "blueLine",
     "name" : "Glowing blue line on the surface",
     "polyline" : {
-      "positions" : {
-        "cartographicDegrees" : [
-          -75, 37, 0,
-          -125, 37, 0
-        ]
-      },
-      "material" : {
-        "polylineGlow" : {
-          "color" : {
-            "rgba" : [0, 0, 255, 255],
-            "glowPower" : 0.2
-          }
-        }
-      },
-      "width" : 10
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 37, 0,
+                -125, 37, 0
+            ]
+        },
+        "material" : {
+            "polylineGlow" : {
+                "color" : {
+                    "rgba" : [0, 0, 255, 255],
+                    "glowPower" : 0.2
+                }
+            }
+        },
+        "width" : 10
     }
-  },
-  {
+}, {
     "id" : "orangeLine",
     "name" : "Orange line with black outline at height and following the surface",
     "polyline" : {
-      "positions" : {
-        "cartographicDegrees" : [
-          -75, 39, 250000,
-          -125, 39, 250000
-        ]
-      },
-      "material" : {
-        "polylineOutline" : {
-          "color" : {
-            "rgba" : [255, 165, 0, 255]
-          },
-          "outlineColor" : {
-            "rgba" : [0, 0, 0, 255]
-          },
-          "outlineWidth" : 2
-        }
-      },
-      "width" : 5
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 39, 250000,
+                -125, 39, 250000
+            ]
+        },
+        "material" : {
+            "polylineOutline" : {
+                "color" : {
+                    "rgba" : [255, 165, 0, 255]
+                },
+                "outlineColor" : {
+                    "rgba" : [0, 0, 0, 255]
+                },
+                "outlineWidth" : 2
+            }
+        },
+        "width" : 5
     }
-  },
-  {
+}, {
     "id" : "purpleLine",
     "name" : "Purple arrow at height",
     "polyline" : {
-      "positions" : {
-        "cartographicDegrees" : [
-          -75, 43, 500000,
-          -125, 43, 500000
-        ]
-      },
-      "material" : {
-        "polylineArrow" : {
-          "color" : {
-            "rgba" : [148, 0, 211, 255]
-          }
-        }
-      },
-      "followSurface" : false,
-      "width" : 10
+        "positions" : {
+            "cartographicDegrees" : [
+                -75, 43, 500000,
+                -125, 43, 500000
+            ]
+        },
+        "material" : {
+            "polylineArrow" : {
+                "color" : {
+                    "rgba" : [148, 0, 211, 255]
+                }
+            }
+        },
+        "followSurface" : false,
+        "width" : 10
     }
-  }
-];
+}];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 var dataSource = Cesium.CzmlDataSource.load(czml);
