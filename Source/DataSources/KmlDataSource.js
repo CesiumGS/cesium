@@ -1525,7 +1525,7 @@ define([
 
         for (var q = 0; q < length; q++) {
             var child = childNodes[q];
-            var featureProcessor = promisifiedFeatureTypes[child.localName];
+            var featureProcessor = featureTypes[child.localName];
             if(defined(featureProcessor) &&
                 ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
                 promises.push(featureProcessor(dataSource, parent, child, entityCollection, styleCollection, sourceUri, uriResolver));
@@ -1935,17 +1935,6 @@ define([
     }
 
     var featureTypes = {
-        Document : processDocument,
-        Folder : processFolder,
-        Placemark : processPlacemark,
-        NetworkLink : processNetworkLink,
-        GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
-    };
-
-    var promisifiedFeatureTypes = {
         // already promisified
         Document : processDocument,
         // already promisified
@@ -1981,7 +1970,7 @@ define([
     }
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProcessor = promisifiedFeatureTypes[node.localName];
+        var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
             return featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
