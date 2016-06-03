@@ -361,7 +361,7 @@ define([
      * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
      * producing the overall bounds of imagery that can be produced by this layer.
      *
-     * @returns {Promise} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
+     * @returns {Promise.<Rectangle>} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
      *
      * @example
      * // Zoom to an imagery layer.

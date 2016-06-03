@@ -327,6 +327,20 @@ define([
         },
 
         /**
+         * Get the bounding sphere derived from the tile's bounding volume.
+         *
+         * @memberof Cesium3DTile.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                return this._boundingVolume.boundingSphere;
+            }
+        },
+
+        /**
          * @readonly
          * @private
          */

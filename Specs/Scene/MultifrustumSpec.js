@@ -203,9 +203,8 @@ defineSuite([
         }
 
         expect(billboardCall).toBeDefined();
-        expect(billboardCall.args.length).toEqual(4);
-        expect(billboardCall.args[3]).toBeDefined();
-        expect(billboardCall.args[3].fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
+        expect(billboardCall.args.length).toEqual(2);
+        expect(billboardCall.object.shaderProgram.fragmentShaderSource.sources[1]).toContain('czm_Debug_main');
     });
 
     function createPrimitive(bounded, closestFrustum) {

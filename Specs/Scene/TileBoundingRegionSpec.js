@@ -54,6 +54,7 @@ defineSuite([
         var tbr = new TileBoundingRegion({maximumHeight: maximumHeight, minimumHeight: minimumHeight, rectangle: rectangle});
         expect(tbr).toBeDefined();
         expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.boundingSphere).toBeDefined();
         expect(tbr.rectangle).toEqual(rectangle);
         expect(tbr.minimumHeight).toEqual(minimumHeight);
         expect(tbr.maximumHeight).toEqual(maximumHeight);
@@ -63,6 +64,7 @@ defineSuite([
         var tbr = new TileBoundingRegion({rectangle: rectangle});
         expect(tbr).toBeDefined();
         expect(tbr.boundingVolume).toBeDefined();
+        expect(tbr.boundingSphere).toBeDefined();
         expect(tbr.rectangle).toEqual(rectangle);
         expect(tbr.minimumHeight).toBeDefined();
         expect(tbr.maximumHeight).toBeDefined();

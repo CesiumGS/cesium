@@ -65,14 +65,9 @@ function loadTileset(url) {
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
-        var boundingBox = tileset._root._boundingVolume;
-        var center = Cesium.Rectangle.center(boundingBox.rectangle);
-        var height = boundingBox.maximumHeight + 500.0;
-        viewer.camera.setView({
-            destination : Cesium.Cartesian3.fromRadians(center.longitude, center.latitude, height)
-        });
+        var boundingSphere = tileset.boundingSphere;
+        viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
 
-        // Style only if the tileset has properties to style with.
         var properties = tileset.properties;
         if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
             tileset.style = new Cesium.Cesium3DTileStyle({

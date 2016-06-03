@@ -10,6 +10,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -27,6 +28,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -269,7 +271,7 @@ define([
 
     var createGeometryFromPositionsPositions = [];
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, positions, granularity, perPositionHeight, vertexFormat) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -295,8 +297,7 @@ define([
                 flattenedPositions[index++] = p.y;
                 flattenedPositions[index++] = p.z;
             }
-
-            return new Geometry({
+            var geometry = new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
@@ -307,6 +308,12 @@ define([
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
+
+            if (vertexFormat.normal) {
+                return GeometryPipeline.computeNormal(geometry);
+            }
+
+            return geometry;
         }
 
         return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
