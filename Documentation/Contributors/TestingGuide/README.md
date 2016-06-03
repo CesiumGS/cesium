@@ -671,7 +671,7 @@ This runner has lots of options, such as only showing failing tests or automatic
 
 Instead of using Chrome or Firefox, the WebStorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
 
-To make jumping between the source and spec files easier download [this](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin) plugin.
+To make jumping between the source and spec files easier download the  [Cesium WebStorm plugin](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin).
 
 ## Resources
 
