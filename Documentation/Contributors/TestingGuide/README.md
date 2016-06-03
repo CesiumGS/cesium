@@ -35,7 +35,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
 * [Pragmatic Advice](#pragmatic-advice)
    * [Start with a Similar (Small) Test](#start-with-a-similar-small-test)
    * [Debugger-Aided Incremental Improvements](#debugger-aided-incremental-improvements)
-* [Testing in Webstorm](#testing-in-webstorm)
+* [Testing in WebStorm](#testing-in-webstorm)
 * [Resources](#resources)
 
 ## Running the Tests
@@ -657,19 +657,21 @@ The first 73 Cesium tests from March 2011.
 
 > Try this approach for yourself!
 
-## Testing in Webstorm
+## Testing in WebStorm
 
-When you load the Cesium Webstorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
+When you load the Cesium WebStorm project, there will already be a predefined run configuration for executing the unit tests.  It will be in the upper-right corner and look something like the below:
 
 ![](webstorm-test-configuration.png)
 
-You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the Webstorm test runner:
+You can run or debug the tests by using the first two buttons.  The third button is for coverage, which is currently not supported.  It will pop up the WebStorm test runner:
 
 ![](webstorm-test-runner.png)
 
 This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
 
-Instead of using Chrome or Firefox, the Webstorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
+Instead of using Chrome or Firefox, the WebStorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
+
+To make jumping between the source and spec files easier download [this](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin) plugin.
 
 ## Resources
 

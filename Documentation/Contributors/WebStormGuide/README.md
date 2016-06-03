@@ -11,9 +11,14 @@ WebStorm requires very little configuration out of the box.  Just browse to and 
 Cesium's build scripts use gulp.  WebStorm has excellent gulp integration for running tasks from the IDE.  Just right-click on `gulpfile.js` in the Project tree and select `Show Gulp Tasks`, now you can double click on any task to run it.  Even better, perpetual tasks like `build-watch` and `jsHint-watch`
 will get their own output tab that automatically updates.
 
+### WebStorm Plugins
+
+[Jump Source Spec](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin) is a plugin that allows users to easily jump between source and spec files.
+
 ### WebStorm Shortcuts
 
 * `Ctrl-Shift-A` - search for settings, shortcuts, or anything else you want to do.
 * `Ctrl-Shift-N` - search and open files in the workspace.
 * `Ctrl-ALT-L` - auto-format an entire file or the selected block of code.
 * `Ctrl-Shift-F` - bring up the global find dialog.
+* `ALT-Shift-K` - jump between source and spec file.
