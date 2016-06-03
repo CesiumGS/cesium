@@ -124,7 +124,7 @@ defineSuite([
         it('eliminates multiple holes', function() {
             var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(3.0, 0.0), new Cartesian2(3.0, 5.0), new Cartesian2(0.0, 5.0)];
             var bottomHole = [new Cartesian2(1.0, 1.0), new Cartesian2(2.0, 1.0), new Cartesian2(2.0, 2.0), new Cartesian2(1.0, 2.0)];
-            var topHole = [new Cartesian2(1.0, 3.0), new Cartesian2(2.0, 3.0), new Cartesian2(2.0, 4.0), new Cartesian2(1.0, 4.0)];;
+            var topHole = [new Cartesian2(1.0, 3.0), new Cartesian2(2.0, 3.0), new Cartesian2(2.0, 4.0), new Cartesian2(1.0, 4.0)];
 
             var combinedPositions = positions.concat(bottomHole).concat(topHole);
             var indices = PolygonPipeline.triangulate(combinedPositions, [4, 8]);
