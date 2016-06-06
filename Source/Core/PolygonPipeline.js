@@ -15,7 +15,7 @@ define([
         './PrimitiveType',
         './Queue',
         './WindingOrder',
-        '../ThirdParty/earcut-2.0.8'
+        '../ThirdParty/earcut-2.1.1'
     ], function(
         Cartesian2,
         Cartesian3,
