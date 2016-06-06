@@ -1491,7 +1491,7 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
+        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
