@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -33,6 +34,7 @@ define([
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RuntimeError',
+        '../Core/Transforms',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -49,6 +51,7 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './getModelAccessor',
+        './HeightReference',
         './JobType',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -63,6 +66,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         clone,
         combine,
         ComponentDatatype,
@@ -92,6 +96,7 @@ define([
         Request,
         RequestScheduler,
         RuntimeError,
+        Transforms,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -108,6 +113,7 @@ define([
         Uri,
         when,
         getModelAccessor,
+        HeightReference,
         JobType,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -317,8 +323,12 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
      * @exception {DeveloperError} Only glTF Binary version 1 is supported.
@@ -410,6 +420,7 @@ define([
          */
         this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         this._modelMatrix = Matrix4.clone(this.modelMatrix);
+        this._clampedModelMatrix = undefined;
 
         /**
          * A uniform scale applied to this model before the {@link Model#modelMatrix}.
@@ -458,6 +469,27 @@ define([
         this._id = options.id;
 
         /**
+         * Returns the height reference of the model
+         *
+         * @memberof Model.prototype
+         *
+         * @type {HeightReference}
+         *
+         * @default HeightReference.NONE
+         */
+        this.heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._heightReference = this.heightReference;
+        this._heightChanged = false;
+        this._removeUpdateHeightCallback = undefined;
+        var scene = options.scene;
+        this._scene = scene;
+        if (defined(scene)) {
+            scene.terrainProviderChanged.addEventListener(function() {
+                this._heightChanged = true;
+            }, this);
+        }
+
+        /**
          * Used for picking primitives that wrap a model.
          *
          * @private
@@ -479,6 +511,26 @@ define([
         this._defaultTexture = undefined;
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
+
+        /**
+         * Determines whether the model casts shadows from each light source.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.castShadows = defaultValue(options.castShadows, true);
+        this._castShadows = this.castShadows;
+
+        /**
+         * Determines whether the model receives shadows from shadow casters in the scene.
+         *
+         * @type {Boolean}
+         *
+         * @default true
+         */
+        this.receiveShadows = defaultValue(options.receiveShadows, true);
+        this._receiveShadows = this.receiveShadows;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -530,6 +582,8 @@ define([
         this._scaledBoundingSphere = new BoundingSphere();
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
+
+        this._mode = undefined;
 
         this._perNodeShowDirty = false;            // true when the Cesium API was used to change a node's show property
         this._cesiumAnimationsDirty = false;       // true when the Cesium API, not a glTF animation, changed a node transform
@@ -676,7 +730,12 @@ define([
                 }
                 //>>includeEnd('debug');
 
-                var nonUniformScale = Matrix4.getScale(this.modelMatrix, boundingSphereCartesian3Scratch);
+                var modelMatrix = this.modelMatrix;
+                if ((this.heightReference !== HeightReference.NONE) && this._clampedModelMatrix) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
+                var nonUniformScale = Matrix4.getScale(modelMatrix, boundingSphereCartesian3Scratch);
                 var scale = defined(this.maximumScale) ? Math.min(this.maximumScale, this.scale) : this.scale;
                 Cartesian3.multiplyByScalar(nonUniformScale, scale, nonUniformScale);
 
@@ -894,8 +953,11 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
+     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
+     *
      * @returns {Model} The newly created model.
      *
      * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
@@ -1130,7 +1192,7 @@ define([
             var loadResources = model._loadResources;
             loadResources.buffers[id] = new Uint8Array(arrayBuffer);
             --loadResources.pendingBufferLoads;
-         };
+        };
     }
 
     function parseBuffers(model) {
@@ -1208,7 +1270,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-         };
+        };
     }
 
     function parseShaders(model) {
@@ -1534,11 +1596,25 @@ define([
         }
     }
 
-    function createAttributeLocations(attributes) {
+    function createAttributeLocations(model, attributes) {
         var attributeLocations = {};
         var length = attributes.length;
+        var i;
 
-        for (var i = 0; i < length; ++i) {
+        // Set the position attribute to the 0th index. In some WebGL implementations the shader
+        // will not work correctly if the 0th attribute is not active. For example, some glTF models
+        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
+        // the normal attribute.
+        for (i = 1; i < length; ++i) {
+            var attribute = attributes[i];
+            if (/position/i.test(attribute)) {
+                attributes[i] = attributes[0];
+                attributes[0] = attribute;
+                break;
+            }
+        }
+
+        for (i = 0; i < length; ++i) {
             attributeLocations[attributes[i]] = i;
         }
 
@@ -1587,12 +1663,9 @@ define([
         var shaders = model._loadResources.shaders;
         var program = programs[id];
 
-        var attributeLocations = createAttributeLocations(program.attributes);
+        var attributeLocations = createAttributeLocations(model, program.attributes);
         var vs = getShaderSource(model, shaders[program.vertexShader]);
         var fs = getShaderSource(model, shaders[program.fragmentShader]);
-
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         // Add pre-created attributes to attributeLocations
         var attributesLength = program.attributes.length;
@@ -1604,6 +1677,9 @@ define([
                 }
             }
         }
+
+        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
 
         model._rendererResources.programs[id] = ShaderProgram.fromCache({
             context : context,
@@ -1976,49 +2052,49 @@ define([
         var animations = model.gltf.animations;
         var accessors = model.gltf.accessors;
 
-         for (var animationId in animations) {
-             if (animations.hasOwnProperty(animationId)) {
-                 var animation = animations[animationId];
-                 var channels = animation.channels;
-                 var parameters = animation.parameters;
-                 var samplers = animation.samplers;
+        for (var animationId in animations) {
+            if (animations.hasOwnProperty(animationId)) {
+                var animation = animations[animationId];
+                var channels = animation.channels;
+                var parameters = animation.parameters;
+                var samplers = animation.samplers;
 
-                 var parameterValues = {};
+                var parameterValues = {};
 
-                 for (var name in parameters) {
-                     if (parameters.hasOwnProperty(name)) {
-                         parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
-                     }
-                 }
+                for (var name in parameters) {
+                    if (parameters.hasOwnProperty(name)) {
+                        parameterValues[name] = ModelAnimationCache.getAnimationParameterValues(model, accessors[parameters[name]]);
+                    }
+                }
 
-                 // Find start and stop time for the entire animation
-                 var startTime = Number.MAX_VALUE;
-                 var stopTime = -Number.MAX_VALUE;
+                // Find start and stop time for the entire animation
+                var startTime = Number.MAX_VALUE;
+                var stopTime = -Number.MAX_VALUE;
 
-                 var length = channels.length;
-                 var channelEvaluators = new Array(length);
+                var length = channels.length;
+                var channelEvaluators = new Array(length);
 
-                 for (var i = 0; i < length; ++i) {
-                     var channel = channels[i];
-                     var target = channel.target;
-                     var sampler = samplers[channel.sampler];
-                     var times = parameterValues[sampler.input];
+                for (var i = 0; i < length; ++i) {
+                    var channel = channels[i];
+                    var target = channel.target;
+                    var sampler = samplers[channel.sampler];
+                    var times = parameterValues[sampler.input];
 
-                     startTime = Math.min(startTime, times[0]);
-                     stopTime = Math.max(stopTime, times[times.length - 1]);
+                    startTime = Math.min(startTime, times[0]);
+                    stopTime = Math.max(stopTime, times[times.length - 1]);
 
-                     var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
-                     // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
-                     channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
-                 }
+                    var spline = ModelAnimationCache.getAnimationSpline(model, animationId, animation, channel.sampler, sampler, parameterValues);
+                    // GLTF_SPEC: Support more targets like materials. https://github.com/KhronosGroup/glTF/issues/142
+                    channelEvaluators[i] = getChannelEvaluator(model, runtimeNodes[target.id], target.path, spline);
+                }
 
-                 model._runtime.animations[animationId] = {
-                     startTime : startTime,
-                     stopTime : stopTime,
-                     channelEvaluators : channelEvaluators
-                 };
-             }
-         }
+                model._runtime.animations[animationId] = {
+                    startTime : startTime,
+                    stopTime : stopTime,
+                    channelEvaluators : channelEvaluators
+                };
+            }
+        }
     }
 
     function createVertexArrays(model, context) {
@@ -2637,7 +2713,7 @@ define([
         };
     }
 
-    function createCommand(model, gltfNode, runtimeNode, context) {
+    function createCommand(model, gltfNode, runtimeNode, context, scene3DOnly) {
         var nodeCommands = model._nodeCommands;
         var pickIds = model._pickIds;
         var allowPicking = model.allowPicking;
@@ -2731,6 +2807,8 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
+                    castShadows : model._castShadows,
+                    receiveShadows : model._receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -2777,11 +2855,27 @@ define([
                     });
                 }
 
+                var command2D;
+                var pickCommand2D;
+                if (!scene3DOnly) {
+                    command2D = DrawCommand.shallowClone(command);
+                    command2D.boundingVolume = new BoundingSphere();
+                    command2D.modelMatrix = new Matrix4();
+
+                    if (allowPicking) {
+                        pickCommand2D = DrawCommand.shallowClone(pickCommand);
+                        pickCommand2D.boundingVolume = new BoundingSphere();
+                        pickCommand2D.modelMatrix = new Matrix4();
+                    }
+                }
+
                 var nodeCommand = {
                     show : true,
                     boundingSphere : boundingSphere,
                     command : command,
-                    pickCommand : pickCommand
+                    pickCommand : pickCommand,
+                    command2D : command2D,
+                    pickCommand2D : pickCommand2D
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -2789,7 +2883,7 @@ define([
         }
     }
 
-    function createRuntimeNodes(model, context) {
+    function createRuntimeNodes(model, context, scene3DOnly) {
         var loadResources = model._loadResources;
 
         if (!loadResources.finishedEverythingButTextureCreation()) {
@@ -2847,7 +2941,7 @@ define([
                 }
 
                 if (defined(gltfNode.meshes)) {
-                    createCommand(model, gltfNode, runtimeNode, context);
+                    createCommand(model, gltfNode, runtimeNode, context, scene3DOnly);
                 }
 
                 var children = gltfNode.children;
@@ -2868,6 +2962,7 @@ define([
 
     function createResources(model, frameState) {
         var context = frameState.context;
+        var scene3DOnly = frameState.scene3DOnly;
 
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
@@ -2905,8 +3000,8 @@ define([
             // Could use copy-on-write if it is worth it.  Probably overkill.
         }
 
-        createUniformMaps(model, context);  // using glTF materials/techniques
-        createRuntimeNodes(model, context); // using glTF scene
+        createUniformMaps(model, context);               // using glTF materials/techniques
+        createRuntimeNodes(model, context, scene3DOnly); // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2928,8 +3023,9 @@ define([
     }
 
     var scratchNodeStack = [];
+    var scratchComputedMatrixIn2D = new Matrix4();
 
-    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded) {
+    function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
         var allowPicking = model.allowPicking;
 
@@ -2938,6 +3034,10 @@ define([
 
         var nodeStack = scratchNodeStack;
         var computedModelMatrix = model._computedModelMatrix;
+
+        if (model._mode !== SceneMode.SCENE3D) {
+            computedModelMatrix = Transforms.basisTo2D(projection, computedModelMatrix, scratchComputedMatrixIn2D);
+        }
 
         for (var i = 0; i < length; ++i) {
             var n = rootNodes[i];
@@ -2971,6 +3071,23 @@ define([
                                 var pickCommand = primitiveCommand.pickCommand;
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
+                            }
+
+                            // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
+                            // will be clipped by the viewport. We create a second command that translates the model
+                            // model matrix to the opposite side of the map so the part that was clipped in one viewport
+                            // is drawn in the other.
+                            command = primitiveCommand.command2D;
+                            if (defined(command) && model._mode === SceneMode.SCENE2D) {
+                                Matrix4.clone(nodeMatrix, command.modelMatrix);
+                                command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
+                                BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
+
+                                if (allowPicking) {
+                                    var pickCommand2D = primitiveCommand.pickCommand2D;
+                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
+                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
+                                }
                             }
                         }
                     }
@@ -3113,8 +3230,26 @@ define([
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
 
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 nodeCommands[i].command.debugShowBoundingVolume = debugShowBoundingVolume;
+            }
+        }
+    }
+
+    function updateShadows(model) {
+        if ((model.castShadows !== model._castShadows) || (model.receiveShadows !== model._receiveShadows)) {
+            model._castShadows = model.castShadows;
+            model._receiveShadows = model.receiveShadows;
+
+            var castShadows = model.castShadows;
+            var receiveShadows = model.receiveShadows;
+            var nodeCommands = model._nodeCommands;
+            var length = nodeCommands.length;
+
+            for (var i = 0; i < length; i++) {
+                var nodeCommand = nodeCommands[i];
+                nodeCommand.command.castShadows = castShadows;
+                nodeCommand.command.receiveShadows = receiveShadows;
             }
         }
     }
@@ -3128,6 +3263,7 @@ define([
     }
 
     var scratchPosition = new Cartesian3();
+    var scratchCartographic = new Cartographic();
 
     function getScale(model, frameState) {
         var scale = model.scale;
@@ -3136,13 +3272,20 @@ define([
             // Compute size of bounding sphere in pixels
             var context = frameState.context;
             var maxPixelSize = Math.max(context.drawingBufferWidth, context.drawingBufferHeight);
-            var m = model.modelMatrix;
+            var m = defined(model._clampedModelMatrix) ? model._clampedModelMatrix : model.modelMatrix;
             scratchPosition.x = m[12];
             scratchPosition.y = m[13];
             scratchPosition.z = m[14];
 
             if (defined(model._rtcCenter)) {
                 Cartesian3.add(model._rtcCenter, scratchPosition, scratchPosition);
+            }
+
+            if (model._mode !== SceneMode.SCENE3D) {
+                var projection = frameState.mapProjection;
+                var cartographic = projection.ellipsoid.cartesianToCartographic(scratchPosition, scratchCartographic);
+                projection.project(cartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
             }
 
             var radius = model.boundingSphere.radius;
@@ -3231,6 +3374,75 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function getUpdateHeightCallback(model, ellipsoid, cartoPosition) {
+        return function (clampedPosition) {
+            if (model.heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                clampedCart.height += cartoPosition.height;
+                ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+            }
+
+            var clampedModelMatrix = model._clampedModelMatrix;
+            if (!defined(clampedModelMatrix)) {
+                clampedModelMatrix = new Matrix4();
+                model._clampedModelMatrix = clampedModelMatrix;
+            }
+
+            // Modify clamped model matrix to use new height
+            Matrix4.clone(model.modelMatrix, clampedModelMatrix);
+            clampedModelMatrix[12] = clampedPosition.x;
+            clampedModelMatrix[13] = clampedPosition.y;
+            clampedModelMatrix[14] = clampedPosition.z;
+
+            model._heightChanged = true;
+        };
+    }
+
+    function updateClamping(model) {
+        if (defined(model._removeUpdateHeightCallback)) {
+            model._removeUpdateHeightCallback();
+            model._removeUpdateHeightCallback = undefined;
+        }
+
+        var scene = model._scene;
+        if (!defined(scene) || (model.heightReference === HeightReference.NONE)) {
+            //>>includeStart('debug', pragmas.debug);
+            if (model.heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported without a scene.');
+            }
+            //>>includeEnd('debug');
+            model._clampedModelMatrix = undefined;
+            return;
+        }
+
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+
+        // Compute cartographic position so we don't recompute every update
+        var modelMatrix = model.modelMatrix;
+        scratchPosition.x = modelMatrix[12];
+        scratchPosition.y = modelMatrix[13];
+        scratchPosition.z = modelMatrix[14];
+        var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        // Install callback to handle updating of terrain tiles
+        var surface = globe._surface;
+        model._removeUpdateHeightCallback = surface.updateHeight(cartoPosition, getUpdateHeightCallback(model, ellipsoid, cartoPosition));
+
+        // Set the correct height now
+        var height = globe.getHeight(cartoPosition);
+        if (defined(height)) {
+            // Get callback with cartoPosition being the non-clamped position
+            var cb = getUpdateHeightCallback(model, ellipsoid, cartoPosition);
+
+            // Compute the clamped cartesian and call updateHeight callback
+            Cartographic.clone(cartoPosition, scratchCartographic);
+            scratchCartographic.height = height;
+            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            cb(scratchPosition);
+        }
+    }
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -3242,7 +3454,7 @@ define([
      * @exception {RuntimeError} Failed to load external reference.
      */
     Model.prototype.update = function(frameState) {
-        if (frameState.mode !== SceneMode.SCENE3D) {
+        if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
 
@@ -3353,28 +3565,43 @@ define([
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
             this._cesiumAnimationsDirty = false;
             this._dirty = false;
+            var modelMatrix = this.modelMatrix;
+
+            var modeChanged = frameState.mode !== this._mode;
+            this._mode = frameState.mode;
 
             // Model's model matrix needs to be updated
-            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, this.modelMatrix) ||
+            var modelTransformChanged = !Matrix4.equals(this._modelMatrix, modelMatrix) ||
                 (this._scale !== this.scale) ||
                 (this._minimumPixelSize !== this.minimumPixelSize) || (this.minimumPixelSize !== 0.0) || // Minimum pixel size changed or is enabled
-                (this._maximumScale !== this.maximumScale);
+                (this._maximumScale !== this.maximumScale) ||
+                (this._heightReference !== this.heightReference) || this._heightChanged ||
+                modeChanged;
 
             if (modelTransformChanged || justLoaded) {
-                Matrix4.clone(this.modelMatrix, this._modelMatrix);
+                Matrix4.clone(modelMatrix, this._modelMatrix);
+
+                updateClamping(this);
+
+                if (defined(this._clampedModelMatrix)) {
+                    modelMatrix = this._clampedModelMatrix;
+                }
+
                 this._scale = this.scale;
                 this._minimumPixelSize = this.minimumPixelSize;
                 this._maximumScale = this.maximumScale;
+                this._heightReference = this.heightReference;
+                this._heightChanged = false;
 
                 var scale = getScale(this, frameState);
                 var computedModelMatrix = this._computedModelMatrix;
-                Matrix4.multiplyByUniformScale(this.modelMatrix, scale, computedModelMatrix);
+                Matrix4.multiplyByUniformScale(modelMatrix, scale, computedModelMatrix);
                 Matrix4.multiplyTransformation(computedModelMatrix, yUpToZUp, computedModelMatrix);
             }
 
             // Update modelMatrix throughout the graph as needed
             if (animated || modelTransformChanged || justLoaded) {
-                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded);
+                updateNodeHierarchyModelMatrix(this, modelTransformChanged, justLoaded, frameState.mapProjection);
                 this._dirty = true;
 
                 if (animated || justLoaded) {
@@ -3390,6 +3617,7 @@ define([
             updatePickIds(this, context);
             updateWireframe(this);
             updateShowBoundingVolume(this);
+            updateShadows(this);
         }
 
         if (justLoaded) {
@@ -3413,11 +3641,21 @@ define([
             var i;
             var nc;
 
+            var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
+            var boundingVolume;
+
             if (passes.render) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        frameState.addCommand(nc.command);
+                        var command = nc.command;
+                        frameState.addCommand(command);
+
+                        boundingVolume = command.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            frameState.addCommand(nc.command2D);
+                        }
                     }
                 }
             }
@@ -3426,7 +3664,14 @@ define([
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
-                        frameState.addCommand(nc.pickCommand);
+                        var pickCommand = nc.pickCommand;
+                        frameState.addCommand(pickCommand);
+
+                        boundingVolume = pickCommand.boundingVolume;
+                        if (frameState.mode === SceneMode.SCENE2D &&
+                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                            frameState.addCommand(nc.pickCommand2D);
+                        }
                     }
                 }
             }

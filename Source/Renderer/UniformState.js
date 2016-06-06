@@ -227,8 +227,6 @@ define([
                 this._inverseTransposeModelDirty = true;
                 this._modelViewDirty = true;
                 this._inverseModelViewDirty = true;
-                this._viewProjectionDirty = true;
-                this._inverseViewProjectionDirty = true;
                 this._modelViewRelativeToEyeDirty = true;
                 this._inverseModelViewDirty = true;
                 this._modelViewProjectionDirty = true;
@@ -792,6 +790,7 @@ define([
         uniformState._inverseModelViewDirty = true;
         uniformState._inverseModelView3DDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
         uniformState._modelViewInfiniteProjectionDirty = true;
@@ -812,6 +811,7 @@ define([
         uniformState._inverseProjectionDirty = true;
         uniformState._inverseProjectionOITDirty = true;
         uniformState._viewProjectionDirty = true;
+        uniformState._inverseViewProjectionDirty = true;
         uniformState._modelViewProjectionDirty = true;
         uniformState._modelViewProjectionRelativeToEyeDirty = true;
     }
@@ -857,6 +857,23 @@ define([
     }
 
     /**
+     * Synchronizes the frustum's state with the camera state.  This is called
+     * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
+     * are set to the right value.
+     *
+     * @param {Object} camera The camera to synchronize with.
+     */
+    UniformState.prototype.updateCamera = function(camera) {
+        setView(this, camera.viewMatrix);
+        setInverseView(this, camera.inverseViewMatrix);
+        setCamera(this, camera);
+
+        this._entireFrustum.x = camera.frustum.near;
+        this._entireFrustum.y = camera.frustum.far;
+        this.updateFrustum(camera.frustum);
+    };
+
+    /**
      * Synchronizes the frustum's state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
      * are set to the right value.
@@ -900,10 +917,7 @@ define([
         this._resolutionScale = canvas.width / canvas.clientWidth;
 
         var camera = frameState.camera;
-
-        setView(this, camera.viewMatrix);
-        setInverseView(this, camera.inverseViewMatrix);
-        setCamera(this, camera);
+        this.updateCamera(camera);
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
@@ -916,10 +930,6 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
-
-        this._entireFrustum.x = camera.frustum.near;
-        this._entireFrustum.y = camera.frustum.far;
-        this.updateFrustum(camera.frustum);
 
         this._fogDensity = frameState.fog.density;
 
