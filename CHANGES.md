@@ -2,6 +2,10 @@ Change Log
 ==========
 
 ### 1.23 - 2016-07-01
+
+* Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
+* Added CZML support for Box, Corridor and Cylinder
 * Implemented support for [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
 
 ### 1.22 - 2016-06-01
@@ -22,6 +26,7 @@ Change Log
 * Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
 * Improve memory management for entity billboard/label/point/path visualization.
 * Added `terrainProviderChanged` event to `Scene` and `Globe`
+* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere`. See the new Sandcastle example: [Atmosphere Color](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Atmosphere%20Color.html&label=Showcases). [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
 * Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
@@ -34,7 +39,6 @@ Change Log
 * Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [#3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
 * Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
 * Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
-* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere`. See the new Sandcastle example: [Atmosphere Color](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Atmosphere%20Color.html&label=Showcases). [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
 * Added `Matrix4.computeView`.
 * Added `CullingVolume.fromBoundingSphere`.
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
