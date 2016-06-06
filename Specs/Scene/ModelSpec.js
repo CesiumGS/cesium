@@ -1604,7 +1604,7 @@ defineSuite([
         });
     });
 
-    it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where one primitive is quantized and the other is not, but both use the same shader', function() {
+    it('loads a glTF with WEB3D_quantized_attributes POSITION, TEXCOORD and NORMAL where one primitive is quantized and the other is not, but both use the same shader', function() {
         return loadModel(milkTruckQuantizedMismatchUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
