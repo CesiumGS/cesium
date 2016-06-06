@@ -1580,8 +1580,9 @@ define([
     }
 
     function replaceAllButFirstInString(string, find, replace) {
+        var index = string.indexOf(find);
         return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
-            return all.indexOf(find) === offset ? match : replace;
+            return index === offset ? match : replace;
         });
     }
 
