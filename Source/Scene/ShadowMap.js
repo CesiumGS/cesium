@@ -1483,6 +1483,8 @@ define([
         }
 
         result = DrawCommand.shallowClone(command, result);
+        result.castShadows = true;
+        result.receiveShadows = false;
 
         if (!defined(castShader) || oldShaderId !== command.shaderProgram.id || shadowsDirty) {
             if (defined(castShader)) {
@@ -1575,6 +1577,8 @@ define([
             }
 
             result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
+            result.castShadows = false;
+            result.receiveShadows = true;
 
             // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
             // self-shadowing so it should be turned off if castShadows is false.

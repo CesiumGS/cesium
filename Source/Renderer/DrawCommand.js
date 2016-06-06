@@ -465,6 +465,8 @@ define([
         result._owner = command._owner;
         result._debugShowBoundingVolume = command._debugShowBoundingVolume;
         result._debugOverlappingFrustums = command._debugOverlappingFrustums;
+        result._castShadows = command._castShadows;
+        result._receiveShadows = command._receiveShadows;
         
         result.dirty = true;
         result.lastDirtyTime = 0;
