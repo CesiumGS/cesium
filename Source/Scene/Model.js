@@ -1641,7 +1641,9 @@ define([
                 for (var attributeSemantic in primitive.attributes) {
                     if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
                         var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
-                        if (!defined(quantizedUniforms[decodeUniformVarName])) {
+                        var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                        var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                        if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
                             var accessorId = primitive.attributes[attributeSemantic];
                             var quantizedAttributes = getQuantizedAttributes(model, accessorId);
                             if (defined(quantizedAttributes)) {
@@ -1660,8 +1662,7 @@ define([
                                 var decode = '';
                                 if (size === 5) {
                                     // separate scale and translate since glsl doesn't have mat5
-                                    var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
-                                    var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+
                                     shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
                                     shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
                                     decode = '\n' +
@@ -2738,7 +2739,7 @@ define([
         var accessors = gltf.accessors;
         var programId = getProgramForPrimitive(model, primitive);
         var quantizedUniforms = model._quantizedUniforms[programId];
-        var setUniforms = [];
+        var setUniforms = {};
         var uniformMap = {};
 
         for (var attribute in primitive.attributes) {
@@ -2756,11 +2757,11 @@ define([
                         switch (a.type) {
                             case 'VEC2':
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
-                                setUniforms.push(uniformVariable);
+                                setUniforms[uniformVariable] = true;
                                 break;
                             case 'VEC3':
                                 uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
-                                setUniforms.push(uniformVariable);
+                                setUniforms[uniformVariable] = true;
                                 break;
                             case 'VEC4':
                                 // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
@@ -2768,8 +2769,8 @@ define([
                                 var uniformVariableTranslate = uniformVariable + '_translate';
                                 uniformMap[uniformVariableScale] = getMat4UniformFunction(scaleFromMatrix5Array(decodeMatrix), model).func;
                                 uniformMap[uniformVariableTranslate] = getVec4UniformFunction(translateFromMatrix5Array(decodeMatrix), model).func;
-                                setUniforms.push(uniformVariableScale);
-                                setUniforms.push(uniformVariableTranslate);
+                                setUniforms[uniformVariableScale] = true;
+                                setUniforms[uniformVariableTranslate] = true;
                                 break;
                         }
                     }
@@ -2780,7 +2781,7 @@ define([
         // If there are any unset quantized uniforms in this program, they should be set to the identity
         for (var quantizedUniform in quantizedUniforms) {
             if (quantizedUniforms.hasOwnProperty(quantizedUniform)) {
-                if (setUniforms.indexOf(quantizedUniform) < 0) {
+                if (!setUniforms[quantizedUniform]) {
                     var properties = quantizedUniforms[quantizedUniform];
                     if (defined(properties.mat)) {
                         if (properties.mat === 3) {
@@ -2791,7 +2792,7 @@ define([
                     }
                     if (defined(properties.vec)) {
                         if (properties.vec === 4) {
-                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 1], model).func;
+                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 0], model).func;
                         }
                     }
                 }
