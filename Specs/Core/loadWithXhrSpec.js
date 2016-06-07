@@ -133,27 +133,6 @@ defineSuite([
             });
         });
 
-        it('add string with addWithCredentials', function() {
-            loadWithXhr.addWithCredentials('cesiumjs.org');
-            var a = loadWithXhr._withCredentialsRegexes;
-            expect(a.length).toEqual(1);
-            expect(a[0] instanceof RegExp).toEqual(true);
-            expect(a[0].source).toEqual('cesiumjs.org');
-
-            loadWithXhr._withCredentialsRegexes = [];
-        });
-
-        it('add regex with addWithCredentials', function() {
-            loadWithXhr.addWithCredentials(/cesiumjs.org/i);
-            var a = loadWithXhr._withCredentialsRegexes;
-            expect(a.length).toEqual(1);
-            expect(a[0] instanceof RegExp).toEqual(true);
-            expect(a[0].source).toEqual('cesiumjs.org');
-            expect(a[0].ignoreCase).toEqual(true);
-
-            loadWithXhr._withCredentialsRegexes = [];
-        });
-
         xit('can support 2xx HTTP status (other than 200)', function(){
             return loadWithXhr({
                 method: 'POST',

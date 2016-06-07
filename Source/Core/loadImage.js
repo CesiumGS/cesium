@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../ThirdParty/when',
+        './CredentialsRegistry',
         './defaultValue',
         './defined',
         './DeveloperError',
         './isCrossOriginUrl'
     ], function(
         when,
+        CredentialsRegistry,
         defaultValue,
         defined,
         DeveloperError,
@@ -84,7 +86,11 @@ define([
         };
 
         if (crossOrigin) {
-            image.crossOrigin = '';
+            if (CredentialsRegistry.isTrusted(url)) {
+                image.crossOrigin = 'use-credentials';
+            } else {
+                image.crossOrigin = '';
+            }
         }
 
         image.src = url;
