@@ -27,7 +27,7 @@ define([
 
     function TileBoundingSphere(center, radius) {
         this._boundingSphere = new BoundingSphere(center, radius);
-    };
+    }
 
     defineProperties(TileBoundingSphere.prototype, {
         /**
