@@ -1487,7 +1487,10 @@ define([
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows) {
+        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+            // If the command receives shadows, execute the derived shadows command.
+            // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
+            // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
@@ -1895,6 +1898,9 @@ define([
                 var numberOfCommands = pass.commandList.length;
                 for (var k = 0; k < numberOfCommands; ++k) {
                     var command = pass.commandList[k];
+                    // Set the correct pass before rendering into the shadow map because some shaders
+                    // conditionally render based on whether the pass is translucent or opaque.
+                    uniformState.updatePass(command.pass);
                     executeCommand(command.derivedCommands.shadows.castCommands[i], scene, context, pass.passState);
                 }
             }

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="CZML Wall">
+    <meta name="description" content="CZML Circles and Ellipses">
     <meta name="cesium-sandcastle-labels" content="CZML">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -30,34 +30,64 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var czml = [{
     "id" : "document",
-    "name" : "CZML Wall",
+    "name" : "box",
     "version" : "1.0"
 }, {
-    "id" : "wall",
-    "wall" : {
-        "positions" : {
-            "cartographicDegrees" : [
-                -115.0, 50.0, 1500000,
-                -112.5, 50.0, 500000,
-                -110.0, 50.0,1500000,
-                -107.5, 50.0,500000,
-                -105.0, 50.0,1500000,
-                -102.5, 50.0,500000,
-                -100.0, 50.0,1500000,
-                -97.5, 50.0,500000,
-                -95.0, 50.0,1500000,
-                -92.5, 50.0,500000,
-                -90.0, 50.0, 1500000
-            ]
+    "id" : "shape1",
+    "name" : "Blue box",
+    "position" : {
+        "cartographicDegrees" : [-114.0, 40.0, 300000.0]
+    },
+    "box" : {
+        "dimensions" : {
+            "cartesian": [400000.0, 300000.0, 500000.0]
         },
         "material" : {
             "solidColor" : {
                 "color" : {
-                    "rgba" : [255, 0, 0, 150]
+                    "rgba" : [0, 0, 255, 255]
                 }
             }
         }
     }
+}, {
+    "id" : "shape2",
+    "name" : "Red box with black outline",
+    "position" : {
+        "cartographicDegrees" : [-107.0, 40.0, 300000.0]
+    },
+    "box" : {
+        "dimensions" : {
+            "cartesian": [400000.0, 300000.0, 500000.0]
+        },
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [255, 0, 0, 128]
+                }
+            }
+        },
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [0, 0, 0, 255]
+        }
+    }    
+}, {
+    "id" : "shape3",
+    "name" : "Yellow box outline",
+    "position" : {
+        "cartographicDegrees" : [-100.0, 40.0, 300000.0]
+    },
+    "box" : {
+        "dimensions" : {
+            "cartesian": [400000.0, 300000.0, 500000.0]
+        },
+        "fill" : false,
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [255, 255, 0, 255]
+        }
+    } 
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer');
@@ -65,7 +95,7 @@ var dataSource = Cesium.CzmlDataSource.load(czml);
 viewer.dataSources.add(dataSource);
 viewer.zoomTo(dataSource);
 
-    //Sandcastle_End
+  //Sandcastle_End
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== "undefined") {
