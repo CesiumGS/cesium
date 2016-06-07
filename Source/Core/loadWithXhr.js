@@ -43,7 +43,7 @@ define([
      * }).otherwise(function(error) {
      *     // an error occurred
      * });
-     * 
+     *
      * @see loadArrayBuffer
      * @see loadBlob
      * @see loadJson
@@ -122,6 +122,20 @@ define([
         }
     }
 
+    loadWithXhr._withCredentialsRegexes = [];
+    loadWithXhr.addWithCredentials = function(re) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(re)) {
+            throw new DeveloperError('re is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!(re instanceof RegExp)) {
+            re = new RegExp(re);
+        }
+        loadWithXhr._withCredentialsRegexes.push(re);
+    };
+
     // This is broken out into a separate function so that it can be mocked for testing purposes.
     loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
@@ -131,6 +145,15 @@ define([
         }
 
         var xhr = new XMLHttpRequest();
+
+        var withCredentialsRegexes = loadWithXhr._withCredentialsRegexes;
+        var withCredentialsLength = withCredentialsRegexes.length;
+        for (var i = 0; i < withCredentialsLength; ++i) {
+            if (url.search(withCredentialsRegexes[i])) {
+                xhr.withCredentials = true;
+                break;
+            }
+        }
 
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
