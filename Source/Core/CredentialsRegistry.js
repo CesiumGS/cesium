@@ -108,6 +108,8 @@ define([
                 authority += ':80';
             } else if (scheme === 'https') {
                 authority += ':443';
+            } else {
+                return false;
             }
 
             if (defined(_credentials[authority])) {
