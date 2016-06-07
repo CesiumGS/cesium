@@ -149,7 +149,7 @@ define([
         var withCredentialsRegexes = loadWithXhr._withCredentialsRegexes;
         var withCredentialsLength = withCredentialsRegexes.length;
         for (var i = 0; i < withCredentialsLength; ++i) {
-            if (url.search(withCredentialsRegexes[i])) {
+            if (url.search(withCredentialsRegexes[i]) !== -1) {
                 xhr.withCredentials = true;
                 break;
             }
