@@ -659,7 +659,7 @@ define([
       */
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (fovY <= 0.0 || fovY > Math.PI) {
+        if (fovY < 0.0 || fovY >= Math.PI) {
             throw new DeveloperError('fovY must be in [0, PI).');
         }
         if (aspectRatio <= 0.0) {
