@@ -85,6 +85,46 @@ var simpleCity = viewer.entities.add({
     }
 });
 
+var boxEntity = viewer.entities.add({
+    name : 'Box',
+    height : 10.0,
+    box : {
+        dimensions : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : Cesium.Color.RED,
+        shadows : true
+    }
+});
+
+var checkerMaterial = new Cesium.CheckerboardMaterialProperty({
+    evenColor : Cesium.Color.RED.withAlpha(0.5),
+    oddColor : Cesium.Color.RED.withAlpha(0.0),
+    repeat : new Cesium.Cartesian2(5.0, 10.0)
+});
+
+var checkerEntity = viewer.entities.add({
+    name : 'Checkered Box',
+    height : 10.0,
+    box : {
+        dimensions : new Cesium.Cartesian3(10.0, 10.0, 10.0),
+        material : checkerMaterial,
+        outline : true,
+        outlineColor : Cesium.Color.RED,
+        shadows : true
+    }
+});
+
+var sphereEntity = viewer.entities.add({
+    name : 'Sphere',
+    height : 20.0,
+    ellipsoid : {
+        radii : new Cesium.Cartesian3(15.0, 15.0, 15.0),
+        material : Cesium.Color.BLUE.withAlpha(0.5),
+        slicePartitions : 24,
+        stackPartitions : 36,
+        shadows : true
+    }
+});
+
 var locations = {
     Exton : {
         longitude : -1.31968,
@@ -194,7 +234,9 @@ var entityShadows = true;
 Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
     entityShadows = !entityShadows;
     for (i = 0; i < entitiesLength; ++i) {
-        entities[i].model.shadows = entityShadows;
+        var entity = entities[i];
+        var visual = entity.model || entity.box || entity.ellipsoid;
+        visual.shadows = entityShadows;
     }
 });
 
