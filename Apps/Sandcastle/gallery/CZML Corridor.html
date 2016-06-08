@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="CZML Spheres and Ellipsoids">
+    <meta name="description" content="CZML Polyline">
     <meta name="cesium-sandcastle-labels" content="CZML">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -30,67 +30,80 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var czml = [{
     "id" : "document",
-    "name" : "CZML Geometries: Spheres and Ellipsoids",
+    "name" : "CZML Geometries: Polyline",
     "version" : "1.0"
 }, {
-    "id" : "blueEllipsoid",
-    "name" : "blue ellipsoid",
-    "position" : {
-        "cartographicDegrees" : [-114.0, 40.0, 300000.0]
-    },
-    "ellipsoid" : {
-        "radii" : {
-            "cartesian" : [200000.0, 200000.0, 300000.0]
+    "id" : "redCorridor",
+    "name" : "Red corridor on surface with rounded corners and outline",
+    "corridor" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -100.0, 40.0, 0,
+                -105.0, 40.0, 0,
+                -105.0, 35.0, 0
+            ]
         },
-        "fill" : true,
+        "width" : 200000.0,
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [255, 0, 0, 127]
+                }
+            }
+        },
+        "outline" : true,
+        "outlineColor" : {
+            "rgba" : [255, 0, 0, 255]
+        }
+    }
+}, {
+    "id" : "greenCorridor",
+    "name" : "Green corridor at height with mitered corners",
+    "corridor" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -90.0, 40.0, 0,
+                -95.0, 40.0, 0,
+                -95.0, 35.0, 0
+            ]
+        },
+        "height" : 100000.0,
+        "cornerType" : "MITERED",
+        "width" : 200000.0,
+        "material" : {
+            "solidColor" : {
+                "color" : {
+                    "rgba" : [0, 255, 0, 255]
+                }
+            }
+        }
+    }
+}, {
+    "id" : "blueCorridor",
+    "name" : "Blue extruded corridor with beveled corners and outline",
+    "corridor" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                  -80.0, 40.0, 0,
+                  -85.0, 40.0, 0,
+                  -85.0, 35.0, 0
+            ]
+        },
+        "height" : 200000.0,
+        "extrudedHeight" : 100000.0,
+        "width" : 200000.0,
+        "cornerType": "BEVELED",
         "material" : {
             "solidColor" : {
                 "color" : {
                     "rgba" : [0, 0, 255, 255]
                 }
             }
-        }
-    }
-}, {
-    "id" : "redSphere",
-    "name" : "Red sphere with black outline",
-    "position" : {
-        "cartographicDegrees" : [-107.0, 40.0, 300000.0]
-    },
-    "ellipsoid" : {
-        "radii" : {
-            "cartesian" : [300000.0, 300000.0, 300000.0]
-        },
-        "fill" : true,
-        "material" : {
-            "solidColor" : {
-                "color" : {
-                    "rgba" : [255, 0, 0, 100]
-                }
-            }
         },
         "outline" : true,
         "outlineColor" : {
-            "rgbaf" : [0, 0, 0, 1]
+            "rgba" : [0, 0, 0, 255]
         }
-    }
-}, {
-    "id" : "yellowEllipsoid",
-    "name" : "ellipsoid with yellow outline",
-    "position" : {
-        "cartographicDegrees" : [-100.0, 40.0, 300000.0]
-    },
-    "ellipsoid" : {
-        "radii" : {
-            "cartesian" : [200000.0, 200000.0, 300000.0]
-        },
-        "fill" : false,
-        "outline" : true,
-        "outlineColor" : {
-            "rgba" : [255, 255, 0, 255]
-        },
-        "slicePartitions" : 24,
-        "stackPartitions" : 36
     }
 }];
 
