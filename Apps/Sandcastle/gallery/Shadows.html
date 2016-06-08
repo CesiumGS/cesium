@@ -190,6 +190,14 @@ Sandcastle.addToolbarButton('Toggle Shadows', function() {
     viewer.shadows = !viewer.shadows;
 });
 
+var entityShadows = true;
+Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
+    entityShadows = !entityShadows;
+    for (i = 0; i < entitiesLength; ++i) {
+        entities[i].model.shadows = entityShadows;
+    }
+});
+
 Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
     viewer.terrainShadows = !viewer.terrainShadows;
 });
@@ -217,35 +225,6 @@ Sandcastle.addToolbarMenu([{
     text : 'Size : 256',
     onselect : function() {
         shadowMap.size = 256;
-    }
-}]);
-
-function setShadows(castShadows, receiveShadows) {
-    for (i = 0; i < entitiesLength; ++i) {
-        entities[i].model.castShadows = castShadows;
-        entities[i].model.receiveShadows = receiveShadows;
-    }
-}
-
-Sandcastle.addToolbarMenu([{
-    text : 'Entity Shadows',
-    onselect : function() {
-        setShadows(true, true);
-    }
-}, {
-    text : 'Cast Only',
-    onselect : function() {
-        setShadows(true, false);
-    }
-}, {
-    text : 'Receive Only',
-    onselect : function() {
-        setShadows(false, true);
-    }
-}, {
-    text : 'Off',
-    onselect : function() {
-        setShadows(false, false);
     }
 }]);
 

@@ -27,7 +27,8 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 4
+            outlineWidth : 4,
+            shadows : false
         };
 
         var ellipsoid = new EllipsoidGraphics(options);
@@ -40,6 +41,7 @@ defineSuite([
         expect(ellipsoid.outline).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipsoid.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(ellipsoid.shadows).toBeInstanceOf(ConstantProperty);
 
         expect(ellipsoid.material.color.getValue()).toEqual(options.material);
         expect(ellipsoid.show.getValue()).toEqual(options.show);
@@ -50,6 +52,7 @@ defineSuite([
         expect(ellipsoid.outline.getValue()).toEqual(options.outline);
         expect(ellipsoid.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipsoid.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(ellipsoid.shadows.getValue()).toEqual(options.shadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -64,6 +67,7 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty(true);
 
         var target = new EllipsoidGraphics();
         target.merge(source);
@@ -78,6 +82,7 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
+        expect(target.shadows).toBe(source.shadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -93,6 +98,7 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
+        var shadows = new ConstantProperty();
 
         var target = new EllipsoidGraphics();
         target.material = material;
@@ -101,6 +107,8 @@ defineSuite([
         target.stackPartitions = stackPartitions;
         target.slicePartitions = slicePartitions;
         target.subdivisions = subdivisions;
+        target.shadows = shadows;
+
         source.fill = fill;
         source.outline = outline;
         source.outlineColor = outlineColor;
@@ -118,6 +126,7 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
+        expect(target.shadows).toBe(shadows);
     });
 
     it('clone works', function() {
@@ -132,6 +141,7 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -144,6 +154,7 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.shadows).toBe(source.shadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -165,5 +176,6 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
+        testDefinitionChanged(property, 'shadows', true, false);
     });
 });

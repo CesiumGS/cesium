@@ -30,7 +30,8 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 9
+            outlineWidth : 9,
+            shadows : false
         };
 
         var ellipse = new EllipseGraphics(options);
@@ -48,6 +49,7 @@ defineSuite([
         expect(ellipse.outline).toBeInstanceOf(ConstantProperty);
         expect(ellipse.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(ellipse.shadows).toBeInstanceOf(ConstantProperty);
 
         expect(ellipse.material.color.getValue()).toEqual(options.material);
         expect(ellipse.show.getValue()).toEqual(options.show);
@@ -63,6 +65,7 @@ defineSuite([
         expect(ellipse.outline.getValue()).toEqual(options.outline);
         expect(ellipse.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(ellipse.shadows.getValue()).toEqual(options.shadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -81,6 +84,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
+        source.shadows = new ConstantProperty(true);
 
         var target = new EllipseGraphics();
         target.merge(source);
@@ -99,6 +103,7 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
+        expect(target.shadows).toBe(source.shadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -118,6 +123,7 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var numberOfVerticalLines = new ConstantProperty();
+        var shadows = new ConstantProperty();
 
         var target = new EllipseGraphics();
         target.material = material;
@@ -134,6 +140,7 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.numberOfVerticalLines = numberOfVerticalLines;
+        target.shadows = shadows;
 
         target.merge(source);
 
@@ -151,6 +158,7 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.numberOfVerticalLines).toBe(numberOfVerticalLines);
+        expect(target.shadows).toBe(shadows);
     });
 
     it('clone works', function() {
@@ -169,6 +177,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.numberOfVerticalLines = new ConstantProperty();
+        source.shadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -185,6 +194,7 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
+        expect(result.shadows).toBe(source.shadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -210,5 +220,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'numberOfVerticalLines', 16, 32);
+        testDefinitionChanged(property, 'shadows', true, false);
     });
 });

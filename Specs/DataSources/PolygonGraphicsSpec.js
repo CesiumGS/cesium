@@ -32,7 +32,8 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 7,
             closeTop : true,
-            closeBottom : true
+            closeBottom : true,
+            shadows : false
         };
 
         var polygon = new PolygonGraphics(options);
@@ -50,6 +51,7 @@ defineSuite([
         expect(polygon.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(polygon.closeTop).toBeInstanceOf(ConstantProperty);
         expect(polygon.closeBottom).toBeInstanceOf(ConstantProperty);
+        expect(polygon.shadows).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -65,6 +67,7 @@ defineSuite([
         expect(polygon.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(polygon.closeTop.getValue()).toEqual(options.closeTop);
         expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
+        expect(polygon.shadows.getValue()).toEqual(options.shadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -83,6 +86,7 @@ defineSuite([
         source.perPositionHeight = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.shadows = new ConstantProperty(true);
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -101,6 +105,7 @@ defineSuite([
         expect(target.perPositionHeight).toBe(source.perPositionHeight);
         expect(target.closeTop).toBe(source.closeTop);
         expect(target.closeBottom).toBe(source.closeBottom);
+        expect(target.shadows).toBe(source.shadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -120,6 +125,7 @@ defineSuite([
         var perPositionHeight = new ConstantProperty();
         var closeTop = new ConstantProperty();
         var closeBottom = new ConstantProperty();
+        var shadows = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -136,6 +142,7 @@ defineSuite([
         target.perPositionHeight = perPositionHeight;
         target.closeTop = closeTop;
         target.closeBottom = closeBottom;
+        target.shadows = shadows;
 
         target.merge(source);
 
@@ -153,6 +160,7 @@ defineSuite([
         expect(target.perPositionHeight).toBe(perPositionHeight);
         expect(target.closeTop).toBe(closeTop);
         expect(target.closeBottom).toBe(closeBottom);
+        expect(target.shadows).toBe(shadows);
     });
 
     it('clone works', function() {
@@ -171,6 +179,7 @@ defineSuite([
         source.perPositionHeight = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
+        source.shadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -187,6 +196,7 @@ defineSuite([
         expect(result.perPositionHeight).toBe(source.perPositionHeight);
         expect(result.closeTop).toBe(source.closeTop);
         expect(result.closeBottom).toBe(source.closeBottom);
+        expect(result.shadows).toBe(source.shadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -212,5 +222,6 @@ defineSuite([
         testDefinitionChanged(property, 'perPositionHeight', false, true);
         testDefinitionChanged(property, 'closeTop', true, false);
         testDefinitionChanged(property, 'closeBottom', true, false);
+        testDefinitionChanged(property, 'shadows', true, false);
     });
 });

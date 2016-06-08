@@ -54,6 +54,7 @@ define([
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
+    var defaultShadows = new ConstantProperty(false);
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -91,6 +92,7 @@ define([
         this._geometryChanged = new Event();
         this._showProperty = undefined;
         this._materialProperty = undefined;
+        this._shadowsProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polyline', entity.polyline, undefined);
     }
@@ -194,6 +196,19 @@ define([
             value : undefined
         },
         /**
+         * Gets the boolean property specifying whether the geometry
+         * casts and receives shadows from each light source.
+         * @memberof PolylineGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -202,6 +217,7 @@ define([
          * @type {Boolean}
          * @readonly
          */
+        
         isDynamic : {
             get : function() {
                 return this._dynamic;
@@ -366,6 +382,7 @@ define([
         var isColorMaterial = material instanceof ColorMaterialProperty;
         this._materialProperty = material;
         this._showProperty = defaultValue(show, defaultShow);
+        this._shadowsProperty = defaultValue(polyline.shadows, defaultShadows);
         this._fillEnabled = true;
 
         var width = polyline.width;

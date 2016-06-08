@@ -9,6 +9,7 @@ Change Log
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
 * Added CZML support for Box, Corridor and Cylinder
+* Added `shadows` property to the entity API for models, boxes, corridors, cylinders, ellipses, ellipsoids, polygons, polylines, polyline volumes, rectangles, and walls. [#4005](https://github.com/AnalyticalGraphicsInc/cesium/pull/4005)
 
 ### 1.22 - 2016-06-01
 

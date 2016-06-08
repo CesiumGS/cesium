@@ -32,6 +32,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
+     * @param {Property} [options.shadows=false] A boolean Property specifying whether the polyline casts and receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
@@ -50,6 +51,8 @@ define([
         this._widthSubscription = undefined;
         this._width = undefined;
         this._widthSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -116,7 +119,16 @@ define([
          * @type {Property}
          * @default Cesium.Math.RADIANS_PER_DEGREE
          */
-        granularity : createPropertyDescriptor('granularity')
+        granularity : createPropertyDescriptor('granularity'),
+        
+        /**
+         * Get or sets the boolean Property specifying whether the polyline
+         * casts and receives shadows from each light source.
+         * @memberof PolylineGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        shadows : createPropertyDescriptor('shadows')
     });
 
     /**
@@ -135,6 +147,7 @@ define([
         result.width = this.width;
         result.followSurface = this.followSurface;
         result.granularity = this.granularity;
+        result.shadows = this.shadows;
         return result;
     };
 
@@ -157,6 +170,7 @@ define([
         this.width = defaultValue(this.width, source.width);
         this.followSurface = defaultValue(this.followSurface, source.followSurface);
         this.granularity = defaultValue(this.granularity, source.granularity);
+        this.shadows = defaultValue(this.shadows, source.shadows);
     };
 
     return PolylineGraphics;

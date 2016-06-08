@@ -34,6 +34,7 @@ define([
      * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
+     * @param {Property} [options.shadows=false] A boolean Property specifying whether the ellipsoid casts and receives shadows from each light source.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
@@ -58,6 +59,7 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._shadows = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -154,7 +156,16 @@ define([
          * @type {Property}
          * @default 128
          */
-        subdivisions : createPropertyDescriptor('subdivisions')
+        subdivisions : createPropertyDescriptor('subdivisions'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the ellipsoid
+         * casts and receives shadows from each light source.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        shadows : createPropertyDescriptor('shadows')
     });
 
     /**
@@ -177,6 +188,7 @@ define([
         result.stackPartitions = this.stackPartitions;
         result.slicePartitions = this.slicePartitions;
         result.subdivisions = this.subdivisions;
+        result.shadows = this.shadows;
 
         return result;
     };
@@ -204,6 +216,7 @@ define([
         this.stackPartitions = defaultValue(this.stackPartitions, source.stackPartitions);
         this.slicePartitions = defaultValue(this.slicePartitions, source.slicePartitions);
         this.subdivisions = defaultValue(this.subdivisions, source.subdivisions);
+        this.shadows = defaultValue(this.shadows, source.shadows);
     };
 
     return EllipsoidGraphics;

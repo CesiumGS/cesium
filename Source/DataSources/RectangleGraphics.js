@@ -40,6 +40,7 @@ define([
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the rectangle clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
+     * @param {Property} [options.shadows=false] A boolean Property specifying whether the rectangle casts and receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
@@ -73,6 +74,8 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -201,7 +204,16 @@ define([
          * @type {Property}
          * @default true
          */
-        closeBottom : createPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the rectangle
+         * casts and receives shadows from each light source.
+         * @memberof RectangleGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        shadows : createPropertyDescriptor('shadows')
     });
 
     /**
@@ -228,6 +240,7 @@ define([
         result.outlineWidth = this.outlineWidth;
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
+        result.shadows = this.shadows;
         return result;
     };
 
@@ -258,6 +271,7 @@ define([
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
+        this.shadows = defaultValue(this.shadows, source.shadows);
     };
 
     return RectangleGraphics;

@@ -50,6 +50,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(false);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -93,6 +94,7 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polylineVolume', entity.polylineVolume, undefined);
     }
@@ -218,6 +220,19 @@ define([
         outlineWidth : {
             get : function() {
                 return this._outlineWidth;
+            }
+        },
+        /**
+         * Gets the boolean property specifying whether the geometry
+         * casts shadows from each light source.
+         * @memberof PolylineVolumeGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
             }
         },
         /**
@@ -437,6 +452,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(polylineVolume.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(polylineVolume.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(polylineVolume.shadows, defaultShadows);
 
         var granularity = polylineVolume.granularity;
         var outlineWidth = polylineVolume.outlineWidth;
@@ -531,6 +547,8 @@ define([
         options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
         options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
         if (!defined(polylineVolume.fill) || polylineVolume.fill.getValue(time)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
@@ -548,7 +566,9 @@ define([
                     geometry : new PolylineVolumeGeometry(options)
                 }),
                 appearance : appearance,
-                asynchronous : false
+                asynchronous : false,
+                castShadows : shadows,
+                receiveShadows : shadows
             }));
         }
 
@@ -574,7 +594,9 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                castShadows : shadows,
+                receiveShadows : shadows
             }));
         }
     };
