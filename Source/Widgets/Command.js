@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A Command is a function with an extra <code>canExecute</code> observable property to determine

@@ -29,7 +29,7 @@ define([
         OrientedBoundingBox,
         TerrainEncoding,
         createTaskProcessorWorker) {
-    "use strict";
+    'use strict';
 
     var maxShort = 32767;
     var halfMaxShort = (maxShort / 2) | 0;
@@ -80,6 +80,7 @@ define([
 
         var encoding = TerrainEncoding.clone(parameters.encoding);
         var hasVertexNormals = encoding.hasVertexNormals;
+        var exaggeration = parameters.exaggeration;
 
         var vertexCount = 0;
         var quantizedVertexCount = parameters.vertexCountWithoutSkirts;
@@ -98,7 +99,7 @@ define([
         var i, n;
         for (i = 0, n = 0; i < quantizedVertexCount; ++i, n += 2) {
             var texCoords = encoding.decodeTextureCoordinates(parentVertices, i, decodeTexCoordsScratch);
-            height  = encoding.decodeHeight(parentVertices, i);
+            height  = encoding.decodeHeight(parentVertices, i) / exaggeration;
 
             parentUBuffer[i] = CesiumMath.clamp((texCoords.x * maxShort) | 0, 0, maxShort);
             parentVBuffer[i] = CesiumMath.clamp((texCoords.y * maxShort) | 0, 0, maxShort);

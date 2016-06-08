@@ -13,7 +13,7 @@ define([
         JulianDate,
         ModelAnimationLoop,
         ModelAnimationState) {
-    "use strict";
+    'use strict';
 
     /**
      * An active glTF animation.  A glTF asset can contain animations.  An active animation

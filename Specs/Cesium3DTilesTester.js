@@ -2,22 +2,20 @@
 define([
         'Core/Color',
         'Core/defaultValue',
-        'Scene/Cesium3DTileContentProviderFactory',
+        'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
         'Scene/TileBoundingSphere',
-        'Scene/Cesium3DTilesetState',
         'Specs/pollToPromise'
     ], function(
         Color,
         defaultValue,
-        Cesium3DTileContentProviderFactory,
+        Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileset,
         TileBoundingSphere,
-        Cesium3DTilesetState,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     function Cesium3DTilesTester() {
     }
@@ -75,10 +73,7 @@ define([
             url : url
         }));
 
-        return pollToPromise(function() {
-            scene.renderForSpecs();
-            return (tileset._state === Cesium3DTilesetState.READY);
-        }).then(function() {
+        return tileset.readyPromise.then(function() {
             return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                 return tileset;
             });
@@ -91,7 +86,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         expect(function() {
             content.initialize(arrayBuffer);
             content.update(tileset, scene.frameState);
@@ -109,7 +104,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = '';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         content.initialize(arrayBuffer);
         content.update(tileset, scene.frameState);
 
@@ -128,7 +123,7 @@ define([
             contentBoundingVolume : new TileBoundingSphere()
         };
         var url = 'invalid';
-        var content = Cesium3DTileContentProviderFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
         content.request();
 
         return content.readyPromise.then(function(content) {

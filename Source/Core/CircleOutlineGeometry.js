@@ -13,7 +13,7 @@ define([
         DeveloperError,
         EllipseOutlineGeometry,
         Ellipsoid) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of the outline of a circle on the ellipsoid.
@@ -51,9 +51,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
-        }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -142,7 +139,7 @@ define([
      * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleOutlineGeometry.createGeometry = function(circleGeometry) {
         return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);

@@ -17,7 +17,7 @@ define([
         Event,
         JulianDate,
         createRawPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Represents CZML document-level clock settings.

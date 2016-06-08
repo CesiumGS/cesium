@@ -3,7 +3,7 @@ defineSuite([
         'Core/Event'
     ], function(
         Event) {
-    "use strict";
+    'use strict';
 
     var event;
     var spyListener;

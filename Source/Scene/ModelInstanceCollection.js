@@ -39,7 +39,7 @@ define([
         when,
         Model,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     var LoadState = {
         NEEDS_LOAD : 0,
@@ -833,13 +833,12 @@ define([
         updateWireframe(this);
         updateShowBoundingVolume(this);
 
-        var commandList = frameState.commandList;
         var passes = frameState.passes;
         var commands = passes.render ? this._drawCommands : this._pickCommands;
         var commandsLength = commands.length;
 
         for (var i = 0; i < commandsLength; ++i) {
-            commandList.push(commands[i]);
+            frameState.addCommand(commands[i]);
         }
     };
 

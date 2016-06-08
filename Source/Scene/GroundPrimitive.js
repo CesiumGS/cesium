@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
@@ -36,6 +37,7 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartographic,
+        Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -65,7 +67,7 @@ define([
         SceneMode,
         StencilFunction,
         StencilOperation) {
-    "use strict";
+    'use strict';
 
     /**
      * A ground primitive represents geometry draped over the terrain in the {@link Scene}.  The geometry must be from a single {@link GeometryInstance}.
@@ -91,7 +93,6 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {GeometryInstance} [options.geometryInstance] A single geometry instance to render. This option is deprecated. Please use options.geometryInstances instead.
      * @param {Array|GeometryInstance} [options.geometryInstances] The geometry instances to render.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
@@ -101,6 +102,8 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
+     *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
      *
      * @example
      * // Example 1: Create primitive with a single instance
@@ -150,25 +153,6 @@ define([
     function GroundPrimitive(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (defined(options.geometryInstance)) {
-            deprecationWarning('GroundPrimitive.geometryInstance', 'GroundPrimitive.geometryInstance is deprecated in version 1.18 and will be removed in version 1.20. Please use GroundPrimitive.geometryInstances.');
-        }
-
-        /**
-         * The geometry instance rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
-         * is <code>true</code> when the primitive is constructed.
-         * <p>
-         * Changing this property after the primitive is rendered has no effect.
-         * </p>
-         *
-         * @type {GeometryInstance}
-         *
-         * @default undefined
-         *
-         * @deprecated
-         */
-        this.geometryInstance = options.geometryInstance;
         /**
          * The geometry instance rendered with this primitive.  This may
          * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
@@ -208,6 +192,20 @@ define([
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the shadow volume for each geometry in the primitive. Must be <code>true</code> on
+         * creation for the volumes to be created before the geometry is released or releaseGeometryInstances
+         * must be <code>false</code>
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowShadowVolume = defaultValue(options.debugShowShadowVolume, false);
+
         this._sp = undefined;
         this._spPick = undefined;
 
@@ -225,6 +223,7 @@ define([
         this._readyPromise = when.defer();
 
         this._primitive = undefined;
+        this._debugPrimitive = undefined;
 
         var appearance = new PerInstanceColorAppearance({
             flat : true
@@ -392,11 +391,9 @@ define([
 
     GroundPrimitive._maxHeight = undefined;
     GroundPrimitive._minHeight = undefined;
-    GroundPrimitive._minOBBHeight = undefined;
 
     GroundPrimitive._maxTerrainHeight = 9000.0;
     GroundPrimitive._minTerrainHeight = -100000.0;
-    GroundPrimitive._minOBBTerrainHeight = -11500.0;
 
     function computeMaximumHeight(granularity, ellipsoid) {
         var r = ellipsoid.maximumRadius;
@@ -560,7 +557,7 @@ define([
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
-            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight, ellipsoid);
+            var obb = OrientedBoundingBox.fromRectangle(rectangle, GroundPrimitive._maxHeight, GroundPrimitive._minHeight, ellipsoid);
             primitive._boundingVolumes.push(obb);
         } else {
             primitive._boundingVolumes.push(BoundingSphere.fromEncodedCartesianVertices(highPositions, lowPositions));
@@ -568,7 +565,7 @@ define([
 
         if (!frameState.scene3DOnly) {
             var projection = frameState.mapProjection;
-            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minOBBHeight);
+            var boundingVolume = BoundingSphere.fromRectangleWithHeights2D(rectangle, projection, GroundPrimitive._maxHeight, GroundPrimitive._minHeight);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             primitive._boundingVolumes2D.push(boundingVolume);
@@ -823,7 +820,7 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstance) && !defined(this.geometryInstances))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 
@@ -831,7 +828,6 @@ define([
             var exaggeration = frameState.terrainExaggeration;
             GroundPrimitive._maxHeight = GroundPrimitive._maxTerrainHeight * exaggeration;
             GroundPrimitive._minHeight = GroundPrimitive._minTerrainHeight * exaggeration;
-            GroundPrimitive._minOBBHeight = GroundPrimitive._minOBBTerrainHeight * exaggeration;
         }
 
         if (!defined(this._primitive)) {
@@ -841,53 +837,39 @@ define([
             var geometry;
             var instanceType;
 
-            if (defined(this.geometryInstance)) {
-                instance = this.geometryInstance;
+
+            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var length = instances.length;
+            var groundInstances = new Array(length);
+
+            var color;
+
+            for (var i = 0 ; i < length; ++i) {
+                instance = instances[i];
                 geometry = instance.geometry;
 
                 instanceType = geometry.constructor;
                 if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                    instance = new GeometryInstance({
+                    var attributes = instance.attributes;
+
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(attributes) || !defined(attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (!defined(color)) {
+                        color = attributes.color;
+                    }
+                    //>>includeEnd('debug');
+
+                    groundInstances[i] = new GeometryInstance({
                         geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                        attributes : instance.attributes,
+                        attributes : attributes,
                         id : instance.id,
                         pickPrimitive : this
                     });
-                }
-
-                primitiveOptions.geometryInstances = instance;
-            } else {
-                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
-                var length = instances.length;
-                var groundInstances = new Array(length);
-
-                var color;
-
-                for (var i = 0 ; i < length; ++i) {
-                    instance = instances[i];
-                    geometry = instance.geometry;
-
-                    instanceType = geometry.constructor;
-                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                        var attributes = instance.attributes;
-
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(attributes) || !defined(attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (!defined(color)) {
-                            color = attributes.color;
-                        }
-                        //>>includeEnd('debug');
-
-                        groundInstances[i] = new GeometryInstance({
-                            geometry : instanceType.createShadowVolume(geometry, computeMinimumHeight, computeMaximumHeight),
-                            attributes : attributes,
-                            id : instance.id,
-                            pickPrimitive : this
-                        });
-                    }
+                } else {
+                    throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                 }
 
                 primitiveOptions.geometryInstances = groundInstances;
@@ -915,7 +897,6 @@ define([
                 that._ready = true;
 
                 if (that.releaseGeometryInstances) {
-                    that.geometryInstance = undefined;
                     that.geometryInstances = undefined;
                 }
 
@@ -930,6 +911,50 @@ define([
 
         this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
         this._primitive.update(frameState);
+
+        if (this.debugShowShadowVolume && !defined(this._debugPrimitive) && defined(this.geometryInstances)) {
+            var debugInstances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var debugLength = debugInstances.length;
+            var debugVolumeInstances = new Array(debugLength);
+
+            for (var j = 0 ; j < debugLength; ++j) {
+                var debugInstance = debugInstances[j];
+                var debugGeometry = debugInstance.geometry;
+                var debugInstanceType = debugGeometry.constructor;
+                if (defined(debugInstanceType) && defined(debugInstanceType.createShadowVolume)) {
+                    var debugColorArray = debugInstance.attributes.color.value;
+                    var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
+                    Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
+                    debugVolumeInstances[j] = new GeometryInstance({
+                        geometry : debugInstanceType.createShadowVolume(debugGeometry, computeMinimumHeight, computeMaximumHeight),
+                        attributes : {
+                            color : ColorGeometryInstanceAttribute.fromColor(debugColor)
+                        },
+                        id : debugInstance.id,
+                        pickPrimitive : this
+                    });
+                }
+            }
+
+            this._debugPrimitive = new Primitive({
+                geometryInstances : debugVolumeInstances,
+                releaseGeometryInstances : true,
+                allowPicking : false,
+                asynchronous : false,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true
+                })
+            });
+        }
+
+        if (defined(this._debugPrimitive)) {
+            if (this.debugShowShadowVolume) {
+                this._debugPrimitive.update(frameState);
+            } else {
+                this._debugPrimitive.destroy();
+                this._debugPrimitive = undefined;
+            }
+        }
     };
 
     /**
@@ -989,6 +1014,7 @@ define([
      */
     GroundPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
+        this._debugPrimitive = this._debugPrimitive && this._debugPrimitive.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);

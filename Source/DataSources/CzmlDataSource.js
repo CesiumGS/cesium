@@ -6,6 +6,7 @@ define([
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/Color',
+        '../Core/CornerType',
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
@@ -38,12 +39,15 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './BillboardGraphics',
+        './BoxGraphics',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
         './CompositeProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
+        './CorridorGraphics',
+        './CylinderGraphics',
         './DataSource',
         './DataSourceClock',
         './EllipseGraphics',
@@ -57,6 +61,7 @@ define([
         './PathGraphics',
         './PointGraphics',
         './PolygonGraphics',
+        './PolylineArrowMaterialProperty',
         './PolylineGlowMaterialProperty',
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
@@ -79,6 +84,7 @@ define([
         ClockRange,
         ClockStep,
         Color,
+        CornerType,
         createGuid,
         defaultValue,
         defined,
@@ -111,12 +117,15 @@ define([
         Uri,
         when,
         BillboardGraphics,
+        BoxGraphics,
         ColorMaterialProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CorridorGraphics,
+        CylinderGraphics,
         DataSource,
         DataSourceClock,
         EllipseGraphics,
@@ -130,6 +139,7 @@ define([
         PathGraphics,
         PointGraphics,
         PolygonGraphics,
+        PolylineArrowMaterialProperty,
         PolylineGlowMaterialProperty,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
@@ -145,7 +155,7 @@ define([
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
         WallGraphics) {
-    "use strict";
+    'use strict';
 
     var currentId;
 
@@ -338,42 +348,44 @@ define([
     function unwrapInterval(type, czmlInterval, sourceUri) {
         /*jshint sub:true*/
         switch (type) {
-        case Boolean:
-            return defaultValue(czmlInterval['boolean'], czmlInterval);
-        case Cartesian2:
-            return czmlInterval.cartesian2;
-        case Cartesian3:
-            return unwrapCartesianInterval(czmlInterval);
-        case Color:
-            return unwrapColorInterval(czmlInterval);
-        case StripeOrientation:
-            return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
-        case HorizontalOrigin:
-            return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
-        case Image:
-            return unwrapUriInterval(czmlInterval, sourceUri);
-        case JulianDate:
-            return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
-        case LabelStyle:
-            return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
-        case Rotation:
-            return defaultValue(czmlInterval.number, czmlInterval);
-        case Number:
-            return defaultValue(czmlInterval.number, czmlInterval);
-        case String:
-            return defaultValue(czmlInterval.string, czmlInterval);
-        case Array:
-            return czmlInterval.array;
-        case Quaternion:
-            return unwrapQuaternionInterval(czmlInterval);
-        case Rectangle:
-            return unwrapRectangleInterval(czmlInterval);
-        case Uri:
-            return unwrapUriInterval(czmlInterval, sourceUri);
-        case VerticalOrigin:
-            return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
-        default:
-            throw new RuntimeError(type);
+            case Boolean:
+                return defaultValue(czmlInterval['boolean'], czmlInterval);
+            case Cartesian2:
+                return czmlInterval.cartesian2;
+            case Cartesian3:
+                return unwrapCartesianInterval(czmlInterval);
+            case Color:
+                return unwrapColorInterval(czmlInterval);
+            case StripeOrientation:
+                return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
+            case HorizontalOrigin:
+                return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+            case CornerType:
+                return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
+            case Image:
+                return unwrapUriInterval(czmlInterval, sourceUri);
+            case JulianDate:
+                return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
+            case LabelStyle:
+                return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+            case Rotation:
+                return defaultValue(czmlInterval.number, czmlInterval);
+            case Number:
+                return defaultValue(czmlInterval.number, czmlInterval);
+            case String:
+                return defaultValue(czmlInterval.string, czmlInterval);
+            case Array:
+                return czmlInterval.array;
+            case Quaternion:
+                return unwrapQuaternionInterval(czmlInterval);
+            case Rectangle:
+                return unwrapRectangleInterval(czmlInterval);
+            case Uri:
+                return unwrapUriInterval(czmlInterval, sourceUri);
+            case VerticalOrigin:
+                return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+            default:
+                throw new RuntimeError(type);
         }
     }
 
@@ -562,7 +574,6 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
-        return;
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri, entityCollection) {
@@ -804,7 +815,8 @@ define([
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri, entityCollection);
             processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
-            processPacketData(Number, existingMaterial, 'alpha', materialData.alpha, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
+            processPacketData(Boolean, existingMaterial, 'transparent', materialData.transparent, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.stripe)) {
             if (!(existingMaterial instanceof StripeMaterialProperty)) {
                 existingMaterial = new StripeMaterialProperty();
@@ -830,6 +842,12 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.polylineArrow)) {
+            if (!(existingMaterial instanceof PolylineArrowMaterialProperty)) {
+                existingMaterial = new PolylineArrowMaterialProperty();
+            }
+            materialData = packetData.polylineArrow;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, undefined, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1018,6 +1036,62 @@ define([
         processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
     }
 
+    function processBox(entity, packet, entityCollection, sourceUri) {
+        var boxData = packet.box;
+        if (!defined(boxData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = boxData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var box = entity.box;
+        if (!defined(box)) {
+            entity.box = box = new BoxGraphics();
+        }
+
+        processPacketData(Cartesian3, box, 'dimensions', boxData.dimensions, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'show', boxData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(box, 'material', boxData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'fill', boxData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, box, 'outline', boxData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, box, 'outlineColor', boxData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, box, 'outlineWidth', boxData.outlineWidth, interval, sourceUri, entityCollection);
+    }
+
+    function processCylinder(entity, packet, entityCollection, sourceUri) {
+        var cylinderData = packet.cylinder;
+        if (!defined(cylinderData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = cylinderData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var cylinder = entity.cylinder;
+        if (!defined(cylinder)) {
+            entity.cylinder = cylinder = new CylinderGraphics();
+        }
+
+        processPacketData(Number, cylinder, 'length', cylinderData.length, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'topRadius', cylinderData.topRadius, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'bottomRadius', cylinderData.bottomRadius, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'show', cylinderData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(cylinder, 'material', cylinderData.material, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'fill', cylinderData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, cylinder, 'outline', cylinderData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, cylinder, 'outlineColor', cylinderData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'outlineWidth', cylinderData.outlineWidth, interval, sourceUri, entityCollection);
+    }
+
     function processDocument(packet, dataSource) {
         var version = packet.version;
         if (defined(version)) {
@@ -1178,6 +1252,8 @@ define([
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
 
@@ -1320,6 +1396,8 @@ define([
         processPacketData(Color, polygon, 'outlineColor', polygonData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'outlineWidth', polygonData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
     }
 
@@ -1355,6 +1433,38 @@ define([
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'closeBottom', rectangleData.closeBottom, interval, sourceUri, entityCollection);
         processPacketData(Boolean, rectangle, 'closeTop', rectangleData.closeTop, interval, sourceUri, entityCollection);
+    }
+
+    function processCorridor(entity, packet, entityCollection, sourceUri) {
+        var corridorData = packet.corridor;
+        if (!defined(corridorData)) {
+            return;
+        }
+
+        var interval;
+        var intervalString = corridorData.interval;
+        if (defined(intervalString)) {
+            iso8601Scratch.iso8601 = intervalString;
+            interval = TimeInterval.fromIso8601(iso8601Scratch);
+        }
+
+        var corridor = entity.corridor;
+        if (!defined(corridor)) {
+            entity.corridor = corridor = new CorridorGraphics();
+        }
+
+        processPositions(corridor, 'positions', corridorData.positions, entityCollection);
+        processPacketData(Number, corridor, 'width', corridorData.width, interval, sourceUri, entityCollection);
+        processPacketData(CornerType, corridor, 'cornerType', corridorData.cornerType, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'height', corridorData.height, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'show', corridorData.show, interval, sourceUri, entityCollection);
+        processMaterialPacketData(corridor, 'material', corridorData.material, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'granularity', corridorData.granularity, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'fill', corridorData.fill, interval, sourceUri, entityCollection);
+        processPacketData(Boolean, corridor, 'outline', corridorData.outline, interval, sourceUri, entityCollection);
+        processPacketData(Color, corridor, 'outlineColor', corridorData.outlineColor, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
     }
 
     function processWall(entity, packet, entityCollection, sourceUri) {
@@ -1678,6 +1788,19 @@ define([
             get : function() {
                 return this._loading;
             }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CzmlDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
+            }
         }
     });
 
@@ -1687,23 +1810,26 @@ define([
      * @type Array
      */
     CzmlDataSource.updaters = [
-    processBillboard, //
-    processEllipse, //
-    processEllipsoid, //
-    processLabel, //
-    processModel, //
-    processName, //
-    processDescription, //
-    processPath, //
-    processPoint, //
-    processPolygon, //
-    processPolyline, //
-    processRectangle, //
-    processPosition, //
-    processViewFrom, //
-    processWall, //
-    processOrientation, //
-    processAvailability];
+        processBillboard, //
+        processBox, //
+        processCorridor, //
+        processCylinder, //
+        processEllipse, //
+        processEllipsoid, //
+        processLabel, //
+        processModel, //
+        processName, //
+        processDescription, //
+        processPath, //
+        processPoint, //
+        processPolygon, //
+        processPolyline, //
+        processRectangle, //
+        processPosition, //
+        processViewFrom, //
+        processWall, //
+        processOrientation, //
+        processAvailability];
 
     /**
      * Processes the provided url or CZML object without clearing any existing data.

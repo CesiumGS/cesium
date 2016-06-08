@@ -17,7 +17,7 @@ define([
         FrameState,
         JobScheduler,
         Pass) {
-    "use strict";
+    'use strict';
 
     function executeCommands(context, passState, commands) {
         var length = commands.length;

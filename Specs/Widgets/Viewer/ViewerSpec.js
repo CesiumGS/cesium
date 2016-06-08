@@ -67,7 +67,7 @@ defineSuite([
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
-    "use strict";
+    'use strict';
 
     var testProvider = {
         isReady : function() {
@@ -352,6 +352,20 @@ defineSuite([
         expect(viewer.selectionIndicator).toBeUndefined();
         viewer.resize();
         viewer.render();
+    });
+
+    it('can set shadows', function() {
+        viewer = createViewer(container, {
+            shadows : true
+        });
+        expect(viewer.shadows).toBe(true);
+    });
+
+    it('can set terrain shadows', function() {
+        viewer = createViewer(container, {
+            terrainShadows : true
+        });
+        expect(viewer.terrainShadows).toBe(true);
     });
 
     it('can set terrainProvider', function() {

@@ -17,7 +17,7 @@ define([
         Event,
         JulianDate,
         TimeInterval) {
-    "use strict";
+    'use strict';
 
     function compareIntervalStartTimes(left, right) {
         return JulianDate.compare(left.start, right.start);
@@ -525,10 +525,10 @@ define([
         }
 
         // Remove any intervals that are completely overlapped by the input interval.
-        while (index < intervals.length &&
-                JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
+        while (index < intervals.length && JulianDate.greaterThan(intervalStop, indexInterval.stop)) {
             result = true;
             intervals.splice(index, 1);
+            indexInterval = intervals[index];
         }
 
         // Check for the case where the input interval ends on the same date

@@ -39,7 +39,7 @@ define([
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.
@@ -89,11 +89,11 @@ define([
      *
      * @example
      * var bing = new Cesium.BingMapsImageryProvider({
-     *     url : '//dev.virtualearth.net',
+     *     url : 'https://dev.virtualearth.net',
      *     key : 'get-yours-at-https://www.bingmapsportal.com/',
      *     mapStyle : Cesium.BingMapsStyle.AERIAL
      * });
-     * 
+     *
      * @see {@link http://msdn.microsoft.com/en-us/library/ff701713.aspx|Bing Maps REST Services}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */

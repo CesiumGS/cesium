@@ -5,7 +5,6 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/definedNotNull',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -33,7 +32,6 @@ define([
         createGuid,
         defaultValue,
         defined,
-        definedNotNull,
         defineProperties,
         DeveloperError,
         Event,
@@ -55,7 +53,7 @@ define([
         EntityCollection,
         PolygonGraphics,
         PolylineGraphics) {
-    "use strict";
+    'use strict';
 
     function defaultCrsFunction(coordinates) {
         return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
@@ -63,7 +61,8 @@ define([
 
     var crsNames = {
         'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
-        'EPSG:4326' : defaultCrsFunction
+        'EPSG:4326' : defaultCrsFunction,
+        'urn:ogc:def:crs:EPSG::4326' : defaultCrsFunction
     };
 
     var crsLinkHrefs = {};
@@ -97,7 +96,7 @@ define([
                     continue;
                 }
                 var value = properties[key];
-                if (definedNotNull(value)) {
+                if (defined(value)) {
                     if (typeof value === 'object') {
                         html += '<tr><th>' + key + '</th><td>' + defaultDescribe(value) + '</td></tr>';
                     } else {
@@ -133,7 +132,7 @@ define([
     //we can't use it for them either.
     function createObject(geoJson, entityCollection, describe) {
         var id = geoJson.id;
-        if (!definedNotNull(id) || geoJson.type !== 'Feature') {
+        if (!defined(id) || geoJson.type !== 'Feature') {
             id = createGuid();
         } else {
             var i = 2;
@@ -147,7 +146,7 @@ define([
 
         var entity = entityCollection.getOrCreateEntity(id);
         var properties = geoJson.properties;
-        if (definedNotNull(properties)) {
+        if (defined(properties)) {
             entity.addProperty('properties');
             entity.properties = properties;
 
@@ -155,7 +154,7 @@ define([
 
             //Check for the simplestyle specified name first.
             var name = properties.title;
-            if (definedNotNull(name)) {
+            if (defined(name)) {
                 entity.name = name;
                 nameProperty = 'title';
             } else {
@@ -186,16 +185,14 @@ define([
                         }
                     }
                 }
-                if (definedNotNull(nameProperty)) {
+                if (defined(nameProperty)) {
                     entity.name = properties[nameProperty];
                 }
             }
 
             var description = properties.description;
-            if (!defined(description)) {
-                entity.description = describe(properties, nameProperty);
-            } else if (description !== null) {
-                entity.description = new ConstantProperty(description);
+            if (description !== null) {
+                entity.description = !defined(description) ? describe(properties, nameProperty) : new ConstantProperty(description);
             }
         }
         return entity;
@@ -211,21 +208,22 @@ define([
 
     // GeoJSON processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, options) {
+        if (feature.geometry === null) {
+            //Null geometry is allowed, so just create an empty entity instance for it.
+            createObject(feature, dataSource._entityCollection, options.describe);
+            return;
+        }
+
         if (!defined(feature.geometry)) {
             throw new RuntimeError('feature.geometry is required.');
         }
 
-        if (feature.geometry === null) {
-            //Null geometry is allowed, so just create an empty entity instance for it.
-            createObject(feature, dataSource._entityCollection, options.describe);
-        } else {
-            var geometryType = feature.geometry.type;
-            var geometryHandler = geometryTypes[geometryType];
-            if (!definedNotNull(geometryHandler)) {
-                throw new RuntimeError('Unknown geometry type: ' + geometryType);
-            }
-            geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
+        var geometryType = feature.geometry.type;
+        var geometryHandler = geometryTypes[geometryType];
+        if (!defined(geometryHandler)) {
+            throw new RuntimeError('Unknown geometry type: ' + geometryType);
         }
+        geometryHandler(dataSource, feature, feature.geometry, crsFunction, options);
     }
 
     function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, options) {
@@ -241,7 +239,7 @@ define([
             var geometry = geometries[i];
             var geometryType = geometry.type;
             var geometryHandler = geometryTypes[geometryType];
-            if (!definedNotNull(geometryHandler)) {
+            if (!defined(geometryHandler)) {
                 throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, geoJson, geometry, crsFunction, options);
@@ -254,15 +252,15 @@ define([
         var size = options.markerSize;
 
         var properties = geoJson.properties;
-        if (definedNotNull(properties)) {
+        if (defined(properties)) {
             var cssColor = properties['marker-color'];
-            if (definedNotNull(cssColor)) {
+            if (defined(cssColor)) {
                 color = Color.fromCssColorString(cssColor);
             }
 
             size = defaultValue(sizes[properties['marker-size']], size);
             var markerSymbol = properties['marker-symbol'];
-            if (definedNotNull(markerSymbol)) {
+            if (defined(markerSymbol)) {
                 symbol = markerSymbol;
             }
         }
@@ -305,19 +303,19 @@ define([
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (definedNotNull(properties)) {
+        if (defined(properties)) {
             var width = properties['stroke-width'];
-            if (definedNotNull(width)) {
+            if (defined(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (definedNotNull(stroke)) {
+            if (defined(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (definedNotNull(opacity) && opacity !== 1.0) {
+            if (defined(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = material.color.clone();
                 }
@@ -358,19 +356,19 @@ define([
         var widthProperty = options.strokeWidthProperty;
 
         var properties = geoJson.properties;
-        if (definedNotNull(properties)) {
+        if (defined(properties)) {
             var width = properties['stroke-width'];
-            if (definedNotNull(width)) {
+            if (defined(width)) {
                 widthProperty = new ConstantProperty(width);
             }
 
             var color;
             var stroke = properties.stroke;
-            if (definedNotNull(stroke)) {
+            if (defined(stroke)) {
                 color = Color.fromCssColorString(stroke);
             }
             var opacity = properties['stroke-opacity'];
-            if (definedNotNull(opacity) && opacity !== 1.0) {
+            if (defined(opacity) && opacity !== 1.0) {
                 if (!defined(color)) {
                     color = options.strokeMaterialProperty.color.clone();
                 }
@@ -383,12 +381,12 @@ define([
 
             var fillColor;
             var fill = properties.fill;
-            if (definedNotNull(fill)) {
+            if (defined(fill)) {
                 fillColor = Color.fromCssColorString(fill);
                 fillColor.alpha = material.color.alpha;
             }
             opacity = properties['fill-opacity'];
-            if (definedNotNull(opacity) && opacity !== material.color.alpha) {
+            if (defined(opacity) && opacity !== material.color.alpha) {
                 if (!defined(fillColor)) {
                     fillColor = material.color.clone();
                 }
@@ -722,6 +720,19 @@ define([
             get : function() {
                 return this._loading;
             }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof GeoJsonDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
+            }
         }
     });
 
@@ -801,10 +812,12 @@ define([
         //Check for a Coordinate Reference System.
         var crsFunction = defaultCrsFunction;
         var crs = geoJson.crs;
+
+        if (crs === null) {
+            throw new RuntimeError('crs is null.');
+        }
+
         if (defined(crs)) {
-            if (crs === null) {
-                throw new RuntimeError('crs is null.');
-            }
             if (!defined(crs.properties)) {
                 throw new RuntimeError('crs.properties is undefined.');
             }

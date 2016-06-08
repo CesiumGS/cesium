@@ -37,7 +37,7 @@ define([
         Framebuffer,
         RenderState,
         ShaderProgram) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

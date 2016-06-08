@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 /**
  * This class is an example of a custom DataSource.  It loads JSON data as
@@ -182,6 +182,19 @@ Object.defineProperties(WebGLGlobeDataSource.prototype, {
                 throw new Cesium.DeveloperError('value must be greater than 0');
             }
             this._heightScale = value;
+        }
+    },
+    /**
+     * Gets whether or not this data source should be displayed.
+     * @memberof WebGLGlobeDataSource.prototype
+     * @type {Boolean}
+     */
+    show : {
+        get : function() {
+            return this._entityCollection;
+        },
+        set : function(value) {
+            this._entityCollection = value;
         }
     }
 });

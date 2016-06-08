@@ -17,7 +17,7 @@ define([
         Request,
         RequestScheduler,
         RequestType) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an

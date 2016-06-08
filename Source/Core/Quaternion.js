@@ -17,7 +17,7 @@ define([
         freezeObject,
         CesiumMath,
         Matrix3) {
-    "use strict";
+    'use strict';
 
     /**
      * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.

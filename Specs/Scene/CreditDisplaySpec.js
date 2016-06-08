@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         CreditDisplay,
         Credit) {
-    "use strict";
+    'use strict';
 
     var container;
 

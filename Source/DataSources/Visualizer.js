@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines the interface for visualizers. Visualizers are plug-ins to

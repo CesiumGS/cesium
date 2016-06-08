@@ -15,7 +15,7 @@ define([
         DeveloperError,
         getTimestamp,
         getElement) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

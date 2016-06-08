@@ -1,6 +1,6 @@
 /*global define*/
 define([], function() {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TileDiscardPolicy} specifying that tile images should never be discard.

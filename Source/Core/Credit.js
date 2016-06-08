@@ -7,7 +7,7 @@ define([
         defined,
         defineProperties,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     var nextCreditId = 0;
     var creditToId = {};

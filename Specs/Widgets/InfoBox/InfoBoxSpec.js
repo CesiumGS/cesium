@@ -7,7 +7,7 @@ defineSuite([
         InfoBox,
         defined,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var testContainer;
     var infoBox;

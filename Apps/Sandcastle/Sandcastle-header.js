@@ -1,5 +1,5 @@
 (function() {
-    "use strict";
+    'use strict';
 
     var defaultAction;
     var bucket = window.location.href;
@@ -70,6 +70,7 @@
                 option.value = options[i].value;
                 menu.appendChild(option);
             }
+            return menu;
         },
         reset : function() {
         }

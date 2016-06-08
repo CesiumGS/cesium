@@ -7,6 +7,7 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
+        'Core/CornerType',
         'Core/defined',
         'Core/Ellipsoid',
         'Core/Event',
@@ -35,6 +36,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         Color,
+        CornerType,
         defined,
         Ellipsoid,
         Event,
@@ -55,7 +57,7 @@ defineSuite([
         VerticalOrigin,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     function makePacket(packet) {
         return [{
@@ -157,6 +159,19 @@ defineSuite([
         expect(dataSource.clock).toBeUndefined();
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
+        expect(dataSource.show).toBe(true);
+    });
+
+    it('show sets underlying entity collection show.', function() {
+        var dataSource = new CzmlDataSource();
+
+        dataSource.show = false;
+        expect(dataSource.show).toBe(false);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
+
+        dataSource.show = true;
+        expect(dataSource.show).toBe(true);
+        expect(dataSource.show).toEqual(dataSource.entities.show);
     });
 
     it('name returns CZML defined name', function() {
@@ -1390,7 +1405,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                closeTop : false,
+                closeBottom : false
             }
         };
 
@@ -1408,6 +1425,8 @@ defineSuite([
         expect(entity.polygon.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.polygon.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.polygon.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.polygon.closeTop.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
+        expect(entity.polygon.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
     });
 
     it('CZML adds data for constrained polygon.', function() {
@@ -1521,6 +1540,9 @@ defineSuite([
                 scale : 3.0,
                 minimumPixelSize : 5.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                incrementallyLoadTextures : true,
+                castShadows : true,
+                receiveShadows : true,
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -1546,6 +1568,9 @@ defineSuite([
         expect(entity.model.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
         expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+        expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.model.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.model.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
         expect(nodeTransform).toBeDefined();
@@ -1569,6 +1594,9 @@ defineSuite([
                 scale : 3.0,
                 minimumPixelSize : 5.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                incrementallyLoadTextures : true,
+                castShadows : true,
+                receiveShadows : true,
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -1599,6 +1627,9 @@ defineSuite([
         expect(entity.model.scale.getValue(validTime)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(validTime)).toEqual(5.0);
         expect(entity.model.uri.getValue(validTime)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+        expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
+        expect(entity.model.castShadows.getValue(validTime)).toEqual(true);
+        expect(entity.model.receiveShadows.getValue(validTime)).toEqual(true);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(validTime).Mesh;
         expect(nodeTransform).toBeDefined();
@@ -1617,6 +1648,9 @@ defineSuite([
         expect(entity.model.scale.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.minimumPixelSize.getValue(invalidTime)).toBeUndefined();
         expect(entity.model.uri.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.incrementallyLoadTextures.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.castShadows.getValue(invalidTime)).toBeUndefined();
+        expect(entity.model.receiveShadows.getValue(invalidTime)).toBeUndefined();
 
         expect(entity.model.nodeTransformations.Mesh.getValue(invalidTime)).toEqual(new TranslationRotationScale());
         expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
@@ -1920,6 +1954,127 @@ defineSuite([
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
+    it('CZML adds data for box.', function() {
+        var boxPacket = {
+            box : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                dimensions : {
+                    cartesian : [1, 2, 3]
+                },
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(boxPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.box).toBeDefined();
+        expect(entity.box.dimensions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1, 2, 3));
+        expect(entity.box.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.box.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.box.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.box.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.box.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+    });
+
+    it('CZML adds data for cylinder.', function() {
+        var cylinderPacket = {
+            cylinder : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                length : 5,
+                topRadius: 6,
+                bottomRadius: 7,
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(cylinderPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.cylinder).toBeDefined();
+        expect(entity.cylinder.length.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5);
+        expect(entity.cylinder.topRadius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.cylinder.bottomRadius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7);
+        expect(entity.cylinder.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.cylinder.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.cylinder.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.cylinder.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.cylinder.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+    });
+
+    it('CZML adds data for corridor.', function() {
+        var expectedResult = [new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)];
+
+        var corridorPacket = {
+            corridor : {
+                material : {
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                },
+                positions : {
+                    cartesian : [expectedResult[0].x, expectedResult[0].y, expectedResult[0].z, expectedResult[1].x, expectedResult[1].y, expectedResult[1].z]
+                },
+                cornerType : "MITERED",
+                extrudedHeight : 2,
+                granularity : 3,
+                height : 4,
+                width: 9,
+                show : true,
+                outline : true,
+                outlineColor : {
+                    rgbaf : [0.2, 0.2, 0.2, 0.2]
+                },
+                outlineWidth : 6
+            }
+        };
+
+        var czmlCorridor = corridorPacket.corridor;
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(corridorPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.corridor).toBeDefined();
+        expect(entity.corridor.positions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedResult);
+        expect(entity.corridor.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(entity.corridor.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlCorridor.show);
+        expect(entity.corridor.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlCorridor.height);
+        expect(entity.corridor.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlCorridor.width);
+        expect(entity.corridor.cornerType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(CornerType.MITERED);
+        expect(entity.corridor.extrudedHeight.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlCorridor.extrudedHeight);
+        expect(entity.corridor.granularity.getValue(Iso8601.MINIMUM_VALUE)).toEqual(czmlCorridor.granularity);
+        expect(entity.corridor.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.corridor.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(entity.corridor.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+    });
+
     it('Has entity collection with link to data source', function() {
         var dataSource = new CzmlDataSource();
         dataSource.load(nameCzml);
@@ -2142,6 +2297,27 @@ defineSuite([
         var entity = dataSource.entities.getById('polylineGlow');
         expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
         expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
+    });
+
+    it('Polyline arrow.', function() {
+        var packet = {
+            id : 'polylineArrow',
+            polyline : {
+                material : {
+                    polylineArrow : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+
+        var entity = dataSource.entities.getById('polylineArrow');
+        expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
     });
 
     it('Processes extrapolation options', function() {

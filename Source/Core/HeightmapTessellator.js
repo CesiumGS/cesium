@@ -33,7 +33,7 @@ define([
         Rectangle,
         TerrainEncoding,
         Transforms) {
-    "use strict";
+    'use strict';
 
     /**
      * Contains functions to create a mesh from a heightmap image.
@@ -365,7 +365,7 @@ define([
         var center = options.relativetoCenter;
         if (defined(center)) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromPoints(center, positions);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(center, positions);
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);

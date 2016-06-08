@@ -5,7 +5,7 @@ define([
     ], function(
         Color,
         defineProperties) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides access to a feature's properties stored in the 3D tile's batch table, as well
@@ -18,7 +18,7 @@ define([
      * modifications.
      * </p>
      * <p>
-     * Do not construct this directly.  Access it through {@link Cesium3DTileContentProvider#getFeature}
+     * Do not construct this directly.  Access it through {@link Cesium3DTileContent#getFeature}
      * or picking using {@link Scene#pick} and {@link Scene#pickPosition}.
      * </p>
      *
@@ -41,8 +41,9 @@ define([
      *     }
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
-    function Cesium3DTileFeature(tileset, batchTableResources, batchId) {
-        this._batchTableResources = batchTableResources;
+    function Cesium3DTileFeature(tileset, content, batchId) {
+        this._content = content;
+        this._batchTableResources = content.batchTableResources;
         this._batchId = batchId;
         this._color = undefined;  // for calling getColor
 
@@ -160,6 +161,11 @@ define([
      */
     Cesium3DTileFeature.prototype.setProperty = function(name, value) {
         this._batchTableResources.setProperty(this._batchId, name, value);
+
+        // PERFORMANCE_IDEA: Probably overkill, but maybe only mark the tile dirty if the
+        // property is in one of the style's expressions or - if it can be done quickly -
+        // if the new property value changed the result of an expression.
+        this._content.featurePropertiesDirty = true;
     };
 
     return Cesium3DTileFeature;

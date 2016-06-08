@@ -19,7 +19,7 @@ define([
         Queue,
         Request,
         RequestType) {
-    "use strict";
+    'use strict';
 
     function RequestBudget(request) {
         /**

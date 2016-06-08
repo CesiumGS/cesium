@@ -7,7 +7,7 @@ defineSuite([
         loadJsonp,
         DefaultProxy,
         RequestErrorEvent) {
-    "use strict";
+    'use strict';
 
     it('throws with no url', function() {
         expect(function() {

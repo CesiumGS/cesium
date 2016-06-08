@@ -15,7 +15,7 @@ defineSuite([
         CesiumMath,
         Plane,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var tileBoundingSphere = new TileBoundingSphere(new Cartesian3(0.0, 0.0, 0.0), 1.0);
     var frameState = createFrameState();
@@ -26,6 +26,7 @@ defineSuite([
         var tbs = new TileBoundingSphere(center, radius);
         expect(tbs).toBeDefined();
         expect(tbs.boundingVolume).toBeDefined();
+        expect(tbs.boundingSphere).toBeDefined();
         expect(tbs.center).toEqual(center);
         expect(tbs.radius).toEqual(radius);
     });

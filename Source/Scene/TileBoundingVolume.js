@@ -3,7 +3,7 @@ define([
         '../Core/DeveloperError'
     ], function(
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * Defines a bounding volume for a tile. This type describes an interface
@@ -15,8 +15,8 @@ define([
      *
      * @private
      */
-    var TileBoundingVolume = function() {
-    };
+    function TileBoundingVolume() {
+    }
 
     /**
      * The underlying bounding volume
@@ -27,6 +27,16 @@ define([
      * @readonly
      */
     TileBoundingVolume.prototype.boundingVolume = undefined;
+
+    /**
+     * The underlying bounding sphere
+     *
+     * @memberof TileBoundingVolume.prototype
+     *
+     * @type {BoundingSphere}
+     * @readonly
+     */
+    TileBoundingVolume.prototype.boundingSphere = undefined;
 
     /**
      * Creates a debug primitive that shows the outline of the tile bounding

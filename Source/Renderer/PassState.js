@@ -3,7 +3,7 @@ define([
         '../Core/BoundingRectangle'
     ], function(
         BoundingRectangle) {
-    "use strict";
+    'use strict';
 
     /**
      * The state for a particular rendering pass.  This is used to supplement the state

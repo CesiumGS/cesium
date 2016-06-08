@@ -13,7 +13,7 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    "use strict";
+    'use strict';
 
     var context;
 
@@ -289,6 +289,14 @@ defineSuite([
             '                      czm_nearFarScalar(testNearFarScalar, 10.0 * 10.0) == 1.0, ' +
             '                      czm_nearFarScalar(testNearFarScalar, 20.0 * 20.0) == 0.0, ' +
             '                      czm_nearFarScalar(testNearFarScalar, 50.0 * 50.0) == 0.0); ' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
+
+    it('has czm_cascadeColor', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));' +
             '}';
         context.verifyDrawForSpecs(fs);
     });

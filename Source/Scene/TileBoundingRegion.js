@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/ColorGeometryInstanceAttribute',
@@ -17,6 +18,7 @@ define([
         './Primitive',
         './SceneMode'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Cartographic,
         ColorGeometryInstanceAttribute,
@@ -33,7 +35,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * @param {Object} options Object with the following properties:
@@ -44,7 +46,7 @@ define([
      *
      * @private
      */
-    var TileBoundingRegion = function(options) {
+    function TileBoundingRegion(options) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options) || !defined(options.rectangle)) {
             throw new DeveloperError('options.url is required.');
@@ -114,9 +116,11 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-         // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-         this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
-    };
+        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+
+        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+    }
 
     defineProperties(TileBoundingRegion.prototype, {
         /**
@@ -130,6 +134,19 @@ define([
         boundingVolume : {
             get : function() {
                 return this._orientedBoundingBox;
+            }
+        },
+        /**
+         * The underlying bounding sphere
+         *
+         * @memberof TileBoundingRegion.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                return this._boundingSphere;
             }
         }
     });

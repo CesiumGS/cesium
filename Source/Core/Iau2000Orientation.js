@@ -11,7 +11,7 @@ define([
         JulianDate,
         CesiumMath,
         TimeConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * This is a collection of the orientation information available for central bodies.

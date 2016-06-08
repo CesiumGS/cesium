@@ -17,7 +17,7 @@ defineSuite([
         Matrix3,
         Plane,
         createFrameState) {
-    "use strict";
+    'use strict';
     
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());
@@ -26,8 +26,10 @@ defineSuite([
     var frameState = createFrameState();
     
     it('can be instantiated with center and half-axes', function() {
-        expect(tileBoundingVolume).toBeDefined();
-        expect(tileBoundingVolume.boundingVolume).toBeDefined();
+        expect(tileBoundingVolume.boundingVolume.center).toEqual(center);
+        expect(tileBoundingVolume.boundingVolume.halfAxes).toEqual(halfAxes);
+        expect(tileBoundingVolume.boundingSphere.center).toEqual(center);
+        expect(tileBoundingVolume.boundingSphere.radius).toEqual(0.5);
     });
 
     it('createDebugVolume throws when color is undefined', function() {

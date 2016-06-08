@@ -1,6 +1,6 @@
 /*global define*/
 define(function() {
-    "use strict";
+    'use strict';
 
     /**
      * A structure containing the orientation data computed at a particular time. The data

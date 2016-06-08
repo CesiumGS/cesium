@@ -35,7 +35,7 @@ define([
         RequestScheduler,
         RequestType,
         TerrainProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link TerrainProvider} that produces terrain geometry by tessellating height maps
@@ -59,7 +59,7 @@ define([
      *
      * @example
      * var terrainProvider = new Cesium.ArcGisImageServerTerrainProvider({
-     *   url : '//elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
+     *   url : 'https://elevation.arcgisonline.com/ArcGIS/rest/services/WorldElevation/DTMEllipsoidal/ImageServer',
      *   token : 'KED1aF_I4UzXOHy3BnhwyBHU4l5oY6rO6walkmHoYqGp4XyIWUd5YZUC1ZrLAzvV40pR6gBXQayh0eFA8m6vPg..',
      *   proxy : new Cesium.DefaultProxy('/terrain/')
      * });

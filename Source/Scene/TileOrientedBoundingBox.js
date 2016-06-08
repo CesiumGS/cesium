@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/BoxOutlineGeometry',
         '../Core/Cartesian3',
         '../Core/ColorGeometryInstanceAttribute',
@@ -13,6 +14,7 @@ define([
         './PerInstanceColorAppearance',
         './Primitive'
     ], function(
+        BoundingSphere,
         BoxOutlineGeometry,
         Cartesian3,
         ColorGeometryInstanceAttribute,
@@ -25,12 +27,14 @@ define([
         OrientedBoundingBox,
         PerInstanceColorAppearance,
         Primitive) {
-    "use strict";
+    'use strict';
 
-    var TileOrientedBoundingBox = function(options) {
+    function TileOrientedBoundingBox(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this.orientedBoundingBox = new OrientedBoundingBox(options.center, options.halfAxes);
-    };
+        this._orientedBoundingBox = new OrientedBoundingBox(options.center, options.halfAxes);
+        
+        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+    }
 
     defineProperties(TileOrientedBoundingBox.prototype, {
         /**
@@ -43,7 +47,20 @@ define([
          */
         boundingVolume : {
             get : function() {
-                return this.orientedBoundingBox;
+                return this._orientedBoundingBox;
+            }
+        },
+        /**
+         * The underlying bounding sphere
+         * 
+         * @memberof TileOrientedBoundingBox.prototype
+         * 
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : { 
+            get : function() {
+                return this._boundingSphere;
             }
         }
     });
@@ -60,7 +77,7 @@ define([
             throw new DeveloperError('frameState is required.');
         }
         //>>includeEnd('debug');
-        return Math.sqrt(this.orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC));
+        return Math.sqrt(this._orientedBoundingBox.distanceSquaredTo(frameState.camera.positionWC));
     };
 
     /**
@@ -78,7 +95,7 @@ define([
             throw new DeveloperError('plane is required.');
         }
         //>>includeEnd('debug');
-        return this.orientedBoundingBox.intersectPlane(plane);
+        return this._orientedBoundingBox.intersectPlane(plane);
     };
 
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {

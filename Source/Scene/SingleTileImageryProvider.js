@@ -25,7 +25,7 @@ define([
         RuntimeError,
         TileProviderError,
         when) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides a single, top-level imagery tile.  The single image is assumed to use a

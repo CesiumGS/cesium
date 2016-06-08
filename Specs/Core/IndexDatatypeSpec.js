@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         IndexDatatype,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     it('IndexDatatype.validate validates input', function() {
         expect(IndexDatatype.validate(IndexDatatype.UNSIGNED_SHORT)).toEqual(true);

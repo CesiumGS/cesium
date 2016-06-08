@@ -13,7 +13,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     /**
      * A collection of primitives.  This is most often used with {@link Scene#primitives},

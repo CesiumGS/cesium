@@ -31,7 +31,7 @@ define([
         CesiumMath,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var radiusScratch = new Cartesian2();
     var normalScratch = new Cartesian3();
@@ -80,17 +80,14 @@ define([
         var slices = defaultValue(options.slices, 128);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(length) || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0.');
+        if (!defined(length)) {
+            throw new DeveloperError('options.length must be defined.');
         }
-        if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0.');
+        if (!defined(topRadius)) {
+            throw new DeveloperError('options.topRadius must be defined.');
         }
-        if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0.');
-        }
-        if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
+        if (!defined(bottomRadius)) {
+            throw new DeveloperError('options.bottomRadius must must be defined.');
         }
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
@@ -194,7 +191,7 @@ define([
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CylinderGeometry.createGeometry = function(cylinderGeometry) {
         var length = cylinderGeometry._length;
@@ -202,6 +199,10 @@ define([
         var bottomRadius = cylinderGeometry._bottomRadius;
         var vertexFormat = cylinderGeometry._vertexFormat;
         var slices = cylinderGeometry._slices;
+
+        if ((length <= 0) || (topRadius < 0) || (bottomRadius < 0) || ((topRadius === 0) && (bottomRadius === 0))) {
+            return;
+        }
 
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;
