@@ -17,7 +17,7 @@ define([
         Ellipsoid,
         CesiumMath,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     /**
      * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
@@ -29,10 +29,10 @@ define([
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
      * @param {Number} options.radius The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
+     * @param {Number} [options.height=0.0] The distance in meters between the circle and the ellipsoid surface.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
+     * @param {Number} [options.extrudedHeight=0.0] The distance in meters between the circle's extruded face and the ellipsoid surface.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      *
      * @exception {DeveloperError} radius must be greater than zero.
@@ -40,8 +40,6 @@ define([
      *
      * @see CircleGeometry.createGeometry
      * @see Packable
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circle.html|Cesium Sandcastle Circle Demo}
      *
      * @example
      * // Create a circle.
@@ -58,9 +56,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
-        }
-        if (radius <= 0.0) {
-            throw new DeveloperError('radius must be greater than zero.');
         }
         //>>includeEnd('debug');
 
@@ -152,7 +147,7 @@ define([
      * Computes the geometric representation of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleGeometry} circleGeometry A description of the circle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     CircleGeometry.createGeometry = function(circleGeometry) {
         return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);

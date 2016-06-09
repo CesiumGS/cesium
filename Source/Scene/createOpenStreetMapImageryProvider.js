@@ -1,20 +1,19 @@
 /*global define*/
 define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/DeveloperError',
-    '../Core/Rectangle',
-    '../Core/WebMercatorTilingScheme',
-    './UrlTemplateImageryProvider'
-], function(
-    Credit,
-    defaultValue,
-    DeveloperError,
-    Rectangle,
-    WebMercatorTilingScheme,
-    UrlTemplateImageryProvider
-) {
-    "use strict";
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/DeveloperError',
+        '../Core/Rectangle',
+        '../Core/WebMercatorTilingScheme',
+        './UrlTemplateImageryProvider'
+    ], function(
+        Credit,
+        defaultValue,
+        DeveloperError,
+        Rectangle,
+        WebMercatorTilingScheme,
+        UrlTemplateImageryProvider) {
+    'use strict';
 
     var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
@@ -28,7 +27,7 @@ define([
      * @exports createOpenStreetMapImageryProvider
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {String} [options.url='//a.tile.openstreetmap.org'] The OpenStreetMap server url.
+     * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
@@ -36,6 +35,7 @@ define([
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @returns {UrlTemplateImageryProvider} The imagery provider.
      *
      * @exception {DeveloperError} The rectangle and minimumLevel indicate that there are more than four tiles at the minimum level. Imagery providers with more than four tiles at the minimum level are not supported.
      *
@@ -43,7 +43,7 @@ define([
      * @see BingMapsImageryProvider
      * @see GoogleEarthImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -51,16 +51,16 @@ define([
      *
      * @example
      * var osm = Cesium.createOpenStreetMapImageryProvider({
-     *     url : '//a.tile.openstreetmap.org/'
+     *     url : 'https://a.tile.openstreetmap.org/'
      * });
-     * 
+     *
      * @see {@link http://wiki.openstreetmap.org/wiki/Main_Page|OpenStreetMap Wiki}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
-        var url = defaultValue(options.url, '//a.tile.openstreetmap.org/');
+        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
 
         if (!trailingSlashRegex.test(url)) {
             url = url + '/';

@@ -18,9 +18,8 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        TerrainQuantization
-    ) {
-    "use strict";
+        TerrainQuantization) {
+    'use strict';
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3DimScratch = new Cartesian3();

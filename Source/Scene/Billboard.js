@@ -37,7 +37,7 @@ define([
         SceneMode,
         SceneTransforms,
         VerticalOrigin) {
-    "use strict";
+    'use strict';
 
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
@@ -846,9 +846,11 @@ define([
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
         if (!defined(scene)) {
+            //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported.');
+                throw new DeveloperError('Height reference is not supported without a scene.');
             }
+            //>>includeEnd('debug');
             return;
         }
 
@@ -1083,34 +1085,20 @@ define([
         return SceneTransforms.computeActualWgs84Position(frameState, tempCartesian3);
     };
 
-    var scratchMatrix4 = new Matrix4();
-    var scratchCartesian4 = new Cartesian4();
-    var scrachEyeOffset = new Cartesian3();
     var scratchCartesian2 = new Cartesian2();
+    var scratchCartesian3 = new Cartesian3();
     var scratchComputePixelOffset = new Cartesian2();
 
+    // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
     Billboard._computeScreenSpacePosition = function(modelMatrix, position, eyeOffset, pixelOffset, scene, result) {
-        // This function is basically a stripped-down JavaScript version of BillboardCollectionVS.glsl
-        var camera = scene.camera;
-        var view = camera.viewMatrix;
-        var projection = camera.frustum.projectionMatrix;
+        // Model to world coordinates
+        var positionWorld = Matrix4.multiplyByPoint(modelMatrix, position, scratchCartesian3);
 
-        // Model to eye coordinates
-        var mv = Matrix4.multiplyTransformation(view, modelMatrix, scratchMatrix4);
-        var positionEC = Matrix4.multiplyByVector(mv, Cartesian4.fromElements(position.x, position.y, position.z, 1, scratchCartesian4), scratchCartesian4);
-
-        // Apply eye offset, e.g., czm_eyeOffset
-        var zEyeOffset = Cartesian3.multiplyComponents(eyeOffset, Cartesian3.normalize(positionEC, scrachEyeOffset), scrachEyeOffset);
-        positionEC.x += eyeOffset.x + zEyeOffset.x;
-        positionEC.y += eyeOffset.y + zEyeOffset.y;
-        positionEC.z += zEyeOffset.z;
-
-        var positionCC = Matrix4.multiplyByVector(projection, positionEC, scratchCartesian4); // clip coordinates
-        var positionWC = SceneTransforms.clipToGLWindowCoordinates(scene, positionCC, result);
+        // World to window coordinates
+        var positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, positionWorld, eyeOffset, result);
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
-        pixelOffset.y = -pixelOffset.y;
         var po = Cartesian2.multiplyByScalar(pixelOffset, scene.context.uniformState.resolutionScale, scratchCartesian2);
         positionWC.x += po.x;
         positionWC.y += po.y;
@@ -1131,10 +1119,9 @@ define([
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      *
-     *
      * @example
      * console.log(b.computeScreenSpacePosition(scene).toString());
-     * 
+     *
      * @see Billboard#eyeOffset
      * @see Billboard#pixelOffset
      */
@@ -1162,7 +1149,6 @@ define([
 
         var windowCoordinates = Billboard._computeScreenSpacePosition(modelMatrix, actualPosition,
                 this._eyeOffset, scratchPixelOffset, scene, result);
-        windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };
 

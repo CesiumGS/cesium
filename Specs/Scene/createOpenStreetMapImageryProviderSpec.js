@@ -10,9 +10,9 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/pollToPromise',
         'Scene/UrlTemplateImageryProvider',
-], function(
+        'Specs/pollToPromise'
+    ], function(
         createOpenStreetMapImageryProvider,
         DefaultProxy,
         loadImage,
@@ -23,9 +23,9 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        pollToPromise,
-        UrlTemplateImageryProvider) {
-    "use strict";
+        UrlTemplateImageryProvider,
+        pollToPromise) {
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;

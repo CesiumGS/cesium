@@ -11,7 +11,7 @@ defineSuite([
         Globe,
         SceneMode,
         createScene) {
-    "use strict";
+    'use strict';
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;

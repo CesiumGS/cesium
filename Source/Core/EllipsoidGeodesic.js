@@ -17,7 +17,7 @@ define([
         DeveloperError,
         Ellipsoid,
         CesiumMath) {
-    "use strict";
+    'use strict';
 
     function setConstants(ellipsoidGeodesic) {
         var uSquared = ellipsoidGeodesic._uSquared;

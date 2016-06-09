@@ -7,6 +7,7 @@ define([
         './defined',
         './destroyObject',
         './DeveloperError',
+        './getAbsoluteUri',
         './isCrossOriginUrl',
         './RuntimeError',
         'require'
@@ -18,10 +19,11 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        getAbsoluteUri,
         isCrossOriginUrl,
         RuntimeError,
         require) {
-    "use strict";
+    'use strict';
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -139,8 +141,8 @@ define([
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else if (defined(require.toUrl)) {
-            var baseUrl = new Uri('..').resolve(new Uri(buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'))).toString();
-            bootstrapMessage.loaderConfig.baseUrl = baseUrl;
+            bootstrapMessage.loaderConfig.baseUrl =
+                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')

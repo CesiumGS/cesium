@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         EncodedCartesian3,
         Cartesian3) {
-    "use strict";
+    'use strict';
 
     it('construct with default values', function() {
         var encoded = new EncodedCartesian3();

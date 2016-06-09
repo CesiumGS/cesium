@@ -15,7 +15,7 @@ define([
         Event,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
-    "use strict";
+    'use strict';
 
     /**
      * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
@@ -27,8 +27,8 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
-     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon.
-     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon extrusion.
+     * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the polygon.
@@ -38,6 +38,8 @@ define([
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
+     * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
+     * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -68,6 +70,10 @@ define([
         this._definitionChanged = new Event();
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._closeTop = undefined;
+        this._closeTopSubscription = undefined;
+        this._closeBottom = undefined;
+        this._closeBottomSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -181,7 +187,21 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        perPositionHeight : createPropertyDescriptor('perPositionHeight')
+        perPositionHeight : createPropertyDescriptor('perPositionHeight'),
+
+        /**
+         * Gets or sets a boolean specifying whether or not the top of an extruded polygon is included.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        closeTop : createPropertyDescriptor('closeTop'),
+
+        /**
+         * Gets or sets a boolean specifying whether or not the bottom of an extruded polygon is included.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         */
+        closeBottom : createPropertyDescriptor('closeBottom')
     });
 
     /**
@@ -206,6 +226,8 @@ define([
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
         result.perPositionHeight = this.perPositionHeight;
+        result.closeTop = this.closeTop;
+        result.closeBottom = this.closeBottom;
         return result;
     };
 
@@ -234,6 +256,8 @@ define([
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
+        this.closeTop = defaultValue(this.closeTop, source.closeTop);
+        this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
     };
 
     return PolygonGraphics;

@@ -11,7 +11,7 @@ define([
         defined,
         destroyObject,
         DeveloperError) {
-    "use strict";
+    'use strict';
 
     function displayTextCredit(credit, container, delimiter) {
         if (!defined(credit.element)) {
@@ -171,7 +171,6 @@ define([
         container.appendChild(textContainer);
 
         this._delimiter = defaultValue(delimiter, ' • ');
-        this._container = container;
         this._textContainer = textContainer;
         this._imageContainer = imageContainer;
         this._defaultImageCredits = [];
@@ -185,6 +184,12 @@ define([
             imageCredits : [],
             textCredits : []
         };
+
+        /**
+         * The HTML element where credits will be displayed.
+         * @type {HTMLElement}
+         */
+        this.container = container;
     }
 
     /**
@@ -302,8 +307,8 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     CreditDisplay.prototype.destroy = function() {
-        this._container.removeChild(this._textContainer);
-        this._container.removeChild(this._imageContainer);
+        this.container.removeChild(this._textContainer);
+        this.container.removeChild(this._imageContainer);
 
         return destroyObject(this);
     };

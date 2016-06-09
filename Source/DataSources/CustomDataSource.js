@@ -9,7 +9,7 @@ define([
         Event,
         DataSource,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link DataSource} implementation which can be used to manually manage a group of entities.
@@ -125,6 +125,19 @@ define([
         loadingEvent : {
             get : function() {
                 return this._loading;
+            }
+        },
+        /**
+         * Gets whether or not this data source should be displayed.
+         * @memberof CustomDataSource.prototype
+         * @type {Boolean}
+         */
+        show : {
+            get : function() {
+                return this._entityCollection.show;
+            },
+            set : function(value) {
+                this._entityCollection.show = value;
             }
         }
     });

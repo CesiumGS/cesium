@@ -27,7 +27,7 @@ define([
         Uri,
         GetFeatureInfoFormat,
         UrlTemplateImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
@@ -74,7 +74,7 @@ define([
      * @see GoogleEarthImageryProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
@@ -83,7 +83,7 @@ define([
      *
      * @example
      * var provider = new Cesium.WebMapServiceImageryProvider({
-     *     url: '//sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
+     *     url : 'https://sampleserver1.arcgisonline.com/ArcGIS/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/WMSServer',
      *     layers : '0',
      *     proxy: new Cesium.DefaultProxy('/proxy/')
      * });

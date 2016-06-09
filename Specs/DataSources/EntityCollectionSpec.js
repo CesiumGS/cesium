@@ -13,7 +13,7 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         Entity) {
-    "use strict";
+    'use strict';
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -58,6 +58,24 @@ defineSuite([
 
         entityCollection.add(entity);
         expect(entity.entityCollection).toBe(entityCollection);
+    });
+
+    it('Entity.isShowing changes when collection show changes.', function() {
+        var entity = new Entity();
+        var entityCollection = new EntityCollection();
+
+        entityCollection.add(entity);
+
+        expect(entity.isShowing).toBe(true);
+
+        var listener = jasmine.createSpy('listener');
+        entity.definitionChanged.addEventListener(listener);
+
+        entityCollection.show = false;
+
+        expect(listener.calls.count()).toBe(1);
+        expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', false, true]);
+        expect(entity.isShowing).toBe(false);
     });
 
     it('add with template', function() {
@@ -115,6 +133,53 @@ defineSuite([
         expect(listener.removed[0]).toBe(entity);
 
         entityCollection.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
+    });
+
+    it('raises expected events when reentrant', function() {
+        var entityCollection = new EntityCollection();
+
+        var entity = new Entity();
+        var entity2 = new Entity();
+        entityCollection.add(entity);
+        entityCollection.add(entity2);
+
+        var entityToDelete = new Entity();
+        entityCollection.add(entityToDelete);
+
+        var entityToAdd = new Entity();
+
+        var inCallback = false;
+        var listener = jasmine.createSpy('listener').and.callFake(function(collection, added, removed, changed) {
+            //When we set the name to `newName` below, this code will modify entity2's name, thus triggering
+            //another event firing that occurs after all current subscribers have been notified of the
+            //event we are inside of.
+
+            //By checking that inCallback is false, we are making sure the entity2.name assignment
+            //is delayed until after the first round of events is fired.
+            expect(inCallback).toBe(false);
+            inCallback = true;
+            if (entity2.name !== 'Bob') {
+                entity2.name = 'Bob';
+            }
+            if (entityCollection.contains(entityToDelete)) {
+                entityCollection.removeById(entityToDelete.id);
+            }
+            if (!entityCollection.contains(entityToAdd)) {
+                entityCollection.add(entityToAdd);
+            }
+            inCallback = false;
+        });
+        entityCollection.collectionChanged.addEventListener(listener);
+
+        entity.name = 'newName';
+        expect(listener.calls.count()).toBe(2);
+        expect(listener.calls.argsFor(0)).toEqual([entityCollection, [], [], [entity]]);
+        expect(listener.calls.argsFor(1)).toEqual([entityCollection, [entityToAdd], [entityToDelete], [entity2]]);
+
+        expect(entity.name).toEqual('newName');
+        expect(entity2.name).toEqual('Bob');
+        expect(entityCollection.contains(entityToDelete)).toEqual(false);
+        expect(entityCollection.contains(entityToAdd)).toEqual(true);
     });
 
     it('suspended add/remove raises expected events', function() {

@@ -15,7 +15,7 @@ define([
         knockout,
         getElement,
         CesiumInspectorViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * Inspector widget to aid in debugging

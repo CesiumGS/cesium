@@ -26,7 +26,6 @@ defineSuite([
         'Scene/PerInstanceColorAppearance',
         'Scene/SceneMode',
         'Specs/BadGeometry',
-        'Specs/createFrameState',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -56,10 +55,9 @@ defineSuite([
         PerInstanceColorAppearance,
         SceneMode,
         BadGeometry,
-        createFrameState,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     var context;
@@ -228,7 +226,8 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
         primitive.update(frameState);
         expect(frameState.commandList.length).toEqual(0);
     });
@@ -240,7 +239,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         primitive.update(frameState);
         expect(frameState.commandList.length).toBeGreaterThan(0);
 
@@ -257,7 +256,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.passes.render = false;
         frameState.passes.pick = false;
 
@@ -272,7 +271,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.mode = SceneMode.SCENE2D;
         frameState.scene3DOnly = true;
 
@@ -287,7 +286,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.scene3DOnly = true;
 
@@ -314,11 +313,13 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
 
         // set scene3DOnly to true so that the geometry is not split due to the IDL
         frameState.scene3DOnly = true;
-        primitive.update(frameState);
+        scene.primitives.add(primitive);
+        scene.render();
         expect(frameState.commandList.length).toEqual(2);
     });
 
@@ -334,6 +335,7 @@ defineSuite([
     }
 
     it('renders in Columbus view when scene3DOnly is false', function() {
+        scene.frameState.scene3DOnly = false;
         primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -341,12 +343,12 @@ defineSuite([
         });
 
         scene.morphToColumbusView(0);
-
         verifyPrimitiveRender(primitive, rectangle1);
         verifyPrimitiveRender(primitive, rectangle2);
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
+        scene.frameState.scene3DOnly = false;
         primitive = new Primitive({
             geometryInstances : [rectangleInstance1, rectangleInstance2],
             appearance : new PerInstanceColorAppearance(),
@@ -424,6 +426,7 @@ defineSuite([
     });
 
     it('RTC throws if the scene is not 3D only', function() {
+        scene.frameState.scene3DOnly = false;
         var primitive = new Primitive({
             geometryInstances : rectangleInstance1,
             appearance : new PerInstanceColorAppearance({
@@ -446,11 +449,11 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         primitive.update(frameState);
         var commands = frameState.commandList;
         expect(commands.length).toEqual(1);
-        expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
+        expect(commands[0].modelMatrix).toEqual(primitive.modelMatrix);
 
         var modelMatrix = Matrix4.fromUniformScale(10.0);
         primitive.modelMatrix = modelMatrix;
@@ -472,11 +475,12 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.scene3DOnly = true;
 
-        primitive.update(frameState);
         var commands = frameState.commandList;
+        commands.length = 0;
+        primitive.update(frameState);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(modelMatrix);
 
@@ -521,11 +525,12 @@ defineSuite([
 
         var expectedModelMatrix = Matrix4.multiplyTransformation(primitiveModelMatrix, instanceModelMatrix, new Matrix4());
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.scene3DOnly = true;
 
-        primitive.update(frameState);
         var commands = frameState.commandList;
+        commands.length = 0;
+        primitive.update(frameState);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(expectedModelMatrix);
     });
@@ -537,11 +542,13 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.scene3DOnly = false;
 
-        primitive.update(frameState);
         var commands = frameState.commandList;
+        commands.length = 0;
+        primitive.update(frameState);
         expect(commands.length).toEqual(1);
         expect(commands[0].modelMatrix).toEqual(Matrix4.IDENTITY);
 
@@ -561,8 +568,9 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         frameState.mode = SceneMode.SCENE2D;
+        frameState.scene3DOnly = false;
 
         var commands = frameState.commandList;
         primitive.update(frameState);
@@ -758,7 +766,8 @@ defineSuite([
             cull : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
+        frameState.commandList.length = 0;
         primitive.update(frameState);
         expect(frameState.commandList[0].cull).toEqual(false);
     });
@@ -795,7 +804,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         expect(function() {
             primitive.update(frameState);
@@ -813,14 +822,15 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
+        scene.frameState.afterRender.length = 0;
+        scene.primitives.add(primitive);
 
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            if (scene.frameState.afterRender.length > 0) {
+                scene.frameState.afterRender[0]();
                 return true;
             }
-            primitive.update(frameState);
+            scene.render();
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function() {
@@ -828,7 +838,7 @@ defineSuite([
             }).otherwise(function(e) {
                 expect(e).toBe(primitive._error);
                 expect(function() {
-                    primitive.update(frameState);
+                    scene.render();
                 }).toThrowRuntimeError();
             });
         });
@@ -847,14 +857,14 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
+        scene.frameState.afterRender.length = 0;
 
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            if (scene.frameState.afterRender.length > 0) {
+                scene.frameState.afterRender[0]();
                 return true;
             }
-            primitive.update(frameState);
+            primitive.update(scene.frameState);
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -878,14 +888,14 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
+        scene.frameState.afterRender.length = 0;
 
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            if (scene.frameState.afterRender.length > 0) {
+                scene.frameState.afterRender[0]();
                 return true;
             }
-            primitive.update(frameState);
+            primitive.update(scene.frameState);
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -905,7 +915,7 @@ defineSuite([
             compressVertices : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         expect(function() {
             primitive.update(frameState);
@@ -919,7 +929,7 @@ defineSuite([
             asynchronous : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         primitive.update(frameState);
         var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
 
@@ -936,13 +946,15 @@ defineSuite([
             allowPicking : false
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
+        frameState.afterRender.length = 0;
+        scene.primitives.add(primitive);
 
         return pollToPromise(function() {
-            primitive.update(frameState);
             if (frameState.afterRender.length > 0) {
                 frameState.afterRender[0]();
             }
+            scene.render();
             return primitive.ready;
         }).then(function() {
             var attributes = primitive.getGeometryInstanceAttributes('rectangle1');
@@ -1007,7 +1019,7 @@ defineSuite([
             })
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
 
         return pollToPromise(function() {
             primitive.update(frameState);
@@ -1026,7 +1038,7 @@ defineSuite([
             appearance : new PerInstanceColorAppearance()
         });
 
-        var frameState = createFrameState(context);
+        var frameState = scene.frameState;
         primitive.update(frameState);
 
         primitive.destroy();

@@ -17,7 +17,7 @@ define([
         createPropertyDescriptor,
         Property,
         StripeOrientation) {
-    "use strict";
+    'use strict';
 
     var defaultOrientation = StripeOrientation.HORIZONTAL;
     var defaultEvenColor = Color.WHITE;

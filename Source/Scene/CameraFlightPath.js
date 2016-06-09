@@ -23,7 +23,7 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates tweens for camera flights.
@@ -60,9 +60,9 @@ define([
 
     function createHeightFunction(camera, destination, startHeight, endHeight, optionAltitude) {
         var altitude = optionAltitude;
-        var maxHeight;
+        var maxHeight = Math.max(startHeight, endHeight);
 
-        if (!defined(optionAltitude)) {
+        if (!defined(altitude)) {
             var start = camera.position;
             var end = destination;
             var up = camera.up;
@@ -73,11 +73,10 @@ define([
             var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(up, Cartesian3.dot(diff, up), scratchCart2));
             var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(right, Cartesian3.dot(diff, right), scratchCart2));
 
-            maxHeight = Math.max(startHeight, endHeight);
             altitude = Math.min(getAltitude(frustum, verticalDistance, horizontalDistance) * 0.20, 1000000000.0);
         }
 
-        if ((defined(optionAltitude) && optionAltitude < altitude) || maxHeight < altitude) {
+        if (maxHeight < altitude) {
             var power = 8.0;
             var factor = 1000000.0;
 
@@ -305,10 +304,12 @@ define([
         empty = empty && CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6);
 
         empty = empty || (scene.mode !== SceneMode.SCENE2D &&
-                Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON10) &&
-                CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(heading), CesiumMath.negativePiToPi(camera.heading), CesiumMath.EPSILON10) &&
-                CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(pitch), CesiumMath.negativePiToPi(camera.pitch), CesiumMath.EPSILON10) &&
-                CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(roll), CesiumMath.negativePiToPi(camera.roll), CesiumMath.EPSILON10));
+            Cartesian3.equalsEpsilon(destination, camera.position, CesiumMath.EPSILON10));
+
+        empty = empty &&
+            CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(heading), CesiumMath.negativePiToPi(camera.heading), CesiumMath.EPSILON10) &&
+            CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(pitch), CesiumMath.negativePiToPi(camera.pitch), CesiumMath.EPSILON10) &&
+            CesiumMath.equalsEpsilon(CesiumMath.negativePiToPi(roll), CesiumMath.negativePiToPi(camera.roll), CesiumMath.EPSILON10);
 
         if (empty) {
             return emptyFlight(complete, cancel);

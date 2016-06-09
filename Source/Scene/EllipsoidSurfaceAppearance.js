@@ -17,7 +17,7 @@ define([
         EllipsoidSurfaceAppearanceVS,
         Appearance,
         Material) {
-    "use strict";
+    'use strict';
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
@@ -40,8 +40,6 @@ define([
      * @param {RenderState} [options.renderState] Optional render state to override the default render state.
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric}
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ellipsoid%20Surface.html|Cesium Sandcastle Ellipsoid Surface Appearance Demo}
      *
      * @example
      * var primitive = new Cesium.Primitive({

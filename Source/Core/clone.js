@@ -3,7 +3,7 @@ define([
         './defaultValue'
     ], function(
         defaultValue) {
-    "use strict";
+    'use strict';
 
     /**
      * Clones an object, returning a new object containing the same properties.

@@ -4,20 +4,20 @@ define([
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/BingMapsStyle',
-        '../../Scene/MapboxImageryProvider',
         '../../Scene/createOpenStreetMapImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider',
+        '../../Scene/createTileMapServiceImageryProvider',
+        '../../Scene/MapboxImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
         BingMapsStyle,
-        MapboxImageryProvider,
         createOpenStreetMapImageryProvider,
-        TileMapServiceImageryProvider,
+        createTileMapServiceImageryProvider,
+        MapboxImageryProvider,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -30,7 +30,7 @@ define([
             tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net',
+                    url : 'https://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL
                 });
             }
@@ -42,7 +42,7 @@ define([
             tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net',
+                    url : 'https://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
                 });
             }
@@ -54,7 +54,7 @@ define([
             tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
             creationFunction : function() {
                 return new BingMapsImageryProvider({
-                    url : '//dev.virtualearth.net',
+                    url : 'https://dev.virtualearth.net',
                     mapStyle : BingMapsStyle.ROAD
                 });
             }
@@ -106,7 +106,7 @@ i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Ad
 contributed by the GIS User Community.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+                    url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
                     enablePickFeatures : false
                 });
             }
@@ -122,7 +122,7 @@ Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Bo
 http://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
+                    url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
                     enablePickFeatures : false
                 });
             }
@@ -137,7 +137,7 @@ for informational and educational purposes as well as a basemap by GIS professio
 mapping applications.\nhttp://www.esri.com',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
-                    url : '//services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
+                    url : 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
                     enablePickFeatures : false
                 });
             }
@@ -150,7 +150,7 @@ mapping applications.\nhttp://www.esri.com',
 of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
-                    url : '//a.tile.openstreetmap.org/'
+                    url : 'https://a.tile.openstreetmap.org/'
                 });
             }
         }));
@@ -162,7 +162,7 @@ of the world.\nhttp://www.openstreetmap.org',
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
-                    url : '//stamen-tiles.a.ssl.fastly.net/watercolor/',
+                    url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
@@ -174,7 +174,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
-                    url : '//stamen-tiles.a.ssl.fastly.net/toner/',
+                    url : 'https://stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
             }
@@ -187,7 +187,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 map of the world.\nhttp://www.openstreetmap.org',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
-                    url : '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
+                    url : 'https://otile1-s.mqcdn.com/tiles/1.0.0/osm/'
                 });
             }
         }));
@@ -198,9 +198,9 @@ map of the world.\nhttp://www.openstreetmap.org',
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
 Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
-                    url : '//cesiumjs.org/blackmarble',
-                    maximumLevel : 8,
+                return createTileMapServiceImageryProvider({
+                    url : 'https://cesiumjs.org/blackmarble',
+                    flipXY : true,
                     credit : 'Black Marble imagery courtesy NASA Earth Observatory'
                 });
             }
@@ -211,7 +211,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             creationFunction : function() {
-                return new TileMapServiceImageryProvider({
+                return createTileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }

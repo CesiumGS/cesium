@@ -7,7 +7,7 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         Color,
         ComponentDatatype) {
-    "use strict";
+    'use strict';
 
     it('constructor', function() {
         var attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);
@@ -57,4 +57,15 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('equals', function() {
+        var color = new ColorGeometryInstanceAttribute(0.1, 0.2, 0.3, 0.4);
+        expect(ColorGeometryInstanceAttribute.equals(color, color)).toEqual(true);
+        expect(ColorGeometryInstanceAttribute.equals(color, new ColorGeometryInstanceAttribute(0.1, 0.2, 0.3, 0.4))).toEqual(true);
+        expect(ColorGeometryInstanceAttribute.equals(color, new ColorGeometryInstanceAttribute(0.5, 0.2, 0.3, 0.4))).toEqual(false);
+        expect(ColorGeometryInstanceAttribute.equals(color, new ColorGeometryInstanceAttribute(0.1, 0.5, 0.3, 0.4))).toEqual(false);
+        expect(ColorGeometryInstanceAttribute.equals(color, new ColorGeometryInstanceAttribute(0.1, 0.2, 0.5, 0.4))).toEqual(false);
+        expect(ColorGeometryInstanceAttribute.equals(color, new ColorGeometryInstanceAttribute(0.1, 0.2, 0.3, 0.5))).toEqual(false);
+        expect(ColorGeometryInstanceAttribute.equals(color, undefined)).toEqual(false);
+        expect(ColorGeometryInstanceAttribute.equals(undefined, color)).toEqual(false);
+    });
 });

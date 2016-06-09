@@ -10,7 +10,7 @@ define([
         'Cesium/DataSources/CzmlDataSource',
         'Cesium/DataSources/GeoJsonDataSource',
         'Cesium/DataSources/KmlDataSource',
-        'Cesium/Scene/TileMapServiceImageryProvider',
+        'Cesium/Scene/createTileMapServiceImageryProvider',
         'Cesium/Widgets/Viewer/Viewer',
         'Cesium/Widgets/Viewer/viewerCesiumInspectorMixin',
         'Cesium/Widgets/Viewer/viewerDragDropMixin',
@@ -26,11 +26,11 @@ define([
         CzmlDataSource,
         GeoJsonDataSource,
         KmlDataSource,
-        TileMapServiceImageryProvider,
+        createTileMapServiceImageryProvider,
         Viewer,
         viewerCesiumInspectorMixin,
         viewerDragDropMixin) {
-    "use strict";
+    'use strict';
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -47,7 +47,7 @@ define([
 
     var imageryProvider;
     if (endUserOptions.tmsImageryUrl) {
-        imageryProvider = new TileMapServiceImageryProvider({
+        imageryProvider = createTileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
     }
@@ -104,7 +104,10 @@ define([
         } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             loadPromise = GeoJsonDataSource.load(source);
         } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-            loadPromise = KmlDataSource.load(source);
+            loadPromise = KmlDataSource.load(source, {
+                camera: scene.camera,
+                canvas: scene.canvas
+            });
         } else {
             showLoadError(source, 'Unknown format.');
         }

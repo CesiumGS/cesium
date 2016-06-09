@@ -45,7 +45,7 @@ define([
         PrimitiveType,
         Quaternion,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -618,8 +618,8 @@ define([
      * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.extrudedHeight] The height of the extrusion.
+     * @param {Number} [options.height=0.0] The distance in meters between the ellipse and the ellipsoid surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the ellipse's extruded face and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates counter-clockwise from north.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
@@ -639,7 +639,7 @@ define([
      *   rotation : Cesium.Math.toRadians(60.0)
      * });
      * var geometry = Cesium.EllipseGeometry.createGeometry(ellipse);
-     * 
+     *
      * @see EllipseGeometry.createGeometry
      */
     function EllipseGeometry(options) {
@@ -664,9 +664,6 @@ define([
         }
         if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
-        }
-        if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
-            throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
@@ -815,9 +812,13 @@ define([
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     EllipseGeometry.createGeometry = function(ellipseGeometry) {
+        if ((ellipseGeometry._semiMajorAxis <= 0.0) || (ellipseGeometry._semiMinorAxis <= 0.0)) {
+            return;
+        }
+
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -863,6 +864,7 @@ define([
             semiMajorAxis : ellipseGeometry._semiMajorAxis,
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipsoid,
+            rotation : ellipseGeometry._rotation,
             stRotation : ellipseGeometry._stRotation,
             granularity : granularity,
             extrudedHeight : minHeight,

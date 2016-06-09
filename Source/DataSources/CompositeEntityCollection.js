@@ -15,7 +15,7 @@ define([
         CesiumMath,
         Entity,
         EntityCollection) {
-    "use strict";
+    'use strict';
 
     var entityOptionsScratch = {
         id : undefined
@@ -125,8 +125,10 @@ define([
      * @constructor
      *
      * @param {EntityCollection[]} [collections] The initial list of EntityCollection instances to merge.
+     * @param {DataSource|CompositeEntityCollection} [owner] The data source (or composite entity collection) which created this collection.
      */
-    function CompositeEntityCollection(collections) {
+    function CompositeEntityCollection(collections, owner) {
+        this._owner = owner;
         this._composite = new EntityCollection(this);
         this._suspendCount = 0;
         this._collections = defined(collections) ? collections.slice() : [];
@@ -171,6 +173,17 @@ define([
         values : {
             get : function() {
                 return this._composite.values;
+            }
+        },
+        /**
+         * Gets the owner of this composite entity collection, ie. the data source or composite entity collection which created it.
+         * @memberof CompositeEntityCollection.prototype
+         * @readonly
+         * @type {DataSource|CompositeEntityCollection}
+         */
+        owner : {
+            get : function() {
+                return this._owner;
             }
         }
     });

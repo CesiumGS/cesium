@@ -39,7 +39,7 @@ Your topic is probably second nature to you; you work on it all day. Your audien
 
 Things that are obvious to you are often not obvious to them.
 
-Focus less on details, and instead **focus on providing context**, especially at the start of your talk.  Otherwise, you will loose the audience the moment they [can't see the forest for the trees](http://www.urbandictionary.com/define.php?term=can%27t+see+the+forest+for+the+trees).
+Focus less on details, and instead **focus on providing context**, especially at the start of your talk.  Otherwise, you will lose the audience the moment they [can't see the forest for the trees](http://www.urbandictionary.com/define.php?term=can%27t+see+the+forest+for+the+trees).
 
 ## Tell a Story
 
@@ -151,6 +151,6 @@ When presenting with a partner, strive to make it like a conversation.  For a gr
 
 ## Resources
 
-[10 tips for academic talks](http://matt.might.net/articles/academic-presentation-tips/) by Matt Might applies equally well to Cesium talks.
-
-
+* [10 tips for academic talks](http://matt.might.net/articles/academic-presentation-tips/) by Matt Might applies equally well to Cesium talks.
+* [Presentation Advice](http://cs.williams.edu/~morgan/presentation-advice.pdf) by Morgan McGuire
+* [Tips for Giving Clear Talks](http://www.cs.cmu.edu/~kayvonf/misc/cleartalktips.pdf) by Kayvon Fatahalian

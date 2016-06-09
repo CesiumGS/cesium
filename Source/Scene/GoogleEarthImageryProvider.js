@@ -29,7 +29,7 @@ define([
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides tiled imagery using the Google Earth Imagery API.
@@ -84,7 +84,7 @@ define([
      * @see BingMapsImageryProvider
      * @see createOpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see TileMapServiceImageryProvider
+     * @see createTileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -92,7 +92,7 @@ define([
      *
      * @example
      * var google = new Cesium.GoogleEarthImageryProvider({
-     *     url : '//earth.localdomain',
+     *     url : 'https://earth.localdomain',
      *     channel : 1008
      * });
      * 

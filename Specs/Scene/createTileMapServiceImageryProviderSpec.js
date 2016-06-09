@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/TileMapServiceImageryProvider',
+        'Scene/createTileMapServiceImageryProvider',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/DefaultProxy',
@@ -15,12 +15,12 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Imagery',
         'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        TileMapServiceImageryProvider,
+        createTileMapServiceImageryProvider,
         Cartesian2,
         Cartographic,
         DefaultProxy,
@@ -35,23 +35,26 @@ defineSuite([
         WebMercatorTilingScheme,
         Imagery,
         ImageryLayer,
-        ImageryProvider,
         ImageryState,
+        UrlTemplateImageryProvider,
         pollToPromise,
         when) {
-    "use strict";
+    'use strict';
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
-    it('conforms to ImageryProvider interface', function() {
-        expect(TileMapServiceImageryProvider).toConformToInterface(ImageryProvider);
+    it('return a UrlTemplateImageryProvider', function() {
+        var provider = createTileMapServiceImageryProvider({
+          url: 'made/up/tms/server/'
+        });
+        expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
     });
 
     it('resolves readyPromise', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -85,7 +88,7 @@ defineSuite([
             }, 1);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -99,13 +102,13 @@ defineSuite([
 
     it('requires the url to be specified', function() {
         function createWithoutUrl() {
-            return new TileMapServiceImageryProvider({});
+            return createTileMapServiceImageryProvider({});
         }
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -117,7 +120,7 @@ defineSuite([
     });
 
     it('supports a slash at the end of the URL', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -139,7 +142,7 @@ defineSuite([
     });
 
     it('supports no slash at the endof the URL', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -161,7 +164,7 @@ defineSuite([
     });
 
     it('supports a query string at the end of the URL', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server/?a=some&b=query'
         });
 
@@ -170,7 +173,7 @@ defineSuite([
         }).then(function() {
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 expect(url).not.toContain('//');
-
+                expect(url).toContain('?a=some&b=query');
                 // Just return any old image.
                 loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             });
@@ -183,15 +186,14 @@ defineSuite([
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
-
-        expect(provider.url).toEqual('made/up/tms/server/');
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
+            expect(provider.url).toEqual('made/up/tms/server/{z}/{x}/{reverseY}.png');
             expect(provider.tileWidth).toEqual(256);
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
@@ -211,7 +213,7 @@ defineSuite([
     });
 
     it('when no credit is supplied, the provider has no logo', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
         return pollToPromise(function() {
@@ -222,7 +224,7 @@ defineSuite([
     });
 
     it('turns the supplied credit into a logo', function() {
-        var providerWithCredit = new TileMapServiceImageryProvider({
+        var providerWithCredit = createTileMapServiceImageryProvider({
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
@@ -242,7 +244,7 @@ defineSuite([
             deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
         });
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'server.invalid',
             proxy : proxy
         });
@@ -252,9 +254,26 @@ defineSuite([
         });
     });
 
+    it('resource request takes a query string', function() {
+        /*jshint unused: false*/
+        var requestMetadata = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestMetadata.resolve(url);
+            deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
+        });
+
+        var provider = createTileMapServiceImageryProvider({
+            url : 'server.invalid?query=1',
+        });
+
+        return requestMetadata.promise.then(function(url) {
+            expect(/\?query=1$/.test(url)).toEqual(true);
+        });
+    });
+
     it('routes tile requests through a proxy if one is specified', function() {
         var proxy = new DefaultProxy('/proxy/');
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             proxy : proxy
         });
@@ -280,7 +299,7 @@ defineSuite([
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             rectangle : rectangle
         });
@@ -292,7 +311,10 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toBeUndefined();
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.rectangle).toEqual(rectangle);
+            expect(provider.rectangle.west).toEqualEpsilon(rectangle.west, CesiumMath.EPSILON14);
+            expect(provider.rectangle.east).toEqualEpsilon(rectangle.east, CesiumMath.EPSILON14);
+            expect(provider.rectangle.north).toEqualEpsilon(rectangle.north, CesiumMath.EPSILON14);
+            expect(provider.rectangle.south).toEqualEpsilon(rectangle.south, CesiumMath.EPSILON14);
             expect(provider.tileDiscardPolicy).toBeUndefined();
 
             spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
@@ -310,7 +332,7 @@ defineSuite([
     });
 
     it('uses maximumLevel passed to constructor', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             maximumLevel : 5
         });
@@ -323,7 +345,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -375,8 +397,8 @@ defineSuite([
                 "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
                 "  <Abstract/>" +
                 "  <SRS>EPSG:900913</SRS>" +
-                "  <BoundingBox minx='-88.0' miny='-185.0' maxx='88.0' maxy='185.0'/>" +
-                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+                "  <BoundingBox miny='-88.0' minx='-185.0' maxy='88.0' maxx='185.0'/>" +
+                "  <Origin y='-88.0' x='-180.00000000000000'/>" +
                 "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
                 "  <TileSets profile='mercator'>" +
                 "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
@@ -386,7 +408,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -424,7 +446,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -456,7 +478,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -488,7 +510,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -520,7 +542,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -561,7 +583,7 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -601,8 +623,9 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+        var provider = createTileMapServiceImageryProvider({
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {
@@ -641,8 +664,9 @@ defineSuite([
             deferred.resolve(xml);
         };
 
-        var provider = new TileMapServiceImageryProvider({
-            url : 'made/up/tms/server'
+        var provider = createTileMapServiceImageryProvider({
+            url : 'made/up/tms/server',
+            flipXY : true
         });
 
         return pollToPromise(function() {
@@ -685,7 +709,7 @@ defineSuite([
             }, 1);
         };
 
-        var provider = new TileMapServiceImageryProvider({
+        var provider = createTileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 

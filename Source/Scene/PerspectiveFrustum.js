@@ -9,7 +9,7 @@ define([
         defineProperties,
         DeveloperError,
         PerspectiveOffCenterFrustum) {
-    "use strict";
+    'use strict';
 
     /**
      * The viewing frustum is defined by 6 planes.
@@ -69,6 +69,22 @@ define([
          */
         this.far = 500000000.0;
         this._far = this.far;
+
+        /**
+         * Offsets the frustum in the x direction.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.xOffset = 0.0;
+        this._xOffset = this.xOffset;
+
+        /**
+         * Offsets the frustum in the y direction.
+         * @type {Number}
+         * @default 0.0
+         */
+        this.yOffset = 0.0;
+        this._yOffset = this.yOffset;
     }
 
     function update(frustum) {
@@ -81,7 +97,8 @@ define([
         var f = frustum._offCenterFrustum;
 
         if (frustum.fov !== frustum._fov || frustum.aspectRatio !== frustum._aspectRatio ||
-                frustum.near !== frustum._near || frustum.far !== frustum._far) {
+                frustum.near !== frustum._near || frustum.far !== frustum._far ||
+                frustum.xOffset !== frustum._xOffset || frustum.yOffset !== frustum._yOffset) {
             //>>includeStart('debug', pragmas.debug);
             if (frustum.fov < 0 || frustum.fov >= Math.PI) {
                 throw new DeveloperError('fov must be in the range [0, PI).');
@@ -102,6 +119,8 @@ define([
             frustum._near = frustum.near;
             frustum._far = frustum.far;
             frustum._sseDenominator = 2.0 * Math.tan(0.5 * frustum._fovy);
+            frustum._xOffset = frustum.xOffset;
+            frustum._yOffset = frustum.yOffset;
 
             f.top = frustum.near * Math.tan(0.5 * frustum._fovy);
             f.bottom = -f.top;
@@ -109,6 +128,11 @@ define([
             f.left = -f.right;
             f.near = frustum.near;
             f.far = frustum.far;
+
+            f.right += frustum.xOffset;
+            f.left += frustum.xOffset;
+            f.top += frustum.yOffset;
+            f.bottom += frustum.yOffset;
         }
     }
 
@@ -202,7 +226,7 @@ define([
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, new Cesium.Cartesian2());
      *
      * @example
      * // Example 2
@@ -213,7 +237,7 @@ define([
      * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
      * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
      * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, new Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, new Cesium.Cartesian2());
      */
     PerspectiveFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
         update(this);

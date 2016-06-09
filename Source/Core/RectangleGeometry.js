@@ -49,7 +49,7 @@ define([
         Rectangle,
         RectangleGeometryLibrary,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var positionScratch = new Cartesian3();
     var normalScratch = new Cartesian3();
@@ -245,8 +245,8 @@ define([
 
         var minX = Number.MAX_VALUE;
         var minY = Number.MAX_VALUE;
-        var maxX = Number.MIN_VALUE;
-        var maxY = Number.MIN_VALUE;
+        var maxX = -Number.MAX_VALUE;
+        var maxY = -Number.MAX_VALUE;
 
         for (var row = 0; row < height; ++row) {
             for (var col = 0; col < width; ++col) {
@@ -344,14 +344,13 @@ define([
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, CesiumMath.EPSILON10)) {
             return topBottomGeo;
         }
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, maxHeight, ellipsoid, false);
-        var topPositions = new Float64Array(topBottomGeo.attributes.position.values);
+        var topPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, maxHeight, ellipsoid, false);
+        topPositions = new Float64Array(topPositions);
         var length = topPositions.length;
         var newLength = length*2;
         var positions = new Float64Array(newLength);
         positions.set(topPositions);
-        topBottomGeo = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo, minHeight, ellipsoid);
-        var bottomPositions = topBottomGeo.attributes.position.values;
+        var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(topBottomGeo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         topBottomGeo.attributes.position.values = positions;
 
@@ -509,10 +508,10 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the rectangle lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [options.height=0.0] The distance in meters between the rectangle and the ellipsoid surface.
      * @param {Number} [options.rotation=0.0] The rotation of the rectangle, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Number} [options.extrudedHeight] Height of extruded surface.
+     * @param {Number} [options.extrudedHeight] The distance in meters between the rectangle's extruded face and the ellipsoid surface.
      * @param {Boolean} [options.closeTop=true] Specifies whether the rectangle has a top cover when extruded.
      * @param {Boolean} [options.closeBottom=true] Specifies whether the rectangle has a bottom cover when extruded.
      *
@@ -715,11 +714,16 @@ define([
      * Computes the geometric representation of an rectangle, including its vertices, indices, and a bounding sphere.
      *
      * @param {RectangleGeometry} rectangleGeometry A description of the rectangle.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      *
      * @exception {DeveloperError} Rotated rectangle is invalid.
      */
     RectangleGeometry.createGeometry = function(rectangleGeometry) {
+        if ((CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.north, rectangleGeometry._rectangle.south, CesiumMath.EPSILON10) ||
+             (CesiumMath.equalsEpsilon(rectangleGeometry._rectangle.east, rectangleGeometry._rectangle.west, CesiumMath.EPSILON10)))) {
+            return undefined;
+        }
+
         var rectangle = Rectangle.clone(rectangleGeometry._rectangle, rectangleScratch);
         var ellipsoid = rectangleGeometry._ellipsoid;
         var surfaceHeight = rectangleGeometry._surfaceHeight;
@@ -762,7 +766,7 @@ define([
             boundingSphere = BoundingSphere.union(topBS, bottomBS);
         } else {
             geometry = constructRectangle(options);
-            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid, false);
+            geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometry.attributes.position.values, surfaceHeight, ellipsoid, false);
             boundingSphere = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, surfaceHeight);
         }
 

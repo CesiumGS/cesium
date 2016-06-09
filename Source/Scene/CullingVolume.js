@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
@@ -8,12 +9,13 @@ define([
         '../Core/Plane'
     ], function(
         Cartesian3,
+        Cartesian4,
         defaultValue,
         defined,
         DeveloperError,
         Intersect,
         Plane) {
-    "use strict";
+    'use strict';
 
     /**
      * The culling volume defined by planes.
@@ -21,7 +23,7 @@ define([
      * @alias CullingVolume
      * @constructor
      *
-     * @param {Cartesian4[]} planes An array of clipping planes.
+     * @param {Cartesian4[]} [planes] An array of clipping planes.
      */
     function CullingVolume(planes) {
         /**
@@ -34,7 +36,78 @@ define([
         this.planes = defaultValue(planes, []);
     }
 
+    var faces = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    Cartesian3.clone(Cartesian3.UNIT_X, faces[0]);
+    Cartesian3.clone(Cartesian3.UNIT_Y, faces[1]);
+    Cartesian3.clone(Cartesian3.UNIT_Z, faces[2]);
+
+    var scratchPlaneCenter = new Cartesian3();
+    var scratchPlaneNormal = new Cartesian3();
     var scratchPlane = new Plane(new Cartesian3(), 0.0);
+
+    /**
+     * Constructs a culling volume from a bounding sphere. Creates six planes that create a box containing the sphere.
+     * The planes are aligned to the x, y, and z axes in world coordinates.
+     *
+     * @param {BoundingSphere} boundingSphere The bounding sphere used to create the culling volume.
+     * @param {CullingVolume} [result] The object onto which to store the result.
+     * @returns {CullingVolume} The culling volume created from the bounding sphere.
+     */
+    CullingVolume.fromBoundingSphere = function(boundingSphere, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(boundingSphere)) {
+            throw new DeveloperError('boundingSphere is required.');
+        }
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new CullingVolume();
+        }
+
+        var length = faces.length;
+        var planes = result.planes;
+        planes.length = 2 * length;
+
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        var planeIndex = 0;
+
+        for (var i = 0; i < length; ++i) {
+            var faceNormal = faces[i];
+
+            var plane0 = planes[planeIndex];
+            var plane1 = planes[planeIndex + 1];
+
+            if (!defined(plane0)) {
+                plane0 = planes[planeIndex] = new Cartesian4();
+            }
+            if (!defined(plane1)) {
+                plane1 = planes[planeIndex + 1] = new Cartesian4();
+            }
+
+            Cartesian3.multiplyByScalar(faceNormal, -radius, scratchPlaneCenter);
+            Cartesian3.add(center, scratchPlaneCenter, scratchPlaneCenter);
+
+            plane0.x = faceNormal.x;
+            plane0.y = faceNormal.y;
+            plane0.z = faceNormal.z;
+            plane0.w = -Cartesian3.dot(faceNormal, scratchPlaneCenter);
+
+            Cartesian3.multiplyByScalar(faceNormal, radius, scratchPlaneCenter);
+            Cartesian3.add(center, scratchPlaneCenter, scratchPlaneCenter);
+
+            plane1.x = -faceNormal.x;
+            plane1.y = -faceNormal.y;
+            plane1.z = -faceNormal.z;
+            plane1.w = -Cartesian3.dot(Cartesian3.negate(faceNormal, scratchPlaneNormal), scratchPlaneCenter);
+
+            planeIndex += 2;
+        }
+
+        return result;
+    };
+
     /**
      * Determines whether a bounding volume intersects the culling volume.
      *

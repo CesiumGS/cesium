@@ -62,7 +62,7 @@
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     baseLayerPicker : false
@@ -114,13 +114,13 @@ function setupLayers() {
     addBaseLayerOption(
             'Bing Maps Road',
             new Cesium.BingMapsImageryProvider({
-                url: '//dev.virtualearth.net',
+                url : 'https://dev.virtualearth.net',
                 mapStyle: Cesium.BingMapsStyle.ROAD
             }));
     addBaseLayerOption(
             'ArcGIS World Street Maps',
             new Cesium.ArcGisMapServerImageryProvider({
-                url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+                url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
             }));
     addBaseLayerOption(
             'OpenStreetMaps',
@@ -128,18 +128,18 @@ function setupLayers() {
     addBaseLayerOption(
             'MapQuest OpenStreetMaps',
             Cesium.createOpenStreetMapImageryProvider({
-                url: '//otile1-s.mqcdn.com/tiles/1.0.0/osm/'
+                url : 'https://otile1-s.mqcdn.com/tiles/1.0.0/osm/'
             }));
     addBaseLayerOption(
             'Stamen Maps',
             Cesium.createOpenStreetMapImageryProvider({
-                url: '//stamen-tiles.a.ssl.fastly.net/watercolor/',
+                url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
                 fileExtension: 'jpg',
                 credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
             }));
     addBaseLayerOption(
             'Natural Earth II (local)',
-            new Cesium.TileMapServiceImageryProvider({
+            Cesium.createTileMapServiceImageryProvider({
                 url : require.toUrl('Assets/Textures/NaturalEarthII')
             }));
     addBaseLayerOption(
@@ -158,7 +158,7 @@ function setupLayers() {
     addAdditionalLayerOption(
             'United States GOES Infrared',
             new Cesium.WebMapServiceImageryProvider({
-                url : '//mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
+                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/goes/conus_ir.cgi?',
                 layers : 'goes_conus_ir',
                 credit : 'Infrared data courtesy Iowa Environmental Mesonet',
                 parameters : {
@@ -170,7 +170,7 @@ function setupLayers() {
     addAdditionalLayerOption(
             'United States Weather Radar',
             new Cesium.WebMapServiceImageryProvider({
-                url : '//mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
+                url : 'https://mesonet.agron.iastate.edu/cgi-bin/wms/nexrad/n0r.cgi?',
                 layers : 'nexrad-n0r',
                 credit : 'Radar data courtesy Iowa Environmental Mesonet',
                 parameters : {
@@ -181,7 +181,7 @@ function setupLayers() {
             }));
     addAdditionalLayerOption(
             'TileMapService Image',
-            new Cesium.TileMapServiceImageryProvider({
+            Cesium.createTileMapServiceImageryProvider({
                 url : '../images/cesium_maptiler/Cesium_Logo_Color'
             }),
             0.2);

@@ -7,7 +7,7 @@ define([
         defined,
         Ellipsoid,
         PolygonGeometry) {
-    "use strict";
+    'use strict';
 
     function createPolygonGeometry(polygonGeometry, offset) {
         if (defined(offset)) {

@@ -11,7 +11,8 @@ define([
         '../Core/Matrix3',
         '../Core/Quaternion',
         '../Core/Transforms',
-        './Property'
+        './Property',
+        './VelocityVectorProperty'
     ], function(
         Cartesian3,
         defaultValue,
@@ -24,8 +25,9 @@ define([
         Matrix3,
         Quaternion,
         Transforms,
-        Property) {
-    "use strict";
+        Property,
+        VelocityVectorProperty) {
+    'use strict';
 
     /**
      * A {@link Property} which evaluates to a {@link Quaternion} rotation
@@ -47,13 +49,17 @@ define([
      * }));
      */
     function VelocityOrientationProperty(position, ellipsoid) {
-        this._position = undefined;
+        this._velocityVectorProperty = new VelocityVectorProperty(position);
         this._subscription = undefined;
         this._ellipsoid = undefined;
         this._definitionChanged = new Event();
 
-        this.position = position;
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var that = this;
+        this._velocityVectorProperty.definitionChanged.addEventListener(function() {
+            that._definitionChanged.raiseEvent(that);
+        });
     }
 
     defineProperties(VelocityOrientationProperty.prototype, {
@@ -66,7 +72,7 @@ define([
          */
         isConstant : {
             get : function() {
-                return Property.isConstant(this._position);
+                return Property.isConstant(this._velocityVectorProperty);
             }
         },
         /**
@@ -89,25 +95,10 @@ define([
          */
         position : {
             get : function() {
-                return this._position;
+                return this._velocityVectorProperty.position;
             },
             set : function(value) {
-                var oldValue = this._position;
-                if (oldValue !== value) {
-                    if (defined(oldValue)) {
-                        this._subscription();
-                    }
-
-                    this._position = value;
-
-                    if (defined(value)) {
-                        this._subscription = value._definitionChanged.addEventListener(function() {
-                            this._definitionChanged.raiseEvent(this);
-                        }, this);
-                    }
-
-                    this._definitionChanged.raiseEvent(this);
-                }
+                this._velocityVectorProperty.position = value;
             }
         },
         /**
@@ -130,12 +121,9 @@ define([
         }
     });
 
-    var position1Scratch = new Cartesian3();
-    var position2Scratch = new Cartesian3();
+    var positionScratch = new Cartesian3();
     var velocityScratch = new Cartesian3();
-    var timeScratch = new JulianDate();
     var rotationScratch = new Matrix3();
-    var step = 1.0 / 60.0;
 
     /**
      * Gets the value of the property at the provided time.
@@ -145,43 +133,13 @@ define([
      * @returns {Quaternion} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     VelocityOrientationProperty.prototype.getValue = function(time, result) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required');
-        }
-        //>>includeEnd('debug');
+        var velocity = this._velocityVectorProperty._getValue(time, velocityScratch, positionScratch);
 
-        var property = this._position;
-        if (Property.isConstant(property)) {
+        if (!defined(velocity)) {
             return undefined;
         }
 
-        var position1 = property.getValue(time, position1Scratch);
-        var position2 = property.getValue(JulianDate.addSeconds(time, step, timeScratch), position2Scratch);
-
-        //If we don't have a position for now, return undefined.
-        if (!defined(position1)) {
-            return undefined;
-        }
-
-        //If we don't have a position for now + step, see if we have a position for now - step.
-        if (!defined(position2)) {
-            position2 = position1;
-            position1 = property.getValue(JulianDate.addSeconds(time, -step, timeScratch), position2Scratch);
-
-            if (!defined(position1)) {
-                return undefined;
-            }
-        }
-
-        if (Cartesian3.equals(position1, position2)) {
-            return undefined;
-        }
-
-        var velocity = Cartesian3.subtract(position2, position1, velocityScratch);
-        Cartesian3.normalize(velocity, velocity);
-
-        Transforms.rotationMatrixFromPositionVelocity(position1, velocity, this._ellipsoid, rotationScratch);
+        Transforms.rotationMatrixFromPositionVelocity(positionScratch, velocity, this._ellipsoid, rotationScratch);
         return Quaternion.fromRotationMatrix(rotationScratch, result);
     };
 
@@ -195,7 +153,7 @@ define([
     VelocityOrientationProperty.prototype.equals = function(other) {
         return this === other ||//
                (other instanceof VelocityOrientationProperty &&
-                Property.equals(this._position, other._position) &&
+                Property.equals(this._velocityVectorProperty, other._velocityVectorProperty) &&
                 (this._ellipsoid === other._ellipsoid ||
                  this._ellipsoid.equals(other._ellipsoid)));
     };

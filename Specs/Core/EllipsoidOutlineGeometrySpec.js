@@ -7,7 +7,7 @@ defineSuite([
         EllipsoidOutlineGeometry,
         Cartesian3,
         createPackableSpecs) {
-    "use strict";
+    'use strict';
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
@@ -43,6 +43,41 @@ defineSuite([
         expect(m.attributes.position.values.length).toEqual(14 * 3);
         expect(m.indices.length).toEqual(15 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
+    });
+
+    it('undefined is returned if the x, y, or z radii are equal or less than zero', function() {
+        var ellipsoidOutline0 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(0.0, 500000.0, 500000.0)
+        });
+        var ellipsoidOutline1 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, 0.0, 500000.0)
+        });
+        var ellipsoidOutline2 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, 500000.0, 0.0)
+        });
+        var ellipsoidOutline3 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(-10.0, 500000.0, 500000.0)
+        });
+        var ellipsoidOutline4 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, -10.0, 500000.0)
+        });
+        var ellipsoidOutline5 = new EllipsoidOutlineGeometry({
+            radii : new Cartesian3(1000000.0, 500000.0, -10.0)
+        });
+
+        var geometry0 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline0);
+        var geometry1 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline1);
+        var geometry2 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline2);
+        var geometry3 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline3);
+        var geometry4 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline4);
+        var geometry5 = EllipsoidOutlineGeometry.createGeometry(ellipsoidOutline5);
+
+        expect(geometry0).toBeUndefined();
+        expect(geometry1).toBeUndefined();
+        expect(geometry2).toBeUndefined();
+        expect(geometry3).toBeUndefined();
+        expect(geometry4).toBeUndefined();
+        expect(geometry5).toBeUndefined();
     });
 
     var ellipsoidgeometry = new EllipsoidOutlineGeometry({

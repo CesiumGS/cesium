@@ -9,7 +9,7 @@ define([
         defined,
         DeveloperError,
         BoundingSphereState) {
-    "use strict";
+    'use strict';
 
     /**
      * @private

@@ -21,7 +21,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         PrimitiveType) {
-    "use strict";
+    'use strict';
 
     var diffScratch = new Cartesian3();
 
@@ -38,8 +38,6 @@ define([
      * @see BoxOutlineGeometry.fromDimensions
      * @see BoxOutlineGeometry.createGeometry
      * @see Packable
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box%20Outline.html|Cesium Sandcastle Box Outline Demo}
      *
      * @example
      * var box = new Cesium.BoxOutlineGeometry({
@@ -208,11 +206,15 @@ define([
      * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxOutlineGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._min;
         var max = boxGeometry._max;
+
+        if (Cartesian3.equals(min, max)) {
+            return;
+        }
 
         var attributes = new GeometryAttributes();
         var indices = new Uint16Array(12 * 2);

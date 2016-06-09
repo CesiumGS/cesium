@@ -5,7 +5,7 @@ define([
     ], function(
         freezeObject,
         WebGLConstants) {
-    "use strict";
+    'use strict';
 
     /**
      * Determines the function used to compare two depths for the depth test.

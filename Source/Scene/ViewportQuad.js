@@ -23,7 +23,7 @@ define([
         BlendingState,
         Material,
         Pass) {
-    "use strict";
+    'use strict';
 
     /**
      * A viewport aligned quad.
@@ -184,7 +184,7 @@ define([
      *
      * @example
      * quad = quad && quad.destroy();
-     * 
+     *
      * @see ViewportQuad#isDestroyed
      */
     ViewportQuad.prototype.destroy = function() {

@@ -25,7 +25,7 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -48,7 +48,9 @@ var greenPolygon = viewer.entities.add({
                                                         -100.0, 42.0,
                                                         -104.0, 40.0]),
         extrudedHeight: 500000.0,
-        material : Cesium.Color.GREEN
+        material : Cesium.Color.GREEN,
+        closeTop : false,
+        closeBottom : false
     }
 });
 

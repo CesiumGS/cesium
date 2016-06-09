@@ -83,7 +83,7 @@ define([
         Imagery,
         ImageryState,
         TileImagery) {
-    "use strict";
+    'use strict';
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
@@ -235,6 +235,8 @@ define([
         this._isBaseLayer = false;
 
         this._requestImageError = undefined;
+
+        this._reprojectComputeCommands = [];
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -344,7 +346,7 @@ define([
      *
      * @example
      * imageryLayer = imageryLayer && imageryLayer.destroy();
-     * 
+     *
      * @see ImageryLayer#isDestroyed
      */
     ImageryLayer.prototype.destroy = function() {
@@ -354,6 +356,28 @@ define([
     var imageryBoundsScratch = new Rectangle();
     var tileImageryBoundsScratch = new Rectangle();
     var clippedRectangleScratch = new Rectangle();
+
+    /**
+     * Computes the intersection of this layer's rectangle with the imagery provider's availability rectangle,
+     * producing the overall bounds of imagery that can be produced by this layer.
+     *
+     * @returns {Promise.<Rectangle>} A promise to a rectangle which defines the overall bounds of imagery that can be produced by this layer.
+     *
+     * @example
+     * // Zoom to an imagery layer.
+     * imageryLayer.getViewableRectangle().then(function (rectangle) {
+     *     return camera.flyTo({
+     *         destination: rectangle
+     *     });
+     * });
+     */
+    ImageryLayer.prototype.getViewableRectangle = function() {
+        var imageryProvider = this._imageryProvider;
+        var rectangle = this._rectangle;
+        return imageryProvider.readyPromise.then(function() {
+            return Rectangle.intersection(imageryProvider.rectangle, rectangle);
+        });
+    };
 
     /**
      * Create skeletons for the imagery tiles that partially or completely overlap a given terrain
@@ -717,7 +741,7 @@ define([
     }
 
     /**
-     * Reproject a texture to a {@link GeographicProjection}, if necessary, and generate
+     * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
      * mipmaps for the geographic texture.
      *
      * @private
@@ -751,10 +775,35 @@ define([
                         finalizeReprojectTexture(that, context, imagery, outputTexture);
                     }
                 });
-                frameState.commandList.push(computeCommand);
+                this._reprojectComputeCommands.push(computeCommand);
         } else {
             finalizeReprojectTexture(this, context, imagery, texture);
         }
+    };
+
+    /**
+     * Updates frame state to execute any queued texture re-projections.
+     *
+     * @private
+     *
+     * @param {FrameState} frameState The frameState.
+     */
+    ImageryLayer.prototype.queueReprojectionCommands = function(frameState) {
+        var computeCommands = this._reprojectComputeCommands;
+        var length = computeCommands.length;
+        for (var i = 0; i < length; ++i) {
+            frameState.commandList.push(computeCommands[i]);
+        }
+        computeCommands.length = 0;
+    };
+
+    /**
+     * Cancels re-projection commands queued for the next frame.
+     *
+     * @private
+     */
+    ImageryLayer.prototype.cancelReprojections = function() {
+        this._reprojectComputeCommands.length = 0;
     };
 
     ImageryLayer.prototype.getImageryFromCache = function(x, y, level, imageryRectangle) {

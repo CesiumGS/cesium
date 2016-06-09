@@ -6,5 +6,11 @@
                 <scale>3</scale>
             </IconStyle>
         </Style>
+        <StyleMap id="testStyleMap">
+            <Pair>
+                <key>normal</key>
+                <styleUrl>#testStyle</styleUrl>
+            </Pair>
+        </StyleMap>
     </Document>
 </kml>

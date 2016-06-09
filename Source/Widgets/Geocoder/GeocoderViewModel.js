@@ -29,7 +29,7 @@ define([
         knockout,
         when,
         createCommand) {
-    "use strict";
+    'use strict';
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -38,7 +38,7 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Scene} options.scene The Scene instance to use.
-     * @param {String} [options.url='//dev.virtualearth.net'] The base URL of the Bing Maps API.
+     * @param {String} [options.url='https://dev.virtualearth.net'] The base URL of the Bing Maps API.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
@@ -55,7 +55,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = defaultValue(options.url, '//dev.virtualearth.net/');
+        this._url = defaultValue(options.url, 'https://dev.virtualearth.net/');
         if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
             this._url += '/';
         }
@@ -210,8 +210,7 @@ define([
                 viewModel._complete.raiseEvent();
             },
             duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY,
-            convert : false
+            endTransform : Matrix4.IDENTITY
         });
     }
 

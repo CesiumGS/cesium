@@ -24,6 +24,7 @@ define([
         '../Core/PrimitiveType',
         '../Core/Rectangle',
         '../Core/SphereOutlineGeometry',
+        '../Core/TerrainQuantization',
         '../Core/Visibility',
         '../Core/WebMercatorProjection',
         '../Renderer/Buffer',
@@ -68,6 +69,7 @@ define([
         PrimitiveType,
         Rectangle,
         SphereOutlineGeometry,
+        TerrainQuantization,
         Visibility,
         WebMercatorProjection,
         Buffer,
@@ -87,7 +89,7 @@ define([
         ImageryState,
         QuadtreeTileLoadState,
         SceneMode) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
@@ -122,6 +124,8 @@ define([
         this.oceanNormalMap = undefined;
         this.zoomedOutOceanSpecularIntensity = 0.5;
         this.enableLighting = false;
+        this.castShadows = false;
+        this.receiveShadows = false;
 
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
@@ -147,6 +151,8 @@ define([
         this._pickCommands = [];
         this._usedDrawCommands = 0;
         this._usedPickCommands = 0;
+
+        this._vertexArraysToDestroy = [];
 
         this._debug = {
             wireframe : false,
@@ -280,14 +286,29 @@ define([
         return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
+    function freeVertexArray(vertexArray) {
+        var indexBuffer = vertexArray.indexBuffer;
+        vertexArray.destroy();
+
+        if (!indexBuffer.isDestroyed() && defined(indexBuffer.referenceCount)) {
+            --indexBuffer.referenceCount;
+            if (indexBuffer.referenceCount === 0) {
+                indexBuffer.destroy();
+            }
+        }
+    }
+
     /**
-     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
-     * or any other functions.
-     *
+     * Called at the beginning of each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
      * @param {FrameState} frameState The frame state.
      */
-    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
-        this._imageryLayers._update();
+    GlobeSurfaceTileProvider.prototype.initialize = function(frameState) {
+        var imageryLayers = this._imageryLayers;
+
+        // update collection: imagery indices, base layers, raise layer show/hide event
+        imageryLayers._update();
+        // update each layer for texture reprojection.
+        imageryLayers.queueReprojectionCommands(frameState);
 
         if (this._layerOrderChanged) {
             this._layerOrderChanged = false;
@@ -298,19 +319,6 @@ define([
             });
         }
 
-        var i;
-        var len;
-
-        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
-        for (i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
-            var tiles = tilesToRenderByTextureCount[i];
-            if (defined(tiles)) {
-                tiles.length = 0;
-            }
-        }
-
-        this._usedDrawCommands = 0;
-
         // Add credits for terrain and imagery providers.
         var creditDisplay = frameState.creditDisplay;
 
@@ -318,13 +326,37 @@ define([
             creditDisplay.addCredit(this._terrainProvider.credit);
         }
 
-        var imageryLayers = this._imageryLayers;
-        for (i = 0, len = imageryLayers.length; i < len; ++i) {
+        for (var i = 0, len = imageryLayers.length; i < len; ++i) {
             var imageryProvider = imageryLayers.get(i).imageryProvider;
             if (imageryProvider.ready && defined(imageryProvider.credit)) {
                 creditDisplay.addCredit(imageryProvider.credit);
             }
         }
+
+        var vertexArraysToDestroy = this._vertexArraysToDestroy;
+        var length = vertexArraysToDestroy.length;
+        for (var j = 0; j < length; ++j) {
+            freeVertexArray(vertexArraysToDestroy[j]);
+        }
+        vertexArraysToDestroy.length = 0;
+    };
+
+    /**
+     * Called at the beginning of the update cycle for each render frame, before {@link QuadtreeTileProvider#showTileThisFrame}
+     * or any other functions.
+     *
+     * @param {FrameState} frameState The frame state.
+     */
+    GlobeSurfaceTileProvider.prototype.beginUpdate = function(frameState) {
+        var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
+        for (var i = 0, len = tilesToRenderByTextureCount.length; i < len; ++i) {
+            var tiles = tilesToRenderByTextureCount[i];
+            if (defined(tiles)) {
+                tiles.length = 0;
+            }
+        }
+
+        this._usedDrawCommands = 0;
     };
 
     /**
@@ -401,6 +433,13 @@ define([
     };
 
     /**
+     * Cancels any imagery re-projections in the queue.
+     */
+    GlobeSurfaceTileProvider.prototype.cancelReprojections = function() {
+        this._imageryLayers.cancelReprojections();
+    };
+
+    /**
      * Gets the maximum geometric error allowed in a tile at a given level, in meters.  This function should not be
      * called before {@link GlobeSurfaceTileProvider#ready} returns true.
      *
@@ -422,7 +461,7 @@ define([
      * @exception {DeveloperError} <code>loadTile</code> must not be called before the tile provider is ready.
      */
     GlobeSurfaceTileProvider.prototype.loadTile = function(frameState, tile) {
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this._terrainProvider, this._imageryLayers, this._vertexArraysToDestroy);
     };
 
     var boundingSphereScratch = new BoundingSphere();
@@ -485,6 +524,7 @@ define([
     };
 
     var modifiedModelViewScratch = new Matrix4();
+    var modifiedModelViewProjectionScratch = new Matrix4();
     var tileRectangleScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
     var centerEyeScratch = new Cartesian3();
@@ -565,7 +605,7 @@ define([
      *
      * @example
      * provider = provider && provider();
-     * 
+     *
      * @see GlobeSurfaceTileProvider#isDestroyed
      */
     GlobeSurfaceTileProvider.prototype.destroy = function() {
@@ -632,107 +672,122 @@ define([
         }
     };
 
-    function createTileUniformMap() {
+    function createTileUniformMap(frameState) {
         var uniformMap = {
             u_initialColor : function() {
-                return this.initialColor;
+                return this.properties.initialColor;
             },
             u_zoomedOutOceanSpecularIntensity : function() {
-                return this.zoomedOutOceanSpecularIntensity;
+                return this.properties.zoomedOutOceanSpecularIntensity;
             },
             u_oceanNormalMap : function() {
-                return this.oceanNormalMap;
+                return this.properties.oceanNormalMap;
             },
             u_lightingFadeDistance : function() {
-                return this.lightingFadeDistance;
+                return this.properties.lightingFadeDistance;
             },
             u_center3D : function() {
-                return this.center3D;
+                return this.properties.center3D;
             },
             u_tileRectangle : function() {
-                return this.tileRectangle;
+                return this.properties.tileRectangle;
             },
             u_modifiedModelView : function() {
-                return this.modifiedModelView;
+                var viewMatrix = frameState.context.uniformState.view;
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.rtc, centerEyeScratch);
+                Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
+            },
+            u_modifiedModelViewProjection : function() {
+                var viewMatrix = frameState.context.uniformState.view;
+                var projectionMatrix = frameState.context.uniformState.projection;
+                var centerEye = Matrix4.multiplyByPoint(viewMatrix, this.properties.rtc, centerEyeScratch);
+                Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewProjectionScratch);
+                Matrix4.multiply(projectionMatrix, modifiedModelViewProjectionScratch, modifiedModelViewProjectionScratch);
+                return modifiedModelViewProjectionScratch;
             },
             u_dayTextures : function() {
-                return this.dayTextures;
+                return this.properties.dayTextures;
             },
             u_dayTextureTranslationAndScale : function() {
-                return this.dayTextureTranslationAndScale;
+                return this.properties.dayTextureTranslationAndScale;
             },
             u_dayTextureTexCoordsRectangle : function() {
-                return this.dayTextureTexCoordsRectangle;
+                return this.properties.dayTextureTexCoordsRectangle;
             },
             u_dayTextureAlpha : function() {
-                return this.dayTextureAlpha;
+                return this.properties.dayTextureAlpha;
             },
             u_dayTextureBrightness : function() {
-                return this.dayTextureBrightness;
+                return this.properties.dayTextureBrightness;
             },
             u_dayTextureContrast : function() {
-                return this.dayTextureContrast;
+                return this.properties.dayTextureContrast;
             },
             u_dayTextureHue : function() {
-                return this.dayTextureHue;
+                return this.properties.dayTextureHue;
             },
             u_dayTextureSaturation : function() {
-                return this.dayTextureSaturation;
+                return this.properties.dayTextureSaturation;
             },
             u_dayTextureOneOverGamma : function() {
-                return this.dayTextureOneOverGamma;
+                return this.properties.dayTextureOneOverGamma;
             },
             u_dayIntensity : function() {
-                return this.dayIntensity;
+                return this.properties.dayIntensity;
             },
             u_southAndNorthLatitude : function() {
-                return this.southAndNorthLatitude;
+                return this.properties.southAndNorthLatitude;
             },
             u_southMercatorYAndOneOverHeight : function() {
-                return this.southMercatorYAndOneOverHeight;
+                return this.properties.southMercatorYAndOneOverHeight;
             },
             u_waterMask : function() {
-                return this.waterMask;
+                return this.properties.waterMask;
             },
             u_waterMaskTranslationAndScale : function() {
-                return this.waterMaskTranslationAndScale;
+                return this.properties.waterMaskTranslationAndScale;
             },
             u_minMaxHeight : function() {
-                return this.minMaxHeight;
+                return this.properties.minMaxHeight;
             },
             u_scaleAndBias : function() {
-                return this.scaleAndBias;
+                return this.properties.scaleAndBias;
             },
 
+            // make a separate object so that changes to the properties are seen on
+            // derived commands that combine another uniform map with this one.
+            properties : {
+                initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
+                zoomedOutOceanSpecularIntensity : 0.5,
+                oceanNormalMap : undefined,
+                lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
 
-            initialColor : new Cartesian4(0.0, 0.0, 0.5, 1.0),
-            zoomedOutOceanSpecularIntensity : 0.5,
-            oceanNormalMap : undefined,
-            lightingFadeDistance : new Cartesian2(6500000.0, 9000000.0),
+                center3D : undefined,
+                rtc : new Cartesian3(),
+                modifiedModelView : new Matrix4(),
+                tileRectangle : new Cartesian4(),
 
-            center3D : undefined,
-            modifiedModelView : new Matrix4(),
-            tileRectangle : new Cartesian4(),
+                dayTextures : [],
+                dayTextureTranslationAndScale : [],
+                dayTextureTexCoordsRectangle : [],
+                dayTextureAlpha : [],
+                dayTextureBrightness : [],
+                dayTextureContrast : [],
+                dayTextureHue : [],
+                dayTextureSaturation : [],
+                dayTextureOneOverGamma : [],
+                dayIntensity : 0.0,
 
-            dayTextures : [],
-            dayTextureTranslationAndScale : [],
-            dayTextureTexCoordsRectangle : [],
-            dayTextureAlpha : [],
-            dayTextureBrightness : [],
-            dayTextureContrast : [],
-            dayTextureHue : [],
-            dayTextureSaturation : [],
-            dayTextureOneOverGamma : [],
-            dayIntensity : 0.0,
+                southAndNorthLatitude : new Cartesian2(),
+                southMercatorYAndOneOverHeight : new Cartesian2(),
 
-            southAndNorthLatitude : new Cartesian2(),
-            southMercatorYAndOneOverHeight : new Cartesian2(),
+                waterMask : undefined,
+                waterMaskTranslationAndScale : new Cartesian4(),
 
-            waterMask : undefined,
-            waterMaskTranslationAndScale : new Cartesian4(),
-
-            minMaxHeight : new Cartesian2(),
-            scaleAndBias : new Matrix4()
+                minMaxHeight : new Cartesian2(),
+                scaleAndBias : new Matrix4()
+            }
         };
 
         return uniformMap;
@@ -745,24 +800,11 @@ define([
             return;
         }
 
-        if (defined(surfaceTile.meshForWireframePromise)) {
+        if (!defined(surfaceTile.terrainData) || !defined(surfaceTile.terrainData._mesh)) {
             return;
         }
 
-        surfaceTile.meshForWireframePromise = surfaceTile.terrainData.createMesh(provider._terrainProvider.tilingScheme, tile.x, tile.y, tile.level);
-        if (!defined(surfaceTile.meshForWireframePromise)) {
-            // deferrred
-            return;
-        }
-
-        var vertexArray = surfaceTile.vertexArray;
-
-        when(surfaceTile.meshForWireframePromise, function(mesh) {
-            if (surfaceTile.vertexArray === vertexArray) {
-                surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, mesh);
-            }
-            surfaceTile.meshForWireframePromise = undefined;
-        });
+        surfaceTile.wireframeVertexArray = createWireframeVertexArray(context, surfaceTile.vertexArray, surfaceTile.terrainData._mesh);
     }
 
     /**
@@ -871,8 +913,6 @@ define([
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
 
-        var viewMatrix = frameState.camera.viewMatrix;
-
         var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
@@ -881,7 +921,9 @@ define([
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
         var hasVertexNormals = tileProvider.terrainProvider.ready && tileProvider.terrainProvider.hasVertexNormals;
         var enableFog = frameState.fog.enabled;
-
+        var castShadows = tileProvider.castShadows;
+        var receiveShadows = tileProvider.receiveShadows;
+        
         if (showReflectiveOcean) {
             --maxTextures;
         }
@@ -890,6 +932,7 @@ define([
         }
 
         var rtc = surfaceTile.center;
+        var encoding = surfaceTile.pickTerrain.mesh.encoding;
 
         // Not used in 3D.
         var tileRectangle = tileRectangleScratch;
@@ -924,6 +967,20 @@ define([
                 tileRectangle.w -= rtc.z;
             }
 
+            if (frameState.mode === SceneMode.SCENE2D && encoding.quantization === TerrainQuantization.BITS12) {
+                // In 2D, the texture coordinates of the tile are interpolated over the rectangle to get the position in the vertex shader.
+                // When the texture coordinates are quantized, error is introduced. This can be seen through the 1px wide cracking
+                // between the quantized tiles in 2D. To compensate for the error, move the expand the rectangle in each direction by
+                // half the error amount.
+                var epsilon = (1.0 / (Math.pow(2.0, 12.0) - 1.0)) * 0.5;
+                var widthEpsilon = (tileRectangle.z - tileRectangle.x) * epsilon;
+                var heightEpsilon = (tileRectangle.w - tileRectangle.y) * epsilon;
+                tileRectangle.x -= widthEpsilon;
+                tileRectangle.y -= heightEpsilon;
+                tileRectangle.z += widthEpsilon;
+                tileRectangle.w += heightEpsilon;
+            }
+
             if (projection instanceof WebMercatorProjection) {
                 southLatitude = tile.rectangle.south;
                 northLatitude = tile.rectangle.north;
@@ -935,9 +992,6 @@ define([
                 useWebMercatorProjection = true;
             }
         }
-
-        var centerEye = Matrix4.multiplyByPoint(viewMatrix, rtc, centerEyeScratch);
-        Matrix4.setTranslation(viewMatrix, centerEye, modifiedModelViewScratch);
 
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
@@ -968,7 +1022,7 @@ define([
                 command.boundingVolume = new BoundingSphere();
                 command.orientedBoundingBox = undefined;
 
-                uniformMap = createTileUniformMap();
+                uniformMap = createTileUniformMap(frameState);
 
                 tileProvider._drawCommands.push(command);
                 tileProvider._uniformMaps.push(uniformMap);
@@ -992,20 +1046,21 @@ define([
                 }
             }
 
-            Cartesian4.clone(initialColor, uniformMap.initialColor);
-            uniformMap.oceanNormalMap = oceanNormalMap;
-            uniformMap.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
-            uniformMap.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
-            uniformMap.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
+            var uniformMapProperties = uniformMap.properties;
+            Cartesian4.clone(initialColor, uniformMapProperties.initialColor);
+            uniformMapProperties.oceanNormalMap = oceanNormalMap;
+            uniformMapProperties.lightingFadeDistance.x = tileProvider.lightingFadeOutDistance;
+            uniformMapProperties.lightingFadeDistance.y = tileProvider.lightingFadeInDistance;
+            uniformMapProperties.zoomedOutOceanSpecularIntensity = tileProvider.zoomedOutOceanSpecularIntensity;
 
-            uniformMap.center3D = surfaceTile.center;
+            uniformMapProperties.center3D = surfaceTile.center;
+            Cartesian3.clone(rtc, uniformMapProperties.rtc);
 
-            Cartesian4.clone(tileRectangle, uniformMap.tileRectangle);
-            uniformMap.southAndNorthLatitude.x = southLatitude;
-            uniformMap.southAndNorthLatitude.y = northLatitude;
-            uniformMap.southMercatorYAndOneOverHeight.x = southMercatorY;
-            uniformMap.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
-            Matrix4.clone(modifiedModelViewScratch, uniformMap.modifiedModelView);
+            Cartesian4.clone(tileRectangle, uniformMapProperties.tileRectangle);
+            uniformMapProperties.southAndNorthLatitude.x = southLatitude;
+            uniformMapProperties.southAndNorthLatitude.y = northLatitude;
+            uniformMapProperties.southMercatorYAndOneOverHeight.x = southMercatorY;
+            uniformMapProperties.southMercatorYAndOneOverHeight.y = oneOverMercatorHeight;
 
             // For performance, use fog in the shader only when the tile is in fog.
             var applyFog = enableFog && CesiumMath.fog(tile._distance, frameState.fog.density) > CesiumMath.EPSILON3;
@@ -1032,27 +1087,27 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
-                uniformMap.dayTextures[numberOfDayTextures] = imagery.texture;
-                uniformMap.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
-                uniformMap.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
+                uniformMapProperties.dayTextures[numberOfDayTextures] = imagery.texture;
+                uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
+                uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
 
-                uniformMap.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
-                applyAlpha = applyAlpha || uniformMap.dayTextureAlpha[numberOfDayTextures] !== 1.0;
+                uniformMapProperties.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
+                applyAlpha = applyAlpha || uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;
 
-                uniformMap.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
-                applyBrightness = applyBrightness || uniformMap.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
+                uniformMapProperties.dayTextureBrightness[numberOfDayTextures] = imageryLayer.brightness;
+                applyBrightness = applyBrightness || uniformMapProperties.dayTextureBrightness[numberOfDayTextures] !== ImageryLayer.DEFAULT_BRIGHTNESS;
 
-                uniformMap.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
-                applyContrast = applyContrast || uniformMap.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
+                uniformMapProperties.dayTextureContrast[numberOfDayTextures] = imageryLayer.contrast;
+                applyContrast = applyContrast || uniformMapProperties.dayTextureContrast[numberOfDayTextures] !== ImageryLayer.DEFAULT_CONTRAST;
 
-                uniformMap.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
-                applyHue = applyHue || uniformMap.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
+                uniformMapProperties.dayTextureHue[numberOfDayTextures] = imageryLayer.hue;
+                applyHue = applyHue || uniformMapProperties.dayTextureHue[numberOfDayTextures] !== ImageryLayer.DEFAULT_HUE;
 
-                uniformMap.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
-                applySaturation = applySaturation || uniformMap.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
+                uniformMapProperties.dayTextureSaturation[numberOfDayTextures] = imageryLayer.saturation;
+                applySaturation = applySaturation || uniformMapProperties.dayTextureSaturation[numberOfDayTextures] !== ImageryLayer.DEFAULT_SATURATION;
 
-                uniformMap.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
-                applyGamma = applyGamma || uniformMap.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
+                uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] = 1.0 / imageryLayer.gamma;
+                applyGamma = applyGamma || uniformMapProperties.dayTextureOneOverGamma[numberOfDayTextures] !== 1.0 / ImageryLayer.DEFAULT_GAMMA;
 
                 if (defined(imagery.credits)) {
                     var creditDisplay = frameState.creditDisplay;
@@ -1067,16 +1122,17 @@ define([
 
             // trim texture array to the used length so we don't end up using old textures
             // which might get destroyed eventually
-            uniformMap.dayTextures.length = numberOfDayTextures;
-            uniformMap.waterMask = waterMaskTexture;
-            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMap.waterMaskTranslationAndScale);
+            uniformMapProperties.dayTextures.length = numberOfDayTextures;
+            uniformMapProperties.waterMask = waterMaskTexture;
+            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMapProperties.waterMaskTranslationAndScale);
 
-            var encoding = surfaceTile.pickTerrain.mesh.encoding;
-            uniformMap.minMaxHeight.x = encoding.minimumHeight;
-            uniformMap.minMaxHeight.y = encoding.maximumHeight;
-            Matrix4.clone(encoding.matrix, uniformMap.scaleAndBias);
+            uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
+            uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;
+            Matrix4.clone(encoding.matrix, uniformMapProperties.scaleAndBias);
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, showReflectiveOcean, showOceanWaves, tileProvider.enableLighting, hasVertexNormals, useWebMercatorProjection, applyFog);
+            command.castShadows = castShadows;
+            command.receiveShadows = receiveShadows;
             command.renderState = renderState;
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.vertexArray = surfaceTile.vertexArray;
@@ -1137,7 +1193,7 @@ define([
         pickCommand.vertexArray = drawCommand.vertexArray;
         pickCommand.uniformMap = drawCommand.uniformMap;
         pickCommand.boundingVolume = drawCommand.boundingVolume;
-        pickCommand.orientedBoundingBox = pickCommand.orientedBoundingBox;
+        pickCommand.orientedBoundingBox = drawCommand.orientedBoundingBox;
         pickCommand.pass = drawCommand.pass;
 
         frameState.commandList.push(pickCommand);

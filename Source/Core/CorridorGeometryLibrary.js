@@ -19,7 +19,7 @@ define([
         PolylinePipeline,
         PolylineVolumeGeometryLibrary,
         Quaternion) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -318,31 +318,6 @@ define([
             normals : calculatedNormals,
             endPositions : endPositions
         };
-    };
-
-    var scaleN = new Cartesian3();
-    var scaleP = new Cartesian3();
-    CorridorGeometryLibrary.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
-        var length = positions.length;
-        var newPositions = isArray(result) ? result : new Array(positions.length);
-        newPositions.length = positions.length;
-
-        var h = height;
-        for (var i = 0; i < length; i += 3) {
-            var p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, scaleP), scaleP);
-            var n = scaleN;
-            if (height !== 0.0) {
-                n = ellipsoid.geodeticSurfaceNormal(p, n);
-                n = Cartesian3.multiplyByScalar(n, h, n);
-                p = Cartesian3.add(p, n, p);
-            }
-
-            newPositions[i] = p.x;
-            newPositions[i + 1] = p.y;
-            newPositions[i + 2] = p.z;
-        }
-
-        return newPositions;
     };
 
     return CorridorGeometryLibrary;
