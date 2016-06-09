@@ -48,7 +48,7 @@ define([
      * @exception {DeveloperError} options.topRadius must be greater than 0.
      * @exception {DeveloperError} options.bottomRadius must be greater than 0.
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
-     * @exception {DeveloperError} options.slices must be greater that 3.
+     * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderOutlineGeometry.createGeometry
      *
@@ -78,10 +78,10 @@ define([
             throw new DeveloperError('options.topRadius must be defined.');
         }
         if (!defined(bottomRadius)) {
-            throw new DeveloperError('options.bottomRadius must must be defined.');
+            throw new DeveloperError('options.bottomRadius must be defined.');
         }
         if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3.');
+            throw new DeveloperError('options.slices must be greater than or equal to 3.');
         }
         //>>includeEnd('debug');
 
