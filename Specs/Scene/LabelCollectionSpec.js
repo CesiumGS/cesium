@@ -803,10 +803,10 @@ defineSuite([
             var label = labels.add({
                 text : 'abc',
                 position : Cartesian3.ZERO,
-                pixelOffset : new Cartesian2(1.0, 2.0)
+                pixelOffset : new Cartesian2(0.5, 0.5)
             });
             scene.renderForSpecs();
-            expect(label.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.5, 2.5), CesiumMath.EPSILON1);
+            expect(label.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.0, 1.0), CesiumMath.EPSILON1);
         });
 
         it('can compute screen space position with eyeOffset', function() {

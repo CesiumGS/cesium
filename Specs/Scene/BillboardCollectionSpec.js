@@ -1022,10 +1022,10 @@ defineSuite([
     it('computes screen space position with pixelOffset', function() {
         var b = billboards.add({
             position : Cartesian3.ZERO,
-            pixelOffset : new Cartesian2(1.0, 2.0)
+            pixelOffset : new Cartesian2(0.5, 0.5)
         });
         scene.renderForSpecs();
-        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1.5, 2.5), CesiumMath.EPSILON1);
+        expect(b.computeScreenSpacePosition(scene)).toEqualEpsilon(new Cartesian2(1, 1.0), CesiumMath.EPSILON1);
     });
 
     it('computes screen space position with eyeOffset', function() {

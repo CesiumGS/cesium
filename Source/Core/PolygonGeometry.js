@@ -349,14 +349,14 @@ define([
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, positions, granularity, perPositionHeight, vertexFormat);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -808,29 +808,22 @@ define([
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
 
-        var walls;
-        var topAndBottom;
-        var outerPositions;
-
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, ellipsoid);
-        var hierarchy = results.hierarchy;
-        var polygons = results.polygons;
-        var i;
-
-        if (polygons.length === 0) {
+        var outerPositions = polygonHierarchy.positions;
+        if (outerPositions.length < 3) {
             return;
         }
 
-        if (perPositionHeight) {
-            outerPositions = polygons[0].slice();
-            for (i = 0; i < outerPositions.length; i++) {
-                outerPositions[i] = ellipsoid.scaleToGeodeticSurface(outerPositions[i]);
-            }
-        } else {
-            outerPositions = polygons[0];
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+
+        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid);
+        var hierarchy = results.hierarchy;
+        var polygons = results.polygons;
+
+        if (hierarchy.length === 0) {
+            return;
         }
 
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
+        outerPositions = hierarchy[0].outerRing;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
         var geometry;
@@ -848,11 +841,16 @@ define([
             top: true,
             wall: false
         };
+
+        var i;
+
         if (extrude) {
             options.top = closeTop;
             options.bottom = closeBottom;
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat);
+
+                var topAndBottom;
                 if (closeTop && closeBottom) {
                     topAndBottom = geometry.topAndBottom;
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
@@ -871,7 +869,7 @@ define([
                     geometries.push(topAndBottom);
                 }
 
-                walls = geometry.walls;
+                var walls = geometry.walls;
                 options.wall = true;
                 for ( var k = 0; k < walls.length; k++) {
                     var wall = walls[k];

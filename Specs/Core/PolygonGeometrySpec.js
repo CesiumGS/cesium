@@ -186,7 +186,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3); // 4 points * 3 rectangles + 2 points duplicated at corner
+        expect(p.attributes.position.values.length).toEqual(12 * 3); // 4 points * 3 rectangles
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -225,7 +225,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -261,7 +261,7 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p.attributes.position.values.length).toEqual(14 * 3);
+        expect(p.attributes.position.values.length).toEqual(12 * 3);
         expect(p.indices.length).toEqual(10 * 3);
     });
 
@@ -581,8 +581,8 @@ defineSuite([
             extrudedHeight: 30000
         }));
 
-        // (4 points * 3 rectangles * 3 to duplicate for normals + 2 duplicated at corner) * 2 for top and bottom
-        expect(p.attributes.position.values.length).toEqual(76 * 3);
+        // (4 points * 3 rectangles * 3 to duplicate for normals) * 2 for top and bottom
+        expect(p.attributes.position.values.length).toEqual(72 * 3);
         // 10 top + 10 bottom + 2 triangles * 12 walls
         expect(p.indices.length).toEqual(44 * 3);
     });

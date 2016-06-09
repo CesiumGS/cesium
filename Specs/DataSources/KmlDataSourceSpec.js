@@ -147,7 +147,7 @@ defineSuite([
     });
 
     it('show sets underlying entity collection show.', function() {
-        var dataSource = new KmlDataSource();
+        var dataSource = new KmlDataSource(options);
 
         dataSource.show = false;
         expect(dataSource.show).toBe(false);

@@ -45,6 +45,8 @@ define([
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
+     * @param {Property} [options.castShadows=true] A boolean Property specifying whether the model casts shadows from each light source.
+     * @param {Property} [options.receiveShadows=true] A boolean Property specifying whether the model receives shadows from shadow casters in the scene.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
@@ -63,6 +65,10 @@ define([
         this._maximumScaleSubscription = undefined;
         this._incrementallyLoadTextures = undefined;
         this._incrementallyLoadTexturesSubscription = undefined;
+        this._castShadows = undefined;
+        this._castShadowsSubscription = undefined;
+        this._receiveShadows = undefined;
+        this._receiveShadowsSubscription = undefined;
         this._uri = undefined;
         this._uriSubscription = undefined;
         this._runAnimations = undefined;
@@ -136,6 +142,22 @@ define([
         incrementallyLoadTextures : createPropertyDescriptor('incrementallyLoadTextures'),
 
         /**
+         * Get or sets the boolean Property specifying whether the model
+         * casts shadows from each light source.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        castShadows : createPropertyDescriptor('castShadows'),
+
+        /**
+         * Get or sets the boolean Property specifying whether the model
+         * receives shadows from shadow casters in the scene.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        receiveShadows : createPropertyDescriptor('receiveShadows'),
+
+        /**
          * Gets or sets the string Property specifying the URI of the glTF asset.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -182,6 +204,8 @@ define([
         result.minimumPixelSize = this.minimumPixelSize;
         result.maximumScale = this.maximumScale;
         result.incrementallyLoadTextures = this.incrementallyLoadTextures;
+        result.castShadows = this.castShadows;
+        result.receiveShadows = this.receiveShadows;
         result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
@@ -208,6 +232,8 @@ define([
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.incrementallyLoadTextures = defaultValue(this.incrementallyLoadTextures, source.incrementallyLoadTextures);
+        this.castShadows = defaultValue(this.castShadows, source.castShadows);
+        this.receiveShadows = defaultValue(this.receiveShadows, source.receiveShadows);
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);

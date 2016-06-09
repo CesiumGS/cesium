@@ -29,6 +29,8 @@ define([
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
     var defaultHeightReference = HeightReference.NONE;
+    var defaultCastShadows = true;
+    var defaultReceiveShadows = true;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -132,6 +134,8 @@ define([
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
+            model.castShadows = Property.getValueOrDefault(modelGraphics._castShadows, time, defaultCastShadows);
+            model.receiveShadows = Property.getValueOrDefault(modelGraphics._receiveShadows, time, defaultReceiveShadows);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
 
