@@ -660,8 +660,7 @@ define([
         var endDir = Cartesian3.clone(cameraCV.direction, scratch3DToCVEndDir);
         var endUp = Cartesian3.clone(cameraCV.up, scratch3DToCVEndUp);
 
-        var startRight = camera.frustum.right;
-        var endRight = endPos.z * 0.5;
+        morphOrthographicToPerspective(transitioner, 0.0, cameraCV, complete);
 
         function update(value) {
             columbusViewMorph(startPos, endPos, value.time, camera.position);
@@ -669,14 +668,6 @@ define([
             columbusViewMorph(startUp, endUp, value.time, camera.up);
             Cartesian3.cross(camera.direction, camera.up, camera.right);
             Cartesian3.normalize(camera.right, camera.right);
-
-            var frustum = camera.frustum;
-            frustum.right = CesiumMath.lerp(startRight, endRight, value.time);
-            frustum.left = -frustum.right;
-            frustum.top = frustum.right * (scene.drawingBufferHeight / scene.drawingBufferWidth);
-            frustum.bottom = -frustum.top;
-
-            camera.position.z = 2.0 * scene.mapProjection.ellipsoid.maximumRadius;
         }
         var tween = scene.tweens.add({
             duration : duration,
