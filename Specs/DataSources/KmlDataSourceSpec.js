@@ -22,6 +22,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'Scene/Camera',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/SceneMode',
@@ -51,6 +52,7 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         Camera,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
@@ -2133,7 +2135,7 @@ defineSuite([
         });
     });
 
-    it('Geometry Point: sets position clampToGround (the default)', function() {
+    it('Geometry Point: sets heightReference to clampToGround (the default)', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
@@ -2144,7 +2146,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
-            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 0), CesiumMath.EPSILON13);
+            expect(entities[0].billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entities[0].polyline).toBeUndefined();
         });
     });
