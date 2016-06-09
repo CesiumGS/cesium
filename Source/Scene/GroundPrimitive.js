@@ -902,6 +902,7 @@ define([
         }
     }
 
+    GroundPrimitive._initialized = false;
     GroundPrimitive._initPromise = undefined;
     GroundPrimitive.initializeTerrainHeights = function() {
         var initPromise = GroundPrimitive._initPromise;
@@ -909,12 +910,17 @@ define([
             return initPromise;
         }
 
-        GroundPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+        initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
 
-        return GroundPrimitive._initPromise;
+        initPromise.then(function() {
+            GroundPrimitive._initialized = true;
+        });
+
+        GroundPrimitive._initPromise = initPromise;
+        return initPromise;
     };
 
     /**
@@ -932,6 +938,15 @@ define([
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
         if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
+            return;
+        }
+
+        if (!GroundPrimitive._initialized) {
+            if (!this.asynchronous) {
+                throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
+            }
+
+            GroundPrimitive.initializeTerrainHeights();
             return;
         }
 
