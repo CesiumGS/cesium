@@ -55,25 +55,33 @@ viewer.clock.multiplier = 1.0;
 
 function computeCirclularFlight(lon, lat, radius) {
     var property = new Cesium.SampledPositionProperty();
-    for (var i = 0; i <= 360; i += 45) {
+    var startAngle = Cesium.Math.nextRandomNumber() * 360.0;
+    var endAngle = startAngle + 360.0;
+
+    var increment = (Cesium.Math.nextRandomNumber() * 2.0 - 1.0) * 10.0 + 45.0;
+    for (var i = startAngle; i < endAngle; i += increment) {
         var radians = Cesium.Math.toRadians(i);
-        var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
+        var timeIncrement = i - startAngle;
+        var time = Cesium.JulianDate.addSeconds(start, timeIncrement, new Cesium.JulianDate());
         var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
         property.addSample(time, position);
     }
     return property;
 }
 
-var position = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
+var longitude = -112.110693;
+var latitude = 36.0994841;
+var radius = 0.03;
 
+var modelURI = '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb';
 var entity = viewer.entities.add({
     availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
         start : start,
         stop : stop
     })]),
-    position : position,
+    position : computeCirclularFlight(longitude, latitude, radius),
     model : {
-        uri : '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb',
+        uri : modelURI,
         minimumPixelSize : 64
     }
 });
@@ -122,6 +130,28 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
     Cesium.Cartesian3.clone(up, camera.up);
     Cesium.Cartesian3.cross(direction, up, camera.right);
 });
+
+// Add a few more balloons flying with the one the viewer is in.
+var numBalloons = 12;
+for (var i = 0; i < numBalloons; ++i) {
+    var balloonRadius = (Cesium.Math.nextRandomNumber() * 2.0 - 1.0) * 0.01 + radius;
+    var balloon = viewer.entities.add({
+        availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+            start : start,
+            stop : stop
+        })]),
+        position : computeCirclularFlight(longitude, latitude, balloonRadius),
+        model : {
+            uri : modelURI,
+            minimumPixelSize : 64
+        }
+    });
+
+    balloon.position.setInterpolationOptions({
+        interpolationDegree : 2,
+        interpolationAlgorithm : Cesium.HermitePolynomialApproximation
+    });
+}
 
 //Sandcastle_End
     Sandcastle.finishedLoading();
