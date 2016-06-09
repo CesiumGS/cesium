@@ -19,7 +19,7 @@ defineSuite([
         TerrainData,
         TerrainMesh,
         when) {
-     "use strict";
+     'use strict';
 
      it('conforms to TerrainData interface', function() {
          expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);

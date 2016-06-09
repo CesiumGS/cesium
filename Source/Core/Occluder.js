@@ -21,7 +21,7 @@ define([
         CesiumMath,
         Rectangle,
         Visibility) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates an Occluder derived from an object's position and radius, as well as the camera position.

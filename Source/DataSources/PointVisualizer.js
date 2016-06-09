@@ -21,7 +21,7 @@ define([
         PointPrimitiveCollection,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
@@ -221,6 +221,7 @@ define([
             var pointPrimitive = item.pointPrimitive;
             if (defined(pointPrimitive)) {
                 item.pointPrimitive = undefined;
+                pointPrimitive.id = undefined;
                 pointPrimitive.show = false;
                 unusedIndexes.push(pointPrimitive._index);
             }

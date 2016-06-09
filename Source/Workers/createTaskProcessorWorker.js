@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         formatError) {
-    "use strict";
+    'use strict';
 
     /**
      * Creates an adapter function to allow a calculation function to operate as a Web Worker,

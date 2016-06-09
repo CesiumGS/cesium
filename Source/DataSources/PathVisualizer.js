@@ -43,7 +43,7 @@ define([
         SampledPositionProperty,
         ScaledPositionProperty,
         TimeIntervalCollectionPositionProperty) {
-    "use strict";
+    'use strict';
 
     var defaultResolution = 60.0;
     var defaultWidth = 1.0;
@@ -376,6 +376,7 @@ define([
             this._unusedIndexes.push(item.index);
             item.polyline = undefined;
             polyline.show = false;
+            polyline.id = undefined;
             item.index = undefined;
         }
     };
@@ -529,7 +530,9 @@ define([
             entity = removed[i];
             item = items.get(entity.id);
             if (defined(item)) {
-                item.updater.removeObject(item);
+                if (defined(item.updater)) {
+                    item.updater.removeObject(item);
+                }
                 items.remove(entity.id);
             }
         }

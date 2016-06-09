@@ -11,7 +11,7 @@ defineSuite([
         Camera,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     beforeAll(function() {

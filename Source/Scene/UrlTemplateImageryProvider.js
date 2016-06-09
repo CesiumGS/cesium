@@ -45,7 +45,7 @@ define([
         WebMercatorTilingScheme,
         when,
         ImageryProvider) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides imagery by requesting tiles using a specified URL template.
@@ -53,7 +53,7 @@ define([
      * @alias UrlTemplateImageryProvider
      * @constructor
      *
-     * @param {Promise|Object} [options] Object with the following properties:
+     * @param {Promise.<Object>|Object} [options] Object with the following properties:
      * @param {String} options.url  The URL template to use to request tiles.  It has the following keywords:
      * <ul>
      *     <li><code>{z}</code>: The level of the tile in the tiling scheme.  Level zero is the root of the quadtree pyramid.</li>
@@ -127,7 +127,7 @@ define([
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
      * var tms = new Cesium.UrlTemplateImageryProvider({
-     *     url : '//cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+     *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
      *     credit : '© Analytical Graphics, Inc.',
      *     tilingScheme : new Cesium.GeographicTilingScheme(),
      *     maximumLevel : 5
@@ -487,7 +487,7 @@ define([
      * Reinitializes this instance.  Reinitializing an instance already in use is supported, but it is not
      * recommended because existing tiles provided by the imagery provider will not be updated.
      *
-     * @param {Promise|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
+     * @param {Promise.<Object>|Object} options Any of the options that may be passed to the {@link UrlTemplateImageryProvider} constructor.
      */
     UrlTemplateImageryProvider.prototype.reinitialize = function(options) {
         var that = this;

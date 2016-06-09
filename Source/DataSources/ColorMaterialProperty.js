@@ -17,7 +17,7 @@ define([
         ConstantProperty,
         createPropertyDescriptor,
         Property) {
-    "use strict";
+    'use strict';
 
     /**
      * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.

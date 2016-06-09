@@ -5,58 +5,46 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Math',
-        'Renderer/ClearCommand',
+        'Scene/Camera',
         'Scene/Material',
         'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/createScene',
-        'Specs/pick',
-        'Specs/render'
+        'Specs/createScene'
     ], function(
         PolylineCollection,
         BoundingSphere,
         Cartesian3,
         Color,
         CesiumMath,
-        ClearCommand,
+        Camera,
         Material,
         SceneMode,
-        createCamera,
-        createContext,
-        createFrameState,
-        createScene,
-        pick,
-        render) {
-    "use strict";
+        createScene) {
+    'use strict';
 
-    var context;
-    var frameState;
+    var scene;
     var polylines;
-    var us;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
+        scene.destroyForSpecs();
     });
 
     beforeEach(function() {
         polylines = new PolylineCollection();
-
-        frameState = createFrameState(context, createCamera());
-        us = context.uniformState;
-        us.update(frameState);
+        scene.mode = SceneMode.SCENE3D;
+        scene._camera = new Camera(scene);
     });
 
     afterEach(function() {
+        scene.primitives.removeAll();
         if (!polylines.isDestroyed()) {
+            polylines.removeAll();
             polylines.destroy();
         }
-        us = undefined;
     });
 
     it('default constructs a polyline', function() {
@@ -359,41 +347,39 @@ defineSuite([
     });
 
     it('does not render when constructed', function() {
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('renders polylines. one polyline with no positions', function() {
         var positions = [];
-        for ( var i = 0; i < 100; ++i) {
+        for (var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
 
         polylines.add({
-            positions : positions
+            positions : positions,
         });
         polylines.add();
         polylines.add({
-            positions: positions
+            positions: positions,
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not crash if polyline has one position', function() {
@@ -405,48 +391,47 @@ defineSuite([
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('renders polylines with duplicate positions at construction', function() {
         polylines.add({
             positions : [
-                         new Cartesian3(0.0, -1.0, 0.0),
-                         new Cartesian3(0.0, 1.0, 0.0),
-                         new Cartesian3(0.0, 1.0, 0.0),
-                         new Cartesian3(0.0, 2.0, 0.0)
+                         new Cartesian3(0.0, -1000000.0, 0.0),
+                         new Cartesian3(0.0, 1000000.0, 0.0),
+                         new Cartesian3(0.0, 1000000.0, 0.0),
+                         new Cartesian3(0.0, 2000000.0, 0.0)
             ]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders polylines with duplicate positions after setting positions', function() {
         var p = polylines.add();
         p.positions = [
-                       new Cartesian3(0.0, -1.0, 0.0),
-                       new Cartesian3(0.0, 1.0, 0.0),
-                       new Cartesian3(0.0, 1.0, 0.0),
-                       new Cartesian3(0.0, 2.0, 0.0)
+                       new Cartesian3(0.0, -1000000.0, 0.0),
+                       new Cartesian3(0.0, 1000000.0, 0.0),
+                       new Cartesian3(0.0, 1000000.0, 0.0),
+                       new Cartesian3(0.0, 2000000.0, 0.0)
         ];
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('A polyline that used to cross the IDL but now does not, triggers vertex creation (This code used to crash)', function() {
 
         //Need to be in 2D or CV
-        frameState.mode = SceneMode.SCENE2D;
+        scene.mode = SceneMode.SCENE2D;
 
         //These positions cross the IDL
         var positions = [];
@@ -467,14 +452,14 @@ defineSuite([
         });
 
         //Render it
-        ClearCommand.ALL.execute(context);
-        render(frameState, polylines);
+        scene.primitives.add(polylines);
+        scene.render();
 
         //We need to set positions and render it again
         //in order for BufferUsage.STREAM_DRAW to be
         //triggered, which ends up rebuilding vertex arrays.
         line.positions = positions;
-        render(frameState, polylines);
+        scene.render();
 
         //Now set the second position which results in a line that does not cross the IDL
         positions[1] = {
@@ -487,8 +472,7 @@ defineSuite([
         //Render the new line.  The fact that the new position no longer crosses the IDL
         //is what triggers the vertex array creation.  If the vertex array were not
         //recreaated, an exception would be thrown do to positions having less data then expected.
-        render(frameState, polylines);
-        frameState.mode = SceneMode.SCENE3D;
+        scene.render();
     });
 
     it('renders 64K vertices of same polyline', function() {
@@ -496,12 +480,12 @@ defineSuite([
         for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -509,11 +493,10 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('creates two vertex arrays and renders', function() {
@@ -521,12 +504,12 @@ defineSuite([
         for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -534,28 +517,19 @@ defineSuite([
         var p1 = polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p1.show = false;
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         polylines.add({
             positions : positions
         });
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
     });
 
@@ -564,34 +538,33 @@ defineSuite([
         for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
         positions.push({
             x : 0,
-            y : -1,
+            y : -1000000,
             z : 0
         });
         positions.push({
             x : 0,
-            y : 1,
+            y : 1000000,
             z : 0
         });
 
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders a polyline with no positions', function() {
@@ -599,12 +572,12 @@ defineSuite([
         for ( var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -612,21 +585,20 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.add({
             positions : []
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.removeAll();
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using set positions', function() {
@@ -634,12 +606,12 @@ defineSuite([
         for ( var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -647,39 +619,24 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.positions = [];
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         //should call PolylineCollection.writePositionsUpdate
         p2.positions = [];
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using show', function() {
@@ -687,12 +644,12 @@ defineSuite([
         for ( var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -700,40 +657,23 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.show = false;
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         //should call PolylineCollection.writeMiscUpdate
         p2.show = true;
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders an updated polyline with no positions using material', function() {
@@ -741,12 +681,12 @@ defineSuite([
         for ( var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -754,30 +694,21 @@ defineSuite([
         polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         var p2 = polylines.add({
             positions : []
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         //recreates vertex array because buffer usage changed
         p2.material = Material.fromType(Material.PolylineOutlineType);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('changes buffer usage after 100 iterations of not changing', function() {
@@ -785,12 +716,12 @@ defineSuite([
         for ( var i = 0; i < 100; ++i) {
             positions.push({
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             });
             positions.push({
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             });
         }
@@ -798,23 +729,17 @@ defineSuite([
         var p = polylines.add({
             positions : positions
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         // changes buffer usage, recreates vertex arrays
         p.positions = positions;
-        render(frameState, polylines);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
         for(var j = 0; j < 101; ++j){
-            render(frameState, polylines);
+            scene.render();
         }
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
     });
 
@@ -822,13 +747,13 @@ defineSuite([
         var positions = [];
         for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
-                x : -1,
-                y : -1,
+                x : -1000000,
+                y : -1000000,
                 z : 0
             });
             positions.push({
-                x : -1,
-                y : 1,
+                x : -1000000,
+                y : 1000000,
                 z : 0
             });
         }
@@ -839,414 +764,363 @@ defineSuite([
         polylines.add({
            positions : [{
                 x : 0,
-                y : -1,
+                y : -1000000,
                 z : 0
             },{
                 x : 0,
-                y : 1,
+                y : 1000000,
                 z : 0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var scene = createScene();
-        var p = scene.primitives.add(new PolylineCollection({
-            debugShowBoundingVolume : true
-        }));
+        polylines.debugShowBoundingVolume = true;
         var material = Material.fromType('Color');
         material.uniforms.color = new Color(1.0, 1.0, 1.0, 0.0);
-        p.add({
-            positions : [Cartesian3.UNIT_Z, Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())],
+        var p = polylines.add({
+            positions : [{
+                x : 1.0,
+                y : -1000.0,
+                z : 1.0
+            },{
+                x : 1.0,
+                y : 1000.00,
+                z : 1.0
+            }],
             material : material
         });
+        var bounds = BoundingSphere.fromPoints(p.positions);
+        scene.camera.viewBoundingSphere(bounds);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        var camera = scene.camera;
-        camera.position = new Cartesian3(1.02, 0.0, 0.0);
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_X, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
-
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
-
-        scene.destroyForSpecs();
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render', function() {
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         p.show = false;
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('modifies and removes a polyline, then renders', function() {
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.remove(p);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('renders a green polyline', function() {
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('adds and renders a polyline', function() {
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.add({
             positions : [{
-                x : 0.5,
-                y : -1.0,
+                x : 500000.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
-                x : 0.5,
-                y : 1.0,
+                x : 500000.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('removes and renders a polyline', function() {
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
         var bluePolyline = polylines.add({
             positions : [{
-                x : 0.5,
-                y : -1.0,
+                x : 500000.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
-                x : 0.5,
-                y : 1.0,
+                x : 500000.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.remove(bluePolyline);
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('removes all polylines and renders', function() {
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.removeAll();
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('removes all polylines, adds a polyline, and renders', function() {
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         polylines.removeAll();
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders using polyline positions property', function() {
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p.positions = [{
-            x : -2.0,
-            y : -1.0,
-            z : 0.0
+            x : 0.0,
+            y : -1000000.0,
+            z : -2000000.0
         }, {
-            x : -2.0,
-            y : 1.0,
-            z : 0.0
+            x : 0.0,
+            y : 1000000.0,
+            z : -2000000.0
         }]; // Behind viewer
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         p.positions = [{
             x : 0.0,
-            y : -1.0,
+            y : -1000000.0,
             z : 0.0
         }, {
             x : 0.0,
-            y : 1.0,
+            y : 1000000.0,
             z : 0.0
         }]; // Back in front of viewer
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders and updates one polyline from many polylines using show property', function() {
-        var positions = [];
-        for(var i = 0; i < 200; i++){
-            positions.push({
-                x : -1.0,
-                y : -1.0,
-                z : 0.0
-            }, {
-                x : -1.0,
-                y : 1.0,
-                z : 0.0
-            });
-        }
+        var positions = [{
+            x : 0.0,
+            y : -1000000.0,
+            z : -2000000.0
+        }, {
+            x : 0.0,
+            y : 1000000.0,
+            z : -2000000.0
+        }];
         polylines.add({
             positions : positions,
-            width:2
+            width : 2
         });
 
         polylines.add({
             positions : positions,
-            width:2
+            width : 2
         });
 
         polylines.add({
             positions : positions,
-            width:2
+            width : 2
         });
 
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
-            width:2
+            width : 2
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p.show = false;
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         p.show = true;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders using polyline show property', function() {
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             show:true
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p.show = false;
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        // Update a second time since it goes through a different vertex array update path
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
         p.show = true;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders four polylines with different widths', function() {
         var positions = [];
         for(var i = 0; i < 200; ++i){
             positions.push({
-                x : -1.0,
-                y : 1.0,
+                x : -1000000.0,
+                y : 1000000.0,
                 z : 0.0
             },{
-                x : -1.0,
-                y : -1.0,
+                x : -1000000.0,
+                y : -1000000.0,
                 z : 0.0
             });
         }
@@ -1274,23 +1148,22 @@ defineSuite([
             }],
             width : 7
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('renders three polylines with different widths and updates one', function() {
         var positions = [];
         for(var i = 0; i < 200; ++i){
             positions.push({
-                x : -1.0,
-                y : 1.0,
+                x : -1000000.0,
+                y : 1000000.0,
                 z : 0.0
             },{
-                x : -1.0,
-                y : -1.0,
+                x : -1000000.0,
+                y : -1000000.0,
                 z : 0.0
             });
         }
@@ -1305,56 +1178,48 @@ defineSuite([
         var p2 = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             width : 7
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p2.material = Material.fromType(Material.PolylineOutlineType);
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p2.material = Material.fromType(Material.ColorType);
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render with width 0.0', function() {
         var line = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             width : 7
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         line.width = 0.0;
-        render(frameState, polylines);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
     });
 
     it('changes polyline position size recreates vertex arrays', function() {
@@ -1362,11 +1227,11 @@ defineSuite([
         for(var i = 0; i < 20; ++i){
             positions.push({
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             },{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             });
         }
@@ -1374,68 +1239,60 @@ defineSuite([
             positions : positions
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p.positions = positions;
-
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         positions.push({
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             });
 
         p.positions = positions;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('changes polyline width property', function() {
         var p1 = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
         var p2 = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p1.width = 2;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p2.width = 2;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
         p1.width = 1;
-        render(frameState, polylines);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
     });
 
@@ -1443,17 +1300,18 @@ defineSuite([
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             id : 'id'
         });
 
-        var pickedObject = pick(frameState, polylines, 0, 0);
+        scene.primitives.add(polylines);
+        var pickedObject = scene.pickForSpecs();
         expect(pickedObject.primitive).toEqual(p);
         expect(pickedObject.id).toEqual('id');
     });
@@ -1462,23 +1320,24 @@ defineSuite([
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             id : 'id'
         });
 
-        var pickedObject = pick(frameState, polylines, 0, 0);
+        scene.primitives.add(polylines);
+        var pickedObject = scene.pickForSpecs();
         expect(pickedObject.primitive).toEqual(p);
         expect(pickedObject.id).toEqual('id');
 
         p.id = 'id2';
 
-        pickedObject = pick(frameState, polylines, 0, 0);
+        pickedObject = scene.pickForSpecs();
         expect(pickedObject.primitive).toEqual(p);
         expect(pickedObject.id).toEqual('id2');
     });
@@ -1487,36 +1346,36 @@ defineSuite([
         polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }],
             show : false
         });
+        scene.primitives.add(polylines);
 
-        var pickedObject = pick(frameState, polylines, 0, 0);
-        expect(pickedObject).toBeUndefined();
+        expect(scene.pickForSpecs()).toBeUndefined();
     });
 
     it('is not picked (alpha === 0.0)', function() {
         var p = polylines.add({
             positions : [{
                 x : 0.0,
-                y : -1.0,
+                y : -1000000.0,
                 z : 0.0
             }, {
                 x : 0.0,
-                y : 1.0,
+                y : 1000000.0,
                 z : 0.0
             }]
         });
         p.material.uniforms.color.alpha = 0.0;
+        scene.primitives.add(polylines);
 
-        var pickedObject = pick(frameState, polylines, 0, 0);
-        expect(pickedObject).toBeUndefined();
+        expect(scene.pickForSpecs()).toBeUndefined();
     });
 
     it('does not equal undefined', function() {
@@ -1565,8 +1424,9 @@ defineSuite([
             }]
         });
 
-        polylines.update(frameState);
-        var boundingVolume = frameState.commandList[0].boundingVolume;
+        scene.primitives.add(polylines);
+        scene.render();
+        var boundingVolume = scene.frameState.commandList[0].boundingVolume;
 
         expect(one._boundingVolume).toEqual(BoundingSphere.fromPoints(one.positions));
         expect(two._boundingVolume).toEqual(BoundingSphere.fromPoints(two.positions));
@@ -1574,8 +1434,8 @@ defineSuite([
         expect(boundingVolume).toEqual(BoundingSphere.union(BoundingSphere.union(one._boundingVolume, two._boundingVolume), three._boundingVolume));
     });
 
-    function test2DBoundingSphere(testMode) {
-        var projection = frameState.mapProjection;
+    function testBoundingSphere() {
+        var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
         var one = polylines.add({
@@ -1591,11 +1451,9 @@ defineSuite([
             ])
         });
 
-        var mode = frameState.mode;
-        frameState.mode = testMode;
-        polylines.update(frameState);
-        var boundingVolume = frameState.commandList[0].boundingVolume;
-        frameState.mode = mode;
+        scene.primitives.add(polylines);
+        scene.render();
+        var boundingVolume = scene.frameState.commandList[0].boundingVolume;
 
         var positions = one.positions;
         var projectedPositions = [];
@@ -1624,11 +1482,13 @@ defineSuite([
     }
 
     it('computes bounding sphere in Columbus view', function() {
-        test2DBoundingSphere(SceneMode.COLUMBUS_VIEW);
+        scene.mode = SceneMode.COLUMBUS_VIEW;
+        testBoundingSphere();
     });
 
     it('computes bounding sphere in 2D', function() {
-        test2DBoundingSphere(SceneMode.SCENE2D);
+        scene.mode = SceneMode.SCENE2D;
+        testBoundingSphere();
     });
 
     it('computes optimized bounding volumes per material', function() {
@@ -1647,21 +1507,22 @@ defineSuite([
 
         var two = polylines.add({
             positions : [{
-                x : 4.0,
-                y : 5.0,
-                z : 6.0
-            },{
                 x : 2.0,
                 y : 3.0,
                 z : 4.0
+            },{
+                x : 4.0,
+                y : 5.0,
+                z : 6.0
             }]
         });
         two.material.uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
 
-        polylines.update(frameState);
+        scene.primitives.add(polylines);
+        scene.render();
 
-        expect(frameState.commandList[0].boundingVolume).toEqual(one._boundingVolume);
-        expect(frameState.commandList[1].boundingVolume).toEqual(two._boundingVolume);
+        expect(scene.frameState.commandList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(scene.frameState.commandList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {

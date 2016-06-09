@@ -5,7 +5,7 @@ defineSuite([
     ], function(
         joinUrls,
         URI) {
-    "use strict";
+    'use strict';
 
     var queryString = "a=some&b=query";
     var fragment = "#iamaframent";
@@ -154,5 +154,10 @@ defineSuite([
     it('works with fragments for second url', function() {
         var result = joinUrls(absolutePath, absolutePath + fragment);
         expect(result).toEqual(expectedAbsolutePath + fragment);
+    });
+
+    it('works with trailing slash for first url', function() {
+        var result = joinUrls('http://www.xyz.com/', 'MODULE');
+        expect(result).toEqual('http://www.xyz.com/MODULE');
     });
 });

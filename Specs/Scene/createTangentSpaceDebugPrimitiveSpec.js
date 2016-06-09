@@ -13,7 +13,7 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
 
     it('computes all attributes', function() {

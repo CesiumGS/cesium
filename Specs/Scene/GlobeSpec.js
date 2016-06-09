@@ -21,7 +21,7 @@ defineSuite([
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
-    "use strict";
+    'use strict';
 
     var scene;
     var globe;
@@ -104,6 +104,20 @@ defineSuite([
             scene.globe.show = true;
             expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
         });
+    });
+
+    it('terrainProviderChanged event fires', function() {
+        var terrainProvider = new CesiumTerrainProvider({
+            url : 'made/up/url',
+            requestVertexNormals : true
+        });
+
+        var spyListener = jasmine.createSpy('listener');
+        globe.terrainProviderChanged.addEventListener(spyListener);
+
+        globe.terrainProvider = terrainProvider;
+
+        expect(spyListener).toHaveBeenCalledWith(terrainProvider);
     });
 
     it('renders terrain with enableLighting', function() {

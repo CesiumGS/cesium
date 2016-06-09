@@ -25,20 +25,20 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     imageryProvider : new Cesium.ArcGisMapServerImageryProvider({
-        url : '//server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
+        url : 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer'
     }),
     baseLayerPicker : false
 });
 
 var layers = viewer.imageryLayers;
 var blackMarble = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
-    url : '//cesiumjs.org/blackmarble',
-    maximumLevel : 8,
-    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+    url : 'https://cesiumjs.org/blackmarble',
+    credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+    flipXY : true // Only old gdal2tile.py generated tilesets need this flag.
 }));
 blackMarble.alpha = 0.5;
 blackMarble.brightness = 2.0;

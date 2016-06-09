@@ -47,7 +47,7 @@ define([
         ConstantProperty,
         MaterialProperty,
         Property) {
-    "use strict";
+    'use strict';
 
     //We use this object to create one polyline collection per-scene.
     var polylineCollections = {};

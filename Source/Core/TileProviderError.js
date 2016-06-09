@@ -7,7 +7,7 @@ define([
         defaultValue,
         defined,
         formatError) {
-    "use strict";
+    'use strict';
 
     /**
      * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.

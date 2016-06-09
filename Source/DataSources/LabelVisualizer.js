@@ -29,7 +29,7 @@ define([
         VerticalOrigin,
         BoundingSphereState,
         Property) {
-    "use strict";
+    'use strict';
 
     var defaultScale = 1.0;
     var defaultFont = '30px sans-serif';
@@ -250,6 +250,7 @@ define([
             var label = item.label;
             if (defined(label)) {
                 unusedIndexes.push(item.index);
+                label.id = undefined;
                 label.show = false;
                 item.label = undefined;
                 item.index = -1;

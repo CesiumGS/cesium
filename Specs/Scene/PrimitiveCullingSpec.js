@@ -3,6 +3,8 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
@@ -10,29 +12,33 @@ defineSuite([
         'Core/Math',
         'Core/Occluder',
         'Core/PolygonGeometry',
+        'Core/Rectangle',
+        'Core/RectangleGeometry',
+        'Core/Transforms',
         'Renderer/Sampler',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Scene/BillboardCollection',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/Globe',
         'Scene/HorizontalOrigin',
         'Scene/LabelCollection',
         'Scene/Material',
         'Scene/OrthographicFrustum',
+        'Scene/PerInstanceColorAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
         'Scene/SceneMode',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
-        'Specs/createCamera',
-        'Specs/createContext',
-        'Specs/createFrameState',
-        'Specs/render'
+        'Specs/createScene'
     ], 'Scene/PrimitiveCulling', function(
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Color,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         Ellipsoid,
         GeometryInstance,
@@ -40,36 +46,37 @@ defineSuite([
         CesiumMath,
         Occluder,
         PolygonGeometry,
+        Rectangle,
+        RectangleGeometry,
+        Transforms,
         Sampler,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         BillboardCollection,
         EllipsoidSurfaceAppearance,
+        Globe,
         HorizontalOrigin,
         LabelCollection,
         Material,
         OrthographicFrustum,
+        PerInstanceColorAppearance,
         PolylineCollection,
         Primitive,
         PrimitiveCollection,
         SceneMode,
         TextureAtlas,
         VerticalOrigin,
-        createCamera,
-        createContext,
-        createFrameState,
-        render) {
-    "use strict";
+        createScene) {
+    'use strict';
 
-    var context;
-    var frameState;
-    var primitives;
-    var us;
-    var camera;
+    var scene;
+    var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);
+    var primitive;
     var greenImage;
 
     beforeAll(function() {
-        context = createContext();
+        scene = createScene();
+        scene.primitives.destroyPrimitives = false;
 
         return loadImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
@@ -77,266 +84,112 @@ defineSuite([
     });
 
     afterAll(function() {
-        context.destroyForSpecs();
-    });
-
-    beforeEach(function() {
-        primitives = new PrimitiveCollection();
-
-        camera = createCamera();
-
-        frameState = createFrameState(context, camera);
-        us = context.uniformState;
-        us.update(frameState);
+        scene.destroyForSpecs();
     });
 
     afterEach(function() {
-        primitives = primitives && primitives.destroy();
-        us = undefined;
+        scene.primitives.removeAll();
+        primitive = primitive && primitive.destroy();
     });
 
+    function testCull(primitive) {
+        scene.camera.setView({
+            destination : rectangle
+        });
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(primitive);
+
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+        if (scene.mode !== SceneMode.SCENE2D) {
+            // move the camera through the rectangle so that is behind the view frustum
+            scene.camera.moveForward(100000000.0);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        }
+    }
+
     function testCullIn3D(primitive) {
-        primitives.add(primitive);
-
-        var savedVolume = frameState.cullingVolume;
-        var savedCamera = frameState.camera;
-
-        frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        // get bounding volume for primitive and reposition camera so its in the the frustum.
-        primitive.update(frameState);
-        var commandList = frameState.commandList;
-        var bv = commandList[0].boundingVolume;
-        camera.position = Cartesian3.clone(bv.center);
-        camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, new Cartesian3()), Cartesian3.magnitude(camera.position) + 1.0, new Cartesian3());
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        var numRendered = render(frameState, primitives);
-        expect(numRendered).toBeGreaterThan(0);
-
-        // reposition camera so bounding volume is outside frustum.
-        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.cullingVolume = savedVolume;
+        scene.mode = SceneMode.SCENE3D;
+        testCull(primitive);
     }
 
     function testCullInColumbusView(primitive) {
-        primitives.add(primitive);
-
-        var savedVolume = frameState.cullingVolume;
-        var savedCamera = frameState.camera;
-        var savedMode = frameState.mode;
-
-        frameState.camera = camera;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-
-        // get bounding volume for primitive and reposition camera so its in the the frustum.
-        primitive.update(frameState);
-        var commandList = frameState.commandList;
-        var bv = commandList[0].boundingVolume;
-        camera.position = Cartesian3.clone(bv.center);
-        camera.position.z += 1.0;
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        var numRendered = render(frameState, primitives);
-        expect(numRendered).toBeGreaterThan(0);
-
-        // reposition camera so bounding volume is outside frustum.
-        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(0);
-
-        frameState.mode = savedMode;
-        frameState.camera = savedCamera;
-        frameState.cullingVolume = savedVolume;
+        scene.mode = SceneMode.COLUMBUS_VIEW;
+        testCull(primitive);
     }
 
     function testCullIn2D(primitive) {
-        primitives.add(primitive);
-
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
-
-        var savedVolume = frameState.cullingVolume;
-        var orthoFrustum = new OrthographicFrustum();
-        orthoFrustum.right = 1.0;
-        orthoFrustum.left = -orthoFrustum.right;
-        orthoFrustum.top = orthoFrustum.right;
-        orthoFrustum.bottom = -orthoFrustum.top;
-        orthoFrustum.near = camera.frustum.near;
-        orthoFrustum.far = camera.frustum.far;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        // get bounding volume for primitive and reposition camera so its in the the frustum.
-        primitive.update(frameState);
-        var commandList = frameState.commandList;
-        var bv = commandList[0].boundingVolume;
-        camera.position = Cartesian3.clone(bv.center);
-        camera.position.z += 1.0;
-        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.clone(Cartesian3.UNIT_Y);
-        camera.right = Cartesian3.cross(camera.direction, camera.up, new Cartesian3());
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        var numRendered = render(frameState, primitives);
-        expect(numRendered).toBeGreaterThan(0);
-
-        // reposition camera so bounding volume is outside frustum.
-        Cartesian3.add(camera.position, Cartesian3.multiplyByScalar(camera.right, 8000000000.0, new Cartesian3()), camera.position);
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(0);
-
-        frameState.mode = mode;
-        frameState.camera = savedCamera;
-        frameState.cullingVolume = savedVolume;
+        scene.mode = SceneMode.SCENE2D;
+        testCull(primitive);
     }
 
     function testOcclusionCull(primitive) {
-        primitives.add(primitive);
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
-
-        // get bounding volume for primitive and reposition camera so its in the the frustum.
-        primitive.update(frameState);
-        var commandList = frameState.commandList;
-        var bv = commandList[0].boundingVolume;
-        camera.position = Cartesian3.clone(bv.center);
-        camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position, new Cartesian3()), Cartesian3.magnitude(camera.position) + 1.0, new Cartesian3());
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
-
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
-        frameState.occluder = occluder;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        var numRendered = render(frameState, primitives);
-        expect(numRendered).toBeGreaterThan(0);
-
-        // reposition camera so bounding volume on the other side of the ellipsoid.
-        camera.position = Cartesian3.negate(camera.position, new Cartesian3());
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z, new Cartesian3());
-        camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
-
-        occluder.cameraPosition = camera.position;
-        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
-
-        numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.occluder = undefined;
-    }
-
-    // This function is used instead of the testOcclusionCull function for billboards/labels because the
-    // bounding volume is view-dependent. All of the "magic numbers" come from adding a billboard/label
-    // collection to a Cesium app and looking for when it is/is not occluded.
-    function testBillboardOcclusion(billboard) {
-        primitives.add(billboard);
-
-        camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
-        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position, new Cartesian3()), new Cartesian3());
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
-
-        var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
-        frameState.occluder = occluder;
-
-        var numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(1);
-
-        camera.position  = Cartesian3.negate(camera.position, new Cartesian3());
-        camera.direction = Cartesian3.negate(camera.direction, new Cartesian3());
-
-        occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
-        frameState.occluder = occluder;
-
-        numRendered = render(frameState, primitives);
-        expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.occluder = undefined;
-    }
-
-    function createPolygon(degree, ellipsoid) {
-        degree = defaultValue(degree, 50.0);
-        var polygon = new Primitive({
-            geometryInstances: new GeometryInstance({
-                geometry: PolygonGeometry.fromPositions({
-                    positions: Cartesian3.fromDegreesArray([
-                        -degree, -degree,
-                        degree, -degree,
-                        degree, degree,
-                        -degree, degree
-                    ]),
-                    vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    ellipsoid: ellipsoid,
-                    granularity: CesiumMath.toRadians(20.0)
-                })
-            }),
-            appearance: new EllipsoidSurfaceAppearance({
-                aboveGround: false
-            }),
-            asynchronous: false
+        scene.mode = SceneMode.SCENE3D;
+        scene.camera.setView({
+            destination : rectangle
         });
-        polygon.appearance.material.translucent = false;
 
-        return polygon;
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        scene.primitives.add(primitive);
+
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
+
+        // create the globe; it should occlude the primitive
+        scene.globe = new Globe();
+
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        scene.globe = undefined;
+    }
+
+    function createPrimitive(height) {
+        height = defaultValue(height, 0);
+        var primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new RectangleGeometry({
+                    rectangle : rectangle,
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    height : height
+                }),
+                attributes : {
+                    color : ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                }
+            }),
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
+        });
+        return primitive;
     }
 
     it('frustum culls polygon in 3D', function() {
-        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
-        testCullIn3D(polygon);
+        primitive = createPrimitive();
+        testCullIn3D(primitive);
     });
 
     it('frustum culls polygon in Columbus view', function() {
-        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
-        testCullInColumbusView(polygon);
+        primitive = createPrimitive();
+        testCullInColumbusView(primitive);
     });
 
     it('frustum culls polygon in 2D', function() {
-        var polygon = createPolygon(10.0, Ellipsoid.WGS84);
-        testCullIn2D(polygon);
+        primitive = createPrimitive();
+        testCullIn2D(primitive);
     });
 
     it('polygon occlusion', function() {
-        var polygon = createPolygon(1.0);
-        testOcclusionCull(polygon);
+        primitive = createPrimitive(-1000000.0);
+        testOcclusionCull(primitive);
     });
 
-    function createLabels(position) {
-        position = defaultValue(position, {
-            x : -1.0,
-            y : 0.0,
-            z : 0.0
-        });
+    function createLabels(height) {
+        height = defaultValue(height, 0);
         var labels = new LabelCollection();
+        var center = Cartesian3.fromDegrees(-96.5, 33.5, height);
+        labels.modelMatrix = Transforms.eastNorthUpToFixedFrame(center);
         labels.add({
-            position : position,
-            text : 'x',
+            position : Cartesian3.ZERO,
+            text : 'X',
             horizontalOrigin : HorizontalOrigin.CENTER,
             verticalOrigin : VerticalOrigin.CENTER
         });
@@ -344,84 +197,65 @@ defineSuite([
     }
 
     it('frustum culls labels in 3D', function() {
-        var labels = createLabels();
-        testCullIn3D(labels);
+        primitive = createLabels();
+        testCullIn3D(primitive);
     });
 
     it('frustum culls labels in Columbus view', function() {
-        var labels = createLabels();
-        testCullInColumbusView(labels);
+        primitive = createLabels();
+        testCullInColumbusView(primitive);
     });
 
     it('frustum culls labels in 2D', function() {
-        var labels = createLabels();
-        testCullIn2D(labels);
+        primitive = createLabels();
+        testCullIn2D(primitive);
     });
 
     it('label occlusion', function() {
-        var labels = new LabelCollection();
-        labels.add({
-            position : Cartesian3.fromDegrees(-75.10, 39.57),
-            text : 'x',
-            horizontalOrigin : HorizontalOrigin.CENTER,
-            verticalOrigin : VerticalOrigin.CENTER
-        });
-
-        testBillboardOcclusion(labels);
+        primitive = createLabels(-1000000.0);
+        testOcclusionCull(primitive);
     });
 
-    function createBillboard() {
-        var atlas = new TextureAtlas({
-            context : context,
-            borderWidthInPixels : 1,
-            initialSize : new Cartesian2(3, 3)
-        });
-
-        // ANGLE Workaround
-        atlas.texture.sampler = new Sampler({
-            minificationFilter : TextureMinificationFilter.NEAREST,
-            magnificationFilter : TextureMagnificationFilter.NEAREST
-        });
-
+    function createBillboard(height) {
+        height = defaultValue(height, 0);
         var billboards = new BillboardCollection();
-        billboards.textureAtlas = atlas;
         billboards.add({
-            position : Cartesian3.fromDegrees(-75.10, 39.57),
+            position : Cartesian3.fromDegrees(-96.5, 33.5, height),
             image : greenImage
         });
-
         return billboards;
     }
 
     it('frustum culls billboards in 3D', function() {
-        var billboards = createBillboard();
-        testCullIn3D(billboards);
+        primitive = createBillboard();
+        testCullIn3D(primitive);
     });
 
     it('frustum culls billboards in Columbus view', function() {
-        var billboards = createBillboard();
-        testCullInColumbusView(billboards);
+        primitive = createBillboard();
+        testCullInColumbusView(primitive);
     });
 
     it('frustum culls billboards in 2D', function() {
-        var billboards = createBillboard();
-        testCullIn2D(billboards);
+        primitive = createBillboard();
+        testCullIn2D(primitive);
     });
 
     it('billboard occlusion', function() {
-        var billboards = createBillboard();
-        testBillboardOcclusion(billboards);
+        primitive = createBillboard(-1000000.0);
+        testOcclusionCull(primitive);
     });
 
-    function createPolylines() {
+    function createPolylines(height) {
+        height = defaultValue(height, 0);
         var material = Material.fromType('Color');
         material.translucent = false;
 
         var polylines = new PolylineCollection();
         polylines.add({
-            positions : Cartesian3.fromDegreesArray([
-                -75.10, 39.57,
-                -80.12, 25.46
+            positions : Cartesian3.fromDegreesArrayHeights([
+                -100.0, 30.0, height,
+                -93.0, 37.0, height
             ]),
             material : material
         });
@@ -429,22 +263,22 @@ defineSuite([
     }
 
     it('frustum culls polylines in 3D', function() {
-        var polylines = createPolylines();
-        testCullIn3D(polylines);
+        primitive = createPolylines();
+        testCullIn3D(primitive);
     });
 
     it('frustum culls polylines in Columbus view', function() {
-        var polylines = createPolylines();
-        testCullInColumbusView(polylines);
+        primitive = createPolylines();
+        testCullInColumbusView(primitive);
     });
 
     it('frustum culls polylines in 2D', function() {
-        var polylines = createPolylines();
-        testCullIn2D(polylines);
+        primitive = createPolylines();
+        testCullIn2D(primitive);
     });
 
     it('polyline occlusion', function() {
-        var polylines = createPolylines();
-        testOcclusionCull(polylines);
+        primitive = createPolylines(-1000000.0);
+        testOcclusionCull(primitive);
     });
 }, 'WebGL');

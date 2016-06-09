@@ -23,7 +23,7 @@ define([
         GeometryAttributes,
         PrimitiveType,
         VertexFormat) {
-    "use strict";
+    'use strict';
 
     var diffScratch = new Cartesian3();
 
@@ -133,42 +133,7 @@ define([
      *      -70.0, 30.0,
      *      -68.0, 40.0
      * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
-     * 
-     * @see BoxGeometry.createGeometry
-     */
-    BoxGeometry.fromAxisAlignedBoundingBox = function (boundingBox) {
-        if (!defined(boundingBox)) {
-            throw new DeveloperError('boundingBox is required.');
-        }
-
-        return new BoxGeometry({
-            minimum: boundingBox.minimum,
-            maximum: boundingBox.maximum
-        });
-    };
-
-    /**
-     * Creates a cube from the dimensions of an AxisAlignedBoundingBox.
-     *
-     * @param {AxisAlignedBoundingBox} boundingBox A description of the AxisAlignedBoundingBox.
-     * @returns {BoxGeometry}
-     *
-     *
-     * 
-     * @example
-     * var aabb = Cesium.AxisAlignedBoundingBox.fromPoints(Cesium.Cartesian3.fromDegreesArray([
-     *      -72.0, 40.0,
-     *      -70.0, 35.0,
-     *      -75.0, 30.0,
-     *      -70.0, 30.0,
-     *      -68.0, 40.0
-     * ]));
-     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox({
-     *      boundingBox: aabb
-     * });
+     * var box = Cesium.BoxGeometry.fromAxisAlignedBoundingBox(aabb);
      * 
      * @see BoxGeometry.createGeometry
      */
@@ -258,12 +223,16 @@ define([
      * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
-     * @returns {Geometry} The computed vertices and indices.
+     * @returns {Geometry|undefined} The computed vertices and indices.
      */
     BoxGeometry.createGeometry = function(boxGeometry) {
         var min = boxGeometry._minimum;
         var max = boxGeometry._maximum;
         var vertexFormat = boxGeometry._vertexFormat;
+
+        if (Cartesian3.equals(min, max)) {
+            return;
+        }
 
         var attributes = new GeometryAttributes();
         var indices;

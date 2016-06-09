@@ -29,7 +29,7 @@ define([
         when,
         TerrainState,
         TileBoundingBox) {
-    "use strict";
+    'use strict';
 
     /**
      * Manages details of the terrain load or upsample process.
@@ -93,13 +93,6 @@ define([
         });
 
         tile.data.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
-
-        // Free the tile's existing vertex array, if any.
-        surfaceTile.freeVertexArray();
-
-        // Transfer ownership of the vertex array to the tile itself.
-        surfaceTile.vertexArray = this.vertexArray;
-        this.vertexArray = undefined;
     };
 
     TileTerrain.prototype.processLoadStateMachine = function(frameState, terrainProvider, x, y, level) {
@@ -129,12 +122,12 @@ define([
 
             var message = 'Failed to obtain terrain tile X: ' + x + ' Y: ' + y + ' Level: ' + level + '.';
             terrainProvider._requestError = TileProviderError.handleError(
-                    terrainProvider._requestError,
-                    terrainProvider,
-                    terrainProvider.errorEvent,
-                    message,
-                    x, y, level,
-                    doRequest);
+                terrainProvider._requestError,
+                terrainProvider,
+                terrainProvider.errorEvent,
+                message,
+                x, y, level,
+                doRequest);
         }
 
         function doRequest() {

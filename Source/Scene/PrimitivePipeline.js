@@ -33,7 +33,7 @@ define([
         IndexDatatype,
         Matrix4,
         WebMercatorProjection) {
-    "use strict";
+    'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
@@ -153,7 +153,7 @@ define([
             var attribute = instanceAttributes[name];
             var componentDatatype = attribute.componentDatatype;
             var value = attribute.value;
-            var componentsPerAttribute = value.length;
+            var componentsPerAttribute = attribute.componentsPerAttribute;
 
             var buffer = ComponentDatatype.createTypedArray(componentDatatype, numberOfVertices * componentsPerAttribute);
             for (var k = 0; k < numberOfVertices; ++k) {

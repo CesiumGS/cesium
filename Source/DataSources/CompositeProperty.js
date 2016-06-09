@@ -15,7 +15,7 @@ define([
         EventHelper,
         TimeIntervalCollection,
         Property) {
-    "use strict";
+    'use strict';
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
         function callback() {

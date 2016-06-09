@@ -15,7 +15,7 @@ defineSuite([
         Matrix3,
         Quaternion,
         TranslationRotationScale) {
-    "use strict";
+    'use strict';
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -329,8 +329,8 @@ defineSuite([
     it('fromCamera works without a result parameter', function() {
         var expected = Matrix4.IDENTITY;
         var returnedResult = Matrix4.fromCamera({
-            eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+            position : Cartesian3.ZERO,
+            direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         });
         expect(expected).toEqual(returnedResult);
@@ -340,8 +340,8 @@ defineSuite([
         var expected = Matrix4.IDENTITY;
         var result = new Matrix4();
         var returnedResult = Matrix4.fromCamera({
-            eye : Cartesian3.ZERO,
-            target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+            position : Cartesian3.ZERO,
+            direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
             up : Cartesian3.UNIT_Y
         }, result);
         expect(returnedResult).toBe(result);
@@ -1096,19 +1096,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('fromCamera throws without eye', function() {
+    it('fromCamera throws without position', function() {
         expect(function() {
             Matrix4.fromCamera({
-                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
+                direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3()),
                 up : Cartesian3.UNIT_Y
             });
         }).toThrowDeveloperError();
     });
 
-    it('fromCamera throws without target', function() {
+    it('fromCamera throws without direction', function() {
         expect(function() {
             Matrix4.fromCamera({
-                eye : Cartesian3.ZERO,
+                position : Cartesian3.ZERO,
                 up : Cartesian3.UNIT_Y
             });
         }).toThrowDeveloperError();
@@ -1117,8 +1117,8 @@ defineSuite([
     it('fromCamera throws without up', function() {
         expect(function() {
             Matrix4.fromCamera({
-                eye : Cartesian3.ZERO,
-                target : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
+                position : Cartesian3.ZERO,
+                direction : Cartesian3.negate(Cartesian3.UNIT_Z, new Cartesian3())
             });
         }).toThrowDeveloperError();
     });
@@ -1730,5 +1730,19 @@ defineSuite([
                 height : 6.0
             }, 0.0, 2.0);
         }).toThrowDeveloperError();
+    });
+
+    it('Matrix4 objects can be used as array like objects', function() {
+        var matrix = new Matrix4(
+                1, 5, 9, 13,
+                2, 6, 10, 14,
+                3, 7, 11, 15,
+                4, 8, 12, 16);
+        expect(matrix.length).toEqual(16);
+        var intArray = new Uint32Array(matrix.length);
+        intArray.set(matrix);
+        for ( var index = 0; index < matrix.length; index++) {
+            expect(intArray[index]).toEqual(index + 1);
+        }
     });
 });

@@ -15,7 +15,7 @@ defineSuite([
         RenderState,
         Texture,
         createContext) {
-    "use strict";
+    'use strict';
 
     var context;
 

@@ -30,7 +30,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"><div id="viewChanged">View Changed</div></div><script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
@@ -140,7 +140,7 @@ function setHeadingPitchRoll() {
     
     var camera = viewer.camera;
     camera.setView({
-        position : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
+        destination : Cesium.Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),
         orientation: {
             heading : -Cesium.Math.PI_OVER_TWO,
             pitch : -Cesium.Math.PI_OVER_FOUR,

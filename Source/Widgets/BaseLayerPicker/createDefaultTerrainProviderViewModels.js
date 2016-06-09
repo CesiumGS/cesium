@@ -9,7 +9,7 @@ define([
         CesiumTerrainProvider,
         EllipsoidTerrainProvider,
         ProviderViewModel) {
-    "use strict";
+    'use strict';
 
     /**
      * @private
@@ -32,7 +32,7 @@ define([
             tooltip : 'High-resolution, mesh-based terrain for the entire globe. Free for use on the Internet. Closed-network options are available.\nhttp://www.agi.com',
             creationFunction : function() {
                 return new CesiumTerrainProvider({
-                    url : '//assets.agi.com/stk-terrain/world',
+                    url : 'https://assets.agi.com/stk-terrain/world',
                     requestWaterMask : true,
                     requestVertexNormals : true
                 });

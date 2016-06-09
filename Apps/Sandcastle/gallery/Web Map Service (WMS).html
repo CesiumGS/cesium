@@ -25,14 +25,14 @@
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
-    "use strict";
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 // Add a WMS imagery layer
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(new Cesium.WebMapServiceImageryProvider({
-    url : '//nationalmap.gov.au/proxy/http://geoserver.nationalmap.nicta.com.au/geotopo_250k/ows',
+    url : 'https://nationalmap.gov.au/proxy/http://geoserver.nationalmap.nicta.com.au/geotopo_250k/ows',
     layers : 'Hydrography:bores',
     parameters : {
         transparent : true,

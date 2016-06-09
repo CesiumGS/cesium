@@ -7,7 +7,7 @@ define([
         defined,
         DeveloperError,
         isArray) {
-    "use strict";
+    'use strict';
 
     /**
      * Converts an object representing a set of name/value pairs into a query string,
