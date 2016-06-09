@@ -36,6 +36,7 @@ define([
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      * @param {Boolean} [options.flyToOnDrop=true] When true, dropping files will fly to the data source once it is loaded.
+     * @param {Boolean} [options.onTerrain=true] When true, datasources are drawn on terrain.
      * @param {DefaultProxy} [options.proxy] The proxy to be used for KML network links.
      *
      * @exception {DeveloperError} Element with id <options.dropTarget> does not exist in the document.
@@ -82,6 +83,7 @@ define([
         var dropError = new Event();
         var clearOnDrop = defaultValue(options.clearOnDrop, true);
         var dropTarget = defaultValue(options.dropTarget, viewer.container);
+        var onTerrain = defaultValue(options.onTerrain, true);
         var proxy = options.proxy;
 
         dropTarget = getElement(dropTarget);
@@ -182,6 +184,20 @@ define([
                 set : function(value) {
                     proxy = value;
                 }
+            },
+
+            /**
+             * Gets or sets a value indicating if the datasources should be drawn on terrain
+             * @memberof viewerDragDropMixin.prototype
+             * @type {Boolean}
+             */
+            onTerrain : {
+                get : function() {
+                    return onTerrain;
+                },
+                set : function(value) {
+                    onTerrain = value;
+                }
             }
         });
 
@@ -198,7 +214,7 @@ define([
             for (var i = 0; i < length; i++) {
                 var file = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, file, proxy);
+                reader.onload = createOnLoadCallback(viewer, file, proxy, onTerrain);
                 reader.onerror = createDropErrorCallback(viewer, file);
                 reader.readAsText(file);
             }
@@ -238,7 +254,7 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
-    function createOnLoadCallback(viewer, file, proxy) {
+    function createOnLoadCallback(viewer, file, proxy, onTerrain) {
         var scene = viewer.scene;
         return function(evt) {
             var fileName = file.name;
@@ -253,7 +269,7 @@ define([
                     loadPromise = GroundPrimitive.init().then(function() {
                         return GeoJsonDataSource.load(JSON.parse(evt.target.result), {
                             sourceUri : fileName,
-                            terrain : true
+                            terrain : onTerrain
                         });
                     });
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {

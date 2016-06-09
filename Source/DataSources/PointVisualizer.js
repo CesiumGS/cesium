@@ -102,7 +102,7 @@ define([
             var pointGraphics = entity._point;
             var pointPrimitive = item.pointPrimitive;
             var billboard = item.billboard;
-            var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE)
+            var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE);
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, position);
@@ -311,6 +311,7 @@ define([
                 pointPrimitive.id = undefined;
                 pointPrimitive.show = false;
                 unusedPointIndexes.push(pointPrimitive._index);
+                return;
             }
             var billboard = item.billboard;
             if (defined(billboard)) {

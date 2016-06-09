@@ -3,16 +3,16 @@ defineSuite([
         'Core/EllipseGeometry',
         'Core/Cartesian3',
         'Core/Ellipsoid',
-        'Core/Rectangle',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         EllipseGeometry,
         Cartesian3,
         Ellipsoid,
-        Rectangle,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';

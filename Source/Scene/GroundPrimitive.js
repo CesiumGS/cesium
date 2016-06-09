@@ -903,17 +903,19 @@ define([
         }
     }
 
-    GroundPrimitive._initialized = false;
-    GroundPrimitive.init = function() {
-        var initialized = GroundPrimitive._initialized;
-        if (initialized) {
-            return when.resolve();
+    GroundPrimitive._initPromise = undefined;
+    GroundPrimitive.initializeTerrainHeights = function() {
+        var initPromise = GroundPrimitive._initPromise;
+        if (defined(initPromise)) {
+            return initPromise;
         }
 
-        return loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+        GroundPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
+
+        return GroundPrimitive._initPromise;
     };
 
     /**
@@ -1038,7 +1040,7 @@ define([
                     var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
                     Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
                     debugVolumeInstances[j] = new GeometryInstance({
-                        geometry : debugInstanceType.createShadowVolume(debugGeometry, computeMinimumHeight, computeMaximumHeight),
+                        geometry : debugInstanceType.createShadowVolume(debugGeometry, getComputeMinimumHeightFunction(this), getComputeMaximumHeightFunction(this)),
                         attributes : {
                             color : ColorGeometryInstanceAttribute.fromColor(debugColor)
                         },

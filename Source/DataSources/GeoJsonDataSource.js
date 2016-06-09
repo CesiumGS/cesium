@@ -415,9 +415,6 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        if (!options.terrain) {
-            polygon.height = 0;
-        }
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -428,6 +425,8 @@ define([
         polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
         if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
+        } else if (!options.terrain) {
+            polygon.height = 0;
         }
 
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);

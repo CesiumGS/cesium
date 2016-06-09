@@ -977,27 +977,26 @@ define([
         }
 
         if (altitudeMode === 'absolute') {
-            window.console.log('KML - <kml:altitudeMode>:absolute is currently not supported, using <kml:altitudeMode>:relativeToGround.');
-            return HeightReference.RELATIVE_TO_GROUND;
+            return HeightReference.NONE;
         }
 
         if (gxAltitudeMode === 'clampToSeaFloor') {
-            window.console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
             return HeightReference.CLAMP_TO_GROUND;
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor') {
-            window.console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
             return HeightReference.RELATIVE_TO_GROUND;
         }
 
         if (defined(altitudeMode)) {
-            window.console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+            console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
         } else {
-            window.console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+            console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
         }
 
-        //Clamp to ellipsoid until we support terrain
+        // Clamp to ground is the default
         return HeightReference.CLAMP_TO_GROUND;
     }
 
