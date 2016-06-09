@@ -115,7 +115,6 @@ define([
         return Quaternion.fromRotationMatrix(icrfToFixedRotation, scratchIcrfToFixed);
     }
 
-    var scratchMatrix3 = new Matrix3();
     var scratchQuaternion = new Quaternion();
 
     /**

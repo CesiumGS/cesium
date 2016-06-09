@@ -627,8 +627,6 @@ define([
         var isReference = defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
-        var property = object[propertyName];
-
         if (!isReference) {
             var packetReferenceFrame = packetData.referenceFrame;
             if (defined(packetReferenceFrame)) {
@@ -653,6 +651,8 @@ define([
             }
             return;
         }
+
+        var property = object[propertyName];
 
         var epoch;
         var packetEpoch = packetData.epoch;

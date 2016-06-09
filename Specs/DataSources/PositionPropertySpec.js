@@ -20,7 +20,6 @@ defineSuite([
         ConstantProperty,
         Entity) {
     "use strict";
-    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     //Results of the below tests were verified against STK Components.
     var time = JulianDate.now();
