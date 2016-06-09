@@ -7,6 +7,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './EllipseGeometryLibrary',
         './Ellipsoid',
@@ -33,6 +34,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         EllipseGeometryLibrary,
         Ellipsoid,
@@ -922,12 +924,16 @@ define([
         });
     };
 
-    /**
-     * @private
-     */
-    EllipseGeometry.getRectangle = function(geometry) {
-        return geometry._rectangle;
-    };
+    defineProperties(EllipseGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return EllipseGeometry;
 });

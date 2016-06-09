@@ -8,6 +8,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -34,6 +35,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -931,12 +933,16 @@ define([
         });
     };
 
-    /**
-     * @private
-     */
-    PolygonGeometry.getRectangle = function(geometry) {
-        return geometry._rectangle;
-    };
+    defineProperties(PolygonGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return PolygonGeometry;
 });

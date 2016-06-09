@@ -548,9 +548,8 @@ define([
         var ellipsoid = frameState.mapProjection.ellipsoid;
         
         if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
-            var instanceType = geometry.constructor;
-            if (defined(instanceType.getRectangle)) {
-                return instanceType.getRectangle(geometry, ellipsoid);
+            if (defined(geometry.rectangle)) {
+                return geometry.rectangle;
             }
 
             return undefined;

@@ -9,6 +9,7 @@ define([
         './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -30,6 +31,7 @@ define([
         CorridorGeometryLibrary,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -986,12 +988,16 @@ define([
         });
     };
 
-    /**
-     * @private
-     */
-    CorridorGeometry.getRectangle = function(geometry) {
-        return geometry._rectangle;
-    };
+    defineProperties(CorridorGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return CorridorGeometry;
 });
