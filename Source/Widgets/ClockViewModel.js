@@ -107,7 +107,7 @@ define([
         }, this);
 
         /**
-         * Gets or sets the clock range setting
+         * Gets or sets the clock range setting.
          * See {@link Clock#clockRange}.
          * This property is observable.
          * @type {ClockRange}
