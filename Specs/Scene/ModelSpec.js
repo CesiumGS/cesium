@@ -90,6 +90,7 @@ defineSuite([
     var boxColorUrl = './Data/Models/Box-Color/Box-Color.gltf';
     var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
     var boxColorQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Color-Quantized.gltf';
+    var boxScalarQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Scalar-Quantized.gltf';
     var milkTruckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Quantized.gltf';
     var milkTruckQuantizedMismatchUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Mismatch-Quantized.gltf';
     var duckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Duck-Quantized.gltf';
@@ -1661,13 +1662,20 @@ defineSuite([
          });
     });
 
-    it('loads a gltf with WEB3D_quantized_Attributes COLOR', function() {
+    it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {
         return loadModel(boxColorQuantizedUrl).then(function(m) {
             expect(m.ready).toBe(true);
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
             m.show = true;
             m.zoomTo();
             testBoxSideColors(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
+        return loadModel(boxScalarQuantizedUrl).then(function(m) {
+            verifyRender(m);
             primitives.remove(m);
         });
     });

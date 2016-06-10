@@ -1656,13 +1656,18 @@ define([
                                 // replace usages of the original attribute with the decoded version, but not the declaration
                                 shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
                                 // declare decoded attribute
-                                shader = 'vec' + (size - 1) + ' ' + decodedAttributeVarName + ';\n' + shader;
+                                var variableType;
+                                if (size > 2) {
+                                    variableType = 'vec' + (size - 1);
+                                } else {
+                                    variableType = 'float';
+                                }
+                                shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
                                 // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
                                 // uniform in the shader (32-bit floating point)
                                 var decode = '';
                                 if (size === 5) {
                                     // separate scale and translate since glsl doesn't have mat5
-
                                     shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
                                     shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
                                     decode = '\n' +
@@ -1678,7 +1683,7 @@ define([
                                     shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
                                     decode = '\n' +
                                              'void main() {\n' +
-                                             '    ' + decodedAttributeVarName + ' = vec' + (size - 1) + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
                                              '    ' + newMain + '();\n' +
                                              '}\n';
 
@@ -2755,6 +2760,10 @@ define([
                         var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
 
                         switch (a.type) {
+                            case 'SCALAR':
+                                uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
                             case 'VEC2':
                                 uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
                                 setUniforms[uniformVariable] = true;
@@ -2784,7 +2793,9 @@ define([
                 if (!setUniforms[quantizedUniform]) {
                     var properties = quantizedUniforms[quantizedUniform];
                     if (defined(properties.mat)) {
-                        if (properties.mat === 3) {
+                        if (properties.mat === 2) {
+                            uniformMap[quantizedUniform] = getMat2UniformFunction(Matrix2.IDENTITY, model).func;
+                        } else if (properties.mat === 3) {
                             uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
                         } else if (properties.mat === 4) {
                             uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
