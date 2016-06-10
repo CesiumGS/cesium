@@ -7,6 +7,7 @@ attribute vec3 textureCoordAndEncodedNormals;
 
 uniform vec3 u_center3D;
 uniform mat4 u_modifiedModelView;
+uniform mat4 u_modifiedModelViewProjection;
 uniform vec4 u_tileRectangle;
 
 // Uniforms for 2D Mercator projection
@@ -32,7 +33,7 @@ float get2DYPositionFraction(vec2 textureCoordinates);
 
 vec4 getPosition3DMode(vec3 position, float height, vec2 textureCoordinates)
 {
-    return czm_projection * (u_modifiedModelView * vec4(position, 1.0));
+    return u_modifiedModelViewProjection * vec4(position, 1.0);
 }
 
 float get2DMercatorYPositionFraction(vec2 textureCoordinates)
@@ -67,7 +68,7 @@ vec4 getPositionPlanarEarth(vec3 position, float height, vec2 textureCoordinates
 {
     float yPositionFraction = get2DYPositionFraction(textureCoordinates);
     vec4 rtcPosition2D = vec4(height, mix(u_tileRectangle.st, u_tileRectangle.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
-    return czm_projection * (u_modifiedModelView * rtcPosition2D);
+    return u_modifiedModelViewProjection * rtcPosition2D;
 }
 
 vec4 getPosition2DMode(vec3 position, float height, vec2 textureCoordinates)
@@ -120,13 +121,13 @@ void main()
 
     v_textureCoordinates = textureCoordinates;
 
-#if defined(ENABLE_VERTEX_LIGHTING)
-    v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
+#if defined(ENABLE_VERTEX_LIGHTING) || defined(GENERATE_POSITION_AND_NORMAL)
+    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
     v_normalMC = czm_octDecode(encodedNormal);
     v_normalEC = czm_normal3D * v_normalMC;
-#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
-    v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;
+#elif defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(GENERATE_POSITION)
+    v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
     

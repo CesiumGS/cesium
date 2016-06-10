@@ -29,6 +29,7 @@ defineSuite([
         'Scene/Scene',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
+        'Specs/createCanvas',
         'Specs/createScene',
         'Specs/equals',
         'Specs/pollToPromise',
@@ -63,6 +64,7 @@ defineSuite([
         Scene,
         ScreenSpaceCameraController,
         TweenCollection,
+        createCanvas,
         createScene,
         equals,
         pollToPromise,
@@ -558,6 +560,33 @@ defineSuite([
         expect(pixels[0]).not.toEqual(0);
         expect(pixels[1]).toEqual(0);
         expect(pixels[2]).toEqual(0);
+    });
+
+    it('renders map when the camera is on the IDL in 2D', function() {
+        var s = createScene({
+            canvas : createCanvas(5, 5)
+        });
+        s.morphTo2D(0.0);
+
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, 180.0, 90.0);
+
+        var rectanglePrimitive1 = createRectangle(rectangle, 0.0);
+        rectanglePrimitive1.appearance.material.uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var primitives = s.primitives;
+        primitives.add(rectanglePrimitive1);
+
+        s.camera.setView({
+            destination : new Cartesian3(Ellipsoid.WGS84.maximumRadius * Math.PI, 0.0, 10.0),
+            convert : false
+        });
+
+        var pixels = s.renderForSpecs();
+        expect(pixels[0]).not.toEqual(0);
+        expect(pixels[1]).toEqual(0);
+        expect(pixels[2]).toEqual(0);
+
+        s.destroyForSpecs();
     });
 
     it('copies the globe depth', function() {

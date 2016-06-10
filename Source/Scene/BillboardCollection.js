@@ -281,6 +281,17 @@ define([
                 return that._textureAtlas.texture;
             }
         };
+
+        var scene = this._scene;
+        if (defined(scene)) {
+            scene.terrainProviderChanged.addEventListener(function() {
+                var billboards = this._billboards;
+                var length = billboards.length;
+                for (var i=0;i<length;++i) {
+                    billboards[i]._updateClamping();
+                }
+            }, this);
+        }
     }
 
     defineProperties(BillboardCollection.prototype, {

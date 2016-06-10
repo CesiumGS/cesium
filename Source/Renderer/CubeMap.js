@@ -169,7 +169,7 @@ define([
         this._positiveZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_POSITIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
         this._negativeZ = new CubeMapFace(gl, texture, textureTarget, gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, pixelFormat, pixelDatatype, size, preMultiplyAlpha, flipY);
 
-        this.sampler = new Sampler();
+        this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
 
     defineProperties(CubeMap.prototype, {

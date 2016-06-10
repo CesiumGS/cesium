@@ -259,31 +259,13 @@ define([
     Camera.DEFAULT_VIEW_FACTOR = 0.5;
 
     function updateViewMatrix(camera) {
-        var r = camera._right;
-        var u = camera._up;
-        var d = camera._direction;
-        var e = camera._position;
-
-        var viewMatrix = camera._viewMatrix;
-        viewMatrix[0] = r.x;
-        viewMatrix[1] = u.x;
-        viewMatrix[2] = -d.x;
-        viewMatrix[3] = 0.0;
-        viewMatrix[4] = r.y;
-        viewMatrix[5] = u.y;
-        viewMatrix[6] = -d.y;
-        viewMatrix[7] = 0.0;
-        viewMatrix[8] = r.z;
-        viewMatrix[9] = u.z;
-        viewMatrix[10] = -d.z;
-        viewMatrix[11] = 0.0;
-        viewMatrix[12] = -Cartesian3.dot(r, e);
-        viewMatrix[13] = -Cartesian3.dot(u, e);
-        viewMatrix[14] = Cartesian3.dot(d, e);
-        viewMatrix[15] = 1.0;
-
-        Matrix4.multiply(viewMatrix, camera._actualInvTransform, camera._viewMatrix);
+        Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
+        Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
+    }
+
+    function convertTransformForColumbusView(camera) {
+        Transforms.basisTo2D(camera._projection, camera._transform, camera._actualTransform);
     }
 
     var scratchCartographic = new Cartographic();
@@ -294,58 +276,6 @@ define([
     var scratchCartesian4NewXAxis = new Cartesian4();
     var scratchCartesian4NewYAxis = new Cartesian4();
     var scratchCartesian4NewZAxis = new Cartesian4();
-
-    function convertTransformForColumbusView(camera) {
-        var projection = camera._projection;
-        var ellipsoid = projection.ellipsoid;
-
-        var origin = Matrix4.getColumn(camera._transform, 3, scratchCartesian4Origin);
-        var cartographic = ellipsoid.cartesianToCartographic(origin, scratchCartographic);
-
-        var projectedPosition = projection.project(cartographic, scratchCartesian3Projection);
-        var newOrigin = scratchCartesian4NewOrigin;
-        newOrigin.x = projectedPosition.z;
-        newOrigin.y = projectedPosition.x;
-        newOrigin.z = projectedPosition.y;
-        newOrigin.w = 1.0;
-
-        var xAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 0, scratchCartesian3), origin, scratchCartesian3);
-        ellipsoid.cartesianToCartographic(xAxis, cartographic);
-
-        projection.project(cartographic, projectedPosition);
-        var newXAxis = scratchCartesian4NewXAxis;
-        newXAxis.x = projectedPosition.z;
-        newXAxis.y = projectedPosition.x;
-        newXAxis.z = projectedPosition.y;
-        newXAxis.w = 0.0;
-
-        Cartesian3.subtract(newXAxis, newOrigin, newXAxis);
-
-        var yAxis = Cartesian4.add(Matrix4.getColumn(camera._transform, 1, scratchCartesian3), origin, scratchCartesian3);
-        ellipsoid.cartesianToCartographic(yAxis, cartographic);
-
-        projection.project(cartographic, projectedPosition);
-        var newYAxis = scratchCartesian4NewYAxis;
-        newYAxis.x = projectedPosition.z;
-        newYAxis.y = projectedPosition.x;
-        newYAxis.z = projectedPosition.y;
-        newYAxis.w = 0.0;
-
-        Cartesian3.subtract(newYAxis, newOrigin, newYAxis);
-
-        var newZAxis = scratchCartesian4NewZAxis;
-        Cartesian3.cross(newXAxis, newYAxis, newZAxis);
-        Cartesian3.normalize(newZAxis, newZAxis);
-        Cartesian3.cross(newYAxis, newZAxis, newXAxis);
-        Cartesian3.normalize(newXAxis, newXAxis);
-        Cartesian3.cross(newZAxis, newXAxis, newYAxis);
-        Cartesian3.normalize(newYAxis, newYAxis);
-
-        Matrix4.setColumn(camera._actualTransform, 0, newXAxis, camera._actualTransform);
-        Matrix4.setColumn(camera._actualTransform, 1, newYAxis, camera._actualTransform);
-        Matrix4.setColumn(camera._actualTransform, 2, newZAxis, camera._actualTransform);
-        Matrix4.setColumn(camera._actualTransform, 3, newOrigin, camera._actualTransform);
-    }
 
     function convertTransformFor2D(camera) {
         var projection = camera._projection;
@@ -1018,7 +948,7 @@ define([
      *     destination : Cesium.Rectangle.fromDegrees(west, south, east, north)
      * });
      *
-     * // 5. Setposition with an orientation using unit vectors.
+     * // 5. Set position with an orientation using unit vectors.
      * viewer.camera.setView({
      *     destination : Cesium.Cartesian3.fromDegrees(-122.19, 46.25, 5000.0),
      *     orientation : {
@@ -2864,6 +2794,7 @@ define([
         Cartesian3.clone(camera.up, result.up);
         Cartesian3.clone(camera.right, result.right);
         Matrix4.clone(camera._transform, result.transform);
+        result._transformChanged = true;
 
         return result;
     };
