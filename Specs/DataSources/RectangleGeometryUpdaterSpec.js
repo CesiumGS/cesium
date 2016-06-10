@@ -9,6 +9,7 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
@@ -30,6 +31,7 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
@@ -65,6 +67,14 @@ defineSuite([
         entity.rectangle = rectangle;
         entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
         entity.rectangle.height = new ConstantProperty(0);
+        return entity;
+    }
+
+    function createBasicRectangleWithoutHeight() {
+        var rectangle = new RectangleGraphics();
+        var entity = new Entity();
+        entity.rectangle = rectangle;
+        entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
         return entity;
     }
 
@@ -614,6 +624,52 @@ defineSuite([
         expect(function() {
             return new RectangleGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('fill is true sets onTerrain to true', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = true;
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('fill is false sets onTerrain to false', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = false;
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined height sets onTerrain to false', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = true;
+        entity.rectangle.height = 0;
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined extrudedHeight sets onTerrain to false', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = true;
+        entity.rectangle.extrudedHeight = 12;
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('color material sets onTerrain to true', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = true;
+        entity.rectangle.material = new ColorMaterialProperty(Color.WHITE);
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('non-color material sets onTerrain to false', function() {
+        var entity = createBasicRectangleWithoutHeight();
+        entity.rectangle.fill = true;
+        entity.rectangle.material = new CheckerboardMaterialProperty();
+        var updater = new RectangleGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
     });
 
     var entity = createBasicRectangle();

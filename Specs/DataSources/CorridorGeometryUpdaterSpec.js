@@ -9,6 +9,7 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/CorridorGraphics',
@@ -32,6 +33,7 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         ConstantProperty,
         CorridorGraphics,
@@ -69,6 +71,20 @@ defineSuite([
         ]));
         corridor.width = new ConstantProperty(1);
         corridor.height = new ConstantProperty(0);
+        var entity = new Entity();
+        entity.corridor = corridor;
+        return entity;
+    }
+
+    function createBasicCorridorWithoutHeight() {
+        var corridor = new CorridorGraphics();
+        corridor.positions = new ConstantProperty(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ]));
+        corridor.width = new ConstantProperty(1);
         var entity = new Entity();
         entity.corridor = corridor;
         return entity;
@@ -624,6 +640,52 @@ defineSuite([
         expect(function() {
             return new CorridorGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('fill is true sets onTerrain to true', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('fill is false sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = false;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined height sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.height = 0;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined extrudedHeight sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.extrudedHeight = 12;
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('color material sets onTerrain to true', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.material = new ColorMaterialProperty(Color.WHITE);
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('non-color material sets onTerrain to false', function() {
+        var entity = createBasicCorridorWithoutHeight();
+        entity.corridor.fill = true;
+        entity.corridor.material = new CheckerboardMaterialProperty();
+        var updater = new CorridorGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
     });
 
     var entity = createBasicCorridor();

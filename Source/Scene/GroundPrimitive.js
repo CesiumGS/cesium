@@ -110,7 +110,7 @@ define([
      * @param {Boolean} [options.compressVertices=true] When <code>true</code>, the geometry vertices are compressed, which will save memory.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each geometry instance will only be pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
-     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
+     * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready. If false initializeTerrainHeights() must be called first.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
      * @param {Boolean} [options.debugShowShadowVolume=false] For debugging only. Determines if the shadow volume for each geometry in the primitive is drawn. Must be <code>true</code> on
      *                  creation for the volumes to be created before the geometry is released or options.releaseGeometryInstance must be <code>false</code>.
@@ -904,6 +904,14 @@ define([
 
     GroundPrimitive._initialized = false;
     GroundPrimitive._initPromise = undefined;
+
+    /**
+     * Initializes the minimum and maximum terrain heights. This only needs to be called if you are creating the
+     * GroundPrimitive asynchronously.
+     *
+     * @returns {Promise} A promise that will resolve once the terrain heights have been loaded.
+     *
+     */
     GroundPrimitive.initializeTerrainHeights = function() {
         var initPromise = GroundPrimitive._initPromise;
         if (defined(initPromise)) {

@@ -8,6 +8,7 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -30,6 +31,7 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
@@ -68,6 +70,18 @@ defineSuite([
         entity.ellipse = ellipse;
         return entity;
     }
+
+    function createBasicEllipseWithoutHeight() {
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.fromDegrees(0, 0, 0));
+        entity.ellipse = ellipse;
+        return entity;
+    }
+
 
     it('Constructor sets expected defaults', function() {
         var entity = new Entity();
@@ -664,6 +678,52 @@ defineSuite([
         expect(function() {
             return new EllipseGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('fill is true sets onTerrain to true', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = true;
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('fill is false sets onTerrain to false', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = false;
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined height sets onTerrain to false', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = true;
+        entity.ellipse.height = 0;
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined extrudedHeight sets onTerrain to false', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = true;
+        entity.ellipse.extrudedHeight = 12;
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('color material sets onTerrain to true', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = true;
+        entity.ellipse.material = new ColorMaterialProperty(Color.WHITE);
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('non-color material sets onTerrain to false', function() {
+        var entity = createBasicEllipseWithoutHeight();
+        entity.ellipse.fill = true;
+        entity.ellipse.material = new CheckerboardMaterialProperty();
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
     });
 
     var entity = createBasicEllipse();
