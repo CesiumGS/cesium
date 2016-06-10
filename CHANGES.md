@@ -8,7 +8,9 @@ Change Log
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
-* Added CZML support for Box, Corridor and Cylinder
+* Added CZML support for Box, Corridor and Cylinder.
+* Updated Cardboard Sandcastle example.
+* Added the hot air balloon sample model.
 
 ### 1.22 - 2016-06-01
 
