@@ -910,17 +910,12 @@ define([
             return initPromise;
         }
 
-        initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
+        GroundPrimitive._initPromise = loadJson(buildModuleUrl('Assets/approximateTerrainHeights.json')).then(function(json) {
             GroundPrimitive._initialized = true;
             GroundPrimitive._terrainHeights = json;
         });
 
-        initPromise.then(function() {
-            GroundPrimitive._initialized = true;
-        });
-
-        GroundPrimitive._initPromise = initPromise;
-        return initPromise;
+        return GroundPrimitive._initPromise;
     };
 
     /**

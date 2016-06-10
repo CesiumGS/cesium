@@ -9,6 +9,7 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
@@ -32,6 +33,7 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         TimeInterval,
         TimeIntervalCollection,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
@@ -73,6 +75,19 @@ defineSuite([
         return entity;
     }
 
+    function createBasicPolygonWithoutHeight() {
+        var polygon = new PolygonGraphics();
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ])));
+        var entity = new Entity();
+        entity.polygon = polygon;
+        return entity;
+    }
+
     it('Constructor sets expected defaults', function() {
         var entity = new Entity();
         var updater = new PolygonGeometryUpdater(entity, scene);
@@ -88,6 +103,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
+        expect(updater.onTerrain).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
         updater.destroy();
@@ -666,6 +682,60 @@ defineSuite([
         expect(function() {
             return new PolygonGeometryUpdater(entity, undefined);
         }).toThrowDeveloperError();
+    });
+
+    it('fill is true sets onTerrain to true', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('fill is false sets onTerrain to false', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = false;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined height sets onTerrain to false', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        entity.polygon.height = 0;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('a defined extrudedHeight sets onTerrain to false', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        entity.polygon.extrudedHeight = 12;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('perPositionHeight is true sets onTerrain to false', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        entity.polygon.perPositionHeight = true;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
+    });
+
+    it('color material sets onTerrain to true', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        entity.polygon.material = new ColorMaterialProperty(Color.WHITE);
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(true);
+    });
+
+    it('non-color material sets onTerrain to false', function() {
+        var entity = createBasicPolygonWithoutHeight();
+        entity.polygon.fill = true;
+        entity.polygon.material = new CheckerboardMaterialProperty();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        expect(updater.onTerrain).toBe(false);
     });
 
     var entity = createBasicPolygon();

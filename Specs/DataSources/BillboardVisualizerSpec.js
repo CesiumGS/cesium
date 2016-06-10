@@ -13,6 +13,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'Scene/BillboardCollection',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
@@ -32,6 +33,7 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         BillboardCollection,
+        HeightReference,
         HorizontalOrigin,
         VerticalOrigin,
         createGlobe,
@@ -141,6 +143,7 @@ defineSuite([
         billboard.scale = new ConstantProperty(12.5);
         billboard.rotation = new ConstantProperty(1.5);
         billboard.alignedAxis = new ConstantProperty(Cartesian3.UNIT_Z);
+        billboard.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
         billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
         billboard.pixelOffset = new ConstantProperty(new Cartesian2(3, 2));
@@ -168,6 +171,7 @@ defineSuite([
             expect(bb.scale).toEqual(testObject.billboard.scale.getValue(time));
             expect(bb.rotation).toEqual(testObject.billboard.rotation.getValue(time));
             expect(bb.alignedAxis).toEqual(testObject.billboard.alignedAxis.getValue(time));
+            expect(bb.heightReference).toEqual(testObject.billboard.heightReference.getValue(time));
             expect(bb.horizontalOrigin).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
             expect(bb.verticalOrigin).toEqual(testObject.billboard.verticalOrigin.getValue(time));
             expect(bb.width).toEqual(testObject.billboard.width.getValue(time));

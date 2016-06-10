@@ -6,6 +6,7 @@ defineSuite([
         'Core/Color',
         'Core/NearFarScalar',
         'DataSources/ConstantProperty',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin'
     ], function(
@@ -15,6 +16,7 @@ defineSuite([
         Color,
         NearFarScalar,
         ConstantProperty,
+        HeightReference,
         HorizontalOrigin,
         VerticalOrigin) {
     'use strict';
@@ -25,6 +27,7 @@ defineSuite([
             rotation : 1,
             alignedAxis : new Cartesian3(2, 3, 4),
             color : Color.RED,
+            heightReference: HeightReference.CLAMP_TO_GROUND,
             horizontalOrigin : HorizontalOrigin.LEFT,
             verticalOrigin : VerticalOrigin.BOTTOM,
             eyeOffset : new Cartesian3(5, 6, 7),
@@ -44,6 +47,7 @@ defineSuite([
         expect(billboard.rotation).toBeInstanceOf(ConstantProperty);
         expect(billboard.alignedAxis).toBeInstanceOf(ConstantProperty);
         expect(billboard.color).toBeInstanceOf(ConstantProperty);
+        expect(billboard.heightReference).toBeInstanceOf(ConstantProperty);
         expect(billboard.horizontalOrigin).toBeInstanceOf(ConstantProperty);
         expect(billboard.verticalOrigin).toBeInstanceOf(ConstantProperty);
         expect(billboard.eyeOffset).toBeInstanceOf(ConstantProperty);
@@ -60,6 +64,7 @@ defineSuite([
         expect(billboard.rotation.getValue()).toEqual(options.rotation);
         expect(billboard.alignedAxis.getValue()).toEqual(options.alignedAxis);
         expect(billboard.color.getValue()).toEqual(options.color);
+        expect(billboard.heightReference.getValue()).toEqual(options.heightReference);
         expect(billboard.horizontalOrigin.getValue()).toEqual(options.horizontalOrigin);
         expect(billboard.verticalOrigin.getValue()).toEqual(options.verticalOrigin);
         expect(billboard.eyeOffset.getValue()).toEqual(options.eyeOffset);
@@ -80,6 +85,7 @@ defineSuite([
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
         source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
@@ -101,6 +107,7 @@ defineSuite([
         expect(target.rotation).toBe(source.rotation);
         expect(target.alignedAxis).toBe(source.alignedAxis);
         expect(target.color).toBe(source.color);
+        expect(target.heightReference).toBe(source.heightReference);
         expect(target.horizontalOrigin).toBe(source.horizontalOrigin);
         expect(target.verticalOrigin).toBe(source.verticalOrigin);
         expect(target.eyeOffset).toBe(source.eyeOffset);
@@ -122,6 +129,7 @@ defineSuite([
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
         source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
@@ -140,6 +148,7 @@ defineSuite([
         var rotation = new ConstantProperty(5);
         var alignedAxis = new ConstantProperty(new Cartesian3());
         var color = new ConstantProperty(Color.BLACK);
+        var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         var horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         var verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
         var eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
@@ -159,6 +168,7 @@ defineSuite([
         target.rotation = rotation;
         target.alignedAxis = alignedAxis;
         target.color = color;
+        target.heightReference = heightReference;
         target.horizontalOrigin = horizontalOrigin;
         target.verticalOrigin = verticalOrigin;
         target.eyeOffset = eyeOffset;
@@ -179,6 +189,7 @@ defineSuite([
         expect(target.rotation).toBe(rotation);
         expect(target.alignedAxis).toBe(alignedAxis);
         expect(target.color).toBe(color);
+        expect(target.heightReference).toBe(heightReference);
         expect(target.horizontalOrigin).toBe(horizontalOrigin);
         expect(target.verticalOrigin).toBe(verticalOrigin);
         expect(target.eyeOffset).toBe(eyeOffset);
@@ -200,6 +211,7 @@ defineSuite([
         source.rotation = new ConstantProperty(5);
         source.alignedAxis = new ConstantProperty(new Cartesian3());
         source.color = new ConstantProperty(Color.BLACK);
+        source.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
         source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
         source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
@@ -219,6 +231,7 @@ defineSuite([
         expect(result.rotation).toBe(source.rotation);
         expect(result.alignedAxis).toBe(source.alignedAxis);
         expect(result.color).toBe(source.color);
+        expect(result.heightReference).toBe(source.heightReference);
         expect(result.horizontalOrigin).toBe(source.horizontalOrigin);
         expect(result.verticalOrigin).toBe(source.verticalOrigin);
         expect(result.eyeOffset).toBe(source.eyeOffset);
