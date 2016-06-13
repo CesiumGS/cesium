@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 1.22.1 - 2016-06-13
+* Fixed default Bing Key and added a watermark to notify users that they need to sign up for their own key.
+
 ### 1.22 - 2016-06-01
 
 * Breaking changes
