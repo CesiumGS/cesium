@@ -629,6 +629,26 @@ defineSuite([
         expect(notEqualCount).toEqual(6);
     });
 
+    it('computing rectangle property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])},
+            granularity: CesiumMath.PI
+        });
+
+        var r = p.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(30.5, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(-100.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -124.0, 35.0,
         -110.0, 35.0,

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/Math',
         'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
@@ -12,6 +13,7 @@ defineSuite([
         Cartesian3,
         CornerType,
         Ellipsoid,
+        CesiumMath,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
@@ -251,6 +253,26 @@ defineSuite([
         expect(geometry0).toBeUndefined();
         expect(geometry1).toBeUndefined();
         expect(geometry2).toBeUndefined();
+    });
+
+    it('computing rectangle property', function() {
+        var c = new CorridorGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                -67.655, 0.0,
+                -67.655, 15.0,
+                -67.655, 20.0
+            ]),
+            cornerType: CornerType.MITERED,
+            width : 1,
+            granularity : Math.PI / 6.0
+        });
+
+        var r = c.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(20.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(0.0, CesiumMath.EPSILON20);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(-67.65499522658291);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-67.6550047734171);
     });
 
     var positions = Cartesian3.fromDegreesArray([
