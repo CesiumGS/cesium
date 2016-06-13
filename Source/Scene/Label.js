@@ -188,6 +188,17 @@ define([
 
                 if (value !== this._heightReference) {
                     this._heightReference = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.heightReference = value;
+                        }
+                    }
+
+                    repositionAllGlyphs(this);
+
                     this._updateClamping();
                 }
             }
