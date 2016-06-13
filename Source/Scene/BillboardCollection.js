@@ -29,7 +29,8 @@ define([
         './HorizontalOrigin',
         './Pass',
         './SceneMode',
-        './TextureAtlas'
+        './TextureAtlas',
+        './VerticalOrigin'
     ], function(
         AttributeCompression,
         BoundingSphere,
@@ -60,7 +61,8 @@ define([
         HorizontalOrigin,
         Pass,
         SceneMode,
-        TextureAtlas) {
+        TextureAtlas,
+        VerticalOrigin) {
     'use strict';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
@@ -785,7 +787,7 @@ define([
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffsetX + translateX), Math.abs(-pixelOffsetY + translateY));
 
         var horizontalOrigin = billboard.horizontalOrigin;
-        var verticalOrigin = billboard.verticalOrigin;
+        var verticalOrigin = billboard._actualVerticalOrigin;
         var show = billboard.show;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
@@ -795,7 +797,7 @@ define([
         }
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
-        billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === HorizontalOrigin.CENTER;
+        billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === VerticalOrigin.CENTER;
 
         var bottomLeftX = 0;
         var bottomLeftY = 0;
