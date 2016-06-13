@@ -197,6 +197,13 @@ define([
         this._moveStart = new Event();
         this._moveEnd = new Event();
 
+        this._changedSometimes = new Event();
+        this._changedSometimesPosition = undefined;
+        this._changedSometimesDirection = undefined;
+        this._changedSometimesFrustum = undefined;
+
+        this.percentageChanged = 0.5;
+
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
@@ -249,6 +256,79 @@ define([
         Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
+    }
+
+    function updateCameraChangedSometimes(camera) {
+        if (camera._changedSometimes.numberOfListeners === 0) {
+            return;
+        }
+
+        var percentageChanged = camera.percentageChanged;
+
+        if (camera._mode === SceneMode.SCENE2D) {
+            if (!defined(camera._changedSometimesFrustum)) {
+                camera._changedSometimesPosition = Cartesian3.clone(camera.position);
+                camera._changedSometimesFrustum = camera.frustum.clone();
+                return;
+            }
+
+            var position = camera.position;
+            var lastPosition = camera._changedSometimesPosition;
+
+            var frustum = camera.frustum;
+            var lastFrustum = camera._changedSometimesFrustum;
+
+            var x0 = position.x + frustum.left;
+            var x1 = position.x + frustum.right;
+            var x2 = lastPosition.x + lastFrustum.left;
+            var x3 = lastPosition.x + lastFrustum.right;
+
+            var y0 = position.y + frustum.bottom;
+            var y1 = position.y + frustum.top;
+            var y2 = lastPosition.y + lastFrustum.bottom;
+            var y3 = lastPosition.y + lastFrustum.top;
+
+            var leftX = Math.max(x0, x2);
+            var rightX = Math.min(x1, x3);
+            var bottomY = Math.max(y0, y2);
+            var topY = Math.min(y1, y3);
+
+            var areaPercentage;
+            if (leftX >= rightX || bottomY >= y1) {
+                areaPercentage = 1.0;
+            } else {
+                var areaRef = lastFrustum;
+                if (x0 < x2 && x1 > x3 && y0 < y2 && y1 > y3) {
+                    areaRef = frustum;
+                }
+                areaPercentage = 1.0 - ((rightX - leftX) * (topY - bottomY)) / ((areaRef.right - areaRef.left) * (areaRef.top - areaRef.bottom));
+            }
+
+            if (areaPercentage > percentageChanged) {
+                camera._changedSometimes.raiseEvent();
+                camera._changedSometimesPosition = Cartesian3.clone(camera.position, camera._changedSometimesPosition);
+                camera._changedSometimesFrustum = camera.frustum.clone(camera._changedSometimesFrustum);
+            }
+            return;
+        }
+
+        if (!defined(camera._changedSometimesDirection)) {
+            camera._changedSometimesPosition = Cartesian3.clone(camera.position);
+            camera._changedSometimesDirection = Cartesian3.clone(camera.direction);
+            return;
+        }
+
+        var dirAngle = CesiumMath.acosClamped(Cartesian3.dot(camera.directionWC, camera._changedSometimesDirection));
+        var dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
+
+        var distance = Cartesian3.distance(camera.position, camera._changedSometimesPosition);
+        var heightPercentage = distance / camera.positionCartographic.height;
+
+        if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
+            camera._changedSometimes.raiseEvent();
+            camera._changedSometimesPosition = Cartesian3.clone(camera.position, camera._changedSometimesPosition);
+            camera._changedSometimesDirection = Cartesian3.clone(camera.direction, camera._changedSometimesDirection);
+        }
     }
 
     function convertTransformForColumbusView(camera) {
@@ -444,6 +524,7 @@ define([
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             updateViewMatrix(camera);
+            updateCameraChangedSometimes(camera);
         }
     }
 
@@ -713,6 +794,12 @@ define([
         moveEnd : {
             get : function() {
                 return this._moveEnd;
+            }
+        },
+
+        changedSometimes : {
+            get : function() {
+                return this._changedSometimes;
             }
         }
     });
