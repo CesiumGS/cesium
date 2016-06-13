@@ -42,6 +42,7 @@ define([
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
@@ -179,7 +180,7 @@ define([
 
         /**
          * Gets or sets the Property specifying the {@link HeightReference}.
-         * @memberof BillboardGraphics.prototype
+         * @memberof LabelGraphics.prototype
          * @type {Property}
          * @default HeightReference.NONE
          */
