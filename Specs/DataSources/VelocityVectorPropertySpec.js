@@ -1,20 +1,20 @@
 /*global defineSuite*/
 defineSuite([
-    'DataSources/VelocityVectorProperty',
-    'Core/Cartesian3',
-    'Core/Event',
-    'Core/ExtrapolationType',
-    'Core/JulianDate',
-    'DataSources/CallbackProperty',
-    'DataSources/SampledPositionProperty'
-], function(
-    VelocityVectorProperty,
-    Cartesian3,
-    Event,
-    ExtrapolationType,
-    JulianDate,
-    CallbackProperty,
-    SampledPositionProperty) {
+        'DataSources/VelocityVectorProperty',
+        'Core/Cartesian3',
+        'Core/Event',
+        'Core/ExtrapolationType',
+        'Core/JulianDate',
+        'DataSources/CallbackProperty',
+        'DataSources/SampledPositionProperty'
+    ], function(
+        VelocityVectorProperty,
+        Cartesian3,
+        Event,
+        ExtrapolationType,
+        JulianDate,
+        CallbackProperty,
+        SampledPositionProperty) {
     'use strict';
 
     var time = JulianDate.now();
