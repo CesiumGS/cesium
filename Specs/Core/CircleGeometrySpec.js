@@ -153,6 +153,20 @@ defineSuite([
         expect(geometry1).toBeUndefined();
     });
 
+    it('undefined is returned if the minor axis is equal to or less than zero', function() {
+        var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
+        var ellipse = new CircleGeometry({
+            center : center,
+            radius : 1000.0
+        });
+
+        var r = ellipse.rectangle;
+        expect(r.north).toEqual(0.6989665987920752);
+        expect(r.south).toEqual(0.6986522252554146);
+        expect(r.east).toEqual(-1.3192254919769824);
+        expect(r.west).toEqual(-1.319634495353805);
+    });
+
     var center = Cartesian3.fromDegrees(0,0);
     var ellipsoid = Ellipsoid.WGS84;
     var rectangle = new Rectangle(-1.5678559428873852e-7, -1.578422502906833e-7, 1.5678559428873852e-7, 1.578422502906833e-7);
