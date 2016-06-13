@@ -13,6 +13,9 @@ Change Log
 * Updated Cardboard Sandcastle example.
 * Added the hot air balloon sample model.
 
+### 1.22a - 2016-06-13
+* Fixed default Bing Key and added a watermark to notify users that they need to sign up for their own key.
+
 ### 1.22 - 2016-06-01
 
 * Breaking changes
