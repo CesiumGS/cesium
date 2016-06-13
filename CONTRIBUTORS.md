@@ -55,6 +55,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
+* [Vricon](https://www.vricon.com/)
+   * [Erik Andersson](https://github.com/e-andersson)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
