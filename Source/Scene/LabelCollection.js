@@ -9,6 +9,7 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -24,6 +25,7 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -230,6 +232,7 @@ define([
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
+        var heightReference = label._heightReference;
         var widthOffset = 0;
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
             widthOffset -= totalWidth / 2 * scale;
@@ -240,7 +243,7 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var verticalOrigin = label._verticalOrigin;
+        var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;

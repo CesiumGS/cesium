@@ -755,6 +755,7 @@ define([
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
+               this._heightReference === other._heightReference &&
                this._text === other._text &&
                this._font === other._font &&
                Cartesian3.equals(this._position, other._position) &&

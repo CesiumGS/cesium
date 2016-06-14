@@ -39,6 +39,15 @@ define([
         VerticalOrigin) {
     'use strict';
 
+    function setActualVerticalOrigin(billboard) {
+        var heightReference = billboard._heightReference;
+        if (heightReference === HeightReference.NONE) {
+            billboard._actualVerticalOrigin = billboard._verticalOrigin;
+        } else {
+            billboard._actualVerticalOrigin = VerticalOrigin.BOTTOM;
+        }
+    }
+
     /**
      * A viewport-aligned image positioned in the 3D scene, that is created
      * and rendered using a {@link BillboardCollection}.  A billboard is created and its initial
@@ -91,12 +100,11 @@ define([
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
-        var heightReference = defaultValue(options.heightReference, HeightReference.NONE);
-        this._heightReference = heightReference;
-        var verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
-        this._verticalOrigin = verticalOrigin;
-        this._actualVerticalOrigin = (heightReference === HeightReference.NONE) ?
-                                        verticalOrigin : VerticalOrigin.BOTTOM;
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
+        this._actualVerticalOrigin = undefined;
+        setActualVerticalOrigin(this);
+
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
         this._scale = defaultValue(options.scale, 1.0);
         this._color = Color.clone(defaultValue(options.color, Color.WHITE));
@@ -254,11 +262,7 @@ define([
                 var heightReference = this._heightReference;
                 if (value !== heightReference) {
                     this._heightReference = value;
-                    if (value === HeightReference.NONE) {
-                        this._actualVerticalOrigin = this._verticalOrigin;
-                    } else {
-                        this._actualVerticalOrigin = VerticalOrigin.BOTTOM;
-                    }
+                    setActualVerticalOrigin(this);
                     this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
@@ -524,6 +528,7 @@ define([
 
                 if (this._verticalOrigin !== value) {
                     this._verticalOrigin = value;
+                    setActualVerticalOrigin(this);
                     makeDirty(this, VERTICAL_ORIGIN_INDEX);
                 }
             }
