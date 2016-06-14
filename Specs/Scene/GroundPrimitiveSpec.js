@@ -416,6 +416,26 @@ defineSuite([
         expect(pixels[3]).toEqual(255);
     });
 
+    it('renders shadow volume with debugShowShadowVolume', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false,
+            debugShowShadowVolume : true
+        });
+
+        scene.groundPrimitives.add(primitive);
+        scene.camera.setView({ destination : rectangle });
+        var pixels = scene.renderForSpecs();
+        expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
+        expect(pixels[1]).toBeGreaterThanOrEqualTo(0);
+        expect(pixels[2]).toBeGreaterThanOrEqualTo(0);
+        expect(pixels[3]).toEqual(255);
+    });
+
     it('get per instance attributes', function() {
         if (!GroundPrimitive.isSupported(scene)) {
             return;

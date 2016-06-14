@@ -102,10 +102,11 @@ defineSuite([
 
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
 
-        // move the camera through the rectangle so that is behind the view frustum
-        scene.camera.moveForward(100000000.0);
-
-        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        if (scene.mode !== SceneMode.SCENE2D) {
+            // move the camera through the rectangle so that is behind the view frustum
+            scene.camera.moveForward(100000000.0);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+        }
     }
 
     function testCullIn3D(primitive) {

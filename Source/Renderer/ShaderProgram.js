@@ -61,6 +61,7 @@ define([
          */
         this.id = nextShaderProgramId++;
     }
+
     ShaderProgram.fromCache = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
