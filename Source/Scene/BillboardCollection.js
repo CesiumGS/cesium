@@ -789,7 +789,8 @@ define([
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffsetX + translateX), Math.abs(-pixelOffsetY + translateY));
 
         var horizontalOrigin = billboard.horizontalOrigin;
-        var verticalOrigin = billboard._actualVerticalOrigin;
+        var heightReference = billboard._heightReference;
+        var verticalOrigin = (heightReference === HeightReference.NONE) ? billboard._verticalOrigin : VerticalOrigin.BOTTOM;
         var show = billboard.show;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing

@@ -232,7 +232,6 @@ define([
 
         var scale = label._scale;
         var horizontalOrigin = label._horizontalOrigin;
-        var heightReference = label._heightReference;
         var widthOffset = 0;
         if (horizontalOrigin === HorizontalOrigin.CENTER) {
             widthOffset -= totalWidth / 2 * scale;
@@ -243,6 +242,7 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
+        var heightReference = label._heightReference;
         var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];

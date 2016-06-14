@@ -651,18 +651,18 @@ defineSuite([
 
     var positions = Cartesian3.fromDegreesArray([
         -124.0, 35.0,
-        -110.0, 35.0,
-        -110.0, 40.0
+        -120.0, 35.0,
+        -120.0, 40.0
     ]);
     var holePositions0 = Cartesian3.fromDegreesArray([
+        -122.0, 35.5,
         -122.0, 36.0,
-        -122.0, 39.0,
-        -112.0, 39.0
+        -123.0, 36.0
     ]);
     var holePositions1 = Cartesian3.fromDegreesArray([
         -120.0, 36.5,
-        -114.0, 36.5,
-        -114.0, 38.5
+        -122.0, 36.5,
+        -121.0, 38.0
     ]);
     var hierarchy = {
         positions : positions,
@@ -689,7 +689,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
-    var rectangle = new Rectangle(-2.1642082724729685, 0.6108652381980151, -1.9198621771937625, 0.6981317007977317);
+    var rectangle = new Rectangle(-2.1642082724729685, 0.6108652381980151, -2.0943951023931953, 0.6981317007977317);
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
