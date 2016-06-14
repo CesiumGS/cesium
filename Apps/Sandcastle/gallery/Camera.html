@@ -192,11 +192,11 @@ function cameraEvents() {
 
 var removeChanged;
 
-function cameraChangesSometimes() {
-    Sandcastle.declare(cameraChangesSometimes);
+function cameraChanges() {
+    Sandcastle.declare(cameraChanges);
 
     var i = 0;
-    removeChanged = viewer.camera.changedSometimes.addEventListener(function() {
+    removeChanged = viewer.camera.changed.addEventListener(function() {
         ++i;
         console.log('camera changed: ' + i);
     })
@@ -286,10 +286,10 @@ Sandcastle.addToolbarMenu([{
         Sandcastle.highlight(cameraEvents);
     }
 }, {
-    text : 'Move sometimes event',
+    text : 'Camera changed event',
     onselect : function() {
-        cameraChangesSometimes();
-        Sandcastle.highlight(cameraChangesSometimes);
+        cameraChanges();
+        Sandcastle.highlight(cameraChanges);
     }
 }]);
 
