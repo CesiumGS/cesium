@@ -4,12 +4,14 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
+        'Specs/createPackableArraySpecs',
         'Specs/createPackableSpecs'
     ], function(
         Cartesian3,
         Cartographic,
         Ellipsoid,
         CesiumMath,
+        createPackableArraySpecs,
         createPackableSpecs) {
     'use strict';
 
@@ -1167,4 +1169,5 @@ defineSuite([
     });
 
     createPackableSpecs(Cartesian3, new Cartesian3(1, 2, 3), [1, 2, 3]);
+    createPackableArraySpecs(Cartesian3, [new Cartesian3(1, 2, 3), new Cartesian3(4, 5, 6)], [1, 2, 3, 4, 5, 6]);
 });

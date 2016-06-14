@@ -63,6 +63,11 @@ define([
         }
 
         this._key = BingMapsApi.getKey(options.key);
+        var errorCredit = BingMapsApi.getErrorCredit(options.key);
+        if (defined(errorCredit)) {
+            options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
+        }
+
         this._scene = options.scene;
         this._flightDuration = options.flightDuration;
         this._searchText = '';
