@@ -1654,6 +1654,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNodes.push(node);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1948,10 +1949,11 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
+            dataSource._unsupportedNodes.push(node);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
@@ -2152,6 +2154,7 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
+        this._unsupportedNodes = [];
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2213,6 +2216,16 @@ define([
         entities : {
             get : function() {
                 return this._entityCollection;
+            }
+        },
+        /**
+         * Gets the array of KML nodes that are not yet suported by Cesium.
+         * @memberof KmlDataSource.prototype
+         * @type {Array}
+         */
+        unsupportedNodes : {
+            get : function() {
+                return this._unsupportedNodes;
             }
         },
         /**
