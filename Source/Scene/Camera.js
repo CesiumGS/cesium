@@ -427,6 +427,12 @@ define([
     var sideIndices = [0, 3, 3, 7, 7, 4, 4, 0];
 
     function frustumPoints(camera) {
+        var frustum = camera.frustum;
+
+        camera.frustum = frustum.clone();
+        camera.frustum.near = 1.0;
+        camera.frustum.far = camera.positionCartographic.height * 2.0;
+
         var view = camera.viewMatrix;
         var projection = camera.frustum.projectionMatrix;
         var viewProjection = Matrix4.multiply(projection, view, new Matrix4());
@@ -443,12 +449,26 @@ define([
 
         var lastPositions = camera._changedFrustumPositions;
         if (!defined(lastPositions)) {
+            camera._changedHeight = camera.positionCartographic.height;
             camera._changedFrustumPositions = positions;
+
+            camera._changedPosition = Cartesian3.clone(camera.positionWC);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC);
+            camera._changedUp = Cartesian3.clone(camera.upWC);
+            camera._changedFrustum = frustum.clone();
+
+            camera.frustum = frustum;
             return;
         }
 
+        var entireCullingVolume;
+        if (camera.positionCartographic.height > camera._changedHeight) {
+            entireCullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+        } else {
+            entireCullingVolume = camera._changedFrustum.computeCullingVolume(camera._changedPosition, camera._changedDirection, camera._changedUp);
+        }
+
         var polygonPoints = [];
-        var entireCullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         var allPlanes = entireCullingVolume.planes;
 
         var xAxis;
@@ -474,6 +494,7 @@ define([
             facetIndices = sideIndices;
         }
 
+        var boundingVolume;
 
         var projectedLastPositions = [];
         for (i = 0; i < lastPositions.length; ++i) {
@@ -481,16 +502,16 @@ define([
 
             var p = new Cartesian2();
             var b = Cartesian3.subtract(lastPosition, camera.positionWC, new Cartesian3());
-            //p.x = Cartesian3.dot(b, camera.rightWC);
-            //p.y = Cartesian3.dot(b, camera.directionWC);
             p.x = Cartesian3.dot(b, xAxis);
             p.y = Cartesian3.dot(b, yAxis);
 
             projectedLastPositions.push(p);
 
-            var boundingVolume = new BoundingSphere(lastPosition, 0.0);
-            if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
-                polygonPoints.push(projectedLastPositions[projectedLastPositions.length - 1]);
+            if (camera.positionCartographic.height > camera._changedHeight) {
+                boundingVolume = new BoundingSphere(lastPosition, 0.0);
+                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
+                    polygonPoints.push(projectedLastPositions[projectedLastPositions.length - 1]);
+                }
             }
         }
 
@@ -502,12 +523,17 @@ define([
 
             var projectedPosition = new Cartesian2();
             var a = Cartesian3.subtract(c, camera.positionWC, new Cartesian3());
-            //projectedPosition.x = Cartesian3.dot(a, camera.rightWC);
-            //projectedPosition.y = Cartesian3.dot(a, camera.directionWC);
             projectedPosition.x = Cartesian3.dot(a, xAxis);
             projectedPosition.y = Cartesian3.dot(a, yAxis);
 
             projectedPositions.push(projectedPosition);
+
+            if (camera.positionCartographic.height < camera._changedHeight) {
+                boundingVolume = new BoundingSphere(c, 0.0);
+                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
+                    polygonPoints.push(projectedPositions[projectedPositions.length - 1]);
+                }
+            }
         }
 
         for (i = 0; i < projectedPositions.length - 1; i += 2) {
@@ -529,18 +555,43 @@ define([
 
         var convexHull = convexHull2D(polygonPoints);
         var intersectionArea = PolygonPipeline.computeArea2D(convexHull);
-        var totalArea = PolygonPipeline.computeArea2D(projectedPositions);
+
+        var totalArea;
+        if (camera.positionCartographic.height < camera._changedHeight) {
+            var frustumConvexHull = convexHull2D(projectedLastPositions);
+            totalArea = PolygonPipeline.computeArea2D(frustumConvexHull);
+        } else {
+            totalArea = PolygonPipeline.computeArea2D(projectedPositions);
+        }
+
         var percentage = 1.0 - Math.abs(intersectionArea / totalArea);
 
-        /*
-        if (percentage > camera.percentageChanged) {
+        //if (percentage > camera.percentageChanged) {
+        if (percentage > 0.75) {
             camera._changed.raiseEvent();
+            camera._changedHeight = camera.positionCartographic.height;
             camera._changedFrustumPositions = positions;
-        }
-        */
 
+            camera._changedPosition = Cartesian3.clone(camera.positionWC);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC);
+            camera._changedUp = Cartesian3.clone(camera.upWC);
+            camera._changedFrustum = frustum.clone();
+        }
+
+        camera.frustum = frustum;
+
+        /*
         console.log(percentage);
+
+        camera._changedHeight = camera.positionCartographic.height;
         camera._changedFrustumPositions = positions;
+
+        camera._changedPosition = Cartesian3.clone(camera.positionWC);
+        camera._changedDirection = Cartesian3.clone(camera.directionWC);
+        camera._changedUp = Cartesian3.clone(camera.upWC);
+        camera._changedFrustum = frustum.clone();
+
+        camera.frustum = frustum;
 
         var minX = Number.POSITIVE_INFINITY;
         var maxX = Number.NEGATIVE_INFINITY;
@@ -620,6 +671,7 @@ define([
         ctx.stroke();
 
         window.open(canvas.toDataURL());
+        */
     }
 
     function updateCameraChanged(camera) {
@@ -676,6 +728,7 @@ define([
             return;
         }
 
+        /*
         if (!defined(camera._changedDirection)) {
             camera._changedPosition = Cartesian3.clone(camera.position);
             camera._changedDirection = Cartesian3.clone(camera.direction);
@@ -695,6 +748,9 @@ define([
             camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.direction, camera._changedDirection);
         }
+        */
+
+        frustumPoints(camera);
     }
 
     function convertTransformForColumbusView(camera) {
