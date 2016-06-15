@@ -1004,7 +1004,7 @@ define([
                             }
                         }
                     } else {
-                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+                        // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
@@ -1044,14 +1044,14 @@ define([
             var descendantsLength = refiningTile.descendantsWithContent.length;
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
-                if (!descendant.selected && !descendant.replaced) {
-                    refinable = false;
-                    break;
+                if (!descendant.selected && !descendant.replaced &&
+                    frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE) {
+                        refinable = false;
+                        break;
                 }
             }
             if (!refinable) {
-                var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
-                selectTile(tileset, refiningTile, fullyVisible, frameState);
+                selectTile(tileset, refiningTile, true, frameState);
                 for (j = 0; j < descendantsLength; ++j) {
                     descendant = refiningTile.descendantsWithContent[j];
                     descendant.selected = false;
