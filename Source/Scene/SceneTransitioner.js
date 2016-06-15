@@ -652,6 +652,8 @@ define([
         var scene = transitioner._scene;
         var camera = scene.camera;
 
+        camera.position.z = camera.position.z * 3;
+
         var startPos = Cartesian3.clone(camera.position, scratch3DToCVStartPos);
         var startDir = Cartesian3.clone(camera.direction, scratch3DToCVStartDir);
         var startUp = Cartesian3.clone(camera.up, scratch3DToCVStartUp);
