@@ -206,5 +206,6 @@ defineSuite([
         var position = Cartesian3.fromDegrees(-80, 25);
         var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
         expect(windowCoordinates).toBeDefined();
+        scene.destroyForSpecs();
     });
 }, 'WebGL');
