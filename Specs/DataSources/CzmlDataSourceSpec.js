@@ -87,48 +87,48 @@ defineSuite([
     };
 
     var clockCzml = {
-            id : 'document',
-            version : '1.0',
-            clock : {
-                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-                currentTime : '2012-03-15T10:00:00Z',
-                multiplier : 60.0,
-                range : 'LOOP_STOP',
-                step : 'SYSTEM_CLOCK_MULTIPLIER'
-            }
-        };
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+            currentTime : '2012-03-15T10:00:00Z',
+            multiplier : 60.0,
+            range : 'LOOP_STOP',
+            step : 'SYSTEM_CLOCK_MULTIPLIER'
+        }
+    };
 
     var clockCzml2 = {
-            id : 'document',
-            version : '1.0',
-            clock : {
-                interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
-                currentTime : '2013-03-15T10:00:00Z',
-                multiplier : 30.0,
-                range : 'UNBOUNDED',
-                step : 'TICK_DEPENDENT'
-            }
-        };
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
+            currentTime : '2013-03-15T10:00:00Z',
+            multiplier : 30.0,
+            range : 'UNBOUNDED',
+            step : 'TICK_DEPENDENT'
+        }
+    };
 
     var parsedClock = {
-            interval : TimeInterval.fromIso8601({
-                iso8601 : clockCzml.clock.interval
-            }),
-            currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
-            multiplier : clockCzml.clock.multiplier,
-            range : ClockRange[clockCzml.clock.range],
-            step : ClockStep[clockCzml.clock.step]
-        };
+        interval : TimeInterval.fromIso8601({
+            iso8601 : clockCzml.clock.interval
+        }),
+        currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
+        multiplier : clockCzml.clock.multiplier,
+        range : ClockRange[clockCzml.clock.range],
+        step : ClockStep[clockCzml.clock.step]
+    };
 
     var parsedClock2 = {
-            interval : TimeInterval.fromIso8601({
-                iso8601 : clockCzml2.clock.interval
-            }),
-            currentTime : JulianDate.fromIso8601(clockCzml2.clock.currentTime),
-            multiplier : clockCzml2.clock.multiplier,
-            range : ClockRange[clockCzml2.clock.range],
-            step : ClockStep[clockCzml2.clock.step]
-        };
+        interval : TimeInterval.fromIso8601({
+            iso8601 : clockCzml2.clock.interval
+        }),
+        currentTime : JulianDate.fromIso8601(clockCzml2.clock.currentTime),
+        multiplier : clockCzml2.clock.multiplier,
+        range : ClockRange[clockCzml2.clock.range],
+        step : ClockStep[clockCzml2.clock.step]
+    };
 
     var nameCzml = {
         id : 'document',
@@ -1958,6 +1958,41 @@ defineSuite([
         expect(entity.wall.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.wall.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+    });
+
+    it('CZML adds data for wall with minimumHeights as references.', function() {
+        var packets = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'obj1',
+            billboard : {
+                scale : 1.0
+            }
+        }, {
+            id : 'obj2',
+            billboard : {
+                scale : 4.0
+            }
+        }, {
+            id : 'wall',
+            wall : {
+                minimumHeights : {
+                    references : ['obj1#billboard.scale', 'obj2#billboard.scale']
+                },
+                maximumHeights : {
+                    references : ['obj2#billboard.scale', 'obj1#billboard.scale']
+                }
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+        var entity = dataSource.entities.getById('wall');
+
+        expect(entity.wall).toBeDefined();
+        expect(entity.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[1].billboard.scale, packets[2].billboard.scale]);
+        expect(entity.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[2].billboard.scale, packets[1].billboard.scale]);
     });
 
     it('CZML adds data for box.', function() {

@@ -65,6 +65,7 @@ define([
         './PolylineGraphics',
         './PolylineOutlineMaterialProperty',
         './PositionPropertyArray',
+        './PropertyArray',
         './PropertyBag',
         './RectangleGraphics',
         './ReferenceProperty',
@@ -142,6 +143,7 @@ define([
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
         PositionPropertyArray,
+        PropertyArray,
         PropertyBag,
         RectangleGraphics,
         ReferenceProperty,
@@ -901,15 +903,49 @@ define([
         }
     }
 
-    function processVertexData(object, propertyName, positionsData, entityCollection) {
-        var i;
-        var len;
-        var references = positionsData.references;
+    function processArrayPacketData(object, propertyName, packetData, entityCollection) {
+        var references = packetData.references;
         if (defined(references)) {
-            var properties = [];
-            for (i = 0, len = references.length; i < len; i++) {
-                properties.push(makeReference(entityCollection, references[i]));
+            var properties = references.map(function(reference) {
+                return makeReference(entityCollection, reference);
+            });
+
+            var iso8601Interval = packetData.interval;
+            if (defined(iso8601Interval)) {
+                iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
+                if (!(object[propertyName] instanceof CompositePositionProperty)) {
+                    iso8601Interval.data = new PropertyArray(properties);
+                    var property = new CompositeProperty();
+                    property.intervals.addInterval(iso8601Interval);
+                    object[propertyName] = property;
+                }
+            } else {
+                object[propertyName] = new PropertyArray(properties);
             }
+        } else {
+            processPacketData(Array, object, propertyName, packetData, undefined, undefined, entityCollection);
+        }
+    }
+
+    function processArray(object, propertyName, packetData, entityCollection) {
+        if (!defined(packetData)) {
+            return;
+        }
+
+        if (isArray(packetData)) {
+            for (var i = 0, length = packetData.length; i < length; ++i) {
+                processArrayPacketData(object, propertyName, packetData[i], entityCollection);
+            }
+        } else {
+            processArrayPacketData(object, propertyName, packetData, entityCollection);
+        }
+    }
+
+    function processPositionsPacketData(object, propertyName, positionsData, entityCollection) {
+        if (defined(positionsData.references)) {
+            var properties = positionsData.references.map(function(reference) {
+                return makeReference(entityCollection, reference);
+            });
 
             var iso8601Interval = positionsData.interval;
             if (defined(iso8601Interval)) {
@@ -924,33 +960,14 @@ define([
                 object[propertyName] = new PositionPropertyArray(properties);
             }
         } else {
-            var values = [];
-            var tmp = positionsData.cartesian;
-            if (defined(tmp)) {
-                for (i = 0, len = tmp.length; i < len; i += 3) {
-                    values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
-                }
-                positionsData.array = values;
-            } else {
-                tmp = positionsData.cartographicRadians;
-                if (defined(tmp)) {
-                    for (i = 0, len = tmp.length; i < len; i += 3) {
-                        scratchCartographic.longitude = tmp[i];
-                        scratchCartographic.latitude = tmp[i + 1];
-                        scratchCartographic.height = tmp[i + 2];
-                        values.push(Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic));
-                    }
-                    positionsData.array = values;
-                } else {
-                    tmp = positionsData.cartographicDegrees;
-                    if (defined(tmp)) {
-                        for (i = 0, len = tmp.length; i < len; i += 3) {
-                            values.push(Cartesian3.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
-                        }
-                        positionsData.array = values;
-                    }
-                }
+            if (defined(positionsData.cartesian)) {
+                positionsData.array = Cartesian3.unpackArray(positionsData.cartesian);
+            } else if (defined(positionsData.cartographicRadians)) {
+                positionsData.array = Cartesian3.fromRadiansArrayHeights(positionsData.cartographicRadians);
+            } else if (defined(positionsData.cartographicDegrees)) {
+                positionsData.array = Cartesian3.fromDegreesArrayHeights(positionsData.cartographicDegrees);
             }
+
             if (defined(positionsData.array)) {
                 processPacketData(Array, object, propertyName, positionsData, undefined, undefined, entityCollection);
             }
@@ -963,12 +980,11 @@ define([
         }
 
         if (isArray(positionsData)) {
-            var length = positionsData.length;
-            for (var i = 0; i < length; i++) {
-                processVertexData(object, propertyName, positionsData[i], entityCollection);
+            for (var i = 0, length = positionsData.length; i < length; i++) {
+                processPositionsPacketData(object, propertyName, positionsData[i], entityCollection);
             }
         } else {
-            processVertexData(object, propertyName, positionsData, entityCollection);
+            processPositionsPacketData(object, propertyName, positionsData, entityCollection);
         }
     }
 
@@ -1514,8 +1530,8 @@ define([
 
         processPacketData(Boolean, wall, 'show', wallData.show, interval, sourceUri, entityCollection);
         processPositions(wall, 'positions', wallData.positions, entityCollection);
-        processPacketData(Array, wall, 'minimumHeights', wallData.minimumHeights, interval, sourceUri, entityCollection);
-        processPacketData(Array, wall, 'maximumHeights', wallData.maximumHeights, interval, sourceUri, entityCollection);
+        processArray(wall, 'minimumHeights', wallData.minimumHeights, entityCollection);
+        processArray(wall, 'maximumHeights', wallData.maximumHeights, entityCollection);
         processPacketData(Number, wall, 'granularity', wallData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, wall, 'fill', wallData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(wall, 'material', wallData.material, interval, sourceUri, entityCollection);
