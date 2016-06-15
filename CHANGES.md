@@ -12,6 +12,7 @@ Change Log
 
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
 * `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
+* Made changes to KML processing that allows for some incorrect KML (specifically KML that reuses IDs) to still be parsed correctly
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
