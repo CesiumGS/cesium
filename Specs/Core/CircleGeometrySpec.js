@@ -153,7 +153,7 @@ defineSuite([
         expect(geometry1).toBeUndefined();
     });
 
-    it('undefined is returned if the minor axis is equal to or less than zero', function() {
+    it('computing rectangle property', function() {
         var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
         var ellipse = new CircleGeometry({
             center : center,

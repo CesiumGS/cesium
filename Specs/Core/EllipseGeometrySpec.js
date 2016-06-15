@@ -238,7 +238,7 @@ defineSuite([
         expect(sv._vertexFormat.tangent).toBe(VertexFormat.POSITION_ONLY.tangent);
     });
 
-    it('undefined is returned if the minor axis is equal to or less than zero', function() {
+    it('computing rectangle property', function() {
         var center = Cartesian3.fromDegrees(-75.59777, 40.03883);
         var ellipse = new EllipseGeometry({
             center : center,
