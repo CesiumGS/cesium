@@ -2,6 +2,7 @@
   "asset": {
     "version": "0.0"
   },
+  "geometricError": 0,
   "root": {
     "boundingVolume": {
       "region": [

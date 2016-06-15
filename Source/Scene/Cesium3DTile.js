@@ -271,6 +271,13 @@ define([
         this.selected = false;
 
         /**
+         * Marks if the tile is replaced this frame.
+         *
+         * @type {Boolean}
+         */
+        this.replaced = false;
+
+        /**
          * The last frame number the tile was selected in.
          *
          * @type {Number}

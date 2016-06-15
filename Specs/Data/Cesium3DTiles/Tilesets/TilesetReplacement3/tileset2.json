@@ -15,9 +15,7 @@
       ]
     },
     "geometricError": 70,
-    "content": {
-      "url": "parent.b3dm"
-    },
+    "refine": "replace",
     "children": [
       {
         "boundingVolume": {
@@ -31,9 +29,8 @@
           ]
         },
         "geometricError": 0,
-        "refine": "add",
         "content": {
-          "url": "tileset3/tileset3.json"
+          "url": "ll.b3dm"
         }
       },
       {

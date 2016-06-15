@@ -50,6 +50,7 @@ defineSuite([
 
     var tilesetReplacement1Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement1/';
     var tilesetReplacement2Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement2/';
+    var tilesetReplacement3Url = './Data/Cesium3DTiles/Tilesets/TilesetReplacement3/';
 
     // 3 level tree with mix of additive and replacement refinement
     var tilesetRefinementMix = './Data/Cesium3DTiles/Tilesets/TilesetRefinementMix/';
@@ -568,6 +569,42 @@ defineSuite([
                 return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
                     scene.renderForSpecs();
                     expect(stats.numberOfCommands).toEqual(2); // Renders two content tiles
+                });
+            });
+        });
+    });
+
+    it('replacement refinement - selects root when sse is not met and subtree is not refinable (3)', function() {
+        // Check that the root is refinable once its child is loaded
+        //
+        //          C
+        //          T (external tileset ref)
+        //          E (root of external tileset)
+        //     C  C  C  C
+        //
+
+        viewRootOnly();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            var root = tileset._root;
+            expect(root.descendantsWithContent).toBeDefined();
+            expect(root.descendantsWithContent.length).toEqual(0);
+            expect(stats.numberOfCommands).toEqual(1);
+
+            viewAllTiles();
+            scene.renderForSpecs();
+            return root.children[0].contentReadyPromise.then(function() {
+                // The external tileset json is loaded, but the external tileset isn't.
+                scene.renderForSpecs();
+                expect(root.descendantsWithContent.length).toEqual(4);
+                expect(stats.numberOfCommands).toEqual(1); // Render root
+                expect(stats.numberOfPendingRequests).toEqual(4); // Loading child content tiles
+
+                return Cesium3DTilesTester.waitForPendingRequests(scene, tileset).then(function() {
+                    scene.renderForSpecs();
+                    expect(root.selected).toEqual(false);
+                    expect(stats.numberOfCommands).toEqual(4); // Render child content tiles
                 });
             });
         });

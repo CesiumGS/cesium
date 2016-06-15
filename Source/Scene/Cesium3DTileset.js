@@ -664,15 +664,22 @@ define([
             baseUrl = joinUrls(baseUrl, versionQuery);
             var rootTile = new Cesium3DTile(that, baseUrl, tilesetJson.root, parentTile);
 
+            var refiningTiles = [];
+
             // If there is a parentTile, add the root of the currently loading tileset
             // to parentTile's children, and increment its numberOfChildrenWithoutContent
             if (defined(parentTile)) {
                 parentTile.children.push(rootTile);
                 ++parentTile.numberOfChildrenWithoutContent;
-            }
-            ++stats.numberTotal;
 
-            var refiningTiles = [];
+                // When an external tileset is loaded, its ancestor needs to recheck its refinement
+                var ancestor = getAncestorWithContent(parentTile);
+                if (defined(ancestor) && (ancestor.refine === Cesium3DTileRefine.REPLACE)) {
+                    refiningTiles.push(ancestor);
+                }
+            }
+
+            ++stats.numberTotal;
 
             var stack = [];
             stack.push({
@@ -716,6 +723,13 @@ define([
             };
         });
     };
+
+    function getAncestorWithContent(ancestor) {
+        while(defined(ancestor) && !ancestor.hasContent) {
+            ancestor = ancestor.parent;
+        }
+        return ancestor;
+    }
 
     function prepareRefiningTiles(refiningTiles) {
         var stack = [];
@@ -864,6 +878,7 @@ define([
             // Depth first.  We want the high detail tiles first.
             var t = stack.pop();
             t.selected = false;
+            t.replaced = false;
             ++stats.visited;
 
             var planeMask = t.visibility(cullingVolume);
@@ -989,7 +1004,7 @@ define([
                             }
                         }
                     } else {
-                        // Tile does not meet SEE and its children are loaded.  Refine to them in front-to-back order.
+                        // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             // Store the plane mask so that the child can optimize based on its parent's returned mask
@@ -1002,6 +1017,7 @@ define([
                             touch(tileset, child);
                         }
 
+                        t.replaced = true;
                         if (defined(t.descendantsWithContent)) {
                             scratchRefiningTiles.push(t);
                         }
@@ -1028,15 +1044,14 @@ define([
             var descendantsLength = refiningTile.descendantsWithContent.length;
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
-                if (!descendant.selected) {
-                    // TODO: also check that its visible
-                    refinable = false;
-                    break;
+                if (!descendant.selected && !descendant.replaced &&
+                    frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE) {
+                        refinable = false;
+                        break;
                 }
             }
             if (!refinable) {
-                var fullyVisible = refiningTile.visibility(frameState.cullingVolume) === CullingVolume.MASK_INSIDE;
-                selectTile(tileset, refiningTile, fullyVisible, frameState);
+                selectTile(tileset, refiningTile, true, frameState);
                 for (j = 0; j < descendantsLength; ++j) {
                     descendant = refiningTile.descendantsWithContent[j];
                     descendant.selected = false;
