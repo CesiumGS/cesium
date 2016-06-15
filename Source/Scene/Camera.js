@@ -19,11 +19,13 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
+        '../Core/PolygonPipeline',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
+        './CullingVolume',
         './MapMode2D',
         './PerspectiveFrustum',
         './SceneMode'
@@ -47,11 +49,13 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
+        PolygonPipeline,
         Quaternion,
         Ray,
         Rectangle,
         Transforms,
         CameraFlightPath,
+        CullingVolume,
         MapMode2D,
         PerspectiveFrustum,
         SceneMode) {
@@ -263,6 +267,361 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
+    function findIntersection(u0, u1, v0, v1, result) {
+        if (u1 < v0 || u0 > v1) {
+            return;
+        }
+
+        if (u1 > v0) {
+            if (u0 < v1) {
+                if (u0 < v0) {
+                    result.push(v0);
+                } else {
+                    result.push(u0);
+                }
+                if (u1 > v1) {
+                    result.push(v1);
+                } else {
+                    result.push(u1);
+                }
+            } else {
+                result.push(u0);
+            }
+        } else {
+            result.push(u1);
+        }
+    }
+
+    function intersectLineSegments2D(p0, d0, p1, d1) {
+        var sqrEpsilon = CesiumMath.EPSILON6;
+
+        var E = Cartesian2.subtract(p1, p0, new Cartesian3());
+        var kross = d0.x * d1.y - d0.y * d1.x;
+        var sqrKross = kross * kross;
+        var sqrLen0 = d0.x * d0.x + d0.y * d0.y;
+        var sqrLen1 = d1.x * d1.x + d1.y * d1.y;
+        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLen1) {
+            var s = (E.x * d1.y - E.y * d1.x) / kross;
+            if (s < 0.0 || s > 1.0) {
+                return [];
+            }
+
+            var t = (E.x * d0.y - E.y * d0.x) / kross;
+            if (t < 0.0 || t > 1.0) {
+                return [];
+            }
+
+            var intersection = Cartesian2.multiplyByScalar(d0, s, new Cartesian2());
+            Cartesian2.add(p0, intersection, intersection);
+            return [intersection];
+        }
+
+        var sqrLenE = E.x * E.x + E.y * E.y;
+        kross = E.x * d0.y - E.y * d0.x;
+        sqrKross = kross * kross;
+        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLenE) {
+            return [];
+        }
+
+        var s0 = Cartesian2.dot(d0, E) / sqrLen0;
+        var s1 = s0 + Cartesian2.dot(d0, d1) / sqrLen0;
+        var smin = Math.min(s0, s1);
+        var smax = Math.max(s0, s1);
+
+        var intersectionScalars = [];
+        findIntersection(0.0, 1.0, smin, smax, intersectionScalars);
+        var imax = intersectionScalars.length;
+        var result = [];
+        for (var i = 0; i < imax; ++i) {
+            var a = Cartesian2.multiplyByScalar(d0, intersectionScalars[i], new Cartesian2());
+            Cartesian2.add(a, p0, a);
+            result.push(a);
+        }
+        return result;
+    }
+
+    function convexHull2D(points) {
+        points.sort(function(a, b) {
+            return a.x - b.x;
+        });
+
+        var i;
+        var p0;
+        var p1;
+        var p2;
+        var theta;
+        var phi;
+
+        var upper = [points[0], points[1]];
+        for (i = 2; i < points.length; ++i) {
+            upper.push(points[i]);
+
+            p0 = upper[upper.length - 3];
+            p1 = upper[upper.length - 2];
+            p2 = upper[upper.length - 1];
+
+            theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+            phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
+
+            while (upper.length > 2 && phi > theta) {
+                upper.splice(upper.length - 2, 1);
+
+                if (upper.length < 3) {
+                    break;
+                }
+
+                p0 = upper[upper.length - 3];
+                p1 = upper[upper.length - 2];
+                p2 = upper[upper.length - 1];
+
+                theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+                phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
+            }
+        }
+
+        var lower = [points[points.length - 1], points[points.length - 2]];
+        for (i = points.length - 3; i >= 0; --i) {
+            lower.push(points[i]);
+
+            p0 = lower[lower.length - 1];
+            p1 = lower[lower.length - 2];
+            p2 = lower[lower.length - 3];
+
+            theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+            phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
+
+            while (lower.length > 2 && phi < theta) {
+                lower.splice(lower.length - 2, 1);
+
+                if (lower.length < 3) {
+                    break;
+                }
+
+                p0 = lower[lower.length - 1];
+                p1 = lower[lower.length - 2];
+                p2 = lower[lower.length - 3];
+
+                theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
+                phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
+            }
+        }
+
+        lower.splice(0, 1);
+
+        var polygon = upper.concat(lower);
+        return polygon;
+    }
+
+    var frustumCornersNDC = new Array(8);
+    frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, -1.0, 1.0);
+    frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, -1.0, 1.0);
+    frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, -1.0, 1.0);
+    frustumCornersNDC[3] = new Cartesian4(-1.0, 1.0, -1.0, 1.0);
+    frustumCornersNDC[4] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
+    frustumCornersNDC[5] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
+    frustumCornersNDC[6] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
+    frustumCornersNDC[7] = new Cartesian4(-1.0, 1.0, 1.0, 1.0);
+
+    var frustumIndices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 7, 7, 3, 7, 6, 6, 2, 2, 1, 1, 5, 5, 4, 5, 6];
+    var topIndices = [0, 1, 1, 5, 5, 4, 4, 0];
+    var sideIndices = [0, 3, 3, 7, 7, 4, 4, 0];
+
+    function frustumPoints(camera) {
+        var view = camera.viewMatrix;
+        var projection = camera.frustum.projectionMatrix;
+        var viewProjection = Matrix4.multiply(projection, view, new Matrix4());
+        var inverseViewProjection = Matrix4.inverse(viewProjection, new Matrix4());
+
+        var positions = [];
+        var i;
+        for (i = 0; i < frustumCornersNDC.length; ++i) {
+            var corner = Cartesian4.clone(frustumCornersNDC[i]);
+            Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
+            Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
+            positions.push(corner);
+        }
+
+        var lastPositions = camera._changedFrustumPositions;
+        if (!defined(lastPositions)) {
+            camera._changedFrustumPositions = positions;
+            return;
+        }
+
+        var polygonPoints = [];
+        var entireCullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
+        var allPlanes = entireCullingVolume.planes;
+
+        var xAxis;
+        var yAxis;
+        var planes;
+        var cullingVolume;
+        var facetIndices;
+
+        var xComponent = Math.abs(Cartesian3.dot(camera._changedDirection, camera.rightWC));
+        var yComponent = Math.abs(Cartesian3.dot(camera._changedDirection, camera.upWC));
+
+        if (xComponent > yComponent) {
+            xAxis = camera.rightWC;
+            yAxis = camera.directionWC;
+            planes = [allPlanes[0], allPlanes[1], allPlanes[4], allPlanes[5]];
+            cullingVolume = new CullingVolume(planes);
+            facetIndices = topIndices;
+        } else {
+            xAxis = camera.upWC;
+            yAxis = camera.directionWC;
+            planes = [allPlanes[2], allPlanes[3], allPlanes[4], allPlanes[5]];
+            cullingVolume = new CullingVolume(planes);
+            facetIndices = sideIndices;
+        }
+
+
+        var projectedLastPositions = [];
+        for (i = 0; i < lastPositions.length; ++i) {
+            var lastPosition = lastPositions[i];
+
+            var p = new Cartesian2();
+            var b = Cartesian3.subtract(lastPosition, camera.positionWC, new Cartesian3());
+            //p.x = Cartesian3.dot(b, camera.rightWC);
+            //p.y = Cartesian3.dot(b, camera.directionWC);
+            p.x = Cartesian3.dot(b, xAxis);
+            p.y = Cartesian3.dot(b, yAxis);
+
+            projectedLastPositions.push(p);
+
+            var boundingVolume = new BoundingSphere(lastPosition, 0.0);
+            if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
+                polygonPoints.push(projectedLastPositions[projectedLastPositions.length - 1]);
+            }
+        }
+
+        var projectedPositions = [];
+        for (i = 0; i < facetIndices.length; ++i) {
+            var c = Cartesian4.clone(frustumCornersNDC[facetIndices[i]]);
+            Matrix4.multiplyByVector(inverseViewProjection, c, c);
+            Cartesian3.divideByScalar(c, c.w, c); // Handle the perspective divide
+
+            var projectedPosition = new Cartesian2();
+            var a = Cartesian3.subtract(c, camera.positionWC, new Cartesian3());
+            //projectedPosition.x = Cartesian3.dot(a, camera.rightWC);
+            //projectedPosition.y = Cartesian3.dot(a, camera.directionWC);
+            projectedPosition.x = Cartesian3.dot(a, xAxis);
+            projectedPosition.y = Cartesian3.dot(a, yAxis);
+
+            projectedPositions.push(projectedPosition);
+        }
+
+        for (i = 0; i < projectedPositions.length - 1; i += 2) {
+            var p0 = projectedPositions[i];
+            var p1 = projectedPositions[i + 1];
+            var d0 = Cartesian2.subtract(p1, p0, new Cartesian2());
+
+            for (var j = 0; j < frustumIndices.length - 1; j += 2) {
+                var q0 = projectedLastPositions[frustumIndices[j]];
+                var q1 = projectedLastPositions[frustumIndices[j + 1]];
+                var d1 = Cartesian2.subtract(q1, q0, new Cartesian2());
+
+                var intersections = intersectLineSegments2D(p0, d0, q0, d1);
+                for (var k = 0; k < intersections.length; ++k) {
+                    polygonPoints.push(intersections[k]);
+                }
+            }
+        }
+
+        var convexHull = convexHull2D(polygonPoints);
+        var intersectionArea = PolygonPipeline.computeArea2D(convexHull);
+        var totalArea = PolygonPipeline.computeArea2D(projectedPositions);
+        var percentage = 1.0 - Math.abs(intersectionArea / totalArea);
+
+        /*
+        if (percentage > camera.percentageChanged) {
+            camera._changed.raiseEvent();
+            camera._changedFrustumPositions = positions;
+        }
+        */
+
+        console.log(percentage);
+        camera._changedFrustumPositions = positions;
+
+        var minX = Number.POSITIVE_INFINITY;
+        var maxX = Number.NEGATIVE_INFINITY;
+        var minY = Number.POSITIVE_INFINITY;
+        var maxY = Number.NEGATIVE_INFINITY;
+
+        for (i = 0; i < projectedPositions.length; ++i) {
+            minX = Math.min(minX, projectedPositions[i].x);
+            maxX = Math.max(maxX, projectedPositions[i].x);
+            minY = Math.min(minY, projectedPositions[i].y);
+            maxY = Math.max(maxY, projectedPositions[i].y);
+        }
+
+        for (i = 0; i < projectedLastPositions.length; ++i) {
+            minX = Math.min(minX, projectedLastPositions[i].x);
+            maxX = Math.max(maxX, projectedLastPositions[i].x);
+            minY = Math.min(minY, projectedLastPositions[i].y);
+            maxY = Math.max(maxY, projectedLastPositions[i].y);
+        }
+
+        var x;
+        var y;
+
+        var size = 600.0;
+        var canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+
+        var ctx = canvas.getContext("2d");
+        ctx.beginPath();
+        ctx.strokeStyle = 'red';
+
+        x = (projectedPositions[0].x - minX) / (maxX - minX) * size;
+        y = (projectedPositions[0].y - minY) / (maxY - minY) * size;
+        ctx.moveTo(x, y);
+
+        for (i = 1; i < projectedPositions.length; ++i) {
+            x = (projectedPositions[i].x - minX) / (maxX - minX) * size;
+            y = (projectedPositions[i].y - minY) / (maxY - minY) * size;
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        for (i = 0; i < frustumIndices.length - 1; i += 2) {
+            ctx.beginPath();
+            ctx.strokeStyle = 'green';
+
+            x = (projectedLastPositions[frustumIndices[i]].x - minX) / (maxX - minX) * size;
+            y = (projectedLastPositions[frustumIndices[i]].y - minY) / (maxY - minY) * size;
+            ctx.moveTo(x, y);
+
+            x = (projectedLastPositions[frustumIndices[i + 1]].x - minX) / (maxX - minX) * size;
+            y = (projectedLastPositions[frustumIndices[i + 1]].y - minY) / (maxY - minY) * size;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        var pointSize = 5;
+        for (i = 0; i < polygonPoints.length; ++i) {
+            x = (polygonPoints[i].x - minX) / (maxX - minX) * size;
+            y = (polygonPoints[i].y - minY) / (maxY - minY) * size;
+            ctx.fillRect(x - pointSize * 0.5, y - pointSize * 0.5, pointSize, pointSize);
+        }
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'blue';
+
+        x = (convexHull[0].x - minX) / (maxX - minX) * size;
+        y = (convexHull[0].y - minY) / (maxY - minY) * size;
+        ctx.moveTo(x, y);
+
+        for (i = 1; i < convexHull.length; ++i) {
+            x = (convexHull[i].x - minX) / (maxX - minX) * size;
+            y = (convexHull[i].y - minY) / (maxY - minY) * size;
+            ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        window.open(canvas.toDataURL());
+    }
+
     function updateCameraChanged(camera) {
         if (camera._changed.numberOfListeners === 0) {
             return;
@@ -330,6 +689,8 @@ define([
         var heightPercentage = distance / camera.positionCartographic.height;
 
         if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
+            frustumPoints(camera);
+
             camera._changed.raiseEvent();
             camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.direction, camera._changedDirection);
