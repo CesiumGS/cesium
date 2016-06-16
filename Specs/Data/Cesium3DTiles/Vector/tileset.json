@@ -1,0 +1,118 @@
+{
+  "asset": {
+    "version": "0.0",
+    "tilesetVersion": "1.2.3"
+  },
+  "properties": {
+    "id": {
+      "minimum": 0,
+      "maximum": 99
+    },
+    "Longitude": {
+      "minimum": -1.3197209267166137,
+      "maximum": -1.319639102447024
+    },
+    "Latitude": {
+      "minimum": 0.6988426520676222,
+      "maximum": 0.6989055039320631
+    },
+    "Height": {
+      "minimum": 6,
+      "maximum": 84
+    }
+  },
+  "geometricError": 240,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -1.3197209591796106,
+        0.6988424218,
+        -1.3196390408203893,
+        0.6989055782,
+        0,
+        88
+      ]
+    },
+    "geometricError": 70,
+    "refine": "add",
+    "content": {
+      "url": "parent.vctr",
+      "boundingVolume": {
+        "region": [
+          -1.3197004795898053,
+          0.6988582109,
+          -1.3196595204101946,
+          0.6988897891,
+          0,
+          88
+        ]
+      }
+    },
+    "children": [
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.6988424218,
+            -1.31968,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "url": "ll.vctr"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.6988424218,
+            -1.3196390408203893,
+            0.698874,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "url": "lr.vctr"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.31968,
+            0.698874,
+            -1.3196390408203893,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "url": "ur.vctr"
+        }
+      },
+      {
+        "boundingVolume": {
+          "region": [
+            -1.3197209591796106,
+            0.698874,
+            -1.31968,
+            0.6989055782,
+            0,
+            20
+          ]
+        },
+        "geometricError": 0,
+        "content": {
+          "url": "ul.vctr"
+        }
+      }
+    ]
+  }
+}
