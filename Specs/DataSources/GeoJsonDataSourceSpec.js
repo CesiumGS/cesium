@@ -33,6 +33,7 @@ defineSuite([
     var defaultStroke;
     var defaultStrokeWidth;
     var defaultFill;
+    var defaultClampToGround;
 
     beforeAll(function() {
         defaultMarkerSize = GeoJsonDataSource.markerSize;
@@ -41,6 +42,7 @@ defineSuite([
         defaultStroke = GeoJsonDataSource.stroke;
         defaultStrokeWidth = GeoJsonDataSource.strokeWidth;
         defaultFill = GeoJsonDataSource.fill;
+        defaultClampToGround = GeoJsonDataSource.clampToGround;
     });
 
     beforeEach(function() {
@@ -50,6 +52,7 @@ defineSuite([
         GeoJsonDataSource.stroke = defaultStroke;
         GeoJsonDataSource.strokeWidth = defaultStrokeWidth;
         GeoJsonDataSource.fill = defaultFill;
+        GeoJsonDataSource.clampToGround = defaultClampToGround;
     });
 
     var time = new JulianDate();
@@ -613,10 +616,9 @@ defineSuite([
     });
 
     it('Works with multipoint geometry clamped to ground', function() {
+        GeoJsonDataSource.clampToGround = true;
         var dataSource = new GeoJsonDataSource();
-        return dataSource.load(multiPoint, {
-            clampToGround: true
-        }).then(function() {
+        return dataSource.load(multiPoint).then(function() {
             var entityCollection = dataSource.entities;
             var entities = entityCollection.values;
             var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);

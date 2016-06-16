@@ -1007,7 +1007,7 @@ define([
 
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return property;
         }
 
@@ -1016,7 +1016,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain
+        // Clamp to ground is the default
         return new ScaledPositionProperty(property);
     }
 
@@ -1026,7 +1026,7 @@ define([
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return properties;
         }
 
@@ -1035,7 +1035,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain.
+        // Clamp to ground is the default
         var propertiesLength = properties.length;
         for (var i = 0; i < propertiesLength; i++) {
             var property = properties[i];

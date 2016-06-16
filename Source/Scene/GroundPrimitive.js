@@ -944,9 +944,11 @@ define([
         }
 
         if (!GroundPrimitive._initialized) {
+            //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
             }
+            //>>includeEnd('debug');
 
             GroundPrimitive.initializeTerrainHeights();
             return;

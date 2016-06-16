@@ -261,7 +261,7 @@ define([
         },
         /**
          * Gets a value indicating if the geometry should be drawn on terrain.
-         * @memberof CorridorGeometryUpdater.prototype
+         * @memberof EllipseGeometryUpdater.prototype
          *
          * @type {Boolean}
          * @readonly

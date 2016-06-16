@@ -626,9 +626,8 @@ define([
         Matrix4.inverseTransformation(scratchEnuToFixedMatrix, scratchFixedToEnuMatrix);
 
         // Find the 4 extreme points of the ellipse in ENU
-        var enuCenter = Matrix4.multiplyByPoint(scratchFixedToEnuMatrix, center, scratchCartesian1);
         for (var i = 0; i < 4; ++i) {
-            Cartesian3.clone(enuCenter, scratchRectanglePoints[i]);
+            Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
         }
         scratchRectanglePoints[0].x += semiMajorAxis;
         scratchRectanglePoints[1].x -= semiMajorAxis;

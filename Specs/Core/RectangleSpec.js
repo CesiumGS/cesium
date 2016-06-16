@@ -242,6 +242,12 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('fromCartesianArray throws with no array', function() {
+        expect(function() {
+            Rectangle.fromCartesianArray(undefined, undefined, new Rectangle());
+        }).toThrowDeveloperError();
+    });
+
     it('validate throws with no rectangle', function() {
         expect(function() {
             Rectangle.validate();

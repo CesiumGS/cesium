@@ -44,20 +44,16 @@ defineSuite([
     var scene;
     var camera;
     var labels;
-    var heightReferenceSupported;
     var labelsWithHeight;
 
     beforeAll(function() {
         scene = createScene();
         camera = scene.camera;
-
-        heightReferenceSupported = defined(scene._globeDepth) && scene._globeDepth.supported && ContextLimits.maximumVertexTextureImageUnits > 0;
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
     });
-
     beforeEach(function() {
         scene.morphTo3D(0);
 
@@ -67,13 +63,6 @@ defineSuite([
 
         labels = new LabelCollection();
         scene.primitives.add(labels);
-
-        if (heightReferenceSupported) {
-            labelsWithHeight = new LabelCollection({
-                scene : scene
-            });
-            scene.primitives.add(labelsWithHeight);
-        }
     });
 
     afterEach(function() {
@@ -93,6 +82,7 @@ defineSuite([
         expect(label.style).toEqual(LabelStyle.FILL);
         expect(label.pixelOffset).toEqual(Cartesian2.ZERO);
         expect(label.eyeOffset).toEqual(Cartesian3.ZERO);
+        expect(label.heightReference).toEqual(HeightReference.NONE);
         expect(label.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(label.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(label.scale).toEqual(1.0);
@@ -1634,13 +1624,19 @@ defineSuite([
     });
 
     describe('height referenced labels', function() {
-        it('explicitly constructs a label with height reference', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
+        beforeEach(function() {
+            scene.globe = createGlobe();
 
+            labelsWithHeight = new LabelCollection({
+                scene : scene
+            });
+            scene.primitives.add(labelsWithHeight);
+        });
+
+        it('explicitly constructs a label with height reference', function() {
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
+                text : "test",
                 heightReference : HeightReference.CLAMP_TO_GROUND
             });
 
@@ -1648,22 +1644,16 @@ defineSuite([
         });
 
         it('set label height reference property', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
-            var l = labelsWithHeight.add();
+            var l = labelsWithHeight.add({
+                text : "test"
+            });
             l.heightReference = HeightReference.CLAMP_TO_GROUND;
 
             expect(l.heightReference).toEqual(HeightReference.CLAMP_TO_GROUND);
         });
 
         it('creating with a height reference creates a height update callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
             labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
@@ -1673,10 +1663,6 @@ defineSuite([
         });
 
         it('set height reference property creates a height update callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1686,10 +1672,6 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
@@ -1708,10 +1690,6 @@ defineSuite([
         });
 
         it('changing the position updates the callback', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
@@ -1725,10 +1703,6 @@ defineSuite([
         });
 
         it('callback updates the position', function() {
-            if (!heightReferenceSupported) {
-                return;
-            }
-
             scene.globe = createGlobe();
             var l = labelsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,

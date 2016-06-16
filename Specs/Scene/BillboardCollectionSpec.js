@@ -1565,48 +1565,9 @@ defineSuite([
     });
 
     describe('height referenced billboards', function() {
-        function createMockGlobe() {
-            var globe = {
-                callback : undefined,
-                removedCallback : false,
-                ellipsoid : Ellipsoid.WGS84,
-                update : function() {},
-                getHeight : function() {
-                    return 0.0;
-                },
-                _surface : {},
-                destroy : function() {}
-            };
-
-            globe.beginFrame = function() {
-            };
-
-            globe.endFrame = function() {
-            };
-
-            globe.terrainProviderChanged = new Event();
-            defineProperties(globe, {
-                terrainProvider : {
-                    set : function(value) {
-                        this.terrainProviderChanged.raiseEvent(value);
-                    }
-                }
-            });
-
-            globe._surface.updateHeight = function(position, callback) {
-                globe.callback = callback;
-                return function() {
-                    globe.removedCallback = true;
-                    globe.callback = undefined;
-                };
-            };
-
-            return globe;
-        }
-
         var billboardsWithHeight;
         beforeEach(function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             billboardsWithHeight = new BillboardCollection({
                 scene : scene
             });
