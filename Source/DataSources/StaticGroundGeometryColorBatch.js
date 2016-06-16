@@ -36,6 +36,7 @@ define([
         this.itemsToRemove = [];
         this.isDirty = false;
     }
+
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
         this.createPrimitive = true;
@@ -233,6 +234,7 @@ define([
         this._batches = new AssociativeArray();
         this._primitives = primitives;
     }
+
     StaticGroundGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         var batches = this._batches;
@@ -252,7 +254,7 @@ define([
     StaticGroundGeometryColorBatch.prototype.remove = function(updater) {
         var batchesArray = this._batches.values;
         var count = batchesArray.length;
-        for(var i=0;i<count;++i) {
+        for (var i = 0; i < count; ++i) {
             if (batchesArray[i].remove(updater)) {
                 return;
             }
@@ -268,12 +270,12 @@ define([
         var batches = this._batches;
         var batchesArray = batches.values;
         var batchCount = batchesArray.length;
-        for(i=0;i<batchCount;++i) {
+        for (i = 0; i < batchCount; ++i) {
             isUpdated = batchesArray[i].update(time) && isUpdated;
         }
 
         //If any items swapped between batches we need to move them
-        for(i=0;i<batchCount;++i) {
+        for (i = 0; i < batchCount; ++i) {
             var oldBatch = batchesArray[i];
             var itemsToRemove = oldBatch.itemsToRemove;
             var itemsToMoveLength = itemsToRemove.length;
@@ -289,7 +291,7 @@ define([
         //If we moved anything around, we need to re-build the primitive and remove empty batches
         var batchesArrayCopy = batchesArray.slice();
         var batchesCopyCount = batchesArrayCopy.length;
-        for(i=0;i<batchesCopyCount;++i) {
+        for (i = 0; i < batchesCopyCount; ++i) {
             var batch = batchesArrayCopy[i];
             if (batch.geometry.length === 0) {
                 batches.remove(batch.key);
@@ -305,7 +307,7 @@ define([
     StaticGroundGeometryColorBatch.prototype.getBoundingSphere = function(entity, result) {
         var batchesArray = this._batches.values;
         var batchCount = batchesArray.length;
-        for(var i=0;i<batchCount;++i) {
+        for (var i = 0; i < batchCount; ++i) {
             var batch = batchesArray[i];
             if (batch.contains(entity)) {
                 return batch.getBoundingSphere(entity, result);
@@ -318,7 +320,7 @@ define([
     StaticGroundGeometryColorBatch.prototype.removeAllPrimitives = function() {
         var batchesArray = this._batches.values;
         var batchCount = batchesArray.length;
-        for(var i=0;i<batchCount;++i) {
+        for (var i = 0; i < batchCount; ++i) {
             batchesArray[i].removeAllPrimitives();
         }
     };
