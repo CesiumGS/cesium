@@ -40,7 +40,7 @@ define([
     var defaultStyle = LabelStyle.FILL;
     var defaultFillColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
-    var defaultOutlineWidth = 1;
+    var defaultOutlineWidth = 1.0;
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultEyeOffset = Cartesian3.ZERO;
     var defaultHeightReference = HeightReference.NONE;

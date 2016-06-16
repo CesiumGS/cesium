@@ -5,13 +5,21 @@ Change Log
 
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
 * `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
+* Made changes to KML processing that allows for some incorrect KML (specifically KML that reuses IDs) to still be parsed correctly
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
-* Added CZML support for Box, Corridor and Cylinder.
+* Added CZML support for Box, Corridor and Cylinder, and added Ellipsoid subdivisions, stackPartitions, and slicePartitions.
 * `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
 * Updated Cardboard Sandcastle example.
 * Added the hot air balloon sample model.
+* Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+
+### 1.22.2 - 2016-06-14
+* This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
+
+### 1.22.1 - 2016-06-13
+* Fixed default Bing Key and added a watermark to notify users that they need to sign up for their own key.
 
 ### 1.22 - 2016-06-01
 
@@ -35,7 +43,7 @@ Change Log
 * Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
 * Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
 * Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
-* Fixed a bug that was causing the atmosphere to disappear when only atmosphere is visible. [#3347](https://github.com/AnalyticalGraphicsInc/cesium/issues/3347) 
+* Fixed a bug that was causing the atmosphere to disappear when only atmosphere is visible. [#3347](https://github.com/AnalyticalGraphicsInc/cesium/issues/3347)
 * Fixed infinite horizontal 2D scrolling in IE/Edge. [#3893](https://github.com/AnalyticalGraphicsInc/cesium/issues/3893)
 * Fixed a bug that would cause a crash is the camera was on the IDL in 2D. [#3951](https://github.com/AnalyticalGraphicsInc/cesium/issues/3951)
 * Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [#3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
