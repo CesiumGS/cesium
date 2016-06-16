@@ -75,7 +75,7 @@ define([
     var defaultStroke = Color.YELLOW;
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
-    var defaultTerrain = false;
+    var defaultClampToGround = false;
 
     var defaultStrokeWidthProperty = new ConstantProperty(defaultStrokeWidth);
     var defaultStrokeMaterialProperty = new ColorMaterialProperty(defaultStroke);
@@ -284,7 +284,7 @@ define([
             billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
             billboard.image = new ConstantProperty(dataUrl);
 
-            if (options.terrain) {
+            if (options.clampToGround) {
                 billboard.heightReference = HeightReference.CLAMP_TO_GROUND;
             }
 
@@ -335,7 +335,7 @@ define([
 
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
         var graphics;
-        if (options.terrain) {
+        if (options.clampToGround) {
             graphics = new CorridorGraphics();
             entity.corridor = graphics;
         } else {
@@ -425,7 +425,7 @@ define([
         polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(coordinatesArrayToCartesianArray(positions, crsFunction), holes));
         if (positions[0].length > 2) {
             polygon.perPositionHeight = new ConstantProperty(true);
-        } else if (!options.terrain) {
+        } else if (!options.clampToGround) {
             polygon.height = 0;
         }
 
@@ -525,7 +525,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features on the ground.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -623,17 +623,17 @@ define([
             }
         },
         /**
-         * Gets or sets default of whether to draw on terrain.
+         * Gets or sets default of whether to clamp to the ground.
          * @memberof GeoJsonDataSource
          * @type {Boolean}
          * @default false
          */
-        terrain : {
+        clampToGround : {
             get : function() {
-                return defaultTerrain;
+                return defaultClampToGround;
             },
             set : function(value) {
-                defaultTerrain = value;
+                defaultClampToGround = value;
             }
         },
 
@@ -780,7 +780,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.terrain=GeoJsonDataSource.terrain] true if we want the features on terrain.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -811,7 +811,7 @@ define([
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
             fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
-            terrain : defaultValue(options.terrain, defaultTerrain)
+            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
         };
 
         var that = this;

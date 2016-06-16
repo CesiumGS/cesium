@@ -128,11 +128,10 @@ define([
             if (!defined(billboard)) {
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
-                    billboardCollection = new BillboardCollection({
+                    billboardCollection = this._scene.primitives.add(new BillboardCollection({
                         scene : this._scene
-                    });
+                    }));
                     this._billboardCollection = billboardCollection;
-                    this._scene.primitives.add(billboardCollection);
                 }
 
                 var length = unusedIndexes.length;

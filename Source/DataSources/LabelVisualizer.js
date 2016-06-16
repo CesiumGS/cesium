@@ -130,11 +130,10 @@ define([
             if (!defined(label)) {
                 var labelCollection = this._labelCollection;
                 if (!defined(labelCollection)) {
-                    labelCollection = new LabelCollection({
+                    labelCollection = this._scene.primitives.add(new LabelCollection({
                         scene : this._scene
-                    });
+                    }));
                     this._labelCollection = labelCollection;
-                    this._scene.primitives.add(labelCollection);
                 }
 
                 var length = unusedIndexes.length;
