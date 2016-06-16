@@ -8,13 +8,13 @@ defineSuite([
     it('logs a warning', function() {
         spyOn(console, 'log');
 
-        oneTimeWarning('identifier', 'message');
-        oneTimeWarning('identifier');
-        oneTimeWarning('another identifier');
+        oneTimeWarning('oneTime-identifier', 'message');
+        oneTimeWarning('oneTime-identifier');
+        oneTimeWarning('another oneTime-identifier');
 
         expect(console.log.calls.count()).toEqual(2);
         expect(console.log.calls.argsFor(0)[0]).toBe('message');
-        expect(console.log.calls.argsFor(1)[0]).toBe('another identifier');
+        expect(console.log.calls.argsFor(1)[0]).toBe('another oneTime-identifier');
     });
 
     it('throws without identifier', function() {

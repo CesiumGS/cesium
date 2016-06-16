@@ -447,39 +447,6 @@ define([
         return geos;
     }
 
-    function computeRectangle(positions, ellipsoid) {
-        if (!defined(positions) || positions.length < 3) {
-            return new Rectangle();
-        }
-
-        var minLat = Number.POSITIVE_INFINITY;
-        var minLon = Number.POSITIVE_INFINITY;
-        var maxLat = Number.NEGATIVE_INFINITY;
-        var maxLon = Number.NEGATIVE_INFINITY;
-
-        var length = positions.length;
-        for (var i = 0; i < length; ++i) {
-            var position = positions[i];
-            var cartographic = ellipsoid.cartesianToCartographic(position, scratchCarto1);
-
-            var latitude = cartographic.latitude;
-            var longitude = cartographic.longitude;
-
-            minLat = Math.min(minLat, latitude);
-            minLon = Math.min(minLon, longitude);
-            maxLat = Math.max(maxLat, latitude);
-            maxLon = Math.max(maxLon, longitude);
-        }
-
-        var rectangle = new Rectangle();
-        rectangle.north = maxLat;
-        rectangle.south = minLat;
-        rectangle.east = maxLon;
-        rectangle.west = minLon;
-
-        return rectangle;
-    }
-
     /**
      * A description of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy. Polygon geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -615,7 +582,13 @@ define([
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
-        this._rectangle = computeRectangle(polygonHierarchy.positions, ellipsoid);
+
+        var positions = polygonHierarchy.positions;
+        if (!defined(positions) || positions.length < 3) {
+            this._rectangle = new Rectangle();
+        } else {
+            this._rectangle = Rectangle.fromCartesianArray(positions, ellipsoid);
+        }
 
         /**
          * The number of elements used to pack the object into an array.

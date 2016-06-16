@@ -270,6 +270,28 @@ define([
         return result;
     };
 
+    var scratchCartoArray = [];
+
+    /**
+     * Creates the smallest possible Rectangle that encloses all positions in the provided array.
+     *
+     * @param {Cartesian[]} cartesians The list of Cartesian instances.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid the cartesians are on.
+     * @param {Rectangle} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     * @returns {Rectangle} The modified result parameter or a new Rectangle instance if none was provided.
+     */
+    Rectangle.fromCartesianArray = function(cartesians, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(cartesians)) {
+            throw new DeveloperError('cartesians is required.');
+        }
+        //>>includeEnd('debug');
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        ellipsoid.cartesianArrayToCartographicArray(cartesians, scratchCartoArray);
+        return Rectangle.fromCartographicArray(scratchCartoArray, result);
+    };
+
     /**
      * Duplicates an Rectangle.
      *

@@ -689,7 +689,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
-    var rectangle = new Rectangle(-0.21642082724729683, 0.06108652381980151, -0.20943951023931953, 0.06981317007977318);
+    var rectangle = new Rectangle(-0.21642082724729672, 0.06108652381980151, -0.20943951023931984, 0.06981317007977318);
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
