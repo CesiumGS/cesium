@@ -1008,7 +1008,13 @@ defineSuite([
                     cartesian2 : [4.0, 5.0]
                 },
                 scale : 1.0,
-                show : true
+                show : true,
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                },
+                pixelOffsetScaleByDistance : {
+                    nearFarScalar : [1.0, 20.0, 10000.0, 30.0]
+                }
             }
         };
 
@@ -1029,6 +1035,8 @@ defineSuite([
         expect(entity.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, 5.0));
         expect(entity.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
         expect(entity.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
+        expect(entity.label.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
+        expect(entity.label.pixelOffsetScaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 20.0, 10000.0, 30.0));
     });
 
     it('CZML adds data for constrained label.', function() {
@@ -1423,7 +1431,13 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 1.0,
-                show : true
+                show : true,
+                scaleByDistance : {
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                },
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                }
             }
         };
 
@@ -1437,6 +1451,8 @@ defineSuite([
         expect(entity.point.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.point.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.outlineWidth);
         expect(entity.point.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.point.scaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.point.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
     });
 
     it('CZML adds data for constrained point.', function() {
@@ -1631,6 +1647,7 @@ defineSuite([
                 show : true,
                 scale : 3.0,
                 minimumPixelSize : 5.0,
+                maximumScale : 4.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 castShadows : true,
@@ -1659,6 +1676,7 @@ defineSuite([
         expect(entity.model.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
+        expect(entity.model.maximumScale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4.0);
         expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
@@ -2134,7 +2152,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                numberOfVerticalLines : 15,
+                slices : 100
             }
         };
 
@@ -2151,6 +2171,8 @@ defineSuite([
         expect(entity.cylinder.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.cylinder.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.cylinder.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.cylinder.numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE)).toEqual(15);
+        expect(entity.cylinder.slices.getValue(Iso8601.MINIMUM_VALUE)).toEqual(100);
     });
 
     it('CZML adds data for corridor.', function() {
