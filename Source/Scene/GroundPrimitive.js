@@ -973,8 +973,8 @@ define([
             return;
         }
 
+        var exaggeration = frameState.terrainExaggeration;
         if (!defined(this._maxHeight)) {
-            var exaggeration = frameState.terrainExaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
             this._minHeight = this._minTerrainHeight * exaggeration;
         }
@@ -1037,7 +1037,6 @@ define([
 
             // Now compute the min/max heights for the primitive
             setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
-            var exaggeration = frameState.terrainExaggeration;
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
 
