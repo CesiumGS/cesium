@@ -652,7 +652,7 @@ define([
             var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
             if (defined(surfacePosition)) {
                 var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);
-                minTerrainHeight = Math.min(minTerrainHeight, -distance * 2.0);
+                minTerrainHeight = Math.min(minTerrainHeight, -distance);
             } else {
                 minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
             }
