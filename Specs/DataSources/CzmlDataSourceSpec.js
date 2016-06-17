@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/CzmlDataSource',
+        'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -15,6 +16,7 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
+        'Core/NearFarScalar',
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
@@ -30,6 +32,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -44,6 +47,7 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadJson,
+        NearFarScalar,
         Quaternion,
         Rectangle,
         ReferenceFrame,
@@ -420,7 +424,25 @@ defineSuite([
                 pixelOffset : {
                     cartesian2 : [1.0, 2.0]
                 },
-                show : true
+                alignedAxis : {
+                    cartesian : [1.0, 0.0, 0.0]
+                },
+                show : true,
+                sizeInMeters : false,
+                width : 10,
+                height : 11,
+                scaleByDistance : {
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                },
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                },
+                pixelOffsetScaleByDistance : {
+                    nearFarScalar : [1.0, 20.0, 10000.0, 30.0]
+                },
+                imageSubRegion : {
+                    boundingRectangle : [20, 30, 10, 11]
+                }
             }
         };
 
@@ -439,7 +461,15 @@ defineSuite([
         expect(entity.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(entity.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
         expect(entity.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, 2.0));
+        expect(entity.billboard.alignedAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 0.0, 0.0));
         expect(entity.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.billboard.sizeInMeters.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
+        expect(entity.billboard.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(10);
+        expect(entity.billboard.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(11);
+        expect(entity.billboard.scaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
+        expect(entity.billboard.pixelOffsetScaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 20.0, 10000.0, 30.0));
+        expect(entity.billboard.imageSubRegion.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new BoundingRectangle(20, 30, 10, 11));
     });
 
     it('can handle image intervals both of type uri and image', function() {
@@ -541,6 +571,56 @@ defineSuite([
         expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, 4.0));
     });
 
+    it('can handle interval billboard scaleByDistance.', function() {
+        var billboardPacket = {
+            billboard : {
+                scaleByDistance : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    nearFarScalar : [2.0, 3.0, 20000.0, 4.0]
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.scaleByDistance.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.scaleByDistance.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(new NearFarScalar(2.0, 3.0, 20000.0, 4.0));
+    });
+
+    it('can handle sampled billboard scaleByDistance.', function() {
+        var epoch = JulianDate.now();
+
+        var billboardPacket = {
+            billboard : {
+                scaleByDistance : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    nearFarScalar : [
+                        0, 1.0, 2.0, 10000.0, 3.0,
+                        2, 2.0, 3.0, 20000.0, 4.0
+                    ]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 2.0, new JulianDate());
+        expect(entity.billboard.scaleByDistance.getValue(date1)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.scaleByDistance.getValue(date2)).toEqual(new NearFarScalar(1.5, 2.5, 15000.0, 3.5));
+        expect(entity.billboard.scaleByDistance.getValue(date3)).toEqual(new NearFarScalar(2.0, 3.0, 20000.0, 4.0));
+    });
+
     it('CZML adds clock data.', function() {
         var clockPacket = {
             id : 'document',
@@ -595,7 +675,10 @@ defineSuite([
         var czml = {
             position : {
                 epoch : JulianDate.toIso8601(epoch),
-                cartographicDegrees : [0, 34, 117, 10000, 1, 34, 117, 20000]
+                cartographicDegrees : [
+                    0, 34, 117, 10000,
+                    1, 34, 117, 20000
+                ]
             }
         };
 
@@ -616,7 +699,10 @@ defineSuite([
 
         var czml = {
             position : {
-                cartographicDegrees : [JulianDate.toIso8601(firstDate), 34, 117, 10000, JulianDate.toIso8601(lastDate), 34, 117, 20000]
+                cartographicDegrees : [
+                    JulianDate.toIso8601(firstDate), 34, 117, 10000,
+                    JulianDate.toIso8601(lastDate), 34, 117, 20000
+                ]
             }
         };
 
