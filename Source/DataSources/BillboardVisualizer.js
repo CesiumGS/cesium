@@ -203,7 +203,14 @@ define([
         }
 
         var billboard = item.billboard;
-        result.center = Cartesian3.clone(defaultValue(billboard._clampedPosition, billboard.position), result.center);
+        if (billboard.heightReference === HeightReference.NONE) {
+            result.center = Cartesian3.clone(billboard.position, result.center);
+        } else {
+            if (!defined(billboard._clampedPosition)) {
+                return BoundingSphereState.PENDING;
+            }
+            result.center = Cartesian3.clone(billboard._clampedPosition, result.center);
+        }
         result.radius = 0;
         return BoundingSphereState.DONE;
     };

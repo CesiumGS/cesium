@@ -3,6 +3,7 @@ define([
         '../Core/AssociativeArray',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -16,6 +17,7 @@ define([
         AssociativeArray,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -114,7 +116,7 @@ define([
             }
 
             var needsRedraw = false;
-            if ((heightReference === HeightReference.CLAMP_TO_GROUND) && !defined(billboard)) {
+            if ((heightReference !== HeightReference.NONE) && !defined(billboard)) {
                 if (defined(pointPrimitive)) {
                     returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
                     pointPrimitive = undefined;
@@ -137,7 +139,7 @@ define([
                 billboard.image = undefined;
                 item.billboard = billboard;
                 needsRedraw = true;
-            } else if ((heightReference !== HeightReference.CLAMP_TO_GROUND) && !defined(pointPrimitive)) {
+            } else if ((heightReference === HeightReference.NONE) && !defined(pointPrimitive)) {
                 if (defined(billboard)) {
                     returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
                     billboard = undefined;
@@ -241,8 +243,16 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(defined(item.pointPrimitive) ?
-                                         item.pointPrimitive.position : item.billboard.position, result.center);
+        if (defined(item.pointPrimitive)) {
+            result.center = Cartesian3.clone(item.pointPrimitive.position, result.center);
+        } else {
+            var billboard = item.billboard;
+            if (!defined(billboard._clampedPosition)) {
+                return BoundingSphereState.PENDING;
+            }
+            result.center = Cartesian3.clone(billboard._clampedPosition, result.center);
+        }
+
         result.radius = 0;
         return BoundingSphereState.DONE;
     };

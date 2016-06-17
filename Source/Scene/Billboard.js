@@ -897,19 +897,20 @@ define([
         }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
+        Cartographic.clone(position, scratchCartographic);
         var height = globe.getHeight(position);
         if (defined(height)) {
-            Cartographic.clone(position, scratchCartographic);
             scratchCartographic.height = height;
-            if (owner._mode === SceneMode.SCENE3D) {
-                ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-            } else {
-                projection.project(scratchCartographic, scratchPosition);
-                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-            }
-
-            updateFunction(scratchPosition);
         }
+
+        if (owner._mode === SceneMode.SCENE3D) {
+            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+        } else {
+            projection.project(scratchCartographic, scratchPosition);
+            Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+        }
+
+        updateFunction(scratchPosition);
     };
 
     Billboard.prototype._loadImage = function() {

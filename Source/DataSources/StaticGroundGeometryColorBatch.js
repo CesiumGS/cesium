@@ -200,12 +200,13 @@ define([
         if (!primitive.ready) {
             return BoundingSphereState.PENDING;
         }
-        var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
-            (defined(attributes.show) && attributes.show[0] === 0)) {
+        
+        var bs = primitive.getBoundingSphere(entity);
+        if (!defined(bs)) {
             return BoundingSphereState.FAILED;
         }
-        attributes.boundingSphere.clone(result);
+
+        bs.clone(result);
         return BoundingSphereState.DONE;
     };
 

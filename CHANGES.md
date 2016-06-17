@@ -3,6 +3,8 @@ Change Log
 
 ### 1.23 - 2016-07-01
 
+* Added `heightReference` property to point, billboard and model entities that would allow them to be rendered relative to terrain.
+* Changed corridor, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if they are filled and don't have `height` or `extrudedHeight`.
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
 * `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
 * Made changes to KML processing that allows for some incorrect KML (specifically KML that reuses IDs) to still be parsed correctly

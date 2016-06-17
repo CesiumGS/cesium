@@ -126,9 +126,9 @@ define([
 
                     var glyphs = this._glyphs;
                     for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.show = value;
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.show = value;
                         }
                     }
                 }
@@ -158,9 +158,9 @@ define([
                     if (this._heightReference === HeightReference.NONE) {
                         var glyphs = this._glyphs;
                         for (var i = 0, len = glyphs.length; i < len; i++) {
-                            var glyph = glyphs[i];
-                            if (defined(glyph.billboard)) {
-                                glyph.billboard.position = value;
+                            var billboard = glyphs[i].billboard;
+                            if (defined(billboard)) {
+                                billboard.position = value;
                             }
                         }
                     } else {
@@ -191,9 +191,9 @@ define([
 
                     var glyphs = this._glyphs;
                     for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.heightReference = value;
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.heightReference = value;
                         }
                     }
 
