@@ -9,7 +9,12 @@ Change Log
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
-* Added CZML support for Box, Corridor and Cylinder, and added Ellipsoid subdivisions, stackPartitions, and slicePartitions.
+* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
+    * `Billboard`: `width`, `height`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
+    * `Label`: `translucencyByDistance`, `pixelOffsetScaleByDistance`
+    * `Model`: `maximumScale`
+    * `Point`: `scaleByDistance`, `translucencyByDistance`
+    * `Ellipsoid`: `subdivisions`, `stackPartitions`, `slicePartitions`
 * `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
 * Updated Cardboard Sandcastle example.
 * Added the hot air balloon sample model.
