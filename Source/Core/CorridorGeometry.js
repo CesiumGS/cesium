@@ -689,15 +689,22 @@ define([
         scratchCartographicMax.latitude = Number.NEGATIVE_INFINITY;
         scratchCartographicMax.longitude = Number.NEGATIVE_INFINITY;
 
+        var lat, lon;
         if (cornerType === CornerType.ROUNDED) {
             // Compute start cap
             var first = positions[0];
             Cartesian3.subtract(first, positions[1], scratchCartesianOffset);
             Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
-            Cartesian3.multiplyByScalar(scratchCartesianOffset, width, scratchCartesianOffset);
+            Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
             Cartesian3.add(first, scratchCartesianOffset, scratchCartesianEnds);
-            computeOffsetPoints(scratchCartesianEnds, first, ellipsoid, halfWidth,
-                scratchCartographicMin, scratchCartographicMax);
+
+            ellipsoid.cartesianToCartographic(scratchCartesianEnds, scratchCartographic);
+            lat = scratchCartographic.latitude;
+            lon = scratchCartographic.longitude;
+            scratchCartographicMin.latitude = Math.min(scratchCartographicMin.latitude, lat);
+            scratchCartographicMin.longitude = Math.min(scratchCartographicMin.longitude, lon);
+            scratchCartographicMax.latitude = Math.max(scratchCartographicMax.latitude, lat);
+            scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
         }
 
         // Compute the rest
@@ -710,16 +717,20 @@ define([
         var last = positions[length];
         Cartesian3.subtract(last, positions[length-1], scratchCartesianOffset);
         Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
-        Cartesian3.multiplyByScalar(scratchCartesianOffset, width, scratchCartesianOffset);
+        Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
         Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);
         computeOffsetPoints(last, scratchCartesianEnds, ellipsoid, halfWidth,
             scratchCartographicMin, scratchCartographicMax);
 
         if (cornerType === CornerType.ROUNDED) {
-            // Compute end cap using made up point in correct direction
-            Cartesian3.add(scratchCartesianEnds, scratchCartesianOffset, scratchCartesianOffset);
-            computeOffsetPoints(scratchCartesianEnds, scratchCartesianOffset, ellipsoid, halfWidth,
-                scratchCartographicMin, scratchCartographicMax);
+            // Compute end cap
+            ellipsoid.cartesianToCartographic(scratchCartesianEnds, scratchCartographic);
+            lat = scratchCartographic.latitude;
+            lon = scratchCartographic.longitude;
+            scratchCartographicMin.latitude = Math.min(scratchCartographicMin.latitude, lat);
+            scratchCartographicMin.longitude = Math.min(scratchCartographicMin.longitude, lon);
+            scratchCartographicMax.latitude = Math.max(scratchCartographicMax.latitude, lat);
+            scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
         }
 
         var rectangle = new Rectangle();

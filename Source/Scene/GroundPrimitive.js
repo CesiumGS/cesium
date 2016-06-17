@@ -588,6 +588,13 @@ define([
         return rectangle;
     }
 
+    var scratchDiagonalCartesianNE = new Cartesian3();
+    var scratchDiagonalCartesianSW = new Cartesian3();
+    var scratchDiagonalCartographic = new Cartographic();
+    var scratchCenterCartesian = new Cartesian3();
+    var scratchSurfaceCartesian = new Cartesian3();
+    var scratchTileRectangle = new Rectangle();
+
     function setMinMaxTerrainHeights(primitive, frameState, geometry) {
         var rectangle = getRectangle(frameState, geometry);
 
@@ -633,14 +640,34 @@ define([
                 minTerrainHeight = heights[0];
                 maxTerrainHeight = heights[1];
             }
+
+            // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
+            var ellipsoid = frameState.mapProjection.ellipsoid;
+            tilingScheme.tileXYToRectangle(lastLevelX, lastLevelY, i-1, scratchTileRectangle);
+            ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle, scratchDiagonalCartographic),
+                scratchDiagonalCartesianNE);
+            ellipsoid.cartographicToCartesian(Rectangle.southwest(rectangle, scratchDiagonalCartographic),
+                scratchDiagonalCartesianSW);
+
+            Cartesian3.subtract(scratchDiagonalCartesianSW, scratchDiagonalCartesianNE, scratchCenterCartesian);
+            Cartesian3.add(scratchDiagonalCartesianNE,
+                Cartesian3.multiplyByScalar(scratchCenterCartesian, 0.5, scratchCenterCartesian), scratchCenterCartesian);
+            var surfacePosition = ellipsoid.scaleToGeodeticSurface(scratchCenterCartesian, scratchSurfaceCartesian);
+            if (defined(surfacePosition)) {
+                var distance = Cartesian3.distance(scratchCenterCartesian, surfacePosition);
+                minTerrainHeight = Math.min(minTerrainHeight, -distance * 2.0);
+            } else {
+                minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
+            }
         }
+
         primitive._minTerrainHeight = Math.min(primitive._minTerrainHeight, minTerrainHeight);
         primitive._maxTerrainHeight = Math.max(primitive._maxTerrainHeight, maxTerrainHeight);
 
         // Now compute the min/max heights for the primitive
         var exaggeration = frameState.terrainExaggeration;
-        primitive._minHeight = minTerrainHeight * exaggeration;
-        primitive._maxHeight = maxTerrainHeight * exaggeration;
+        primitive._minHeight = primitive._minTerrainHeight * exaggeration;
+        primitive._maxHeight = primitive._maxTerrainHeight * exaggeration;
     }
 
     function createBoundingVolume(primitive, frameState, geometry) {
@@ -972,6 +999,9 @@ define([
             var groundInstances = new Array(length);
 
             var color;
+
+            this._maxTerrainHeight = -Number.MAX_VALUE;
+            this._minTerrainHeight = Number.MAX_VALUE;
 
             for (var i = 0; i < length; ++i) {
                 instance = instances[i];
