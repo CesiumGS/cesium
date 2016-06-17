@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartographic',
@@ -25,6 +26,7 @@ define([
         '../Core/LinearApproximation',
         '../Core/loadJson',
         '../Core/Math',
+        '../Core/NearFarScalar',
         '../Core/Quaternion',
         '../Core/Rectangle',
         '../Core/ReferenceFrame',
@@ -79,6 +81,7 @@ define([
         './TimeIntervalCollectionProperty',
         './WallGraphics'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -104,6 +107,7 @@ define([
         LinearApproximation,
         loadJson,
         CesiumMath,
+        NearFarScalar,
         Quaternion,
         Rectangle,
         ReferenceFrame,
@@ -350,38 +354,42 @@ define([
     function unwrapInterval(type, czmlInterval, sourceUri) {
         /*jshint sub:true*/
         switch (type) {
+            case Array:
+                return czmlInterval.array;
             case Boolean:
                 return defaultValue(czmlInterval['boolean'], czmlInterval);
+            case BoundingRectangle:
+                return czmlInterval.boundingRectangle;
             case Cartesian2:
                 return czmlInterval.cartesian2;
             case Cartesian3:
                 return unwrapCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
-            case StripeOrientation:
-                return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
-            case HorizontalOrigin:
-                return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
             case CornerType:
                 return CornerType[defaultValue(czmlInterval.cornerType, czmlInterval)];
             case HeightReference:
                 return HeightReference[defaultValue(czmlInterval.heightReference, czmlInterval)];
+            case HorizontalOrigin:
+                return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
             case Image:
                 return unwrapUriInterval(czmlInterval, sourceUri);
             case JulianDate:
                 return JulianDate.fromIso8601(defaultValue(czmlInterval.date, czmlInterval));
             case LabelStyle:
                 return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
-            case Rotation:
-                return defaultValue(czmlInterval.number, czmlInterval);
             case Number:
+                return defaultValue(czmlInterval.number, czmlInterval);
+            case NearFarScalar:
+                return czmlInterval.nearFarScalar;
+            case Quaternion:
+                return unwrapQuaternionInterval(czmlInterval);
+            case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
-            case Array:
-                return czmlInterval.array;
-            case Quaternion:
-                return unwrapQuaternionInterval(czmlInterval);
+            case StripeOrientation:
+                return StripeOrientation[defaultValue(czmlInterval.stripeOrientation, czmlInterval)];
             case Rectangle:
                 return unwrapRectangleInterval(czmlInterval);
             case Uri:
@@ -1053,6 +1061,12 @@ define([
         processPacketData(Rotation, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
+        processPacketData(Number, billboard, 'width', billboardData.width, interval, sourceUri, entityCollection);
+        processPacketData(Number, billboard, 'height', billboardData.height, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, billboard, 'scaleByDistance', billboardData.scaleByDistance, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, billboard, 'translucencyByDistance', billboardData.translucencyByDistance, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, billboard, 'pixelOffsetScaleByDistance', billboardData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection);
+        processPacketData(BoundingRectangle, billboard, 'imageSubRegion', billboardData.imageSubRegion, interval, sourceUri, entityCollection);
     }
 
     function processBox(entity, packet, entityCollection, sourceUri) {
@@ -1141,6 +1155,8 @@ define([
         processPacketData(Boolean, cylinder, 'outline', cylinderData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, cylinder, 'outlineColor', cylinderData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'outlineWidth', cylinderData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'numberOfVerticalLines', cylinderData.numberOfVerticalLines, interval, sourceUri, entityCollection);
+        processPacketData(Number, cylinder, 'slices', cylinderData.slices, interval, sourceUri, entityCollection);
     }
 
     function processDocument(packet, dataSource) {
@@ -1242,14 +1258,14 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'stackPartitions', ellipsoidData.stackPartitions, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'slicePartitions', ellipsoidData.slicePartitions, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipsoid, 'subdivisions', ellipsoidData.subdivisions, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri, entityCollection);
         processPacketData(Color, ellipsoid, 'outlineColor', ellipsoidData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipsoid, 'outlineWidth', ellipsoidData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'stackPartitions', ellipsoidData.stackPartitions, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'slicePartitions', ellipsoidData.slicePartitions, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'subdivisions', ellipsoidData.subdivisions, interval, sourceUri, entityCollection);
     }
 
     function processLabel(entity, packet, entityCollection, sourceUri) {
@@ -1283,6 +1299,8 @@ define([
         processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri, entityCollection);
         processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, label, 'translucencyByDistance', labelData.translucencyByDistance, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, label, 'pixelOffsetScaleByDistance', labelData.pixelOffsetScaleByDistance, interval, sourceUri, entityCollection);
     }
 
     function processModel(entity, packet, entityCollection, sourceUri) {
@@ -1307,6 +1325,7 @@ define([
         processPacketData(Uri, model, 'uri', modelData.gltf, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri, entityCollection);
         processPacketData(Number, model, 'minimumPixelSize', modelData.minimumPixelSize, interval, sourceUri, entityCollection);
+        processPacketData(Number, model, 'maximumScale', modelData.maximumScale, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'incrementallyLoadTextures', modelData.incrementallyLoadTextures, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
@@ -1420,6 +1439,8 @@ define([
         processPacketData(Color, point, 'color', pointData.color, interval, sourceUri, entityCollection);
         processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, point, 'scaleByDistance', pointData.scaleByDistance, interval, sourceUri, entityCollection);
+        processPacketData(NearFarScalar, point, 'translucencyByDistance', pointData.translucencyByDistance, interval, sourceUri, entityCollection);
     }
 
     function processPolygon(entity, packet, entityCollection, sourceUri) {

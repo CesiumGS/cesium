@@ -43,7 +43,7 @@ define([
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
-     * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image.
+     * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
      * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      *
@@ -114,7 +114,8 @@ define([
 
         /**
          * Gets or sets the Property specifying a {@link BoundingRectangle} that defines a
-         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image.
+         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
+         * measured in pixels from the bottom-left.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
