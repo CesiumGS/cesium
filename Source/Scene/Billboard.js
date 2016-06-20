@@ -1015,7 +1015,8 @@ define([
     };
 
     /**
-     * Uses a sub-region of the image with the given id as the image for this billboard.
+     * Uses a sub-region of the image with the given id as the image for this billboard,
+     * measured in pixels from the bottom-left.
      *
      * @param {String} id The id of the image to use.
      * @param {BoundingRectangle} subRegion The sub-region of the image.

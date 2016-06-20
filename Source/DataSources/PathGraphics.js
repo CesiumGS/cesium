@@ -29,7 +29,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
-     * @param {Property} [options.resolution=60] A numeric Property specifying the width in pixels.
+     * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
      */
     function PathGraphics(options) {
         this._material = undefined;
