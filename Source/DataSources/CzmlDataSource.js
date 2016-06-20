@@ -186,13 +186,13 @@ define([
             return undefined;
         }
 
-        if (rgba.length === Color.length) {
+        var length = rgba.length;
+        if (length === Color.packedLength) {
             return [Color.byteToFloat(rgba[0]), Color.byteToFloat(rgba[1]), Color.byteToFloat(rgba[2]), Color.byteToFloat(rgba[3])];
         }
 
-        var len = rgba.length;
-        rgbaf = new Array(len);
-        for (var i = 0; i < len; i += 5) {
+        rgbaf = new Array(length);
+        for (var i = 0; i < length; i += 5) {
             rgbaf[i] = rgba[i];
             rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
             rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
@@ -211,15 +211,30 @@ define([
     }
 
     function unwrapRectangleInterval(czmlInterval) {
-        var wsenDegrees = czmlInterval.wsenDegrees;
-        if (defined(wsenDegrees)) {
-            var length = wsenDegrees.length;
-            for (var i = 0; i < length; i++) {
-                wsenDegrees[i] = CesiumMath.toRadians(wsenDegrees[i]);
-            }
-            return wsenDegrees;
+        var wsen = czmlInterval.wsen;
+        if (defined(wsen)) {
+            return wsen;
         }
-        return czmlInterval.wsen;
+
+        var wsenDegrees = czmlInterval.wsenDegrees;
+        if (!defined(wsenDegrees)) {
+            return undefined;
+        }
+
+        var length = wsenDegrees.length;
+        if (length === Rectangle.packedLength) {
+            return [CesiumMath.toRadians(wsenDegrees[0]), CesiumMath.toRadians(wsenDegrees[1]), CesiumMath.toRadians(wsenDegrees[2]), CesiumMath.toRadians(wsenDegrees[3])];
+        }
+
+        wsen = new Array(length);
+        for (var i = 0; i < length; i += 5) {
+            wsen[i] = wsenDegrees[i];
+            wsen[i + 1] = CesiumMath.toRadians(wsenDegrees[i + 1]);
+            wsen[i + 2] = CesiumMath.toRadians(wsenDegrees[i + 2]);
+            wsen[i + 3] = CesiumMath.toRadians(wsenDegrees[i + 3]);
+            wsen[i + 4] = CesiumMath.toRadians(wsenDegrees[i + 4]);
+        }
+        return wsen;
     }
 
     function unwrapCartesianInterval(czmlInterval) {

@@ -16,6 +16,7 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
+        'Core/Math',
         'Core/NearFarScalar',
         'Core/Quaternion',
         'Core/Rectangle',
@@ -47,6 +48,7 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadJson,
+        CesiumMath,
         NearFarScalar,
         Quaternion,
         Rectangle,
@@ -555,7 +557,8 @@ defineSuite([
             billboard : {
                 pixelOffset : {
                     epoch : JulianDate.toIso8601(epoch),
-                    cartesian2 : [0, 1, 2, 1, 3, 4]
+                    cartesian2 : [0.0, 1.0, 2.0,
+                                  1.0, 3.0, 4.0]
                 }
             }
         };
@@ -566,9 +569,11 @@ defineSuite([
 
         expect(entity.billboard).toBeDefined();
         var date1 = epoch;
-        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
         expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, 2.0));
-        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, 4.0));
+        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(2.0, 3.0));
+        expect(entity.billboard.pixelOffset.getValue(date3)).toEqual(new Cartesian2(3.0, 4.0));
     });
 
     it('can handle interval billboard scaleByDistance.', function() {
@@ -619,6 +624,32 @@ defineSuite([
         expect(entity.billboard.scaleByDistance.getValue(date1)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
         expect(entity.billboard.scaleByDistance.getValue(date2)).toEqual(new NearFarScalar(1.5, 2.5, 15000.0, 3.5));
         expect(entity.billboard.scaleByDistance.getValue(date3)).toEqual(new NearFarScalar(2.0, 3.0, 20000.0, 4.0));
+    });
+
+    it('can handle sampled billboard color rgba.', function() {
+        var epoch = JulianDate.now();
+
+        var billboardPacket = {
+            billboard : {
+                color : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    rgba : [0, 200, 202, 204, 206,
+                            2, 0, 0, 0, 0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 2.0, new JulianDate());
+        expect(entity.billboard.color.getValue(date1)).toEqual(Color.fromBytes(200, 202, 204, 206));
+        expect(entity.billboard.color.getValue(date2)).toEqual(Color.fromBytes(100, 101, 102, 103));
+        expect(entity.billboard.color.getValue(date3)).toEqual(Color.fromBytes(0, 0, 0, 0));
     });
 
     it('CZML adds clock data.', function() {
@@ -2006,7 +2037,7 @@ defineSuite([
         expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
-    it('CZML adds data for rectangle in degrees.', function() {
+    it('can handle constant rectangle coordinates in degrees.', function() {
         var rectanglePacket = {
             rectangle : {
                 coordinates : {
@@ -2019,6 +2050,58 @@ defineSuite([
         dataSource.load(makePacket(rectanglePacket));
         var entity = dataSource.entities.values[0];
         expect(entity.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
+    });
+
+    it('can handle sampled rectangle coordinates.', function() {
+        var epoch = JulianDate.now();
+
+        var rectanglePacket = {
+            rectangle : {
+                coordinates : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    wsen : [0.0, 1.0, 2.0, 3.0, 4.0,
+                            1.0, 3.0, 4.0, 5.0, 6.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(rectanglePacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.rectangle).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(entity.rectangle.coordinates.getValue(date1)).toEqual(new Rectangle(1.0, 2.0, 3.0, 4.0));
+        expect(entity.rectangle.coordinates.getValue(date2)).toEqual(new Rectangle(2.0, 3.0, 4.0, 5.0));
+        expect(entity.rectangle.coordinates.getValue(date3)).toEqual(new Rectangle(3.0, 4.0, 5.0, 6.0));
+    });
+
+    it('can handle sampled rectangle coordinates in degrees.', function() {
+        var epoch = JulianDate.now();
+
+        var rectanglePacket = {
+            rectangle : {
+                coordinates : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    wsenDegrees : [0.0, 1.0, 2.0, 3.0, 4.0,
+                                   1.0, 3.0, 4.0, 5.0, 6.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(rectanglePacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.rectangle).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(entity.rectangle.coordinates.getValue(date1)).toEqual(Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0));
+        expect(entity.rectangle.coordinates.getValue(date2)).toEqualEpsilon(Rectangle.fromDegrees(2.0, 3.0, 4.0, 5.0), CesiumMath.EPSILON15);
+        expect(entity.rectangle.coordinates.getValue(date3)).toEqual(Rectangle.fromDegrees(3.0, 4.0, 5.0, 6.0));
     });
 
     it('CZML adds data for wall.', function() {
