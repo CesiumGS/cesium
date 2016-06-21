@@ -167,7 +167,12 @@ define([
             var label = json[i];
             var labelText = label.text;
             var cartographicArray = label.position;
-            var cartographic = new Cartographic(cartographicArray[0], cartographicArray[1]);
+
+            var lon = cartographicArray[0];
+            var lat = cartographicArray[1];
+            var alt = defaultValue(cartographicArray[1], 0.0);
+
+            var cartographic = new Cartographic(lon, lat, alt);
             var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
             labelCollection.add({
