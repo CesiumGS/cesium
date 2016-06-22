@@ -7,7 +7,8 @@ define([
         '../Core/Event',
         './createPropertyDescriptor',
         './NodeTransformationProperty',
-        './PropertyBag'
+        './PropertyBag',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -16,7 +17,8 @@ define([
         Event,
         createPropertyDescriptor,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        when) {
     'use strict';
 
     function createNodeTransformationProperty(value) {
@@ -33,6 +35,9 @@ define([
      * <p>
      * Cesium includes support for glTF geometry, materials, animations, and skinning.
      * Cameras and lights are not currently supported.
+     * An external model (glTF) is created with {@link Entity.model}.  glTF JSON can also be created at runtime and passed to this constructor function.  
+     * In either case, the {@link ModelGraphics#readyPromise} is resolved when the entity is ready to render, 
+     * i.e., when the external binary, image, and shader files are downloaded and the WebGL resources are created.
      * </p>
      *
      * @alias ModelGraphics
@@ -75,6 +80,8 @@ define([
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
         this._definitionChanged = new Event();
+        this._ready = false;
+        this._readyPromise = when.defer();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -175,7 +182,52 @@ define([
          * @memberof ModelGraphics.prototype
          * @type {PropertyBag}
          */
-        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag)
+        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
+        
+        /**
+         * When <code>true</code>, this model is ready to render, i.e., the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.  This is set to
+         * <code>true</code> right before {@link ModelGraphics#readyPromise} is resolved.
+         *
+         * @memberof ModelGraphics.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @default false
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when this entity/model is ready to render, i.e., when the external binary, image,
+         * and shader files were downloaded and the WebGL resources were created.
+         * <p>
+         * This promise is resolved at the end of the frame before the first frame the entity/model is rendered in.
+         * </p>
+         *
+         * @memberof ModelGraphics.prototype
+         * @type {Promise.<ModelGraphics>}
+         * @readonly
+         *
+         * @example
+         * // Play all animations at half-speed when the model is ready to render
+         * Cesium.when(entity._model.readyPromise).then(function(model) {
+         *   // success call
+         * }).otherwise(function(error){
+         *   // fail call
+         * });
+         *
+         * @see ModelGraphics#ready
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
+            }
+        }
     });
 
     /**

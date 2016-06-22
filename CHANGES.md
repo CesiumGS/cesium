@@ -63,6 +63,7 @@ Change Log
 * Added `debugShowShadowVolume` to `GroundPrimitive`.
 * Fix issue with disappearing tiles on Linux. [#3889](https://github.com/AnalyticalGraphicsInc/cesium/issues/3889)
 
+
 ### 1.21 - 2016-05-02
 
 * Breaking changes

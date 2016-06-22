@@ -6,7 +6,8 @@ defineSuite([
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag'
+        'DataSources/PropertyBag',
+        'ThirdParty/when'
     ], function(
         ModelGraphics,
         Cartesian3,
@@ -14,7 +15,8 @@ defineSuite([
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        when) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -47,6 +49,7 @@ defineSuite([
         expect(model.castShadows).toBeInstanceOf(ConstantProperty);
         expect(model.receiveShadows).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
+        expect(model.ready).toEqual(false);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
 
