@@ -328,7 +328,7 @@ defineSuite([
         var dataSource = new KmlDataSource(options);
 
         var spy = jasmine.createSpy('unsupportedNodeEvent');
-        dataSource.loadingEvent.addEventListener(spy);
+        dataSource.unsupportedNodeEvent.addEventListener(spy);
 
         var promise = dataSource.load('Data/KML/unsupported.kml');
         expect(spy).toHaveBeenCalledWith(dataSource, true);
