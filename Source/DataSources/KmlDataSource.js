@@ -1654,7 +1654,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, node);
+        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
