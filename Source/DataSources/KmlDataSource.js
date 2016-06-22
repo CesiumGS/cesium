@@ -1654,7 +1654,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNodes.push(node);
+        dataSource._unsupportedNode.raiseEvent(dataSource, node);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1937,6 +1937,7 @@ define([
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
@@ -1953,7 +1954,7 @@ define([
         if (defined(featureProcessor)) {
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            dataSource._unsupportedNodes.push(node);
+            dataSource._unsupportedNode.raiseEvent(dataSource, node);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
@@ -2146,6 +2147,8 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
@@ -2154,7 +2157,6 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
-        this._unsupportedNodes = [];
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2219,16 +2221,6 @@ define([
             }
         },
         /**
-         * Gets the array of KML nodes that are not yet suported by Cesium.
-         * @memberof KmlDataSource.prototype
-         * @type {Array}
-         */
-        unsupportedNodes : {
-            get : function() {
-                return this._unsupportedNodes;
-            }
-        },
-        /**
          * Gets a value indicating if the data source is currently loading data.
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
@@ -2276,6 +2268,16 @@ define([
         refreshEvent : {
             get : function() {
                 return this._refresh;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
             }
         },
         /**
