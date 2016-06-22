@@ -326,16 +326,18 @@ defineSuite([
 
     it('raises unsupportedNodeEvent event when parsing an unsupported kml node type', function() {
         var dataSource = new KmlDataSource(options);
-
         var spy = jasmine.createSpy('unsupportedNodeEvent');
         dataSource.unsupportedNodeEvent.addEventListener(spy);
 
-        var promise = dataSource.load('Data/KML/unsupported.kml');
-        expect(spy).toHaveBeenCalledWith(dataSource, true);
-        spy.calls.reset();
-
-        return promise.then(function() {
-            expect(spy).toHaveBeenCalledWith(dataSource, false);
+        return dataSource.load('Data/KML/unsupported.kml').then(function() {
+            var nodeNames = ['PhotoOverlay', 'ScreenOverlay', 'Tour'];
+            expect(spy.calls.count()).toEqual(3);
+            for (var i = 0; i < nodeNames.length; i++) {
+                var args = spy.calls.argsFor(i);
+                expect(args.length).toEqual(2);
+                expect(args[0]).toBe(dataSource);
+                expect(args[1].localName).toEqual(nodeNames[i]);
+            }
         });
     });
 
