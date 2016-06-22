@@ -1954,7 +1954,7 @@ define([
         if (defined(featureProcessor)) {
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            dataSource._unsupportedNode.raiseEvent(dataSource, node);
+            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }

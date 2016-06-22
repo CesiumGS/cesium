@@ -334,9 +334,10 @@ defineSuite([
             expect(spy.calls.count()).toEqual(3);
             for (var i = 0; i < nodeNames.length; i++) {
                 var args = spy.calls.argsFor(i);
-                expect(args.length).toEqual(2);
+                expect(args.length).toEqual(3);
                 expect(args[0]).toBe(dataSource);
                 expect(args[1].localName).toEqual(nodeNames[i]);
+                // args[2] could be undefined, allow for that
             }
         });
     });
