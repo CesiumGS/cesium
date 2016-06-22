@@ -170,7 +170,7 @@ define([
 
             var lon = cartographicArray[0];
             var lat = cartographicArray[1];
-            var alt = defaultValue(cartographicArray[1], 0.0);
+            var alt = defaultValue(cartographicArray[2], 0.0);
 
             var cartographic = new Cartographic(lon, lat, alt);
             var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
