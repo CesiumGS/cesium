@@ -2707,6 +2707,14 @@ defineSuite([
         });
     });
 
+    // The below test was generated, along with ValidationDocument.czml,
+    // by the czml-writer ValidationDocumentationGenerator.
+    // https://github.com/AnalyticalGraphicsInc/czml-writer/blob/master/DotNet/GenerateFromSchema/ValidationDocumentGenerator.cs
+    // using command line
+    // GenerateFromSchema.exe -p ..\..\..\..\Schema\Packet.jsonschema -t validation -o ..\..\..\CesiumLanguageWriterTests\
+    // then running the generated TestGenerateValidationDocument unit test
+    // to produce ValidationDocument.czml and ValidationDocumentAssertions.js
+
     it('checks validation document', function() {
         return CzmlDataSource.load('Data/CZML/ValidationDocument.czml').then(function(dataSource) {
             /*jshint -W120 */
