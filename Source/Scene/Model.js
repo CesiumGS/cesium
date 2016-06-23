@@ -3134,7 +3134,7 @@ define([
                 Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
             }
 
-            var radius = model.boundingSphere.radius;
+            var radius = model.boundingSphere.radius * model.scale;
             var metersPerPixel = scaleInPixels(scratchPosition, radius, frameState);
 
             // metersPerPixel is always > 0.0
