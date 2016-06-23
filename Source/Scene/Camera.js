@@ -310,7 +310,7 @@ define([
             }
 
             if (areaPercentage > percentageChanged) {
-                camera._changed.raiseEvent();
+                camera._changed.raiseEvent(areaPercentage);
                 camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
                 camera._changedFrustum = camera.frustum.clone(camera._changedFrustum);
             }
@@ -318,21 +318,21 @@ define([
         }
 
         if (!defined(camera._changedDirection)) {
-            camera._changedPosition = Cartesian3.clone(camera.position);
-            camera._changedDirection = Cartesian3.clone(camera.direction);
+            camera._changedPosition = Cartesian3.clone(camera.positionWC);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC);
             return;
         }
 
         var dirAngle = CesiumMath.acosClamped(Cartesian3.dot(camera.directionWC, camera._changedDirection));
         var dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
 
-        var distance = Cartesian3.distance(camera.position, camera._changedPosition);
+        var distance = Cartesian3.distance(camera.positionWC, camera._changedPosition);
         var heightPercentage = distance / camera.positionCartographic.height;
 
         if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
-            camera._changed.raiseEvent();
-            camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
-            camera._changedDirection = Cartesian3.clone(camera.direction, camera._changedDirection);
+            camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
         }
     }
 
@@ -413,7 +413,9 @@ define([
 
     var scratchCartesian = new Cartesian3();
 
-    function updateMembers(camera) {
+    function updateMembers(camera, updateCameraChangedEvent) {
+        updateCameraChangedEvent = defaultValue(updateCameraChangedEvent, true);
+
         var mode = camera._mode;
 
         var heightChanged = false;
@@ -529,7 +531,10 @@ define([
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             updateViewMatrix(camera);
-            updateCameraChanged(camera);
+
+            if (updateCameraChangedEvent) {
+                updateCameraChanged(camera);
+            }
         }
     }
 
@@ -865,7 +870,7 @@ define([
 
         Matrix4.clone(transform, this._transform);
         this._transformChanged = true;
-        updateMembers(this);
+        updateMembers(this, false);
         var inverse = this._actualInvTransform;
 
         Matrix4.multiplyByPoint(inverse, position, this.position);
@@ -873,7 +878,7 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
-        updateMembers(this);
+        updateMembers(this, false);
     };
 
     var scratchSetViewCartesian = new Cartesian3();
@@ -1158,7 +1163,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian4();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByVector(this._actualInvTransform, cartesian, result);
     };
 
@@ -1179,7 +1184,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByPoint(this._actualInvTransform, cartesian, result);
     };
 
@@ -1200,7 +1205,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByPointAsVector(this._actualInvTransform, cartesian, result);
     };
 
@@ -1221,7 +1226,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian4();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByVector(this._actualTransform, cartesian, result);
     };
 
@@ -1242,7 +1247,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByPoint(this._actualTransform, cartesian, result);
     };
 
@@ -1263,7 +1268,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this);
+        updateMembers(this, false);
         return Matrix4.multiplyByPointAsVector(this._actualTransform, cartesian, result);
     };
 

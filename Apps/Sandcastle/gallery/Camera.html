@@ -196,10 +196,10 @@ function cameraChanges() {
     Sandcastle.declare(cameraChanges);
 
     var i = 0;
-    removeChanged = viewer.camera.changed.addEventListener(function() {
+    removeChanged = viewer.camera.changed.addEventListener(function(percentage) {
         ++i;
-        console.log('camera changed: ' + i);
-    })
+        console.log('camera changed: ' + i + ', ' + percentage);
+    });
 }
 
 function flyInACity() {
