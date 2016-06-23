@@ -19,13 +19,11 @@ define([
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/PolygonPipeline',
         '../Core/Quaternion',
         '../Core/Ray',
         '../Core/Rectangle',
         '../Core/Transforms',
         './CameraFlightPath',
-        './CullingVolume',
         './MapMode2D',
         './PerspectiveFrustum',
         './SceneMode'
@@ -49,13 +47,11 @@ define([
         CesiumMath,
         Matrix3,
         Matrix4,
-        PolygonPipeline,
         Quaternion,
         Ray,
         Rectangle,
         Transforms,
         CameraFlightPath,
-        CullingVolume,
         MapMode2D,
         PerspectiveFrustum,
         SceneMode) {
@@ -211,7 +207,7 @@ define([
          * @type {number}
          * @default 0.5
          */
-        this.percentageChanged = 0.6;
+        this.percentageChanged = 0.5;
 
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
@@ -265,267 +261,6 @@ define([
         Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
-    }
-
-    var frustumCornersNDC = new Array(8);
-    frustumCornersNDC[0] = new Cartesian4(-1.0, -1.0, -1.0, 1.0);
-    frustumCornersNDC[1] = new Cartesian4(1.0, -1.0, -1.0, 1.0);
-    frustumCornersNDC[2] = new Cartesian4(1.0, 1.0, -1.0, 1.0);
-    frustumCornersNDC[3] = new Cartesian4(-1.0, 1.0, -1.0, 1.0);
-    frustumCornersNDC[4] = new Cartesian4(-1.0, -1.0, 1.0, 1.0);
-    frustumCornersNDC[5] = new Cartesian4(1.0, -1.0, 1.0, 1.0);
-    frustumCornersNDC[6] = new Cartesian4(1.0, 1.0, 1.0, 1.0);
-    frustumCornersNDC[7] = new Cartesian4(-1.0, 1.0, 1.0, 1.0);
-
-    var frustumIndices = [0, 1, 1, 2, 2, 3, 3, 0, 0, 4, 4, 7, 7, 3, 7, 6, 6, 2, 2, 1, 1, 5, 5, 4, 5, 6];
-    var topIndices = [0, 1, 1, 5, 5, 4, 4, 0];
-    var sideIndices = [0, 3, 3, 7, 7, 4, 4, 0];
-
-    function frustumPoints(camera) {
-        var frustum = camera.frustum;
-
-        camera.frustum = frustum.clone();
-        camera.frustum.near = 1.0;
-        camera.frustum.far = camera.positionCartographic.height * 2.0;
-
-        var view = camera.viewMatrix;
-        var projection = camera.frustum.projectionMatrix;
-        var viewProjection = Matrix4.multiply(projection, view, new Matrix4());
-        var inverseViewProjection = Matrix4.inverse(viewProjection, new Matrix4());
-
-        var positions = [];
-        var i;
-        for (i = 0; i < frustumCornersNDC.length; ++i) {
-            var corner = Cartesian4.clone(frustumCornersNDC[i]);
-            Matrix4.multiplyByVector(inverseViewProjection, corner, corner);
-            Cartesian3.divideByScalar(corner, corner.w, corner); // Handle the perspective divide
-            positions.push(corner);
-        }
-
-        var lastPositions = camera._changedFrustumPositions;
-        if (!defined(lastPositions)) {
-            camera._changedHeight = camera.positionCartographic.height;
-            camera._changedFrustumPositions = positions;
-
-            camera._changedPosition = Cartesian3.clone(camera.positionWC);
-            camera._changedDirection = Cartesian3.clone(camera.directionWC);
-            camera._changedUp = Cartesian3.clone(camera.upWC);
-            camera._changedFrustum = frustum.clone();
-
-            camera.frustum = frustum;
-            return;
-        }
-
-        var entireCullingVolume;
-        if (camera.positionCartographic.height > camera._changedHeight) {
-            entireCullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
-        } else {
-            entireCullingVolume = camera._changedFrustum.computeCullingVolume(camera._changedPosition, camera._changedDirection, camera._changedUp);
-        }
-
-        var polygonPoints = [];
-        var allPlanes = entireCullingVolume.planes;
-
-        var xAxis;
-        var yAxis;
-        var planes;
-        var cullingVolume;
-        var facetIndices;
-
-        var xComponent = Math.abs(Cartesian3.dot(camera._changedDirection, camera.rightWC));
-        var yComponent = Math.abs(Cartesian3.dot(camera._changedDirection, camera.upWC));
-
-        if (xComponent > yComponent) {
-            xAxis = camera.rightWC;
-            yAxis = camera.directionWC;
-            planes = [allPlanes[0], allPlanes[1], allPlanes[4], allPlanes[5]];
-            cullingVolume = new CullingVolume(planes);
-            facetIndices = topIndices;
-        } else {
-            xAxis = camera.upWC;
-            yAxis = camera.directionWC;
-            planes = [allPlanes[2], allPlanes[3], allPlanes[4], allPlanes[5]];
-            cullingVolume = new CullingVolume(planes);
-            facetIndices = sideIndices;
-        }
-
-        var boundingVolume;
-
-        var projectedLastPositions = [];
-        for (i = 0; i < lastPositions.length; ++i) {
-            var lastPosition = lastPositions[i];
-
-            var p = new Cartesian2();
-            var b = Cartesian3.subtract(lastPosition, camera.positionWC, new Cartesian3());
-            p.x = Cartesian3.dot(b, xAxis);
-            p.y = Cartesian3.dot(b, yAxis);
-
-            projectedLastPositions.push(p);
-
-            if (camera.positionCartographic.height > camera._changedHeight) {
-                boundingVolume = new BoundingSphere(lastPosition, 0.0);
-                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
-                    polygonPoints.push(projectedLastPositions[projectedLastPositions.length - 1]);
-                }
-            }
-        }
-
-        var projectedPositions = [];
-        for (i = 0; i < facetIndices.length; ++i) {
-            var c = Cartesian4.clone(frustumCornersNDC[facetIndices[i]]);
-            Matrix4.multiplyByVector(inverseViewProjection, c, c);
-            Cartesian3.divideByScalar(c, c.w, c); // Handle the perspective divide
-
-            var projectedPosition = new Cartesian2();
-            var a = Cartesian3.subtract(c, camera.positionWC, new Cartesian3());
-            projectedPosition.x = Cartesian3.dot(a, xAxis);
-            projectedPosition.y = Cartesian3.dot(a, yAxis);
-
-            projectedPositions.push(projectedPosition);
-
-            if (camera.positionCartographic.height < camera._changedHeight) {
-                boundingVolume = new BoundingSphere(c, 0.0);
-                if (cullingVolume.computeVisibility(boundingVolume) === Intersect.INSIDE) {
-                    polygonPoints.push(projectedPositions[projectedPositions.length - 1]);
-                }
-            }
-        }
-
-        for (i = 0; i < projectedPositions.length - 1; i += 2) {
-            var p0 = projectedPositions[i];
-            var p1 = projectedPositions[i + 1];
-            var d0 = Cartesian2.subtract(p1, p0, new Cartesian2());
-
-            for (var j = 0; j < frustumIndices.length - 1; j += 2) {
-                var q0 = projectedLastPositions[frustumIndices[j]];
-                var q1 = projectedLastPositions[frustumIndices[j + 1]];
-                var d1 = Cartesian2.subtract(q1, q0, new Cartesian2());
-
-                var intersections = IntersectionTests.lineSegmentLineSegment(p0, d0, q0, d1);
-                for (var k = 0; k < intersections.length; ++k) {
-                    polygonPoints.push(intersections[k]);
-                }
-            }
-        }
-
-        var convexHull = PolygonPipeline.convexHull2D(polygonPoints);
-        var intersectionArea = PolygonPipeline.computeArea2D(convexHull);
-
-        var totalArea;
-        if (camera.positionCartographic.height < camera._changedHeight) {
-            var frustumConvexHull = PolygonPipeline.convexHull2D(projectedLastPositions);
-            totalArea = PolygonPipeline.computeArea2D(frustumConvexHull);
-        } else {
-            totalArea = PolygonPipeline.computeArea2D(projectedPositions);
-        }
-
-        var percentage = 1.0 - Math.abs(intersectionArea / totalArea);
-
-        if (percentage > camera.percentageChanged) {
-            camera._changed.raiseEvent();
-            camera._changedHeight = camera.positionCartographic.height;
-            camera._changedFrustumPositions = positions;
-
-            camera._changedPosition = Cartesian3.clone(camera.positionWC);
-            camera._changedDirection = Cartesian3.clone(camera.directionWC);
-            camera._changedUp = Cartesian3.clone(camera.upWC);
-            camera._changedFrustum = frustum.clone();
-        }
-
-        camera.frustum = frustum;
-
-        /*
-        console.log(percentage);
-
-        camera._changedHeight = camera.positionCartographic.height;
-        camera._changedFrustumPositions = positions;
-
-        camera._changedPosition = Cartesian3.clone(camera.positionWC);
-        camera._changedDirection = Cartesian3.clone(camera.directionWC);
-        camera._changedUp = Cartesian3.clone(camera.upWC);
-        camera._changedFrustum = frustum.clone();
-
-        camera.frustum = frustum;
-
-        var minX = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-
-        for (i = 0; i < projectedPositions.length; ++i) {
-            minX = Math.min(minX, projectedPositions[i].x);
-            maxX = Math.max(maxX, projectedPositions[i].x);
-            minY = Math.min(minY, projectedPositions[i].y);
-            maxY = Math.max(maxY, projectedPositions[i].y);
-        }
-
-        for (i = 0; i < projectedLastPositions.length; ++i) {
-            minX = Math.min(minX, projectedLastPositions[i].x);
-            maxX = Math.max(maxX, projectedLastPositions[i].x);
-            minY = Math.min(minY, projectedLastPositions[i].y);
-            maxY = Math.max(maxY, projectedLastPositions[i].y);
-        }
-
-        var x;
-        var y;
-
-        var size = 600.0;
-        var canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-
-        var ctx = canvas.getContext("2d");
-        ctx.beginPath();
-        ctx.strokeStyle = 'red';
-
-        x = (projectedPositions[0].x - minX) / (maxX - minX) * size;
-        y = (projectedPositions[0].y - minY) / (maxY - minY) * size;
-        ctx.moveTo(x, y);
-
-        for (i = 1; i < projectedPositions.length; ++i) {
-            x = (projectedPositions[i].x - minX) / (maxX - minX) * size;
-            y = (projectedPositions[i].y - minY) / (maxY - minY) * size;
-            ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        for (i = 0; i < frustumIndices.length - 1; i += 2) {
-            ctx.beginPath();
-            ctx.strokeStyle = 'green';
-
-            x = (projectedLastPositions[frustumIndices[i]].x - minX) / (maxX - minX) * size;
-            y = (projectedLastPositions[frustumIndices[i]].y - minY) / (maxY - minY) * size;
-            ctx.moveTo(x, y);
-
-            x = (projectedLastPositions[frustumIndices[i + 1]].x - minX) / (maxX - minX) * size;
-            y = (projectedLastPositions[frustumIndices[i + 1]].y - minY) / (maxY - minY) * size;
-            ctx.lineTo(x, y);
-            ctx.stroke();
-        }
-
-        var pointSize = 5;
-        for (i = 0; i < polygonPoints.length; ++i) {
-            x = (polygonPoints[i].x - minX) / (maxX - minX) * size;
-            y = (polygonPoints[i].y - minY) / (maxY - minY) * size;
-            ctx.fillRect(x - pointSize * 0.5, y - pointSize * 0.5, pointSize, pointSize);
-        }
-
-        ctx.beginPath();
-        ctx.strokeStyle = 'blue';
-
-        x = (convexHull[0].x - minX) / (maxX - minX) * size;
-        y = (convexHull[0].y - minY) / (maxY - minY) * size;
-        ctx.moveTo(x, y);
-
-        for (i = 1; i < convexHull.length; ++i) {
-            x = (convexHull[i].x - minX) / (maxX - minX) * size;
-            y = (convexHull[i].y - minY) / (maxY - minY) * size;
-            ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-
-        window.open(canvas.toDataURL());
-        */
     }
 
     function updateCameraChanged(camera) {
@@ -582,7 +317,6 @@ define([
             return;
         }
 
-        /*
         if (!defined(camera._changedDirection)) {
             camera._changedPosition = Cartesian3.clone(camera.position);
             camera._changedDirection = Cartesian3.clone(camera.direction);
@@ -596,15 +330,10 @@ define([
         var heightPercentage = distance / camera.positionCartographic.height;
 
         if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
-            frustumPoints(camera);
-
             camera._changed.raiseEvent();
             camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.direction, camera._changedDirection);
         }
-        */
-
-        frustumPoints(camera);
     }
 
     function convertTransformForColumbusView(camera) {
@@ -1795,7 +1524,7 @@ define([
      * @see Camera#rotateDown
      * @see Camera#rotateLeft
      * @see Camera#rotateRight
-    */
+     */
     Camera.prototype.rotate = function(axis, angle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
@@ -2444,7 +2173,7 @@ define([
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < -Math.PI || cart.longitude > Math.PI) {
+            cart.longitude < -Math.PI || cart.longitude > Math.PI) {
             return undefined;
         }
 
