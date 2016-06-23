@@ -1188,6 +1188,11 @@ define([
             this._customData = undefined;
         }
 
+        if (defined(this._removeCallbackFunc)) {
+            this._removeCallbackFunc();
+            this._removeCallbackFunc = undefined;
+        }
+
         this.image = undefined;
         this._pickId = this._pickId && this._pickId.destroy();
         this._billboardCollection = undefined;

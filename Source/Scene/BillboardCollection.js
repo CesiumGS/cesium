@@ -288,7 +288,7 @@ define([
 
         var scene = this._scene;
         if (defined(scene)) {
-            scene.terrainProviderChanged.addEventListener(function() {
+            this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
                 for (var i=0;i<length;++i) {
@@ -1579,6 +1579,11 @@ define([
      * @see BillboardCollection#isDestroyed
      */
     BillboardCollection.prototype.destroy = function() {
+        if (defined(this._removeCallbackFunc)) {
+            this._removeCallbackFunc();
+            this._removeCallbackFunc = undefined;
+        }
+
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();

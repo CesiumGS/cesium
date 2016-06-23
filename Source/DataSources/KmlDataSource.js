@@ -1220,8 +1220,8 @@ define([
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = property;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
         processPathGraphics(dataSource, entity, styleEntity);
 
         entity.availability = new TimeIntervalCollection();

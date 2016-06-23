@@ -525,7 +525,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features on the ground.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
