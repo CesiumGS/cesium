@@ -336,7 +336,7 @@ define([
             camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
         }
-    }
+    };
 
     function convertTransformForColumbusView(camera) {
         Transforms.basisTo2D(camera._projection, camera._transform, camera._actualTransform);
