@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './defaultValue',
@@ -11,6 +12,7 @@ define([
         './QuarticRealPolynomial',
         './Ray'
     ], function(
+        Cartesian2,
         Cartesian3,
         Cartographic,
         defaultValue,
@@ -883,6 +885,86 @@ define([
         // if numBehind is 3, the triangle is completely behind the plane;
         // otherwise, it is completely in front (numBehind is 0).
         return undefined;
+    };
+
+    function findIntervalIntersection(u0, u1, v0, v1, result) {
+        if (u1 < v0 || u0 > v1) {
+            return 0;
+        }
+
+        result.length = 2;
+
+        if (u1 > v0) {
+            if (u0 < v1) {
+                if (u0 < v0) {
+                    result[0] = v0;
+                } else {
+                    result[0] = u0;
+                }
+                if (u1 > v1) {
+                    result[1] = v1;
+                } else {
+                    result[1] = u1;
+                }
+                return 2;
+            } else {
+                result[0] = u0;
+                return 1;
+            }
+        } else {
+            result[0] = u1;
+            return 1;
+        }
+    }
+
+    var scratchInterval = new Array(2);
+    var scratchE = new Cartesian2();
+
+    var sqrEpsilon = CesiumMath.EPSILON6;
+
+    IntersectionTests.lineSegmentLineSegment = function (p0, d0, p1, d1) {
+        var E = Cartesian2.subtract(p1, p0, scratchE);
+        var kross = d0.x * d1.y - d0.y * d1.x;
+        var sqrKross = kross * kross;
+        var sqrLen0 = d0.x * d0.x + d0.y * d0.y;
+        var sqrLen1 = d1.x * d1.x + d1.y * d1.y;
+        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLen1) {
+            var s = (E.x * d1.y - E.y * d1.x) / kross;
+            if (s < 0.0 || s > 1.0) {
+                return [];
+            }
+
+            var t = (E.x * d0.y - E.y * d0.x) / kross;
+            if (t < 0.0 || t > 1.0) {
+                return [];
+            }
+
+            var intersection = Cartesian2.multiplyByScalar(d0, s, new Cartesian2());
+            Cartesian2.add(p0, intersection, intersection);
+            return [intersection];
+        }
+
+        var sqrLenE = E.x * E.x + E.y * E.y;
+        kross = E.x * d0.y - E.y * d0.x;
+        sqrKross = kross * kross;
+        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLenE) {
+            return [];
+        }
+
+        var s0 = Cartesian2.dot(d0, E) / sqrLen0;
+        var s1 = s0 + Cartesian2.dot(d0, d1) / sqrLen0;
+        var smin = Math.min(s0, s1);
+        var smax = Math.max(s0, s1);
+
+        var intersectionScalars = scratchInterval;
+        var imax = findIntervalIntersection(0.0, 1.0, smin, smax, intersectionScalars);
+        var result = [];
+        for (var i = 0; i < imax; ++i) {
+            var a = Cartesian2.multiplyByScalar(d0, intersectionScalars[i], new Cartesian2());
+            Cartesian2.add(a, p0, a);
+            result.push(a);
+        }
+        return result;
     };
 
     return IntersectionTests;

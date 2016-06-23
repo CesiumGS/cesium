@@ -211,7 +211,7 @@ define([
          * @type {number}
          * @default 0.5
          */
-        this.percentageChanged = 0.5;
+        this.percentageChanged = 0.6;
 
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
@@ -265,151 +265,6 @@ define([
         Matrix4.computeView(camera._position, camera._direction, camera._up, camera._right, camera._viewMatrix);
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
-    }
-
-    function findIntersection(u0, u1, v0, v1, result) {
-        if (u1 < v0 || u0 > v1) {
-            return;
-        }
-
-        if (u1 > v0) {
-            if (u0 < v1) {
-                if (u0 < v0) {
-                    result.push(v0);
-                } else {
-                    result.push(u0);
-                }
-                if (u1 > v1) {
-                    result.push(v1);
-                } else {
-                    result.push(u1);
-                }
-            } else {
-                result.push(u0);
-            }
-        } else {
-            result.push(u1);
-        }
-    }
-
-    function intersectLineSegments2D(p0, d0, p1, d1) {
-        var sqrEpsilon = CesiumMath.EPSILON6;
-
-        var E = Cartesian2.subtract(p1, p0, new Cartesian3());
-        var kross = d0.x * d1.y - d0.y * d1.x;
-        var sqrKross = kross * kross;
-        var sqrLen0 = d0.x * d0.x + d0.y * d0.y;
-        var sqrLen1 = d1.x * d1.x + d1.y * d1.y;
-        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLen1) {
-            var s = (E.x * d1.y - E.y * d1.x) / kross;
-            if (s < 0.0 || s > 1.0) {
-                return [];
-            }
-
-            var t = (E.x * d0.y - E.y * d0.x) / kross;
-            if (t < 0.0 || t > 1.0) {
-                return [];
-            }
-
-            var intersection = Cartesian2.multiplyByScalar(d0, s, new Cartesian2());
-            Cartesian2.add(p0, intersection, intersection);
-            return [intersection];
-        }
-
-        var sqrLenE = E.x * E.x + E.y * E.y;
-        kross = E.x * d0.y - E.y * d0.x;
-        sqrKross = kross * kross;
-        if (sqrKross > sqrEpsilon * sqrLen0 * sqrLenE) {
-            return [];
-        }
-
-        var s0 = Cartesian2.dot(d0, E) / sqrLen0;
-        var s1 = s0 + Cartesian2.dot(d0, d1) / sqrLen0;
-        var smin = Math.min(s0, s1);
-        var smax = Math.max(s0, s1);
-
-        var intersectionScalars = [];
-        findIntersection(0.0, 1.0, smin, smax, intersectionScalars);
-        var imax = intersectionScalars.length;
-        var result = [];
-        for (var i = 0; i < imax; ++i) {
-            var a = Cartesian2.multiplyByScalar(d0, intersectionScalars[i], new Cartesian2());
-            Cartesian2.add(a, p0, a);
-            result.push(a);
-        }
-        return result;
-    }
-
-    function convexHull2D(points) {
-        points.sort(function(a, b) {
-            return a.x - b.x;
-        });
-
-        var i;
-        var p0;
-        var p1;
-        var p2;
-        var theta;
-        var phi;
-
-        var upper = [points[0], points[1]];
-        for (i = 2; i < points.length; ++i) {
-            upper.push(points[i]);
-
-            p0 = upper[upper.length - 3];
-            p1 = upper[upper.length - 2];
-            p2 = upper[upper.length - 1];
-
-            theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
-            phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
-
-            while (upper.length > 2 && phi > theta) {
-                upper.splice(upper.length - 2, 1);
-
-                if (upper.length < 3) {
-                    break;
-                }
-
-                p0 = upper[upper.length - 3];
-                p1 = upper[upper.length - 2];
-                p2 = upper[upper.length - 1];
-
-                theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
-                phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
-            }
-        }
-
-        var lower = [points[points.length - 1], points[points.length - 2]];
-        for (i = points.length - 3; i >= 0; --i) {
-            lower.push(points[i]);
-
-            p0 = lower[lower.length - 1];
-            p1 = lower[lower.length - 2];
-            p2 = lower[lower.length - 3];
-
-            theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
-            phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
-
-            while (lower.length > 2 && phi < theta) {
-                lower.splice(lower.length - 2, 1);
-
-                if (lower.length < 3) {
-                    break;
-                }
-
-                p0 = lower[lower.length - 1];
-                p1 = lower[lower.length - 2];
-                p2 = lower[lower.length - 3];
-
-                theta = Math.atan2(p1.y - p0.y, p1.x - p0.x);
-                phi = Math.atan2(p2.y - p1.y, p2.x - p0.x);
-            }
-        }
-
-        lower.splice(0, 1);
-
-        var polygon = upper.concat(lower);
-        return polygon;
     }
 
     var frustumCornersNDC = new Array(8);
@@ -546,19 +401,19 @@ define([
                 var q1 = projectedLastPositions[frustumIndices[j + 1]];
                 var d1 = Cartesian2.subtract(q1, q0, new Cartesian2());
 
-                var intersections = intersectLineSegments2D(p0, d0, q0, d1);
+                var intersections = IntersectionTests.lineSegmentLineSegment(p0, d0, q0, d1);
                 for (var k = 0; k < intersections.length; ++k) {
                     polygonPoints.push(intersections[k]);
                 }
             }
         }
 
-        var convexHull = convexHull2D(polygonPoints);
+        var convexHull = PolygonPipeline.convexHull2D(polygonPoints);
         var intersectionArea = PolygonPipeline.computeArea2D(convexHull);
 
         var totalArea;
         if (camera.positionCartographic.height < camera._changedHeight) {
-            var frustumConvexHull = convexHull2D(projectedLastPositions);
+            var frustumConvexHull = PolygonPipeline.convexHull2D(projectedLastPositions);
             totalArea = PolygonPipeline.computeArea2D(frustumConvexHull);
         } else {
             totalArea = PolygonPipeline.computeArea2D(projectedPositions);
@@ -566,8 +421,7 @@ define([
 
         var percentage = 1.0 - Math.abs(intersectionArea / totalArea);
 
-        //if (percentage > camera.percentageChanged) {
-        if (percentage > 0.75) {
+        if (percentage > camera.percentageChanged) {
             camera._changed.raiseEvent();
             camera._changedHeight = camera.positionCartographic.height;
             camera._changedFrustumPositions = positions;
