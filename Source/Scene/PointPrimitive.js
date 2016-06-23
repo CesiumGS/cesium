@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -10,12 +11,14 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        './HeightReference',
         './SceneMode',
         './SceneTransforms'
     ], function(
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        Cartographic,
         Color,
         defaultValue,
         defined,
@@ -23,6 +26,7 @@ define([
         DeveloperError,
         Matrix4,
         NearFarScalar,
+        HeightReference,
         SceneMode,
         SceneTransforms) {
     'use strict';
@@ -72,6 +76,7 @@ define([
         this._pixelSize = defaultValue(options.pixelSize, 10.0);
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
@@ -79,6 +84,12 @@ define([
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
         this._index = -1; //Used only by PointPrimitiveCollection
+
+        this._actualClampedPosition = undefined;
+        this._removeCallbackFunc = undefined;
+        this._mode = SceneMode.SCENE3D;
+
+        this._updateClamping();
     }
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX = 0;
@@ -145,6 +156,33 @@ define([
                     Cartesian3.clone(value, position);
                     Cartesian3.clone(value, this._actualPosition);
 
+                    this._updateClamping();
+                    makeDirty(this, POSITION_INDEX);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the height reference of this point.
+         * @memberof PointPrimitive.prototype
+         * @type {HeightReference}
+         * @default HeightReference.NONE
+         */
+        heightReference : {
+            get : function() {
+                return this._heightReference;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug)
+                if (!defined(value)) {
+                    throw new DeveloperError('value is required.');
+                }
+                //>>includeEnd('debug');
+
+                var heightReference = this._heightReference;
+                if (value !== heightReference) {
+                    this._heightReference = value;
+                    this._updateClamping();
                     makeDirty(this, POSITION_INDEX);
                 }
             }
@@ -354,6 +392,22 @@ define([
                     this._pickId.object.id = value;
                 }
             }
+        },
+
+        /**
+         * Keeps track of the position of the point based on the height reference.
+         * @memberof PointPrimitive.prototype
+         * @type {Cartesian3}
+         * @private
+         */
+        _clampedPosition : {
+            get : function() {
+                return this._actualClampedPosition;
+            },
+            set : function(value) {
+                this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
+                makeDirty(this, POSITION_INDEX);
+            }
         }
     });
 
@@ -369,18 +423,99 @@ define([
         return this._pickId;
     };
 
+    PointPrimitive.prototype._updateClamping = function() {
+        PointPrimitive._updateClamping(this._pointPrimitiveCollection, this);
+    };
+
+    var scratchCartographic = new Cartographic();
+    var scratchPosition = new Cartesian3();
+
+    PointPrimitive._updateClamping = function(collection, owner) {
+        var scene = collection._scene;
+        if (!defined(scene)) {
+            if (owner._heightReference !== HeightReference.NONE) {
+                throw new DeveloperError('Height reference is not supported.');
+            }
+            return;
+        }
+
+        var globe = scene.globe;
+        var ellipsoid = globe.ellipsoid;
+        var surface = globe._surface;
+
+        var mode = scene.frameState.mode;
+        var projection = scene.frameState.mapProjection;
+
+        var modeChanged = mode !== owner._mode;
+        owner._mode = mode;
+
+        if ((owner._heightReference === HeightReference.NONE || modeChanged) && defined(owner._removeCallbackFunc)) {
+            owner._removeCallbackFunc();
+            owner._removeCallbackFunc = undefined;
+            owner._clampedPosition = undefined;
+        }
+
+        if (owner._heightReference === HeightReference.NONE || !defined(owner._position)) {
+            return;
+        }
+
+        var position = ellipsoid.cartesianToCartographic(owner._position);
+        if (!defined(position)) {
+            return;
+        }
+
+        if (defined(owner._removeCallbackFunc)) {
+            owner._removeCallbackFunc();
+        }
+
+        function updateFunction(clampedPosition) {
+            if (owner._heightReference === HeightReference.RELATIVE_TO_GROUND) {
+                if (owner._mode === SceneMode.SCENE3D) {
+                    var clampedCart = ellipsoid.cartesianToCartographic(clampedPosition, scratchCartographic);
+                    clampedCart.height += position.height;
+                    ellipsoid.cartographicToCartesian(clampedCart, clampedPosition);
+                } else {
+                    clampedPosition.x += position.height;
+                }
+            }
+            owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
+        }
+        owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
+
+        var height = globe.getHeight(position);
+        if (defined(height)) {
+            Cartographic.clone(position, scratchCartographic);
+            scratchCartographic.height = height;
+            if (owner._mode === SceneMode.SCENE3D) {
+                ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+            } else {
+                projection.project(scratchCartographic, scratchPosition);
+                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
+            }
+
+            updateFunction(scratchPosition);
+        }
+    };
+
     PointPrimitive.prototype._getActualPosition = function() {
-        return this._actualPosition;
+        return defined(this._clampedPosition) ? this._clampedPosition : this._actualPosition;
     };
 
     PointPrimitive.prototype._setActualPosition = function(value) {
-        Cartesian3.clone(value, this._actualPosition);
+        if (!(defined(this._clampedPosition))) {
+            Cartesian3.clone(value, this._actualPosition);
+        }
         makeDirty(this, POSITION_INDEX);
     };
 
     var tempCartesian3 = new Cartesian4();
-    PointPrimitive._computeActualPosition = function(position, frameState, modelMatrix) {
-        if (frameState.mode === SceneMode.SCENE3D) {
+    PointPrimitive._computeActualPosition = function(point, position, frameState, modelMatrix) {
+        if (defined(point._clampedPosition)) {
+            if (frameState.mode !== point._mode) {
+                point._updateClamping();
+            }
+            return point._clampedPosition;
+        } else if (frameState.mode === SceneMode.SCENE3D) {
             return position;
         }
 
@@ -428,7 +563,8 @@ define([
         //>>includeEnd('debug');
 
         var modelMatrix = pointPrimitiveCollection.modelMatrix;
-        var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, this._actualPosition, scene, result);
+        var actualPosition = this._getActualPosition();
+        var windowCoordinates = PointPrimitive._computeScreenSpacePosition(modelMatrix, actualPosition, scene, result);
         windowCoordinates.y = scene.canvas.clientHeight - windowCoordinates.y;
         return windowCoordinates;
     };

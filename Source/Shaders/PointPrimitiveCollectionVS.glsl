@@ -138,6 +138,11 @@ void main()
     }
 #endif
 
+#ifdef CLAMPED_TO_GROUND
+    // move slightly closer to camera to avoid depth issues.
+    positionEC.z *= 0.995;
+#endif
+
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);

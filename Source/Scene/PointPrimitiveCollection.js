@@ -87,6 +87,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms each point from model to world coordinates.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
+     * @param {Scene} [options.scene] Must be passed in for points that use the height reference property or will be depth tested against the globe.
      *
      * @performance For best performance, prefer a few collections, each with many points, to
      * many collections with only a few points each.  Organize collections so that points
@@ -113,6 +114,8 @@ define([
      */
     function PointPrimitiveCollection(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._scene = options.scene;
 
         this._sp = undefined;
         this._rs = undefined;
@@ -620,7 +623,7 @@ define([
         for ( var i = 0; i < length; ++i) {
             var pointPrimitive = pointPrimitives[i];
             var position = pointPrimitive.position;
-            var actualPosition = PointPrimitive._computeActualPosition(position, frameState, modelMatrix);
+            var actualPosition = PointPrimitive._computeActualPosition(pointPrimitive, position, frameState, modelMatrix);
             if (defined(actualPosition)) {
                 pointPrimitive._setActualPosition(actualPosition);
 
@@ -838,6 +841,9 @@ define([
                 if (this._shaderTranslucencyByDistance) {
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
                 }
+                if (defined(this._scene)) {
+                    vs.defines.push('CLAMPED_TO_GROUND');
+                }
 
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -894,6 +900,9 @@ define([
                 }
                 if (this._shaderTranslucencyByDistance) {
                     vs.defines.push('EYE_DISTANCE_TRANSLUCENCY');
+                }
+                if (defined(this._scene)) {
+                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({
