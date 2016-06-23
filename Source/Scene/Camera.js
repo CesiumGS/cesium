@@ -263,7 +263,9 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
-    function updateCameraChanged(camera) {
+    Camera.prototype._updateCameraChanged = function() {
+        var camera = this;
+
         if (camera._changed.numberOfListeners === 0) {
             return;
         }
@@ -272,7 +274,7 @@ define([
 
         if (camera._mode === SceneMode.SCENE2D) {
             if (!defined(camera._changedFrustum)) {
-                camera._changedPosition = Cartesian3.clone(camera.position);
+                camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
                 camera._changedFrustum = camera.frustum.clone();
                 return;
             }
@@ -318,8 +320,8 @@ define([
         }
 
         if (!defined(camera._changedDirection)) {
-            camera._changedPosition = Cartesian3.clone(camera.positionWC);
-            camera._changedDirection = Cartesian3.clone(camera.directionWC);
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
             return;
         }
 
@@ -413,9 +415,7 @@ define([
 
     var scratchCartesian = new Cartesian3();
 
-    function updateMembers(camera, updateCameraChangedEvent) {
-        updateCameraChangedEvent = defaultValue(updateCameraChangedEvent, true);
-
+    function updateMembers(camera) {
         var mode = camera._mode;
 
         var heightChanged = false;
@@ -531,10 +531,6 @@ define([
 
         if (positionChanged || directionChanged || upChanged || rightChanged || transformChanged) {
             updateViewMatrix(camera);
-
-            if (updateCameraChangedEvent) {
-                updateCameraChanged(camera);
-            }
         }
     }
 
@@ -870,7 +866,7 @@ define([
 
         Matrix4.clone(transform, this._transform);
         this._transformChanged = true;
-        updateMembers(this, false);
+        updateMembers(this);
         var inverse = this._actualInvTransform;
 
         Matrix4.multiplyByPoint(inverse, position, this.position);
@@ -878,7 +874,7 @@ define([
         Matrix4.multiplyByPointAsVector(inverse, up, this.up);
         Cartesian3.cross(this.direction, this.up, this.right);
 
-        updateMembers(this, false);
+        updateMembers(this);
     };
 
     var scratchSetViewCartesian = new Cartesian3();
@@ -1163,7 +1159,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian4();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByVector(this._actualInvTransform, cartesian, result);
     };
 
@@ -1184,7 +1180,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualInvTransform, cartesian, result);
     };
 
@@ -1205,7 +1201,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualInvTransform, cartesian, result);
     };
 
@@ -1226,7 +1222,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian4();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByVector(this._actualTransform, cartesian, result);
     };
 
@@ -1247,7 +1243,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByPoint(this._actualTransform, cartesian, result);
     };
 
@@ -1268,7 +1264,7 @@ define([
         if (!defined(result)) {
             result = new Cartesian3();
         }
-        updateMembers(this, false);
+        updateMembers(this);
         return Matrix4.multiplyByPointAsVector(this._actualTransform, cartesian, result);
     };
 
