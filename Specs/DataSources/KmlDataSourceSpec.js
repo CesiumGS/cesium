@@ -2665,9 +2665,12 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entity.polyline).toBeUndefined();
 
             expect(entity.availability.start).toEqual(time1);
@@ -2697,9 +2700,12 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entity.polyline).toBeUndefined();
         });
     });
@@ -2787,9 +2793,14 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
             expect(entity.position.getValue(time3)).toBeUndefined();
+
+            // heightReference should be constant so its available all the time
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
 
             expect(entity.availability.start).toEqual(time1);
             expect(entity.availability.stop).toEqual(time2);
