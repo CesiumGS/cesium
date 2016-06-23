@@ -693,7 +693,11 @@ define([
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
-                        glyph.billboard.position = value;
+                        // Set all the private values here, because we already clamped to ground
+                        //  so we don't want to do it again for every glyph
+                        glyph.billboard._position = value;
+                        glyph.billboard._actualPosition = value;
+                        glyph.billboard._clampedPosition = value;
                     }
                 }
             }
