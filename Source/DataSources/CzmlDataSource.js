@@ -1330,6 +1330,7 @@ define([
         processPacketData(Boolean, model, 'castShadows', modelData.castShadows, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'receiveShadows', modelData.receiveShadows, interval, sourceUri, entityCollection);
         processPacketData(Boolean, model, 'runAnimations', modelData.runAnimations, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, model, 'heightReference', modelData.heightReference, interval, sourceUri, entityCollection);
 
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
@@ -1441,6 +1442,7 @@ define([
         processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'scaleByDistance', pointData.scaleByDistance, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'translucencyByDistance', pointData.translucencyByDistance, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, point, 'heightReference', pointData.heightReference, interval, sourceUri, entityCollection);
     }
 
     function processPolygon(entity, packet, entityCollection, sourceUri) {

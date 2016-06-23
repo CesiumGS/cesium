@@ -266,11 +266,9 @@ define([
                         sourceUri : fileName
                     });
                 } else if (/\.geojson$/i.test(fileName) || /\.json$/i.test(fileName) || /\.topojson$/i.test(fileName)) {
-                    loadPromise = GroundPrimitive.init().then(function() {
-                        return GeoJsonDataSource.load(JSON.parse(evt.target.result), {
-                            sourceUri : fileName,
-                            clampToGround : clampToGround
-                        });
+                    loadPromise = GeoJsonDataSource.load(JSON.parse(evt.target.result), {
+                        sourceUri : fileName,
+                        clampToGround : clampToGround
                     });
                 } else if (/\.(kml|kmz)$/i.test(fileName)) {
                     loadPromise = KmlDataSource.load(file, {
