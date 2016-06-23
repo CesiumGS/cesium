@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
         'DataSources/CzmlDataSource',
+        'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -15,10 +16,13 @@ defineSuite([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/loadJson',
+        'Core/Math',
+        'Core/NearFarScalar',
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
         'Core/RuntimeError',
+        'Core/Spherical',
         'Core/TimeInterval',
         'Core/TranslationRotationScale',
         'DataSources/EntityCollection',
@@ -30,6 +34,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -44,10 +49,13 @@ defineSuite([
         Iso8601,
         JulianDate,
         loadJson,
+        CesiumMath,
+        NearFarScalar,
         Quaternion,
         Rectangle,
         ReferenceFrame,
         RuntimeError,
+        Spherical,
         TimeInterval,
         TranslationRotationScale,
         EntityCollection,
@@ -87,48 +95,48 @@ defineSuite([
     };
 
     var clockCzml = {
-            id : 'document',
-            version : '1.0',
-            clock : {
-                interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
-                currentTime : '2012-03-15T10:00:00Z',
-                multiplier : 60.0,
-                range : 'LOOP_STOP',
-                step : 'SYSTEM_CLOCK_MULTIPLIER'
-            }
-        };
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+            currentTime : '2012-03-15T10:00:00Z',
+            multiplier : 60.0,
+            range : 'LOOP_STOP',
+            step : 'SYSTEM_CLOCK_MULTIPLIER'
+        }
+    };
 
     var clockCzml2 = {
-            id : 'document',
-            version : '1.0',
-            clock : {
-                interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
-                currentTime : '2013-03-15T10:00:00Z',
-                multiplier : 30.0,
-                range : 'UNBOUNDED',
-                step : 'TICK_DEPENDENT'
-            }
-        };
+        id : 'document',
+        version : '1.0',
+        clock : {
+            interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
+            currentTime : '2013-03-15T10:00:00Z',
+            multiplier : 30.0,
+            range : 'UNBOUNDED',
+            step : 'TICK_DEPENDENT'
+        }
+    };
 
     var parsedClock = {
-            interval : TimeInterval.fromIso8601({
-                iso8601 : clockCzml.clock.interval
-            }),
-            currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
-            multiplier : clockCzml.clock.multiplier,
-            range : ClockRange[clockCzml.clock.range],
-            step : ClockStep[clockCzml.clock.step]
-        };
+        interval : TimeInterval.fromIso8601({
+            iso8601 : clockCzml.clock.interval
+        }),
+        currentTime : JulianDate.fromIso8601(clockCzml.clock.currentTime),
+        multiplier : clockCzml.clock.multiplier,
+        range : ClockRange[clockCzml.clock.range],
+        step : ClockStep[clockCzml.clock.step]
+    };
 
     var parsedClock2 = {
-            interval : TimeInterval.fromIso8601({
-                iso8601 : clockCzml2.clock.interval
-            }),
-            currentTime : JulianDate.fromIso8601(clockCzml2.clock.currentTime),
-            multiplier : clockCzml2.clock.multiplier,
-            range : ClockRange[clockCzml2.clock.range],
-            step : ClockStep[clockCzml2.clock.step]
-        };
+        interval : TimeInterval.fromIso8601({
+            iso8601 : clockCzml2.clock.interval
+        }),
+        currentTime : JulianDate.fromIso8601(clockCzml2.clock.currentTime),
+        multiplier : clockCzml2.clock.multiplier,
+        range : ClockRange[clockCzml2.clock.range],
+        step : ClockStep[clockCzml2.clock.step]
+    };
 
     var nameCzml = {
         id : 'document',
@@ -420,7 +428,25 @@ defineSuite([
                 pixelOffset : {
                     cartesian2 : [1.0, 2.0]
                 },
-                show : true
+                alignedAxis : {
+                    cartesian : [1.0, 0.0, 0.0]
+                },
+                show : true,
+                sizeInMeters : false,
+                width : 10,
+                height : 11,
+                scaleByDistance : {
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                },
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                },
+                pixelOffsetScaleByDistance : {
+                    nearFarScalar : [1.0, 20.0, 10000.0, 30.0]
+                },
+                imageSubRegion : {
+                    boundingRectangle : [20, 30, 10, 11]
+                }
             }
         };
 
@@ -439,7 +465,15 @@ defineSuite([
         expect(entity.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
         expect(entity.billboard.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(3.0, 4.0, 5.0));
         expect(entity.billboard.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(1.0, 2.0));
+        expect(entity.billboard.alignedAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 0.0, 0.0));
         expect(entity.billboard.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.billboard.sizeInMeters.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
+        expect(entity.billboard.width.getValue(Iso8601.MINIMUM_VALUE)).toEqual(10);
+        expect(entity.billboard.height.getValue(Iso8601.MINIMUM_VALUE)).toEqual(11);
+        expect(entity.billboard.scaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
+        expect(entity.billboard.pixelOffsetScaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 20.0, 10000.0, 30.0));
+        expect(entity.billboard.imageSubRegion.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new BoundingRectangle(20, 30, 10, 11));
     });
 
     it('can handle image intervals both of type uri and image', function() {
@@ -525,7 +559,58 @@ defineSuite([
             billboard : {
                 pixelOffset : {
                     epoch : JulianDate.toIso8601(epoch),
-                    cartesian2 : [0, 1, 2, 1, 3, 4]
+                    cartesian2 : [0.0, 1.0, 2.0,
+                                  1.0, 3.0, 4.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, 2.0));
+        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(2.0, 3.0));
+        expect(entity.billboard.pixelOffset.getValue(date3)).toEqual(new Cartesian2(3.0, 4.0));
+    });
+
+    it('can handle interval billboard scaleByDistance.', function() {
+        var billboardPacket = {
+            billboard : {
+                scaleByDistance : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    nearFarScalar : [2.0, 3.0, 20000.0, 4.0]
+                }]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.scaleByDistance.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.scaleByDistance.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(new NearFarScalar(2.0, 3.0, 20000.0, 4.0));
+    });
+
+    it('can handle sampled billboard scaleByDistance.', function() {
+        var epoch = JulianDate.now();
+
+        var billboardPacket = {
+            billboard : {
+                scaleByDistance : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    nearFarScalar : [
+                        0, 1.0, 2.0, 10000.0, 3.0,
+                        2, 2.0, 3.0, 20000.0, 4.0
+                    ]
                 }
             }
         };
@@ -537,11 +622,39 @@ defineSuite([
         expect(entity.billboard).toBeDefined();
         var date1 = epoch;
         var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
-        expect(entity.billboard.pixelOffset.getValue(date1)).toEqual(new Cartesian2(1.0, 2.0));
-        expect(entity.billboard.pixelOffset.getValue(date2)).toEqual(new Cartesian2(3.0, 4.0));
+        var date3 = JulianDate.addSeconds(epoch, 2.0, new JulianDate());
+        expect(entity.billboard.scaleByDistance.getValue(date1)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.billboard.scaleByDistance.getValue(date2)).toEqual(new NearFarScalar(1.5, 2.5, 15000.0, 3.5));
+        expect(entity.billboard.scaleByDistance.getValue(date3)).toEqual(new NearFarScalar(2.0, 3.0, 20000.0, 4.0));
     });
 
-    it('CZML adds clock data.', function() {
+    it('can handle sampled billboard color rgba.', function() {
+        var epoch = JulianDate.now();
+
+        var billboardPacket = {
+            billboard : {
+                color : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    rgba : [0, 200, 202, 204, 206,
+                            2, 0, 0, 0, 0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 2.0, new JulianDate());
+        expect(entity.billboard.color.getValue(date1)).toEqual(Color.fromBytes(200, 202, 204, 206));
+        expect(entity.billboard.color.getValue(date2)).toEqual(Color.fromBytes(100, 101, 102, 103));
+        expect(entity.billboard.color.getValue(date3)).toEqual(Color.fromBytes(0, 0, 0, 0));
+    });
+
+    it('can handle clock data.', function() {
         var clockPacket = {
             id : 'document',
             version : '1.0',
@@ -574,7 +687,7 @@ defineSuite([
         expect(dataSource.clock.multiplier).toEqual(multiplier);
     });
 
-    it('CZML constant cartographicsDegrees positions work.', function() {
+    it('can handle position specified as constant cartographicsDegrees.', function() {
         var czml = {
             position : {
                 cartographicDegrees : [34, 117, 10000]
@@ -589,13 +702,14 @@ defineSuite([
         expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
     });
 
-    it('CZML sampled cartographicsDegrees positions work.', function() {
+    it('can handle position specified as sampled cartographicsDegrees.', function() {
         var epoch = JulianDate.now();
 
         var czml = {
             position : {
                 epoch : JulianDate.toIso8601(epoch),
-                cartographicDegrees : [0, 34, 117, 10000, 1, 34, 117, 20000]
+                cartographicDegrees : [0, 34, 117, 10000,
+                                       1, 34, 117, 20000]
             }
         };
 
@@ -610,13 +724,14 @@ defineSuite([
         expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
     });
 
-    it('CZML sampled positions work without epoch.', function() {
+    it('can handle position specified as sampled cartographicDegrees without epoch.', function() {
         var lastDate = JulianDate.now();
         var firstDate = new JulianDate(lastDate.dayNumber - 1, 0);
 
         var czml = {
             position : {
-                cartographicDegrees : [JulianDate.toIso8601(firstDate), 34, 117, 10000, JulianDate.toIso8601(lastDate), 34, 117, 20000]
+                cartographicDegrees : [JulianDate.toIso8601(firstDate), 34, 117, 10000,
+                                       JulianDate.toIso8601(lastDate), 34, 117, 20000]
             }
         };
 
@@ -631,7 +746,7 @@ defineSuite([
         expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
     });
 
-    it('CZML constant cartographicRadians positions work.', function() {
+    it('can handle position specified as constant cartographicRadians.', function() {
         var czml = {
             position : {
                 cartographicRadians : [1, 2, 10000]
@@ -644,6 +759,28 @@ defineSuite([
         var entity = dataSource.entities.values[0];
         var resultCartesian = entity.position.getValue(JulianDate.now());
         expect(resultCartesian).toEqual(Cartesian3.fromRadians(1, 2, 10000));
+    });
+
+    it('can handle position specified as sampled cartographicRadians.', function() {
+        var epoch = JulianDate.now();
+
+        var czml = {
+            position : {
+                epoch : JulianDate.toIso8601(epoch),
+                cartographicRadians : [0, 2, 0.3, 10000,
+                                       1, 0.2, 0.5, 20000]
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(czml));
+
+        var entity = dataSource.entities.values[0];
+        var resultCartesian = entity.position.getValue(epoch);
+        expect(resultCartesian).toEqual(Cartesian3.fromRadians(2, 0.3, 10000));
+
+        resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
+        expect(resultCartesian).toEqual(Cartesian3.fromRadians(0.2, 0.5, 20000));
     });
 
     it('Can set reference frame', function() {
@@ -718,28 +855,7 @@ defineSuite([
         expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
     });
 
-    it('CZML sampled cartographicRadians positions work.', function() {
-        var epoch = JulianDate.now();
-
-        var czml = {
-            position : {
-                epoch : JulianDate.toIso8601(epoch),
-                cartographicRadians : [0, 2, 0.3, 10000, 1, 0.2, 0.5, 20000]
-            }
-        };
-
-        var dataSource = new CzmlDataSource();
-        dataSource.load(makePacket(czml));
-
-        var entity = dataSource.entities.values[0];
-        var resultCartesian = entity.position.getValue(epoch);
-        expect(resultCartesian).toEqual(Cartesian3.fromRadians(2, 0.3, 10000));
-
-        resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
-        expect(resultCartesian).toEqual(Cartesian3.fromRadians(0.2, 0.5, 20000));
-    });
-
-    it('CZML sampled numbers work without epoch.', function() {
+    it('can handle a number specified as sampled values without epoch.', function() {
         var firstDate = Iso8601.MINIMUM_VALUE;
         var midDate = JulianDate.addDays(firstDate, 1, new JulianDate());
         var lastDate = JulianDate.addDays(firstDate, 2, new JulianDate());
@@ -747,7 +863,8 @@ defineSuite([
         var ellipsePacket = {
             ellipse : {
                 semiMajorAxis : {
-                    number : [JulianDate.toIso8601(firstDate), 0, JulianDate.toIso8601(lastDate), 10]
+                    number : [JulianDate.toIso8601(firstDate), 0,
+                              JulianDate.toIso8601(lastDate), 10]
                 }
             }
         };
@@ -760,6 +877,88 @@ defineSuite([
         expect(entity.ellipse.semiMajorAxis.getValue(firstDate)).toEqual(0);
         expect(entity.ellipse.semiMajorAxis.getValue(midDate)).toEqual(5);
         expect(entity.ellipse.semiMajorAxis.getValue(lastDate)).toEqual(10);
+    });
+
+    it('can handle a direction specified as constant unitSpherical', function() {
+        var czml = {
+            billboard : {
+                alignedAxis : {
+                    unitSpherical : [1.0, 2.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(czml));
+
+        var entity = dataSource.entities.values[0];
+        var resultCartesian = entity.billboard.alignedAxis.getValue(JulianDate.now());
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(1.0, 2.0)));
+    });
+
+    it('can handle a direction specified as sampled unitSpherical.', function() {
+        var epoch = JulianDate.now();
+
+        var czml = {
+            billboard : {
+                alignedAxis : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    unitSpherical : [0, 1.0, 2.0,
+                                     1, -1.0, -2.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(czml));
+
+        var entity = dataSource.entities.values[0];
+        var resultCartesian = entity.billboard.alignedAxis.getValue(epoch);
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(1.0, 2.0)));
+
+        resultCartesian = entity.billboard.alignedAxis.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(-1.0, -2.0)));
+    });
+
+    it('can handle a direction specified as constant spherical', function() {
+        var czml = {
+            billboard : {
+                alignedAxis : {
+                    spherical : [1.0, 2.0, 30.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(czml));
+
+        var entity = dataSource.entities.values[0];
+        var resultCartesian = entity.billboard.alignedAxis.getValue(JulianDate.now());
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(1.0, 2.0, 30.0)));
+    });
+
+    it('can handle a direction specified as sampled spherical.', function() {
+        var epoch = JulianDate.now();
+
+        var czml = {
+            billboard : {
+                alignedAxis : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    spherical : [0, 1.0, 2.0, 30.0,
+                                 1, -1.0, -2.0, 40.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(czml));
+
+        var entity = dataSource.entities.values[0];
+        var resultCartesian = entity.billboard.alignedAxis.getValue(epoch);
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(1.0, 2.0, 30.0)));
+
+        resultCartesian = entity.billboard.alignedAxis.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
+        expect(resultCartesian).toEqual(Cartesian3.fromSpherical(new Spherical(-1.0, -2.0, 40.0)));
     });
 
     it('CZML adds data for infinite ellipse.', function() {
@@ -838,7 +1037,10 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                stackPartitions : 25,
+                slicePartitions : 26,
+                subdivisions : 27
             }
         };
 
@@ -853,6 +1055,9 @@ defineSuite([
         expect(entity.ellipsoid.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.ellipsoid.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.ellipsoid.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.ellipsoid.stackPartitions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(25);
+        expect(entity.ellipsoid.slicePartitions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(26);
+        expect(entity.ellipsoid.subdivisions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(27);
     });
 
     it('CZML adds data for constrained ellipsoid.', function() {
@@ -916,7 +1121,13 @@ defineSuite([
                     cartesian2 : [4.0, 5.0]
                 },
                 scale : 1.0,
-                show : true
+                show : true,
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                },
+                pixelOffsetScaleByDistance : {
+                    nearFarScalar : [1.0, 20.0, 10000.0, 30.0]
+                }
             }
         };
 
@@ -937,6 +1148,8 @@ defineSuite([
         expect(entity.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, 5.0));
         expect(entity.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
         expect(entity.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
+        expect(entity.label.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
+        expect(entity.label.pixelOffsetScaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 20.0, 10000.0, 30.0));
     });
 
     it('CZML adds data for constrained label.', function() {
@@ -1331,7 +1544,13 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 1.0,
-                show : true
+                show : true,
+                scaleByDistance : {
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                },
+                translucencyByDistance : {
+                    nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
+                }
             }
         };
 
@@ -1345,6 +1564,8 @@ defineSuite([
         expect(entity.point.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.point.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pointPacket.point.outlineWidth);
         expect(entity.point.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.point.scaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
+        expect(entity.point.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
     });
 
     it('CZML adds data for constrained point.', function() {
@@ -1539,6 +1760,7 @@ defineSuite([
                 show : true,
                 scale : 3.0,
                 minimumPixelSize : 5.0,
+                maximumScale : 4.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 castShadows : true,
@@ -1567,6 +1789,7 @@ defineSuite([
         expect(entity.model.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3.0);
         expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
+        expect(entity.model.maximumScale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4.0);
         expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE)).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
@@ -1896,7 +2119,7 @@ defineSuite([
         expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
     });
 
-    it('CZML adds data for rectangle in degrees.', function() {
+    it('can handle constant rectangle coordinates in degrees.', function() {
         var rectanglePacket = {
             rectangle : {
                 coordinates : {
@@ -1909,6 +2132,58 @@ defineSuite([
         dataSource.load(makePacket(rectanglePacket));
         var entity = dataSource.entities.values[0];
         expect(entity.rectangle.coordinates.getValue(Iso8601.MINIMUM_VALUE)).toEqual(Rectangle.fromDegrees(0, 1, 2, 3));
+    });
+
+    it('can handle sampled rectangle coordinates.', function() {
+        var epoch = JulianDate.now();
+
+        var rectanglePacket = {
+            rectangle : {
+                coordinates : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    wsen : [0.0, 1.0, 2.0, 3.0, 4.0,
+                            1.0, 3.0, 4.0, 5.0, 6.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(rectanglePacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.rectangle).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(entity.rectangle.coordinates.getValue(date1)).toEqual(new Rectangle(1.0, 2.0, 3.0, 4.0));
+        expect(entity.rectangle.coordinates.getValue(date2)).toEqual(new Rectangle(2.0, 3.0, 4.0, 5.0));
+        expect(entity.rectangle.coordinates.getValue(date3)).toEqual(new Rectangle(3.0, 4.0, 5.0, 6.0));
+    });
+
+    it('can handle sampled rectangle coordinates in degrees.', function() {
+        var epoch = JulianDate.now();
+
+        var rectanglePacket = {
+            rectangle : {
+                coordinates : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    wsenDegrees : [0.0, 1.0, 2.0, 3.0, 4.0,
+                                   1.0, 3.0, 4.0, 5.0, 6.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(rectanglePacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.rectangle).toBeDefined();
+        var date1 = epoch;
+        var date2 = JulianDate.addSeconds(epoch, 0.5, new JulianDate());
+        var date3 = JulianDate.addSeconds(epoch, 1.0, new JulianDate());
+        expect(entity.rectangle.coordinates.getValue(date1)).toEqual(Rectangle.fromDegrees(1.0, 2.0, 3.0, 4.0));
+        expect(entity.rectangle.coordinates.getValue(date2)).toEqualEpsilon(Rectangle.fromDegrees(2.0, 3.0, 4.0, 5.0), CesiumMath.EPSILON15);
+        expect(entity.rectangle.coordinates.getValue(date3)).toEqual(Rectangle.fromDegrees(3.0, 4.0, 5.0, 6.0));
     });
 
     it('CZML adds data for wall.', function() {
@@ -1952,6 +2227,41 @@ defineSuite([
         expect(entity.wall.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.wall.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.wall.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+    });
+
+    it('CZML adds data for wall with minimumHeights as references.', function() {
+        var packets = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'obj1',
+            billboard : {
+                scale : 1.0
+            }
+        }, {
+            id : 'obj2',
+            billboard : {
+                scale : 4.0
+            }
+        }, {
+            id : 'wall',
+            wall : {
+                minimumHeights : {
+                    references : ['obj1#billboard.scale', 'obj2#billboard.scale']
+                },
+                maximumHeights : {
+                    references : ['obj2#billboard.scale', 'obj1#billboard.scale']
+                }
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(packets);
+        var entity = dataSource.entities.getById('wall');
+
+        expect(entity.wall).toBeDefined();
+        expect(entity.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[1].billboard.scale, packets[2].billboard.scale]);
+        expect(entity.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[2].billboard.scale, packets[1].billboard.scale]);
     });
 
     it('CZML adds data for box.', function() {
@@ -2007,7 +2317,9 @@ defineSuite([
                 outlineColor : {
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
-                outlineWidth : 6
+                outlineWidth : 6,
+                numberOfVerticalLines : 15,
+                slices : 100
             }
         };
 
@@ -2024,6 +2336,8 @@ defineSuite([
         expect(entity.cylinder.outline.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.cylinder.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
         expect(entity.cylinder.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+        expect(entity.cylinder.numberOfVerticalLines.getValue(Iso8601.MINIMUM_VALUE)).toEqual(15);
+        expect(entity.cylinder.slices.getValue(Iso8601.MINIMUM_VALUE)).toEqual(100);
     });
 
     it('CZML adds data for corridor.', function() {
