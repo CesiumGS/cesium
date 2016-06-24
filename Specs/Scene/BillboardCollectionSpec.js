@@ -150,7 +150,7 @@ defineSuite([
                 alpha : 4.0
             },
             rotation : 1.0,
-            alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
+            alignedAxis : Cartesian3.UNIT_Z,
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
@@ -173,7 +173,7 @@ defineSuite([
         expect(b.color.blue).toEqual(3.0);
         expect(b.color.alpha).toEqual(4.0);
         expect(b.rotation).toEqual(1.0);
-        expect(b.alignedAxis).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
         expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
@@ -195,7 +195,7 @@ defineSuite([
         b.image = greenImage;
         b.color = new Color(1.0, 2.0, 3.0, 4.0);
         b.rotation = 1.0;
-        b.alignedAxis = new Cartesian3(1.0, 2.0, 3.0);
+        b.alignedAxis = Cartesian3.UNIT_Z;
         b.width = 300.0;
         b.height = 200.0;
         b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
@@ -216,7 +216,7 @@ defineSuite([
         expect(b.color.blue).toEqual(3.0);
         expect(b.color.alpha).toEqual(4.0);
         expect(b.rotation).toEqual(1.0);
-        expect(b.alignedAxis).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
         expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
@@ -1718,7 +1718,7 @@ defineSuite([
             var b = billboards.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
-            
+
             expect(function() {
                 b.heightReference = HeightReference.CLAMP_TO_GROUND;
             }).toThrowDeveloperError();
