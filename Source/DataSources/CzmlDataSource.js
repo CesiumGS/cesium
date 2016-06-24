@@ -186,13 +186,13 @@ define([
             return undefined;
         }
 
-        if (rgba.length === Color.length) {
+        var length = rgba.length;
+        if (length === Color.packedLength) {
             return [Color.byteToFloat(rgba[0]), Color.byteToFloat(rgba[1]), Color.byteToFloat(rgba[2]), Color.byteToFloat(rgba[3])];
         }
 
-        var len = rgba.length;
-        rgbaf = new Array(len);
-        for (var i = 0; i < len; i += 5) {
+        rgbaf = new Array(length);
+        for (var i = 0; i < length; i += 5) {
             rgbaf[i] = rgba[i];
             rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
             rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
@@ -211,114 +211,172 @@ define([
     }
 
     function unwrapRectangleInterval(czmlInterval) {
-        var wsenDegrees = czmlInterval.wsenDegrees;
-        if (defined(wsenDegrees)) {
-            var length = wsenDegrees.length;
-            for (var i = 0; i < length; i++) {
-                wsenDegrees[i] = CesiumMath.toRadians(wsenDegrees[i]);
-            }
-            return wsenDegrees;
+        var wsen = czmlInterval.wsen;
+        if (defined(wsen)) {
+            return wsen;
         }
-        return czmlInterval.wsen;
+
+        var wsenDegrees = czmlInterval.wsenDegrees;
+        if (!defined(wsenDegrees)) {
+            return undefined;
+        }
+
+        var length = wsenDegrees.length;
+        if (length === Rectangle.packedLength) {
+            return [CesiumMath.toRadians(wsenDegrees[0]), CesiumMath.toRadians(wsenDegrees[1]), CesiumMath.toRadians(wsenDegrees[2]), CesiumMath.toRadians(wsenDegrees[3])];
+        }
+
+        wsen = new Array(length);
+        for (var i = 0; i < length; i += 5) {
+            wsen[i] = wsenDegrees[i];
+            wsen[i + 1] = CesiumMath.toRadians(wsenDegrees[i + 1]);
+            wsen[i + 2] = CesiumMath.toRadians(wsenDegrees[i + 2]);
+            wsen[i + 3] = CesiumMath.toRadians(wsenDegrees[i + 3]);
+            wsen[i + 4] = CesiumMath.toRadians(wsenDegrees[i + 4]);
+        }
+        return wsen;
     }
 
-    function unwrapCartesianInterval(czmlInterval) {
-        if (defined(czmlInterval.cartesian)) {
-            return czmlInterval.cartesian;
-        }
+    function convertUnitSphericalToCartesian(unitSpherical) {
+        var length = unitSpherical.length;
+        scratchSpherical.magnitude = 1.0;
+        if (length === 2) {
+            scratchSpherical.clock = unitSpherical[0];
+            scratchSpherical.cone = unitSpherical[1];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+            return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+        } else {
+            var result = new Array(length / 3 * 4);
+            for (var i = 0, j = 0; i < length; i += 3, j += 4) {
+                result[j] = unitSpherical[i];
 
-        if (defined(czmlInterval.cartesianVelocity)) {
-            return czmlInterval.cartesianVelocity;
-        }
-
-        if (defined(czmlInterval.unitCartesian)) {
-            return czmlInterval.unitCartesian;
-        }
-
-        var i;
-        var len;
-        var result;
-
-        var unitSpherical = czmlInterval.unitSpherical;
-        if (defined(unitSpherical)) {
-            len = unitSpherical.length;
-            if (len === 2) {
-                scratchSpherical.clock = unitSpherical[0];
-                scratchSpherical.cone = unitSpherical[1];
+                scratchSpherical.clock = unitSpherical[i + 1];
+                scratchSpherical.cone = unitSpherical[i + 2];
                 Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-                result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-            } else {
-                var sphericalIt = 0;
-                result = new Array((len / 3) * 4);
-                for (i = 0; i < len; i += 4) {
-                    result[i] = unitSpherical[sphericalIt++];
 
-                    scratchSpherical.clock = unitSpherical[sphericalIt++];
-                    scratchSpherical.cone = unitSpherical[sphericalIt++];
-                    Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-
-                    result[i + 1] = scratchCartesian.x;
-                    result[i + 2] = scratchCartesian.y;
-                    result[i + 3] = scratchCartesian.z;
-                }
+                result[j + 1] = scratchCartesian.x;
+                result[j + 2] = scratchCartesian.y;
+                result[j + 3] = scratchCartesian.z;
             }
             return result;
         }
+    }
 
-        var cartographic = czmlInterval.cartographicRadians;
-        if (defined(cartographic)) {
-            if (cartographic.length === 3) {
-                scratchCartographic.longitude = cartographic[0];
-                scratchCartographic.latitude = cartographic[1];
-                scratchCartographic.height = cartographic[2];
+    function convertSphericalToCartesian(spherical) {
+        var length = spherical.length;
+        if (length === 3) {
+            scratchSpherical.clock = spherical[0];
+            scratchSpherical.cone = spherical[1];
+            scratchSpherical.magnitude = spherical[2];
+            Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+            return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+        } else {
+            var result = new Array(length);
+            for (var i = 0; i < length; i += 4) {
+                result[i] = spherical[i];
+
+                scratchSpherical.clock = spherical[i + 1];
+                scratchSpherical.cone = spherical[i + 2];
+                scratchSpherical.magnitude = spherical[i + 3];
+                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+                result[i + 1] = scratchCartesian.x;
+                result[i + 2] = scratchCartesian.y;
+                result[i + 3] = scratchCartesian.z;
+            }
+            return result;
+        }
+    }
+
+    function convertCartographicRadiansToCartesian(cartographicRadians) {
+        var length = cartographicRadians.length;
+        if (length === 3) {
+            scratchCartographic.longitude = cartographicRadians[0];
+            scratchCartographic.latitude = cartographicRadians[1];
+            scratchCartographic.height = cartographicRadians[2];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+            return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+        } else {
+            var result = new Array(length);
+            for (var i = 0; i < length; i += 4) {
+                result[i] = cartographicRadians[i];
+
+                scratchCartographic.longitude = cartographicRadians[i + 1];
+                scratchCartographic.latitude = cartographicRadians[i + 2];
+                scratchCartographic.height = cartographicRadians[i + 3];
                 Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-                result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
-            } else {
-                len = cartographic.length;
-                result = new Array(len);
-                for (i = 0; i < len; i += 4) {
-                    scratchCartographic.longitude = cartographic[i + 1];
-                    scratchCartographic.latitude = cartographic[i + 2];
-                    scratchCartographic.height = cartographic[i + 3];
-                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
-                    result[i] = cartographic[i];
-                    result[i + 1] = scratchCartesian.x;
-                    result[i + 2] = scratchCartesian.y;
-                    result[i + 3] = scratchCartesian.z;
-                }
+                result[i + 1] = scratchCartesian.x;
+                result[i + 2] = scratchCartesian.y;
+                result[i + 3] = scratchCartesian.z;
             }
             return result;
         }
+    }
 
-        var cartographicDegrees = czmlInterval.cartographicDegrees;
-        if (!defined(cartographicDegrees)) {
-            throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
-        }
-
-        if (cartographicDegrees.length === 3) {
+    function convertCartographicDegreesToCartesian(cartographicDegrees) {
+        var length = cartographicDegrees.length;
+        if (length === 3) {
             scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
             scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
             scratchCartographic.height = cartographicDegrees[2];
             Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
-            result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+            return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
         } else {
-            len = cartographicDegrees.length;
-            result = new Array(len);
-            for (i = 0; i < len; i += 4) {
+            var result = new Array(length);
+            for (var i = 0; i < length; i += 4) {
+                result[i] = cartographicDegrees[i];
+
                 scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
                 scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
                 scratchCartographic.height = cartographicDegrees[i + 3];
                 Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
-                result[i] = cartographicDegrees[i];
                 result[i + 1] = scratchCartesian.x;
                 result[i + 2] = scratchCartesian.y;
                 result[i + 3] = scratchCartesian.z;
             }
+            return result;
+        }
+    }
+
+    function unwrapCartesianInterval(czmlInterval) {
+        var cartesian = czmlInterval.cartesian;
+        if (defined(cartesian)) {
+            return cartesian;
         }
 
-        return result;
+        var cartesianVelocity = czmlInterval.cartesianVelocity;
+        if (defined(cartesianVelocity)) {
+            return cartesianVelocity;
+        }
+
+        var unitCartesian = czmlInterval.unitCartesian;
+        if (defined(unitCartesian)) {
+            return unitCartesian;
+        }
+
+        var unitSpherical = czmlInterval.unitSpherical;
+        if (defined(unitSpherical)) {
+            return convertUnitSphericalToCartesian(unitSpherical);
+        }
+
+        var spherical = czmlInterval.spherical;
+        if (defined(spherical)) {
+            return convertSphericalToCartesian(spherical);
+        }
+
+        var cartographicRadians = czmlInterval.cartographicRadians;
+        if (defined(cartographicRadians)) {
+            return convertCartographicRadiansToCartesian(cartographicRadians);
+        }
+
+        var cartographicDegrees = czmlInterval.cartographicDegrees;
+        if (defined(cartographicDegrees)) {
+            return convertCartographicDegreesToCartesian(cartographicDegrees);
+        }
+
+        throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
     }
 
     function normalizePackedQuaternionArray(array, startingIndex) {
