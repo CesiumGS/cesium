@@ -78,6 +78,7 @@ define([
         './StripeOrientation',
         './TimeIntervalCollectionPositionProperty',
         './TimeIntervalCollectionProperty',
+        './VelocityVectorProperty',
         './WallGraphics'
     ], function(
         BoundingRectangle,
@@ -158,6 +159,7 @@ define([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
+        VelocityVectorProperty,
         WallGraphics) {
     'use strict';
 
@@ -1085,6 +1087,18 @@ define([
         iso8601 : undefined
     };
 
+    function processAlignedAxis(billboard, packetData, interval, sourceUri, entityCollection) {
+        if (!defined(packetData)) {
+            return;
+        }
+
+        if (defined(packetData.velocityReference)) {
+            billboard.alignedAxis = new VelocityVectorProperty(makeReference(entityCollection, packetData.velocityReference), true);
+        } else {
+            processPacketData(Cartesian3, billboard, 'alignedAxis', packetData, interval, sourceUri, entityCollection);
+        }
+    }
+
     function processBillboard(entity, packet, entityCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
@@ -1112,7 +1126,7 @@ define([
         processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri, entityCollection);
         processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri, entityCollection);
         processPacketData(Rotation, billboard, 'rotation', billboardData.rotation, interval, sourceUri, entityCollection);
-        processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri, entityCollection);
+        processAlignedAxis(billboard, billboardData.alignedAxis, interval, sourceUri, entityCollection);
         processPacketData(Boolean, billboard, 'sizeInMeters', billboardData.sizeInMeters, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'width', billboardData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, billboard, 'height', billboardData.height, interval, sourceUri, entityCollection);

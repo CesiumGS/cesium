@@ -431,7 +431,7 @@ defineSuite([
                     cartesian2 : [1.0, 2.0]
                 },
                 alignedAxis : {
-                    cartesian : [1.0, 0.0, 0.0]
+                    unitCartesian : [1.0, 0.0, 0.0]
                 },
                 show : true,
                 sizeInMeters : false,
@@ -476,6 +476,52 @@ defineSuite([
         expect(entity.billboard.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
         expect(entity.billboard.pixelOffsetScaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 20.0, 10000.0, 30.0));
         expect(entity.billboard.imageSubRegion.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new BoundingRectangle(20, 30, 10, 11));
+    });
+
+    it('can handle aligned axis expressed as a cartesian', function() {
+        // historically, CZML allowed alignedAxis to be defined as a cartesian, even though that implied it could be
+        // non-unit magnitude (it can't).
+        // but, we need to ensure that continues to work.
+        var billboardPacket = {
+            billboard : {
+                alignedAxis : {
+                    cartesian : [1.0, 0.0, 0.0]
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(billboardPacket));
+        var entity = dataSource.entities.values[0];
+
+        expect(entity.billboard).toBeDefined();
+        expect(entity.billboard.alignedAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+    });
+
+    it('can handle aligned axis expressed as a velocity reference', function() {
+        var packet = {
+            "position" : {
+                "epoch" : "2016-06-17T12:00:00Z",
+                "cartesian" : [0, 1, 2, 3,
+                               60, 61, 122, 183]
+            },
+            "billboard" : {
+                "alignedAxis" : {
+                    "velocityReference" : "#position"
+                }
+            }
+        };
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(makePacket(packet));
+        var entity = dataSource.entities.values[0];
+        var property = entity.billboard.alignedAxis;
+
+        var expectedVelocity = new Cartesian3(1.0, 2.0, 3.0);
+        var expectedVelocityDirection = Cartesian3.normalize(expectedVelocity, new Cartesian3());
+
+        expect(property.getValue(JulianDate.fromIso8601('2016-06-17T12:00:00Z'))).toEqualEpsilon(expectedVelocityDirection, CesiumMath.EPSILON15);
+        expect(property.getValue(JulianDate.fromIso8601('2016-06-17T12:00:30Z'))).toEqualEpsilon(expectedVelocityDirection, CesiumMath.EPSILON15);
     });
 
     it('can handle image intervals both of type uri and image', function() {
