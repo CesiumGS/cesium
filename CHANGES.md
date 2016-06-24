@@ -7,9 +7,9 @@ Change Log
     * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
 * Added entities on terrain
     * Added `heightReference` property to point, billboard and model entities that would allow them to be rendered relative to terrain.
-    * Changed corridor, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if it's material is a `ColorMaterialProperty` and it doesn't have a `height` or `extrudedHeight`. Geometry that has any other type of material won't be drawn on terrain.
-    * `KMLDataSource` now clamps to terrain based on altitudeMode.
-    * `GeoJsonDataSource` has an option `clampToGround` that when set to true will clamp all features to terrain. For this case, lines use a corridor is used instead of a polyline.
+    * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if it's material is a `ColorMaterialProperty` and it doesn't have a `height` or `extrudedHeight`. Geometry that has any other type of material won't be drawn on terrain.
+    * `KMLDataSource` now clamps to terrain based on altitudeMode, excluding polylines.
+    * `GeoJsonDataSource` has an option `clampToGround` that when set to true will clamp all features to terrain. For this case, lines use a corridor instead of a polyline.
     * Added `Ground Clamping` example to Sandcastle [here](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Clamping.html&label=Showcases).
 * Improved performance in `GroundPrimitive`.
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)

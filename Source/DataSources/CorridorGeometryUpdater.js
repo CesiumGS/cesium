@@ -471,7 +471,7 @@ define([
                         isColorMaterial && GroundPrimitive.isSupported(this._scene);
 
         if (outlineEnabled && onTerrain) {
-            oneTimeWarning('Entities with an outline are unsupported on terrain. Outline will be disabled.');
+            oneTimeWarning(oneTimeWarning.geometryOutlines);
             outlineEnabled = false;
         }
 

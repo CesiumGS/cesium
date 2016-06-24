@@ -46,5 +46,7 @@ define([
         }
     }
 
+    oneTimeWarning.geometryOutlines = 'Entity geometry outlines are unsupported on terrain. Outlines will be disabled. To enable outlines, disable geometry terrain clamping by explicitly setting height to 0.';
+
     return oneTimeWarning;
 });
