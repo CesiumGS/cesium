@@ -3,40 +3,58 @@ define([
     '../Core/BoundingSphere',
     '../Core/Cartesian3',
     '../Core/Cartographic',
+    '../Core/Color',
+    '../Core/ColorGeometryInstanceAttribute',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/destroyObject',
     '../Core/defineProperties',
     '../Core/DeveloperError',
     '../Core/Ellipsoid',
+    '../Core/GeometryInstance',
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
     '../Core/loadArrayBuffer',
+    '../Core/PolygonGeometry',
+    '../Core/PolylineGeometry',
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
     '../ThirdParty/when',
     './Cesium3DTileContentState',
-    './LabelCollection'
+    './GroundPrimitive',
+    './LabelCollection',
+    './PerInstanceColorAppearance',
+    './PolylineColorAppearance',
+    './Primitive'
 ], function(
     BoundingSphere,
     Cartesian3,
     Cartographic,
+    Color,
+    ColorGeometryInstanceAttribute,
     defaultValue,
     defined,
     destroyObject,
     defineProperties,
     DeveloperError,
     Ellipsoid,
+    GeometryInstance,
     getMagic,
     getStringFromTypedArray,
     loadArrayBuffer,
+    PolygonGeometry,
+    PolylineGeometry,
     Request,
     RequestScheduler,
     RequestType,
     when,
     Cesium3DTileContentState,
-    LabelCollection) {
+    GroundPrimitive,
+    LabelCollection,
+    PerInstanceColorAppearance,
+    PolylineColorAppearance,
+    Primitive) {
     'use strict';
 
     /**
@@ -47,6 +65,7 @@ define([
      */
     function Vector3DTileContent(tileset, tile, url) {
         this._labelCollection = undefined;
+        this._primitives = [];
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -160,6 +179,7 @@ define([
         var text = getStringFromTypedArray(uint8Array, byteOffset);
         var json = JSON.parse(text);
 
+        /*
         var labelCollection = new LabelCollection();
 
         var length = json.length;
@@ -180,11 +200,61 @@ define([
                 position : position
             });
         }
+        */
+
+        var polygonInstances = [];
+        var outlineInstances = [];
+
+        var polygons = json.polygons;
+        var length = polygons.length;
+        for (var i = 0; i < length; ++i) {
+            polygonInstances.push(new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    positions : polygons[i].positions,
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
+                }),
+                attributes: {
+                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED.withAlpha(0.5))
+                }
+            }));
+            outlineInstances.push(new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : polygons[i].positions,
+                    width : 1.0,
+                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT
+                }),
+                attributes: {
+                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
+                }
+            }));
+        }
+
+        this._primitives.push(new Primitive({
+            geometryInstances : polygonInstances,
+            appearance : new PerInstanceColorAppearance({
+                closed : true,
+                translucent : true
+            }),
+            asynchrounous : false
+        }));
+
+        this._primitives.push(new Primitive({
+            geometryInstances : outlineInstances,
+            appearance : new PolylineColorAppearance(),
+            asynchrounous : false
+        }));
+
+        /*
+        this._primitives.push(new GroundPrimitive({
+            geometryInstances : polygonInstances,
+            asynchrounous : false
+        }));
+        */
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
 
-        this._labelCollection = labelCollection;
+        //this._labelCollection = labelCollection;
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     };
@@ -199,7 +269,12 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        this._labelCollection.update(frameState);
+        //this._labelCollection.update(frameState);
+        var primitives = this._primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            primitives[i].update(frameState);
+        }
     };
 
     /**
