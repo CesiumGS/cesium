@@ -20,6 +20,8 @@ Change Log
 * Added the hot air balloon sample model.
 * Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
 * Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+* Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
+
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
