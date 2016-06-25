@@ -224,7 +224,7 @@ define([
         },
         /**
          * Gets the boolean property specifying whether the geometry
-         * casts shadows from each light source.
+         * casts and receives shadows from each light source.
          * @memberof PolylineVolumeGeometryUpdater.prototype
          * 
          * @type {Property}
