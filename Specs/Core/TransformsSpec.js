@@ -243,6 +243,62 @@ defineSuite([
         expect(actualTranslation).toEqual(origin);
     });
 
+    it('aircraftHeadingPitchRollToFixedFrame works without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
+        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
+        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
+
+        Cartesian3.fromElements(-expectedX.z, expectedX.y, expectedX.x, expectedX);
+        Cartesian3.fromElements(-expectedY.z, expectedY.y, expectedY.x, expectedY);
+        Cartesian3.fromElements(-expectedZ.z, expectedZ.y, expectedZ.x, expectedZ);
+
+        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
+        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
+        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
+        var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
+
+        expect(actualX).toEqual(expectedX);
+        expect(actualY).toEqual(expectedY);
+        expect(actualZ).toEqual(expectedZ);
+        expect(actualTranslation).toEqual(origin);
+    });
+
+    it('aircraftHeadingPitchRollToFixedFrame works with a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+
+        var expectedRotation = Matrix3.fromQuaternion(Quaternion.fromHeadingPitchRoll(heading, pitch, roll));
+        var expectedX = Matrix3.getColumn(expectedRotation, 0, new Cartesian3());
+        var expectedY = Matrix3.getColumn(expectedRotation, 1, new Cartesian3());
+        var expectedZ = Matrix3.getColumn(expectedRotation, 2, new Cartesian3());
+
+        Cartesian3.fromElements(-expectedX.z, expectedX.y, expectedX.x, expectedX);
+        Cartesian3.fromElements(-expectedY.z, expectedY.y, expectedY.x, expectedY);
+        Cartesian3.fromElements(-expectedZ.z, expectedZ.y, expectedZ.x, expectedZ);
+
+        var result = new Matrix4();
+        var returnedResult = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var actualX = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 0, new Cartesian4()));
+        var actualY = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 1, new Cartesian4()));
+        var actualZ = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 2, new Cartesian4()));
+        var actualTranslation = Cartesian3.fromCartesian4(Matrix4.getColumn(returnedResult, 3, new Cartesian4()));
+
+        expect(returnedResult).toBe(result);
+        expect(actualX).toEqual(expectedX);
+        expect(actualY).toEqual(expectedY);
+        expect(actualZ).toEqual(expectedZ);
+        expect(actualTranslation).toEqual(origin);
+    });
+    
     it('headingPitchRollQuaternion works without a result parameter', function() {
         var origin = new Cartesian3(1.0, 0.0, 0.0);
         var heading = CesiumMath.toRadians(20.0);
@@ -268,6 +324,36 @@ defineSuite([
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(quaternion).toBe(result);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
+    it('aircraftHeadingPitchRollQuaternion works without a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+
+        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var actual = Matrix3.fromQuaternion(quaternion);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
+    });
+
+    it('aircraftHeadingPitchRollQuaternion works with a result parameter', function() {
+        var origin = new Cartesian3(1.0, 0.0, 0.0);
+        var heading = CesiumMath.toRadians(20.0);
+        var pitch = CesiumMath.toRadians(30.0);
+        var roll = CesiumMath.toRadians(40.0);
+
+        var transform = Transforms.aircraftHeadingPitchRollToFixedFrame(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE);
+        var expected = Matrix4.getRotation(transform, new Matrix3());
+
+        var result = new Quaternion();
+        var quaternion = Transforms.aircraftHeadingPitchRollQuaternion(origin, heading, pitch, roll, Ellipsoid.UNIT_SPHERE, result);
         var actual = Matrix3.fromQuaternion(quaternion);
         expect(quaternion).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON11);
