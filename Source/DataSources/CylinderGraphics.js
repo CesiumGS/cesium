@@ -35,9 +35,8 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
-     * @param {Property} [options.slices=128] The number of edges around perimeter of the cylinder.
+     * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {Property} [options.shadows=false] A boolean Property specifying whether the cylinder casts and receives shadows from each light source.
-     *
      */
     function CylinderGraphics(options) {
         this._length = undefined;
@@ -106,7 +105,6 @@ define([
 
         /**
          * Gets or sets the Property specifying the number of vertical lines to draw along the perimeter for the outline.
-         * to use when outlining the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default 16
@@ -114,8 +112,7 @@ define([
         numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
 
         /**
-         * Gets or sets the Property specifying the number of edges around perimeter of the cylinder.
-         * between each latitude and longitude point.
+         * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
          * @default 16
