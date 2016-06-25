@@ -1,18 +1,14 @@
 /*global define*/
 define([
-    './defaultValue',
-    './defined',
-    './DeveloperError',
-    './freezeObject',
-    './Math',
-    './defineProperties'
-], function (
+        './defaultValue',
+        './defined',
+        './DeveloperError',
+        './Math'
+    ], function(
         defaultValue,
         defined,
         DeveloperError,
-        freezeObject,
-        CesiumMath,
-        defineProperties) {
+        CesiumMath) {
     "use strict";
 
     /**
@@ -26,7 +22,7 @@ define([
      * @param {Number} [pitch=0.0] The pitch component in radians.
      * @param {Number} [roll=0.0] The roll component in radians.
      */
-    var HeadingPitchRoll = function (heading, pitch, roll) {
+    var HeadingPitchRoll = function(heading, pitch, roll) {
         this.heading = defaultValue(heading, 0.0);
         this.pitch = defaultValue(pitch, 0.0);
         this.roll = defaultValue(roll, 0.0);
@@ -39,23 +35,23 @@ define([
      * @param {Quaternion} [result] The object in which to store the result. If not provided, a new instance is created and returned.
      * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
      */
-    HeadingPitchRoll.fromQuaternion = function (quaternion, result) {
+    HeadingPitchRoll.fromQuaternion = function(quaternion, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         //>>includeEnd('debug');
-        result = defaultValue(result, new HeadingPitchRoll());
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
         var test = 2 * (quaternion.w * quaternion.y - quaternion.z * quaternion.x);
         var denominatorRoll = 1 - 2 * (quaternion.x * quaternion.x + quaternion.y * quaternion.y);
-        var  numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
+        var numeratorRoll = 2 * (quaternion.w * quaternion.x + quaternion.y * quaternion.z);
         var denominatorHeading = 1 - 2 * (quaternion.y * quaternion.y + quaternion.z * quaternion.z);
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
-
         result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
-        result.roll = Math.atan2( numeratorRoll, denominatorRoll);
+        result.roll = Math.atan2(numeratorRoll, denominatorRoll);
         result.pitch = -Math.asin(test);
-
         return result;
     };
 
@@ -68,7 +64,7 @@ define([
      * @param {HeadingPitchRoll} [result] The object in which to store the result. If not provided, a new instance is created and returned.
      * @returns {HeadingPitchRoll} A new HeadingPitchRoll instance
      */
-    HeadingPitchRoll.fromDegrees = function (heading, pitch, roll,result) {
+    HeadingPitchRoll.fromDegrees = function(heading, pitch, roll, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(heading)) {
             throw new DeveloperError('heading is required');
@@ -80,17 +76,115 @@ define([
             throw new DeveloperError('roll is required');
         }
         //>>includeEnd('debug');
-
-        result = defaultValue(result, new HeadingPitchRoll());
+        if (!defined(result)) {
+            result = new HeadingPitchRoll();
+        }
         result.heading = heading * CesiumMath.RADIANS_PER_DEGREE;
         result.pitch = pitch * CesiumMath.RADIANS_PER_DEGREE;
         result.roll = roll * CesiumMath.RADIANS_PER_DEGREE;
-
         return result;
+    };
+
+    /**
+     * Duplicates a HeadingPitchRoll instance.
+     *
+     * @param {HeadingPitchRoll} headingPitchRoll The HeadingPitchRoll to duplicate.
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided. (Returns undefined if headingPitchRoll is undefined)
+     */
+    HeadingPitchRoll.clone = function(headingPitchRoll, result) {
+        if (!defined(headingPitchRoll)) {
+            return undefined;
+        }
+        if (!defined(result)) {
+            return new HeadingPitchRoll(headingPitchRoll.heading, headingPitchRoll.pitch, headingPitchRoll.roll);
+        }
+        result.heading = headingPitchRoll.heading;
+        result.pitch = headingPitchRoll.pitch;
+        result.roll = headingPitchRoll.roll;
+        return result;
+    };
+
+    /**
+     * Compares the provided HeadingPitchRolls componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
+     * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.equals = function(left, right) {
+        return (left === right) ||
+            ((defined(left)) &&
+                (defined(right)) &&
+                (left.heading === right.heading) &&
+                (left.pitch === right.pitch) &&
+                (left.roll === right.roll));
+    };
+
+    /**
+     * Compares the provided HeadingPitchRolls componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [left] The first HeadingPitchRoll.
+     * @param {HeadingPitchRoll} [right] The second HeadingPitchRoll.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.equalsEpsilon = function(left, right, relativeEpsilon, absoluteEpsilon) {
+        return (left === right) ||
+            (defined(left) &&
+                defined(right) &&
+                CesiumMath.equalsEpsilon(left.heading, right.heading, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.pitch, right.pitch, relativeEpsilon, absoluteEpsilon) &&
+                CesiumMath.equalsEpsilon(left.roll, right.roll, relativeEpsilon, absoluteEpsilon));
+    };
+
+    /**
+     * Duplicates this HeadingPitchRoll instance.
+     *
+     * @param {HeadingPitchRoll} [result] The object onto which to store the result.
+     * @returns {HeadingPitchRoll} The modified result parameter or a new HeadingPitchRoll instance if one was not provided.
+     */
+    HeadingPitchRoll.prototype.clone = function(result) {
+        return HeadingPitchRoll.clone(this, result);
+    };
+
+    /**
+     * Compares this HeadingPitchRoll against the provided HeadingPitchRoll componentwise and returns
+     * <code>true</code> if they are equal, <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.prototype.equals = function(right) {
+        return HeadingPitchRoll.equals(this, right);
+    };
+
+    /**
+     * Compares this HeadingPitchRoll against the provided HeadingPitchRoll componentwise and returns
+     * <code>true</code> if they pass an absolute or relative tolerance test,
+     * <code>false</code> otherwise.
+     *
+     * @param {HeadingPitchRoll} [right] The right hand side HeadingPitchRoll.
+     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
+     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     */
+    HeadingPitchRoll.prototype.equalsEpsilon = function(right, relativeEpsilon, absoluteEpsilon) {
+        return HeadingPitchRoll.equalsEpsilon(this, right, relativeEpsilon, absoluteEpsilon);
+    };
+
+    /**
+     * Creates a string representing this HeadingPitchRoll in the format '(heading, pitch, roll)' in radians.
+     *
+     * @returns {String} A string representing the provided HeadingPitchRoll in the format '(heading, pitch, roll)'.
+     */
+    HeadingPitchRoll.prototype.toString = function() {
+        return '(' + this.heading + ', ' + this.pitch + ', ' + this.roll + ')';
     };
 
     return HeadingPitchRoll;
 });
-
-
-
