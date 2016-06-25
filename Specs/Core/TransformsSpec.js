@@ -881,6 +881,54 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('aircraftHeadingPitchRollToFixedFrame throws without an origin', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollToFixedFrame(undefined, 0.0, 0.0, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollToFixedFrame throws without an heading', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, undefined, 0.0, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollToFixedFrame throws without an pitch', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, undefined, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollToFixedFrame throws without an roll', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollToFixedFrame(Cartesian3.ZERO, 0.0, 0.0, undefined);
+        }).toThrowDeveloperError();
+    });
+    
+    it('aircraftHeadingPitchRollQuaternion throws without an origin', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollQuaternion(undefined, 0.0, 0.0, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollQuaternion throws without an heading', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, undefined, 0.0, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollQuaternion throws without an pitch', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, 0.0, undefined, 0.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('aircraftHeadingPitchRollQuaternion throws without an roll', function() {
+        expect(function() {
+            Transforms.aircraftHeadingPitchRollQuaternion(Cartesian3.ZERO, 0.0, 0.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('computeTemeToPseudoFixedMatrix throws without a date', function() {
         expect(function() {
             Transforms.computeTemeToPseudoFixedMatrix(undefined);
