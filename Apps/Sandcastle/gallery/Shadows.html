@@ -33,7 +33,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox : false,
     selectionIndicator : false,
     shadows : true,
-    terrainShadows : true
+    terrainShadows : Cesium.ShadowMode.ENABLED
 });
 
 viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
@@ -91,7 +91,7 @@ var boxEntity = viewer.entities.add({
     box : {
         dimensions : new Cesium.Cartesian3(10.0, 10.0, 10.0),
         material : Cesium.Color.RED,
-        shadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     }
 });
 
@@ -109,7 +109,7 @@ var checkerEntity = viewer.entities.add({
         material : checkerMaterial,
         outline : true,
         outlineColor : Cesium.Color.RED,
-        shadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     }
 });
 
@@ -121,7 +121,7 @@ var sphereEntity = viewer.entities.add({
         material : Cesium.Color.BLUE.withAlpha(0.5),
         slicePartitions : 24,
         stackPartitions : 36,
-        shadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     }
 });
 
@@ -230,9 +230,13 @@ Sandcastle.addToolbarButton('Toggle Shadows', function() {
     viewer.shadows = !viewer.shadows;
 });
 
-var entityShadows = true;
+var entityShadows = Cesium.ShadowMode.ENABLED;
 Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
-    entityShadows = !entityShadows;
+    if (entityShadows === Cesium.ShadowMode.ENABLED) {
+        entityShadows = Cesium.ShadowMode.DISABLED;
+    } else {
+        entityShadows = Cesium.ShadowMode.ENABLED;
+    }
     for (i = 0; i < entitiesLength; ++i) {
         var entity = entities[i];
         var visual = entity.model || entity.box || entity.ellipsoid;
@@ -241,7 +245,11 @@ Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
 });
 
 Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
-    viewer.terrainShadows = !viewer.terrainShadows;
+    if (viewer.terrainShadows === Cesium.ShadowMode.ENABLED) {
+        viewer.terrainShadows = Cesium.ShadowMode.DISABLED;
+    } else {
+        viewer.terrainShadows = Cesium.ShadowMode.ENABLED;
+    }
 });
 
 Sandcastle.addToolbarButton('Soft Shadows', function() {

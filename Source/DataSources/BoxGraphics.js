@@ -31,7 +31,7 @@ define([
      * @param {Property} [options.outline=false] A boolean Property specifying whether the box is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the box casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from each light source.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      */
@@ -126,11 +126,11 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Get or sets the boolean Property specifying whether the box
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the box
+         * casts or receives shadows from each light source.
          * @memberof BoxGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

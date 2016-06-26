@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -28,7 +30,7 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 6,
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var cylinder = new CylinderGraphics(options);
@@ -71,7 +73,7 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new CylinderGraphics();
         target.merge(source);
@@ -179,6 +181,6 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

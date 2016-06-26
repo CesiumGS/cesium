@@ -127,8 +127,7 @@ define([
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
                     }),
-                    castShadows : this.shadows,
-                    receiveShadows : this.shadows
+                    shadows : this.shadows
                 });
 
                 primitives.add(primitive);

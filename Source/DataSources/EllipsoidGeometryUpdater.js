@@ -19,6 +19,7 @@ define([
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/SceneMode',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -44,6 +45,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -56,7 +58,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultShadows = new ConstantProperty(false);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 
     var radiiScratch = new Cartesian3();
     var scratchColor = new Color();
@@ -232,8 +234,8 @@ define([
             }
         },
         /**
-         * Gets the boolean property specifying whether the geometry
-         * casts and receives shadows from each light source.
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
          * @memberof EllipsoidGeometryUpdater.prototype
          * 
          * @type {Property}
@@ -635,8 +637,7 @@ define([
                 }),
                 appearance : appearance,
                 asynchronous : false,
-                castShadows : shadows,
-                receiveShadows : shadows
+                shadows : shadows
             }));
 
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
@@ -659,8 +660,7 @@ define([
                     }
                 }),
                 asynchronous : false,
-                castShadows : shadows,
-                receiveShadows : shadows
+                shadows : shadows
             }));
 
             this._lastShow = showFill;

@@ -35,7 +35,7 @@ define([
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the wall casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the wall casts or receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
@@ -162,11 +162,11 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth'),
         
         /**
-         * Get or sets the boolean Property specifying whether the wall
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the wall
+         * casts or receives shadows from each light source.
          * @memberof WallGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

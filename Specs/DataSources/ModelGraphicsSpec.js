@@ -6,7 +6,8 @@ defineSuite([
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag'
+        'DataSources/PropertyBag',
+        'Scene/ShadowMode'
     ], function(
         ModelGraphics,
         Cartesian3,
@@ -14,7 +15,8 @@ defineSuite([
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        ShadowMode) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -25,8 +27,8 @@ defineSuite([
             minimumPixelSize : 2,
             maximumScale : 200,
             incrementallyLoadTextures : false,
-            shadows : false,
             runAnimations : false,
+            shadows : ShadowMode.DISABLED,
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -74,7 +76,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -109,7 +111,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -121,7 +123,7 @@ defineSuite([
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
-        var shadows = new ConstantProperty(true);
+        var shadows = new ConstantProperty(ShadowMode.ENABLED);
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -159,7 +161,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),

@@ -5,6 +5,7 @@ defineSuite([
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -33,7 +35,7 @@ defineSuite([
             outlineWidth : 7,
             closeTop : true,
             closeBottom : true,
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var polygon = new PolygonGraphics(options);
@@ -86,7 +88,7 @@ defineSuite([
         source.perPositionHeight = new ConstantProperty();
         source.closeTop = new ConstantProperty();
         source.closeBottom = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -222,6 +224,6 @@ defineSuite([
         testDefinitionChanged(property, 'perPositionHeight', false, true);
         testDefinitionChanged(property, 'closeTop', true, false);
         testDefinitionChanged(property, 'closeBottom', true, false);
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

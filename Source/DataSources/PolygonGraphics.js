@@ -40,7 +40,7 @@ define([
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the polygon casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -207,11 +207,11 @@ define([
         closeBottom : createPropertyDescriptor('closeBottom'),
 
         /**
-         * Get or sets the boolean Property specifying whether the polygon
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the polygon
+         * casts or receives shadows from each light source.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

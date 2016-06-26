@@ -32,7 +32,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if followSurface is true.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the polyline casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
@@ -122,11 +122,11 @@ define([
         granularity : createPropertyDescriptor('granularity'),
         
         /**
-         * Get or sets the boolean Property specifying whether the polyline
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the polyline
+         * casts or receives shadows from each light source.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

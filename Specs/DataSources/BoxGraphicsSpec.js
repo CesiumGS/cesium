@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         Color,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -26,7 +28,7 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 1,
             dimensions : new Cartesian3(2, 3, 4),
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var box = new BoxGraphics(options);
@@ -58,7 +60,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.dimensions = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new BoxGraphics();
         target.merge(source);
@@ -145,6 +147,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'dimensions', new Cartesian3(0, 0, 0), new Cartesian3(1, 1, 1));
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

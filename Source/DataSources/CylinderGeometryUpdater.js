@@ -17,6 +17,7 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -40,6 +41,7 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -52,7 +54,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
-    var defaultShadows = new ConstantProperty(false);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 
     var scratchColor = new Color();
 
@@ -227,8 +229,8 @@ define([
             }
         },
         /**
-         * Gets the boolean property specifying whether the geometry
-         * casts and receives shadows from each light source.
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
          * @memberof CylinderGeometryUpdater.prototype
          * 
          * @type {Property}
@@ -584,8 +586,7 @@ define([
                 }),
                 appearance : appearance,
                 asynchronous : false,
-                castShadows : shadows,
-                receiveShadows : shadows
+                shadows : shadows
             }));
         }
 
@@ -613,8 +614,7 @@ define([
                     }
                 }),
                 asynchronous : false,
-                castShadows : shadows,
-                receiveShadows : shadows
+                shadows : shadows
             }));
         }
     };

@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -23,7 +25,7 @@ defineSuite([
             width : 1,
             followSurface : false,
             granularity : 2,
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var polyline = new PolylineGraphics(options);
@@ -52,7 +54,7 @@ defineSuite([
         source.show = new ConstantProperty();
         source.followSurface = new ConstantProperty();
         source.granularity = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new PolylineGraphics();
         target.merge(source);
@@ -137,6 +139,6 @@ defineSuite([
         testDefinitionChanged(property, 'width', 3, 4);
         testDefinitionChanged(property, 'followSurface', false, true);
         testDefinitionChanged(property, 'granularity', 2, 1);
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

@@ -36,7 +36,7 @@ define([
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
      * @param {Property} [options.numberOfVerticalLines=16] A numeric Property specifying the number of vertical lines to draw along the perimeter for the outline.
      * @param {Property} [options.slices=128] The number of edges around the perimeter of the cylinder.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the cylinder casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the cylinder casts or receives shadows from each light source.
      */
     function CylinderGraphics(options) {
         this._length = undefined;
@@ -168,11 +168,11 @@ define([
         outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
-         * Get or sets the boolean Property specifying whether the cylinder
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the cylinder
+         * casts or receives shadows from each light source.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

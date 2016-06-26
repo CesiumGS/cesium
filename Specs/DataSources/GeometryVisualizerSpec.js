@@ -21,6 +21,7 @@ defineSuite([
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StaticOutlineGeometryBatch',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -46,6 +47,7 @@ defineSuite([
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
         StaticOutlineGeometryBatch,
+        ShadowMode,
         createDynamicProperty,
         createScene,
         pollToPromise) {
@@ -302,8 +304,7 @@ defineSuite([
             return isUpdated;
         }).then(function() {
             var primitive = scene.primitives.get(0);
-            expect(primitive.castShadows).toBe(shadows);
-            expect(primitive.receiveShadows).toBe(shadows);
+            expect(primitive.shadows).toBe(shadows);
 
             objects.remove(entity);
 
@@ -318,9 +319,20 @@ defineSuite([
         });
     }
 
-    it('Creates and removes geometry with shadows', function() {
-        createAndRemoveGeometryWithShadows(true);
-        createAndRemoveGeometryWithShadows(false);
+    it('Creates and removes geometry with shadows disabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.DISABLED);
+    });
+
+    it('Creates and removes geometry with shadows enabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.ENABLED);
+    });
+
+    it('Creates and removes geometry with shadow casting only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.CAST_ONLY);
+    });
+
+    it('Creates and removes geometry with shadow receiving only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.RECEIVE_ONLY);
     });
 
     it('Correctly handles geometry changing batches', function() {
@@ -480,7 +492,7 @@ defineSuite([
     });
 
     it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
-        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -527,7 +539,7 @@ defineSuite([
     });
 
     it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -574,7 +586,7 @@ defineSuite([
     });
 
     it('StaticOutlineGeometryBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false);
+        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),

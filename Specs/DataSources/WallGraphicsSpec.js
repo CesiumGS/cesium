@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -27,7 +29,7 @@ defineSuite([
             outlineWidth : 2,
             minimumHeights : [3, 4, 5],
             maximumHeights : [6, 7, 8],
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var wall = new WallGraphics(options);
@@ -70,7 +72,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty();
         source.minimumHeights = new ConstantProperty();
         source.maximumHeights = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new WallGraphics();
         target.merge(source);
@@ -178,6 +180,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'minimumHeights', [0, 1], [2, 3]);
         testDefinitionChanged(property, 'maximumHeights', [3, 5], [7, 8]);
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

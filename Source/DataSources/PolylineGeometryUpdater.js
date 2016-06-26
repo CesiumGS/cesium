@@ -18,6 +18,7 @@ define([
         '../Scene/PolylineCollection',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './ConstantProperty',
@@ -42,6 +43,7 @@ define([
         PolylineCollection,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
+        ShadowMode,
         BoundingSphereState,
         ColorMaterialProperty,
         ConstantProperty,
@@ -54,7 +56,7 @@ define([
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultShow = new ConstantProperty(true);
-    var defaultShadows = new ConstantProperty(false);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
 
     function GeometryOptions(entity) {
         this.id = entity;
@@ -196,8 +198,8 @@ define([
             value : undefined
         },
         /**
-         * Gets the boolean property specifying whether the geometry
-         * casts and receives shadows from each light source.
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
          * @memberof PolylineGeometryUpdater.prototype
          * 
          * @type {Property}
@@ -217,7 +219,6 @@ define([
          * @type {Boolean}
          * @readonly
          */
-        
         isDynamic : {
             get : function() {
                 return this._dynamic;

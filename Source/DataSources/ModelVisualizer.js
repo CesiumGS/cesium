@@ -8,6 +8,7 @@ define([
         '../Core/Matrix4',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './Property'
     ], function(
@@ -19,6 +20,7 @@ define([
         Matrix4,
         Model,
         ModelAnimationLoop,
+        ShadowMode,
         BoundingSphereState,
         Property) {
     'use strict';
@@ -26,7 +28,7 @@ define([
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
-    var defaultShadows = true;
+    var defaultShadows = ShadowMode.ENABLED;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -125,14 +127,11 @@ define([
                 modelHash[entity.id] = modelData;
             }
 
-            var shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
-
             model.show = true;
             model.scale = Property.getValueOrDefault(modelGraphics._scale, time, defaultScale);
             model.minimumPixelSize = Property.getValueOrDefault(modelGraphics._minimumPixelSize, time, defaultMinimumPixelSize);
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
-            model.castShadows = shadows;
-            model.receiveShadows = shadows;
+            model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
 
             if (model.ready) {

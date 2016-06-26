@@ -5,6 +5,7 @@ defineSuite([
         'Core/CornerType',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         CornerType,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -31,7 +33,7 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 5,
             cornerType : CornerType.BEVELED,
-            shadows : false
+            shadows : ShadowMode.DISABLED
         };
 
         var corridor = new CorridorGraphics(options);
@@ -78,7 +80,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
-        source.shadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new CorridorGraphics();
         target.merge(source);
@@ -200,6 +202,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'cornerType', CornerType.BEVELED, CornerType.MITERED);
-        testDefinitionChanged(property, 'shadows', true, false);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

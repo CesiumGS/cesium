@@ -112,8 +112,7 @@ define([
                             lineWidth : this.width
                         }
                     }),
-                    castShadows : this.shadows,
-                    receiveShadows : this.shadows
+                    shadows : this.shadows
                 });
 
                 primitives.add(primitive);

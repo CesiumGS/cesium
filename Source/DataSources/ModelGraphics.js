@@ -45,9 +45,9 @@ define([
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
-     * @param {Property} [options.shadows=true] A boolean Property specifying whether the model casts and receives shadows from each light source.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -136,11 +136,11 @@ define([
         incrementallyLoadTextures : createPropertyDescriptor('incrementallyLoadTextures'),
 
         /**
-         * Get or sets the boolean Property specifying whether the model
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the model
+         * casts or receives shadows from each light source.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default true
+         * @default ShadowMode.ENABLED
          */
         shadows : createPropertyDescriptor('shadows'),
 

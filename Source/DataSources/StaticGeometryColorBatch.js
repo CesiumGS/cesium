@@ -109,8 +109,7 @@ define([
                         translucent : this.translucent,
                         closed : this.closed
                     }),
-                    castShadows : this.shadows,
-                    receiveShadows : this.shadows
+                    shadows : this.shadows
                 });
                 primitives.add(primitive);
                 isUpdated = false;

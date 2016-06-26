@@ -34,7 +34,7 @@ define([
      * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
-     * @param {Property} [options.shadows=false] A boolean Property specifying whether the ellipsoid casts and receives shadows from each light source.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
      *
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
@@ -159,11 +159,11 @@ define([
         subdivisions : createPropertyDescriptor('subdivisions'),
 
         /**
-         * Get or sets the boolean Property specifying whether the ellipsoid
-         * casts and receives shadows from each light source.
+         * Get or sets the enum Property specifying whether the ellipsoid
+         * casts or receives shadows from each light source.
          * @memberof EllipsoidGraphics.prototype
          * @type {Property}
-         * @default false
+         * @default ShadowMode.DISABLED
          */
         shadows : createPropertyDescriptor('shadows')
     });

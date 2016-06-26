@@ -33,7 +33,8 @@ define([
         './Pass',
         './PrimitivePipeline',
         './PrimitiveState',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -68,7 +69,8 @@ define([
         Pass,
         PrimitivePipeline,
         PrimitiveState,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     /**
@@ -108,8 +110,7 @@ define([
      * @param {Boolean} [options.cull=true] When <code>true</code>, the renderer frustum culls and horizon culls the primitive's commands based on their bounding volume.  Set this to <code>false</code> for a small performance gain if you are manually culling the primitive.
      * @param {Boolean} [options.asynchronous=true] Determines if the primitive will be created asynchronously or block until ready.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Determines if this primitive's commands' bounding spheres are shown.
-     * @param {Boolean} [options.castShadows=false] Determines whether this primitive casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=false] Determines whether this primitive receives shadows from shadow casters in the scene.
+     * @param {ShadowMode} [options.shadows=ShadowMode.DISABLED] Determines whether this primitive casts or receives shadows from each light source.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -284,22 +285,13 @@ define([
         //>>includeEnd('debug');
 
         /**
-         * Determines whether this primitive casts shadows from each light source.
+         * Determines whether this primitive casts or receives shadows from each light source.
          *
-         * @type {Boolean}
+         * @type {ShadowMode}
          *
-         * @default false
+         * @default ShadowMode.DISABLED
          */
-        this.castShadows = defaultValue(options.castShadows, false);
-
-        /**
-         * Determines whether this primitive receives shadows from shadow casters in the scene.
-         *
-         * @type {Boolean}
-         *
-         * @default false
-         */
-        this.receiveShadows = defaultValue(options.receiveShadows, false);
+        this.shadows = defaultValue(options.shadows, ShadowMode.DISABLED);
 
         this._translucent = undefined;
 
@@ -1325,6 +1317,8 @@ define([
         var commandList = frameState.commandList;
         var passes = frameState.passes;
         if (passes.render) {
+            var castShadows = ShadowMode.castShadows(primitive.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(primitive.shadows);
             var colorLength = colorCommands.length;
             for (var j = 0; j < colorLength; ++j) {
                 var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
@@ -1333,8 +1327,8 @@ define([
                 colorCommand.boundingVolume = boundingSpheres[sphereIndex];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
-                colorCommand.castShadows = primitive.castShadows;
-                colorCommand.receiveShadows = primitive.receiveShadows;
+                colorCommand.castShadows = castShadows;
+                colorCommand.receiveShadows = receiveShadows;
 
                 commandList.push(colorCommand);
             }

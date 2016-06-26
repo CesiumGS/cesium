@@ -22,6 +22,7 @@ define([
         '../../DataSources/Property',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
+        '../../Scene/ShadowMode',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../Animation/Animation',
@@ -65,6 +66,7 @@ define([
         Property,
         ImageryLayer,
         SceneMode,
+        ShadowMode,
         knockout,
         when,
         Animation,
@@ -277,7 +279,7 @@ define([
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -963,16 +965,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
-         * Determines if the terrain casts shadows from the sun.
+         * Determines if the terrain casts or shadows from the sun.
          * @memberof Viewer.prototype
-         * @type {Boolean}
+         * @type {ShadowMode}
          */
         terrainShadows : {
             get : function() {
-                return this.scene.globe.castShadows;
+                return this.scene.globe.shadows;
             },
             set : function(value) {
-                this.scene.globe.castShadows = value;
+                this.scene.globe.shadows = value;
             }
         },
 
