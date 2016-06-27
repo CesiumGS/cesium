@@ -143,6 +143,7 @@ defineSuite([
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
+        expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
     });
 
@@ -320,6 +321,24 @@ defineSuite([
 
         return promise.then(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, false);
+        });
+    });
+
+    it('raises unsupportedNodeEvent event when parsing an unsupported kml node type', function() {
+        var dataSource = new KmlDataSource(options);
+        var spy = jasmine.createSpy('unsupportedNodeEvent');
+        dataSource.unsupportedNodeEvent.addEventListener(spy);
+
+        return dataSource.load('Data/KML/unsupported.kml').then(function() {
+            var nodeNames = ['PhotoOverlay', 'ScreenOverlay', 'Tour'];
+            expect(spy.calls.count()).toEqual(3);
+            for (var i = 0; i < nodeNames.length; i++) {
+                var args = spy.calls.argsFor(i);
+                expect(args.length).toEqual(3);
+                expect(args[0]).toBe(dataSource);
+                expect(args[1].localName).toEqual(nodeNames[i]);
+                // args[2] could be undefined, allow for that
+            }
         });
     });
 

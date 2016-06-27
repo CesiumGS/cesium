@@ -1661,6 +1661,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1943,6 +1944,7 @@ define([
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
@@ -1955,10 +1957,11 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
+            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
@@ -2151,6 +2154,8 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
@@ -2270,6 +2275,16 @@ define([
         refreshEvent : {
             get : function() {
                 return this._refresh;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
             }
         },
         /**
