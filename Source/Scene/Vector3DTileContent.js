@@ -3,6 +3,7 @@ define([
     '../Core/BoundingSphere',
     '../Core/Cartesian3',
     '../Core/Cartographic',
+    '../Core/Color',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/destroyObject',
@@ -17,11 +18,13 @@ define([
     '../Core/RequestType',
     '../ThirdParty/when',
     './Cesium3DTileContentState',
-    './LabelCollection'
+    './LabelCollection',
+    './PointPrimitiveCollection'
 ], function(
     BoundingSphere,
     Cartesian3,
     Cartographic,
+    Color,
     defaultValue,
     defined,
     destroyObject,
@@ -36,7 +39,8 @@ define([
     RequestType,
     when,
     Cesium3DTileContentState,
-    LabelCollection) {
+    LabelCollection,
+    PointPrimitiveCollection) {
     'use strict';
 
     /**
@@ -47,6 +51,7 @@ define([
      */
     function Vector3DTileContent(tileset, tile, url) {
         this._labelCollection = undefined;
+        this._pointCollection = undefined;
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -161,6 +166,7 @@ define([
         var json = JSON.parse(text);
 
         var labelCollection = new LabelCollection();
+        var pointCollection = new PointPrimitiveCollection();
 
         var length = json.length;
         for (var i = 0; i < length; ++i) {
@@ -179,12 +185,20 @@ define([
                 text : labelText,
                 position : position
             });
+            pointCollection.add({
+                position : position,
+                pixelSize : 10.0,
+                color : Color.RED,
+                outlineColor : Color.BLACK,
+                oulineWidth : 2.0
+            });
         }
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
 
         this._labelCollection = labelCollection;
+        this._pointCollection = pointCollection;
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     };
@@ -200,6 +214,7 @@ define([
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         this._labelCollection.update(frameState);
+        this._pointCollection.update(frameState);
     };
 
     /**
@@ -214,6 +229,7 @@ define([
      */
     Vector3DTileContent.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
+        this._pointCollection = this._pointCollection && this._pointCollection.destroy();
         return destroyObject(this);
     };
 
