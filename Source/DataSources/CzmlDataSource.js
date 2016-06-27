@@ -167,10 +167,6 @@ define([
     }
 
     function makeReferenceEntity(collection, referenceFrameString, currentReferenceFrame) {
-        if (referenceFrameString === null) {
-          return null;
-        }
-
         if (referenceFrameString[0] === '#') {
             referenceFrameString = referenceFrameString.slice(1);
         }

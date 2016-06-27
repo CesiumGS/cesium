@@ -82,7 +82,7 @@ define([
 
     function frameParents(frame) {
         var frames = [];
-        while (defined(frame) && frame !== null) {
+        while (defined(frame)) {
             frames.unshift(frame);
             frame = frame.position && frame.position.referenceFrame;
         }
@@ -132,7 +132,7 @@ define([
           return Quaternion.clone(value, result);
       }
 
-      if (inputFrame === null || outputFrame === null) {
+      if (!defined(inputFrame) || !defined(outputFrame)) {
           return undefined;
       }
 
