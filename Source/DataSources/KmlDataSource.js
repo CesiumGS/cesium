@@ -277,9 +277,14 @@ define([
         return url;
     }
 
-    function getOrCreateEntity(node, entityCollection) {
+    // an optional context is passed to allow for some malformed kmls (those with multiple geometries with same ids) to still parse
+    // correctly, as they do in Google Earth.
+    function getOrCreateEntity(node, entityCollection, context) {
         var id = queryStringAttribute(node, 'id');
-        id = defined(id) ? id : createGuid();
+        id = defined(id) && id.length !== 0 ? id : createGuid();
+        if(defined(context)){
+            id = context + id;
+        }
         var entity = entityCollection.getOrCreateEntity(id);
         if (!defined(entity.kml)) {
             entity.addProperty('kml');
@@ -1286,14 +1291,14 @@ define([
         return true;
     }
 
-    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity) {
+    function processMultiGeometry(dataSource, entityCollection, geometryNode, entity, styleEntity, context) {
         var childNodes = geometryNode.childNodes;
         var hasGeometry = false;
         for (var i = 0, len = childNodes.length; i < len; i++) {
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                var childEntity = getOrCreateEntity(childNode, entityCollection);
+                var childEntity = getOrCreateEntity(childNode, entityCollection, context);
                 childEntity.parent = entity;
                 childEntity.name = entity.name;
                 childEntity.availability = entity.availability;
@@ -1552,7 +1557,9 @@ define([
             var childNode = childNodes.item(i);
             var geometryProcessor = geometryTypes[childNode.localName];
             if (defined(geometryProcessor)) {
-                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity);
+                // pass the placemark entity id as a context for case of defining multiple child entities together to handle case
+                // where some malformed kmls reuse the same id across placemarks, which works in GE, but is not technically to spec.
+                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity, entity.id);
                 hasGeometry = true;
             }
         }
@@ -1654,6 +1661,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1936,6 +1944,7 @@ define([
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
@@ -1948,10 +1957,11 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
+            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
@@ -2144,6 +2154,8 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
@@ -2263,6 +2275,16 @@ define([
         refreshEvent : {
             get : function() {
                 return this._refresh;
+            }
+        },
+        /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
             }
         },
         /**
