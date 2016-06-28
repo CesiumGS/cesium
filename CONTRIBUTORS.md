@@ -98,10 +98,3 @@
 * [Mati Ostrovsky](https://github.com/mati-o)
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
-* [Dave Whipps](https://github.com/dwhipps)
-=======
->>>>>>> 191a93b... Add Simulation Curriculum to CONTRIBUTORS.md
->>>>>>> e-andersson-zooming_toward_target_point
