@@ -56,6 +56,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
+* [Simulation Curriculum](http://www.simulationcurriculum.com/)
+   * [Dave Whipps](https://github.com/dwhipps)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -94,4 +96,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Mati Ostrovsky](https://github.com/mati-o)
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
-* [Dave Whipps](https://github.com/dwhipps)
