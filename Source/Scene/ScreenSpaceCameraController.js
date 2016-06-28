@@ -430,6 +430,21 @@ define([
     var scratchZoomAxis = new Cartesian3();
     var scratchCameraPositionNormal = new Cartesian3();
 
+    // Scratch variables used in zooming algorithm
+    var scratchTargetNormal = new Cartesian3();
+    var scratchCameraPosition = new Cartesian3();
+    var scratchCameraUpNormal = new Cartesian3();
+    var scratchCameraRightNormal = new Cartesian3();
+    var scratchForwardNormal = new Cartesian3();
+    var scratchPositionToTarget = new Cartesian3();
+    var scratchPositionToTargetNormal = new Cartesian3();
+    var scratchPan = new Cartesian3();
+    var scratchCenterMovement = new Cartesian3();
+    var scratchCenter = new Cartesian3();
+    var scratchCartesian = new Cartesian3();
+    var scratchCartesianTwo = new Cartesian3();
+    var scratchCartesianThree = new Cartesian3();
+
     function handleZoom(object, startPosition, movement, zoomFactor, distanceMeasure, unitPositionDotDirection) {
         var percentage = 1.0;
         if (defined(unitPositionDotDirection)) {
@@ -492,6 +507,10 @@ define([
 
         var zoomOnVector = mode === SceneMode.COLUMBUS_VIEW;
 
+        if (camera.positionCartographic.height < 2000000) {
+            rotatingZoom = true;
+        }
+
         if (!sameStartPosition || rotatingZoom) {
             if (mode === SceneMode.SCENE2D) {
                 var worldPosition = object._zoomWorldPosition;
@@ -522,7 +541,92 @@ define([
                     centerPixel.x = canvas.clientWidth / 2;
                     centerPixel.y = canvas.clientHeight / 2;
                     var centerPosition = pickGlobe(object, centerPixel, scratchCenterPosition);
-                    if (defined(centerPosition)) {
+                    // If centerPosition is not defined, it means the globe does not cover the center position of screen
+
+                    if (defined(centerPosition) && camera.positionCartographic.height < 1000000) {
+
+                        var cameraPosition = scratchCameraPosition;
+                        Cartesian3.clone(camera.position, cameraPosition);
+                        var target = object._zoomWorldPosition;
+
+                        var targetNormal = scratchTargetNormal;
+
+                        targetNormal = Cartesian3.normalize(target, targetNormal);
+
+                        if (Cartesian3.dot(targetNormal, cameraPositionNormal) < 0.0) {
+                            return;
+                        }
+
+                        var center = scratchCenter;
+                        var forward = scratchForwardNormal;
+                        Cartesian3.clone(camera.direction, forward);
+                        Cartesian3.add(cameraPosition, Cartesian3.multiplyByScalar(forward, 1000, scratchCartesian), center);
+
+
+                        var positionToTarget = scratchPositionToTarget;
+                        var positionToTargetNormal = scratchPositionToTargetNormal;
+                        Cartesian3.subtract(target, cameraPosition, positionToTarget);
+
+                        Cartesian3.normalize(positionToTarget, positionToTargetNormal);
+
+                        var alpha = Math.acos( -Cartesian3.dot( cameraPositionNormal, positionToTargetNormal ) );
+                        var cameraDistance = Cartesian3.magnitude( cameraPosition );
+                        var targetDistance = Cartesian3.magnitude( target );
+                        var remainingDistance = cameraDistance - distance;
+                        var positionToTargetDistance = Cartesian3.magnitude(positionToTarget);
+
+                        var gamma = Math.asin( CesiumMath.clamp( positionToTargetDistance / targetDistance * Math.sin(alpha), -1.0, 1.0 ) );
+                        var delta = Math.asin( CesiumMath.clamp( remainingDistance / targetDistance * Math.sin(alpha), -1.0, 1.0 ) );
+                        var beta = gamma - delta + alpha;
+
+                        var up = scratchCameraUpNormal;
+                        Cartesian3.normalize(cameraPosition, up);
+                        var right = scratchCameraRightNormal;
+                        right = Cartesian3.cross(positionToTargetNormal, up, right);
+                        right = Cartesian3.normalize(right, right );
+
+                        Cartesian3.normalize( Cartesian3.cross(up, right, scratchCartesian), forward );
+
+                        // Calculate new position to move to
+                        Cartesian3.multiplyByScalar(Cartesian3.normalize(center, scratchCartesian), (Cartesian3.magnitude(center) - distance), center);
+                        Cartesian3.normalize(cameraPosition, cameraPosition);
+                        Cartesian3.multiplyByScalar(cameraPosition, remainingDistance, cameraPosition);
+
+                        // Pan
+                        var pMid = scratchPan;
+                        Cartesian3.multiplyByScalar(Cartesian3.add(
+                            Cartesian3.multiplyByScalar(up, Math.cos(beta) - 1, scratchCartesianTwo),
+                            Cartesian3.multiplyByScalar(forward, Math.sin(beta), scratchCartesianThree),
+                            scratchCartesian
+                        ), remainingDistance, pMid);
+                        Cartesian3.add(cameraPosition, pMid, cameraPosition);
+
+                        Cartesian3.normalize(center, up);
+                        Cartesian3.normalize( Cartesian3.cross(up, right, scratchCartesian), forward );
+
+                        var cMid = scratchCenterMovement;
+                        Cartesian3.multiplyByScalar(Cartesian3.add(
+                            Cartesian3.multiplyByScalar(up, Math.cos(beta) - 1, scratchCartesianTwo),
+                            Cartesian3.multiplyByScalar(forward, Math.sin(beta), scratchCartesianThree),
+                            scratchCartesian
+                        ), Cartesian3.magnitude(center), cMid);
+                        Cartesian3.add(center, cMid, center);
+
+                        // Update camera
+
+                        // Set new position
+                        Cartesian3.clone(cameraPosition, camera.position);
+
+                        // Set new direction
+                        Cartesian3.normalize(Cartesian3.subtract(center, cameraPosition, scratchCartesian), camera.direction);
+                        Cartesian3.clone(camera.direction, camera.direction);
+
+                        // Set new right & up vectors
+                        Cartesian3.cross(camera.direction, camera.up, camera.right);
+                        Cartesian3.cross(camera.right, camera.direction, camera.up);
+
+                        return;
+                    } else if (defined(centerPosition)) {
                         var positionNormal = Cartesian3.normalize(centerPosition, scratchPositionNormal);
                         var pickedNormal = Cartesian3.normalize(object._zoomWorldPosition, scratchPickNormal);
                         var dotProduct = Cartesian3.dot(pickedNormal, positionNormal);
