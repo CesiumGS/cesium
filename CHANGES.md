@@ -20,10 +20,10 @@ Change Log
 * Added the hot air balloon sample model.
 * Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
 * Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+* Added transform functions to generate 4X4 matrix or quaternion from heading, pitch, roll of an aircraft (use of North East Down local reference)
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
 * Zooming in toward some target point now keeps the target point at the same screen position. [#4016](https://github.com/AnalyticalGraphicsInc/cesium/pull/4016)
-
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
