@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+﻿See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
 ## [Corporate CLA](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt)
 
@@ -58,6 +58,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Keith Pomakis](https://github.com/pomakis)
 * [Vricon](https://www.vricon.com/)
    * [Erik Andersson](https://github.com/e-andersson)
+* [Simulation Curriculum](http://www.simulationcurriculum.com/)
+   * [Dave Whipps](https://github.com/dwhipps)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -96,4 +98,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Mati Ostrovsky](https://github.com/mati-o)
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
+<<<<<<< HEAD
 * [Dave Whipps](https://github.com/dwhipps)
+=======
+>>>>>>> 191a93b... Add Simulation Curriculum to CONTRIBUTORS.md
