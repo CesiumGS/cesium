@@ -619,8 +619,12 @@ define([
             var positions = screenSpaceEventHandler._positions;
 
             var identifier = event.pointerId;
-            getPosition(screenSpaceEventHandler, event, positions.get(identifier));
+            var position = positions.get(identifier);
+            if(!defined(position)){
+                return;
+            }
 
+            getPosition(screenSpaceEventHandler, event, position);
             fireTouchMoveEvents(screenSpaceEventHandler, event);
 
             var previousPositions = screenSpaceEventHandler._previousPositions;
