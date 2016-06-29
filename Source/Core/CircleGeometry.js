@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './EllipseGeometry',
         './Ellipsoid',
@@ -12,6 +13,7 @@ define([
         Cartesian3,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         EllipseGeometry,
         Ellipsoid,
@@ -174,6 +176,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+    
+    defineProperties(CircleGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._ellipseGeometry.rectangle;
+            }
+        }
+    });
 
     return CircleGeometry;
 });

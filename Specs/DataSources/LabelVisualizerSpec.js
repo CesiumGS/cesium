@@ -15,6 +15,7 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene'
     ], function(
         LabelVisualizer,
@@ -32,6 +33,7 @@ defineSuite([
         LabelCollection,
         LabelStyle,
         VerticalOrigin,
+        createGlobe,
         createScene) {
     'use strict';
 
@@ -40,6 +42,7 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.globe = createGlobe();
     });
 
     afterAll(function() {

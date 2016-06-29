@@ -1,17 +1,17 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/SkyAtmosphere',
-        'Core/Math',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/Math',
         'Renderer/ClearCommand',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         SkyAtmosphere,
-        CesiumMath,
         Cartesian3,
         Ellipsoid,
+        CesiumMath,
         ClearCommand,
         SceneMode,
         createScene) {

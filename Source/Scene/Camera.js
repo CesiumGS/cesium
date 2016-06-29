@@ -634,6 +634,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Cartographic}
+         * @readonly
          */
         positionCartographic : {
             get : function() {
