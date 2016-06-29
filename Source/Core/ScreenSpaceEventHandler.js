@@ -7,6 +7,7 @@ define([
         './destroyObject',
         './DeveloperError',
         './FeatureDetection',
+        './getTimestamp',
         './KeyboardEventModifier',
         './ScreenSpaceEventType'
     ], function(
@@ -17,6 +18,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        getTimestamp,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
     'use strict';
@@ -123,11 +125,11 @@ define([
     };
 
     function gotTouchEvent(screenSpaceEventHandler) {
-        screenSpaceEventHandler._lastSeenTouchEvent = Date.now();
+        screenSpaceEventHandler._lastSeenTouchEvent = getTimestamp();
     }
 
     function canProcessMouseEvent(screenSpaceEventHandler) {
-        return (Date.now() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds;
+        return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds;
     }
 
     function handleMouseDown(screenSpaceEventHandler, event) {
@@ -652,7 +654,7 @@ define([
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
-        this._lastSeenTouchEvent = 0;
+        this._lastSeenTouchEvent = -ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds;
 
         this._primaryStartPosition = new Cartesian2();
         this._primaryPosition = new Cartesian2();
