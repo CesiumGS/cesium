@@ -28,6 +28,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/StripeOrientation',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
@@ -62,6 +63,7 @@ defineSuite([
         EntityCollection,
         ReferenceProperty,
         StripeOrientation,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -419,6 +421,7 @@ defineSuite([
                 image : 'image.png',
                 scale : 1.0,
                 rotation : 1.3,
+                heightReference: 'CLAMP_TO_GROUND',
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -462,6 +465,7 @@ defineSuite([
         expect(entity.billboard.image.getValue(Iso8601.MINIMUM_VALUE)).toEqual(sourceUri + 'image.png');
         expect(entity.billboard.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.rotation);
         expect(entity.billboard.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(billboardPacket.billboard.scale);
+        expect(entity.billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
         expect(entity.billboard.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.CENTER);
         expect(entity.billboard.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
         expect(entity.billboard.color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(1.0, 1.0, 1.0, 1.0));
@@ -1552,7 +1556,8 @@ defineSuite([
                 },
                 translucencyByDistance : {
                     nearFarScalar : [1.0, 1.0, 10000.0, 0.0]
-                }
+                },
+                heightReference : 'CLAMP_TO_GROUND'
             }
         };
 
@@ -1568,6 +1573,7 @@ defineSuite([
         expect(entity.point.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.point.scaleByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 2.0, 10000.0, 3.0));
         expect(entity.point.translucencyByDistance.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new NearFarScalar(1.0, 1.0, 10000.0, 0.0));
+        expect(entity.point.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
     });
 
     it('CZML adds data for constrained point.', function() {
@@ -1767,6 +1773,7 @@ defineSuite([
                 incrementallyLoadTextures : true,
                 castShadows : true,
                 receiveShadows : true,
+                heightReference: 'CLAMP_TO_GROUND',
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -1796,6 +1803,7 @@ defineSuite([
         expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.castShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
         expect(entity.model.receiveShadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
+        expect(entity.model.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
 
         var nodeTransform = entity.model.nodeTransformations.getValue(Iso8601.MINIMUM_VALUE).Mesh;
         expect(nodeTransform).toBeDefined();

@@ -21,6 +21,7 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -46,6 +47,7 @@ defineSuite([
         OrthographicFrustum,
         TextureAtlas,
         VerticalOrigin,
+        createGlobe,
         createScene,
         pollToPromise,
         when) {
@@ -1563,48 +1565,9 @@ defineSuite([
     });
 
     describe('height referenced billboards', function() {
-        function createMockGlobe() {
-            var globe = {
-                callback : undefined,
-                removedCallback : false,
-                ellipsoid : Ellipsoid.WGS84,
-                update : function() {},
-                getHeight : function() {
-                    return 0.0;
-                },
-                _surface : {},
-                destroy : function() {}
-            };
-
-            globe.beginFrame = function() {
-            };
-
-            globe.endFrame = function() {
-            };
-
-            globe.terrainProviderChanged = new Event();
-            defineProperties(globe, {
-                terrainProvider : {
-                    set : function(value) {
-                        this.terrainProviderChanged.raiseEvent(value);
-                    }
-                }
-            });
-
-            globe._surface.updateHeight = function(position, callback) {
-                globe.callback = callback;
-                return function() {
-                    globe.removedCallback = true;
-                    globe.callback = undefined;
-                };
-            };
-
-            return globe;
-        }
-
         var billboardsWithHeight;
         beforeEach(function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             billboardsWithHeight = new BillboardCollection({
                 scene : scene
             });
@@ -1643,6 +1606,7 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
+
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)

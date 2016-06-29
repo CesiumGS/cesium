@@ -26,10 +26,12 @@ define([
         '../Shaders/BillboardCollectionVS',
         './Billboard',
         './BlendingState',
+        './HeightReference',
         './HorizontalOrigin',
         './Pass',
         './SceneMode',
-        './TextureAtlas'
+        './TextureAtlas',
+        './VerticalOrigin'
     ], function(
         AttributeCompression,
         BoundingSphere,
@@ -57,10 +59,12 @@ define([
         BillboardCollectionVS,
         Billboard,
         BlendingState,
+        HeightReference,
         HorizontalOrigin,
         Pass,
         SceneMode,
-        TextureAtlas) {
+        TextureAtlas,
+        VerticalOrigin) {
     'use strict';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
@@ -284,7 +288,7 @@ define([
 
         var scene = this._scene;
         if (defined(scene)) {
-            scene.terrainProviderChanged.addEventListener(function() {
+            this._removeCallbackFunc = scene.terrainProviderChanged.addEventListener(function() {
                 var billboards = this._billboards;
                 var length = billboards.length;
                 for (var i=0;i<length;++i) {
@@ -785,7 +789,8 @@ define([
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, Math.abs(pixelOffsetX + translateX), Math.abs(-pixelOffsetY + translateY));
 
         var horizontalOrigin = billboard.horizontalOrigin;
-        var verticalOrigin = billboard.verticalOrigin;
+        var heightReference = billboard._heightReference;
+        var verticalOrigin = (heightReference === HeightReference.NONE) ? billboard._verticalOrigin : VerticalOrigin.BOTTOM;
         var show = billboard.show;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
@@ -795,7 +800,7 @@ define([
         }
 
         billboardCollection._allHorizontalCenter = billboardCollection._allHorizontalCenter && horizontalOrigin === HorizontalOrigin.CENTER;
-        billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === HorizontalOrigin.CENTER;
+        billboardCollection._allVerticalCenter = billboardCollection._allVerticalCenter && verticalOrigin === VerticalOrigin.CENTER;
 
         var bottomLeftX = 0;
         var bottomLeftY = 0;
@@ -985,7 +990,13 @@ define([
         var i;
         var writer = vafWriters[attributeLocations.eyeOffset];
         var eyeOffset = billboard.eyeOffset;
-        billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
+
+        // For billboards that are clamped to ground, move it slightly closer to the camera
+        var eyeOffsetZ = eyeOffset.z;
+        if (billboard._heightReference !== HeightReference.NONE) {
+            eyeOffsetZ *= 1.005;
+        }
+        billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffsetZ));
 
         if (billboardCollection._instanced) {
             var width = 0;
@@ -1009,13 +1020,13 @@ define([
             var compressedTexCoordsRange = AttributeCompression.compressTextureCoordinates(scratchCartesian2);
 
             i = billboard._index;
-            writer(i, eyeOffset.x, eyeOffset.y, eyeOffset.z, compressedTexCoordsRange);
+            writer(i, eyeOffset.x, eyeOffset.y, eyeOffsetZ, compressedTexCoordsRange);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffset.z, 0.0);
-            writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffset.z, 0.0);
-            writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffset.z, 0.0);
-            writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffset.z, 0.0);
+            writer(i + 0, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
+            writer(i + 1, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
+            writer(i + 2, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
+            writer(i + 3, eyeOffset.x, eyeOffset.y, eyeOffsetZ, 0.0);
         }
     }
 
@@ -1404,9 +1415,6 @@ define([
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
                 }
-                if (defined(this._scene)) {
-                    vs.defines.push('CLAMPED_TO_GROUND');
-                }
 
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
@@ -1486,9 +1494,6 @@ define([
                 }
                 if (this._shaderPixelOffsetScaleByDistance) {
                     vs.defines.push('EYE_DISTANCE_PIXEL_OFFSET');
-                }
-                if (defined(this._scene)) {
-                    vs.defines.push('CLAMPED_TO_GROUND');
                 }
 
                 fs = new ShaderSource({
@@ -1574,6 +1579,11 @@ define([
      * @see BillboardCollection#isDestroyed
      */
     BillboardCollection.prototype.destroy = function() {
+        if (defined(this._removeCallbackFunc)) {
+            this._removeCallbackFunc();
+            this._removeCallbackFunc = undefined;
+        }
+
         this._textureAtlas = this._destroyTextureAtlas && this._textureAtlas && this._textureAtlas.destroy();
         this._sp = this._sp && this._sp.destroy();
         this._spPick = this._spPick && this._spPick.destroy();

@@ -5,11 +5,13 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
@@ -20,11 +22,13 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
         NearFarScalar,
         BillboardCollection,
+        HeightReference,
         HorizontalOrigin,
         VerticalOrigin,
         BoundingSphereState,
@@ -33,6 +37,7 @@ define([
 
     var defaultColor = Color.WHITE;
     var defaultEyeOffset = Cartesian3.ZERO;
+    var defaultHeightReference = HeightReference.NONE;
     var defaultPixelOffset = Cartesian2.ZERO;
     var defaultScale = 1.0;
     var defaultRotation = 0.0;
@@ -123,9 +128,10 @@ define([
             if (!defined(billboard)) {
                 var billboardCollection = this._billboardCollection;
                 if (!defined(billboardCollection)) {
-                    billboardCollection = new BillboardCollection();
+                    billboardCollection = this._scene.primitives.add(new BillboardCollection({
+                        scene : this._scene
+                    }));
                     this._billboardCollection = billboardCollection;
-                    this._scene.primitives.add(billboardCollection);
                 }
 
                 var length = unusedIndexes.length;
@@ -148,6 +154,7 @@ define([
             billboard.position = position;
             billboard.color = Property.getValueOrDefault(billboardGraphics._color, time, defaultColor, color);
             billboard.eyeOffset = Property.getValueOrDefault(billboardGraphics._eyeOffset, time, defaultEyeOffset, eyeOffset);
+            billboard.heightReference = Property.getValueOrDefault(billboardGraphics._heightReference, time, defaultHeightReference);
             billboard.pixelOffset = Property.getValueOrDefault(billboardGraphics._pixelOffset, time, defaultPixelOffset, pixelOffset);
             billboard.scale = Property.getValueOrDefault(billboardGraphics._scale, time, defaultScale);
             billboard.rotation = Property.getValueOrDefault(billboardGraphics._rotation, time, defaultRotation);
@@ -195,7 +202,15 @@ define([
             return BoundingSphereState.FAILED;
         }
 
-        result.center = Cartesian3.clone(item.billboard.position, result.center);
+        var billboard = item.billboard;
+        if (billboard.heightReference === HeightReference.NONE) {
+            result.center = Cartesian3.clone(billboard.position, result.center);
+        } else {
+            if (!defined(billboard._clampedPosition)) {
+                return BoundingSphereState.PENDING;
+            }
+            result.center = Cartesian3.clone(billboard._clampedPosition, result.center);
+        }
         result.radius = 0;
         return BoundingSphereState.DONE;
     };
