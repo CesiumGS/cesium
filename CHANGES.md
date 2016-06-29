@@ -5,40 +5,40 @@ Change Log
 
 * Breaking changes
     * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
-* Added entities on terrain
-    * Added `heightReference` property to point, billboard and model entities that would allow them to be rendered relative to terrain.
-    * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if it's material is a `ColorMaterialProperty` and it doesn't have a `height` or `extrudedHeight`. Geometry that has any other type of material won't be drawn on terrain.
+* Added terrain clamping to entities, KML, and GeoJSON
+    * Added `heightReference` property to point, billboard and model entities.
+    * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if its material is a `ColorMaterialProperty` instance and it doesn't have a `height` or `extrudedHeight`. Entities with any other type of material are not clamped to terrain.
     * `KMLDataSource`
-      * Point and model features will always respect `altitudeMode`.
-      * Adds an option `clampToGround` that when set to true will clamp `Polygon`, `LineString` and `LinearRing` features to the ground if their `altitudeMode` is `clampToGround`. For this case, lines use a corridor instead of a polyline.
+      * Point and Model features will always respect `altitudeMode`.
+      * Added `clampToGround` property.  When `true`, clamps `Polygon`, `LineString` and `LinearRing` features to the ground if their `altitudeMode` is `clampToGround`. For this case, lines use a corridor instead of a polyline.
     * `GeoJsonDataSource`
-      * Points with a height will be drawn at that height, otherwise they will be clamped to the ground.
-      * Adds an option `clampToGround` that when set to true will clamp `Polygon` and `LineString` features to the ground. For this case, lines use a corridor instead of a polyline.
-    * Added `Ground Clamping` example to Sandcastle [here](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Clamping.html&label=Showcases).
-* Improved performance in `GroundPrimitive`.
-* Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
-* `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
-* Made changes to KML processing that allows for some incorrect KML (specifically KML that reuses IDs) to still be parsed correctly
-* Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
+      * Points with a height will be drawn at that height; otherwise, they will be clamped to the ground.
+      * Added `clampToGround` property.  When `true`, clamps `Polygon` and `LineString` features to the ground. For this case, lines use a corridor instead of a polyline.
+    * Added [Ground Clamping Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Clamping.html&label=Showcases).
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
+* Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
     * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
     * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
     * `Model`: `heightReference`, `maximumScale`
     * `Point`: `heightReference`, `scaleByDistance`, `translucencyByDistance`
     * `Ellipsoid`: `subdivisions`, `stackPartitions`, `slicePartitions`
+* Added `rotatable2D` property to to `Scene`, `CesiumWidget` and `Viewer` to enable map rotation in 2D mode. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* `Camera.setView` and `Camera.flyTo` now use the `orientation.heading` parameter in 2D if the map is rotatable.
+* Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range [0, 1].
+* Zooming in toward some target point now keeps the target point at the same screen position. [#4016](https://github.com/AnalyticalGraphicsInc/cesium/pull/4016)
+* Improved `GroundPrimitive` performance.
+* Some incorrect KML (specifically KML that reuses IDs) is now parsed correctly.
+* Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
+* Added aircraft heading, pitch, roll functions: `Transforms.aircraftHeadingPitchRollToFixedFrame` and `Transforms.aircraftHeadingPitchRollQuaternion`.
 * `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
-* Updated Cardboard Sandcastle example.
-* Added the hot air balloon sample model.
+* Updated [Google Cardboard Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cardboard.html&label=Showcase).
+* Added [hot air balloon](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Apps/SampleData/models/CesiumBalloon) sample model.
 * Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
 * Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
-* Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range [0, 1].
-* Added aircraft heading, pitch, roll functions: `Transforms.aircraftHeadingPitchRollToFixedFrame` and `Transforms.aircraftHeadingPitchRollQuaternion`.
-* Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
-* Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
-* Zooming in toward some target point now keeps the target point at the same screen position. [#4016](https://github.com/AnalyticalGraphicsInc/cesium/pull/4016)
 * Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
+* Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
+* Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
