@@ -33,6 +33,7 @@ Change Log
 * Added the hot air balloon sample model.
 * Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
 * Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+* Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range [0, 1].
 * Added aircraft heading, pitch, roll functions: `Transforms.aircraftHeadingPitchRollToFixedFrame` and `Transforms.aircraftHeadingPitchRollQuaternion`.
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
