@@ -1480,7 +1480,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var entityView = this._entityView;
         if (defined(entityView)) {
-            entityView.update(time);
+            var trackedEntity = this._trackedEntity;
+            var trackedState = this._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
+            if (trackedState === BoundingSphereState.DONE) {
+                entityView.update(time, boundingSphereScratch);
+            }
         }
 
         var position;
@@ -1872,8 +1876,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
-        viewer._entityView.update(currentTime);
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid);
+        viewer._entityView.update(currentTime, bs);
         viewer._needTrackedEntityUpdate = false;
     }
 

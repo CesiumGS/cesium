@@ -4,24 +4,36 @@ defineSuite([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defineProperties',
+        'Core/Ellipsoid',
+        'Core/Event',
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
+        'Scene/BillboardCollection',
+        'Scene/HeightReference',
+        'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
         PointVisualizer,
         BoundingSphere,
         Cartesian3,
         Color,
+        defineProperties,
+        Ellipsoid,
+        Event,
         JulianDate,
         NearFarScalar,
         BoundingSphereState,
         ConstantProperty,
         EntityCollection,
         PointGraphics,
+        BillboardCollection,
+        HeightReference,
+        PointPrimitiveCollection,
         createScene) {
     'use strict';
 
@@ -30,6 +42,29 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
+        scene.globe = {
+            ellipsoid : Ellipsoid.WGS84,
+            _surface : {}
+        };
+
+        scene.globe.getHeight = function() {
+            return 0.0;
+        };
+
+        scene.globe.destroy = function() {
+        };
+
+        scene.globe._surface.updateHeight = function() {
+        };
+
+        scene.globe.terrainProviderChanged = new Event();
+        defineProperties(scene.globe, {
+            terrainProvider : {
+                set : function(value) {
+                    this.terrainProviderChanged.raiseEvent(value);
+                }
+            }
+        });
     });
 
     afterAll(function() {
@@ -122,6 +157,7 @@ defineSuite([
         visualizer.update(time);
 
         var pointPrimitiveCollection = scene.primitives.get(0);
+        expect(pointPrimitiveCollection instanceof PointPrimitiveCollection).toBe(true);
         expect(pointPrimitiveCollection.length).toEqual(1);
         var pointPrimitive = pointPrimitiveCollection.get(0);
 
@@ -150,6 +186,60 @@ defineSuite([
         point.show = false;
         visualizer.update(time);
         expect(pointPrimitive.show).toEqual(point.show.getValue(time));
+    });
+
+    it('A PointGraphics on terrain causes a Billboard to be created and updated.', function() {
+        var time = JulianDate.now();
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PointVisualizer(scene, entityCollection);
+
+        var entity = entityCollection.add({
+            position : new Cartesian3(1234, 5678, 9101112),
+            point : {
+                show : true,
+                color : new Color(0.1, 0.2, 0.3, 0.4),
+                outlineColor : new Color(0.5, 0.6, 0.7, 0.8),
+                outlineWidth : 9,
+                pixelSize : 10,
+                scaleByDistance : new NearFarScalar(11, 12, 13, 14),
+                heightReference : HeightReference.CLAMP_TO_GROUND
+            }
+        });
+        var point = entity.point;
+
+        visualizer.update(time);
+
+        var billboardCollection = scene.primitives.get(0);
+        expect(billboardCollection instanceof BillboardCollection).toBe(true);
+        expect(billboardCollection.length).toEqual(1);
+        var billboard = billboardCollection.get(0);
+
+        expect(billboard.show).toEqual(point.show.getValue(time));
+        expect(billboard.position).toEqual(entity.position.getValue(time));
+        expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
+        //expect(billboard.color).toEqual(point.color.getValue(time));
+        //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
+        //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));
+
+        point.color = new Color(0.15, 0.16, 0.17, 0.18);
+        point.outlineColor = new Color(0.19, 0.20, 0.21, 0.22);
+        point.pixelSize = 23;
+        point.outlineWidth = 24;
+        point.scaleByDistance = new NearFarScalar(25, 26, 27, 28);
+
+        visualizer.update(time);
+
+        expect(billboard.show).toEqual(point.show.getValue(time));
+        expect(billboard.position).toEqual(entity.position.getValue(time));
+        expect(billboard.scaleByDistance).toEqual(point.scaleByDistance.getValue(time));
+        //expect(billboard.color).toEqual(point.color.getValue(time));
+        //expect(billboard.outlineColor).toEqual(point.outlineColor.getValue(time));
+        //expect(billboard.outlineWidth).toEqual(point.outlineWidth.getValue(time));
+
+        point.show = false;
+        visualizer.update(time);
+        expect(billboard.show).toEqual(point.show.getValue(time));
     });
 
     it('Reuses primitives when hiding one and showing another', function() {

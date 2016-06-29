@@ -3,11 +3,13 @@ define([
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
+        './Cartographic',
         './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -17,16 +19,19 @@ define([
         './Math',
         './PolygonPipeline',
         './PrimitiveType',
+        './Rectangle',
         './VertexFormat'
     ], function(
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
+        Cartographic,
         ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -36,6 +41,7 @@ define([
         CesiumMath,
         PolygonPipeline,
         PrimitiveType,
+        Rectangle,
         VertexFormat) {
     'use strict';
 
@@ -622,6 +628,120 @@ define([
         };
     }
 
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+
+    function computeOffsetPoints(position1, position2, ellipsoid, halfWidth, min, max) {
+        // Compute direction of offset the point
+        var direction = Cartesian3.subtract(position2, position1, scratchCartesian1);
+        Cartesian3.normalize(direction, direction);
+        var normal = ellipsoid.geodeticSurfaceNormal(position1, scratchCartesian2);
+        var offsetDirection = Cartesian3.cross(direction, normal, scratchCartesian1);
+        Cartesian3.multiplyByScalar(offsetDirection, halfWidth, offsetDirection);
+
+        var minLat = min.latitude;
+        var minLon = min.longitude;
+        var maxLat = max.latitude;
+        var maxLon = max.longitude;
+
+        // Compute 2 offset points
+        Cartesian3.add(position1, offsetDirection, scratchCartesian2);
+        ellipsoid.cartesianToCartographic(scratchCartesian2, scratchCartographic);
+
+        var lat = scratchCartographic.latitude;
+        var lon = scratchCartographic.longitude;
+        minLat = Math.min(minLat, lat);
+        minLon = Math.min(minLon, lon);
+        maxLat = Math.max(maxLat, lat);
+        maxLon = Math.max(maxLon, lon);
+
+        Cartesian3.subtract(position1, offsetDirection, scratchCartesian2);
+        ellipsoid.cartesianToCartographic(scratchCartesian2, scratchCartographic);
+
+        lat = scratchCartographic.latitude;
+        lon = scratchCartographic.longitude;
+        minLat = Math.min(minLat, lat);
+        minLon = Math.min(minLon, lon);
+        maxLat = Math.max(maxLat, lat);
+        maxLon = Math.max(maxLon, lon);
+
+        min.latitude = minLat;
+        min.longitude = minLon;
+        max.latitude = maxLat;
+        max.longitude = maxLon;
+    }
+
+    var scratchCartesianOffset = new Cartesian3();
+    var scratchCartesianEnds = new Cartesian3();
+    var scratchCartographicMin = new Cartographic();
+    var scratchCartographicMax = new Cartographic();
+
+    function computeRectangle(positions, ellipsoid, width, cornerType) {
+        var length = positions.length - 1;
+        if (length === 0) {
+            return new Rectangle();
+        }
+        var halfWidth = width * 0.5;
+
+        scratchCartographicMin.latitude = Number.POSITIVE_INFINITY;
+        scratchCartographicMin.longitude = Number.POSITIVE_INFINITY;
+        scratchCartographicMax.latitude = Number.NEGATIVE_INFINITY;
+        scratchCartographicMax.longitude = Number.NEGATIVE_INFINITY;
+
+        var lat, lon;
+        if (cornerType === CornerType.ROUNDED) {
+            // Compute start cap
+            var first = positions[0];
+            Cartesian3.subtract(first, positions[1], scratchCartesianOffset);
+            Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
+            Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
+            Cartesian3.add(first, scratchCartesianOffset, scratchCartesianEnds);
+
+            ellipsoid.cartesianToCartographic(scratchCartesianEnds, scratchCartographic);
+            lat = scratchCartographic.latitude;
+            lon = scratchCartographic.longitude;
+            scratchCartographicMin.latitude = Math.min(scratchCartographicMin.latitude, lat);
+            scratchCartographicMin.longitude = Math.min(scratchCartographicMin.longitude, lon);
+            scratchCartographicMax.latitude = Math.max(scratchCartographicMax.latitude, lat);
+            scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
+        }
+
+        // Compute the rest
+        for (var i = 0; i < length; ++i) {
+            computeOffsetPoints(positions[i], positions[i+1], ellipsoid, halfWidth,
+                scratchCartographicMin, scratchCartographicMax);
+        }
+
+        // Compute ending point
+        var last = positions[length];
+        Cartesian3.subtract(last, positions[length-1], scratchCartesianOffset);
+        Cartesian3.normalize(scratchCartesianOffset, scratchCartesianOffset);
+        Cartesian3.multiplyByScalar(scratchCartesianOffset, halfWidth, scratchCartesianOffset);
+        Cartesian3.add(last, scratchCartesianOffset, scratchCartesianEnds);
+        computeOffsetPoints(last, scratchCartesianEnds, ellipsoid, halfWidth,
+            scratchCartographicMin, scratchCartographicMax);
+
+        if (cornerType === CornerType.ROUNDED) {
+            // Compute end cap
+            ellipsoid.cartesianToCartographic(scratchCartesianEnds, scratchCartographic);
+            lat = scratchCartographic.latitude;
+            lon = scratchCartographic.longitude;
+            scratchCartographicMin.latitude = Math.min(scratchCartographicMin.latitude, lat);
+            scratchCartographicMin.longitude = Math.min(scratchCartographicMin.longitude, lon);
+            scratchCartographicMax.latitude = Math.max(scratchCartographicMax.latitude, lat);
+            scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
+        }
+
+        var rectangle = new Rectangle();
+        rectangle.north = scratchCartographicMax.latitude;
+        rectangle.south = scratchCartographicMin.latitude;
+        rectangle.east = scratchCartographicMax.longitude;
+        rectangle.west = scratchCartographicMin.longitude;
+
+        return rectangle;
+    }
+
     /**
      * A description of a corridor. Corridor geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
      *
@@ -673,12 +793,13 @@ define([
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createCorridorGeometry';
+        this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 5;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 5;
     }
 
     /**
@@ -714,6 +835,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._width;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
@@ -723,6 +847,7 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         positions : undefined,
         ellipsoid : scratchEllipsoid,
@@ -764,6 +889,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var width = array[startingIndex++];
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
@@ -788,6 +916,7 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._cornerType = cornerType;
         result._granularity = granularity;
+        result._rectangle = Rectangle.clone(rectangle);
 
         return result;
     };
@@ -869,6 +998,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+
+    defineProperties(CorridorGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return CorridorGeometry;
 });

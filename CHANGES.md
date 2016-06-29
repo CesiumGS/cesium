@@ -3,6 +3,19 @@ Change Log
 
 ### 1.23 - 2016-07-01
 
+* Breaking changes
+    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
+* Added entities on terrain
+    * Added `heightReference` property to point, billboard and model entities that would allow them to be rendered relative to terrain.
+    * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if it's material is a `ColorMaterialProperty` and it doesn't have a `height` or `extrudedHeight`. Geometry that has any other type of material won't be drawn on terrain.
+    * `KMLDataSource`
+      * Point and model features will always respect `altitudeMode`.
+      * Adds an option `clampToGround` that when set to true will clamp `Polygon`, `LineString` and `LinearRing` features to the ground if their `altitudeMode` is `clampToGround`. For this case, lines use a corridor instead of a polyline.
+    * `GeoJsonDataSource`
+      * Points with a height will be drawn at that height, otherwise they will be clamped to the ground.
+      * Adds an option `clampToGround` that when set to true will clamp `Polygon` and `LineString` features to the ground. For this case, lines use a corridor instead of a polyline.
+    * Added `Ground Clamping` example to Sandcastle [here](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Clamping.html&label=Showcases).
+* Improved performance in `GroundPrimitive`.
 * Add a `rotatable2D` option to to `Scene`, `CesiumWidget` and `Viewer` to enable a rotatable map in 2D. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
 * `Camera.setView` and `Camera.flyTo` will now use the `orientation.heading` parameter in 2D if the map is rotatable.
 * Made changes to KML processing that allows for some incorrect KML (specifically KML that reuses IDs) to still be parsed correctly
@@ -10,10 +23,10 @@ Change Log
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
 * Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
-    * `Billboard`: `width`, `height`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
-    * `Label`: `translucencyByDistance`, `pixelOffsetScaleByDistance`
-    * `Model`: `maximumScale`
-    * `Point`: `scaleByDistance`, `translucencyByDistance`
+    * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
+    * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
+    * `Model`: `heightReference`, `maximumScale`
+    * `Point`: `heightReference`, `scaleByDistance`, `translucencyByDistance`
     * `Ellipsoid`: `subdivisions`, `stackPartitions`, `slicePartitions`
 * `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
 * Updated Cardboard Sandcastle example.
