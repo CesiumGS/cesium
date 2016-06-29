@@ -38,6 +38,7 @@ Change Log
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
 * Zooming in toward some target point now keeps the target point at the same screen position. [#4016](https://github.com/AnalyticalGraphicsInc/cesium/pull/4016)
+* Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
