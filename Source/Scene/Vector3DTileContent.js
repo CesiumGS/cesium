@@ -205,21 +205,29 @@ define([
         var polygonInstances = [];
         var outlineInstances = [];
 
+        var minHeight = Number.POSITIVE_INFINITY;
+        var maxHeight = Number.NEGATIVE_INFINITY;
+
         var polygons = json.polygons;
         var length = polygons.length;
+
+        var color = Color.fromRandom().withAlpha(0.5);
+
         for (var i = 0; i < length; ++i) {
+            var polygon = polygons[i];
             polygonInstances.push(new GeometryInstance({
                 geometry : PolygonGeometry.fromPositions({
-                    positions : polygons[i].positions,
+                    positions : polygon.positions,
                     vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
                 }),
                 attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED.withAlpha(0.5))
+                    //color: ColorGeometryInstanceAttribute.fromColor(Color.RED.withAlpha(0.5))
+                    color: ColorGeometryInstanceAttribute.fromColor(color)
                 }
             }));
             outlineInstances.push(new GeometryInstance({
                 geometry : new PolylineGeometry({
-                    positions : polygons[i].positions,
+                    positions : polygon.positions,
                     width : 1.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT
                 }),
@@ -227,8 +235,12 @@ define([
                     color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }));
+
+            minHeight = Math.min(minHeight, defaultValue(polygon.minimumHeight, minHeight));
+            maxHeight = Math.max(maxHeight, defaultValue(polygon.maximumHeight, maxHeight));
         }
 
+        /*
         this._primitives.push(new Primitive({
             geometryInstances : polygonInstances,
             appearance : new PerInstanceColorAppearance({
@@ -243,13 +255,14 @@ define([
             appearance : new PolylineColorAppearance(),
             asynchrounous : false
         }));
+        */
 
-        /*
         this._primitives.push(new GroundPrimitive({
             geometryInstances : polygonInstances,
-            asynchrounous : false
+            asynchrounous : false,
+            _minimumHeight : minHeight !== Number.POSITIVE_INFINITY ? minHeight : undefined,
+            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined
         }));
-        */
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
