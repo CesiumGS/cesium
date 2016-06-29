@@ -30,6 +30,7 @@ define([
      * @param {Number} [height=0.0] The height of the rectangle.
      *
      * @see BoundingSphere
+     * @see Packable
      */
     function BoundingRectangle(x, y, width, height) {
         /**
@@ -60,6 +61,64 @@ define([
          */
         this.height = defaultValue(height, 0.0);
     }
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @type {Number}
+     */
+    BoundingRectangle.packedLength = 4;
+
+    /**
+     * Stores the provided instance into the provided array.
+     *
+     * @param {BoundingRectangle} value The value to pack.
+     * @param {Number[]} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     */
+    BoundingRectangle.pack = function(value, array, startingIndex) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.x;
+        array[startingIndex++] = value.y;
+        array[startingIndex++] = value.width;
+        array[startingIndex] = value.height;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     *
+     * @param {Number[]} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {BoundingRectangle} [result] The object into which to store the result.
+     * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
+     */
+    BoundingRectangle.unpack = function(array, startingIndex, result) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+        //>>includeEnd('debug');
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+        result.x = array[startingIndex++];
+        result.y = array[startingIndex++];
+        result.width = array[startingIndex++];
+        result.height = array[startingIndex];
+        return result;
+    };
 
     /**
      * Computes a bounding rectangle enclosing the list of 2D points.

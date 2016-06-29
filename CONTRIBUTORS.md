@@ -1,4 +1,4 @@
-See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
+﻿See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesium.  The following people have contributed to Cesium, under the following agreements:
 
 ## [Corporate CLA](http://www.agi.com/licenses/corporate-cla-agi-v1.0.txt)
 
@@ -31,9 +31,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Brendan Flood](https://github.com/bflood-agi)
    * [Thomas Pedbereznak](https://github.com/TomPed)
    * [Rob Taglang](https://github.com/lasalvavida)
-   * [Todd Smith] (https://github.com/tsmith717)
-   * [Josh Becker] (https://github.com/JoshuaStorm)
-   * [Kangning Li] (https://github.com/likangning93)
+   * [Todd Smith](https://github.com/tsmith717)
+   * [Josh Becker](https://github.com/JoshuaStorm)
+   * [Kangning Li](https://github.com/likangning93)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
@@ -51,12 +51,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Mike Macaulay](https://github.com/mmacaula)
    * [Nathan Schulte](https://github.com/nmschulte)
    * [Jed Fong](https://github.com/jedfong)
+   * [Brandon McAllister](https://github.com/bmcallis)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
    * [Keith Pomakis](https://github.com/pomakis)
 * [Vricon](http://www.vricon.com/)
    * [Erik Andersson](https://github.com/e-andersson)
+* [Simulation Curriculum](http://www.simulationcurriculum.com/)
+   * [Dave Whipps](https://github.com/dwhipps)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)

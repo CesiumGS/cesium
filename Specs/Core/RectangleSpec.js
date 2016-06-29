@@ -124,6 +124,57 @@ defineSuite([
         expect(rectangle.north).toEqual(maxLat.latitude);
     });
 
+    it('fromCartesianArray produces expected values.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84);
+        expect(rectangle.west).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON15);
+        expect(rectangle.east).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
+    });
+
+    it('fromCartesianArray produces rectangle that crosses IDL.', function() {
+        var minLon = Cartographic.fromDegrees(-178, 3);
+        var minLat = Cartographic.fromDegrees(-179, -4);
+        var maxLon = Cartographic.fromDegrees(178, 3);
+        var maxLat = Cartographic.fromDegrees(179, 4);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84);
+        expect(rectangle.east).toEqual(minLon.longitude);
+        expect(rectangle.south).toEqual(minLat.latitude);
+        expect(rectangle.west).toEqual(maxLon.longitude);
+        expect(rectangle.north).toEqual(maxLat.latitude);
+    });
+
+    it('fromCartesianArray works with a result parameter.', function() {
+        var minLon = new Cartographic(-0.1, 0.3, 0.0);
+        var minLat = new Cartographic(0.0, -0.2, 0.0);
+        var maxLon = new Cartographic(0.3, -0.1, 0.0);
+        var maxLat = new Cartographic(0.2, 0.4, 0.0);
+
+        var wgs84 = Ellipsoid.WGS84;
+
+        var result = new Rectangle();
+        var rectangle = Rectangle.fromCartesianArray(
+            wgs84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]), wgs84, result);
+        expect(result).toBe(rectangle);
+        expect(rectangle.west).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON15);
+        expect(rectangle.east).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON15);
+        expect(rectangle.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON15);
+    });
+
+
     it('clone works without a result parameter.', function() {
         var rectangle = new Rectangle(west, south, east, north);
         var returnedResult = rectangle.clone();
@@ -188,6 +239,12 @@ defineSuite([
     it('fromCartographicArray throws with no array', function() {
         expect(function() {
             Rectangle.fromCartographicArray(undefined, new Rectangle());
+        }).toThrowDeveloperError();
+    });
+
+    it('fromCartesianArray throws with no array', function() {
+        expect(function() {
+            Rectangle.fromCartesianArray(undefined, undefined, new Rectangle());
         }).toThrowDeveloperError();
     });
 

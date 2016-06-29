@@ -6,6 +6,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryPipeline',
         'Core/Math',
+        'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -15,6 +16,7 @@ defineSuite([
         Ellipsoid,
         GeometryPipeline,
         CesiumMath,
+        Rectangle,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -627,20 +629,40 @@ defineSuite([
         expect(notEqualCount).toEqual(6);
     });
 
+    it('computing rectangle property', function() {
+        var p = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -100.5, 30.0, 92,
+                    -100.0, 30.0, 92,
+                    -100.0, 30.5, 92,
+                    -100.5, 30.5, 92
+                ])},
+            granularity: CesiumMath.PI
+        });
+
+        var r = p.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqualEpsilon(30.5, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(-100.0, CesiumMath.EPSILON13);
+        expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
-        -124.0, 35.0,
-        -110.0, 35.0,
-        -110.0, 40.0
+        -12.4, 3.5,
+        -12.0, 3.5,
+        -12.0, 4.0
     ]);
     var holePositions0 = Cartesian3.fromDegreesArray([
-        -122.0, 36.0,
-        -122.0, 39.0,
-        -112.0, 39.0
+        -12.2, 3.5,
+        -12.2, 3.6,
+        -12.3, 3.6
     ]);
     var holePositions1 = Cartesian3.fromDegreesArray([
-        -120.0, 36.5,
-        -114.0, 36.5,
-        -114.0, 38.5
+        -12.20, 3.5,
+        -12.25, 3.5,
+        -12.25, 3.55
     ]);
     var hierarchy = {
         positions : positions,
@@ -667,6 +689,7 @@ defineSuite([
             array.push(positions[i].x, positions[i].y, positions[i].z);
         }
     }
+    var rectangle = new Rectangle(-0.21642082724729672, 0.06108652381980151, -0.20943951023931984, 0.06981317007977318);
     var packedInstance = [3.0, 1.0];
     addPositions(packedInstance, positions);
     packedInstance.push(3.0, 1.0);
@@ -674,6 +697,8 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 51);
+    packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+    packedInstance.push(rectangle.west, rectangle.south, rectangle.east, rectangle.north);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 55);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

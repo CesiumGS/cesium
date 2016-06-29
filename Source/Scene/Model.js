@@ -3383,10 +3383,6 @@ define([
             }
 
             var clampedModelMatrix = model._clampedModelMatrix;
-            if (!defined(clampedModelMatrix)) {
-                clampedModelMatrix = new Matrix4();
-                model._clampedModelMatrix = clampedModelMatrix;
-            }
 
             // Modify clamped model matrix to use new height
             Matrix4.clone(model.modelMatrix, clampedModelMatrix);
@@ -3424,6 +3420,10 @@ define([
         scratchPosition.y = modelMatrix[13];
         scratchPosition.z = modelMatrix[14];
         var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        if (!defined(model._clampedModelMatrix)) {
+            model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+        }
 
         // Install callback to handle updating of terrain tiles
         var surface = globe._surface;

@@ -197,6 +197,18 @@ define([
         this._moveStart = new Event();
         this._moveEnd = new Event();
 
+        this._changed = new Event();
+        this._changedPosition = undefined;
+        this._changedDirection = undefined;
+        this._changedFrustum = undefined;
+
+        /**
+         * The amount the camera has to change before the <code>changed</code> event is raised. The value is a percentage in the [0, 1] range.
+         * @type {number}
+         * @default 0.5
+         */
+        this.percentageChanged = 0.5;
+
         this._viewMatrix = new Matrix4();
         this._invViewMatrix = new Matrix4();
         updateViewMatrix(this);
@@ -250,6 +262,81 @@ define([
         Matrix4.multiply(camera._viewMatrix, camera._actualInvTransform, camera._viewMatrix);
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
+
+    Camera.prototype._updateCameraChanged = function() {
+        var camera = this;
+
+        if (camera._changed.numberOfListeners === 0) {
+            return;
+        }
+
+        var percentageChanged = camera.percentageChanged;
+
+        if (camera._mode === SceneMode.SCENE2D) {
+            if (!defined(camera._changedFrustum)) {
+                camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
+                camera._changedFrustum = camera.frustum.clone();
+                return;
+            }
+
+            var position = camera.position;
+            var lastPosition = camera._changedPosition;
+
+            var frustum = camera.frustum;
+            var lastFrustum = camera._changedFrustum;
+
+            var x0 = position.x + frustum.left;
+            var x1 = position.x + frustum.right;
+            var x2 = lastPosition.x + lastFrustum.left;
+            var x3 = lastPosition.x + lastFrustum.right;
+
+            var y0 = position.y + frustum.bottom;
+            var y1 = position.y + frustum.top;
+            var y2 = lastPosition.y + lastFrustum.bottom;
+            var y3 = lastPosition.y + lastFrustum.top;
+
+            var leftX = Math.max(x0, x2);
+            var rightX = Math.min(x1, x3);
+            var bottomY = Math.max(y0, y2);
+            var topY = Math.min(y1, y3);
+
+            var areaPercentage;
+            if (leftX >= rightX || bottomY >= y1) {
+                areaPercentage = 1.0;
+            } else {
+                var areaRef = lastFrustum;
+                if (x0 < x2 && x1 > x3 && y0 < y2 && y1 > y3) {
+                    areaRef = frustum;
+                }
+                areaPercentage = 1.0 - ((rightX - leftX) * (topY - bottomY)) / ((areaRef.right - areaRef.left) * (areaRef.top - areaRef.bottom));
+            }
+
+            if (areaPercentage > percentageChanged) {
+                camera._changed.raiseEvent(areaPercentage);
+                camera._changedPosition = Cartesian3.clone(camera.position, camera._changedPosition);
+                camera._changedFrustum = camera.frustum.clone(camera._changedFrustum);
+            }
+            return;
+        }
+
+        if (!defined(camera._changedDirection)) {
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+            return;
+        }
+
+        var dirAngle = CesiumMath.acosClamped(Cartesian3.dot(camera.directionWC, camera._changedDirection));
+        var dirPercentage = dirAngle / (camera.frustum.fovy * 0.5);
+
+        var distance = Cartesian3.distance(camera.positionWC, camera._changedPosition);
+        var heightPercentage = distance / camera.positionCartographic.height;
+
+        if (dirPercentage > percentageChanged || heightPercentage > percentageChanged) {
+            camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
+            camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
+            camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+        }
+    };
 
     function convertTransformForColumbusView(camera) {
         Transforms.basisTo2D(camera._projection, camera._transform, camera._actualTransform);
@@ -547,6 +634,7 @@ define([
          * @memberof Camera.prototype
          *
          * @type {Cartographic}
+         * @readonly
          */
         positionCartographic : {
             get : function() {
@@ -705,7 +793,7 @@ define([
         },
 
         /**
-         * Gets the event that will be raised at when the camera has stopped moving.
+         * Gets the event that will be raised when the camera has stopped moving.
          * @memberof Camera.prototype
          * @type {Event}
          * @readonly
@@ -713,6 +801,18 @@ define([
         moveEnd : {
             get : function() {
                 return this._moveEnd;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised when the camera has changed by <code>percentageChanged</code>.
+         * @memberof Camera.prototype
+         * @type {Event}
+         * @readonly
+         */
+        changed : {
+            get : function() {
+                return this._changed;
             }
         }
     });
@@ -1426,7 +1526,7 @@ define([
      * @see Camera#rotateDown
      * @see Camera#rotateLeft
      * @see Camera#rotateRight
-    */
+     */
     Camera.prototype.rotate = function(axis, angle) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(axis)) {
@@ -2075,7 +2175,7 @@ define([
         var cart = projection.unproject(new Cartesian3(result.y, result.z, 0.0));
 
         if (cart.latitude < -CesiumMath.PI_OVER_TWO || cart.latitude > CesiumMath.PI_OVER_TWO ||
-                cart.longitude < -Math.PI || cart.longitude > Math.PI) {
+            cart.longitude < -Math.PI || cart.longitude > Math.PI) {
             return undefined;
         }
 
