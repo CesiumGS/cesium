@@ -7,6 +7,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './EllipseGeometryLibrary',
         './Ellipsoid',
@@ -19,8 +20,11 @@ define([
         './IndexDatatype',
         './Math',
         './Matrix3',
+        './Matrix4',
         './PrimitiveType',
         './Quaternion',
+        './Rectangle',
+        './Transforms',
         './VertexFormat'
     ], function(
         BoundingSphere,
@@ -30,6 +34,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         EllipseGeometryLibrary,
         Ellipsoid,
@@ -42,8 +47,11 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix3,
+        Matrix4,
         PrimitiveType,
         Quaternion,
+        Rectangle,
+        Transforms,
         VertexFormat) {
     'use strict';
 
@@ -101,7 +109,7 @@ define([
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
         var stOffset = bottomOffset / 3 * 2;
-        for ( var i = 0; i < length; i += 3) {
+        for (var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
@@ -224,7 +232,6 @@ define([
         return attributes;
     }
 
-
     function topIndices(numPts) {
         // numTriangles in half = 3 + 8 + 12 + ... = -1 + 4 + (4 + 4) + (4 + 4 + 4) + ... = -1 + 4 * (1 + 2 + 3 + ...)
         //              = -1 + 4 * ((n * ( n + 1)) / 2)
@@ -296,7 +303,6 @@ define([
         indices[indicesIndex++] = prevIndex++;
         indices[indicesIndex++] = prevIndex;
 
-
         // Reverse the process creating indices to the 'left' of the north vector
         ++prevIndex;
         for (i = numPts - 1; i > 1; --i) {
@@ -329,6 +335,7 @@ define([
     }
 
     var boundingSphereCenter = new Cartesian3();
+
     function computeEllipse(options) {
         var center = options.center;
         boundingSphereCenter = Cartesian3.multiplyByScalar(options.ellipsoid.geodeticSurfaceNormal(center, boundingSphereCenter), options.height, boundingSphereCenter);
@@ -385,7 +392,7 @@ define([
 
         var length = positions.length;
         var stOffset = length / 3 * 2;
-        for ( var i = 0; i < length; i += 3) {
+        for (var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
@@ -545,6 +552,7 @@ define([
 
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
+
     function computeExtrudedEllipse(options) {
         var center = options.center;
         var ellipsoid = options.ellipsoid;
@@ -567,7 +575,7 @@ define([
         var length = indices.length;
         indices.length = length * 2;
         var posLength = positions.length / 3;
-        for ( var i = 0; i < length; i += 3) {
+        for (var i = 0; i < length; i += 3) {
             indices[i + length] = indices[i + 2] + posLength;
             indices[i + 1 + length] = indices[i + 1] + posLength;
             indices[i + 2 + length] = indices[i] + posLength;
@@ -605,6 +613,38 @@ define([
             attributes : geo[0].attributes,
             indices : geo[0].indices
         };
+    }
+
+    var scratchEnuToFixedMatrix = new Matrix4();
+    var scratchFixedToEnuMatrix = new Matrix4();
+    var scratchRotationMatrix = new Matrix3();
+    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+
+    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
+        Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
+        Matrix4.inverseTransformation(scratchEnuToFixedMatrix, scratchFixedToEnuMatrix);
+
+        // Find the 4 extreme points of the ellipse in ENU
+        for (var i = 0; i < 4; ++i) {
+            Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
+        }
+        scratchRectanglePoints[0].x += semiMajorAxis;
+        scratchRectanglePoints[1].x -= semiMajorAxis;
+        scratchRectanglePoints[2].y += semiMinorAxis;
+        scratchRectanglePoints[3].y -= semiMinorAxis;
+
+        Matrix3.fromRotationZ(rotation, scratchRotationMatrix);
+        for (i = 0; i < 4; ++i) {
+            // Apply the rotation
+            Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+
+            // Convert back to fixed and then to cartographic
+            Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+            ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
+        }
+
+        return Rectangle.fromCartographicArray(scratchCartographicPoints);
     }
 
     /**
@@ -685,13 +725,15 @@ define([
         this._extrudedHeight = defaultValue(extrudedHeight, height);
         this._extrude = extrude;
         this._workerName = 'createEllipseGeometry';
+
+        this._rectangle = computeRectangle(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 8;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 8;
 
     /**
      * Stores the provided instance into the provided array.
@@ -721,6 +763,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._semiMajorAxis;
         array[startingIndex++] = value._semiMinorAxis;
         array[startingIndex++] = value._rotation;
@@ -728,12 +773,13 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex]   = value._extrude ? 1.0 : 0.0;
+        array[startingIndex] = value._extrude ? 1.0 : 0.0;
     };
 
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         center : scratchCenter,
         ellipsoid : scratchEllipsoid,
@@ -773,6 +819,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var semiMajorAxis = array[startingIndex++];
         var semiMinorAxis = array[startingIndex++];
         var rotation = array[startingIndex++];
@@ -804,6 +853,7 @@ define([
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
         result._extrude = extrude;
+        result._rectangle = Rectangle.clone(rectangle);
 
         return result;
     };
@@ -872,6 +922,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+
+    defineProperties(EllipseGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return EllipseGeometry;
 });

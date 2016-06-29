@@ -67,9 +67,9 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
-        this._definitionChanged = new Event();
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._definitionChanged = new Event();
         this._closeTop = undefined;
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
