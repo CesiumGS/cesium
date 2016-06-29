@@ -129,7 +129,7 @@ define([
     }
 
     function canProcessMouseEvent(screenSpaceEventHandler) {
-        return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds;
+        return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
     }
 
     function handleMouseDown(screenSpaceEventHandler, event) {
@@ -654,7 +654,7 @@ define([
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
-        this._lastSeenTouchEvent = -ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds;
+        this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
         this._primaryStartPosition = new Cartesian2();
         this._primaryPosition = new Cartesian2();
@@ -783,7 +783,7 @@ define([
      * receiving any touch events, such that any emulated mouse events will be ignored.
      * @default 800
      */
-    ScreenSpaceEventHandler.MouseEmulationIgnoreMilliseconds = 800;
+    ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
 
     return ScreenSpaceEventHandler;
 });
