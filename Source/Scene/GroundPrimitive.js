@@ -1009,12 +1009,6 @@ define([
             return;
         }
 
-        var exaggeration = frameState.terrainExaggeration;
-        if (!defined(this._maxHeight)) {
-            this._maxHeight = this._maxTerrainHeight * exaggeration;
-            this._minHeight = this._minTerrainHeight * exaggeration;
-        }
-
         if (!defined(this._primitive)) {
             var primitiveOptions = this._primitiveOptions;
             var ellipsoid = frameState.mapProjection.ellipsoid;
@@ -1027,12 +1021,10 @@ define([
             var length = instances.length;
             var groundInstances = new Array(length);
 
-            this._maxTerrainHeight = -Number.MAX_VALUE;
-            this._minTerrainHeight = Number.MAX_VALUE;
-
+            var i;
             var color;
             var rectangle;
-            for (var i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 instance = instances[i];
                 geometry = instance.geometry;
                 var instanceRectangle = getRectangle(frameState, geometry);
@@ -1064,26 +1056,31 @@ define([
                         color = attributes.color;
                     }
                     //>>includeEnd('debug');
-
-                    groundInstances[i] = new GeometryInstance({
-                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
-                                                                   getComputeMaximumHeightFunction(this)),
-                        attributes : attributes,
-                        id : instance.id,
-                        pickPrimitive : this
-                    });
-
                 } else {
                     throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                 }
-
-                primitiveOptions.geometryInstances = groundInstances;
             }
 
             // Now compute the min/max heights for the primitive
             setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
+            var exaggeration = frameState.terrainExaggeration;
             this._minHeight = this._minTerrainHeight * exaggeration;
             this._maxHeight = this._maxTerrainHeight * exaggeration;
+
+            for (i = 0; i < length; ++i) {
+                instance = instances[i];
+                geometry = instance.geometry;
+                instanceType = geometry.constructor;
+                groundInstances[i] = new GeometryInstance({
+                    geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                        getComputeMaximumHeightFunction(this)),
+                    attributes : instance.attributes,
+                    id : instance.id,
+                    pickPrimitive : this
+                });
+            }
+
+            primitiveOptions.geometryInstances = groundInstances;
 
             var that = this;
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
