@@ -35,7 +35,7 @@ We appreciate attribution by including the Cesium logo and link in your app.
 <p align="center">
 <a href="http://cesiumjs.org/demos/NewYork.html"><img src="http://cesiumjs.org/demos/images/nyc.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/fodarEarth.html"><img src="http://cesiumjs.org/demos/images/fodar/fodar_03_md.png" height="150" /></a>&nbsp;
-<a href="http://cesiumjs.org/demos/xalps.html"><img src="http://cesiumjs.org/demos/images/RedBull1.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/xalps.html"><img src="http://cesiumjs.org/demos/images/RedBull1.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/noradtrackssanta.html"><img src="http://cesiumjs.org/demos/images/noradtrackssanta.png" height="150" /></a>&nbsp;
 <a href="http://apps.agi.com/SatelliteViewer/?Status=Operational"><img src="http://cesiumjs.org/demos/images/SatelliteViewer.png" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/Cesium/demos/VestaTrek.html"><img src="http://cesiumjs.org/demos/images/VestaTrek.png" height="150" /></a>&nbsp;
@@ -46,6 +46,14 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/Citisens.html"><img src="http://cesiumjs.org/demos/images/citisens.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/ParalogPerformance.html"><img src="http://cesiumjs.org/demos/images/ParalogPerformance.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/FlightClub.html"><img src="http://cesiumjs.org/demos/images/FlightClub.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GDMOV.html"><img src="http://cesiumjs.org/demos/images/GDMOV.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/CanadianLandforms.html"><img src="http://cesiumjs.org/demos/images/CanadianLandforms.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/myCesiumflight.html"><img src="http://cesiumjs.org/demos/images/myCesiumflight.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/PowderGlobe.html"><img src="http://cesiumjs.org/demos/images/PowderGlobe.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/Flightradar24.html"><img src="http://cesiumjs.org/demos/images/Flightradar24.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/CubeGlobe.html"><img src="http://cesiumjs.org/demos/images/CubeGlobe.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/OrbitalPredictor.html"><img src="http://cesiumjs.org/demos/images/OrbitalPredictor.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/RapidScat.html"><img src="http://cesiumjs.org/demos/images/RapidScat.jpg" height="150" /></a>&nbsp;
