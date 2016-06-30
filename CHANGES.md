@@ -36,6 +36,7 @@ Change Log
 * Added [hot air balloon](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Apps/SampleData/models/CesiumBalloon) sample model.
 * Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
 * Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+* Implemented support for [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
 * Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
