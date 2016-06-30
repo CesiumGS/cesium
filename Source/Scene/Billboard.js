@@ -859,7 +859,6 @@ define([
         var surface = globe._surface;
 
         var mode = scene.frameState.mode;
-        var projection = scene.frameState.mapProjection;
 
         var modeChanged = mode !== owner._mode;
         owner._mode = mode;
