@@ -893,12 +893,6 @@ define([
                     clampedPosition.x += position.height;
                 }
             }
-
-            if (owner._mode !== SceneMode.SCENE3D) {
-                Cartesian3.fromElements(clampedPosition.y, clampedPosition.z, clampedPosition.x, clampedPosition);
-                projection.unproject(clampedPosition, scratchCartographic);
-                ellipsoid.cartographicToCartesian(scratchCartographic, clampedPosition);
-            }
             owner._clampedPosition = Cartesian3.clone(clampedPosition, owner._clampedPosition);
         }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
@@ -909,12 +903,7 @@ define([
             scratchCartographic.height = height;
         }
 
-        if (owner._mode === SceneMode.SCENE3D) {
-            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-        } else {
-            projection.project(scratchCartographic, scratchPosition);
-            Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-        }
+        ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
 
         updateFunction(scratchPosition);
     };
