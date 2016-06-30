@@ -30,7 +30,6 @@ Change Log
 * Improved `GroundPrimitive` performance.
 * Some incorrect KML (specifically KML that reuses IDs) is now parsed correctly.
 * Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
-* Added aircraft heading, pitch, roll functions: `Transforms.aircraftHeadingPitchRollToFixedFrame` and `Transforms.aircraftHeadingPitchRollQuaternion`.
 * `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
 * Updated [Google Cardboard Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cardboard.html&label=Showcase).
 * Added [hot air balloon](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Apps/SampleData/models/CesiumBalloon) sample model.
