@@ -859,7 +859,6 @@ define([
         var surface = globe._surface;
 
         var mode = scene.frameState.mode;
-        var projection = scene.frameState.mapProjection;
 
         var modeChanged = mode !== owner._mode;
         owner._mode = mode;
@@ -903,12 +902,7 @@ define([
             scratchCartographic.height = height;
         }
 
-        if (owner._mode === SceneMode.SCENE3D) {
-            ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-        } else {
-            projection.project(scratchCartographic, scratchPosition);
-            Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-        }
+        ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
 
         updateFunction(scratchPosition);
     };

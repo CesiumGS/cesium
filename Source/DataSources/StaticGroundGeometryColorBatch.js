@@ -67,6 +67,8 @@ define([
         }
     };
 
+    var scratchArray = new Array(4);
+
     Batch.prototype.update = function(time) {
         var isUpdated = true;
         var removedCount = 0;
@@ -145,10 +147,14 @@ define([
                 if (!updater.fillMaterialProperty.isConstant || waitingOnCreate) {
                     var colorProperty = updater.fillMaterialProperty.color;
                     colorProperty.getValue(time, colorScratch);
+
                     if (!Color.equals(attributes._lastColor, colorScratch)) {
                         attributes._lastColor = Color.clone(colorScratch, attributes._lastColor);
-                        if (!Color.equals(this.color, attributes.color)) {
-                            this.itemsToRemove[removedCount++] = updater;
+                        var color = this.color;
+                        var newColor = colorScratch.toBytes(scratchArray);
+                        if (color[0] !== newColor[0] || color[1] !== newColor[1] ||
+                            color[2] !== newColor[2] || color[3] !== newColor[3]) {
+                           this.itemsToRemove[removedCount++] = updater;
                         }
                     }
                 }
@@ -245,7 +251,7 @@ define([
         if (batches.contains(batchKey)) {
             batch = batches.get(batchKey);
         } else {
-            batch = new Batch(this._primitives, instance.attributes.color, batchKey);
+            batch = new Batch(this._primitives, instance.attributes.color.value, batchKey);
             batches.set(batchKey, batch);
         }
         batch.add(updater, instance);
