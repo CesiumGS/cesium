@@ -163,6 +163,7 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
@@ -260,7 +261,8 @@ define([
                 orderIndependentTranslucency : options.orderIndependentTranslucency,
                 scene3DOnly : defaultValue(options.scene3DOnly, false),
                 terrainExaggeration : options.terrainExaggeration,
-                shadows : options.shadows
+                shadows : options.shadows,
+                mapMode2D : options.mapMode2D
             });
             this._scene = scene;
 

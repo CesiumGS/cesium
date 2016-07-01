@@ -1,22 +1,22 @@
 /*global define*/
 define([
-    '../Core/Cartesian3',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    '../Core/JulianDate',
-    './Property'
-], function(
-    Cartesian3,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    Event,
-    JulianDate,
-    Property) {
+        '../Core/Cartesian3',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/JulianDate',
+        './Property'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        JulianDate,
+        Property) {
     'use strict';
 
     /**

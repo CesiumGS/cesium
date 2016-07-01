@@ -20,7 +20,8 @@ define([
     'use strict';
 
     /**
-     * Represents CZML document-level clock settings.
+     * Represents desired clock settings for a particular {@link DataSource}.  These settings may be applied
+     * to the {@link Clock} when the DataSource is loaded.
      *
      * @alias DataSourceClock
      * @constructor
@@ -50,45 +51,48 @@ define([
         },
 
         /**
-         * Gets or sets the start time of the clock to use when looping or clamped.
+         * Gets or sets the desired start time of the clock.
+         * See {@link Clock#startTime}.
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
         startTime : createRawPropertyDescriptor('startTime'),
 
         /**
-         * Gets or sets the stop time of the clock to use when looping or clamped.
+         * Gets or sets the desired stop time of the clock.
+         * See {@link Clock#stopTime}.
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
         stopTime : createRawPropertyDescriptor('stopTime'),
 
         /**
-         * Gets or sets the initial time to use when switching to this clock.
+         * Gets or sets the desired current time when this data source is loaded.
+         * See {@link Clock#currentTime}.
          * @memberof DataSourceClock.prototype
          * @type {JulianDate}
          */
         currentTime : createRawPropertyDescriptor('currentTime'),
 
         /**
-         * Gets or sets how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * Gets or sets the desired clock range setting.
+         * See {@link Clock#clockRange}.
          * @memberof DataSourceClock.prototype
          * @type {ClockRange}
          */
         clockRange : createRawPropertyDescriptor('clockRange'),
 
         /**
-         * Gets or sets if clock advancement is frame dependent or system clock dependent.
+         * Gets or sets the desired clock step setting.
+         * See {@link Clock#clockStep}.
          * @memberof DataSourceClock.prototype
          * @type {ClockStep}
          */
         clockStep : createRawPropertyDescriptor('clockStep'),
 
         /**
-         * Gets or sets how much time advances with each tick, negative values allow for advancing backwards.
-         * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
-         * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
-         * elapsed system time since the last call to tick.
+         * Gets or sets the desired clock multiplier.
+         * See {@link Clock#multiplier}.
          * @memberof DataSourceClock.prototype
          * @type {Number}
          */
@@ -163,10 +167,10 @@ define([
         }
         result.startTime = this.startTime;
         result.stopTime = this.stopTime;
-        result.clockRange = this.clockRange;
-        result.clockStep = this.clockStep;
-        result.multiplier = this.multiplier;
         result.currentTime = this.currentTime;
+        result.clockRange = this.clockRange;
+        result.multiplier = this.multiplier;
+        result.clockStep = this.clockStep;
         return result;
     };
 

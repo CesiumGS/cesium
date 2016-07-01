@@ -8,7 +8,9 @@ defineSuite([
         'Core/PolygonHierarchy',
         'Core/RuntimeError',
         'DataSources/CallbackProperty',
+        'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'Scene/HeightReference',
         'ThirdParty/when'
     ], function(
         GeoJsonDataSource,
@@ -19,7 +21,9 @@ defineSuite([
         PolygonHierarchy,
         RuntimeError,
         CallbackProperty,
+        ConstantProperty,
         EntityCollection,
+        HeightReference,
         when) {
     'use strict';
 
@@ -29,6 +33,7 @@ defineSuite([
     var defaultStroke;
     var defaultStrokeWidth;
     var defaultFill;
+    var defaultClampToGround;
 
     beforeAll(function() {
         defaultMarkerSize = GeoJsonDataSource.markerSize;
@@ -37,6 +42,7 @@ defineSuite([
         defaultStroke = GeoJsonDataSource.stroke;
         defaultStrokeWidth = GeoJsonDataSource.strokeWidth;
         defaultFill = GeoJsonDataSource.fill;
+        defaultClampToGround = GeoJsonDataSource.clampToGround;
     });
 
     beforeEach(function() {
@@ -46,6 +52,7 @@ defineSuite([
         GeoJsonDataSource.stroke = defaultStroke;
         GeoJsonDataSource.strokeWidth = defaultStrokeWidth;
         GeoJsonDataSource.fill = defaultFill;
+        GeoJsonDataSource.clampToGround = defaultClampToGround;
     });
 
     var time = new JulianDate();
@@ -534,6 +541,21 @@ defineSuite([
         });
     });
 
+    it('Works with point geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(point, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(point.properties);
+            expect(entity.position.getValue(time)).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.image).toBeDefined();
+            expect(entity.billboard.heightReference.getValue(time)).toBe(HeightReference.CLAMP_TO_GROUND);
+        });
+    });
+
     it('Works with point geometry with simplystyle', function() {
         var geojson = {
             type : 'Point',
@@ -593,6 +615,24 @@ defineSuite([
         });
     });
 
+    it('Works with multipoint geometry clamped to ground', function() {
+        GeoJsonDataSource.clampToGround = true;
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(multiPoint).then(function() {
+            var entityCollection = dataSource.entities;
+            var entities = entityCollection.values;
+            var expectedPositions = coordinatesArrayToCartesian(multiPoint.coordinates);
+            for (var i = 0; i < multiPoint.coordinates.length; i++) {
+                var entity = entities[i];
+                expect(entity.properties).toBe(multiPoint.properties);
+                expect(entity.position.getValue(time)).toEqual(expectedPositions[i]);
+                expect(entity.billboard).toBeDefined();
+                expect(entity.billboard.image).toBeDefined();
+                expect(entity.billboard.heightReference.getValue()).toBe(HeightReference.CLAMP_TO_GROUND);
+            }
+        });
+    });
+
     it('Works with lineString geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(lineString).then(function() {
@@ -602,6 +642,20 @@ defineSuite([
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue(time)).toEqual(2);
+        });
+    });
+
+    it('Works with lineString geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(lineString, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(lineString.properties);
+            expect(entity.corridor.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(entity.corridor.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.corridor.width.getValue(time)).toEqual(2);
         });
     });
 
@@ -621,6 +675,24 @@ defineSuite([
         });
     });
 
+    it('Works with multiLineString geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(multiLineString, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entities = entityCollection.values;
+            var lines = multiLineToCartesian(multiLineString);
+            for (var i = 0; i < multiLineString.coordinates.length; i++) {
+                var entity = entities[i];
+                expect(entity.properties).toBe(multiLineString.properties);
+                expect(entity.corridor.positions.getValue(time)).toEqual(lines[i]);
+                expect(entity.corridor.material.color.getValue(time)).toEqual(Color.YELLOW);
+                expect(entity.corridor.width.getValue(time)).toEqual(2);
+            }
+        });
+    });
+
     it('Works with polygon geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(polygon).then(function() {
@@ -633,6 +705,26 @@ defineSuite([
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polygon.height).toBeInstanceOf(ConstantProperty);
+        });
+    });
+
+    it('Works with polygon geometry clamped to ground', function() {
+        var dataSource = new GeoJsonDataSource();
+        return dataSource.load(polygon, {
+            clampToGround: true
+        }).then(function() {
+            var entityCollection = dataSource.entities;
+            var entity = entityCollection.values[0];
+            expect(entity.properties).toBe(polygon.properties);
+            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
+            expect(entity.polygon.perPositionHeight).toBeUndefined();
+            expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
+            expect(entity.polygon.outline.getValue(time)).toEqual(true);
+            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
+            expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
+            expect(entity.polygon.height).toBeUndefined();
+
         });
     });
 

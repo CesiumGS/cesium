@@ -91,6 +91,7 @@ define([
         this._pixelOffset = Cartesian2.clone(defaultValue(options.pixelOffset, Cartesian2.ZERO));
         this._translate = new Cartesian2(0.0, 0.0); // used by labels for glyph vertex translation
         this._eyeOffset = Cartesian3.clone(defaultValue(options.eyeOffset, Cartesian3.ZERO));
+        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._verticalOrigin = defaultValue(options.verticalOrigin, VerticalOrigin.CENTER);
         this._horizontalOrigin = defaultValue(options.horizontalOrigin, HorizontalOrigin.CENTER);
         this._scale = defaultValue(options.scale, 1.0);
@@ -102,7 +103,6 @@ define([
         this._scaleByDistance = options.scaleByDistance;
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
-        this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
@@ -859,7 +859,6 @@ define([
         var surface = globe._surface;
 
         var mode = scene.frameState.mode;
-        var projection = scene.frameState.mapProjection;
 
         var modeChanged = mode !== owner._mode;
         owner._mode = mode;
@@ -897,19 +896,15 @@ define([
         }
         owner._removeCallbackFunc = surface.updateHeight(position, updateFunction);
 
+        Cartographic.clone(position, scratchCartographic);
         var height = globe.getHeight(position);
         if (defined(height)) {
-            Cartographic.clone(position, scratchCartographic);
             scratchCartographic.height = height;
-            if (owner._mode === SceneMode.SCENE3D) {
-                ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
-            } else {
-                projection.project(scratchCartographic, scratchPosition);
-                Cartesian3.fromElements(scratchPosition.z, scratchPosition.x, scratchPosition.y, scratchPosition);
-            }
-
-            updateFunction(scratchPosition);
         }
+
+        ellipsoid.cartographicToCartesian(scratchCartographic, scratchPosition);
+
+        updateFunction(scratchPosition);
     };
 
     Billboard.prototype._loadImage = function() {
@@ -1015,7 +1010,8 @@ define([
     };
 
     /**
-     * Uses a sub-region of the image with the given id as the image for this billboard.
+     * Uses a sub-region of the image with the given id as the image for this billboard,
+     * measured in pixels from the bottom-left.
      *
      * @param {String} id The id of the image to use.
      * @param {BoundingRectangle} subRegion The sub-region of the image.
@@ -1169,6 +1165,7 @@ define([
                this._scale === other._scale &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
+               this._heightReference === other._heightReference &&
                BoundingRectangle.equals(this._imageSubRegion, other._imageSubRegion) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
@@ -1183,6 +1180,11 @@ define([
         if (defined(this._customData)) {
             this._billboardCollection._scene.globe._surface.removeTileCustomData(this._customData);
             this._customData = undefined;
+        }
+
+        if (defined(this._removeCallbackFunc)) {
+            this._removeCallbackFunc();
+            this._removeCallbackFunc = undefined;
         }
 
         this.image = undefined;

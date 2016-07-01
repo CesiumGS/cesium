@@ -1,13 +1,17 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/Matrix4',
         './BoundingSphereState'
     ], function(
         BoundingSphere,
+        defaultValue,
         defined,
         DeveloperError,
+        Matrix4,
         BoundingSphereState) {
     'use strict';
 
@@ -25,12 +29,14 @@ define([
         //>>includeEnd('debug');
 
         var attributes;
+        var modelMatrix;
 
         //Outline and Fill geometries have the same bounding sphere, so just use whichever one is defined and ready
         if (defined(primitive) && primitive.show && primitive.ready) {
             attributes = primitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
-                BoundingSphere.transform(attributes.boundingSphere, primitive.modelMatrix, result);
+                modelMatrix = defaultValue(primitive.modelMatrix, Matrix4.IDENTITY);
+                BoundingSphere.transform(attributes.boundingSphere, modelMatrix, result);
                 return BoundingSphereState.DONE;
             }
         }
@@ -38,7 +44,8 @@ define([
         if (defined(outlinePrimitive) && outlinePrimitive.show && outlinePrimitive.ready) {
             attributes = outlinePrimitive.getGeometryInstanceAttributes(entity);
             if (defined(attributes) && defined(attributes.boundingSphere)) {
-                BoundingSphere.transform(attributes.boundingSphere, outlinePrimitive.modelMatrix, result);
+                modelMatrix = defaultValue(outlinePrimitive.modelMatrix, Matrix4.IDENTITY);
+                BoundingSphere.transform(attributes.boundingSphere, modelMatrix, result);
                 return BoundingSphereState.DONE;
             }
         }
