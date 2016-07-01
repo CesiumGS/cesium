@@ -1,6 +1,6 @@
 {
   "name": "cesium",
-  "version": "1.22.2",
+  "version": "1.23.0",
   "description": "Cesium is a JavaScript library for creating 3D globes and 2D maps in a web browser without a plugin.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
