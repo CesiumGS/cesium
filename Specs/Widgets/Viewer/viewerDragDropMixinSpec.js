@@ -57,6 +57,7 @@ defineSuite([
         expect(viewer.dropTarget).toBe(viewer.container);
         expect(viewer.dropEnabled).toEqual(true);
         expect(viewer.clearOnDrop).toEqual(true);
+        expect(viewer.clampToGround).toEqual(true);
     });
 
     it('clearOnDrop defaults to true when dataSourceBrowser is not used', function() {
@@ -71,11 +72,13 @@ defineSuite([
         viewer = createViewer(container);
         viewer.extend(viewerDragDropMixin, {
             dropTarget : document.body,
-            clearOnDrop : false
+            clearOnDrop : false,
+            clampToGround : false
         });
         expect(viewer.dropTarget).toBe(document.body);
         expect(viewer.dropEnabled).toEqual(true);
         expect(viewer.clearOnDrop).toEqual(false);
+        expect(viewer.clampToGround).toEqual(false);
     });
 
     it('mixin works with dropTarget id string', function() {

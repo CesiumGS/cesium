@@ -143,16 +143,10 @@ define([
         var rectangle;
 
         if (defined(added) && defined(removed)) {
-            // level zero tile
-            for (i = 0; i < removed.length; ++i) {
-                data = removed[i];
-                for (var j = 0; j < customData.length; ++j) {
-                    if (customData[j] === data) {
-                        customData.splice(j, 1);
-                        break;
-                    }
-                }
-            }
+            customData = customData.filter(function(value) {
+                return removed.indexOf(value) === -1;
+            });
+            this._customData = customData;
 
             rectangle = this._rectangle;
             for (i = 0; i < added.length; ++i) {
