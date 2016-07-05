@@ -13,11 +13,14 @@ define([
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
     '../Core/loadArrayBuffer',
+    '../Core/PinBuilder',
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
     '../ThirdParty/when',
+    './BillboardCollection',
     './Cesium3DTileContentState',
+    './HorizontalOrigin',
     './LabelCollection',
     './PointPrimitiveCollection'
 ], function(
@@ -34,11 +37,14 @@ define([
     getMagic,
     getStringFromTypedArray,
     loadArrayBuffer,
+    PinBuilder,
     Request,
     RequestScheduler,
     RequestType,
     when,
+    BillboardCollection,
     Cesium3DTileContentState,
+    HorizontalOrigin,
     LabelCollection,
     PointPrimitiveCollection) {
     'use strict';
@@ -52,6 +58,7 @@ define([
     function Vector3DTileContent(tileset, tile, url) {
         this._labelCollection = undefined;
         this._pointCollection = undefined;
+        this._billboardCollection = undefined;
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -166,7 +173,10 @@ define([
         var json = JSON.parse(text);
 
         var labelCollection = new LabelCollection();
-        var pointCollection = new PointPrimitiveCollection();
+        //var pointCollection = new PointPrimitiveCollection();
+        var billboardCollection = new BillboardCollection();
+
+        var pinBuilder = new PinBuilder();
 
         var length = json.length;
         for (var i = 0; i < length; ++i) {
@@ -185,6 +195,7 @@ define([
                 text : labelText,
                 position : position
             });
+            /*
             pointCollection.add({
                 position : position,
                 pixelSize : 10.0,
@@ -192,13 +203,20 @@ define([
                 outlineColor : Color.BLACK,
                 oulineWidth : 2.0
             });
+            */
+            billboardCollection.add({
+                image : pinBuilder.fromColor(Color.ROYALBLUE, 48).toDataURL(),
+                position : position,
+                horizontalOrigin : HorizontalOrigin.RIGHT
+            });
         }
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
 
         this._labelCollection = labelCollection;
-        this._pointCollection = pointCollection;
+        //this._pointCollection = pointCollection;
+        this._billboardCollection = billboardCollection;
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     };
@@ -214,7 +232,8 @@ define([
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         this._labelCollection.update(frameState);
-        this._pointCollection.update(frameState);
+        //this._pointCollection.update(frameState);
+        this._billboardCollection.update(frameState);
     };
 
     /**
@@ -229,7 +248,8 @@ define([
      */
     Vector3DTileContent.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
-        this._pointCollection = this._pointCollection && this._pointCollection.destroy();
+        //this._pointCollection = this._pointCollection && this._pointCollection.destroy();
+        this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
         return destroyObject(this);
     };
 
