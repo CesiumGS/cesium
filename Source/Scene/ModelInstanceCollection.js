@@ -294,8 +294,7 @@ define([
                 modelView = 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model;\n';
             }
 
-            var usesBatchTable = defined(collection._batchTableResources);
-            var batchIdAttribute = usesBatchTable ? 'attribute float a_batchId;\n' : '';
+            var batchIdAttribute = 'attribute float a_batchId;\n';
 
             var instancedSource =
                 uniforms +
@@ -315,10 +314,7 @@ define([
                 '}';
 
             vertexShaderCached = instancedSource;
-
-            if (usesBatchTable) {
-                instancedSource = collection._batchTableResources.getVertexShaderCallback()(instancedSource);
-            }
+            instancedSource = collection._batchTableResources.getVertexShaderCallback()(instancedSource);
 
             return instancedSource;
         };
