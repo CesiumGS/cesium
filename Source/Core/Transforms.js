@@ -402,6 +402,8 @@ define([
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
      * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, heading, pitch, roll);
+     *
+     * @private
      */
     Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, heading, pitch, roll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
@@ -464,6 +466,8 @@ define([
      * var pitch = Cesium.Math.PI_OVER_FOUR;
      * var roll = 0.0;
      * var quaternion = Cesium.Transforms.aircraftHeadingPitchRollQuaternion(center, heading, pitch, roll);
+     *
+     * @private
      */
     Transforms.aircraftHeadingPitchRollQuaternion = function(origin, heading, pitch, roll, ellipsoid, result) {
         // checks for required parameters happen in the called functions

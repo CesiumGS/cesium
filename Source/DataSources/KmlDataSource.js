@@ -1190,13 +1190,11 @@ define([
         }
         entity.polygon = polygon;
 
-        if (!dataSource._clampToGround) {
-            polygon.height = 0;
-        }
-
         if (canExtrude) {
             polygon.perPositionHeight = true;
             polygon.extrudedHeight = extrude ? 0 : undefined;
+        } else if (!dataSource._clampToGround) {
+            polygon.height = 0;
         }
 
         if (defined(coordinates)) {
