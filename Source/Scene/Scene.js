@@ -2140,7 +2140,7 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick;
+        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
         if (!frameState.shadowHints.shadowsEnabled) {
             return;
         }
