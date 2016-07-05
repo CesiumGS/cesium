@@ -3,7 +3,7 @@ Change Log
 
 ### 1.24 - 2016-08-01
 
-* Fixed a crash that occurred when switching to 2D view when shadows were enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
+* Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
 
 ### 1.23 - 2016-07-01
 
