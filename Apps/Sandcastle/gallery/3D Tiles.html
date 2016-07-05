@@ -89,7 +89,7 @@ function loadTileset(url) {
                     }
                 },
 //              "show": false
-                "show" : "${Height} > 0",
+//              "show" : "${Height} >= 0",
                 "meta" : {
                     "description" : "'Building id ${id} has height ${Height}.'"
                 }
@@ -413,7 +413,7 @@ function styleFunction(name) {
         color : {
             conditions : conditions
         },
-        show : '${' + name + '} > 0'
+        show : '${' + name + '} >= 0'
     });
 
     currentPropertyName = name;
