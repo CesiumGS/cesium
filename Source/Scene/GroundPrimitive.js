@@ -246,6 +246,8 @@ define([
         this._customMaxHeight = options._maximumHeight;
         this._customHeights = defined(this._customMinHeight) && defined(this._customMaxHeight);
 
+        this._geometryPrecreated = defaultValue(options._precreated, false);
+
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
@@ -1013,7 +1015,7 @@ define([
             return;
         }
 
-        if (!GroundPrimitive._initialized) {
+        if (!GroundPrimitive._initialized && !this._geometryPrecreated) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
@@ -1025,81 +1027,91 @@ define([
         }
 
         var exaggeration = frameState.terrainExaggeration;
+        /*
         if (!defined(this._maxHeight)) {
             this._maxHeight = this._maxTerrainHeight * exaggeration;
             this._minHeight = this._minTerrainHeight * exaggeration;
         }
+        */
 
         if (!defined(this._primitive)) {
             var primitiveOptions = this._primitiveOptions;
-            var ellipsoid = frameState.mapProjection.ellipsoid;
 
-            var instance;
-            var geometry;
-            var instanceType;
+            if (!this._geometryPrecreated) {
+                var ellipsoid = frameState.mapProjection.ellipsoid;
 
-            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
-            var length = instances.length;
-            var groundInstances = new Array(length);
+                var instance;
+                var geometry;
+                var instanceType;
 
-            var color;
-            var rectangle;
-            for (var i = 0; i < length; ++i) {
-                instance = instances[i];
-                geometry = instance.geometry;
-                var instanceRectangle = getRectangle(frameState, geometry);
-                if (!defined(rectangle)) {
-                    rectangle = instanceRectangle;
-                } else {
-                    if (defined(instanceRectangle)) {
-                        Rectangle.union(rectangle, instanceRectangle, rectangle);
+                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+                var length = instances.length;
+                var groundInstances = new Array(length);
+
+                var color;
+                var rectangle;
+                for (var i = 0; i < length; ++i) {
+                    instance = instances[i];
+                    geometry = instance.geometry;
+                    var instanceRectangle = getRectangle(frameState, geometry);
+                    if (!defined(rectangle)) {
+                        rectangle = instanceRectangle;
+                    } else {
+                        if (defined(instanceRectangle)) {
+                            Rectangle.union(rectangle, instanceRectangle, rectangle);
+                        }
+                    }
+
+                    var id = instance.id;
+                    if (defined(id) && defined(instanceRectangle)) {
+                        var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
+                        this._boundingSpheresKeys.push(id);
+                        this._boundingSpheres.push(boundingSphere);
+                    }
+
+                    instanceType = geometry.constructor;
+                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                        var attributes = instance.attributes;
+
+                        //>>includeStart('debug', pragmas.debug);
+                        if (!defined(attributes) || !defined(attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                        } else if (!defined(color)) {
+                            color = attributes.color;
+                        }
+                        //>>includeEnd('debug');
+                    } else {
+                        throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
                     }
                 }
 
-                var id = instance.id;
-                if (defined(id) && defined(instanceRectangle)) {
-                    var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
-                    this._boundingSpheresKeys.push(id);
-                    this._boundingSpheres.push(boundingSphere);
+                // Now compute the min/max heights for the primitive
+                setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
+                this._minHeight = this._minTerrainHeight * exaggeration;
+                this._maxHeight = this._maxTerrainHeight * exaggeration;
+
+                for (var j = 0; j < length; ++j) {
+                    instance = instances[j];
+                    geometry = instance.geometry;
+                    instanceType = geometry.constructor;
+                    groundInstances[j] = new GeometryInstance({
+                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                            getComputeMaximumHeightFunction(this)),
+                        attributes : instance.attributes,
+                        id : instance.id,
+                        pickPrimitive : this
+                    });
                 }
 
-                instanceType = geometry.constructor;
-                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                    var attributes = instance.attributes;
+                primitiveOptions.geometryInstances = groundInstances;
+            } else {
+                this._minHeight = this._customMinHeight * exaggeration;
+                this._maxHeight = this._customMaxHeight * exaggeration;
 
-                    //>>includeStart('debug', pragmas.debug);
-                    if (!defined(attributes) || !defined(attributes.color)) {
-                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                    } else if (!defined(color)) {
-                        color = attributes.color;
-                    }
-                    //>>includeEnd('debug');
-                } else {
-                    throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
-                }
+                primitiveOptions.geometryInstances = this.geometryInstances;
             }
-
-            // Now compute the min/max heights for the primitive
-            setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
-            this._minHeight = this._minTerrainHeight * exaggeration;
-            this._maxHeight = this._maxTerrainHeight * exaggeration;
-
-            for (var j = 0; j < length; ++j) {
-                instance = instances[j];
-                geometry = instance.geometry;
-                instanceType = geometry.constructor;
-                groundInstances[j] = new GeometryInstance({
-                    geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
-                        getComputeMaximumHeightFunction(this)),
-                    attributes : instance.attributes,
-                    id : instance.id,
-                    pickPrimitive : this
-                });
-            }
-
-            primitiveOptions.geometryInstances = groundInstances;
 
             var that = this;
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
@@ -1143,16 +1155,27 @@ define([
             var debugLength = debugInstances.length;
             var debugVolumeInstances = new Array(debugLength);
 
-            for (var j = 0 ; j < debugLength; ++j) {
-                var debugInstance = debugInstances[j];
+            for (var k = 0 ; k < debugLength; ++k) {
+                var debugInstance = debugInstances[k];
+
+                var debugColorArray = debugInstance.attributes.color.value;
+                var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
+                Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
+
                 var debugGeometry = debugInstance.geometry;
                 var debugInstanceType = debugGeometry.constructor;
                 if (defined(debugInstanceType) && defined(debugInstanceType.createShadowVolume)) {
-                    var debugColorArray = debugInstance.attributes.color.value;
-                    var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
-                    Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
-                    debugVolumeInstances[j] = new GeometryInstance({
+                    debugVolumeInstances[k] = new GeometryInstance({
                         geometry : debugInstanceType.createShadowVolume(debugGeometry, getComputeMinimumHeightFunction(this), getComputeMaximumHeightFunction(this)),
+                        attributes : {
+                            color : ColorGeometryInstanceAttribute.fromColor(debugColor)
+                        },
+                        id : debugInstance.id,
+                        pickPrimitive : this
+                    });
+                } else if (this._geometryPrecreated) {
+                    debugVolumeInstances[k] = new GeometryInstance({
+                        geometry : debugGeometry,
                         attributes : {
                             color : ColorGeometryInstanceAttribute.fromColor(debugColor)
                         },

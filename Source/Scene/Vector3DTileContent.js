@@ -216,15 +216,19 @@ define([
         for (var i = 0; i < length; ++i) {
             var polygon = polygons[i];
             polygonInstances.push(new GeometryInstance({
+                /*
                 geometry : PolygonGeometry.fromPositions({
                     positions : polygon.positions,
                     vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
                 }),
+                */
+                geometry : polygon.geometry,
                 attributes: {
                     //color: ColorGeometryInstanceAttribute.fromColor(Color.RED.withAlpha(0.5))
                     color: ColorGeometryInstanceAttribute.fromColor(color)
                 }
             }));
+            /*
             outlineInstances.push(new GeometryInstance({
                 geometry : new PolylineGeometry({
                     positions : polygon.positions,
@@ -235,6 +239,7 @@ define([
                     color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
                 }
             }));
+            */
 
             minHeight = Math.min(minHeight, defaultValue(polygon.minimumHeight, minHeight));
             maxHeight = Math.max(maxHeight, defaultValue(polygon.maximumHeight, maxHeight));
@@ -258,10 +263,12 @@ define([
         */
 
         this._primitives.push(new GroundPrimitive({
+            //debugShowShadowVolume : true,
             geometryInstances : polygonInstances,
-            asynchrounous : false,
+            asynchronous : false,
             _minimumHeight : minHeight !== Number.POSITIVE_INFINITY ? minHeight : undefined,
-            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined
+            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined,
+            _precreated : true
         }));
 
         this.state = Cesium3DTileContentState.PROCESSING;
