@@ -111,7 +111,7 @@ define([
      * var esri = new Cesium.ArcGisMapServerImageryProvider({
      *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
-     * 
+     *
      * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
@@ -243,7 +243,12 @@ define([
         }
 
         if (defined(options.mapServerData)) {
-            metadataSuccess(options.mapServerData);
+            // Even if we already have the map server data, we defer processing it in case there are
+            // errors.  Clients must have a chance to subscribe to the errorEvent before we raise it.
+            var mapServerData = options.mapServerData;
+            setTimeout(function() {
+                when(mapServerData, metadataSuccess, metadataFailure);
+            });
         } else if (this._useTiles) {
             requestMetadata();
         } else {
