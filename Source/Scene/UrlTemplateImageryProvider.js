@@ -764,8 +764,10 @@ define([
         {
             var paddingTemplate = imageryProvider.urlSchemeZeroPadding[key];
             if (typeof paddingTemplate === 'string') {
-                var templateWidth = paddingTemplate.length;
-                value = (value.length >= templateWidth) ? value : new Array(templateWidth - value.toString().length + 1).join('0') + value;
+                var paddingTemplateWidth = paddingTemplate.length;
+                if (paddingTemplateWidth > 1) {
+                    value = (value.length >= paddingTemplateWidth) ? value : new Array(paddingTemplateWidth - value.toString().length + 1).join('0') + value;
+                }
             }
         }
         return value;
