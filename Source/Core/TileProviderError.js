@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './defined',
-        './formatError'
+        './formatError',
+        './RuntimeError'
     ], function(
         defaultValue,
         defined,
-        formatError) {
+        formatError,
+        RuntimeError) {
     'use strict';
 
     /**
@@ -27,6 +29,8 @@ define([
      * @param {Error} [error] The error or exception that occurred, if any.
      */
     function TileProviderError(provider, message, x, y, level, timesRetried, error) {
+        this.name = 'TileProviderError';
+
         /**
          * The {@link ImageryProvider} or {@link TerrainProvider} that experienced the error.
          * @type {ImageryProvider|TerrainProvider}
@@ -148,6 +152,11 @@ define([
             previousError.timesRetried = -1;
         }
     };
+
+    if (defined(Object.create)) {
+        TileProviderError.prototype = Object.create(RuntimeError.prototype);
+        TileProviderError.prototype.constructor = TileProviderError;
+    }
 
     /**
      * A function that will be called to retry the operation.
