@@ -1117,29 +1117,29 @@ define([
         var normalsPerTriangle = new Array(numIndices / 3);
         var normalIndices = new Array(numIndices);
         var normalValues;
+        var index;
+        var i;
 
         if (isHard) {
             var oldPositions = [];
             Cartesian3.unpackArray(vertices, oldPositions);
 
-
             var positions = new Array(numIndices);
             var normals = new Array(numIndices);
             var maxIndex = 0;
-            var j;
-            for (j = 0; j < numIndices; j++) {
-                index = indices[j];
+            for (i = 0; i < numIndices; i++) {
+                index = indices[i];
                 maxIndex = Math.max(maxIndex, index);
             }
             // Duplicate any vertices shared by multiple indices
             var seenIndices = {};
             var nextIndex = maxIndex + 1;
-            for (j = 0; j < numIndices; j++) {
-                index = indices[j];
+            for (i = 0; i < numIndices; i++) {
+                index = indices[i];
                 var position = oldPositions[index];
                 if (defined(seenIndices[index])) {
                     positions[nextIndex] = position;
-                    indices[j] = nextIndex;
+                    indices[i] = nextIndex;
                     nextIndex++;
                 } else {
                     positions[index] = position;
@@ -1148,10 +1148,10 @@ define([
             }
 
             // Add face normal to each vertex normal
-            for (j = 0; j < numIndices; j += 3) {
-                var index1 = indices[j];
-                var index2 = indices[j + 1];
-                var index3 = indices[j + 2];
+            for (i = 0; i < numIndices; i += 3) {
+                var index1 = indices[i];
+                var index2 = indices[i + 1];
+                var index3 = indices[i + 2];
                 var faceNormal = getFaceNormal(positions[index1], positions[index2], positions[index3]);
                 normals[index1] = faceNormal;
                 normals[index2] = faceNormal.clone();
@@ -1159,15 +1159,15 @@ define([
             }
 
             // Normalize the normals
-            for (j = 0; j < numIndices; ++j) {
-                normal = normals[j];
+            for (i = 0; i < numIndices; ++i) {
+                normal = normals[i];
                 Cartesian3.normalize(normal, normal);
             }
             normalValues = [];
             Cartesian3.packArray(normals, normalValues);
         } else {
             // "Soft" normals
-            for (var i = 0; i < numVertices; i++) {
+            for (i = 0; i < numVertices; i++) {
                 normalsPerVertex[i] = {
                     indexOffset : 0,
                     count : 0,
@@ -1214,7 +1214,7 @@ define([
             var vertexNormalData;
             for (i = 0; i < numIndices; i += 3) {
                 vertexNormalData = normalsPerVertex[indices[i]];
-                var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
                 normalIndices[index] = j;
                 vertexNormalData.currentCount++;
 
