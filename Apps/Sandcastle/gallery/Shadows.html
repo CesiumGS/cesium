@@ -168,6 +168,9 @@ var i;
 var entities = viewer.entities.values;
 var entitiesLength = entities.length;
 
+var currentEntity;
+var entityShadows = Cesium.ShadowMode.ENABLED;
+
 function setLocation(location) {
     var longitude = location.longitude;
     var latitude = location.latitude;
@@ -201,12 +204,26 @@ for (var locationName in locations) {
 
 Sandcastle.addToolbarMenu(locationToolbarOptions);
 
+function setEntityShadows(entity, shadows) {
+    if (Cesium.defined(entity.model)) {
+        entity.model.shadows = shadows
+    }
+    if (Cesium.defined(entity.box)) {
+        entity.box.shadows = shadows;
+    }
+    if (Cesium.defined(entity.ellipsoid)) {
+        entity.ellipsoid.shadows = shadows;
+    }
+}
+
 function setEntity(entity) {
     for (i = 0; i < entitiesLength; ++i) {
         entities[i].show = false;
     }
     entity.show = true;
     viewer.trackedEntity = entity;
+    currentEntity = entity;
+    setEntityShadows(entity, entityShadows);
 }
 
 function setEntityFunction(entity) {
@@ -230,18 +247,9 @@ Sandcastle.addToolbarButton('Toggle Shadows', function() {
     viewer.shadows = !viewer.shadows;
 });
 
-var entityShadows = Cesium.ShadowMode.ENABLED;
 Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
-    if (entityShadows === Cesium.ShadowMode.ENABLED) {
-        entityShadows = Cesium.ShadowMode.DISABLED;
-    } else {
-        entityShadows = Cesium.ShadowMode.ENABLED;
-    }
-    for (i = 0; i < entitiesLength; ++i) {
-        var entity = entities[i];
-        var visual = entity.model || entity.box || entity.ellipsoid;
-        visual.shadows = entityShadows;
-    }
+    entityShadows = (entityShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
+    setEntityShadows(currentEntity, entityShadows);
 });
 
 Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
