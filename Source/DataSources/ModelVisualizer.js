@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
         '../Scene/ShadowMode',
@@ -18,6 +19,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        HeightReference,
         Model,
         ModelAnimationLoop,
         ShadowMode,
@@ -29,6 +31,7 @@ define([
     var defaultMinimumPixelSize = 0.0;
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
+    var defaultHeightReference = HeightReference.NONE;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -109,7 +112,8 @@ define([
                 }
                 model = Model.fromGltf({
                     url : uri,
-                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures)
+                    incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
+                    scene : this._scene
                 });
 
                 model.readyPromise.otherwise(onModelError);
@@ -133,6 +137,7 @@ define([
             model.maximumScale = Property.getValueOrUndefined(modelGraphics._maximumScale, time);
             model.shadows = Property.getValueOrDefault(modelGraphics._shadows, time, defaultShadows);
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
+            model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
@@ -239,7 +244,14 @@ define([
             return BoundingSphereState.PENDING;
         }
 
-        BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+        if (model.heightReference === HeightReference.NONE) {
+            BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
+        } else {
+            if (!defined(model._clampedModelMatrix)) {
+                return BoundingSphereState.PENDING;
+            }
+            BoundingSphere.transform(model.boundingSphere, model._clampedModelMatrix, result);
+        }
         return BoundingSphereState.DONE;
     };
 

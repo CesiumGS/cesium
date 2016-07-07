@@ -9,6 +9,7 @@ define([
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
+        './StaticGroundGeometryColorBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         AssociativeArray,
@@ -20,17 +21,19 @@ define([
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch) {
     'use strict';
 
     var emptyArray = [];
 
-    function DynamicGeometryBatch(primitives) {
+    function DynamicGeometryBatch(primitives, groundPrimitives) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._dynamicUpdaters = new AssociativeArray();
     }
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives));
+        this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives, this._groundPrimitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {
@@ -91,17 +94,21 @@ define([
         }
 
         if (updater.fillEnabled) {
-            if (updater.isClosed) {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._closedColorBatches[shadows].add(time, updater);
-                } else {
-                    that._closedMaterialBatches[shadows].add(time, updater);
-                }
+            if (updater.onTerrain) {
+                that._groundColorBatch.add(time, updater);
             } else {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._openColorBatches[shadows].add(time, updater);
+                if (updater.isClosed) {
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._closedColorBatches[shadows].add(time, updater);
+                    } else {
+                        that._closedMaterialBatches[shadows].add(time, updater);
+                    }
                 } else {
-                    that._openMaterialBatches[shadows].add(time, updater);
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._openColorBatches[shadows].add(time, updater);
+                    } else {
+                        that._openMaterialBatches[shadows].add(time, updater);
+                    }
                 }
             }
         }
@@ -132,8 +139,10 @@ define([
         this._type = type;
 
         var primitives = scene.primitives;
+        var groundPrimitives = scene.groundPrimitives;
         this._scene = scene;
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._entityCollection = undefined;
         this._addedObjects = new AssociativeArray();
         this._removedObjects = new AssociativeArray();
@@ -154,9 +163,10 @@ define([
             this._openMaterialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false, i);
         }
 
+        this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
 
-        this._batches = [].concat(this._outlineBatches, this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._dynamicBatch);
+        this._batches = [].concat(this._outlineBatches, this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatch, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();

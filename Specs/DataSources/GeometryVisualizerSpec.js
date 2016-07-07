@@ -20,6 +20,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/StaticGeometryColorBatch',
         'DataSources/StaticGeometryPerMaterialBatch',
+        'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
         'Scene/ShadowMode',
         'Specs/createDynamicProperty',
@@ -46,6 +47,7 @@ defineSuite([
         SampledProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
         ShadowMode,
         createDynamicProperty,
@@ -82,6 +84,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -343,6 +346,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
@@ -549,7 +553,8 @@ defineSuite([
                 show : new CallbackProperty(function() {
                     return true;
                 }, false),
-                material : Color.RED
+                material : Color.RED,
+                height : 0
             }
         });
 
@@ -585,6 +590,74 @@ defineSuite([
         });
     });
 
+    it('StaticGroundGeometryColorBatch updates color attribute after rebuilding primitive', function() {
+        var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives);
+
+        function computeKey(color) {
+            var ui8 = new Uint8Array(color);
+            var ui32 = new Uint32Array(ui8.buffer);
+            return ui32[0];
+        }
+
+        var entity = new Entity({
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse : {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                show : new CallbackProperty(function() {
+                    return true;
+                }, false),
+                material : Color.RED
+            }
+        });
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(time, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.groundPrimitives.length).toEqual(1);
+            var primitive = scene.groundPrimitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            var red = [255, 0, 0, 255];
+            var redKey = computeKey(red);
+            expect(attributes.color).toEqual(red);
+
+            // Verify we have 1 batch with the key for red
+            expect(batch._batches.length).toEqual(1);
+            expect(batch._batches.contains(redKey)).toBe(true);
+            expect(batch._batches.get(redKey).key).toEqual(redKey);
+
+            entity.ellipse.material = Color.GREEN;
+            batch.remove(updater);
+            batch.add(time, updater);
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                var isUpdated = batch.update(time);
+                scene.render(time);
+                return isUpdated;
+            }).then(function() {
+                expect(scene.groundPrimitives.length).toEqual(1);
+                var primitive = scene.groundPrimitives.get(0);
+                var attributes = primitive.getGeometryInstanceAttributes(entity);
+                var green = [0, 128, 0, 255];
+                var greenKey = computeKey(green);
+                expect(attributes.color).toEqual(green);
+
+                // Verify we have 1 batch with the key for green
+                expect(batch._batches.length).toEqual(1);
+                expect(batch._batches.contains(greenKey)).toBe(true);
+                expect(batch._batches.get(greenKey).key).toEqual(greenKey);
+
+                batch.removeAllPrimitives();
+            });
+        });
+    });
+
     it('StaticOutlineGeometryBatch updates color attribute after rebuilding primitive', function() {
         var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false, ShadowMode.DISABLED);
 
@@ -597,7 +670,8 @@ defineSuite([
                     return true;
                 }, false),
                 outline : true,
-                outlineColor : Color.RED
+                outlineColor : Color.RED,
+                height : 0
             }
         });
 
@@ -640,6 +714,7 @@ defineSuite([
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.height = new ConstantProperty(0);
 
         var entity = new Entity();
         entity.position = Cartesian3.fromDegrees(0, 0, 0);
@@ -700,7 +775,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : Color.ORANGE
+                material : Color.ORANGE,
+                height : 0
             }
         });
         objects.add(entity);
@@ -719,7 +795,8 @@ defineSuite([
                 ellipse : {
                     semiMajorAxis : 2,
                     semiMinorAxis : 1,
-                    material : Color.BLUE
+                    material : Color.BLUE,
+                    height : 0
                 }
             });
             objects.add(entity2);
@@ -761,7 +838,8 @@ defineSuite([
             ellipse : {
                 semiMajorAxis : 2,
                 semiMinorAxis : 1,
-                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE))
+                material : new ColorMaterialProperty(createDynamicProperty(Color.BLUE)),
+                height : 0
             }
         });
 

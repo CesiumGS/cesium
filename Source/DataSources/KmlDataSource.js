@@ -31,6 +31,7 @@ define([
         '../Core/RuntimeError',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/SceneMode',
@@ -41,6 +42,7 @@ define([
         './BillboardGraphics',
         './CompositePositionProperty',
         './ConstantPositionProperty',
+        './CorridorGraphics',
         './DataSource',
         './DataSourceClock',
         './Entity',
@@ -88,6 +90,7 @@ define([
         RuntimeError,
         TimeInterval,
         TimeIntervalCollection,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
         SceneMode,
@@ -98,6 +101,7 @@ define([
         BillboardGraphics,
         CompositePositionProperty,
         ConstantPositionProperty,
+        CorridorGraphics,
         DataSource,
         DataSourceClock,
         Entity,
@@ -970,9 +974,42 @@ define([
         entity.polyline.positions = new PositionPropertyArray([entityPosition, surfacePosition]);
     }
 
+    function heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode) {
+        if (!defined(altitudeMode) && !defined(gxAltitudeMode) || altitudeMode === 'clampToGround') {
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (altitudeMode === 'relativeToGround') {
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (altitudeMode === 'absolute') {
+            return HeightReference.NONE;
+        }
+
+        if (gxAltitudeMode === 'clampToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:clampToSeaFloor is currently not supported, using <kml:altitudeMode>:clampToGround.');
+            return HeightReference.CLAMP_TO_GROUND;
+        }
+
+        if (gxAltitudeMode === 'relativeToSeaFloor') {
+            console.log('KML - <gx:altitudeMode>:relativeToSeaFloor is currently not supported, using <kml:altitudeMode>:relativeToGround.');
+            return HeightReference.RELATIVE_TO_GROUND;
+        }
+
+        if (defined(altitudeMode)) {
+            console.log('KML - Unknown <kml:altitudeMode>:' + altitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        } else {
+            console.log('KML - Unknown <gx:altitudeMode>:' + gxAltitudeMode + ', using <kml:altitudeMode>:CLAMP_TO_GROUND.');
+        }
+
+        // Clamp to ground is the default
+        return HeightReference.CLAMP_TO_GROUND;
+    }
+
     function createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode) {
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return property;
         }
 
@@ -981,7 +1018,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain
+        // Clamp to ground is the default
         return new ScaledPositionProperty(property);
     }
 
@@ -991,7 +1028,7 @@ define([
         }
 
         if (gxAltitudeMode === 'relativeToSeaFloor' || altitudeMode === 'absolute' || altitudeMode === 'relativeToGround') {
-            //Just return the ellipsoid referenced property until we support MSL and terrain
+            //Just return the ellipsoid referenced property until we support MSL
             return properties;
         }
 
@@ -1000,7 +1037,7 @@ define([
             console.log('KML - Unknown altitudeMode: ' + defaultValue(altitudeMode, gxAltitudeMode));
         }
 
-        //Clamp to ellipsoid until we support terrain.
+        // Clamp to ground is the default
         var propertiesLength = properties.length;
         for (var i = 0; i < propertiesLength; i++) {
             var property = properties[i];
@@ -1009,7 +1046,7 @@ define([
         return properties;
     }
 
-    function processPositionGraphics(dataSource, entity, styleEntity) {
+    function processPositionGraphics(dataSource, entity, styleEntity, heightReference) {
         var label = entity.label;
         if (!defined(label)) {
             label = defined(styleEntity.label) ? styleEntity.label.clone() : createDefaultLabel();
@@ -1037,6 +1074,11 @@ define([
                 label.horizontalOrigin = undefined;
             }
         }
+
+        if (defined(heightReference)) {
+            billboard.heightReference = heightReference;
+            label.heightReference = heightReference;
+        }
     }
 
     function processPathGraphics(dataSource, entity, styleEntity) {
@@ -1062,8 +1104,8 @@ define([
 
         var position = readCoordinate(coordinatesString);
 
-        entity.position = createPositionPropertyFromAltitudeMode(new ConstantPositionProperty(position), altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = position;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
 
         if (extrude && isExtrudable(altitudeMode, gxAltitudeMode)) {
             createDropLine(entityCollection, entity, styleEntity);
@@ -1103,11 +1145,24 @@ define([
                 wall.outlineWidth = polyline.width;
             }
         } else {
-            polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
-            entity.polyline = polyline;
-            polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
-            if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
+            if (dataSource._clampToGround && !canExtrude && tessellate) {
+                var corridor = new CorridorGraphics();
+                entity.corridor = corridor;
+                corridor.positions = coordinates;
+                if (defined(polyline)) {
+                    corridor.material = defined(polyline.material) ? polyline.material.color : Color.WHITE;
+                    corridor.width = defaultValue(polyline.width, 1.0);
+                } else {
+                    corridor.material = Color.WHITE;
+                    corridor.width = 1.0;
+                }
+            } else {
+                polyline = defined(polyline) ? polyline.clone() : new PolylineGraphics();
+                entity.polyline = polyline;
+                polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode);
+                if (!tessellate || canExtrude) {
+                    polyline.followSurface = false;
+                }
             }
         }
 
@@ -1136,6 +1191,8 @@ define([
         if (canExtrude) {
             polygon.perPositionHeight = true;
             polygon.extrudedHeight = extrude ? 0 : undefined;
+        } else if (!dataSource._clampToGround) {
+            polygon.height = 0;
         }
 
         if (defined(coordinates)) {
@@ -1180,8 +1237,8 @@ define([
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
-        entity.position = createPositionPropertyFromAltitudeMode(property, altitudeMode, gxAltitudeMode);
-        processPositionGraphics(dataSource, entity, styleEntity);
+        entity.position = property;
+        processPositionGraphics(dataSource, entity, styleEntity, heightReferenceFromAltitudeMode(altitudeMode, gxAltitudeMode));
         processPathGraphics(dataSource, entity, styleEntity);
 
         entity.availability = new TimeIntervalCollection();
@@ -1661,6 +1718,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -1943,6 +2001,7 @@ define([
         }
     }
 
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
     var featureTypes = {
         Document : processDocument,
         Folder : processFolder,
@@ -1955,10 +2014,11 @@ define([
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
-        var featureProocessor = featureTypes[node.localName];
-        if (defined(featureProocessor)) {
-            featureProocessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
+        var featureProcessor = featureTypes[node.localName];
+        if (defined(featureProcessor)) {
+            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
+            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
             console.log('KML - Unsupported feature node: ' + node.localName);
         }
     }
@@ -2151,6 +2211,8 @@ define([
         this._error = new Event();
         this._loading = new Event();
         this._refresh = new Event();
+        this._unsupportedNode = new Event();
+
         this._clock = undefined;
         this._entityCollection = new EntityCollection(this);
         this._name = undefined;
@@ -2179,6 +2241,7 @@ define([
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {DefaultProxy} [options.proxy] A proxy to be used for loading external data.
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2273,6 +2336,16 @@ define([
             }
         },
         /**
+         * Gets an event that will be raised when the data source finds an unsupported node type.
+         * @memberof KmlDataSource.prototype
+         * @type {Event}
+         */
+        unsupportedNodeEvent : {
+            get : function() {
+                return this._unsupportedNode;
+            }
+        },
+        /**
          * Gets whether or not this data source should be displayed.
          * @memberof KmlDataSource.prototype
          * @type {Boolean}
@@ -2294,6 +2367,7 @@ define([
      * @param {Object} [options] An object with the following properties:
      * @param {Number} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to this instances once the KML is loaded.
+     * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
      */
     KmlDataSource.prototype.load = function(data, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -2302,11 +2376,13 @@ define([
         }
         //>>includeEnd('debug');
 
+        options = defaultValue(options, {});
         DataSource.setLoading(this, true);
 
         var oldName = this._name;
         this._name = undefined;
         this._promises = [];
+        this._clampToGround = defaultValue(options.clampToGround, false);
 
         var that = this;
         return load(this, this._entityCollection, data, options).then(function() {

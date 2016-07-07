@@ -261,12 +261,43 @@ defineSuite([
         expect(geometry2).toBeUndefined();
     });
 
+    it('computing rectangle property', function() {
+        var rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0
+        });
+
+        var r = geometry.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.0);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.0);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(1.0);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.0);
+    });
+
+    it('computing rectangle property with rotation', function() {
+        var rectangle = new Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+        var geometry = new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            granularity : 1.0,
+            rotation : CesiumMath.toRadians(45.0)
+        });
+
+        var r = geometry.rectangle;
+        expect(CesiumMath.toDegrees(r.north)).toEqual(1.4189407575364013);
+        expect(CesiumMath.toDegrees(r.south)).toEqual(-1.4189407575364013);
+        expect(CesiumMath.toDegrees(r.east)).toEqual(1.4094456877799821);
+        expect(CesiumMath.toDegrees(r.west)).toEqual(-1.4094456877799821);
+    });
+
     var rectangle = new RectangleGeometry({
         vertexFormat : VertexFormat.POSITION_ONLY,
         rectangle : new Rectangle(-2.0, -1.0, 0.0, 1.0),
         granularity : 1.0,
         ellipsoid : Ellipsoid.UNIT_SPHERE
     });
-    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0];
+    var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, -1.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
 });

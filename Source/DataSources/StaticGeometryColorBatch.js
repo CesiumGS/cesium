@@ -37,6 +37,7 @@ define([
         this.showsUpdated = new AssociativeArray();
         this.itemsToRemove = [];
     }
+
     Batch.prototype.add = function(updater, instance) {
         var id = updater.entity.id;
         this.createPrimitive = true;
@@ -240,6 +241,7 @@ define([
         this._solidBatch = new Batch(primitives, false, appearanceType, closed, shadows);
         this._translucentBatch = new Batch(primitives, true, appearanceType, closed, shadows);
     }
+
     StaticGeometryColorBatch.prototype.add = function(time, updater) {
         var instance = updater.createFillGeometryInstance(time);
         if (instance.attributes.color.value[3] === 255) {
