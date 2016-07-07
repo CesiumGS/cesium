@@ -5,12 +5,15 @@ define([
     '../Core/Cartographic',
     '../Core/Color',
     '../Core/ColorGeometryInstanceAttribute',
+    '../Core/ComponentDatatype',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/destroyObject',
     '../Core/defineProperties',
     '../Core/DeveloperError',
     '../Core/Ellipsoid',
+    '../Core/Geometry',
+    '../Core/Geometryattribute',
     '../Core/GeometryInstance',
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
@@ -33,12 +36,15 @@ define([
     Cartographic,
     Color,
     ColorGeometryInstanceAttribute,
+    ComponentDatatype,
     defaultValue,
     defined,
     destroyObject,
     defineProperties,
     DeveloperError,
     Ellipsoid,
+    Geometry,
+    GeometryAttribute,
     GeometryInstance,
     getMagic,
     getStringFromTypedArray,
@@ -146,7 +152,8 @@ define([
         }
     };
 
-    //var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -155,7 +162,6 @@ define([
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
-        /*
         var magic = getMagic(uint8Array, byteOffset);
         if (magic !== 'vctr') {
             throw new DeveloperError('Invalid Vector tile.  Expected magic=vctr.  Read magic=' + magic);
@@ -174,10 +180,69 @@ define([
 
         // Skip byteLength
         byteOffset += sizeOfUint32;
-        */
 
-        var text = getStringFromTypedArray(uint8Array, byteOffset);
-        var json = JSON.parse(text);
+        var positionByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var indicesByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        if (positionByteLength === 0) {
+            this.state = Cesium3DTileContentState.PROCESSING;
+            this.contentReadyToProcessPromise.resolve(this);
+            this.state = Cesium3DTileContentState.READY;
+            this.readyPromise.resolve(this);
+            return;
+        }
+
+        // padding
+        byteOffset += sizeOfUint32;
+
+        var positions = new Float64Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat64);
+        byteOffset += positionByteLength;
+        var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
+        byteOffset += indicesByteLength;
+        
+        var x = view.getFloat64(byteOffset, true);
+        byteOffset += sizeOfFloat64;
+        var y = view.getFloat64(byteOffset, true);
+        byteOffset += sizeOfFloat64;
+        var z = view.getFloat64(byteOffset, true);
+        byteOffset += sizeOfFloat64;
+        var r = view.getFloat64(byteOffset, true);
+        byteOffset += sizeOfFloat64;
+        
+        var minHeight = view.getFloat64(byteOffset, true);
+        byteOffset += sizeOfFloat64;
+        var maxHeight = view.getFloat64(byteOffset, true);
+        
+        var boundingSphere = new BoundingSphere(new Cartesian3(x, y, z), r);
+
+        var color = Color.fromRandom().withAlpha(0.5);
+        var geometryInstance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        normalize : false,
+                        values : positions
+                    })
+                },
+                indices : indices,
+                boundingSphere : boundingSphere
+            }),
+            attributes: {
+                color: ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        this._primitives.push(new GroundPrimitive({
+            geometryInstances : geometryInstance,
+            asynchronous : false,
+            _minimumHeight : minHeight !== Number.POSITIVE_INFINITY ? minHeight : undefined,
+            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined,
+            _precreated : true
+        }));
 
         /*
         var labelCollection = new LabelCollection();
@@ -201,75 +266,6 @@ define([
             });
         }
         */
-
-        var polygonInstances = [];
-        var outlineInstances = [];
-
-        var minHeight = Number.POSITIVE_INFINITY;
-        var maxHeight = Number.NEGATIVE_INFINITY;
-
-        var polygons = json.polygons;
-        var length = polygons.length;
-
-        var color = Color.fromRandom().withAlpha(0.5);
-
-        for (var i = 0; i < length; ++i) {
-            var polygon = polygons[i];
-            polygonInstances.push(new GeometryInstance({
-                /*
-                geometry : PolygonGeometry.fromPositions({
-                    positions : polygon.positions,
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT
-                }),
-                */
-                geometry : polygon.geometry,
-                attributes: {
-                    //color: ColorGeometryInstanceAttribute.fromColor(Color.RED.withAlpha(0.5))
-                    color: ColorGeometryInstanceAttribute.fromColor(color)
-                }
-            }));
-            /*
-            outlineInstances.push(new GeometryInstance({
-                geometry : new PolylineGeometry({
-                    positions : polygon.positions,
-                    width : 1.0,
-                    vertexFormat : PolylineColorAppearance.VERTEX_FORMAT
-                }),
-                attributes: {
-                    color: ColorGeometryInstanceAttribute.fromColor(Color.RED)
-                }
-            }));
-            */
-
-            minHeight = Math.min(minHeight, defaultValue(polygon.minimumHeight, minHeight));
-            maxHeight = Math.max(maxHeight, defaultValue(polygon.maximumHeight, maxHeight));
-        }
-
-        /*
-        this._primitives.push(new Primitive({
-            geometryInstances : polygonInstances,
-            appearance : new PerInstanceColorAppearance({
-                closed : true,
-                translucent : true
-            }),
-            asynchrounous : false
-        }));
-
-        this._primitives.push(new Primitive({
-            geometryInstances : outlineInstances,
-            appearance : new PolylineColorAppearance(),
-            asynchrounous : false
-        }));
-        */
-
-        this._primitives.push(new GroundPrimitive({
-            //debugShowShadowVolume : true,
-            geometryInstances : polygonInstances,
-            asynchronous : false,
-            _minimumHeight : minHeight !== Number.POSITIVE_INFINITY ? minHeight : undefined,
-            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined,
-            _precreated : true
-        }));
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);

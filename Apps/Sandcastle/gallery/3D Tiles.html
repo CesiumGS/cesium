@@ -38,6 +38,15 @@ var scene = viewer.scene;
 scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;
 
+    var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+        url : 'https://assets.agi.com/stk-terrain/world',
+        requestWaterMask : true,
+        requestVertexNormals : true
+    });
+    viewer.terrainProvider = cesiumTerrainProviderMeshes;
+
+    viewer.scene.globe.depthTestAgainstTerrain = true;
+
 var tilesets = [{
     //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
     //name : 'Tileset', url : 'http://localhost:8002/tilesets/Names-Test/'
@@ -65,7 +74,7 @@ function loadTileset(url) {
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
         debugShowStatistics : true,
-        maximumNumberOfLoadedTiles : 3
+        maximumNumberOfLoadedTiles : 512
     }));
 
     return Cesium.when(tileset.readyPromise).then(function(tileset) {
