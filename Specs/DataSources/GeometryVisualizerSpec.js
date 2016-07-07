@@ -293,6 +293,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
         ellipse.material = new ColorMaterialProperty();
+        ellipse.extrudedHeight = new ConstantProperty(1000);
         ellipse.shadows = new ConstantProperty(shadows);
 
         var entity = new Entity();
@@ -448,6 +449,7 @@ defineSuite([
         ellipse.semiMajorAxis = new SampledProperty(Number);
         ellipse.semiMajorAxis.addSample(time, 2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.extrudedHeight = new ConstantProperty(1000);
         ellipse.material = new ColorMaterialProperty();
 
         var entity = new Entity();
