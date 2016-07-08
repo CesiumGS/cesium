@@ -4,6 +4,7 @@ Change Log
 ### 1.24 - 2016-08-01
 
 * Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
+* Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
 
 ### 1.23 - 2016-07-01
 
@@ -44,7 +45,6 @@ Change Log
 * Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
-* Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
