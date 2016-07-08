@@ -19,7 +19,7 @@ Change Log
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Added support for the glTF extension [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
 * Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
-* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
+* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties:
     * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
     * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
     * `Model`: `heightReference`, `maximumScale`
@@ -40,6 +40,7 @@ Change Log
 * Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
 * Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
 * Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+* Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
 
 ### 1.22.2 - 2016-06-14
 * This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
