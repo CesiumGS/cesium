@@ -232,11 +232,7 @@ Sandcastle.addToolbarButton('Toggle Shadows', function() {
 
 var entityShadows = Cesium.ShadowMode.ENABLED;
 Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
-    if (entityShadows === Cesium.ShadowMode.ENABLED) {
-        entityShadows = Cesium.ShadowMode.DISABLED;
-    } else {
-        entityShadows = Cesium.ShadowMode.ENABLED;
-    }
+    entityShadows = (entityShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
     for (i = 0; i < entitiesLength; ++i) {
         var entity = entities[i];
         var visual = entity.model || entity.box || entity.ellipsoid;
@@ -245,11 +241,7 @@ Sandcastle.addToolbarButton('Toggle Entity Shadows', function() {
 });
 
 Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
-    if (viewer.terrainShadows === Cesium.ShadowMode.ENABLED) {
-        viewer.terrainShadows = Cesium.ShadowMode.DISABLED;
-    } else {
-        viewer.terrainShadows = Cesium.ShadowMode.ENABLED;
-    }
+    viewer.terrainShadows = (viewer.terrainShadows === Cesium.ShadowMode.ENABLED) ? Cesium.ShadowMode.DISABLED : Cesium.ShadowMode.ENABLED;
 });
 
 Sandcastle.addToolbarButton('Soft Shadows', function() {
