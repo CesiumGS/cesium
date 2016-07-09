@@ -4,6 +4,7 @@ Change Log
 ### 1.24 - 2016-08-01
 
 * Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
+* Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
 
 ### 1.23 - 2016-07-01
 
@@ -23,7 +24,7 @@ Change Log
 * Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
 * Added support for the glTF extension [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
 * Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
-* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
+* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties:
     * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
     * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
     * `Model`: `heightReference`, `maximumScale`
