@@ -1,16 +1,31 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Quaternion'
-    ], function(
-        HeadingPitchRoll,
-        CesiumMath,
-        Quaternion) {
+    'Core/HeadingPitchRoll',
+    'Core/Math',
+    'Core/Quaternion'
+], function(
+    HeadingPitchRoll,
+    CesiumMath,
+    Quaternion) {
     "use strict";
     /*global it,expect*/
 
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
+
+    it('construct with default values', function() {
+        var headingPitchRoll = new HeadingPitchRoll();
+        expect(headingPitchRoll.heading).toEqual(0.0);
+        expect(headingPitchRoll.pitch).toEqual(0.0);
+        expect(headingPitchRoll.roll).toEqual(0.0);
+    });
+
+    it('construct with all values', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+        expect(headingPitchRoll.heading).toEqual(1.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+        expect(headingPitchRoll.pitch).toEqual(2.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+        expect(headingPitchRoll.roll).toEqual(3.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+    });
+
     it('conversion from quaternion', function() {
         var testingTab = [
             [0, 0, 0],
@@ -51,6 +66,73 @@ defineSuite([
             expect(init[1] * deg2rad).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
             expect(init[2] * deg2rad).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
         }
+    });
+
+    it('fromDegrees with result', function() {
+        var headingDeg = -115;
+        var pitchDeg = 37;
+        var rollDeg = 40;
+        var headingRad = headingDeg * deg2rad;
+        var pitchRad = pitchDeg * deg2rad;
+        var rollRad = rollDeg * deg2rad;
+        var result = new HeadingPitchRoll();
+        var actual = HeadingPitchRoll.fromDegrees(headingDeg, pitchDeg, rollDeg, result);
+        var expected = new HeadingPitchRoll(headingRad, pitchRad, rollRad);
+        expect(actual).toEqual(expected);
+        expect(actual).toBe(result);
+    });
+
+    it('clone with a result parameter', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+        var result = new HeadingPitchRoll();
+        var returnedResult = HeadingPitchRoll.clone(headingPitchRoll, result);
+        expect(headingPitchRoll).not.toBe(result);
+        expect(result).toBe(returnedResult);
+        expect(headingPitchRoll).toEqual(result);
+    });
+
+    it('clone works with a result parameter that is an input parameter', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.0 * deg2rad, 2.0 * deg2rad, 3.0 * deg2rad);
+        var returnedResult = HeadingPitchRoll.clone(headingPitchRoll, headingPitchRoll);
+        expect(headingPitchRoll).toBe(returnedResult);
+    });
+
+    it('equals', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
+        expect(HeadingPitchRoll.equals(headingPitchRoll, new HeadingPitchRoll(1.0, 2.0, 3.0))).toEqual(true);
+        expect(HeadingPitchRoll.equals(headingPitchRoll, new HeadingPitchRoll(2.0, 2.0, 3.0))).toEqual(false);
+        expect(HeadingPitchRoll.equals(headingPitchRoll, new HeadingPitchRoll(2.0, 1.0, 3.0))).toEqual(false);
+        expect(HeadingPitchRoll.equals(headingPitchRoll, new HeadingPitchRoll(1.0, 2.0, 4.0))).toEqual(false);
+        expect(HeadingPitchRoll.equals(headingPitchRoll, undefined)).toEqual(false);
+    });
+
+    it('equalsEpsilon', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.0, 2.0, 3.0);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 0.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 3.0), 1.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(2.0, 2.0, 3.0), 1.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 3.0, 3.0), 1.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 4.0), 1.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(2.0, 2.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 3.0, 3.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(1.0, 2.0, 4.0), CesiumMath.EPSILON6)).toEqual(false);
+        expect(headingPitchRoll.equalsEpsilon(undefined, 1)).toEqual(false);
+
+        headingPitchRoll = new HeadingPitchRoll(3000000.0, 4000000.0, 5000000.0);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.0, 4000000.0, 5000000.0), 0.0)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.2, 4000000.0, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.0, 4000000.2, 5000000.0), CesiumMath.EPSILON7)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.0, 4000000.0, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON7)).toEqual(true);
+        expect(headingPitchRoll.equalsEpsilon(new HeadingPitchRoll(3000000.2, 4000000.2, 5000000.2), CesiumMath.EPSILON9)).toEqual(false);
+        expect(headingPitchRoll.equalsEpsilon(undefined, 1)).toEqual(false);
+
+        expect(HeadingPitchRoll.equalsEpsilon(undefined, headingPitchRoll, 1)).toEqual(false);
+    });
+
+    it('toString', function() {
+        var headingPitchRoll = new HeadingPitchRoll(1.123, 2.345, 6.789);
+        expect(headingPitchRoll.toString()).toEqual('(1.123, 2.345, 6.789)');
     });
 
     it('fromQuaternion throws with no parameter', function() {

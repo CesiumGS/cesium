@@ -502,7 +502,7 @@ define([
      *
      *
      */
-    Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin,headingPitchRoll, ellipsoid, result) {
+    Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
         // //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {

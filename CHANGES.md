@@ -5,6 +5,15 @@ Change Log
 
 * Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
 * Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
+* Added `Transforms.northUpEastToFixedFrame` to compute a 4x4 local transformation matrix from a reference frame with an north-west-up axes.
+* Added `Transforms.aircraftHeadingPitchRollToFixedFrame` to create a local frame from a position and heading/pitch/roll angles. The local frame is north-west-up axed.
+* Added `Transforms.aircraftHeadingPitchRollQuaternion` which is the quaternion rotation from `Transforms.aircraftHeadingPitchRollToFixedFrame`.
+* Added `HeadingPitchRoll` :
+    * `HeadingPitchRoll.fromQuaternion` function for retrieving heading-pitch-roll angles from a quaternion.
+    * `HeadingPitchRoll.fromDegrees` function that returns a new HeadingPitchRoll instance from angles given in degrees.
+    * `HeadingPitchRoll.clone` function to duplicate HeadingPitchRoll instance.
+    * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
+* Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
 
 ### 1.23 - 2016-07-01
 

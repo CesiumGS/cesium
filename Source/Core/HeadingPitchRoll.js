@@ -1,14 +1,14 @@
 /*global define*/
 define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
+    './defaultValue',
+    './defined',
+    './DeveloperError',
+    './Math'
+], function(
+    defaultValue,
+    defined,
+    DeveloperError,
+    CesiumMath) {
     "use strict";
 
     /**
@@ -22,7 +22,7 @@ define([
      * @param {Number} [pitch=0.0] The pitch component in radians.
      * @param {Number} [roll=0.0] The roll component in radians.
      */
-    var HeadingPitchRoll = function(heading, pitch, roll) {
+    function HeadingPitchRoll(heading, pitch, roll) {
         this.heading = defaultValue(heading, 0.0);
         this.pitch = defaultValue(pitch, 0.0);
         this.roll = defaultValue(roll, 0.0);

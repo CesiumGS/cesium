@@ -317,29 +317,29 @@ define([
             throw new DeveloperError('headingPitchRoll is required');
         }
         //>>includeEnd('debug');
-        var cosTheta=Math.cos(-headingPitchRoll.pitch);
-        var cosPsi=Math.cos(-headingPitchRoll.heading);
-        var cosPhi=Math.cos(headingPitchRoll.roll);
-        var sinTheta=Math.sin(-headingPitchRoll.pitch);
-        var sinPsi=Math.sin(-headingPitchRoll.heading);
-        var sinPhi=Math.sin(headingPitchRoll.roll);
+        var cosTheta = Math.cos(-headingPitchRoll.pitch);
+        var cosPsi = Math.cos(-headingPitchRoll.heading);
+        var cosPhi = Math.cos(headingPitchRoll.roll);
+        var sinTheta = Math.sin(-headingPitchRoll.pitch);
+        var sinPsi = Math.sin(-headingPitchRoll.heading);
+        var sinPhi = Math.sin(headingPitchRoll.roll);
 
-        var m00 = cosTheta*cosPsi;
-        var m01 = -cosPhi*sinPsi+sinPhi*sinTheta*cosPsi;
-        var m02 = sinPhi*sinPsi+cosPhi*sinTheta*cosPsi;
+        var m00 = cosTheta * cosPsi;
+        var m01 = -cosPhi * sinPsi + sinPhi * sinTheta * cosPsi;
+        var m02 = sinPhi * sinPsi + cosPhi * sinTheta * cosPsi;
 
-        var m10 = cosTheta*sinPsi;
-        var m11 = cosPhi*cosPsi+sinPhi*sinTheta*sinPsi;
-        var m12 = -sinTheta*cosPhi+cosPhi*sinTheta*sinPsi;
+        var m10 = cosTheta * sinPsi;
+        var m11 = cosPhi * cosPsi + sinPhi * sinTheta * sinPsi;
+        var m12 = -sinTheta * cosPhi + cosPhi * sinTheta * sinPsi;
 
         var m20 = -sinTheta;
-        var m21 = sinPhi*cosTheta;
-        var m22 = cosPhi*cosTheta;
+        var m21 = sinPhi * cosTheta;
+        var m22 = cosPhi * cosTheta;
 
         if (!defined(result)) {
             return new Matrix3(m00, m01, m02,
-                               m10, m11, m12,
-                               m20, m21, m22);
+                m10, m11, m12,
+                m20, m21, m22);
         }
         result[0] = m00;
         result[1] = m10;

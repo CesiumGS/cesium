@@ -318,7 +318,8 @@ defineSuite([
     it('fromRotationY works with a result parameter', function() {
         var expected = new Matrix3(
             0.0, 0.0, 1.0,
-            0.0, 1.0, 0.0, -1.0, 0.0, 0.0);
+            0.0, 1.0, 0.0,
+            -1.0, 0.0, 0.0);
         var result = new Matrix3();
         var matrix = Matrix3.fromRotationY(CesiumMath.toRadians(90.0), result);
         expect(matrix).toBe(result);
@@ -665,12 +666,15 @@ defineSuite([
     });
 
     it('computes eigenvalues and eigenvectors', function() {
-        var a = new Matrix3(4.0, -1.0, 1.0, -1.0, 3.0, -2.0,
-            1.0, -2.0, 3.0);
+        var a = new Matrix3(
+          4.0, -1.0, 1.0,
+          -1.0, 3.0, -2.0,
+          1.0, -2.0, 3.0);
 
-        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
-            0.0, 6.0, 0.0,
-            0.0, 0.0, 1.0);
+        var expectedDiagonal = new Matrix3(
+          3.0, 0.0, 0.0,
+          0.0, 6.0, 0.0,
+          0.0, 0.0, 1.0);
 
         var decomposition = Matrix3.computeEigenDecomposition(a);
         expect(decomposition.diagonal).toEqualEpsilon(expectedDiagonal, CesiumMath.EPSILON14);
@@ -689,12 +693,15 @@ defineSuite([
     });
 
     it('computes eigenvalues and eigenvectors with result parameters', function() {
-        var a = new Matrix3(4.0, -1.0, 1.0, -1.0, 3.0, -2.0,
-            1.0, -2.0, 3.0);
+        var a = new Matrix3(
+          4.0, -1.0, 1.0,
+          -1.0, 3.0, -2.0,
+          1.0, -2.0, 3.0);
 
-        var expectedDiagonal = new Matrix3(3.0, 0.0, 0.0,
-            0.0, 6.0, 0.0,
-            0.0, 0.0, 1.0);
+        var expectedDiagonal = new Matrix3(
+          3.0, 0.0, 0.0,
+          0.0, 6.0, 0.0,
+          0.0, 0.0, 1.0);
         var result = {
             unitary: new Matrix3(),
             diagonal: new Matrix3()
