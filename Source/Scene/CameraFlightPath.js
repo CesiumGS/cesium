@@ -151,9 +151,11 @@ define([
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
+        /*
         if (destCart.height <= 0.0) {
             destCart.height = startCart.height;
         }
+        */
 
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
@@ -291,11 +293,14 @@ define([
         var pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(options.roll, 0.0);
 
-        var controller = scene.screenSpaceCameraController;
-        controller.enableInputs = false;
+        //var controller = scene.screenSpaceCameraController;
+        //controller.enableInputs = false;
 
-        var complete = wrapCallback(controller, options.complete);
-        var cancel = wrapCallback(controller, options.cancel);
+        //var complete = wrapCallback(controller, options.complete);
+        //var cancel = wrapCallback(controller, options.cancel);
+
+        var complete = options.complete;
+        var cancel = options.cancel;
 
         var frustum = camera.frustum;
 

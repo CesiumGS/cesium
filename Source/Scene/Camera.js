@@ -219,6 +219,7 @@ define([
         this._projection = projection;
         this._maxCoord = projection.project(new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO));
         this._max2Dfrustum = undefined;
+        this._suspendTerrainAdjustment = false;
 
         // set default view
         rectangleCameraPosition3D(this, Camera.DEFAULT_VIEW_RECTANGLE, this.position, true);
@@ -335,6 +336,75 @@ define([
             camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
             camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+        }
+    };
+
+    var scratchAdjustHeightCartographic = new Cartographic();
+
+    Camera.prototype._adjustHeightForTerrain = function() {
+        var scene = this._scene;
+
+        // TODO: deprecate and move to camera
+        var enableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
+        var minimumCollisionTerrainHeight = scene.screenSpaceCameraController.minimumCollisionTerrainHeight;
+        var minimumZoomDistance = scene.screenSpaceCameraController.minimumZoomDistance;
+
+        if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
+            return;
+        }
+
+        var mode = this._mode;
+        var globe = scene.globe;
+
+        if (!defined(globe) || mode === SceneMode.SCENE2D || mode === SceneMode.MORPHING) {
+            return;
+        }
+
+        var ellipsoid = globe.ellipsoid;
+        var projection = scene.mapProjection;
+
+        var transform;
+        var mag;
+        if (!Matrix4.equals(this.transform, Matrix4.IDENTITY)) {
+            transform = Matrix4.clone(this.transform);
+            mag = Cartesian3.magnitude(this.position);
+            this._setTransform(Matrix4.IDENTITY);
+        }
+
+        var cartographic = scratchAdjustHeightCartographic;
+        if (mode === SceneMode.SCENE3D) {
+            ellipsoid.cartesianToCartographic(this.position, cartographic);
+        } else {
+            projection.unproject(this.position, cartographic);
+        }
+
+        var heightUpdated = false;
+        if (cartographic.height < minimumCollisionTerrainHeight) {
+            var height = globe.getHeight(cartographic);
+            if (defined(height)) {
+                height += minimumZoomDistance;
+                if (cartographic.height < height) {
+                    cartographic.height = height;
+                    if (mode === SceneMode.SCENE3D) {
+                        ellipsoid.cartographicToCartesian(cartographic, this.position);
+                    } else {
+                        projection.project(cartographic, this.position);
+                    }
+                    heightUpdated = true;
+                }
+            }
+        }
+
+        if (defined(transform)) {
+            this._setTransform(transform);
+            if (heightUpdated) {
+                Cartesian3.normalize(this.position, this.position);
+                Cartesian3.negate(this.position, this.direction);
+                Cartesian3.multiplyByScalar(this.position, Math.max(mag, minimumZoomDistance), this.position);
+                Cartesian3.normalize(this.direction, this.direction);
+                Cartesian3.cross(this.direction, this.up, this.right);
+                Cartesian3.cross(this.right, this.direction, this.up);
+            }
         }
     };
 
@@ -854,6 +924,14 @@ define([
         if (this._mode === SceneMode.SCENE2D) {
             clampMove2D(this, this.position);
         }
+
+        var globe = this._scene.globe;
+        var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0);
+        if (this._suspendTerrainAdjustment) {
+            this._scene.screenSpaceCameraController.enableInputs = globeFinishedUpdating;
+            this._suspendTerrainAdjustment = !globeFinishedUpdating;
+        }
+        this._adjustHeightForTerrain();
     };
 
     var setTransformPosition = new Cartesian3();
@@ -1081,6 +1159,8 @@ define([
         var heading = defaultValue(orientation.heading, 0.0);
         var pitch = defaultValue(orientation.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(orientation.roll, 0.0);
+
+        this._suspendTerrainAdjustment = true;
 
         if (mode === SceneMode.SCENE3D) {
             setView3D(this, destination, heading, pitch, roll);
@@ -2542,6 +2622,7 @@ define([
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
+        /*
         var sscc = this._scene.screenSpaceCameraController;
 
         if (defined(sscc) || mode === SceneMode.SCENE2D) {
@@ -2574,6 +2655,7 @@ define([
                 destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
             }
         }
+        */
 
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
