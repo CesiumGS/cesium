@@ -446,6 +446,8 @@ define([
                 return unwrapQuaternionInterval(czmlInterval);
             case Rotation:
                 return defaultValue(czmlInterval.number, czmlInterval);
+            case ShadowMode:
+                return ShadowMode[defaultValue(czmlInterval.shadows, czmlInterval)];
             case String:
                 return defaultValue(czmlInterval.string, czmlInterval);
             case StripeOrientation:

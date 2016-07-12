@@ -980,7 +980,7 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1005,7 +1005,7 @@ defineSuite([
                 semiMajorAxis : 10,
                 semiMinorAxis : 20,
                 rotation : 1.0,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1054,7 +1054,7 @@ defineSuite([
                 stackPartitions : 25,
                 slicePartitions : 26,
                 subdivisions : 27,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1092,7 +1092,7 @@ defineSuite([
                         }
                     }
                 },
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1649,7 +1649,7 @@ defineSuite([
                 outlineWidth : 6,
                 closeTop : false,
                 closeBottom : false,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1684,7 +1684,7 @@ defineSuite([
                     }
                 },
                 show : true,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1724,7 +1724,7 @@ defineSuite([
                 },
                 width : 1.0,
                 show : true,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1758,7 +1758,7 @@ defineSuite([
                 },
                 width : 1.0,
                 show : true,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -1794,7 +1794,7 @@ defineSuite([
                 maximumScale : 4.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
-                shadows : ShadowMode.ENABLED,
+                shadows : 'ENABLED',
                 heightReference: 'CLAMP_TO_GROUND',
                 nodeTransformations : {
                     Mesh : {
@@ -1849,7 +1849,7 @@ defineSuite([
                 minimumPixelSize : 5.0,
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
-                shadows : ShadowMode.ENABLED,
+                shadows : 'ENABLED',
                 nodeTransformations : {
                     Mesh : {
                         scale : {
@@ -2122,7 +2122,7 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -2239,7 +2239,7 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -2315,7 +2315,7 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -2354,7 +2354,7 @@ defineSuite([
                 outlineWidth : 6,
                 numberOfVerticalLines : 15,
                 slices : 100,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
@@ -2402,7 +2402,7 @@ defineSuite([
                     rgbaf : [0.2, 0.2, 0.2, 0.2]
                 },
                 outlineWidth : 6,
-                shadows : ShadowMode.ENABLED
+                shadows : 'ENABLED'
             }
         };
 
