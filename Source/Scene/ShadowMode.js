@@ -42,13 +42,24 @@ define([
          * @type {Number}
          * @constant
          */
-        RECEIVE_ONLY : 3
+        RECEIVE_ONLY : 3,
+
+        /**
+         * @private
+         */
+        NUMBER_OF_SHADOW_MODES : 4
     };
 
+    /**
+     * @private
+     */
     ShadowMode.castShadows = function(shadowMode) {
         return (shadowMode === ShadowMode.ENABLED) || (shadowMode === ShadowMode.CAST_ONLY);
     };
-    
+
+    /**
+     * @private
+     */
     ShadowMode.receiveShadows = function(shadowMode) {
         return (shadowMode === ShadowMode.ENABLED) || (shadowMode === ShadowMode.RECEIVE_ONLY);
     };

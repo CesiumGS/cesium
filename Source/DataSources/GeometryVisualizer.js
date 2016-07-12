@@ -5,6 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Scene/ShadowMode',
         './BoundingSphereState',
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
@@ -17,6 +18,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        ShadowMode,
         BoundingSphereState,
         ColorMaterialProperty,
         StaticGeometryColorBatch,
@@ -148,7 +150,7 @@ define([
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
 
-        var numberOfShadowModes = 4;
+        var numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
         this._outlineBatches = new Array(numberOfShadowModes);
         this._closedColorBatches = new Array(numberOfShadowModes);
         this._closedMaterialBatches = new Array(numberOfShadowModes);
@@ -166,7 +168,7 @@ define([
         this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
         this._dynamicBatch = new DynamicGeometryBatch(primitives);
 
-        this._batches = [].concat(this._outlineBatches, this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatch, this._dynamicBatch);
+        this._batches = this._outlineBatches.concat(this._closedColorBatches, this._closedMaterialBatches, this._openColorBatches, this._openMaterialBatches, this._groundColorBatch, this._dynamicBatch);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
