@@ -6,6 +6,7 @@ Change Log
 * Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
 * Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
 * Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
+* Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 
 ### 1.23 - 2016-07-01
 
