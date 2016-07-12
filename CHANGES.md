@@ -15,6 +15,7 @@ Change Log
     * `HeadingPitchRoll.equals` and `HeadingPitchRoll.equalsEpsilon` functions for comparing two instances.
 * Added `Matrix3.fromHeadingPitchRoll` Computes a 3x3 rotation matrix from the provided headingPitchRoll.
 * Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
+* Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 
 ### 1.23 - 2016-07-01
 
