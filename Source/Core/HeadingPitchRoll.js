@@ -26,7 +26,7 @@ define([
         this.heading = defaultValue(heading, 0.0);
         this.pitch = defaultValue(pitch, 0.0);
         this.roll = defaultValue(roll, 0.0);
-    };
+    }
 
     /**
      * Computes the heading, pitch and roll from a quaternion (see http://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles )
