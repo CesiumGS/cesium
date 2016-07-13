@@ -2796,6 +2796,7 @@ defineSuite([
             expect(e.billboard.eyeOffset.getValue(date)).toEqual(new Cartesian3(7, 8, 9));
             expect(e.billboard.horizontalOrigin.getValue(date)).toEqual(HorizontalOrigin.LEFT);
             expect(e.billboard.verticalOrigin.getValue(date)).toEqual(VerticalOrigin.BOTTOM);
+            expect(e.billboard.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(e.billboard.color.getValue(date)).toEqual(Color.fromBytes(2, 3, 4, 1));
             expect(e.billboard.rotation.getValue(date)).toEqual(2.0);
             expect(e.billboard.alignedAxis.getValue(date)).toEqualEpsilon(new Cartesian3(0.267261241912424, 0.534522483824849, 0.801783725737273), 1e-14);
@@ -2869,6 +2870,7 @@ defineSuite([
             expect(e.label.eyeOffset.getValue(date)).toEqual(new Cartesian3(16, 17, 18));
             expect(e.label.horizontalOrigin.getValue(date)).toEqual(HorizontalOrigin.LEFT);
             expect(e.label.verticalOrigin.getValue(date)).toEqual(VerticalOrigin.BOTTOM);
+            expect(e.label.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(e.label.fillColor.getValue(date)).toEqual(Color.fromBytes(46, 47, 48, 45));
             expect(e.label.outlineColor.getValue(date)).toEqual(Color.fromBytes(50, 51, 52, 49));
             expect(e.label.outlineWidth.getValue(date)).toEqual(31.0);
@@ -2881,6 +2883,7 @@ defineSuite([
             expect(e.model.maximumScale.getValue(date)).toEqual(34.0);
             expect(e.model.incrementallyLoadTextures.getValue(date)).toEqual(true);
             expect(e.model.runAnimations.getValue(date)).toEqual(true);
+            expect(e.model.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(e.model.nodeTransformations.prop.translation.getValue(date)).toEqual(new Cartesian3(19, 20, 21));
             expect(e.model.nodeTransformations.prop.rotation.getValue(date)).toEqualEpsilon(new Quaternion(0.454858826147342, 0.530668630505232, 0.606478434863123, 0.379049021789452), 1e-14);
             expect(e.model.nodeTransformations.prop.scale.getValue(date)).toEqual(new Cartesian3(22, 23, 24));
@@ -2892,6 +2895,7 @@ defineSuite([
             expect(e.path.material.color.getValue(date)).toEqual(Color.fromBytes(54, 55, 56, 53));
             expect(e.point.show.getValue(date)).toEqual(true);
             expect(e.point.pixelSize.getValue(date)).toEqual(39.0);
+            expect(e.point.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(e.point.color.getValue(date)).toEqual(Color.fromBytes(58, 59, 60, 57));
             expect(e.point.outlineColor.getValue(date)).toEqual(Color.fromBytes(62, 63, 64, 61));
             expect(e.point.outlineWidth.getValue(date)).toEqual(40.0);
@@ -3462,6 +3466,7 @@ defineSuite([
             expect(e.billboard.eyeOffset.getValue(date)).toEqual(constant.billboard.eyeOffset.getValue(date));
             expect(e.billboard.horizontalOrigin.getValue(date)).toEqual(constant.billboard.horizontalOrigin.getValue(date));
             expect(e.billboard.verticalOrigin.getValue(date)).toEqual(constant.billboard.verticalOrigin.getValue(date));
+            expect(e.billboard.heightReference.getValue(date)).toEqual(constant.billboard.heightReference.getValue(date));
             expect(e.billboard.color.getValue(date)).toEqual(constant.billboard.color.getValue(date));
             expect(e.billboard.rotation.getValue(date)).toEqual(constant.billboard.rotation.getValue(date));
             expect(e.billboard.alignedAxis.getValue(date)).toEqual(constant.billboard.alignedAxis.getValue(date));
@@ -3535,6 +3540,7 @@ defineSuite([
             expect(e.label.eyeOffset.getValue(date)).toEqual(constant.label.eyeOffset.getValue(date));
             expect(e.label.horizontalOrigin.getValue(date)).toEqual(constant.label.horizontalOrigin.getValue(date));
             expect(e.label.verticalOrigin.getValue(date)).toEqual(constant.label.verticalOrigin.getValue(date));
+            expect(e.label.heightReference.getValue(date)).toEqual(constant.label.heightReference.getValue(date));
             expect(e.label.fillColor.getValue(date)).toEqual(constant.label.fillColor.getValue(date));
             expect(e.label.outlineColor.getValue(date)).toEqual(constant.label.outlineColor.getValue(date));
             expect(e.label.outlineWidth.getValue(date)).toEqual(constant.label.outlineWidth.getValue(date));
@@ -3547,6 +3553,7 @@ defineSuite([
             expect(e.model.maximumScale.getValue(date)).toEqual(constant.model.maximumScale.getValue(date));
             expect(e.model.incrementallyLoadTextures.getValue(date)).toEqual(constant.model.incrementallyLoadTextures.getValue(date));
             expect(e.model.runAnimations.getValue(date)).toEqual(constant.model.runAnimations.getValue(date));
+            expect(e.model.heightReference.getValue(date)).toEqual(constant.model.heightReference.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.translation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.translation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.rotation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.rotation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.scale.getValue(date)).toEqual(constant.model.nodeTransformations.prop.scale.getValue(date));
@@ -3558,6 +3565,7 @@ defineSuite([
             expect(e.path.material.color.getValue(date)).toEqual(constant.path.material.color.getValue(date));
             expect(e.point.show.getValue(date)).toEqual(constant.point.show.getValue(date));
             expect(e.point.pixelSize.getValue(date)).toEqual(constant.point.pixelSize.getValue(date));
+            expect(e.point.heightReference.getValue(date)).toEqual(constant.point.heightReference.getValue(date));
             expect(e.point.color.getValue(date)).toEqual(constant.point.color.getValue(date));
             expect(e.point.outlineColor.getValue(date)).toEqual(constant.point.outlineColor.getValue(date));
             expect(e.point.outlineWidth.getValue(date)).toEqual(constant.point.outlineWidth.getValue(date));

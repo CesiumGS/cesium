@@ -46,6 +46,7 @@
       },
       "horizontalOrigin":"LEFT",
       "verticalOrigin":"BOTTOM",
+      "heightReference":"CLAMP_TO_GROUND",
       "color":{
         "rgba":[
           2,3,4,1
@@ -235,6 +236,7 @@
       },
       "horizontalOrigin":"LEFT",
       "verticalOrigin":"BOTTOM",
+      "heightReference":"CLAMP_TO_GROUND",
       "fillColor":{
         "rgba":[
           46,47,48,45
@@ -265,6 +267,7 @@
       "maximumScale":34,
       "incrementallyLoadTextures":true,
       "runAnimations":true,
+      "heightReference":"CLAMP_TO_GROUND",
       "nodeTransformations":{
         "prop":{
           "translation":{
@@ -304,6 +307,7 @@
     "point":{
       "show":true,
       "pixelSize":39,
+      "heightReference":"CLAMP_TO_GROUND",
       "color":{
         "rgba":[
           58,59,60,57
@@ -5127,6 +5131,9 @@
       "verticalOrigin":{
         "reference":"Constant#billboard.verticalOrigin"
       },
+      "heightReference":{
+        "reference":"Constant#billboard.heightReference"
+      },
       "color":{
         "reference":"Constant#billboard.color"
       },
@@ -5380,6 +5387,9 @@
       "verticalOrigin":{
         "reference":"Constant#label.verticalOrigin"
       },
+      "heightReference":{
+        "reference":"Constant#label.heightReference"
+      },
       "fillColor":{
         "reference":"Constant#label.fillColor"
       },
@@ -5417,6 +5427,9 @@
       },
       "runAnimations":{
         "reference":"Constant#model.runAnimations"
+      },
+      "heightReference":{
+        "reference":"Constant#model.heightReference"
       },
       "nodeTransformations":{
         "referenceProp":{
@@ -5462,6 +5475,9 @@
       },
       "pixelSize":{
         "reference":"Constant#point.pixelSize"
+      },
+      "heightReference":{
+        "reference":"Constant#point.heightReference"
       },
       "color":{
         "reference":"Constant#point.color"

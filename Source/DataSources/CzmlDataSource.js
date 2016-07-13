@@ -1357,7 +1357,7 @@ define([
         if (!defined(label)) {
             entity.label = label = new LabelGraphics();
         }
-        
+
         processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri, entityCollection);
         processPacketData(String, label, 'text', labelData.text, interval, sourceUri, entityCollection);
         processPacketData(String, label, 'font', labelData.font, interval, sourceUri, entityCollection);
@@ -1509,12 +1509,12 @@ define([
 
         processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri, entityCollection);
         processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, point, 'heightReference', pointData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Color, point, 'color', pointData.color, interval, sourceUri, entityCollection);
         processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'scaleByDistance', pointData.scaleByDistance, interval, sourceUri, entityCollection);
         processPacketData(NearFarScalar, point, 'translucencyByDistance', pointData.translucencyByDistance, interval, sourceUri, entityCollection);
-        processPacketData(HeightReference, point, 'heightReference', pointData.heightReference, interval, sourceUri, entityCollection);
     }
 
     function processPolygon(entity, packet, entityCollection, sourceUri) {
