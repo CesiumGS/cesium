@@ -10,6 +10,7 @@ define([
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
         '../Core/getMagic',
+        '../Core/getStringFromTypedArray',
         '../Core/loadArrayBuffer',
         '../Core/PointGeometry',
         '../Core/Request',
@@ -30,6 +31,7 @@ define([
         DeveloperError,
         GeometryInstance,
         getMagic,
+        getStringFromTypedArray,
         loadArrayBuffer,
         PointGeometry,
         Request,
@@ -108,6 +110,7 @@ define([
     };
 
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
@@ -166,11 +169,46 @@ define([
         var pointsLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var positionsOffsetInBytes = byteOffset;
-        var positions = new Float32Array(arrayBuffer, positionsOffsetInBytes, pointsLength * 3);
+        var batchTableJSONByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
-        var colorsOffsetInBytes = positionsOffsetInBytes + (pointsLength * (3 * Float32Array.BYTES_PER_ELEMENT));
-        var colors = new Uint8Array(arrayBuffer, colorsOffsetInBytes, pointsLength * 3);
+        var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+
+        var positions = new Float32Array(arrayBuffer, byteOffset, pointsLength * 3);
+        byteOffset += pointsLength * 3 * sizeOfFloat32;
+
+        var colors;
+
+        if (batchTableJSONByteLength > 0) {
+            // Get the batch table JSON
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
+            var batchTableJSON = JSON.parse(batchTableString);
+            byteOffset += batchTableJSONByteLength;
+
+            // Get the batch table binary
+            var batchTableBinary;
+            if (batchTableBinaryByteLength > 0) {
+                batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
+            }
+            byteOffset += batchTableBinaryByteLength;
+
+            // Get the point colors
+            var tiles3DRGB = batchTableJSON.TILES3D_RGB;
+            if (defined(tiles3DRGB)) {
+                var binaryByteOffset = tiles3DRGB.byteOffset;
+                colors = new Uint8Array(batchTableBinary, binaryByteOffset, pointsLength * 3);
+            }
+        }
+
+        if (!defined(colors)) {
+            // If the tile does not contain colors, default to gray
+            var length = pointsLength * 3;
+            colors = new Uint8Array(length);
+            for (var i = 0; i < length; ++i) {
+                colors[i] = 64;
+            }
+        }
 
         // TODO: performance test with 'interleave : true'
         var instance = new GeometryInstance({
