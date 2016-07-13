@@ -73,6 +73,10 @@ define([
         var componentByteLength = positions.byteLength / positions.length;
         var componentDatatype = componentByteLength === 4 ? ComponentDatatype.FLOAT : ComponentDatatype.DOUBLE;
 
+        // Check if the colors are provided as rgb or rgba
+        var colors = pointGeometry._colorsTypedArray;
+        var colorComponentsPerAttribute = (colors.length === positions.length) ? 3 : 4;
+
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
             componentDatatype : componentDatatype,
@@ -82,8 +86,8 @@ define([
 
         attributes.color = new GeometryAttribute({
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 3,
-            values : pointGeometry._colorsTypedArray,
+            componentsPerAttribute : colorComponentsPerAttribute,
+            values : colors,
             normalize : true
         });
 

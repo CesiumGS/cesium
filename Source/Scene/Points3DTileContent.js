@@ -195,9 +195,11 @@ define([
 
             // Get the point colors
             var tiles3DRGB = batchTableJSON.TILES3D_RGB;
+            var tiles3DRGBA = batchTableJSON.TILES3D_RGBA;
             if (defined(tiles3DRGB)) {
-                var binaryByteOffset = tiles3DRGB.byteOffset;
-                colors = new Uint8Array(batchTableBinary, binaryByteOffset, pointsLength * 3);
+                colors = new Uint8Array(batchTableBinary, tiles3DRGB.byteOffset, pointsLength * 3);
+            } else if (defined(tiles3DRGBA)) {
+                colors = new Uint8Array(batchTableBinary, tiles3DRGBA.byteOffset, pointsLength * 4);
             }
         }
 

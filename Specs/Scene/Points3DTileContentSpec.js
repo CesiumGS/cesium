@@ -18,6 +18,7 @@ defineSuite([
     var centerLatitude = 0.698874;
 
     var pointsRGBUrl = './Data/Cesium3DTiles/Points/PointsRGB';
+    var pointsRGBAUrl = './Data/Cesium3DTiles/Points/PointsRGBA';
     var pointsNoColorUrl = './Data/Cesium3DTiles/Points/PointsNoColor';
 
     beforeAll(function() {
@@ -80,6 +81,10 @@ defineSuite([
 
     it('renders points with rgb colors', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with rgba colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBAUrl).then(expectRenderPoints);
     });
 
     it('renders points with no colors', function() {
