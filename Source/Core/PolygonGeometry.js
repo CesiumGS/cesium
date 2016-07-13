@@ -8,6 +8,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -22,6 +23,7 @@ define([
         './PolygonGeometryLibrary',
         './PolygonPipeline',
         './Quaternion',
+        './Rectangle',
         './VertexFormat',
         './WindingOrder'
     ], function(
@@ -33,6 +35,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -47,6 +50,7 @@ define([
         PolygonGeometryLibrary,
         PolygonPipeline,
         Quaternion,
+        Rectangle,
         VertexFormat,
         WindingOrder) {
     'use strict';
@@ -579,11 +583,18 @@ define([
         this._perPositionHeight = perPositionHeight;
         this._workerName = 'createPolygonGeometry';
 
+        var positions = polygonHierarchy.positions;
+        if (!defined(positions) || positions.length < 3) {
+            this._rectangle = new Rectangle();
+        } else {
+            this._rectangle = Rectangle.fromCartesianArray(positions, ellipsoid);
+        }
+
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
     }
 
     /**
@@ -671,6 +682,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._granularity;
@@ -684,6 +698,7 @@ define([
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
 
     //Only used to avoid inaability to default construct.
     var dummyOptions = {
@@ -716,6 +731,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var granularity = array[startingIndex++];
@@ -741,6 +759,7 @@ define([
         result._perPositionHeight = perPositionHeight;
         result._closeTop = closeTop;
         result._closeBottom = closeBottom;
+        result._rectangle = Rectangle.clone(rectangle);
         result.packedLength = packedLength;
         return result;
     };
@@ -886,6 +905,17 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
+
+    defineProperties(PolygonGeometry.prototype, {
+        /**
+         * @private
+         */
+        rectangle : {
+            get : function() {
+                return this._rectangle;
+            }
+        }
+    });
 
     return PolygonGeometry;
 });

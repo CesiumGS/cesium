@@ -78,7 +78,19 @@ define([
     var scratchTVec = new Cartesian3();
     var scratchQVec = new Cartesian3();
 
-    function rayTriangle(ray, p0, p1, p2, cullBackFaces) {
+    /**
+     * Computes the intersection of a ray and a triangle as a parametric distance along the input ray.
+     * @memberof IntersectionTests
+     *
+     * @param {Ray} ray The ray.
+     * @param {Cartesian3} p0 The first vertex of the triangle.
+     * @param {Cartesian3} p1 The second vertex of the triangle.
+     * @param {Cartesian3} p2 The third vertex of the triangle.
+     * @param {Boolean} [cullBackFaces=false] If <code>true</code>, will only compute an intersection with the front face of the triangle
+     *                  and return undefined for intersections with the back face.
+     * @returns {Number} The intersection as a parametric distance along the ray, or undefined if there is no intersection.
+     */
+    IntersectionTests.rayTriangleParametric  = function(ray, p0, p1, p2, cullBackFaces) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(ray)) {
             throw new DeveloperError('ray is required.');
@@ -154,10 +166,10 @@ define([
         }
 
         return t;
-    }
+    };
 
     /**
-     * Computes the intersection of a ray and a triangle.
+     * Computes the intersection of a ray and a triangle as a Cartesian3 coordinate.
      * @memberof IntersectionTests
      *
      * @param {Ray} ray The ray.
@@ -170,7 +182,7 @@ define([
      * @returns {Cartesian3} The intersection point or undefined if there is no intersections.
      */
     IntersectionTests.rayTriangle = function(ray, p0, p1, p2, cullBackFaces, result) {
-        var t = rayTriangle(ray, p0, p1, p2, cullBackFaces);
+        var t = IntersectionTests.rayTriangleParametric(ray, p0, p1, p2, cullBackFaces);
         if (!defined(t) || t < 0.0) {
             return undefined;
         }
@@ -214,7 +226,7 @@ define([
         Cartesian3.subtract(v1, v0, ray.direction);
         Cartesian3.normalize(ray.direction, ray.direction);
 
-        var t = rayTriangle(ray, p0, p1, p2, cullBackFaces);
+        var t = IntersectionTests.rayTriangleParametric(ray, p0, p1, p2, cullBackFaces);
         if (!defined(t) || t < 0.0 || t > Cartesian3.distance(v0, v1)) {
             return undefined;
         }

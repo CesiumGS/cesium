@@ -9,6 +9,7 @@ define([
         '../Core/Matrix4',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
+        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -24,6 +25,7 @@ define([
         Matrix4,
         writeTextToCanvas,
         BillboardCollection,
+        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -194,6 +196,7 @@ define([
                 billboard.pixelOffset = label._pixelOffset;
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
+                billboard.heightReference = label._heightReference;
                 billboard.scale = label._scale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
@@ -239,7 +242,8 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
-        var verticalOrigin = label._verticalOrigin;
+        var heightReference = label._heightReference;
+        var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
             dimensions = glyph.dimensions;
