@@ -594,7 +594,7 @@ defineSuite([
 
             viewAllTiles();
             scene.renderForSpecs();
-            return root.children[0].contentReadyPromise.then(function() {
+            return root.children[0].content.readyPromise.then(function() {
                 // The external tileset json is loaded, but the external tileset isn't.
                 scene.renderForSpecs();
                 expect(root.descendantsWithContent.length).toEqual(4);
