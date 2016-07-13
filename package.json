@@ -36,7 +36,7 @@
     "bluebird": "3.3.4",
     "compressible": "2.0.7",
     "compression": "1.6.1",
-    "electron-prebuilt": "0.37.2",
+    "electron-prebuilt": "1.2.7",
     "event-stream": "3.3.2",
     "express": "4.13.4",
     "globby": "4.0.0",
