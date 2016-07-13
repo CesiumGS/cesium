@@ -179,6 +179,7 @@ define([
         byteOffset += pointsLength * 3 * sizeOfFloat32;
 
         var colors;
+        var translucent = false;
 
         if (batchTableJSONByteLength > 0) {
             // Get the batch table JSON
@@ -200,16 +201,13 @@ define([
                 colors = new Uint8Array(batchTableBinary, tiles3DRGB.byteOffset, pointsLength * 3);
             } else if (defined(tiles3DRGBA)) {
                 colors = new Uint8Array(batchTableBinary, tiles3DRGBA.byteOffset, pointsLength * 4);
+                translucent = true;
             }
         }
 
+        var highlightColor;
         if (!defined(colors)) {
-            // If the tile does not contain colors, default to gray
-            var length = pointsLength * 3;
-            colors = new Uint8Array(length);
-            for (var i = 0; i < length; ++i) {
-                colors[i] = 64;
-            }
+            highlightColor = Color.DARKGRAY;
         }
 
         // TODO: performance test with 'interleave : true'
@@ -220,9 +218,15 @@ define([
                 boundingSphere : this.boundingSphere
             })
         });
+
+        var appearance = new PointAppearance({
+            highlightColor : highlightColor,
+            translucent : translucent
+        });
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PointAppearance(),
+            appearance : appearance,
             asynchronous : false,
             allowPicking : false,
             cull : false,

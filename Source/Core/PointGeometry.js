@@ -73,10 +73,6 @@ define([
         var componentByteLength = positions.byteLength / positions.length;
         var componentDatatype = componentByteLength === 4 ? ComponentDatatype.FLOAT : ComponentDatatype.DOUBLE;
 
-        // Check if the colors are provided as rgb or rgba
-        var colors = pointGeometry._colorsTypedArray;
-        var colorComponentsPerAttribute = (colors.length === positions.length) ? 3 : 4;
-
         var attributes = new GeometryAttributes();
         attributes.position = new GeometryAttribute({
             componentDatatype : componentDatatype,
@@ -84,12 +80,18 @@ define([
             values : positions
         });
 
-        attributes.color = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : colorComponentsPerAttribute,
-            values : colors,
-            normalize : true
-        });
+        var colors = pointGeometry._colorsTypedArray;
+        if (defined(colors)) {
+            // Check if the colors are provided as rgb or rgba
+            var colorComponentsPerAttribute = (colors.length === positions.length) ? 3 : 4;
+
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : colorComponentsPerAttribute,
+                values : colors,
+                normalize : true
+            });
+        }
 
         // User provided bounding sphere to save computation time.
         var boundingSphere = pointGeometry._boundingSphere;
