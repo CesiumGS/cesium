@@ -45,7 +45,7 @@
     "gulp-jshint": "2.0.1",
     "gulp-rename": "1.2.2",
     "gulp-replace": "0.5.4",
-    "gulp-zip": "3.2.0",
+    "gulp-zip": "3.0.2",
     "jasmine-core": "2.4.1",
     "jsdoc": "3.4.0",
     "jshint": "2.9.2",
@@ -64,7 +64,7 @@
     "mkdirp": "0.5.1",
     "request": "2.73.0",
     "rimraf": "2.5.3",
-    "strip-comments": "0.4.4",
+    "strip-comments": "0.3.2",
     "yargs": "4.8.0"
   },
   "scripts": {
