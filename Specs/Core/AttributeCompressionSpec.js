@@ -79,23 +79,21 @@ defineSuite([
     it('throws oct decode result undefined', function() {
         var result;
         expect(function() {
-            AttributeCompression.octDecode(Cartesian2.ZERO, result);
+            AttributeCompression.octDecode(0, 0, result);
         }).toThrowDeveloperError();
     });
 
     it('throws oct decode x out of bounds', function() {
         var result = new Cartesian3();
-        var invalidSNorm = new Cartesian2(256, 0);
         expect(function() {
-            AttributeCompression.octDecode(invalidSNorm, result);
+            AttributeCompression.octDecode(256, 0, result);
         }).toThrowDeveloperError();
     });
 
     it('throws oct decode y out of bounds', function() {
         var result = new Cartesian3();
-        var invalidSNorm = new Cartesian2(0, 256);
         expect(function() {
-            AttributeCompression.octDecode(invalidSNorm, result);
+            AttributeCompression.octDecode(0, 256, result);
         }).toThrowDeveloperError();
     });
 
