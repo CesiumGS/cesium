@@ -218,10 +218,10 @@ define([
     };
 
     /**
-     * Converts a scalar value in the range [-1.0, 1.0] to an SNORM in the range [0, rangeMax]
+     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMax]
      * @param {Number} value The scalar value in the range [-1.0, 1.0]
      * @param {Number} [rangeMax=255] The maximum value in the mapped range, 255 by default.
-     * @returns {Number} An SNORM value, where 0 maps to -1.0 and rangeMax maps to 1.0.
+     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMax maps to 1.0.
      *
      * @see CesiumMath.fromSNorm
      */
@@ -231,7 +231,7 @@ define([
     };
 
     /**
-     * Converts an SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
+     * Converts a SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
      * @param {Number} value SNORM value in the range [0, 255]
      * @param {Number} [rangeMax=255] The maximum value in the SNORM range, 255 by default.
      * @returns {Number} Scalar in the range [-1.0, 1.0].
