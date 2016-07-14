@@ -23,14 +23,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('throws without colorsTypedArray', function() {
-        expect(function() {
-            return new PointGeometry({
-                positionsTypedArray : positionsTypedArray
-            });
-        }).toThrowDeveloperError();
-    });
-
     it('creates with boundingSphere', function() {
         var points = new PointGeometry({
             positionsTypedArray : positionsTypedArray,
