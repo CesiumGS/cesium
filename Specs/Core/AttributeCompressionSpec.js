@@ -169,6 +169,77 @@ defineSuite([
         expect(AttributeCompression.octDecode(encoded.x, encoded.y, result)).toEqualEpsilon(normal, epsilon);
     });
 
+    it('oct encoding high precision', function() {
+        var rangeMax = 4294967295;
+        var epsilon = CesiumMath.EPSILON8;
+
+        var encoded = new Cartesian2();
+        var result = new Cartesian3();
+        var normal = new Cartesian3(0.0, 0.0, 1.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 0.0, -1.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, 1.0, 0.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(0.0, -1.0, 0.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 0.0, 0.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 0.0, 0.0);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, 1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+
+        normal = new Cartesian3(-1.0, -1.0, -1.0);
+        Cartesian3.normalize(normal, normal);
+        AttributeCompression.octEncode(normal, encoded, rangeMax);
+        expect(AttributeCompression.octDecode(encoded.x, encoded.y, result, rangeMax)).toEqualEpsilon(normal, epsilon);
+    });
+
     it('octFloat encoding', function() {
         var epsilon = CesiumMath.EPSILON1;
 

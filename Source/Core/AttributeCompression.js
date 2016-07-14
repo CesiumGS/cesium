@@ -84,16 +84,17 @@ define([
      * @see AttributeCompression.octEncode
      */
     AttributeCompression.octDecode = function(x, y, result, rangeMax) {
+        rangeMax = defaultValue(rangeMax, 255);
+
         //>>includeStart('debug', pragmas.debug);
         if (!defined(result)) {
             throw new DeveloperError('result is required.');
         }
-        if (x < 0 || x > 255 || y < 0 || y > 255) {
-            throw new DeveloperError('x and y must be a signed normalized integer between 0 and 255');
+        if (x < 0 || x > rangeMax || y < 0 || y > rangeMax) {
+            throw new DeveloperError('x and y must be a signed normalized integer between 0 and ' + rangeMax);
         }
         //>>includeEnd('debug');
-        rangeMax = defaultValue(rangeMax, 255);
-        
+
         result.x = CesiumMath.fromSNorm(x, rangeMax);
         result.y = CesiumMath.fromSNorm(y, rangeMax);
         result.z = 1.0 - (Math.abs(result.x) + Math.abs(result.y));
