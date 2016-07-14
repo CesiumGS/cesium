@@ -20,6 +20,7 @@ defineSuite([
     var pointsRGBUrl = './Data/Cesium3DTiles/Points/PointsRGB';
     var pointsRGBAUrl = './Data/Cesium3DTiles/Points/PointsRGBA';
     var pointsNoColorUrl = './Data/Cesium3DTiles/Points/PointsNoColor';
+    var pointsConstantColorUrl = './Data/Cesium3DTiles/Points/PointsConstantColor';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -89,6 +90,10 @@ defineSuite([
 
     it('renders points with no colors', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointsNoColorUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with constant colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsConstantColorUrl).then(expectRenderPoints);
     });
 
     it('renders with debug color', function() {

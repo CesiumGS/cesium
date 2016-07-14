@@ -58,7 +58,7 @@ define([
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
-        this._constantColor = Color.WHITE;
+        this._constantColor = Color.clone(Color.WHITE);
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -179,6 +179,7 @@ define([
 
         var colors;
         var translucent = false;
+        var hasConstantColor = false;
 
         if (batchTableJSONByteLength > 0) {
             // Get the batch table JSON
@@ -196,17 +197,22 @@ define([
             // Get the point colors
             var tiles3DRGB = batchTableJSON.TILES3D_RGB;
             var tiles3DRGBA = batchTableJSON.TILES3D_RGBA;
+            var tiles3DColor = batchTableJSON.TILES3D_COLOR;
+
             if (defined(tiles3DRGBA)) {
                 colors = new Uint8Array(batchTableBinary, tiles3DRGBA.byteOffset, pointsLength * 4);
                 translucent = true;
             } else if (defined(tiles3DRGB)) {
                 colors = new Uint8Array(batchTableBinary, tiles3DRGB.byteOffset, pointsLength * 3);
+            } else if (defined(tiles3DColor)) {
+                this._constantColor = Color.fromBytes(tiles3DColor[0], tiles3DColor[1], tiles3DColor[2], tiles3DColor[3], this._constantColor);
+                hasConstantColor = true;
             }
         }
 
         var hasColors = defined(colors);
 
-        if (!hasColors) {
+        if (!hasColors && !hasConstantColor) {
             this._constantColor = Color.DARKGRAY;
         }
 
