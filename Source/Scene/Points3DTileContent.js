@@ -58,6 +58,7 @@ define([
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+        this._constantColor = Color.WHITE;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -68,8 +69,6 @@ define([
         this.batchTableResources = undefined;
         this.featurePropertiesDirty = false;
         this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
-        this._debugColor = Color.fromRandom({ alpha : 1.0 });
-        this._debugColorizeTiles = false;
     }
 
     defineProperties(Points3DTileContent.prototype, {
@@ -197,18 +196,63 @@ define([
             // Get the point colors
             var tiles3DRGB = batchTableJSON.TILES3D_RGB;
             var tiles3DRGBA = batchTableJSON.TILES3D_RGBA;
-            if (defined(tiles3DRGB)) {
-                colors = new Uint8Array(batchTableBinary, tiles3DRGB.byteOffset, pointsLength * 3);
-            } else if (defined(tiles3DRGBA)) {
+            if (defined(tiles3DRGBA)) {
                 colors = new Uint8Array(batchTableBinary, tiles3DRGBA.byteOffset, pointsLength * 4);
                 translucent = true;
+            } else if (defined(tiles3DRGB)) {
+                colors = new Uint8Array(batchTableBinary, tiles3DRGB.byteOffset, pointsLength * 3);
             }
         }
 
-        var highlightColor;
-        if (!defined(colors)) {
-            highlightColor = Color.DARKGRAY;
+        var hasColors = defined(colors);
+
+        if (!hasColors) {
+            this._constantColor = Color.DARKGRAY;
         }
+
+        var vs = 'attribute vec3 position3DHigh; \n' +
+                 'attribute vec3 position3DLow; \n' +
+                 'uniform float pointSize; \n';
+        if (hasColors) {
+            if (translucent) {
+                vs += 'attribute vec4 color; \n' +
+                      'varying vec4 v_color; \n';
+            } else {
+                vs += 'attribute vec3 color; \n' +
+                      'varying vec3 v_color; \n';
+            }
+        }
+        vs += 'void main() \n' +
+              '{ \n' +
+              '    gl_Position = czm_modelViewProjectionRelativeToEye * czm_computePosition(); \n' +
+              '    gl_PointSize = pointSize; \n';
+        if (hasColors) {
+            vs += '    v_color = color; \n';
+        }
+        vs += '}';
+
+        var fs = 'uniform vec4 highlightColor; \n';
+        if (hasColors) {
+            if (translucent) {
+                fs += 'varying vec4 v_color; \n';
+            } else {
+                fs += 'varying vec3 v_color; \n';
+            }
+        }
+        fs += 'void main() \n' +
+              '{ \n';
+
+        if (hasColors) {
+            if (translucent) {
+                fs += '    gl_FragColor = v_color * highlightColor; \n';
+            } else {
+                fs += '    gl_FragColor = vec4(v_color * highlightColor.rgb, highlightColor.a); \n';
+            }
+        } else {
+            fs += '    gl_FragColor = highlightColor; \n';
+        }
+
+        fs += '} \n';
 
         // TODO: performance test with 'interleave : true'
         var instance = new GeometryInstance({
@@ -220,8 +264,10 @@ define([
         });
 
         var appearance = new PointAppearance({
-            highlightColor : highlightColor,
-            translucent : translucent
+            highlightColor : this._constantColor,
+            translucent : translucent,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs
         });
 
         var primitive = new Primitive({
@@ -252,7 +298,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Points3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
-        color = enabled ? color : Color.WHITE;
+        color = enabled ? color : this._constantColor;
         this._primitive.appearance.uniforms.highlightColor = color;
     };
 

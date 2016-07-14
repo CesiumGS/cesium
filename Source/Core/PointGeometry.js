@@ -50,9 +50,6 @@ define([
         if (!defined(options.positionsTypedArray)) {
             throw new DeveloperError('options.positionsTypedArray is required.');
         }
-        if (!defined(options.colorsTypedArray)) {
-            throw new DeveloperError('options.colorsTypedArray is required');
-        }
         //>>includeEnd('debug');
 
         this._positionsTypedArray = options.positionsTypedArray;
