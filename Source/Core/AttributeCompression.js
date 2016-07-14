@@ -53,7 +53,6 @@ define([
             throw new DeveloperError('vector must be normalized.');
         }
         //>>includeEnd('debug');
-        rangeMax = defaultValue(rangeMax, 255);
 
         result.x = vector.x / (Math.abs(vector.x) + Math.abs(vector.y) + Math.abs(vector.z));
         result.y = vector.y / (Math.abs(vector.x) + Math.abs(vector.y) + Math.abs(vector.z));
@@ -100,8 +99,6 @@ define([
      * @see AttributeCompression.octEncodeInRange
      */
     AttributeCompression.octDecodeInRange = function(x, y, rangeMax, result) {
-        rangeMax = defaultValue(rangeMax, 255);
-
         //>>includeStart('debug', pragmas.debug);
         if (!defined(result)) {
             throw new DeveloperError('result is required.');
