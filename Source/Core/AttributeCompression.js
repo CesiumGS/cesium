@@ -27,20 +27,20 @@ define([
     /**
      * Encodes a normalized vector into 2 SNORM values in the range of [0-rangeMax] following the 'oct' encoding.
      *
-     * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
+     * Oct encoding is a compact representation of unit length vectors.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
      * Cigolle et al 2014: {@link http://jcgt.org/published/0003/02/01/}
      *
-     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
-     * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
-     * @param {Number} [rangeMax=255] The maximum value of the SNORM range, 255 by default.
-     * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
+     * @param {Cartesian3} vector The normalized vector to be compressed into 2 component 'oct' encoding.
+     * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
+     * @param {Number} rangeMax The maximum value of the SNORM range.
+     * @returns {Cartesian2} The 2 component oct-encoded unit length vector.
      *
      * @exception {DeveloperError} vector must be normalized.
      *
-     * @see AttributeCompression.octDecode
+     * @see AttributeCompression.octDecodeInRange
      */
-    AttributeCompression.octEncode = function(vector, result, rangeMax) {
+    AttributeCompression.octEncodeInRange = function(vector, rangeMax, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(vector)) {
             throw new DeveloperError('vector is required.');
@@ -71,19 +71,35 @@ define([
     };
 
     /**
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
+     *
+     * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
+     * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
+     * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
+     * 
+     * @exception {DeveloperError} vector must be normalized.
+     * 
+     * @see AttributeCompression.octEncodeInRange
+     * @see AttributeCompression.octDecode
+     */
+    AttributeCompression.octEncode = function(vector, result) {
+        return AttributeCompression.octEncodeInRange(vector, 255, result);
+    };
+
+    /**
      * Decodes a unit-length vector in 'oct' encoding to a normalized 3-component vector.
      *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
+     * @param {Number} rangeMax The maximum value of the SNORM range.
      * @param {Cartesian3} result The decoded and normalized vector
-     * @param {Number} [rangeMax=255] The maximum value of the SNORM range, 255 by default.
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and rangeMax.
+     * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and rangeMax.
      *
-     * @see AttributeCompression.octEncode
+     * @see AttributeCompression.octEncodeInRange
      */
-    AttributeCompression.octDecode = function(x, y, result, rangeMax) {
+    AttributeCompression.octDecodeInRange = function(x, y, rangeMax, result) {
         rangeMax = defaultValue(rangeMax, 255);
 
         //>>includeStart('debug', pragmas.debug);
@@ -107,6 +123,22 @@ define([
         }
 
         return Cartesian3.normalize(result, result);
+    };
+
+    /**
+     * Decodes a unit-length vector in 2 byte 'oct' encoding to a normalized 3-component vector.
+     * 
+     * @param {Number} x The x component of the oct-encoded unit length vector.
+     * @param {Number} y The y component of the oct-encoded unit length vector.
+     * @param {Cartesian3} result The decoded and normalized vector.
+     * @returns {Cartesian3} The decoded and normalized vector.
+     * 
+     * @exception {DeveloperError} x and y must be an unsigned normalized integer between 0 and 255.
+     * 
+     * @see AttributeCompression.octDecodeInRange
+     */
+    AttributeCompression.octDecode = function(x, y, result) {
+        return AttributeCompression.octDecodeInRange(x, y, 255, result);
     };
 
     /**
