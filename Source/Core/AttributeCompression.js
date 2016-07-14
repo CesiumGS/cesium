@@ -2,12 +2,14 @@
 define([
         './Cartesian2',
         './Cartesian3',
+        './defaultValue',
         './defined',
         './DeveloperError',
         './Math'
     ], function(
         Cartesian2,
         Cartesian3,
+        defaultValue,
         defined,
         DeveloperError,
         CesiumMath) {
@@ -23,7 +25,7 @@ define([
     var AttributeCompression = {};
 
     /**
-     * Encodes a normalized vector into 2 SNORM values in the range of [0-255] following the 'oct' encoding.
+     * Encodes a normalized vector into 2 SNORM values in the range of [0-rangeMax] following the 'oct' encoding.
      *
      * Oct encoding is a compact representation of unit length vectors.  The encoding and decoding functions are low cost, and represent the normalized vector within 1 degree of error.
      * The 'oct' encoding is described in "A Survey of Efficient Representations of Independent Unit Vectors",
@@ -31,13 +33,14 @@ define([
      *
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 byte 'oct' encoding.
      * @param {Cartesian2} result The 2 byte oct-encoded unit length vector.
+     * @param {Number} [rangeMax=255] The maximum value of the SNORM range, 255 by default.
      * @returns {Cartesian2} The 2 byte oct-encoded unit length vector.
      *
      * @exception {DeveloperError} vector must be normalized.
      *
      * @see AttributeCompression.octDecode
      */
-    AttributeCompression.octEncode = function(vector, result) {
+    AttributeCompression.octEncode = function(vector, result, rangeMax) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(vector)) {
             throw new DeveloperError('vector is required.');
@@ -50,6 +53,7 @@ define([
             throw new DeveloperError('vector must be normalized.');
         }
         //>>includeEnd('debug');
+        rangeMax = defaultValue(rangeMax, 255);
 
         result.x = vector.x / (Math.abs(vector.x) + Math.abs(vector.y) + Math.abs(vector.z));
         result.y = vector.y / (Math.abs(vector.x) + Math.abs(vector.y) + Math.abs(vector.z));
@@ -60,8 +64,8 @@ define([
             result.y = (1.0 - Math.abs(x)) * CesiumMath.signNotZero(y);
         }
 
-        result.x = CesiumMath.toSNorm(result.x);
-        result.y = CesiumMath.toSNorm(result.y);
+        result.x = CesiumMath.toSNorm(result.x, rangeMax);
+        result.y = CesiumMath.toSNorm(result.y, rangeMax);
 
         return result;
     };
@@ -72,13 +76,14 @@ define([
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
      * @param {Cartesian3} result The decoded and normalized vector
+     * @param {Number} [rangeMax=255] The maximum value of the SNORM range, 255 by default.
      * @returns {Cartesian3} The decoded and normalized vector.
      *
-     * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and 255.
+     * @exception {DeveloperError} x and y must be a signed normalized integer between 0 and rangeMax.
      *
      * @see AttributeCompression.octEncode
      */
-    AttributeCompression.octDecode = function(x, y, result) {
+    AttributeCompression.octDecode = function(x, y, result, rangeMax) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(result)) {
             throw new DeveloperError('result is required.');
@@ -87,9 +92,10 @@ define([
             throw new DeveloperError('x and y must be a signed normalized integer between 0 and 255');
         }
         //>>includeEnd('debug');
-
-        result.x = CesiumMath.fromSNorm(x);
-        result.y = CesiumMath.fromSNorm(y);
+        rangeMax = defaultValue(rangeMax, 255);
+        
+        result.x = CesiumMath.fromSNorm(x, rangeMax);
+        result.y = CesiumMath.fromSNorm(y, rangeMax);
         result.z = 1.0 - (Math.abs(result.x) + Math.abs(result.y));
 
         if (result.z < 0.0)
