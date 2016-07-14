@@ -293,14 +293,14 @@ define([
         var pitch = defaultValue(options.pitch, -CesiumMath.PI_OVER_TWO);
         var roll = defaultValue(options.roll, 0.0);
 
-        //var controller = scene.screenSpaceCameraController;
-        //controller.enableInputs = false;
+        var controller = scene.screenSpaceCameraController;
+        controller.enableInputs = false;
 
-        //var complete = wrapCallback(controller, options.complete);
-        //var cancel = wrapCallback(controller, options.cancel);
+        var complete = wrapCallback(controller, options.complete);
+        var cancel = wrapCallback(controller, options.cancel);
 
-        var complete = options.complete;
-        var cancel = options.cancel;
+        //var complete = options.complete;
+        //var cancel = options.cancel;
 
         var frustum = camera.frustum;
 

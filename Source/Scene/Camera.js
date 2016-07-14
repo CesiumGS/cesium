@@ -928,7 +928,6 @@ define([
         var globe = this._scene.globe;
         var globeFinishedUpdating = !defined(globe) || (globe._surface.tileProvider.ready && !defined(globe._surface._tileLoadQueue.head) && globe._surface._debug.tilesWaitingForChildren === 0);
         if (this._suspendTerrainAdjustment) {
-            this._scene.screenSpaceCameraController.enableInputs = globeFinishedUpdating;
             this._suspendTerrainAdjustment = !globeFinishedUpdating;
         }
         this._adjustHeightForTerrain();
