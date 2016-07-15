@@ -33,7 +33,7 @@ define([
      *
      * @param {Cartesian3} vector The normalized vector to be compressed into 2 component 'oct' encoding.
      * @param {Cartesian2} result The 2 component oct-encoded unit length vector.
-     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax) bits.
+     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
      * @returns {Cartesian2} The 2 component oct-encoded unit length vector.
      *
      * @exception {DeveloperError} vector must be normalized.
@@ -90,7 +90,7 @@ define([
      *
      * @param {Number} x The x component of the oct-encoded unit length vector.
      * @param {Number} y The y component of the oct-encoded unit length vector.
-     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax) bits.
+     * @param {Number} rangeMax The maximum value of the SNORM range. The encoded vector is stored in log2(rangeMax+1) bits.
      * @param {Cartesian3} result The decoded and normalized vector
      * @returns {Cartesian3} The decoded and normalized vector.
      *
