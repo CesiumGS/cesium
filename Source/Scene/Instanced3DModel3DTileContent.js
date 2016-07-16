@@ -236,7 +236,7 @@ define([
             cull : false,
             url : undefined,
             headers : undefined,
-            type : RequestType.TILES3D,
+            requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined
         };

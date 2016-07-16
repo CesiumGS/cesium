@@ -56,6 +56,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
+     * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTableResources is defined.
+     * @param {Cesium3DTileBatchTableResources} [options.batchTableResources] The batch table of the instanced 3D Tile.
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
