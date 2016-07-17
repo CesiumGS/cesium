@@ -506,11 +506,7 @@ define([
             var box = boundingVolumeHeader.box;
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
-
-            volume = new TileOrientedBoundingBox({
-                center: center,
-                halfAxes: halfAxes
-            });
+            volume = new TileOrientedBoundingBox(center, halfAxes);
         } else if (boundingVolumeHeader.region) {
             var region = boundingVolumeHeader.region;
             var rectangleRegion = new Rectangle(region[0], region[1], region[2], region[3]);

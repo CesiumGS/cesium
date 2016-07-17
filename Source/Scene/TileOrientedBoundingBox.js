@@ -29,10 +29,8 @@ define([
         Primitive) {
     'use strict';
 
-    function TileOrientedBoundingBox(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        this._orientedBoundingBox = new OrientedBoundingBox(options.center, options.halfAxes);
-        
+    function TileOrientedBoundingBox(center, halfAxes) {
+        this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
         this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
     }
 

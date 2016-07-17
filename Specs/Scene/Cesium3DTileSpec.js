@@ -164,10 +164,7 @@ defineSuite([
             expect(tile.contentBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
-            var obb = new TileOrientedBoundingBox({
-                center: center,
-                halfAxes: halfAxes
-            });
+            var obb = new TileOrientedBoundingBox(center, halfAxes);
             expect(tile.contentBoundingVolume).toEqual(obb);
         });
 
@@ -177,10 +174,7 @@ defineSuite([
             expect(tile.contentBoundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
-            var obb = new TileOrientedBoundingBox({
-                center: center,
-                halfAxes: halfAxes
-            });
+            var obb = new TileOrientedBoundingBox(center, halfAxes);
             expect(tile.contentBoundingVolume).toEqual(obb);
         });
     });
