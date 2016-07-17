@@ -58,6 +58,9 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTableResources is defined.
      * @param {Cesium3DTileBatchTableResources} [options.batchTableResources] The batch table of the instanced 3D Tile.
+     * @param {Object} [options.boundingVolume] The bounding volume, typically the bounding volume of the 3D Tile.
+     * @param {Cartesian3} [options.center] The center point of the instances.
+     * @param {Matrix4} [options.transform=Matrix4.IDENTITY] An additional transform to apply to all instances, typically the transform of the 3D Tile.
      * @param {String} [options.url] The url to the .gltf file.
      * @param {Object} [options.headers] HTTP headers to send with the request.
      * @param {Object} [options.requestType] The request type, used for budget scheduling in {@link RequestScheduler}.
@@ -118,9 +121,13 @@ define([
         this._pickCommands = [];
         this._modelCommands = undefined;
 
-        this._boundingVolume = options.boundingVolume;
-        this._boundingVolumeModelView = new Matrix4();
-        this._boundingVolumeExpand = !defined(options.boundingVolume);
+        this._boundingVolume = defined(options.boundingVolume) ? options.boundingVolume : createBoundingSphere(this);
+        this._boundingVolumeExpand = !defined(options.boundingVolume); // Expand the bounding volume by the radius of the loaded model
+
+        this._center = defined(options.center) ? options.center : this._boundingVolume.center;
+        this._transform = defined(options.transform) ? options.transform : Matrix4.clone(Matrix4.IDENTITY);
+        this._rtcTransform = Matrix4.multiplyByTranslation(this._transform, this._center, new Matrix4());
+        this._rtcViewTransform = new Matrix4(); // Holds onto uniform
 
         // Passed on to Model
         this._url = options.url;
@@ -357,7 +364,7 @@ define([
 
     function createBoundsModelViewFunction(collection, context) {
         return function() {
-            return Matrix4.multiplyByTranslation(context.uniformState.view, collection._boundingVolume.center, collection._boundingVolumeModelView);
+            return Matrix4.multiply(context.uniformState.view, collection._rtcTransform, collection._rtcViewTransform);
         };
     }
 
@@ -437,7 +444,7 @@ define([
         };
     }
 
-    var instanceMatrix = new Matrix4();
+    var scratchMatrix = new Matrix4();
 
     function updateVertexBuffer(collection, context) {
         if (!collection._instancingSupported) {
@@ -451,7 +458,8 @@ define([
         var instancesLength = collection.length;
         var dynamic = collection._dynamic;
         var viewMatrix = context.uniformState.view;
-        var center = dynamic ? Cartesian3.ZERO : collection._boundingVolume.center;
+        var collectionTransform = collection._transform;
+        var collectionCenter = collection._center;
 
         // When using a batch table, add a batch id attribute to each vertex
         var usesBatchTable = defined(collection._batchTableResources);
@@ -464,11 +472,17 @@ define([
         for (var i = 0; i < instancesLength; ++i) {
             var instance = collection._instances[i];
             var modelMatrix = instance.modelMatrix;
+            var instanceMatrix;
 
             if (dynamic) {
-                Matrix4.multiplyTransformation(viewMatrix, modelMatrix, instanceMatrix);
+                instanceMatrix = Matrix4.multiply(collectionTransform, modelMatrix, scratchMatrix);
+                instanceMatrix = Matrix4.multiply(viewMatrix, instanceMatrix, instanceMatrix);
             } else {
-                instanceMatrix = modelMatrix;
+                // Upload the instances relative to center
+                instanceMatrix = Matrix4.clone(modelMatrix, scratchMatrix);
+                instanceMatrix[12] -= collectionCenter.x;
+                instanceMatrix[13] -= collectionCenter.y;
+                instanceMatrix[14] -= collectionCenter.z;
             }
 
             var offset = i * vertexSizeInFloats;
@@ -477,15 +491,15 @@ define([
             instanceBufferData[offset + 0]  = instanceMatrix[0];
             instanceBufferData[offset + 1]  = instanceMatrix[4];
             instanceBufferData[offset + 2]  = instanceMatrix[8];
-            instanceBufferData[offset + 3]  = instanceMatrix[12] - center.x;
+            instanceBufferData[offset + 3]  = instanceMatrix[12];
             instanceBufferData[offset + 4]  = instanceMatrix[1];
             instanceBufferData[offset + 5]  = instanceMatrix[5];
             instanceBufferData[offset + 6]  = instanceMatrix[9];
-            instanceBufferData[offset + 7]  = instanceMatrix[13] - center.y;
+            instanceBufferData[offset + 7]  = instanceMatrix[13];
             instanceBufferData[offset + 8]  = instanceMatrix[2];
             instanceBufferData[offset + 9]  = instanceMatrix[6];
             instanceBufferData[offset + 10] = instanceMatrix[10];
-            instanceBufferData[offset + 11] = instanceMatrix[14] - center.z;
+            instanceBufferData[offset + 11] = instanceMatrix[14];
 
             if (usesBatchTable) {
                 instanceBufferData[offset + 12] = instance.batchId;
@@ -506,18 +520,14 @@ define([
         }
     }
 
-    function createBoundingVolume(collection) {
-        if (!defined(collection._boundingVolume)) {
-            var instancesLength = collection.length;
-            var points = new Array(instancesLength);
-            for (var i = 0; i < instancesLength; ++i) {
-                points[i] = Matrix4.getTranslation(collection._instances[i].modelMatrix, new Cartesian3());
-            }
-
-            var boundingSphere = new BoundingSphere();
-            BoundingSphere.fromPoints(points, boundingSphere);
-            collection._boundingVolume = boundingSphere;
+    function createBoundingSphere(collection) {
+        var instancesLength = collection.length;
+        var points = new Array(instancesLength);
+        for (var i = 0; i < instancesLength; ++i) {
+            points[i] = Matrix4.getTranslation(collection._instances[i].modelMatrix, new Cartesian3());
         }
+
+        return BoundingSphere.fromPoints(points);
     }
 
     function createModel(collection, context) {
@@ -540,8 +550,6 @@ define([
             pickUniformMapLoaded : undefined,
             ignoreCommands : true
         };
-
-        createBoundingVolume(collection);
 
         if (instancingSupported) {
             updateVertexBuffer(collection, context);
@@ -732,10 +740,12 @@ define([
             for (var j = 0; j < instancesLength; ++j) {
                 var commandIndex = i * instancesLength + j;
                 var drawCommand = collection._drawCommands[commandIndex];
+                var collectionTransform = collection._transform;
                 var instanceMatrix = collection._instances[j].modelMatrix;
+                instanceMatrix = Matrix4.multiply(collectionTransform, instanceMatrix, scratchMatrix);
                 var nodeMatrix = modelCommand.modelMatrix;
                 var modelMatrix = drawCommand.modelMatrix;
-                Matrix4.multiplyTransformation(instanceMatrix, nodeMatrix, modelMatrix);
+                Matrix4.multiply(instanceMatrix, nodeMatrix, modelMatrix);
 
                 var nodeBoundingSphere = modelCommand.boundingVolume;
                 var boundingSphere = drawCommand.boundingVolume;

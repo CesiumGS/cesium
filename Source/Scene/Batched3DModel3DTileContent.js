@@ -207,13 +207,14 @@ define([
             gltf : gltfView,
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
+            basePath : this._url,
+            modelMatrix : this._tile.transformGlobal,
             vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
             uniformMapLoaded : batchTableResources.getUniformMapCallback(),
             pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
             pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
             pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback(),
-            basePath : this._url
         });
 
         this._model = model;

@@ -228,14 +228,30 @@ define([
         var instancesView = new DataView(arrayBuffer, byteOffset, instancesByteLength);
         byteOffset += instancesByteLength;
 
+        // Get the center of the bounding volume before tile.transformGlobal is applied.
+        // Regions are not transformed, so use the default center and transform.
+        var center;
+        var transform;
+        var boundingVolumeHeader = defaultValue(this._tile._header.content.boundingVolume, this._tile._header.boundingVolume);
+        if (defined(boundingVolumeHeader.box)) {
+            var box = boundingVolumeHeader.box;
+            center = new Cartesian3(box[0], box[1], box[2]);
+            transform = this._tile.transformGlobal;
+        } else if (defined(boundingVolumeHeader.sphere)) {
+            var sphere = boundingVolumeHeader.sphere;
+            center = new Cartesian3(sphere[0], sphere[1], sphere[2]);
+            transform = this._tile.transformGlobal;
+        }
+
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
+            center : center,
+            transform : transform,
             cull : false,
             url : undefined,
-            headers : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined

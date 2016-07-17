@@ -14,6 +14,7 @@ define([
         '../Core/joinUrls',
         '../Core/loadJson',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/Request',
         '../Core/RequestScheduler',
         '../Core/RequestType',
@@ -39,6 +40,7 @@ define([
         joinUrls,
         loadJson,
         CesiumMath,
+        Matrix4,
         Request,
         RequestScheduler,
         RequestType,
@@ -880,6 +882,9 @@ define([
             t.selected = false;
             t.replaced = false;
             ++stats.visited;
+
+            var parentTransform = defined(t.parent) ? t.parent.transformGlobal : Matrix4.IDENTITY;
+            t.transformGlobal = Matrix4.multiply(parentTransform, t.transformLocal, t.transformGlobal);
 
             var planeMask = t.visibility(cullingVolume);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {

@@ -121,6 +121,20 @@ define([
         return BoundingSphere.intersectPlane(this._boundingSphere, plane);
     };
 
+    /**
+     * Update the bounding sphere after the tile is transformed.
+     */
+    TileBoundingSphere.prototype.update = function(center, radius) {
+        Cartesian3.clone(center, this._boundingSphere.center);
+        this._boundingSphere.radius = radius;
+    };
+
+    /**
+     * Creates a debug primitive that shows the outline of the sphere.
+     *
+     * @param {Color} color The desired color of the primitive's mesh
+     * @return {Primitive}
+     */
     TileBoundingSphere.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {

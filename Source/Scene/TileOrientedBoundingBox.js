@@ -9,6 +9,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/GeometryInstance',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         './PerInstanceColorAppearance',
@@ -23,6 +24,7 @@ define([
         defineProperties,
         DeveloperError,
         GeometryInstance,
+        Matrix3,
         Matrix4,
         OrientedBoundingBox,
         PerInstanceColorAppearance,
@@ -96,6 +98,21 @@ define([
         return this._orientedBoundingBox.intersectPlane(plane);
     };
 
+    /**
+     * Update the bounding box after the tile is transformed.
+     */
+    TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
+        Cartesian3.clone(center, this._orientedBoundingBox.center);
+        Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
+        BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox, this._boundingSphere);
+    };
+
+    /**
+     * Creates a debug primitive that shows the outline of the box.
+     *
+     * @param {Color} color The desired color of the primitive's mesh
+     * @return {Primitive}
+     */
     TileOrientedBoundingBox.prototype.createDebugVolume = function(color) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(color)) {
