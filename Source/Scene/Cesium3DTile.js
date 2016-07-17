@@ -532,22 +532,12 @@ define([
         return volume;
     }
 
-// TODO: remove workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/2657
-    function workaround2657(boundingVolume) {
-        if (defined(boundingVolume.region)) {
-            var region = boundingVolume.region;
-            return (region[1] !== region[3]) && (region[0] !== region[2]);
-        } else {
-            return true;
-        }
-    }
-
     function applyDebugSettings(tile, tileset, frameState) {
         // Tiles do not have a content.box if it is the same as the tile's box.
         var hasContentBoundingVolume = defined(tile._header.content) && defined(tile._header.content.boundingVolume);
 
         var showVolume = tileset.debugShowBoundingVolume || (tileset.debugShowContentBoundingVolume && !hasContentBoundingVolume);
-        if (showVolume && workaround2657(tile._header.boundingVolume)) {
+        if (showVolume) {
             if (!defined(tile._debugBoundingVolume)) {
                 tile._debugBoundingVolume = tile._boundingVolume.createDebugVolume(hasContentBoundingVolume ? Color.WHITE : Color.RED);
             }
@@ -556,7 +546,7 @@ define([
             tile._debugBoundingVolume = tile._debugBoundingVolume.destroy();
         }
 
-        if (tileset.debugShowContentBoundingVolume && hasContentBoundingVolume && workaround2657(tile._header.content.boundingVolume)) {
+        if (tileset.debugShowContentBoundingVolume && hasContentBoundingVolume) {
             if (!defined(tile._debugContentBoundingVolume)) {
                 tile._debugContentBoundingVolume = tile._contentBoundingVolume.createDebugVolume(Color.BLUE);
             }
