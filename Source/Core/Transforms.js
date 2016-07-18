@@ -495,16 +495,15 @@ define([
      * @example
      * // Get the transform from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, heading, pitch, roll);
-     *
-     *
+     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
+     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
+     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
+     * var hpr.roll = 0.0;
+     * var transform = Cesium.Transforms.aircraftHeadingPitchRollToFixedFrame(center, hpr);
      */
     Transforms.aircraftHeadingPitchRollToFixedFrame = function(origin, headingPitchRoll, ellipsoid, result) {
         // checks for required parameters happen in the called functions
-        // //>>includeStart('debug', pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
@@ -565,10 +564,11 @@ define([
      * @example
      * // Get the quaternion from local heading-pitch-roll at cartographic (0.0, 0.0) to Earth's fixed frame.
      * var center = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var heading = -Cesium.Math.PI_OVER_TWO;
-     * var pitch = Cesium.Math.PI_OVER_FOUR;
-     * var roll = 0.0;
-     * var quaternion = Cesium.Transforms.aircraftHeadingPitchRollQuaternion(center, heading, pitch, roll);
+     * var hpr = new HeadingPitchRoll(0.0, 0.0, 0.0);
+     * var hpr.heading = -Cesium.Math.PI_OVER_TWO;
+     * var hpr.pitch = Cesium.Math.PI_OVER_FOUR;
+     * var hpr.roll = 0.0;
+     * var quaternion = Cesium.Transforms.aircraftHeadingPitchRollQuaternion(center, hpr);
      *
      *
      */
