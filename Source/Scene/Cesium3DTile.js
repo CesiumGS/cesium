@@ -86,16 +86,16 @@ define([
          * The local transform of this tile
          * @type {Matrix4}
          */
-        this.transformLocal = defined(header.transform) ? Matrix4.unpack(header.transform, 0) : Matrix4.clone(Matrix4.IDENTITY);
+        this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * The final computed transform of this tile
          * @type {Matrix4}
          */
-        this.transformGlobal = defined(parent) ? Matrix4.multiply(parent.transformGlobal, this.transformLocal, new Matrix4()) : Matrix4.clone(this.transformLocal);
-        this._transformGlobal = Matrix4.clone(this.transformGlobal);
+        this.computedTransform = defined(parent) ? Matrix4.multiply(parent.computedTransform, this.transform, new Matrix4()) : Matrix4.clone(this.transform);
+        this._computedTransform = Matrix4.clone(this.computedTransform);
 
-        this._boundingVolume = createBoundingVolume(header.boundingVolume, this.transformGlobal);
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform);
 
         var contentBoundingVolume;
 
@@ -105,7 +105,7 @@ define([
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            contentBoundingVolume = createBoundingVolume(contentHeader.boundingVolume, this.transformGlobal);
+            contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, this.computedTransform);
         }
         this._contentBoundingVolume = contentBoundingVolume;
 
@@ -519,7 +519,18 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchRectangle = new Rectangle();
 
-    function createBoundingVolume(boundingVolumeHeader, transform, result) {
+    /**
+     * Create a bounding volume from the tile's bounding volume header.
+     *
+     * @param {Object} boundingVolumeHeader The tile's bounding volume header.
+     * @param {Matrix4} transform The transform to apply to the bounding volume.
+     * @param {TileBoundingVolume} [result] The object onto which to store the result.
+     *
+     * @returns {TileBoundingVolume} The modified result parameter or a new TileBoundingVolume instance if none was provided.
+     *
+     * @private
+     */
+    Cesium3DTile.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
         var center;
         if (defined(boundingVolumeHeader.box)) {
             var box = boundingVolumeHeader.box;
@@ -534,10 +545,8 @@ define([
             if (defined(result)) {
                 result.update(center, halfAxes);
                 return result;
-            } else {
-                return new TileOrientedBoundingBox(center, halfAxes);
             }
-
+            return new TileOrientedBoundingBox(center, halfAxes);
         } else if (defined(boundingVolumeHeader.region)) {
             var region = boundingVolumeHeader.region;
             var rectangleRegion = Rectangle.unpack(region, 0, scratchRectangle);
@@ -545,13 +554,12 @@ define([
             if (defined(result)) {
                 // Don't update regions when the transform changes
                 return result;
-            } else {
-                return new TileBoundingRegion({
-                    rectangle : rectangleRegion,
-                    minimumHeight : region[4],
-                    maximumHeight : region[5]
-                });
             }
+            return new TileBoundingRegion({
+                rectangle : rectangleRegion,
+                minimumHeight : region[4],
+                maximumHeight : region[5]
+            });
         } else if (defined(boundingVolumeHeader.sphere)) {
             var sphere = boundingVolumeHeader.sphere;
             center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
@@ -565,11 +573,11 @@ define([
 
             if (defined(result)) {
                 result.update(center, radius);
-            } else {
-                return new TileBoundingSphere(center, radius);
+                return result;
             }
+            return new TileBoundingSphere(center, radius);
         }
-    }
+    };
 
     function applyDebugSettings(tile, tileset, frameState) {
         // Tiles do not have a content.boundingVolume if it is the same as the tile's boundingVolume.
@@ -604,14 +612,16 @@ define([
     }
 
     function updateTransform(tile) {
-        var transformChanged = !Matrix4.equals(tile.transformGlobal, tile._transformGlobal);
+        var transformChanged = !Matrix4.equals(tile.computedTransform, tile._computedTransform);
         if (transformChanged) {
-            Matrix4.clone(tile.transformGlobal, tile._transformGlobal);
+            Matrix4.clone(tile.computedTransform, tile._computedTransform);
 
             // Update the bounding volumes
-            tile._boundingVolume = createBoundingVolume(tile._header.boundingVolume, tile.transformGlobal, tile._boundingVolume);
+            var header = tile._header;
+            var content = tile._header.content;
+            tile._boundingVolume = tile.createBoundingVolume(header.boundingVolume, tile.computedTransform, tile._boundingVolume);
             if (defined(tile._contentBoundingVolume)) {
-                tile._contentBoundingVolume = createBoundingVolume(tile._header.content.boundingVolume, tile.transformGlobal, tile._contentBoundingVolume);
+                tile._contentBoundingVolume = tile.createBoundingVolume(content.boundingVolume, tile.computedTransform, tile._contentBoundingVolume);
             }
 
             // Destroy the debug bounding volumes. They will be generated fresh.

@@ -124,7 +124,7 @@ define([
         this._boundingVolume = defined(options.boundingVolume) ? options.boundingVolume : createBoundingSphere(this);
         this._boundingVolumeExpand = !defined(options.boundingVolume); // Expand the bounding volume by the radius of the loaded model
 
-        this._center = defined(options.center) ? options.center : this._boundingVolume.center;
+        this._center = defaultValue(options.center, this._boundingVolume.center);
         this._transform = defined(options.transform) ? options.transform : Matrix4.clone(Matrix4.IDENTITY);
         this._rtcTransform = Matrix4.multiplyByTranslation(this._transform, this._center, new Matrix4());
         this._rtcViewTransform = new Matrix4(); // Holds onto uniform

@@ -73,12 +73,5 @@ define([
         DeveloperError.throwInstantiationError();
     };
 
-    /**
-     * Update the bounding volume after the tile is transformed.
-     */
-    TileBoundingVolume.prototype.update = function() {
-        DeveloperError.throwInstantiationError();
-    };
-
     return TileBoundingVolume;
 });

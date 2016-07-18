@@ -883,8 +883,8 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var parentTransform = defined(t.parent) ? t.parent.transformGlobal : Matrix4.IDENTITY;
-            t.transformGlobal = Matrix4.multiply(parentTransform, t.transformLocal, t.transformGlobal);
+            var parentTransform = defined(t.parent) ? t.parent.computedTransform : Matrix4.IDENTITY;
+            t.computedTransform = Matrix4.multiply(parentTransform, t.transform, t.computedTransform);
 
             var planeMask = t.visibility(cullingVolume);
             if (planeMask === CullingVolume.MASK_OUTSIDE) {

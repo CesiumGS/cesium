@@ -208,7 +208,7 @@ define([
             cull : false,           // The model is already culled by the 3D tiles
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : this._url,
-            modelMatrix : this._tile.transformGlobal,
+            modelMatrix : this._tile.computedTransform,
             vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
             fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
             uniformMapLoaded : batchTableResources.getUniformMapCallback(),

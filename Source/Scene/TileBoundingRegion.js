@@ -293,13 +293,6 @@ define([
     };
 
     /**
-     * Part of the {@link TileBoundingVolume} interface.
-     * Regions are not updated when the tile is transformed.
-     */
-    TileBoundingRegion.prototype.update = function() {
-    };
-
-    /**
      * Creates a debug primitive that shows the outline of the tile bounding region.
      *
      * @param {Color} color The desired color of the primitive's mesh
