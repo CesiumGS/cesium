@@ -18,6 +18,7 @@ define([
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
     '../Core/loadArrayBuffer',
+    '../Core/Matrix4',
     '../Core/PolygonGeometry',
     '../Core/PolylineGeometry',
     '../Core/Request',
@@ -25,11 +26,7 @@ define([
     '../Core/RequestType',
     '../ThirdParty/when',
     './Cesium3DTileContentState',
-    './GroundPrimitive',
-    './LabelCollection',
-    './PerInstanceColorAppearance',
-    './PolylineColorAppearance',
-    './Primitive'
+    './Cesium3DTileGroundPrimitive'
 ], function(
     BoundingSphere,
     Cartesian3,
@@ -49,6 +46,7 @@ define([
     getMagic,
     getStringFromTypedArray,
     loadArrayBuffer,
+    Matrix4,
     PolygonGeometry,
     PolylineGeometry,
     Request,
@@ -56,11 +54,7 @@ define([
     RequestType,
     when,
     Cesium3DTileContentState,
-    GroundPrimitive,
-    LabelCollection,
-    PerInstanceColorAppearance,
-    PolylineColorAppearance,
-    Primitive) {
+    Cesium3DTileGroundPrimitive) {
     'use strict';
 
     /**
@@ -70,11 +64,11 @@ define([
      * @private
      */
     function Vector3DTileContent(tileset, tile, url) {
-        this._labelCollection = undefined;
-        this._primitives = [];
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
+
+        this._primitive = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -152,7 +146,9 @@ define([
         }
     };
 
+    var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
+    var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
     var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
@@ -179,14 +175,10 @@ define([
         byteOffset += sizeOfUint32;
 
         // Skip byteLength
+        var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var positionByteLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-        var indicesByteLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-
-        if (positionByteLength === 0) {
+        if (byteLength === 0) {
             this.state = Cesium3DTileContentState.PROCESSING;
             this.contentReadyToProcessPromise.resolve(this);
             this.state = Cesium3DTileContentState.READY;
@@ -194,83 +186,61 @@ define([
             return;
         }
 
-        // padding
+        var offsetsByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var countsByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var positionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var positions = new Float64Array(arrayBuffer, byteOffset, positionByteLength / sizeOfFloat64);
+        var decodeMatrixArray = new Float32Array(arrayBuffer, byteOffset, 16);
+        byteOffset += 16 * sizeOfFloat32;
+
+        var decodeMatrix = Matrix4.unpack(decodeMatrixArray);
+
+        var offsets = new Uint32Array(arrayBuffer, byteOffset, offsetsByteLength / sizeOfUint32);
+        byteOffset += offsetsByteLength;
+        var counts = new Uint32Array(arrayBuffer, byteOffset, countsByteLength / sizeOfUint32);
+        byteOffset += countsByteLength;
+
+        var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
         byteOffset += positionByteLength;
-        var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
-        byteOffset += indicesByteLength;
-        
+
+        /*
+        var positions = new Float32Array(arrayBuffer, byteOffset, positionByteLength / Float32Array.BYTES_PER_ELEMENT);
+        byteOffset += positionByteLength;
+        */
+
         var x = view.getFloat64(byteOffset, true);
         byteOffset += sizeOfFloat64;
         var y = view.getFloat64(byteOffset, true);
         byteOffset += sizeOfFloat64;
         var z = view.getFloat64(byteOffset, true);
         byteOffset += sizeOfFloat64;
-        var r = view.getFloat64(byteOffset, true);
-        byteOffset += sizeOfFloat64;
+
+        var center = new Cartesian3(x, y, z);
         
         var minHeight = view.getFloat64(byteOffset, true);
         byteOffset += sizeOfFloat64;
         var maxHeight = view.getFloat64(byteOffset, true);
-        
-        var boundingSphere = new BoundingSphere(new Cartesian3(x, y, z), r);
 
         var color = Color.fromRandom().withAlpha(0.5);
-        var geometryInstance = new GeometryInstance({
-            geometry : new Geometry({
-                attributes : {
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        normalize : false,
-                        values : positions
-                    })
-                },
-                indices : indices,
-                boundingSphere : boundingSphere
-            }),
-            attributes: {
-                color: ColorGeometryInstanceAttribute.fromColor(color)
-            }
+
+        this._primitive = new Cesium3DTileGroundPrimitive({
+            positions : positions,
+            offsets : offsets,
+            counts : counts,
+            decodeMatrix : decodeMatrix,
+            minimumHeight : minHeight,
+            maximumHeight : maxHeight,
+            center : center,
+            color : color
         });
 
-        this._primitives.push(new GroundPrimitive({
-            geometryInstances : geometryInstance,
-            asynchronous : false,
-            _minimumHeight : minHeight !== Number.POSITIVE_INFINITY ? minHeight : undefined,
-            _maximumHeight : maxHeight !== Number.NEGATIVE_INFINITY ? maxHeight : undefined,
-            _precreated : true
-        }));
-
-        /*
-        var labelCollection = new LabelCollection();
-
-        var length = json.length;
-        for (var i = 0; i < length; ++i) {
-            var label = json[i];
-            var labelText = label.text;
-            var cartographicArray = label.position;
-
-            var lon = cartographicArray[0];
-            var lat = cartographicArray[1];
-            var alt = defaultValue(cartographicArray[2], 0.0);
-
-            var cartographic = new Cartographic(lon, lat, alt);
-            var position = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-
-            labelCollection.add({
-                text : labelText,
-                position : position
-            });
-        }
-        */
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
 
-        //this._labelCollection = labelCollection;
         this.state = Cesium3DTileContentState.READY;
         this.readyPromise.resolve(this);
     };
@@ -285,11 +255,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        //this._labelCollection.update(frameState);
-        var primitives = this._primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            primitives[i].update(frameState);
+        if (defined(this._primitive)) {
+            this._primitive.update(frameState);
         }
     };
 
@@ -304,7 +271,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.destroy = function() {
-        this._labelCollection = this._labelCollection && this._labelCollection.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 

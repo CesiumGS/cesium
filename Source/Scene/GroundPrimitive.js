@@ -269,6 +269,7 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
+            rtcCenter : options.rtcCenter,
             _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
@@ -554,40 +555,67 @@ define([
     var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
     var scratchTileXY = new Cartesian2();
 
-    function getRectangle(frameState, geometry) {
+    function getRectangle(primitive, frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
-        
-        if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
-            if (defined(geometry.rectangle)) {
-                return geometry.rectangle;
-            }
-
-            return undefined;
-        }
-
-        var highPositions = geometry.attributes.position3DHigh.values;
-        var lowPositions = geometry.attributes.position3DLow.values;
-        var length = highPositions.length;
 
         var minLat = Number.POSITIVE_INFINITY;
         var minLon = Number.POSITIVE_INFINITY;
         var maxLat = Number.NEGATIVE_INFINITY;
         var maxLon = Number.NEGATIVE_INFINITY;
 
-        for (var i = 0; i < length; i +=3) {
-            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
-            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
+        var i;
+        var length;
+        var position;
+        var cartographic;
+        var latitude;
+        var longitude;
 
-            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
-            var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
+        if (defined(primitive._primitive) && defined(primitive._primitive.rtcCenter)) {
+            var center = primitive._primitive.rtcCenter;
+            var positions = geometry.attributes.position.values;
+            length = positions.length;
 
-            var latitude = cartographic.latitude;
-            var longitude = cartographic.longitude;
+            for (i = 0; i < length; i +=3) {
+                position = Cartesian3.unpack(positions, i, scratchBVCartesianHigh);
+                Cartesian3.add(position, center, position);
+                cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
 
-            minLat = Math.min(minLat, latitude);
-            minLon = Math.min(minLon, longitude);
-            maxLat = Math.max(maxLat, latitude);
-            maxLon = Math.max(maxLon, longitude);
+                latitude = cartographic.latitude;
+                longitude = cartographic.longitude;
+
+                minLat = Math.min(minLat, latitude);
+                minLon = Math.min(minLon, longitude);
+                maxLat = Math.max(maxLat, latitude);
+                maxLon = Math.max(maxLon, longitude);
+            }
+        } else {
+            if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
+                if (defined(geometry.rectangle)) {
+                    return geometry.rectangle;
+                }
+
+                return undefined;
+            }
+
+            var highPositions = geometry.attributes.position3DHigh.values;
+            var lowPositions = geometry.attributes.position3DLow.values;
+            length = highPositions.length;
+
+            for (i = 0; i < length; i +=3) {
+                var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
+                var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
+
+                position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
+                cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
+
+                latitude = cartographic.latitude;
+                longitude = cartographic.longitude;
+
+                minLat = Math.min(minLat, latitude);
+                minLon = Math.min(minLon, longitude);
+                maxLat = Math.max(maxLat, latitude);
+                maxLon = Math.max(maxLon, longitude);
+            }
         }
 
         var rectangle = scratchBVRectangle;
@@ -718,7 +746,7 @@ define([
 
     function createBoundingVolume(primitive, frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
-        var rectangle = getRectangle(frameState, geometry);
+        var rectangle = getRectangle(primitive, frameState, geometry);
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
@@ -793,8 +821,23 @@ define([
         }
     }
 
-    function createColorCommands(groundPrimitive, colorCommands) {
+    var modifiedModelViewScratch = new Matrix4();
+    var rtcScratch = new Cartesian3();
+
+    function createColorCommands(groundPrimitive, colorCommands, frameState) {
         var primitive = groundPrimitive._primitive;
+        var uniforms = groundPrimitive._uniformMap;
+
+        if (defined(primitive.rtcCenter)) {
+            uniforms.u_modifiedModelView = function() {
+                var viewMatrix = frameState.context.uniformState.view;
+                Matrix4.clone(viewMatrix, modifiedModelViewScratch);
+                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive.rtcCenter, rtcScratch);
+                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
+                return modifiedModelViewScratch;
+            };
+        }
+
         var length = primitive._va.length * 3;
         colorCommands.length = length;
 
@@ -918,9 +961,9 @@ define([
         }
     }
 
-    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
-        createColorCommands(groundPrimitive, colorCommands);
-        createPickCommands(groundPrimitive, pickCommands);
+    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+        createColorCommands(groundPrimitive, colorCommands, frameState);
+        createPickCommands(groundPrimitive, pickCommands, frameState);
     }
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -1015,7 +1058,7 @@ define([
             return;
         }
 
-        if (!GroundPrimitive._initialized && !this._geometryPrecreated) {
+        if (!GroundPrimitive._initialized && !this._geometryPrecreated && !this._customHeights) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
@@ -1053,7 +1096,7 @@ define([
                 for (var i = 0; i < length; ++i) {
                     instance = instances[i];
                     geometry = instance.geometry;
-                    var instanceRectangle = getRectangle(frameState, geometry);
+                    var instanceRectangle = getRectangle(this, frameState, geometry);
                     if (!defined(rectangle)) {
                         rectangle = instanceRectangle;
                     } else {
@@ -1123,8 +1166,8 @@ define([
             primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState);
             };
-            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
-                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
+            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
+                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands, frameState);
             };
             primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);

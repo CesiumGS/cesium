@@ -45,6 +45,12 @@ scene.debugShowFramesPerSecond = true;
     });
     viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
+    viewer.imageryLayers.removeAll();
+    var imageryProvider = new Cesium.MapboxImageryProvider({
+        mapId: 'mapbox.satellite'
+    });
+    viewer.imageryLayers.add(new Cesium.ImageryLayer(imageryProvider));
+
     viewer.scene.globe.depthTestAgainstTerrain = true;
 
 var tilesets = [{
