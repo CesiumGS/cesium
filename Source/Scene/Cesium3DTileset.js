@@ -63,6 +63,7 @@ define([
      * @param {Object} options Object with the following properties:
      * @param {String} options.url The url to a tileset.json file or to a directory containing a tileset.json file.
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
@@ -133,6 +134,14 @@ define([
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
+
+        /**
+         * A 4x4 transformation matrix that transforms the tileset's root tile.
+         *
+         * @type {Matrix4}
+         * @default Matrix4.IDENTITY
+         */
+        this.modelMatrix = defined(options.modelMatrix) ? options.modelMatrix : Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -883,7 +892,7 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var parentTransform = defined(t.parent) ? t.parent.computedTransform : Matrix4.IDENTITY;
+            var parentTransform = defined(t.parent) ? t.parent.computedTransform : tileset.modelMatrix;
             t.computedTransform = Matrix4.multiply(parentTransform, t.transform, t.computedTransform);
 
             var planeMask = t.visibility(cullingVolume);

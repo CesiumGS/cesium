@@ -92,7 +92,8 @@ define([
          * The final computed transform of this tile
          * @type {Matrix4}
          */
-        this.computedTransform = defined(parent) ? Matrix4.multiply(parent.computedTransform, this.transform, new Matrix4()) : Matrix4.clone(this.transform);
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
+        this.computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
         this._computedTransform = Matrix4.clone(this.computedTransform);
 
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform);
