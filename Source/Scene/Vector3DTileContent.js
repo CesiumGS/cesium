@@ -174,7 +174,6 @@ define([
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
-        // Skip byteLength
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
@@ -190,6 +189,8 @@ define([
         byteOffset += sizeOfUint32;
         var countsByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+        var indicesByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
         var positionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
@@ -202,14 +203,10 @@ define([
         byteOffset += offsetsByteLength;
         var counts = new Uint32Array(arrayBuffer, byteOffset, countsByteLength / sizeOfUint32);
         byteOffset += countsByteLength;
-
+        var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
+        byteOffset += indicesByteLength;
         var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
         byteOffset += positionByteLength;
-
-        /*
-        var positions = new Float32Array(arrayBuffer, byteOffset, positionByteLength / Float32Array.BYTES_PER_ELEMENT);
-        byteOffset += positionByteLength;
-        */
 
         var x = view.getFloat64(byteOffset, true);
         byteOffset += sizeOfFloat64;
@@ -230,6 +227,7 @@ define([
             positions : positions,
             offsets : offsets,
             counts : counts,
+            indices : indices,
             decodeMatrix : decodeMatrix,
             minimumHeight : minHeight,
             maximumHeight : maxHeight,
