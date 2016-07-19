@@ -242,12 +242,6 @@ define([
         this._maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
         this._minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
 
-        this._customMinHeight = options._minimumHeight;
-        this._customMaxHeight = options._maximumHeight;
-        this._customHeights = defined(this._customMinHeight) && defined(this._customMaxHeight);
-
-        this._geometryPrecreated = defaultValue(options._precreated, false);
-
         this._boundingSpheresKeys = [];
         this._boundingSpheres = [];
 
@@ -269,7 +263,6 @@ define([
             allowPicking : defaultValue(options.allowPicking, true),
             asynchronous : defaultValue(options.asynchronous, true),
             compressVertices : defaultValue(options.compressVertices, true),
-            rtcCenter : options.rtcCenter,
             _readOnlyInstanceAttributes : readOnlyAttributes,
             _createRenderStatesFunction : undefined,
             _createShaderProgramFunction : undefined,
@@ -555,67 +548,40 @@ define([
     var scratchCorners = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
     var scratchTileXY = new Cartesian2();
 
-    function getRectangle(primitive, frameState, geometry) {
+    function getRectangle(frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
+
+        if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
+            if (defined(geometry.rectangle)) {
+                return geometry.rectangle;
+            }
+
+            return undefined;
+        }
+
+        var highPositions = geometry.attributes.position3DHigh.values;
+        var lowPositions = geometry.attributes.position3DLow.values;
+        var length = highPositions.length;
 
         var minLat = Number.POSITIVE_INFINITY;
         var minLon = Number.POSITIVE_INFINITY;
         var maxLat = Number.NEGATIVE_INFINITY;
         var maxLon = Number.NEGATIVE_INFINITY;
 
-        var i;
-        var length;
-        var position;
-        var cartographic;
-        var latitude;
-        var longitude;
+        for (var i = 0; i < length; i +=3) {
+            var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
+            var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
 
-        if (defined(primitive._primitive) && defined(primitive._primitive.rtcCenter)) {
-            var center = primitive._primitive.rtcCenter;
-            var positions = geometry.attributes.position.values;
-            length = positions.length;
+            var position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
+            var cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
 
-            for (i = 0; i < length; i +=3) {
-                position = Cartesian3.unpack(positions, i, scratchBVCartesianHigh);
-                Cartesian3.add(position, center, position);
-                cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
+            var latitude = cartographic.latitude;
+            var longitude = cartographic.longitude;
 
-                latitude = cartographic.latitude;
-                longitude = cartographic.longitude;
-
-                minLat = Math.min(minLat, latitude);
-                minLon = Math.min(minLon, longitude);
-                maxLat = Math.max(maxLat, latitude);
-                maxLon = Math.max(maxLon, longitude);
-            }
-        } else {
-            if (!defined(geometry.attributes) || !defined(geometry.attributes.position3DHigh)) {
-                if (defined(geometry.rectangle)) {
-                    return geometry.rectangle;
-                }
-
-                return undefined;
-            }
-
-            var highPositions = geometry.attributes.position3DHigh.values;
-            var lowPositions = geometry.attributes.position3DLow.values;
-            length = highPositions.length;
-
-            for (i = 0; i < length; i +=3) {
-                var highPosition = Cartesian3.unpack(highPositions, i, scratchBVCartesianHigh);
-                var lowPosition = Cartesian3.unpack(lowPositions, i, scratchBVCartesianLow);
-
-                position = Cartesian3.add(highPosition, lowPosition, scratchBVCartesian);
-                cartographic = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
-
-                latitude = cartographic.latitude;
-                longitude = cartographic.longitude;
-
-                minLat = Math.min(minLat, latitude);
-                minLon = Math.min(minLon, longitude);
-                maxLat = Math.max(maxLat, latitude);
-                maxLon = Math.max(maxLon, longitude);
-            }
+            minLat = Math.min(minLat, latitude);
+            minLon = Math.min(minLon, longitude);
+            maxLat = Math.max(maxLat, latitude);
+            maxLon = Math.max(maxLon, longitude);
         }
 
         var rectangle = scratchBVRectangle;
@@ -677,31 +643,19 @@ define([
     }
 
     function setMinMaxTerrainHeights(primitive, rectangle, ellipsoid) {
-        var computeMin = false;
+        var xyLevel = getTileXYLevel(rectangle);
 
+        // Get the terrain min/max for that tile
         var minTerrainHeight = GroundPrimitive._defaultMinTerrainHeight;
         var maxTerrainHeight = GroundPrimitive._defaultMaxTerrainHeight;
-
-        if (primitive._customHeights) {
-            minTerrainHeight = primitive._customMinHeight;
-            maxTerrainHeight = primitive._customMaxHeight;
-            //computeMin = true;
-        } else {
-            var xyLevel = getTileXYLevel(rectangle);
-
-            // Get the terrain min/max for that tile
-            if (defined(xyLevel)) {
-                var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
-                var heights = GroundPrimitive._terrainHeights[key];
-                if (defined(heights)) {
-                    minTerrainHeight = heights[0];
-                    maxTerrainHeight = heights[1];
-                    computeMin = true;
-                }
+        if (defined(xyLevel)) {
+            var key = xyLevel.level + '-' + xyLevel.x + '-' + xyLevel.y;
+            var heights = GroundPrimitive._terrainHeights[key];
+            if (defined(heights)) {
+                minTerrainHeight = heights[0];
+                maxTerrainHeight = heights[1];
             }
-        }
 
-        if (computeMin) {
             // Compute min by taking the center of the NE->SW diagonal and finding distance to the surface
             ellipsoid.cartographicToCartesian(Rectangle.northeast(rectangle, scratchDiagonalCartographic),
                 scratchDiagonalCartesianNE);
@@ -740,13 +694,13 @@ define([
 
         var result = BoundingSphere.fromRectangle3D(rectangle, ellipsoid, 0.0);
         BoundingSphere.fromRectangle3D(rectangle, ellipsoid, maxTerrainHeight, scratchBoundingSphere);
-        
+
         return BoundingSphere.union(result, scratchBoundingSphere, result);
     }
 
     function createBoundingVolume(primitive, frameState, geometry) {
         var ellipsoid = frameState.mapProjection.ellipsoid;
-        var rectangle = getRectangle(primitive, frameState, geometry);
+        var rectangle = getRectangle(frameState, geometry);
 
         // Use an oriented bounding box by default, but switch to a bounding sphere if bounding box creation would fail.
         if (rectangle.width < CesiumMath.PI) {
@@ -785,7 +739,8 @@ define([
 
         var context = frameState.context;
 
-        var vs = Primitive._modifyShaderPosition(primitive._primitive, ShadowVolumeVS, frameState.scene3DOnly);
+        var vs = ShadowVolumeVS;
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
@@ -821,23 +776,8 @@ define([
         }
     }
 
-    var modifiedModelViewScratch = new Matrix4();
-    var rtcScratch = new Cartesian3();
-
-    function createColorCommands(groundPrimitive, colorCommands, frameState) {
+    function createColorCommands(groundPrimitive, colorCommands) {
         var primitive = groundPrimitive._primitive;
-        var uniforms = groundPrimitive._uniformMap;
-
-        if (defined(primitive.rtcCenter)) {
-            uniforms.u_modifiedModelView = function() {
-                var viewMatrix = frameState.context.uniformState.view;
-                Matrix4.clone(viewMatrix, modifiedModelViewScratch);
-                Matrix4.multiplyByPoint(modifiedModelViewScratch, primitive.rtcCenter, rtcScratch);
-                Matrix4.setTranslation(modifiedModelViewScratch, rtcScratch, modifiedModelViewScratch);
-                return modifiedModelViewScratch;
-            };
-        }
-
         var length = primitive._va.length * 3;
         colorCommands.length = length;
 
@@ -961,9 +901,9 @@ define([
         }
     }
 
-    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
-        createColorCommands(groundPrimitive, colorCommands, frameState);
-        createPickCommands(groundPrimitive, pickCommands, frameState);
+    function createCommands(groundPrimitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+        createColorCommands(groundPrimitive, colorCommands);
+        createPickCommands(groundPrimitive, pickCommands);
     }
 
     function updateAndQueueCommands(groundPrimitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
@@ -1054,11 +994,11 @@ define([
      */
     GroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances.length === 0)))) {
+        if (!context.fragmentDepth || !this.show || (!defined(this._primitive) && !defined(this.geometryInstances))) {
             return;
         }
 
-        if (!GroundPrimitive._initialized && !this._geometryPrecreated && !this._customHeights) {
+        if (!GroundPrimitive._initialized) {
             //>>includeStart('debug', pragmas.debug);
             if (!this.asynchronous) {
                 throw new DeveloperError('For synchronous GroundPrimitives, you must call GroundPrimitive.initializeTerrainHeights() and wait for the returned promise to resolve.');
@@ -1069,92 +1009,78 @@ define([
             return;
         }
 
-        var exaggeration = frameState.terrainExaggeration;
-        /*
-        if (!defined(this._maxHeight)) {
-            this._maxHeight = this._maxTerrainHeight * exaggeration;
-            this._minHeight = this._minTerrainHeight * exaggeration;
-        }
-        */
-
         if (!defined(this._primitive)) {
             var primitiveOptions = this._primitiveOptions;
+            var ellipsoid = frameState.mapProjection.ellipsoid;
 
-            if (!this._geometryPrecreated) {
-                var ellipsoid = frameState.mapProjection.ellipsoid;
+            var instance;
+            var geometry;
+            var instanceType;
 
-                var instance;
-                var geometry;
-                var instanceType;
+            var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
+            var length = instances.length;
+            var groundInstances = new Array(length);
 
-                var instances = isArray(this.geometryInstances) ? this.geometryInstances : [this.geometryInstances];
-                var length = instances.length;
-                var groundInstances = new Array(length);
-
-                var color;
-                var rectangle;
-                for (var i = 0; i < length; ++i) {
-                    instance = instances[i];
-                    geometry = instance.geometry;
-                    var instanceRectangle = getRectangle(this, frameState, geometry);
-                    if (!defined(rectangle)) {
-                        rectangle = instanceRectangle;
-                    } else {
-                        if (defined(instanceRectangle)) {
-                            Rectangle.union(rectangle, instanceRectangle, rectangle);
-                        }
-                    }
-
-                    var id = instance.id;
-                    if (defined(id) && defined(instanceRectangle)) {
-                        var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
-                        this._boundingSpheresKeys.push(id);
-                        this._boundingSpheres.push(boundingSphere);
-                    }
-
-                    instanceType = geometry.constructor;
-                    if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
-                        var attributes = instance.attributes;
-
-                        //>>includeStart('debug', pragmas.debug);
-                        if (!defined(attributes) || !defined(attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
-                            throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
-                        } else if (!defined(color)) {
-                            color = attributes.color;
-                        }
-                        //>>includeEnd('debug');
-                    } else {
-                        throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
+            var i;
+            var color;
+            var rectangle;
+            for (i = 0; i < length; ++i) {
+                instance = instances[i];
+                geometry = instance.geometry;
+                var instanceRectangle = getRectangle(frameState, geometry);
+                if (!defined(rectangle)) {
+                    rectangle = instanceRectangle;
+                } else {
+                    if (defined(instanceRectangle)) {
+                        Rectangle.union(rectangle, instanceRectangle, rectangle);
                     }
                 }
 
-                // Now compute the min/max heights for the primitive
-                setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
-                this._minHeight = this._minTerrainHeight * exaggeration;
-                this._maxHeight = this._maxTerrainHeight * exaggeration;
-
-                for (var j = 0; j < length; ++j) {
-                    instance = instances[j];
-                    geometry = instance.geometry;
-                    instanceType = geometry.constructor;
-                    groundInstances[j] = new GeometryInstance({
-                        geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
-                            getComputeMaximumHeightFunction(this)),
-                        attributes : instance.attributes,
-                        id : instance.id,
-                        pickPrimitive : this
-                    });
+                var id = instance.id;
+                if (defined(id) && defined(instanceRectangle)) {
+                    var boundingSphere = getInstanceBoundingSphere(instanceRectangle, ellipsoid);
+                    this._boundingSpheresKeys.push(id);
+                    this._boundingSpheres.push(boundingSphere);
                 }
 
-                primitiveOptions.geometryInstances = groundInstances;
-            } else {
-                this._minHeight = this._customMinHeight * exaggeration;
-                this._maxHeight = this._customMaxHeight * exaggeration;
+                instanceType = geometry.constructor;
+                if (defined(instanceType) && defined(instanceType.createShadowVolume)) {
+                    var attributes = instance.attributes;
 
-                primitiveOptions.geometryInstances = this.geometryInstances;
+                    //>>includeStart('debug', pragmas.debug);
+                    if (!defined(attributes) || !defined(attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (defined(color) && !ColorGeometryInstanceAttribute.equals(color, attributes.color)) {
+                        throw new DeveloperError('Not all of the geometry instances have the same color attribute.');
+                    } else if (!defined(color)) {
+                        color = attributes.color;
+                    }
+                    //>>includeEnd('debug');
+                } else {
+                    throw new DeveloperError('Not all of the geometry instances have GroundPrimitive support.');
+                }
             }
+
+            // Now compute the min/max heights for the primitive
+            setMinMaxTerrainHeights(this, rectangle, frameState.mapProjection.ellipsoid);
+            var exaggeration = frameState.terrainExaggeration;
+            this._minHeight = this._minTerrainHeight * exaggeration;
+            this._maxHeight = this._maxTerrainHeight * exaggeration;
+
+            for (i = 0; i < length; ++i) {
+                instance = instances[i];
+                geometry = instance.geometry;
+                instanceType = geometry.constructor;
+                groundInstances[i] = new GeometryInstance({
+                    geometry : instanceType.createShadowVolume(geometry, getComputeMinimumHeightFunction(this),
+                        getComputeMaximumHeightFunction(this)),
+                    attributes : instance.attributes,
+                    id : instance.id,
+                    pickPrimitive : this
+                });
+            }
+
+            primitiveOptions.geometryInstances = groundInstances;
 
             var that = this;
             primitiveOptions._createBoundingVolumeFunction = function(frameState, geometry) {
@@ -1166,8 +1092,8 @@ define([
             primitiveOptions._createShaderProgramFunction = function(primitive, frameState, appearance) {
                 createShaderProgram(that, frameState);
             };
-            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands, frameState) {
-                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands, frameState);
+            primitiveOptions._createCommandsFunction = function(primitive, appearance, material, translucent, twoPasses, colorCommands, pickCommands) {
+                createCommands(that, undefined, undefined, true, false, colorCommands, pickCommands);
             };
             primitiveOptions._updateAndQueueCommandsFunction = function(primitive, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses) {
                 updateAndQueueCommands(that, frameState, colorCommands, pickCommands, modelMatrix, cull, debugShowBoundingVolume, twoPasses);
@@ -1198,27 +1124,16 @@ define([
             var debugLength = debugInstances.length;
             var debugVolumeInstances = new Array(debugLength);
 
-            for (var k = 0 ; k < debugLength; ++k) {
-                var debugInstance = debugInstances[k];
-
-                var debugColorArray = debugInstance.attributes.color.value;
-                var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
-                Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
-
+            for (var j = 0 ; j < debugLength; ++j) {
+                var debugInstance = debugInstances[j];
                 var debugGeometry = debugInstance.geometry;
                 var debugInstanceType = debugGeometry.constructor;
                 if (defined(debugInstanceType) && defined(debugInstanceType.createShadowVolume)) {
-                    debugVolumeInstances[k] = new GeometryInstance({
+                    var debugColorArray = debugInstance.attributes.color.value;
+                    var debugColor = Color.fromBytes(debugColorArray[0], debugColorArray[1], debugColorArray[2], debugColorArray[3]);
+                    Color.subtract(new Color(1.0, 1.0, 1.0, 0.0), debugColor, debugColor);
+                    debugVolumeInstances[j] = new GeometryInstance({
                         geometry : debugInstanceType.createShadowVolume(debugGeometry, getComputeMinimumHeightFunction(this), getComputeMaximumHeightFunction(this)),
-                        attributes : {
-                            color : ColorGeometryInstanceAttribute.fromColor(debugColor)
-                        },
-                        id : debugInstance.id,
-                        pickPrimitive : this
-                    });
-                } else if (this._geometryPrecreated) {
-                    debugVolumeInstances[k] = new GeometryInstance({
-                        geometry : debugGeometry,
                         attributes : {
                             color : ColorGeometryInstanceAttribute.fromColor(debugColor)
                         },

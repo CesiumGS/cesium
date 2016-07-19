@@ -1334,7 +1334,7 @@ define([
                 var sphereIndex = twoPasses ? Math.floor(j / 2) : j;
                 var colorCommand = colorCommands[j];
                 colorCommand.modelMatrix = modelMatrix;
-                colorCommand.boundingVolume = undefined;//boundingSpheres[sphereIndex];
+                colorCommand.boundingVolume = boundingSpheres[sphereIndex];
                 colorCommand.cull = cull;
                 colorCommand.debugShowBoundingVolume = debugShowBoundingVolume;
                 colorCommand.castShadows = primitive.castShadows;
