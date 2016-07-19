@@ -65,6 +65,8 @@ define([
         this._positions = options.positions;
         this._offsets = options.offsets;
         this._counts = options.counts;
+        this._indexOffsets = options.indexOffsets;
+        this._indexCounts = options.indexCounts;
         this._indices = options.indices;
         this._decodeMatrix = options.decodeMatrix;
 

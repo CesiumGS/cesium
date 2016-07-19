@@ -185,9 +185,13 @@ define([
             return;
         }
 
-        var offsetsByteLength = view.getUint32(byteOffset, true);
+        var positionOffsetsByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        var countsByteLength = view.getUint32(byteOffset, true);
+        var positionCountsByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var indexOffsetsByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
+        var indexCountsByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         var indicesByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
@@ -199,10 +203,14 @@ define([
 
         var decodeMatrix = Matrix4.unpack(decodeMatrixArray);
 
-        var offsets = new Uint32Array(arrayBuffer, byteOffset, offsetsByteLength / sizeOfUint32);
-        byteOffset += offsetsByteLength;
-        var counts = new Uint32Array(arrayBuffer, byteOffset, countsByteLength / sizeOfUint32);
-        byteOffset += countsByteLength;
+        var offsets = new Uint32Array(arrayBuffer, byteOffset, positionOffsetsByteLength / sizeOfUint32);
+        byteOffset += positionOffsetsByteLength;
+        var counts = new Uint32Array(arrayBuffer, byteOffset, positionCountsByteLength / sizeOfUint32);
+        byteOffset += positionCountsByteLength;
+        var indexOffsets = new Uint32Array(arrayBuffer, byteOffset, indexOffsetsByteLength / sizeOfUint32);
+        byteOffset += indexOffsetsByteLength;
+        var indexCounts = new Uint32Array(arrayBuffer, byteOffset, indexCountsByteLength / sizeOfUint32);
+        byteOffset += indexCountsByteLength;
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
         var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
@@ -227,6 +235,8 @@ define([
             positions : positions,
             offsets : offsets,
             counts : counts,
+            indexOffsets : indexOffsets,
+            indexCounts : indexCounts,
             indices : indices,
             decodeMatrix : decodeMatrix,
             minimumHeight : minHeight,
