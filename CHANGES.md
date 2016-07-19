@@ -1,6 +1,102 @@
 Change Log
 ==========
 
+### 1.23 - 2016-07-01
+
+* Breaking changes
+    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
+* Added terrain clamping to entities, KML, and GeoJSON
+    * Added `heightReference` property to point, billboard and model entities.
+    * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if its material is a `ColorMaterialProperty` instance and it doesn't have a `height` or `extrudedHeight`. Entities with any other type of material are not clamped to terrain.
+    * `KMLDataSource`
+      * Point and Model features will always respect `altitudeMode`.
+      * Added `clampToGround` property.  When `true`, clamps `Polygon`, `LineString` and `LinearRing` features to the ground if their `altitudeMode` is `clampToGround`. For this case, lines use a corridor instead of a polyline.
+    * `GeoJsonDataSource`
+      * Points with a height will be drawn at that height; otherwise, they will be clamped to the ground.
+      * Added `clampToGround` property.  When `true`, clamps `Polygon` and `LineString` features to the ground. For this case, lines use a corridor instead of a polyline.
+    * Added [Ground Clamping Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Clamping.html&label=Showcases).
+* Improved performance and accuracy of polygon triangulation by using the [earcut](https://github.com/mapbox/earcut) library. Loading a GeoJSON with polygons for each country was 2x faster.
+* Fix some large polygon triangulations. [#2788](https://github.com/AnalyticalGraphicsInc/cesium/issues/2788)
+* Added support for the glTF extension [WEB3D_quantized_attributes](https://github.com/KhronosGroup/glTF/blob/master/extensions/Vendor/WEB3D_quantized_attributes/README.md). [#3241](https://github.com/AnalyticalGraphicsInc/cesium/issues/3241)
+* Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
+* Added CZML support for `Box`, `Corridor` and `Cylinder`.  Added new CZML properties: 
+    * `Billboard`: `width`, `height`, `heightReference`, `scaleByDistance`, `translucencyByDistance`, `pixelOffsetScaleByDistance`, `imageSubRegion`
+    * `Label`: `heightReference`, `translucencyByDistance`, `pixelOffsetScaleByDistance`
+    * `Model`: `heightReference`, `maximumScale`
+    * `Point`: `heightReference`, `scaleByDistance`, `translucencyByDistance`
+    * `Ellipsoid`: `subdivisions`, `stackPartitions`, `slicePartitions`
+* Added `rotatable2D` property to to `Scene`, `CesiumWidget` and `Viewer` to enable map rotation in 2D mode. [#3897](https://github.com/AnalyticalGraphicsInc/cesium/issues/3897)
+* `Camera.setView` and `Camera.flyTo` now use the `orientation.heading` parameter in 2D if the map is rotatable.
+* Added `Camera.changed` event that will fire whenever the camera has changed more than `Camera.percentageChanged`. `percentageChanged` is in the range [0, 1].
+* Zooming in toward a target point now keeps the target point at the same screen position. [#4016](https://github.com/AnalyticalGraphicsInc/cesium/pull/4016)
+* Improved `GroundPrimitive` performance.
+* Some incorrect KML (specifically KML that reuses IDs) is now parsed correctly.
+* Added `unsupportedNodeEvent` to `KmlDataSource` that is fired whenever an unsupported node is encountered.
+* `Clock` now keeps its configuration settings self-consistent. Previously, this was done by `AnimationViewModel` and could become inconsistent in certain cases. [#4007](https://github.com/AnalyticalGraphicsInc/cesium/pull/4007)
+* Updated [Google Cardboard Sandcastle example](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cardboard.html&label=Showcase).
+* Added [hot air balloon](https://github.com/AnalyticalGraphicsInc/cesium/tree/master/Apps/SampleData/models/CesiumBalloon) sample model.
+* Fixed handling of sampled Rectangle coordinates in CZML. [#4033](https://github.com/AnalyticalGraphicsInc/cesium/pull/4033)
+* Fix "Cannot read property 'x' of undefined" error when calling SceneTransforms.wgs84ToWindowCoordinates in certain cases. [#4022](https://github.com/AnalyticalGraphicsInc/cesium/pull/4022)
+* Re-enabled mouse inputs after a specified number of milliseconds past the most recent touch event.
+* Exposed a parametric ray-triangle intersection test to the API as `IntersectionTests.rayTriangleParametric`.
+* Added `packArray` and `unpackArray` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
+
+### 1.22.2 - 2016-06-14
+* This is an npm only release to fix the improperly published 1.22.1. There were no code changes.
+
+### 1.22.1 - 2016-06-13
+* Fixed default Bing Key and added a watermark to notify users that they need to sign up for their own key.
+
+### 1.22 - 2016-06-01
+
+* Breaking changes
+    * `KmlDataSource` now requires `options.camera` and `options.canvas`.
+* Added shadows
+    * See the Sandcastle demo: [Shadows](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html&label=Showcases).
+    * Added `Viewer.shadows` and `Viewer.terrainShadows`. Both are off by default.
+    * Added `Viewer.shadowMap` and `Scene.shadowMap` for accessing the scene's shadow map.
+    * Added `castShadows` and `receiveShadows` properties to `Model` and `Entity.model`, and options to the `Model` constructor and `Model.fromGltf`.
+    * Added `castShadows` and `receiveShadows` properties to `Primitive`, and options to the `Primitive` constructor.
+    * Added `castShadows` and `receiveShadows` properties to `Globe`.
+* Added `heightReference` to models so they can be drawn on terrain.
+* Added support for rendering models in 2D and Columbus view.
+* Added option to enable sun position based atmosphere color when `Globe.enableLighting` is `true`. [3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
+* Improved KML NetworkLink compatibility by supporting the `Url` tag. [#3895](https://github.com/AnalyticalGraphicsInc/cesium/pull/3895).
+* Added `VelocityVectorProperty` so billboard's aligned axis can follow the velocity vector.  [#3908](https://github.com/AnalyticalGraphicsInc/cesium/issues/3908)
+* Improve memory management for entity billboard/label/point/path visualization.
+* Added `terrainProviderChanged` event to `Scene` and `Globe`
+* Added support for hue, saturation, and brightness color shifts in the atmosphere in `SkyAtmosphere`. See the new Sandcastle example: [Atmosphere Color](http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Atmosphere%20Color.html&label=Showcases). [#3439](https://github.com/AnalyticalGraphicsInc/cesium/issues/3439)
+* Fixed exaggerated terrain tiles disappearing. [#3676](https://github.com/AnalyticalGraphicsInc/cesium/issues/3676)
+* Fixed a bug that could cause incorrect normals to be computed for exaggerated terrain, especially for low-detail tiles. [#3904](https://github.com/AnalyticalGraphicsInc/cesium/pull/3904)
+* Fixed a bug that was causing errors to be thrown when picking and terrain was enabled. [#3779](https://github.com/AnalyticalGraphicsInc/cesium/issues/3779)
+* Fixed a bug that was causing the atmosphere to disappear when only atmosphere is visible. [#3347](https://github.com/AnalyticalGraphicsInc/cesium/issues/3347)
+* Fixed infinite horizontal 2D scrolling in IE/Edge. [#3893](https://github.com/AnalyticalGraphicsInc/cesium/issues/3893)
+* Fixed a bug that would cause a crash is the camera was on the IDL in 2D. [#3951](https://github.com/AnalyticalGraphicsInc/cesium/issues/3951)
+* Fixed issue where a repeating model animation doesn't play when the clock is set to a time before the model was created. [#3932](https://github.com/AnalyticalGraphicsInc/cesium/issues/3932)
+* Fixed `Billboard.computeScreenSpacePosition` returning the wrong y coordinate. [#3920](https://github.com/AnalyticalGraphicsInc/cesium/issues/3920)
+* Fixed issue where labels were disappearing. [#3730](https://github.com/AnalyticalGraphicsInc/cesium/issues/3730)
+* Fixed issue where billboards on terrain didn't always update when the terrain provider was changed. [#3921](https://github.com/AnalyticalGraphicsInc/cesium/issues/3921)
+* Fixed issue where `Matrix4.fromCamera` was taking eye/target instead of position/direction. [#3927](https://github.com/AnalyticalGraphicsInc/cesium/issues/3927)
+* Added `Scene.nearToFarDistance2D` that determines the size of each frustum of the multifrustum in 2D.
+* Added `Matrix4.computeView`.
+* Added `CullingVolume.fromBoundingSphere`.
+* Added `debugShowShadowVolume` to `GroundPrimitive`.
+* Fix issue with disappearing tiles on Linux. [#3889](https://github.com/AnalyticalGraphicsInc/cesium/issues/3889)
+
+### 1.21 - 2016-05-02
+
+* Breaking changes
+  * Removed `ImageryMaterialProperty.alpha`. Use `ImageryMaterialProperty.color.alpha` instead.
+  * Removed `OpenStreetMapImageryProvider`. Use `createOpenStreetMapImageryProvider` instead.
+* Added ability to import and export Sandcastle example using GitHub Gists. [#3795](https://github.com/AnalyticalGraphicsInc/cesium/pull/3795)
+* Added `PolygonGraphics.closeTop`, `PolygonGraphics.closeBottom`, and `PolygonGeometry` options for creating an extruded polygon without a top or bottom. [#3879](https://github.com/AnalyticalGraphicsInc/cesium/pull/3879)
+* Added support for polyline arrow material to `CzmlDataSource` [#3860](https://github.com/AnalyticalGraphicsInc/cesium/pull/3860)
+* Fixed issue causing the sun not to render. [#3801](https://github.com/AnalyticalGraphicsInc/cesium/pull/3801)
+* Fixed issue where `Camera.flyTo` would not work with a rectangle in 2D. [#3688](https://github.com/AnalyticalGraphicsInc/cesium/issues/3688)
+* Fixed issue causing the fog to go dark and the atmosphere to flicker when the camera clips the globe. [#3178](https://github.com/AnalyticalGraphicsInc/cesium/issues/3178)
+* Fixed a bug that caused an exception and rendering to stop when using `ArcGisMapServerImageryProvider` to connect to a MapServer specifying the Web Mercator projection and a fullExtent bigger than the valid extent of the projection. [#3854](https://github.com/AnalyticalGraphicsInc/cesium/pull/3854)
+* Fixed issue causing an exception when switching scene modes with an active KML network link. [#3865](https://github.com/AnalyticalGraphicsInc/cesium/issues/3865)
+
 ### 1.20 - 2016-04-01
 
 * Breaking changes

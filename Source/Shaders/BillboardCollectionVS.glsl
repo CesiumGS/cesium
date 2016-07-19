@@ -240,14 +240,6 @@ void main()
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
 #endif
-    
-#ifdef CLAMPED_TO_GROUND
-    // move slightly closer to camera to avoid depth issues.
-    positionEC.z *= 0.995;
-    
-    // Force bottom vertical origin
-    origin.y = 1.0;
-#endif
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);

@@ -316,7 +316,16 @@ gulp.task('minifyRelease', ['generateStubs'], function() {
     });
 });
 
+function isTravisPullRequest() {
+    return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
+}
+
 gulp.task('deploy-s3', function(done) {
+    if (isTravisPullRequest()) {
+        console.log('Skipping deployment for non-pull request.');
+        return;
+    }
+
     var argv = yargs.usage('Usage: delpoy -b [Bucket Name] -d [Upload Directory]')
         .demand(['b', 'd']).argv;
 
@@ -566,6 +575,11 @@ gulp.task('deploy-set-version', function() {
 });
 
 gulp.task('deploy-status', function() {
+    if (isTravisPullRequest()) {
+        console.log('Skipping deployment status for non-pull request.');
+        return;
+    }
+
     var status = yargs.argv.status;
     var message = yargs.argv.message;
 

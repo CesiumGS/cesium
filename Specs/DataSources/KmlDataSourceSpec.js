@@ -21,8 +21,12 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
+        'Scene/Camera',
+        'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/SceneMode',
+        'Specs/createCamera',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
@@ -47,8 +51,12 @@ defineSuite([
         ColorMaterialProperty,
         EntityCollection,
         ImageMaterialProperty,
+        Camera,
+        HeightReference,
         HorizontalOrigin,
         LabelStyle,
+        SceneMode,
+        createCamera,
         pollToPromise,
         when) {
     "use strict";
@@ -137,11 +145,12 @@ defineSuite([
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
         expect(dataSource.errorEvent).toBeInstanceOf(Event);
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
+        expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
     });
 
     it('show sets underlying entity collection show.', function() {
-        var dataSource = new KmlDataSource();
+        var dataSource = new KmlDataSource(options);
 
         dataSource.show = false;
         expect(dataSource.show).toBe(false);
@@ -314,6 +323,24 @@ defineSuite([
 
         return promise.then(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, false);
+        });
+    });
+
+    it('raises unsupportedNodeEvent event when parsing an unsupported kml node type', function() {
+        var dataSource = new KmlDataSource(options);
+        var spy = jasmine.createSpy('unsupportedNodeEvent');
+        dataSource.unsupportedNodeEvent.addEventListener(spy);
+
+        return dataSource.load('Data/KML/unsupported.kml').then(function() {
+            var nodeNames = ['PhotoOverlay', 'ScreenOverlay', 'Tour'];
+            expect(spy.calls.count()).toEqual(3);
+            for (var i = 0; i < nodeNames.length; i++) {
+                var args = spy.calls.argsFor(i);
+                expect(args.length).toEqual(3);
+                expect(args[0]).toBe(dataSource);
+                expect(args[1].localName).toEqual(nodeNames[i]);
+                // args[2] could be undefined, allow for that
+            }
         });
     });
 
@@ -2127,7 +2154,7 @@ defineSuite([
         });
     });
 
-    it('Geometry Point: sets position clampToGround (the default)', function() {
+    it('Geometry Point: sets heightReference to clampToGround (the default)', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
           <Placemark>\
             <Point>\
@@ -2138,7 +2165,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
             var entities = dataSource.entities.values;
             expect(entities.length).toEqual(1);
-            expect(entities[0].position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 0), CesiumMath.EPSILON13);
+            expect(entities[0].billboard.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entities[0].polyline).toBeUndefined();
         });
     });
@@ -2657,9 +2684,12 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entity.polyline).toBeUndefined();
 
             expect(entity.availability.start).toEqual(time1);
@@ -2689,9 +2719,12 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time3)).toEqualEpsilon(Cartesian3.fromDegrees(7, 8, 9), CesiumMath.EPSILON12);
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(entity.polyline).toBeUndefined();
         });
     });
@@ -2779,9 +2812,14 @@ defineSuite([
             var time3 = JulianDate.fromIso8601('2000-01-01T00:00:02Z');
 
             var entity = dataSource.entities.values[0];
-            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON12);
-            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time1)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2, 3), CesiumMath.EPSILON12);
+            expect(entity.position.getValue(time2)).toEqualEpsilon(Cartesian3.fromDegrees(4, 5, 6), CesiumMath.EPSILON12);
             expect(entity.position.getValue(time3)).toBeUndefined();
+
+            // heightReference should be constant so its available all the time
+            expect(entity.billboard.heightReference.getValue(time1)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time2)).toEqual(HeightReference.CLAMP_TO_GROUND);
+            expect(entity.billboard.heightReference.getValue(time3)).toEqual(HeightReference.CLAMP_TO_GROUND);
 
             expect(entity.availability.start).toEqual(time1);
             expect(entity.availability.stop).toEqual(time2);
@@ -2932,7 +2970,7 @@ defineSuite([
             var multi = entities.getById('testID');
             expect(multi).toBeDefined();
 
-            var point1 = entities.getById('point1');
+            var point1 = entities.getById('testIDpoint1');
             expect(point1).toBeDefined();
             expect(point1.parent).toBe(multi);
             expect(point1.name).toBe(multi.name);
@@ -2940,7 +2978,7 @@ defineSuite([
             expect(point1.kml).toBe(multi.kml);
             expect(point1.position.getValue(Iso8601.MINIMUM_VALUE)).toEqualEpsilon(Cartesian3.fromDegrees(1, 2), CesiumMath.EPSILON13);
 
-            var point2 = entities.getById('point2');
+            var point2 = entities.getById('testIDpoint2');
             expect(point2).toBeDefined();
             expect(point2.parent).toBe(multi);
             expect(point2.name).toBe(multi.name);
@@ -3095,6 +3133,27 @@ defineSuite([
             <Link>\
               <href>./Data/KML/refresh.kml</href>\
             </Link>\
+          </NetworkLink>';
+
+        var requestNetworkLink = when.defer();
+        spyOn(loadWithXhr, 'load').and.callFake(function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            requestNetworkLink.resolve(url);
+            deferred.reject();
+        });
+
+        KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options);
+
+        return requestNetworkLink.promise.then(function(url) {
+            expect(url).toEqual('./Data/KML/refresh.kml');
+        });
+    });
+
+    it('NetworkLink can accept invalid but common URL tag instead of Link', function(){
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Url>\
+              <href>./Data/KML/refresh.kml</href>\
+            </Url>\
           </NetworkLink>';
 
         var requestNetworkLink = when.defer();
@@ -3712,6 +3771,60 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
             expect(console.log.calls.count()).toEqual(1);
             expect(console.log).toHaveBeenCalledWith('KML - refreshMode of onExpire requires the NetworkLinkControl to have an expires element');
+        });
+    });
+
+    it('NetworkLink: Heading and pitch can be undefined if the camera is in morphing mode', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <NetworkLink id="link">\
+            <Link>\
+              <href>./Data/KML/simple.kml</href>\
+              <refreshMode>onExpire</refreshMode>\
+            </Link>\
+          </NetworkLink>';
+
+        var camera = createCamera();
+        Camera.clone(options.camera, camera);
+
+        var kmlOptions = {
+            camera: camera,
+            canvas: options.canvas
+        };
+
+        camera._mode = SceneMode.MORPHING;
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), kmlOptions).then(function(dataSource) {
+            expect(dataSource.entities.values.length).toEqual(2);
+        });
+    });
+
+    it('when clampToGround is false, height isn\'t set if the polygon is extrudable' , function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+            expect(entity.polygon.height).toBeUndefined();
+        });
+    });
+
+    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable' , function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>clampToGround</altitudeMode>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight).toBeUndefined();
+            expect(entity.polygon.height.getValue()).toEqual(0);
         });
     });
 });

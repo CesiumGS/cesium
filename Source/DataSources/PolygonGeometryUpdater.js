@@ -11,10 +11,12 @@ define([
         '../Core/GeometryInstance',
         '../Core/isArray',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/PolygonGeometry',
         '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
@@ -35,10 +37,12 @@ define([
         GeometryInstance,
         isArray,
         Iso8601,
+        oneTimeWarning,
         PolygonGeometry,
         PolygonHierarchy,
         PolygonOutlineGeometry,
         ShowGeometryInstanceAttribute,
+        GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
@@ -61,6 +65,8 @@ define([
         this.vertexFormat = undefined;
         this.polygonHierarchy = undefined;
         this.perPositionHeight = undefined;
+        this.closeTop = undefined;
+        this.closeBottom = undefined;
         this.height = undefined;
         this.extrudedHeight = undefined;
         this.granularity = undefined;
@@ -100,6 +106,7 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._onTerrain = false;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
     }
@@ -252,6 +259,18 @@ define([
         isClosed : {
             get : function() {
                 return this._isClosed;
+            }
+        },
+        /**
+         * Gets a value indicating if the geometry should be drawn on terrain.
+         * @memberof PolygonGeometryUpdater.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        onTerrain : {
+            get : function() {
+                return this._onTerrain;
             }
         },
         /**
@@ -411,6 +430,9 @@ define([
         var fillProperty = polygon.fill;
         var fillEnabled = defined(fillProperty) && fillProperty.isConstant ? fillProperty.getValue(Iso8601.MINIMUM_VALUE) : true;
 
+        var perPositionHeightProperty = polygon.perPositionHeight;
+        var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
+
         var outlineProperty = polygon.outline;
         var outlineEnabled = defined(outlineProperty);
         if (outlineEnabled && outlineProperty.isConstant) {
@@ -452,9 +474,20 @@ define([
         var granularity = polygon.granularity;
         var stRotation = polygon.stRotation;
         var outlineWidth = polygon.outlineWidth;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) && isColorMaterial &&
+                        !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
+
+        if (outlineEnabled && onTerrain) {
+            oneTimeWarning(oneTimeWarning.geometryOutlines);
+            outlineEnabled = false;
+        }
+
         var perPositionHeight = polygon.perPositionHeight;
+        var closeTop = polygon.closeTop;
+        var closeBottom = polygon.closeBottom;
 
         this._fillEnabled = fillEnabled;
+        this._onTerrain = onTerrain;
         this._outlineEnabled = outlineEnabled;
 
         if (!hierarchy.isConstant || //
@@ -463,7 +496,11 @@ define([
             !Property.isConstant(granularity) || //
             !Property.isConstant(stRotation) || //
             !Property.isConstant(outlineWidth) || //
-            !Property.isConstant(perPositionHeight)) {
+            !Property.isConstant(perPositionHeightProperty) || //
+            !Property.isConstant(perPositionHeight) || //
+            !Property.isConstant(closeTop) || //
+            !Property.isConstant(closeBottom)) {
+
             if (!this._dynamic) {
                 this._dynamic = true;
                 this._geometryChanged.raiseEvent(this);
@@ -477,17 +514,21 @@ define([
                 hierarchyValue = new PolygonHierarchy(hierarchyValue);
             }
 
-            var heightValue = defined(height) ? height.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            var extrudedHeightValue = defined(extrudedHeight) ? extrudedHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            var heightValue = Property.getValueOrUndefined(height, Iso8601.MINIMUM_VALUE);
+            var closeTopValue = Property.getValueOrDefault(closeTop, Iso8601.MINIMUM_VALUE, true);
+            var closeBottomValue = Property.getValueOrDefault(closeBottom, Iso8601.MINIMUM_VALUE, true);
+            var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeight, Iso8601.MINIMUM_VALUE);
 
             options.polygonHierarchy = hierarchyValue;
             options.height = heightValue;
             options.extrudedHeight = extrudedHeightValue;
-            options.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.stRotation = defined(stRotation) ? stRotation.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            options.perPositionHeight = defined(perPositionHeight) ? perPositionHeight.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            this._outlineWidth = defined(outlineWidth) ? outlineWidth.getValue(Iso8601.MINIMUM_VALUE) : 1.0;
-            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue;
+            options.granularity = Property.getValueOrUndefined(granularity, Iso8601.MINIMUM_VALUE);
+            options.stRotation = Property.getValueOrUndefined(stRotation, Iso8601.MINIMUM_VALUE);
+            options.perPositionHeight = Property.getValueOrUndefined(perPositionHeight, Iso8601.MINIMUM_VALUE);
+            options.closeTop = closeTopValue;
+            options.closeBottom = closeBottomValue;
+            this._outlineWidth = Property.getValueOrDefault(outlineWidth, Iso8601.MINIMUM_VALUE, 1.0);
+            this._isClosed = defined(extrudedHeightValue) && extrudedHeightValue !== heightValue && closeTopValue && closeBottomValue;
             this._dynamic = false;
             this._geometryChanged.raiseEvent(this);
         }
@@ -501,7 +542,7 @@ define([
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    PolygonGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    PolygonGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -512,19 +553,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        return new DynamicGeometryUpdater(primitives, this);
+        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
     };
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
         this._options = new GeometryOptions(geometryUpdater._entity);
     }
+
     DynamicGeometryUpdater.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(time)) {
@@ -532,13 +575,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
         var geometryUpdater = this._geometryUpdater;
+        var onTerrain = geometryUpdater._onTerrain;
+
+        var primitives = this._primitives;
+        var groundPrimitives = this._groundPrimitives;
+        if (onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._outlinePrimitive = undefined;
+        }
+        this._primitive = undefined;
+
         var entity = geometryUpdater._entity;
         var polygon = entity.polygon;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(polygon.show, time, true)) {
@@ -557,34 +607,58 @@ define([
             options.polygonHierarchy = hierarchy;
         }
 
+        var closeTopValue = Property.getValueOrDefault(polygon.closeTop, time, true);
+        var closeBottomValue = Property.getValueOrDefault(polygon.closeBottom, time, true);
+
         options.height = Property.getValueOrUndefined(polygon.height, time);
         options.extrudedHeight = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
         options.stRotation = Property.getValueOrUndefined(polygon.stRotation, time);
         options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, time);
+        options.closeTop = closeTopValue;
+        options.closeBottom = closeBottomValue;
 
         if (Property.getValueOrDefault(polygon.fill, time, true)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height
-            });
-            options.vertexFormat = appearance.vertexFormat;
+            if (onTerrain) {
+                var currentColor = Color.WHITE;
+                if (defined(fillMaterialProperty.color)) {
+                    currentColor = fillMaterialProperty.color.getValue(time);
+                }
 
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new PolygonGeometry(options)
-                }),
-                appearance : appearance,
-                asynchronous : false
-            }));
+                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                    geometryInstance : new GeometryInstance({
+                        id : entity,
+                        geometry : new PolygonGeometry(options),
+                        attributes: {
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                        }
+                    }),
+                    asynchronous : false
+                }));
+            } else {
+                var appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight) && options.extrudedHeight !== options.height && closeTopValue && closeBottomValue
+                });
+                options.vertexFormat = appearance.vertexFormat;
+
+                this._primitive = primitives.add(new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new PolygonGeometry(options)
+                    }),
+                    appearance : appearance,
+                    asynchronous : false
+                }));
+            }
         }
 
-        if (Property.getValueOrDefault(polygon.outline, time, false)) {
+        if (!onTerrain && Property.getValueOrDefault(polygon.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(polygon.outlineColor, time, Color.BLACK, scratchColor);
@@ -621,7 +695,12 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (this._geometryUpdater._onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };

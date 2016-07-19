@@ -5,6 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Math',
+        'Scene/Camera',
         'Scene/Material',
         'Scene/SceneMode',
         'Specs/createScene'
@@ -14,6 +15,7 @@ defineSuite([
         Cartesian3,
         Color,
         CesiumMath,
+        Camera,
         Material,
         SceneMode,
         createScene) {
@@ -33,6 +35,8 @@ defineSuite([
 
     beforeEach(function() {
         polylines = new PolylineCollection();
+        scene.mode = SceneMode.SCENE3D;
+        scene._camera = new Camera(scene);
     });
 
     afterEach(function() {
@@ -469,7 +473,6 @@ defineSuite([
         //is what triggers the vertex array creation.  If the vertex array were not
         //recreaated, an exception would be thrown do to positions having less data then expected.
         scene.render();
-        scene.mode = SceneMode.SCENE3D;
     });
 
     it('renders 64K vertices of same polyline', function() {
@@ -777,26 +780,27 @@ defineSuite([
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
-        var p = scene.primitives.add(new PolylineCollection({
-            debugShowBoundingVolume : true
-        }));
+        polylines.debugShowBoundingVolume = true;
         var material = Material.fromType('Color');
         material.uniforms.color = new Color(1.0, 1.0, 1.0, 0.0);
-        p.add({
+        var p = polylines.add({
             positions : [{
-                x : 0,
-                y : -1000000,
-                z : 0
+                x : 1.0,
+                y : -1000.0,
+                z : 1.0
             },{
-                x : 0,
-                y : 1000000,
-                z : 0
+                x : 1.0,
+                y : 1000.00,
+                z : 1.0
             }],
             material : material
         });
+        var bounds = BoundingSphere.fromPoints(p.positions);
+        scene.camera.viewBoundingSphere(bounds);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-
-        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 0]);
+        scene.primitives.add(polylines);
+        expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
     });
 
     it('does not render', function() {
@@ -1430,7 +1434,7 @@ defineSuite([
         expect(boundingVolume).toEqual(BoundingSphere.union(BoundingSphere.union(one._boundingVolume, two._boundingVolume), three._boundingVolume));
     });
 
-    function test2DBoundingSphere(testMode) {
+    function testBoundingSphere() {
         var projection = scene.mapProjection;
         var ellipsoid = projection.ellipsoid;
 
@@ -1447,12 +1451,9 @@ defineSuite([
             ])
         });
 
-        var mode = scene.mode;
-        scene.mode = testMode;
         scene.primitives.add(polylines);
         scene.render();
         var boundingVolume = scene.frameState.commandList[0].boundingVolume;
-        scene.mode = mode;
 
         var positions = one.positions;
         var projectedPositions = [];
@@ -1481,11 +1482,13 @@ defineSuite([
     }
 
     it('computes bounding sphere in Columbus view', function() {
-        test2DBoundingSphere(SceneMode.COLUMBUS_VIEW);
+        scene.mode = SceneMode.COLUMBUS_VIEW;
+        testBoundingSphere();
     });
 
     it('computes bounding sphere in 2D', function() {
-        test2DBoundingSphere(SceneMode.SCENE2D);
+        scene.mode = SceneMode.SCENE2D;
+        testBoundingSphere();
     });
 
     it('computes optimized bounding volumes per material', function() {

@@ -31,7 +31,7 @@ defineSuite([
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBeUndefined();
         expect(property.ellipsoid).toBe(Ellipsoid.WGS84);
-        expect(property.getValue(time)).toBe(undefined);
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('can construct with arguments', function() {
@@ -41,7 +41,7 @@ defineSuite([
         expect(property.definitionChanged).toBeInstanceOf(Event);
         expect(property.position).toBe(position);
         expect(property.ellipsoid).toBe(Ellipsoid.UNIT_SPHERE);
-        expect(property.getValue(time)).toBe(undefined);
+        expect(property.getValue(time)).toBeUndefined();
     });
 
     it('setting position raises definitionChanged event', function() {
