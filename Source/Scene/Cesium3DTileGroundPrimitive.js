@@ -94,6 +94,12 @@ define([
         color : 1
     };
 
+    var scratchEncodedPosition = new Cartesian3();
+    var scratchNormal = new Cartesian3();
+    var scratchScaledNormal = new Cartesian3();
+    var scratchMinHeightPosition = new Cartesian3();
+    var scratchMaxHeightPosition = new Cartesian3();
+
     function createVertexArray(primitive, context) {
         if (!defined(primitive._positions)) {
             return;
@@ -118,19 +124,24 @@ define([
         var minHeight = primitive._minimumHeight;
         var maxHeight = primitive._maximumHeight;
 
+        var red = Color.floatToByte(color.red);
+        var green = Color.floatToByte(color.green);
+        var blue = Color.floatToByte(color.blue);
+        var alpha = Color.floatToByte(color.alpha);
+
         var i;
         for (i = 0; i < positionsLength; i += 3) {
-            var encodedPosition = Cartesian3.unpack(positions, i);
+            var encodedPosition = Cartesian3.unpack(positions, i, scratchEncodedPosition);
             var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
             var position = Cartesian3.add(rtcPosition, center, rtcPosition);
 
-            var normal = ellipsoid.geodeticSurfaceNormal(position);
-            var scaledPosition = ellipsoid.scaleToGeodeticSurface(position);
-            var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, new Cartesian3());
-            var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, new Cartesian3());
+            var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+            var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
+            var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, scratchScaledNormal);
+            var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
 
-            scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, new Cartesian3());
-            var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, new Cartesian3());
+            scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, scaledNormal);
+            var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
 
             Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
             Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
@@ -138,15 +149,15 @@ define([
             Cartesian3.pack(maxHeightPosition, extrudedPositions, positionIndex);
             Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + positionsLength);
 
-            colors[colorIndex] = Color.floatToByte(color.red);
-            colors[colorIndex + 1] = Color.floatToByte(color.green);
-            colors[colorIndex + 2] = Color.floatToByte(color.blue);
-            colors[colorIndex + 3] = Color.floatToByte(color.alpha);
+            colors[colorIndex]     = red;
+            colors[colorIndex + 1] = green;
+            colors[colorIndex + 2] = blue;
+            colors[colorIndex + 3] = alpha;
 
-            colors[colorIndex + colorsLength] = Color.floatToByte(color.red);
-            colors[colorIndex + 1 + colorsLength] = Color.floatToByte(color.green);
-            colors[colorIndex + 2 + colorsLength] = Color.floatToByte(color.blue);
-            colors[colorIndex + 3 + colorsLength] = Color.floatToByte(color.alpha);
+            colors[colorIndex + colorsLength]     = red;
+            colors[colorIndex + 1 + colorsLength] = green;
+            colors[colorIndex + 2 + colorsLength] = blue;
+            colors[colorIndex + 3 + colorsLength] = alpha;
 
             positionIndex += 3;
             colorIndex += 4;
@@ -432,7 +443,8 @@ define([
     };
 
     Cesium3DTileGroundPrimitive.prototype.destroy = function() {
-        // TODO
+        this._va = this._va && this._va.destroy();
+        this._sp = this._sp && this._sp.destroy();
         return destroyObject(this);
     };
 
