@@ -280,7 +280,7 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         if (!defined(surfaceTile)) {
             surfaceTile = tile.data = new GlobeSurfaceTile();
@@ -292,7 +292,7 @@ define([
         }
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider);
+            processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy);
         }
 
         // The terrain is renderable as soon as we have a valid vertex array.
@@ -337,7 +337,7 @@ define([
             isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
 
             isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
-                             (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
+                              (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         tile.upsampledFromParent = isUpsampledOnly;
@@ -375,7 +375,7 @@ define([
         }
     }
 
-    function processTerrainStateMachine(tile, frameState, terrainProvider) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
         var loaded = surfaceTile.loadedTerrain;
         var upsampled = surfaceTile.upsampledTerrain;
@@ -401,6 +401,15 @@ define([
 
             if (loaded.state === TerrainState.READY) {
                 loaded.publishToTile(tile);
+
+                if (defined(tile.data.vertexArray)) {
+                    // Free the tiles existing vertex array on next render.
+                    vertexArraysToDestroy.push(tile.data.vertexArray);
+                }
+
+                // Transfer ownership of the vertex array to the tile itself.
+                tile.data.vertexArray = loaded.vertexArray;
+                loaded.vertexArray = undefined;
 
                 // No further loading or upsampling is necessary.
                 surfaceTile.pickTerrain = defaultValue(surfaceTile.loadedTerrain, surfaceTile.upsampledTerrain);
@@ -437,6 +446,15 @@ define([
 
             if (upsampled.state === TerrainState.READY) {
                 upsampled.publishToTile(tile);
+
+                if (defined(tile.data.vertexArray)) {
+                    // Free the tiles existing vertex array on next render.
+                    vertexArraysToDestroy.push(tile.data.vertexArray);
+                }
+
+                // Transfer ownership of the vertex array to the tile itself.
+                tile.data.vertexArray = upsampled.vertexArray;
+                upsampled.vertexArray = undefined;
 
                 // No further upsampling is necessary.  We need to continue loading, though.
                 surfaceTile.pickTerrain = surfaceTile.upsampledTerrain;

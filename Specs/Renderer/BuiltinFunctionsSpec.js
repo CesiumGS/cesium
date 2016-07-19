@@ -292,4 +292,12 @@ defineSuite([
             '}';
         context.verifyDrawForSpecs(fs);
     });
+
+    it('has czm_cascadeColor', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(all(equal(czm_cascadeColor(vec4(0.5)), vec4(1.0, 0.5, 1.0, 2.0))));' +
+            '}';
+        context.verifyDrawForSpecs(fs);
+    });
 }, 'WebGL');

@@ -36,7 +36,7 @@ define([
      *
      * @exports cancelAnimationFrame
      *
-     * @param requestID The value returned by {@link requestAnimationFrame}.
+     * @param {Number} requestID The value returned by {@link requestAnimationFrame}.
      *
      * @see {@link http://www.w3.org/TR/animation-timing/#the-WindowAnimationTiming-interface|The WindowAnimationTiming interface}
      */

@@ -276,6 +276,9 @@ define([
      * @param {DataSourceCollection} [options.dataSources=new DataSourceCollection()] The collection of data sources visualized by the widget.  If this parameter is provided,
      *                               the instance is assumed to be owned by the caller and will not be destroyed when the viewer is destroyed.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
+     * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
+     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
@@ -408,7 +411,10 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             showRenderLoopErrors : options.showRenderLoopErrors,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
             scene3DOnly : scene3DOnly,
-            terrainExaggeration : options.terrainExaggeration
+            terrainExaggeration : options.terrainExaggeration,
+            shadows : options.shadows,
+            terrainShadows : options.terrainShadows,
+            mapMode2D : options.mapMode2D
         });
 
         var dataSourceCollection = options.dataSources;
@@ -943,6 +949,46 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+         * Determines if shadows are cast by the sun.
+         * @memberof Viewer.prototype
+         * @type {Boolean}
+         */
+        shadows : {
+            get : function() {
+                return this.scene.shadowMap.enabled;
+            },
+            set : function(value) {
+                this.scene.shadowMap.enabled = value;
+            }
+        },
+
+        /**
+         * Determines if the terrain casts shadows from the sun.
+         * @memberof Viewer.prototype
+         * @type {Boolean}
+         */
+        terrainShadows : {
+            get : function() {
+                return this.scene.globe.castShadows;
+            },
+            set : function(value) {
+                this.scene.globe.castShadows = value;
+            }
+        },
+
+        /**
+         * Get the scene's shadow map
+         * @memberof Viewer.prototype
+         * @type {ShadowMap}
+         * @readonly
+         */
+        shadowMap : {
+            get : function() {
+                return this.scene.shadowMap;
+            }
+        },
+
+        /**
          * Gets the collection of image layers that will be rendered on the globe.
          * @memberof Viewer.prototype
          *
@@ -1434,7 +1480,11 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
 
         var entityView = this._entityView;
         if (defined(entityView)) {
-            entityView.update(time);
+            var trackedEntity = this._trackedEntity;
+            var trackedState = this._dataSourceDisplay.getBoundingSphere(trackedEntity, false, boundingSphereScratch);
+            if (trackedState === BoundingSphereState.DONE) {
+                entityView.update(time, boundingSphereScratch);
+            }
         }
 
         var position;
@@ -1666,10 +1716,16 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return;
             }
 
-            //zoomTarget is now an EntityCollection, this will retrieve the array
+            //Zoom target is already an array, just copy it and return.
+            if (isArray(zoomTarget)) {
+                that._zoomTarget = zoomTarget.slice(0);
+                return;
+            }
+
+            //If zoomTarget is an EntityCollection, this will retrieve the array
             zoomTarget = defaultValue(zoomTarget.values, zoomTarget);
 
-            //If zoomTarget is a DataSource, this will retrieve the EntityCollection.
+            //If zoomTarget is a DataSource, this will retrieve the array.
             if (defined(zoomTarget.entities)) {
                 zoomTarget = zoomTarget.entities.values;
             }
@@ -1820,8 +1876,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         var bs = state !== BoundingSphereState.FAILED ? boundingSphereScratch : undefined;
-        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid, bs);
-        viewer._entityView.update(currentTime);
+        viewer._entityView = new EntityView(trackedEntity, scene, scene.mapProjection.ellipsoid);
+        viewer._entityView.update(currentTime, bs);
         viewer._needTrackedEntityUpdate = false;
     }
 

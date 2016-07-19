@@ -354,6 +354,20 @@ defineSuite([
         viewer.render();
     });
 
+    it('can set shadows', function() {
+        viewer = createViewer(container, {
+            shadows : true
+        });
+        expect(viewer.shadows).toBe(true);
+    });
+
+    it('can set terrain shadows', function() {
+        viewer = createViewer(container, {
+            terrainShadows : true
+        });
+        expect(viewer.terrainShadows).toBe(true);
+    });
+
     it('can set terrainProvider', function() {
         var provider = new EllipsoidTerrainProvider();
 
@@ -673,8 +687,8 @@ defineSuite([
         dataSource.clock.stopTime = JulianDate.fromIso8601('2014-08-21T02:00Z');
         dataSource.clock.currentTime = JulianDate.fromIso8601('2014-08-02T00:00Z');
         dataSource.clock.clockRange = ClockRange.UNBOUNDED;
-        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
-        dataSource.clock.multiplier = 20.0;
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        dataSource.clock.multiplier = 10.0;
 
         dataSource.changedEvent.raiseEvent(dataSource);
 
@@ -684,6 +698,13 @@ defineSuite([
         expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
         expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
         expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+
+        dataSource.clock.clockStep = ClockStep.SYSTEM_CLOCK;
+        dataSource.clock.multiplier = 1.0;
+
+        dataSource.changedEvent.raiseEvent(dataSource);
+
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
     });
 
     it('can manually control the clock tracking', function() {

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Shadow maps.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+    #toolbar .cesium-button { display: block; }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false,
+    shadows : true,
+    terrainShadows : true
+});
+
+viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+    url : '//assets.agi.com/stk-terrain/world',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+
+var shadowMap = viewer.shadowMap;
+shadowMap.maxmimumDistance = 10000.0;
+
+var cesiumAir = viewer.entities.add({
+    name : 'Cesium Air',
+    height : 20.0,
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.glb'
+    }
+});
+
+var groundVehicle = viewer.entities.add({
+    name : 'Ground Vehicle',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/CesiumGround/Cesium_Ground.glb'
+    }
+});
+
+var cesiumMan = viewer.entities.add({
+    name : 'Cesium Man',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/CesiumMan/Cesium_Man.glb'
+    }
+});
+
+var woodTower = viewer.entities.add({
+    name : 'Wood Tower',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/WoodTower/Wood_Tower.gltf'
+    }
+});
+
+var simpleCity = viewer.entities.add({
+    name : 'Simple City',
+    height : 0.0,
+    model : {
+        uri : '../../SampleData/models/ShadowTester/Shadow_Tester_4.gltf'
+    }
+});
+
+var locations = {
+    Exton : {
+        longitude : -1.31968,
+        latitude : 0.698874,
+        height : 74.14210186070714,
+        date : 2457522.154792
+    },
+    HalfDome : {
+        longitude : -2.086267733294987,
+        latitude : 0.6587491773830219,
+        height : 2640.716312584986,
+        date : 2457507.247512
+    },
+    Everest : {
+        longitude : 1.517132688,
+        latitude : 0.4884844964,
+        height : 8773.17824498951,
+        date : 2457507.620845
+    },
+    PinnaclePA : {
+        longitude : -1.3324415110874286,
+        latitude : 0.6954224325279967,
+        height : 179.14276256241743,
+        date : 2457523.041620
+    },
+    SenecaRocks : {
+        longitude : -1.3851775172879768,
+        latitude : 0.6778211831093554,
+        height : 682.5893300695776,
+        date : 2457522.097512
+    },
+    Space : {
+        longitude : -1.31968,
+        latitude : 0.698874,
+        height : 2000000.0,
+        date : 2457522.154792
+    }
+};
+
+var i;
+var entities = viewer.entities.values;
+var entitiesLength = entities.length;
+
+function setLocation(location) {
+    var longitude = location.longitude;
+    var latitude = location.latitude;
+    var height = location.height;
+
+    for (i = 0; i < entitiesLength; ++i) {
+        var entity = entities[i];
+        entity.position = Cesium.Cartesian3.fromRadians(longitude, latitude, height + entity.height);
+    }
+
+    viewer.clock.currentTime = new Cesium.JulianDate(location.date);
+    viewer.clock.multiplier = 1.0;
+}
+
+function setLocationFunction(location) {
+    return function() {
+        setLocation(location);
+    };
+}
+
+var locationToolbarOptions = [];
+for (var locationName in locations) {
+    if (locations.hasOwnProperty(locationName)) {
+        var location = locations[locationName];
+        locationToolbarOptions.push({
+            text : locationName,
+            onselect : setLocationFunction(location)
+        });
+    }
+}
+
+Sandcastle.addToolbarMenu(locationToolbarOptions);
+
+function setEntity(entity) {
+    for (i = 0; i < entitiesLength; ++i) {
+        entities[i].show = false;
+    }
+    entity.show = true;
+    viewer.trackedEntity = entity;
+}
+
+function setEntityFunction(entity) {
+    return function() {
+        setEntity(entity);
+    };
+}
+
+var entityToolbarOptions = [];
+for (i = 0; i < entitiesLength; ++i) {
+    var entity = entities[i];
+    entityToolbarOptions.push({
+        text : entity.name,
+        onselect : setEntityFunction(entity)
+    });
+}
+
+Sandcastle.addToolbarMenu(entityToolbarOptions);
+
+Sandcastle.addToolbarButton('Toggle Shadows', function() {
+    viewer.shadows = !viewer.shadows;
+});
+
+Sandcastle.addToolbarButton('Toggle Terrain Shadows', function() {
+    viewer.terrainShadows = !viewer.terrainShadows;
+});
+
+Sandcastle.addToolbarButton('Soft Shadows', function() {
+    shadowMap.softShadows = !shadowMap.softShadows;
+});
+
+Sandcastle.addToolbarMenu([{
+    text : 'Size : 2048',
+    onselect : function() {
+        shadowMap.size = 2048;
+    }
+}, {
+    text : 'Size : 1024',
+    onselect : function() {
+        shadowMap.size = 1024;
+    }
+}, {
+    text : 'Size : 512',
+    onselect : function() {
+        shadowMap.size = 512;
+    }
+}, {
+    text : 'Size : 256',
+    onselect : function() {
+        shadowMap.size = 256;
+    }
+}]);
+
+function setShadows(castShadows, receiveShadows) {
+    for (i = 0; i < entitiesLength; ++i) {
+        entities[i].model.castShadows = castShadows;
+        entities[i].model.receiveShadows = receiveShadows;
+    }
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Entity Shadows',
+    onselect : function() {
+        setShadows(true, true);
+    }
+}, {
+    text : 'Cast Only',
+    onselect : function() {
+        setShadows(true, false);
+    }
+}, {
+    text : 'Receive Only',
+    onselect : function() {
+        setShadows(false, true);
+    }
+}, {
+    text : 'Off',
+    onselect : function() {
+        setShadows(false, false);
+    }
+}]);
+
+setLocation(locations.Exton);
+setEntity(cesiumAir);
+
+//Sandcastle_End
+Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
