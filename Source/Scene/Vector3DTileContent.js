@@ -232,7 +232,8 @@ define([
             minimumHeight : minHeight,
             maximumHeight : maxHeight,
             center : center,
-            color : color
+            color : color,
+            boundingVolume : this._tile._boundingVolume.boundingVolume
         });
 
 

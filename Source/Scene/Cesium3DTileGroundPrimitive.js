@@ -74,6 +74,8 @@ define([
         this._center = options.center;
         this._color = options.color;
 
+        this._boundingVolume = options.boundingVolume;
+
         this._va = undefined;
         this._sp = undefined;
 
@@ -384,7 +386,7 @@ define([
         };
     }
 
-    function createColorCommands(primitive, context) {
+    function createColorCommands(primitive) {
         if (defined(primitive._stencilPreloadCommand)) {
             return;
         }
@@ -397,6 +399,7 @@ define([
             shaderProgram : primitive._sp,
             uniformMap : primitive._uniformMap,
             modelMatrix : Matrix4.IDENTITY,
+            boundingVolume : primitive._boundingVolume,
             pass : Pass.GROUND
         });
 
@@ -416,7 +419,7 @@ define([
         createShaders(this, context);
         createRenderStates(this);
         createUniformMap(this, context);
-        createColorCommands(this, context);
+        createColorCommands(this);
 
         var passes = frameState.passes;
         if (passes.render) {
