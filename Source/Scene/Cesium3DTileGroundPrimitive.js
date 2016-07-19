@@ -110,6 +110,8 @@ define([
         var positions = primitive._positions;
         var offsets = primitive._offsets;
         var counts = primitive._counts;
+        var indexOffsets = primitive._indexOffsets;
+        var indexCounts = primitive._indexCounts;
         var indices = primitive._indices;
         var decodeMatrix = primitive._decodeMatrix;
         var center = primitive._center;
@@ -165,46 +167,46 @@ define([
             colorIndex += 4;
         }
 
-        var positionIndicesLength = positions.length / 3;
         var wallIndicesLength = positions.length / 3 * 6;
         var indicesLength = indices.length;
         var extrudedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
 
-        for (i = 0; i < indicesLength; i += 3) {
-            var i0 = indices[i];
-            var i1 = indices[i + 1];
-            var i2 = indices[i + 2];
+        var indexOffsetLength = indexOffsets.length;
+        var indicesIndex = 0;
 
-            extrudedIndices[i]     = i0 * 2;
-            extrudedIndices[i + 1] = i1 * 2;
-            extrudedIndices[i + 2] = i2 * 2;
+        for (i = 0; i < indexOffsetLength; ++i) {
+            var indexOffset = indexOffsets[i];
+            var indexCount = indexCounts[i];
 
-            extrudedIndices[i + indicesLength]     = i2 * 2 + 1;
-            extrudedIndices[i + 1 + indicesLength] = i1 * 2 + 1;
-            extrudedIndices[i + 2 + indicesLength] = i0 * 2 + 1;
-        }
+            for (var j = 0; j < indexCount; j += 3) {
+                var i0 = indices[indexOffset + j];
+                var i1 = indices[indexOffset + j + 1];
+                var i2 = indices[indexOffset + j + 2];
 
-        var indicesIndex = indicesLength * 2;
-        var length = offsets.length;
+                extrudedIndices[indicesIndex++] = i0 * 2;
+                extrudedIndices[indicesIndex++] = i1 * 2;
+                extrudedIndices[indicesIndex++] = i2 * 2;
 
-        for (i = 0; i < length; ++i) {
-            var offset = offsets[i];
-            var count = counts[i];
+                extrudedIndices[indicesIndex++] = i2 * 2 + 1;
+                extrudedIndices[indicesIndex++] = i1 * 2 + 1;
+                extrudedIndices[indicesIndex++] = i0 * 2 + 1;
+            }
 
-            for (var j = 0; j < count - 1; ++j) {
-                extrudedIndices[indicesIndex++] = (offset + j) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2;
-                extrudedIndices[indicesIndex++] = (offset + j) * 2;
+            var polygonOffset = offsets[i];
+            var polygonCount = counts[i];
 
-                extrudedIndices[indicesIndex++] = (offset + j) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2;
+            for (var k = 0; k < polygonCount - 1; ++k) {
+                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2;
+                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2;
+
+                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2;
             }
         }
 
         primitive._positions = undefined;
-        primitive._offsets = undefined;
-        primitive._counts = undefined;
         primitive._decodeMatrix = undefined;
 
         var positionBuffer = Buffer.createVertexBuffer({
