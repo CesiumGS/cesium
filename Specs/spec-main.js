@@ -58,6 +58,9 @@
 
         /*global jasmineRequire,jasmine,exports,specs*/
 
+        // Disable request prioritization since it interferes with tests that expect a request to go through immediately.
+        Cesium.RequestScheduler.prioritize = false;
+
         var when = Cesium.when;
 
         if (typeof paths !== 'undefined') {

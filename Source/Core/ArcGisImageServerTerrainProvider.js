@@ -13,8 +13,10 @@ define([
         './HeightmapTerrainData',
         './loadImage',
         './Math',
-        './TerrainProvider',
-        './throttleRequestByServer'
+        './Request',
+        './RequestScheduler',
+        './RequestType',
+        './TerrainProvider'
     ], function(
         when,
         Credit,
@@ -29,8 +31,10 @@ define([
         HeightmapTerrainData,
         loadImage,
         CesiumMath,
-        TerrainProvider,
-        throttleRequestByServer) {
+        Request,
+        RequestScheduler,
+        RequestType,
+        TerrainProvider) {
     'use strict';
 
     /**
@@ -200,11 +204,13 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
+     * @param {Request} [request] The request object.
+     *
      * @returns {Promise.<TerrainData>|undefined} A promise for the requested geometry.  If this method
      *          returns undefined instead of a promise, it is an indication that too many requests are already
      *          pending and the request will be retried later.
      */
-    ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(x, y, level) {
+    ArcGisImageServerTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level);
 
         // Each pixel in the heightmap represents the height at the center of that
@@ -231,7 +237,18 @@ define([
             url = proxy.getURL(url);
         }
 
-        var promise = throttleRequestByServer(url, loadImage);
+        if (!defined(request) || (request === false)) {
+            // If a request object isn't provided, perform an immediate request
+            request = new Request({
+                defer : true
+            });
+        }
+
+        request.url = url;
+        request.requestFunction = loadImage;
+        request.type = RequestType.TERRAIN;
+
+        var promise = RequestScheduler.schedule(request);
         if (!defined(promise)) {
             return undefined;
         }

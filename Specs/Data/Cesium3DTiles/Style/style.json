@@ -1,0 +1,4 @@
+{
+  "color" : "color('red')",
+  "show" : "${id} < 100"
+}

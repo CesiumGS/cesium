@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### TODO
+
+* Added support for [3D Tiles](https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md) for streaming massive heterogeneous 3D geospatial datasets.  The new Cesium APIs are:
+   * `Cesium3DTileset`
+   * `Cesium3DTileStyle`, `StyleExpression`, `Expression`, and `ConditionsExpression`
+   * `Cesium3DTile`
+   * `Cesium3DTileContent`
+   * `Cesium3DTileFeature`
+
 ### 1.24 - 2016-08-01
 
 * Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)

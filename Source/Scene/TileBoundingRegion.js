@@ -1,21 +1,39 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/GeometryInstance',
+        '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
+        '../Core/RectangleOutlineGeometry',
+        './PerInstanceColorAppearance',
+        './Primitive',
         './SceneMode'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Cartographic,
+        ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
+        GeometryInstance,
+        Matrix4,
+        OrientedBoundingBox,
         Rectangle,
+        RectangleOutlineGeometry,
+        PerInstanceColorAppearance,
+        Primitive,
         SceneMode) {
     'use strict';
 
@@ -28,11 +46,9 @@ define([
      *
      * @private
      */
-    var TileBoundingBox = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
+    function TileBoundingRegion(options) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.rectangle)) {
+        if (!defined(options) || !defined(options.rectangle)) {
             throw new DeveloperError('options.url is required.');
         }
         //>>includeEnd('debug');
@@ -99,7 +115,41 @@ define([
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
-    };
+
+        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+
+        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+    }
+
+    defineProperties(TileBoundingRegion.prototype, {
+        /**
+         * The underlying bounding volume
+         *
+         * @memberof TileBoundingRegion.prototype
+         *
+         * @type {Object}
+         * @readonly
+         */
+        boundingVolume : {
+            get : function() {
+                return this._orientedBoundingBox;
+            }
+        },
+        /**
+         * The underlying bounding sphere
+         *
+         * @memberof TileBoundingRegion.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         */
+        boundingSphere : {
+            get : function() {
+                return this._boundingSphere;
+            }
+        }
+    });
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
@@ -151,10 +201,14 @@ define([
      * Gets the distance from the camera to the closest point on the tile.  This is used for level-of-detail selection.
      *
      * @param {FrameState} frameState The state information of the current rendering frame.
-     *
      * @returns {Number} The distance from the camera to the closest point on the tile, in meters.
      */
-    TileBoundingBox.prototype.distanceToCamera = function(frameState) {
+    TileBoundingRegion.prototype.distanceToCamera = function(frameState) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(frameState)) {
+            throw new DeveloperError('frameState is required.');
+        }
+        //>>includeEnd('debug');
         var camera = frameState.camera;
         var cameraCartesianPosition = camera.positionWC;
         var cameraCartographicPosition = camera.positionCartographic;
@@ -220,5 +274,54 @@ define([
         return Math.sqrt(result);
     };
 
-    return TileBoundingBox;
+    /**
+     * Determines which side of a plane this box is located.
+     *
+     * @param {Plane} plane The plane to test against.
+     * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+     *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+     *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+     *                      intersects the plane.
+     */
+    TileBoundingRegion.prototype.intersectPlane = function(plane) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(plane)) {
+            throw new DeveloperError('plane is required.');
+        }
+        //>>includeEnd('debug');
+        return this._orientedBoundingBox.intersectPlane(plane);
+    };
+
+    TileBoundingRegion.prototype.createDebugVolume = function(color) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(color)) {
+            throw new DeveloperError('color is required.');
+        }
+        //>>includeEnd('debug');
+
+        var modelMatrix = new Matrix4.clone(Matrix4.IDENTITY);
+        var geometry = new RectangleOutlineGeometry({
+            rectangle : this.rectangle,
+            height : this.minimumHeight,
+            extrudedHeight: this.maximumHeight
+        });
+        var instance = new GeometryInstance({
+            geometry : geometry,
+            modelMatrix : modelMatrix,
+            attributes : {
+                color : ColorGeometryInstanceAttribute.fromColor(color)
+            }
+        });
+
+        return new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                flat : true
+            }),
+            asynchronous : false
+        });
+    };
+
+    return TileBoundingRegion;
 });

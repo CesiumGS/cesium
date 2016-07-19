@@ -739,8 +739,7 @@ define([
 
         var context = frameState.context;
 
-        var vs = ShadowVolumeVS;
-        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
+        var vs = Primitive._modifyShaderPosition(primitive._primitive, ShadowVolumeVS, frameState.scene3DOnly);
         vs = Primitive._appendShowToShader(primitive._primitive, vs);
 
         var fs = ShadowVolumeFS;
