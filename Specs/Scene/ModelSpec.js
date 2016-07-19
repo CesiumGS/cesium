@@ -19,6 +19,7 @@ defineSuite([
         'Core/loadJson',
         'Core/Math',
         'Core/Matrix4',
+        'Core/Matrix3',
         'Core/PrimitiveType',
         'Core/Transforms',
         'Renderer/RenderState',
@@ -49,6 +50,7 @@ defineSuite([
         loadJson,
         CesiumMath,
         Matrix4,
+        Matrix3,
         PrimitiveType,
         Transforms,
         RenderState,
@@ -85,6 +87,14 @@ defineSuite([
     var boxPointLightUrl = './Data/Models/MaterialsCommon/BoxPointLight.gltf';
     var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
     var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
+    var boxColorUrl = './Data/Models/Box-Color/Box-Color.gltf';
+    var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
+    var boxColorQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Color-Quantized.gltf';
+    var boxScalarQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Scalar-Quantized.gltf';
+    var milkTruckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Quantized.gltf';
+    var milkTruckQuantizedMismatchUrl = './Data/Models/WEB3DQuantizedAttributes/CesiumMilkTruck-Mismatch-Quantized.gltf';
+    var duckQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Duck-Quantized.gltf';
+    var riggedSimpleQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/RiggedSimple-Quantized.gltf';
     var CesiumManUrl = './Data/Models/MaterialsCommon/Cesium_Man.gltf';
 
     var texturedBoxModel;
@@ -1604,6 +1614,95 @@ defineSuite([
 
     it('loads a glTF with KHR_materials_common that has transparency', function() {
         return loadModel(boxTransparentUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL', function() {
+        return loadModel(boxQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where primitives with different accessors use the same shader', function() {
+        return loadModel(milkTruckQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes POSITION, TEXCOORD and NORMAL where one primitive is quantized and the other is not, but both use the same shader', function() {
+        return loadModel(milkTruckQuantizedMismatchUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes TEXCOORD', function() {
+        return loadModel(duckQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with WEB3D_quantized_attributes JOINT and WEIGHT', function() {
+        return loadModel(riggedSimpleQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    function testBoxSideColors(m) {
+        var rotateX = Matrix3.fromRotationX(CesiumMath.toRadians(90.0));
+        var rotateY = Matrix3.fromRotationY(CesiumMath.toRadians(90.0));
+        var rotateZ = Matrix3.fromRotationZ(CesiumMath.toRadians(90.0));
+
+        // Each side of the cube should be a different color
+        var oldPixelColor = scene.renderForSpecs();
+        expect(oldPixelColor).not.toEqual([0, 0, 0, 255]);
+        for(var i = 0; i < 6; i++) {
+            var rotate = rotateZ;
+            if (i % 3 === 0) {
+                rotate = rotateX;
+            }
+            else if ((i-1) % 3 === 0) {
+                rotate = rotateY;
+            }
+            Matrix4.multiplyByMatrix3(m.modelMatrix, rotate, m.modelMatrix);
+
+            var pixelColor = scene.renderForSpecs();
+            expect(pixelColor).not.toEqual([0, 0, 0, 255]);
+            expect(pixelColor).not.toEqual(oldPixelColor);
+            oldPixelColor = pixelColor;
+        }
+    }
+
+    it('loads a gltf with color attributes', function() {
+         return loadModel(boxColorUrl).then(function(m) {
+             expect(m.ready).toBe(true);
+             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+             m.show = true;
+             m.zoomTo();
+             testBoxSideColors(m);
+             primitives.remove(m);
+         });
+    });
+
+    it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {
+        return loadModel(boxColorQuantizedUrl).then(function(m) {
+            expect(m.ready).toBe(true);
+            expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+            m.show = true;
+            m.zoomTo();
+            testBoxSideColors(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a gltf with WEB3D_quantized_attributes SCALAR attribute', function() {
+        return loadModel(boxScalarQuantizedUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

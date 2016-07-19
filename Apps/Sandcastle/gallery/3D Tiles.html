@@ -69,7 +69,7 @@ var tilesets = [{
 }, {
     name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
 }, {
-    name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/Points/'
+    name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/PointsRGB/'
 }];
 
 var tileset;
@@ -107,7 +107,7 @@ function loadTileset(url) {
                     }
                 },
 //              "show": false
-                "show" : "${Height} > 0",
+//              "show" : "${Height} >= 0",
                 "meta" : {
                     "description" : "'Building id ${id} has height ${Height}.'"
                 }
@@ -431,7 +431,7 @@ function styleFunction(name) {
         color : {
             conditions : conditions
         },
-        show : '${' + name + '} > 0'
+        show : '${' + name + '} >= 0'
     });
 
     currentPropertyName = name;

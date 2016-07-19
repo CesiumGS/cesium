@@ -3797,4 +3797,34 @@ defineSuite([
             expect(dataSource.entities.values.length).toEqual(2);
         });
     });
+
+    it('when clampToGround is false, height isn\'t set if the polygon is extrudable' , function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>relativeToGround</altitudeMode>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight.getValue()).toEqual(true);
+            expect(entity.polygon.height).toBeUndefined();
+        });
+    });
+
+    it('when clampToGround is false, height is set to 0 if polygon isn\'t extrudable' , function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+          <Placemark>\
+            <Polygon>\
+              <altitudeMode>clampToGround</altitudeMode>\
+            </Polygon>\
+          </Placemark>';
+
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), options).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.polygon.perPositionHeight).toBeUndefined();
+            expect(entity.polygon.height.getValue()).toEqual(0);
+        });
+    });
 });

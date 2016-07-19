@@ -234,7 +234,7 @@ define([
         var magic = defaultValue(options.magic, [112, 110, 116, 115]);
         var version = defaultValue(options.version, 1);
 
-        var headerByteLength = 16;
+        var headerByteLength = 24;
         var byteLength = headerByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -245,6 +245,8 @@ define([
         view.setUint32(4, version, true);          // version
         view.setUint32(8, byteLength, true);       // byteLength
         view.setUint32(12, 0, true);               // pointsLength
+        view.setUint32(16, 0, true);               // batchTableJSONByteLength
+        view.setUint32(20, 0, true);               // batchTableBinaryByteLength
 
         return buffer;
     };
