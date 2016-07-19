@@ -149,7 +149,7 @@ define([
             Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
 
             Cartesian3.pack(maxHeightPosition, extrudedPositions, positionIndex);
-            Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + positionsLength);
+            Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + 3);
 
             colors[colorIndex]     = red;
             colors[colorIndex + 1] = green;
@@ -161,7 +161,7 @@ define([
             colors[colorIndex + 2 + colorsLength] = blue;
             colors[colorIndex + 3 + colorsLength] = alpha;
 
-            positionIndex += 3;
+            positionIndex += 6;
             colorIndex += 4;
         }
 
@@ -175,13 +175,13 @@ define([
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
 
-            extrudedIndices[i]     = i0;
-            extrudedIndices[i + 1] = i1;
-            extrudedIndices[i + 2] = i2;
+            extrudedIndices[i]     = i0 * 2;
+            extrudedIndices[i + 1] = i1 * 2;
+            extrudedIndices[i + 2] = i2 * 2;
 
-            extrudedIndices[i + indicesLength]     = i2 + positionIndicesLength;
-            extrudedIndices[i + 1 + indicesLength] = i1 + positionIndicesLength;
-            extrudedIndices[i + 2 + indicesLength] = i0 + positionIndicesLength;
+            extrudedIndices[i + indicesLength]     = i2 * 2 + 1;
+            extrudedIndices[i + 1 + indicesLength] = i1 * 2 + 1;
+            extrudedIndices[i + 2 + indicesLength] = i0 * 2 + 1;
         }
 
         var indicesIndex = indicesLength * 2;
@@ -192,13 +192,13 @@ define([
             var count = counts[i];
 
             for (var j = 0; j < count - 1; ++j) {
-                extrudedIndices[indicesIndex++] = positionIndicesLength + offset + j;
-                extrudedIndices[indicesIndex++] = offset + j + 1;
-                extrudedIndices[indicesIndex++] = offset + j;
+                extrudedIndices[indicesIndex++] = (offset + j) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2;
+                extrudedIndices[indicesIndex++] = (offset + j) * 2;
 
-                extrudedIndices[indicesIndex++] = positionIndicesLength + offset + j;
-                extrudedIndices[indicesIndex++] = positionIndicesLength + offset + j + 1;
-                extrudedIndices[indicesIndex++] = offset + j + 1;
+                extrudedIndices[indicesIndex++] = (offset + j) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2 + 1;
+                extrudedIndices[indicesIndex++] = (offset + j + 1) * 2;
             }
         }
 
