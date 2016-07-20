@@ -9,7 +9,7 @@ Change Log
 * Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 * Added support in CZML for expressing `BillboardGraphics.alignedAxis` as the velocity vector of an entity, using `velocityReference` syntax.
 * Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
-* Added `AttributeCompression.octEncodeInRange`, `AttributeCompression.octDecodeInRange` and an optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`, to support oct-encoding with variable precision. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
+* Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
 
 ### 1.23 - 2016-07-01
 
