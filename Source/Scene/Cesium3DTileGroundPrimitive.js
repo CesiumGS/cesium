@@ -77,7 +77,7 @@ define([
 
         this._boundingVolume = options.boundingVolume;
 
-        this._vas = undefined;
+        this._va = undefined;
         this._sp = undefined;
 
         this._rsStencilPreloadPass = undefined;
@@ -122,12 +122,22 @@ define([
             primitive._colors[n] = randomColors[n % randomColors.length];
         }
 
-        var rgba;
+        var positionsLength = positions.length;
+        var colorsLength = positionsLength / 3 * 4;
+        var batchedPositions = new Float32Array(positionsLength * 2.0);
+        var batchedColors = new Uint8Array(colorsLength * 2);
+
+        var wallIndicesLength = positions.length / 3 * 6;
+        var indicesLength = indices.length;
+        var batchedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
+
         var colors = primitive._colors;
-        var colorsLength = colors.length;
+        colorsLength = colors.length;
 
         var i;
         var j;
+        var color;
+        var rgba;
 
         var buffers = {};
         for (i = 0; i < colorsLength; ++i) {
@@ -136,9 +146,6 @@ define([
                 buffers[rgba] = {
                     positionLength : counts[i],
                     indexLength : indexCounts[i],
-                    extrudedPositions : undefined,
-                    extrudedIndices : undefined,
-                    colors : undefined,
                     offset : 0,
                     indexOffset : 0
                 };
@@ -149,23 +156,46 @@ define([
         }
 
         var object;
+        var byColorPositionOffset = 0;
+        var byColorIndexOffset = 0;
         for (rgba in buffers) {
             if (buffers.hasOwnProperty(rgba)) {
                 object = buffers[rgba];
+                object.offset = byColorPositionOffset;
+                object.indexOffset = byColorIndexOffset;
+
                 var positionLength = object.positionLength * 2;
                 var indexLength = object.indexLength * 2 + object.positionLength * 6;
-                object.extrudedPositions = new Float32Array(positionLength * 3);
-                object.extrudedIndices = new Uint32Array(indexLength);
-                object.colors = new Uint8Array(positionLength * 4);
+
+                byColorPositionOffset += positionLength;
+                byColorIndexOffset += indexLength;
+
+                object.indexLength = indexLength;
             }
         }
+
+        var batchedDrawCalls = [];
+
+        for (rgba in buffers) {
+            if (buffers.hasOwnProperty(rgba)) {
+                object = buffers[rgba];
+
+                batchedDrawCalls.push({
+                    color : Color.fromRgba(parseInt(rgba)),
+                    offset : object.indexOffset,
+                    count : object.indexLength
+                });
+            }
+        }
+
+        primitive._batchedIndices = batchedDrawCalls;
 
         var minHeight = primitive._minimumHeight;
         var maxHeight = primitive._maximumHeight;
 
         for (i = 0; i < colorsLength; ++i) {
-            var color = colors[i];
-            rgba = colors[i].toRgba();
+            color = colors[i];
+            rgba = color.toRgba();
 
             var red = Color.floatToByte(color.red);
             var green = Color.floatToByte(color.green);
@@ -173,8 +203,6 @@ define([
             var alpha = Color.floatToByte(color.alpha);
 
             object = buffers[rgba];
-            var extrudedPositions = object.extrudedPositions;
-            var extrudedColors = object.colors;
             var positionOffset = object.offset;
             var positionIndex = positionOffset * 3;
             var colorIndex = positionOffset * 4;
@@ -198,24 +226,23 @@ define([
                 Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
                 Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
 
-                Cartesian3.pack(maxHeightPosition, extrudedPositions, positionIndex);
-                Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + 3);
+                Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
+                Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
 
-                extrudedColors[colorIndex]     = red;
-                extrudedColors[colorIndex + 1] = green;
-                extrudedColors[colorIndex + 2] = blue;
-                extrudedColors[colorIndex + 3] = alpha;
+                batchedColors[colorIndex]     = red;
+                batchedColors[colorIndex + 1] = green;
+                batchedColors[colorIndex + 2] = blue;
+                batchedColors[colorIndex + 3] = alpha;
 
-                extrudedColors[colorIndex + 4] = red;
-                extrudedColors[colorIndex + 5] = green;
-                extrudedColors[colorIndex + 6] = blue;
-                extrudedColors[colorIndex + 7] = alpha;
+                batchedColors[colorIndex + 4] = red;
+                batchedColors[colorIndex + 5] = green;
+                batchedColors[colorIndex + 6] = blue;
+                batchedColors[colorIndex + 7] = alpha;
 
                 positionIndex += 6;
                 colorIndex += 8;
             }
 
-            var extrudedIndices = object.extrudedIndices;
             var indicesIndex = object.indexOffset;
 
             var indexOffset = indexOffsets[i];
@@ -226,23 +253,23 @@ define([
                 var i1 = indices[indexOffset + j + 1] - polygonOffset;
                 var i2 = indices[indexOffset + j + 2] - polygonOffset;
 
-                extrudedIndices[indicesIndex++] = i0 * 2 + positionOffset;
-                extrudedIndices[indicesIndex++] = i1 * 2 + positionOffset;
-                extrudedIndices[indicesIndex++] = i2 * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = i0 * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = i1 * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = i2 * 2 + positionOffset;
 
-                extrudedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
-                extrudedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
-                extrudedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
             }
 
             for (j = 0; j < polygonCount - 1; ++j) {
-                extrudedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
-                extrudedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
-                extrudedIndices[indicesIndex++] = j * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = j * 2 + positionOffset;
 
-                extrudedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
-                extrudedIndices[indicesIndex++] = (j + 1) * 2 + 1 + positionOffset;
-                extrudedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
+                batchedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = (j + 1) * 2 + 1 + positionOffset;
+                batchedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
             }
 
             object.offset += polygonCount * 2;
@@ -252,49 +279,41 @@ define([
         primitive._positions = undefined;
         primitive._decodeMatrix = undefined;
 
-        primitive._vas = [];
+        var positionBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : batchedPositions,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var colorBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : batchedColors,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var indexBuffer = Buffer.createIndexBuffer({
+            context : context,
+            typedArray : batchedIndices,
+            usage : BufferUsage.STATIC_DRAW,
+            indexDatatype : IndexDatatype.UNSIGNED_INT
+        });
 
-        for (rgba in buffers) {
-            if (buffers.hasOwnProperty(rgba)) {
-                object = buffers[rgba];
+        var vertexAttributes = [{
+            index : attributeLocations.position,
+            vertexBuffer : positionBuffer,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3
+        }, {
+            index : attributeLocations.color,
+            vertexBuffer : colorBuffer,
+            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute : 4,
+            normalize : true
+        }];
 
-                var positionBuffer = Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : object.extrudedPositions,
-                    usage : BufferUsage.STATIC_DRAW
-                });
-                var colorBuffer = Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : object.colors,
-                    usage : BufferUsage.STATIC_DRAW
-                });
-                var indexBuffer = Buffer.createIndexBuffer({
-                    context : context,
-                    typedArray : object.extrudedIndices,
-                    usage : BufferUsage.STATIC_DRAW,
-                    indexDatatype : IndexDatatype.UNSIGNED_INT
-                });
-
-                var vertexAttributes = [{
-                    index : attributeLocations.position,
-                    vertexBuffer : positionBuffer,
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3
-                }, {
-                    index : attributeLocations.color,
-                    vertexBuffer : colorBuffer,
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 4,
-                    normalize : true
-                }];
-
-                primitive._vas.push(new VertexArray({
-                    context : context,
-                    attributes : vertexAttributes,
-                    indexBuffer : indexBuffer
-                }));
-            }
-        }
+        primitive._va = new VertexArray({
+            context : context,
+            attributes : vertexAttributes,
+            indexBuffer : indexBuffer
+        });
     }
 
     function createShaders(primitive, context) {
@@ -459,17 +478,20 @@ define([
 
         primitive._commands = [];
 
-        var length = primitive._vas.length;
+        var batchedIndices = primitive._batchedIndices;
+        var length = batchedIndices.length;
         for (var i = 0; i < length; ++i) {
             var command = new DrawCommand({
                 owner : primitive,
                 primitiveType : PrimitiveType.TRIANGLES,
-                vertexArray : primitive._vas[i],
+                vertexArray : primitive._va,
                 shaderProgram : primitive._sp,
                 uniformMap : primitive._uniformMap,
                 modelMatrix : Matrix4.IDENTITY,
                 boundingVolume : primitive._boundingVolume,
-                pass : Pass.GROUND
+                pass : Pass.GROUND,
+                offset : batchedIndices[i].offset,
+                count : batchedIndices[i].count
             });
 
             var stencilPreloadCommand = command;
@@ -507,12 +529,7 @@ define([
     };
 
     Cesium3DTileGroundPrimitive.prototype.destroy = function() {
-        if (defined(this._vas)) {
-            var length = this._vas.length;
-            for (var i = 0; i < length; ++i) {
-                this._vas[i] = this._vas[i] && this._vas[i].destroy();
-            }
-        }
+        this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
         return destroyObject(this);
     };
