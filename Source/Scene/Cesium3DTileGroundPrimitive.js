@@ -74,11 +74,10 @@ define([
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
-        this._color = options.color;
 
         this._boundingVolume = options.boundingVolume;
 
-        this._va = undefined;
+        this._vas = undefined;
         this._sp = undefined;
 
         this._rsStencilPreloadPass = undefined;
@@ -86,9 +85,7 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._stencilPreloadCommand = undefined;
-        this._stencilDepthCommand = undefined;
-        this._colorCommand = undefined;
+        this._commands = undefined;
     }
 
     var attributeLocations = {
@@ -116,134 +113,188 @@ define([
         var decodeMatrix = primitive._decodeMatrix;
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
-        var color = primitive._color;
 
-        var positionsLength = positions.length;
-        var colorsLength = positionsLength / 3 * 4;
-        var extrudedPositions = new Float32Array(positionsLength * 2.0);
-        var colors = new Uint8Array(colorsLength * 2);
-        var positionIndex = 0;
-        var colorIndex = 0;
+        // TODO: get feature colors
+        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        primitive._colors = [];
+        var tempLength = offsets.length;
+        for (var n = 0; n < tempLength; ++n) {
+            primitive._colors[n] = randomColors[n % randomColors.length];
+        }
+
+        var rgba;
+        var colors = primitive._colors;
+        var colorsLength = colors.length;
+
+        var i;
+        var j;
+
+        var buffers = {};
+        for (i = 0; i < colorsLength; ++i) {
+            rgba = colors[i].toRgba();
+            if (!defined(buffers[rgba])) {
+                buffers[rgba] = {
+                    positionLength : counts[i],
+                    indexLength : indexCounts[i],
+                    extrudedPositions : undefined,
+                    extrudedIndices : undefined,
+                    colors : undefined,
+                    offset : 0,
+                    indexOffset : 0
+                };
+            } else {
+                buffers[rgba].positionLength += counts[i];
+                buffers[rgba].indexLength += indexCounts[i];
+            }
+        }
+
+        var object;
+        for (rgba in buffers) {
+            if (buffers.hasOwnProperty(rgba)) {
+                object = buffers[rgba];
+                var positionLength = object.positionLength * 2;
+                var indexLength = object.indexLength * 2 + object.positionLength * 6;
+                object.extrudedPositions = new Float32Array(positionLength * 3);
+                object.extrudedIndices = new Uint32Array(indexLength);
+                object.colors = new Uint8Array(positionLength * 4);
+            }
+        }
 
         var minHeight = primitive._minimumHeight;
         var maxHeight = primitive._maximumHeight;
 
-        var red = Color.floatToByte(color.red);
-        var green = Color.floatToByte(color.green);
-        var blue = Color.floatToByte(color.blue);
-        var alpha = Color.floatToByte(color.alpha);
+        for (i = 0; i < colorsLength; ++i) {
+            var color = colors[i];
+            rgba = colors[i].toRgba();
 
-        var i;
-        for (i = 0; i < positionsLength; i += 3) {
-            var encodedPosition = Cartesian3.unpack(positions, i, scratchEncodedPosition);
-            var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
-            var position = Cartesian3.add(rtcPosition, center, rtcPosition);
+            var red = Color.floatToByte(color.red);
+            var green = Color.floatToByte(color.green);
+            var blue = Color.floatToByte(color.blue);
+            var alpha = Color.floatToByte(color.alpha);
 
-            var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
-            var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
-            var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, scratchScaledNormal);
-            var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
-
-            scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, scaledNormal);
-            var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
-
-            Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
-            Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
-
-            Cartesian3.pack(maxHeightPosition, extrudedPositions, positionIndex);
-            Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + 3);
-
-            colors[colorIndex]     = red;
-            colors[colorIndex + 1] = green;
-            colors[colorIndex + 2] = blue;
-            colors[colorIndex + 3] = alpha;
-
-            colors[colorIndex + colorsLength]     = red;
-            colors[colorIndex + 1 + colorsLength] = green;
-            colors[colorIndex + 2 + colorsLength] = blue;
-            colors[colorIndex + 3 + colorsLength] = alpha;
-
-            positionIndex += 6;
-            colorIndex += 4;
-        }
-
-        var wallIndicesLength = positions.length / 3 * 6;
-        var indicesLength = indices.length;
-        var extrudedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
-
-        var indexOffsetLength = indexOffsets.length;
-        var indicesIndex = 0;
-
-        for (i = 0; i < indexOffsetLength; ++i) {
-            var indexOffset = indexOffsets[i];
-            var indexCount = indexCounts[i];
-
-            for (var j = 0; j < indexCount; j += 3) {
-                var i0 = indices[indexOffset + j];
-                var i1 = indices[indexOffset + j + 1];
-                var i2 = indices[indexOffset + j + 2];
-
-                extrudedIndices[indicesIndex++] = i0 * 2;
-                extrudedIndices[indicesIndex++] = i1 * 2;
-                extrudedIndices[indicesIndex++] = i2 * 2;
-
-                extrudedIndices[indicesIndex++] = i2 * 2 + 1;
-                extrudedIndices[indicesIndex++] = i1 * 2 + 1;
-                extrudedIndices[indicesIndex++] = i0 * 2 + 1;
-            }
+            object = buffers[rgba];
+            var extrudedPositions = object.extrudedPositions;
+            var extrudedColors = object.colors;
+            var positionOffset = object.offset;
+            var positionIndex = positionOffset * 3;
+            var colorIndex = positionOffset * 4;
 
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
 
-            for (var k = 0; k < polygonCount - 1; ++k) {
-                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2;
-                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2;
+            for (j = 0; j < polygonCount * 3; j += 3) {
+                var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j, scratchEncodedPosition);
+                var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
+                var position = Cartesian3.add(rtcPosition, center, rtcPosition);
 
-                extrudedIndices[indicesIndex++] = (polygonOffset + k) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2 + 1;
-                extrudedIndices[indicesIndex++] = (polygonOffset + k + 1) * 2;
+                var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+                var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
+                var scaledNormal = Cartesian3.multiplyByScalar(normal, minHeight, scratchScaledNormal);
+                var minHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMinHeightPosition);
+
+                scaledNormal = Cartesian3.multiplyByScalar(normal, maxHeight, scaledNormal);
+                var maxHeightPosition = Cartesian3.add(scaledPosition, scaledNormal, scratchMaxHeightPosition);
+
+                Cartesian3.subtract(maxHeightPosition, center, maxHeightPosition);
+                Cartesian3.subtract(minHeightPosition, center, minHeightPosition);
+
+                Cartesian3.pack(maxHeightPosition, extrudedPositions, positionIndex);
+                Cartesian3.pack(minHeightPosition, extrudedPositions, positionIndex + 3);
+
+                extrudedColors[colorIndex]     = red;
+                extrudedColors[colorIndex + 1] = green;
+                extrudedColors[colorIndex + 2] = blue;
+                extrudedColors[colorIndex + 3] = alpha;
+
+                extrudedColors[colorIndex + 4] = red;
+                extrudedColors[colorIndex + 5] = green;
+                extrudedColors[colorIndex + 6] = blue;
+                extrudedColors[colorIndex + 7] = alpha;
+
+                positionIndex += 6;
+                colorIndex += 8;
             }
+
+            var extrudedIndices = object.extrudedIndices;
+            var indicesIndex = object.indexOffset;
+
+            var indexOffset = indexOffsets[i];
+            var indexCount = indexCounts[i];
+
+            for (j = 0; j < indexCount; j += 3) {
+                var i0 = indices[indexOffset + j] - polygonOffset;
+                var i1 = indices[indexOffset + j + 1] - polygonOffset;
+                var i2 = indices[indexOffset + j + 2] - polygonOffset;
+
+                extrudedIndices[indicesIndex++] = i0 * 2 + positionOffset;
+                extrudedIndices[indicesIndex++] = i1 * 2 + positionOffset;
+                extrudedIndices[indicesIndex++] = i2 * 2 + positionOffset;
+
+                extrudedIndices[indicesIndex++] = i2 * 2 + 1 + positionOffset;
+                extrudedIndices[indicesIndex++] = i1 * 2 + 1 + positionOffset;
+                extrudedIndices[indicesIndex++] = i0 * 2 + 1 + positionOffset;
+            }
+
+            for (j = 0; j < polygonCount - 1; ++j) {
+                extrudedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
+                extrudedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
+                extrudedIndices[indicesIndex++] = j * 2 + positionOffset;
+
+                extrudedIndices[indicesIndex++] = j * 2 + 1 + positionOffset;
+                extrudedIndices[indicesIndex++] = (j + 1) * 2 + 1 + positionOffset;
+                extrudedIndices[indicesIndex++] = (j + 1) * 2 + positionOffset;
+            }
+
+            object.offset += polygonCount * 2;
+            object.indexOffset = indicesIndex;
         }
 
         primitive._positions = undefined;
         primitive._decodeMatrix = undefined;
 
-        var positionBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : extrudedPositions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var colorBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : colors,
-            usage : BufferUsage.STATIC_DRAW
-        });
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : extrudedIndices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_INT
-        });
+        primitive._vas = [];
 
-        var vertexAttributes = [{
-            index : attributeLocations.position,
-            vertexBuffer : positionBuffer,
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.color,
-            vertexBuffer : colorBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 4,
-            normalize : true
-        }];
+        for (rgba in buffers) {
+            if (buffers.hasOwnProperty(rgba)) {
+                object = buffers[rgba];
 
-        primitive._va = new VertexArray({
-            context : context,
-            attributes : vertexAttributes,
-            indexBuffer : indexBuffer
-        });
+                var positionBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : object.extrudedPositions,
+                    usage : BufferUsage.STATIC_DRAW
+                });
+                var colorBuffer = Buffer.createVertexBuffer({
+                    context : context,
+                    typedArray : object.colors,
+                    usage : BufferUsage.STATIC_DRAW
+                });
+                var indexBuffer = Buffer.createIndexBuffer({
+                    context : context,
+                    typedArray : object.extrudedIndices,
+                    usage : BufferUsage.STATIC_DRAW,
+                    indexDatatype : IndexDatatype.UNSIGNED_INT
+                });
+
+                var vertexAttributes = [{
+                    index : attributeLocations.position,
+                    vertexBuffer : positionBuffer,
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3
+                }, {
+                    index : attributeLocations.color,
+                    vertexBuffer : colorBuffer,
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 4,
+                    normalize : true
+                }];
+
+                primitive._vas.push(new VertexArray({
+                    context : context,
+                    attributes : vertexAttributes,
+                    indexBuffer : indexBuffer
+                }));
+            }
+        }
     }
 
     function createShaders(primitive, context) {
@@ -402,29 +453,35 @@ define([
     }
 
     function createColorCommands(primitive) {
-        if (defined(primitive._stencilPreloadCommand)) {
+        if (defined(primitive._commands)) {
             return;
         }
 
-        // stencil preload command
-        var command = new DrawCommand({
-            owner : primitive,
-            primitiveType : PrimitiveType.TRIANGLES,
-            vertexArray : primitive._va,
-            shaderProgram : primitive._sp,
-            uniformMap : primitive._uniformMap,
-            modelMatrix : Matrix4.IDENTITY,
-            boundingVolume : primitive._boundingVolume,
-            pass : Pass.GROUND
-        });
+        primitive._commands = [];
 
-        primitive._stencilPreloadCommand = command;
-        primitive._stencilDepthCommand = DrawCommand.shallowClone(command);
-        primitive._colorCommand = DrawCommand.shallowClone(command);
+        var length = primitive._vas.length;
+        for (var i = 0; i < length; ++i) {
+            var command = new DrawCommand({
+                owner : primitive,
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : primitive._vas[i],
+                shaderProgram : primitive._sp,
+                uniformMap : primitive._uniformMap,
+                modelMatrix : Matrix4.IDENTITY,
+                boundingVolume : primitive._boundingVolume,
+                pass : Pass.GROUND
+            });
 
-        primitive._stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-        primitive._stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-        primitive._colorCommand.renderState = primitive._rsColorPass;
+            var stencilPreloadCommand = command;
+            var stencilDepthCommand = DrawCommand.shallowClone(command);
+            var colorCommand = DrawCommand.shallowClone(command);
+
+            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
+            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
+            colorCommand.renderState = primitive._rsColorPass;
+
+            primitive._commands.push(stencilPreloadCommand, stencilDepthCommand, colorCommand);
+        }
     }
 
     Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
@@ -438,7 +495,10 @@ define([
 
         var passes = frameState.passes;
         if (passes.render) {
-            frameState.commandList.push(this._stencilPreloadCommand, this._stencilDepthCommand, this._colorCommand);
+            var length = this._commands.length;
+            for (var i = 0; i < length; ++i) {
+                frameState.commandList.push(this._commands[i]);
+            }
         }
     };
 
@@ -447,7 +507,12 @@ define([
     };
 
     Cesium3DTileGroundPrimitive.prototype.destroy = function() {
-        this._va = this._va && this._va.destroy();
+        if (defined(this._vas)) {
+            var length = this._vas.length;
+            for (var i = 0; i < length; ++i) {
+                this._vas[i] = this._vas[i] && this._vas[i].destroy();
+            }
+        }
         this._sp = this._sp && this._sp.destroy();
         return destroyObject(this);
     };
