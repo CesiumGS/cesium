@@ -66,6 +66,12 @@
             'use strict';
             //Sandcastle_Begin
             var viewer = new Cesium.Viewer('cesiumContainer');
+            var canvas = viewer.canvas;
+            canvas.setAttribute('tabindex', '0'); // needed to put focus on the canvas
+            canvas.onclick = function() {
+                    canvas.focus();
+                    };
+
             var scene = viewer.scene;
             // viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
