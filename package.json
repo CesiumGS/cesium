@@ -32,12 +32,12 @@
   },
   "devDependencies": {
     "almond": "0.3.2",
-    "aws-sdk": "2.4.7",
+    "aws-sdk": "2.4.8",
     "bluebird": "3.4.1",
     "compressible": "2.0.8",
     "compression": "1.6.2",
     "electron-prebuilt": "1.2.7",
-    "event-stream": "3.3.3",
+    "event-stream": "3.3.4",
     "express": "4.14.0",
     "globby": "5.0.0",
     "gulp": "3.9.1",
@@ -65,7 +65,7 @@
     "request": "2.73.0",
     "rimraf": "2.5.3",
     "strip-comments": "0.3.2",
-    "yargs": "4.8.0"
+    "yargs": "4.8.1"
   },
   "scripts": {
     "start": "node server.js",
