@@ -1,6 +1,13 @@
+#ifdef VECTOR_TILE
+attribute vec3 position;
+attribute vec4 color;
+
+uniform mat4 u_modifiedModelViewProjection;
+#else
 attribute vec3 position3DHigh;
 attribute vec3 position3DLow;
 attribute vec4 color;
+#endif
 
 // emulated noperspective
 varying float v_WindowZ;
@@ -16,7 +23,11 @@ vec4 depthClampFarPlane(vec4 vertexInClipCoordinates)
 void main()
 {
     v_color = color;
-    
+
+#ifdef VECTOR_TILE
+    gl_Position = depthClampFarPlane(u_modifiedModelViewProjection * vec4(position, 1.0));
+#else
     vec4 position = czm_computePosition();
     gl_Position = depthClampFarPlane(czm_modelViewProjectionRelativeToEye * position);
+#endif
 }

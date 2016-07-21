@@ -21,9 +21,10 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
-        '../Shaders/Cesium3DTileGroundPrimitiveFS',
-        '../Shaders/Cesium3DTileGroundPrimitiveVS',
+        '../Shaders/ShadowVolumeFS',
+        '../Shaders/ShadowVolumeVS',
         './BlendingState',
         './DepthFunction',
         './Pass',
@@ -51,9 +52,10 @@ define([
         DrawCommand,
         RenderState,
         ShaderProgram,
+        ShaderSource,
         VertexArray,
-        Cesium3DTileGroundPrimitiveFS,
-        Cesium3DTileGroundPrimitiveVS,
+        ShadowVolumeFS,
+        ShadowVolumeVS,
         BlendingState,
         DepthFunction,
         Pass,
@@ -328,10 +330,15 @@ define([
             return;
         }
 
+        var vs = new ShaderSource({
+            defines : ['VECTOR_TILE'],
+            sources : [ShadowVolumeVS]
+        });
+
         primitive._sp = ShaderProgram.fromCache({
             context : context,
-            vertexShaderSource : Cesium3DTileGroundPrimitiveVS,
-            fragmentShaderSource : Cesium3DTileGroundPrimitiveFS,
+            vertexShaderSource : vs,
+            fragmentShaderSource : ShadowVolumeFS,
             attributeLocations : attributeLocations
         });
     }
