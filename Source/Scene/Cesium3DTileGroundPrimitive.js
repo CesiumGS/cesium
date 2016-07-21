@@ -84,6 +84,7 @@ define([
 
         this._va = undefined;
         this._sp = undefined;
+        this._spPick = undefined;
 
         this._rsStencilPreloadPass = undefined;
         this._rsStencilDepthPass = undefined;

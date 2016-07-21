@@ -4,7 +4,6 @@ define([
     '../Core/Cartesian3',
     '../Core/Cartographic',
     '../Core/Color',
-    '../Core/ColorGeometryInstanceAttribute',
     '../Core/ComponentDatatype',
     '../Core/defaultValue',
     '../Core/defined',
@@ -12,28 +11,23 @@ define([
     '../Core/defineProperties',
     '../Core/DeveloperError',
     '../Core/Ellipsoid',
-    '../Core/Geometry',
-    '../Core/Geometryattribute',
-    '../Core/GeometryInstance',
     '../Core/getMagic',
     '../Core/getStringFromTypedArray',
     '../Core/loadArrayBuffer',
     '../Core/Matrix4',
-    '../Core/PolygonGeometry',
-    '../Core/PolylineGeometry',
     '../Core/Request',
     '../Core/RequestScheduler',
     '../Core/RequestType',
     '../ThirdParty/when',
     './Cesium3DTileBatchTableResources',
     './Cesium3DTileContentState',
+    './Cesium3DTileFeature',
     './Cesium3DTileGroundPrimitive'
 ], function(
     BoundingSphere,
     Cartesian3,
     Cartographic,
     Color,
-    ColorGeometryInstanceAttribute,
     ComponentDatatype,
     defaultValue,
     defined,
@@ -41,21 +35,17 @@ define([
     defineProperties,
     DeveloperError,
     Ellipsoid,
-    Geometry,
-    GeometryAttribute,
-    GeometryInstance,
     getMagic,
     getStringFromTypedArray,
     loadArrayBuffer,
     Matrix4,
-    PolygonGeometry,
-    PolylineGeometry,
     Request,
     RequestScheduler,
     RequestType,
     when,
     Cesium3DTileBatchTableResources,
     Cesium3DTileContentState,
+    Cesium3DTileFeature,
     Cesium3DTileGroundPrimitive) {
     'use strict';
 
@@ -89,8 +79,7 @@ define([
          */
         featuresLength : {
             get : function() {
-                // TODO: implement batchTable for vctr tile format
-                return 0;
+                return this.batchTableResources.featuresLength;
             }
         },
 
@@ -104,20 +93,38 @@ define([
         }
     });
 
+    function createFeatures(content) {
+        var tileset = content._tileset;
+        var featuresLength = content._featuresLength;
+        if (!defined(content._features) && (featuresLength > 0)) {
+            var features = new Array(featuresLength);
+            for (var i = 0; i < featuresLength; ++i) {
+                features[i] = new Cesium3DTileFeature(tileset, content, i);
+            }
+            content._features = features;
+        }
+    }
+
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.hasProperty = function(name) {
-        // TODO: implement batchTable for vctr tile format
-        return false;
+        return this.batchTableResources.hasProperty(name);
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.getFeature = function(batchId) {
-        // TODO: implement batchTable for vctr tile format
-        return undefined;
+        var featuresLength = this._featuresLength;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
+            throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
+        }
+        //>>includeEnd('debug');
+
+        createFeatures(this);
+        return this._features[batchId];
     };
 
     /**
@@ -150,8 +157,6 @@ define([
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
-    var sizeOfFloat32 = Float32Array.BYTES_PER_ELEMENT;
-    var sizeOfFloat64 = Float64Array.BYTES_PER_ELEMENT;
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
