@@ -15,6 +15,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
+        '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -44,6 +45,7 @@ define([
         IndexDatatype,
         Matrix4,
         PrimitiveType,
+        TranslationRotationScale,
         Buffer,
         BufferUsage,
         DrawCommand,
@@ -68,12 +70,13 @@ define([
         this._indexOffsets = options.indexOffsets;
         this._indexCounts = options.indexCounts;
         this._indices = options.indices;
-        this._decodeMatrix = options.decodeMatrix;
 
         this._ellispoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._minimumHeight = options.minimumHeight;
         this._maximumHeight = options.maximumHeight;
         this._center = options.center;
+        this._quantizedOffset = options.quantizedOffset;
+        this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
 
@@ -93,6 +96,7 @@ define([
         color : 1
     };
 
+    var scratchDecodeMatrix = new Matrix4();
     var scratchEncodedPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScaledNormal = new Cartesian3();
@@ -110,9 +114,12 @@ define([
         var indexOffsets = primitive._indexOffsets;
         var indexCounts = primitive._indexCounts;
         var indices = primitive._indices;
-        var decodeMatrix = primitive._decodeMatrix;
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
+
+        var quantizedOffset = primitive._quantizedOffset;
+        var quantizedScale = primitive._quantizedScale;
+        var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
         // TODO: get feature colors
         var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];

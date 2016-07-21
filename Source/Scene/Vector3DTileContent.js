@@ -25,6 +25,7 @@ define([
     '../Core/RequestScheduler',
     '../Core/RequestType',
     '../ThirdParty/when',
+    './Cesium3DTileBatchTableResources',
     './Cesium3DTileContentState',
     './Cesium3DTileGroundPrimitive'
 ], function(
@@ -53,6 +54,7 @@ define([
     RequestScheduler,
     RequestType,
     when,
+    Cesium3DTileBatchTableResources,
     Cesium3DTileContentState,
     Cesium3DTileGroundPrimitive) {
     'use strict';
@@ -185,51 +187,60 @@ define([
             return;
         }
 
-        var positionOffsetsByteLength = view.getUint32(byteOffset, true);
+        var featureTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        var positionCountsByteLength = view.getUint32(byteOffset, true);
+        var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        var indexOffsetsByteLength = view.getUint32(byteOffset, true);
+        var batchTableJSONByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-        var indexCountsByteLength = view.getUint32(byteOffset, true);
+        var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         var indicesByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
         var positionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var decodeMatrixArray = new Float32Array(arrayBuffer, byteOffset, 16);
-        byteOffset += 16 * sizeOfFloat32;
+        var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
+        var featureTableJSON = JSON.parse(featureTableString);
+        byteOffset += featureTableJSONByteLength;
 
-        var decodeMatrix = Matrix4.unpack(decodeMatrixArray);
+        var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
+        byteOffset += featureTableBinaryByteLength;
 
-        var offsets = new Uint32Array(arrayBuffer, byteOffset, positionOffsetsByteLength / sizeOfUint32);
-        byteOffset += positionOffsetsByteLength;
-        var counts = new Uint32Array(arrayBuffer, byteOffset, positionCountsByteLength / sizeOfUint32);
-        byteOffset += positionCountsByteLength;
-        var indexOffsets = new Uint32Array(arrayBuffer, byteOffset, indexOffsetsByteLength / sizeOfUint32);
-        byteOffset += indexOffsetsByteLength;
-        var indexCounts = new Uint32Array(arrayBuffer, byteOffset, indexCountsByteLength / sizeOfUint32);
-        byteOffset += indexCountsByteLength;
+        var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
+
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons);
+        this.batchTableResources = batchTableResources;
+        if (batchTableJSONByteLength > 0) {
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
+            batchTableResources.batchTable = JSON.parse(batchTableString);
+            byteOffset += batchTableJSONByteLength;
+        }
+
+        // TODO: Right now batchTableResources doesn't support binary
+        byteOffset += batchTableBinaryByteLength;
+
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
         var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
-        byteOffset += positionByteLength;
 
-        var x = view.getFloat64(byteOffset, true);
-        byteOffset += sizeOfFloat64;
-        var y = view.getFloat64(byteOffset, true);
-        byteOffset += sizeOfFloat64;
-        var z = view.getFloat64(byteOffset, true);
-        byteOffset += sizeOfFloat64;
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_OFFSETS.offset;
+        var offsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        var center = new Cartesian3(x, y, z);
-        
-        var minHeight = view.getFloat64(byteOffset, true);
-        byteOffset += sizeOfFloat64;
-        var maxHeight = view.getFloat64(byteOffset, true);
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_COUNTS.offset;
+        var counts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
-        var color = Color.fromRandom().withAlpha(0.5);
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_OFFSETS.offset;
+        var indexOffsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
+
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_COUNTS.offset;
+        var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
+
+        var center = Cartesian3.unpack(featureTableJSON.CENTER);
+        var minHeight = featureTableJSON.MINIMUM_HEIGHT;
+        var maxHeight = featureTableJSON.MAXIMUM_HEIGHT;
+        var quantizedOffset = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_OFFSET);
+        var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
 
         this._primitive = new Cesium3DTileGroundPrimitive({
             positions : positions,
@@ -238,11 +249,11 @@ define([
             indexOffsets : indexOffsets,
             indexCounts : indexCounts,
             indices : indices,
-            decodeMatrix : decodeMatrix,
             minimumHeight : minHeight,
             maximumHeight : maxHeight,
             center : center,
-            color : color,
+            quantizedOffset : quantizedOffset,
+            quantizedScale : quantizedScale,
             boundingVolume : this._tile._boundingVolume.boundingVolume
         });
 
