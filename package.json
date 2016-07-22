@@ -39,7 +39,7 @@
     "electron-prebuilt": "1.2.7",
     "event-stream": "3.3.4",
     "express": "4.14.0",
-    "globby": "5.0.0",
+    "globby": "6.0.0",
     "gulp": "3.9.1",
     "gulp-insert": "0.5.0",
     "gulp-jshint": "2.0.1",
