@@ -27,7 +27,7 @@ define([
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
-            var worker = new Worker(getWorkerUrl('Workers/transferTypedArrayTest.js'));
+            var worker = require('worker!../Workers/transferTypedArrayTest')();
             worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
             var value = 99;
@@ -121,16 +121,10 @@ define([
         return url;
     }
 
-    var bootstrapperUrlResult;
-    function getBootstrapperUrl() {
-        if (!defined(bootstrapperUrlResult)) {
-            bootstrapperUrlResult = getWorkerUrl('Workers/cesiumWorkerBootstrapper.js');
-        }
-        return bootstrapperUrlResult;
-    }
+
 
     function createWorker(processor) {
-        var worker = new Worker(getBootstrapperUrl());
+        var worker = require('worker?name=cesiumWorkers.js!../Workers/bootstrapper/cesiumWorkerBootstrapper')();
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {
@@ -140,9 +134,6 @@ define([
 
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else if (defined(require.toUrl)) {
-            bootstrapMessage.loaderConfig.baseUrl =
-                getAbsoluteUri('..', buildModuleUrl('Workers/cesiumWorkerBootstrapper.js'));
         } else {
             bootstrapMessage.loaderConfig.paths = {
                 'Workers' : buildModuleUrl('Workers')

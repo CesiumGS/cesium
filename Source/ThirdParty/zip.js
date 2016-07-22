@@ -402,7 +402,7 @@ define([
 		}
 
 		if (obj.zip.useWebWorkers) {
-			worker = new Worker(obj.zip.workerScriptsPath + INFLATE_JS);
+			worker = require('./' + INFLATE_JS)();
 			launchWorkerProcess(worker, reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
 		} else
 			launchProcess(new obj.zip.Inflater(), reader, writer, offset, size, oninflateappend, onprogress, oninflateend, onreaderror, onwriteerror);
@@ -427,7 +427,7 @@ define([
 		}
 
 		if (obj.zip.useWebWorkers) {
-			worker = new Worker(obj.zip.workerScriptsPath + DEFLATE_JS);
+			worker = require('./' + DEFLATE_JS)();
 			worker.addEventListener(MESSAGE_EVENT, onmessage, false);
 			worker.postMessage({
 				init : true,
