@@ -2,6 +2,9 @@
 attribute vec3 position;
 attribute vec4 color;
 
+// TODO: remove
+attribute float a_batchId;
+
 uniform mat4 u_modifiedModelViewProjection;
 #else
 attribute vec3 position3DHigh;

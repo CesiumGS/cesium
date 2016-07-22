@@ -95,7 +95,7 @@ define([
 
     function createFeatures(content) {
         var tileset = content._tileset;
-        var featuresLength = content._featuresLength;
+        var featuresLength = content.featuresLength;
         if (!defined(content._features) && (featuresLength > 0)) {
             var features = new Array(featuresLength);
             for (var i = 0; i < featuresLength; ++i) {
@@ -259,7 +259,8 @@ define([
             center : center,
             quantizedOffset : quantizedOffset,
             quantizedScale : quantizedScale,
-            boundingVolume : this._tile._boundingVolume.boundingVolume
+            boundingVolume : this._tile._boundingVolume.boundingVolume,
+            batchTableResources : this.batchTableResources
         });
 
 
@@ -281,6 +282,7 @@ define([
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
         if (defined(this._primitive)) {
+            this.batchTableResources.update(tileset, frameState);
             this._primitive.update(frameState);
         }
     };

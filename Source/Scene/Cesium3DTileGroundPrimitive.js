@@ -82,6 +82,8 @@ define([
 
         this._boundingVolume = options.boundingVolume;
 
+        this._batchTableResources = options.batchTableResources;
+
         this._va = undefined;
         this._sp = undefined;
         this._spPick = undefined;
@@ -92,11 +94,13 @@ define([
         this._rsPickPass = undefined;
 
         this._commands = undefined;
+        this._pickCommands = undefined;
     }
 
     var attributeLocations = {
         position : 0,
-        color : 1
+        color : 1,
+        a_batchId : 2
     };
 
     var scratchDecodeMatrix = new Matrix4();
@@ -136,6 +140,7 @@ define([
         var colorsLength = positionsLength / 3 * 4;
         var batchedPositions = new Float32Array(positionsLength * 2.0);
         var batchedColors = new Uint8Array(colorsLength * 2);
+        var batchedIds = new Uint16Array(positionsLength / 3);
 
         var wallIndicesLength = positions.length / 3 * 6;
         var indicesLength = indices.length;
@@ -216,6 +221,7 @@ define([
             var positionOffset = object.offset;
             var positionIndex = positionOffset * 3;
             var colorIndex = positionOffset * 4;
+            var idIndex = positionOffset;
 
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
@@ -249,8 +255,12 @@ define([
                 batchedColors[colorIndex + 6] = blue;
                 batchedColors[colorIndex + 7] = alpha;
 
+                batchedIds[idIndex] = i;
+                batchedIds[idIndex + 1] = i;
+
                 positionIndex += 6;
                 colorIndex += 8;
+                idIndex += 2;
             }
 
             var indicesIndex = object.indexOffset;
@@ -287,7 +297,6 @@ define([
         }
 
         primitive._positions = undefined;
-        primitive._decodeMatrix = undefined;
 
         var positionBuffer = Buffer.createVertexBuffer({
             context : context,
@@ -297,6 +306,11 @@ define([
         var colorBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : batchedColors,
+            usage : BufferUsage.STATIC_DRAW
+        });
+        var idBuffer = Buffer.createVertexBuffer({
+            context : context,
+            typedArray : batchedIds,
             usage : BufferUsage.STATIC_DRAW
         });
         var indexBuffer = Buffer.createIndexBuffer({
@@ -317,6 +331,11 @@ define([
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
             componentsPerAttribute : 4,
             normalize : true
+        }, {
+            index : attributeLocations.a_batchId,
+            vertexBuffer : idBuffer,
+            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+            componentsPerAttribute : 1
         }];
 
         primitive._va = new VertexArray({
@@ -340,6 +359,20 @@ define([
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : ShadowVolumeFS,
+            attributeLocations : attributeLocations
+        });
+
+        var pickVS = new ShaderSource({
+            defines : ['VECTOR_TILE'],
+            sources : [primitive._batchTableResources.getPickVertexShaderCallback()(ShadowVolumeVS)]
+        });
+        var pickFS = new ShaderSource({
+            sources : [primitive._batchTableResources.getPickFragmentShaderCallback()(ShadowVolumeFS)]
+        });
+        primitive._spPick = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : pickVS,
+            fragmentShaderSource : pickFS,
             attributeLocations : attributeLocations
         });
     }
@@ -521,6 +554,44 @@ define([
         }
     }
 
+    function createPickCommands(primitive) {
+        if (defined(primitive._pickCommands)) {
+            return;
+        }
+
+        primitive._pickCommands = [];
+
+        var pickUniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
+        var offsets = primitive._indexOffsets;
+        var counts = primitive._indexCounts;
+
+        var length = offsets.length;
+        for (var i = 0; i < length; ++i) {
+            var command = new DrawCommand({
+                owner : primitive,
+                primitiveType : PrimitiveType.TRIANGLES,
+                vertexArray : primitive._va,
+                shaderProgram : primitive._spPick,
+                uniformMap : pickUniformMap,
+                modelMatrix : Matrix4.IDENTITY,
+                boundingVolume : primitive._boundingVolume,
+                pass : Pass.GROUND,
+                offset : offsets[i].offset,
+                count : counts[i].count
+            });
+
+            var stencilPreloadCommand = command;
+            var stencilDepthCommand = DrawCommand.shallowClone(command);
+            var colorCommand = DrawCommand.shallowClone(command);
+
+            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
+            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
+            colorCommand.renderState = primitive._rsColorPass;
+
+            primitive._pickCommands.push(stencilPreloadCommand, stencilDepthCommand, colorCommand);
+        }
+    }
+
     Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
 
@@ -532,9 +603,17 @@ define([
 
         var passes = frameState.passes;
         if (passes.render) {
-            var length = this._commands.length;
-            for (var i = 0; i < length; ++i) {
+            var commandLength = this._commands.length;
+            for (var i = 0; i < commandLength; ++i) {
                 frameState.commandList.push(this._commands[i]);
+            }
+        }
+
+        if (passes.pick) {
+            createPickCommands(this);
+            var pickCommandLength = this._pickCommands.length;
+            for (var j = 0; j < pickCommandLength; ++j) {
+                frameState.commandList.push(this._pickCommands[j]);
             }
         }
     };
