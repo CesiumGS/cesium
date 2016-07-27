@@ -34,24 +34,24 @@ defineSuite([
     fit('will throw an error if no array is provided', function() {
         expect(function() {
             arrayFill(undefined, 1, 0, 1);
-        }).toThrowDeveloperError('Array is required.');
+        }).toThrowDeveloperError('array is required.');
     });
 
     it('will throw an error if no array is provided', function() {
         expect(function() {
             arrayFill(array, undefined, 0, 1);
-        }).toThrowDeveloperError('Value is required.');
+        }).toThrowDeveloperError('value is required.');
     });
 
     it('will throw an error if given an invalid start index', function() {
         expect(function() {
             arrayFill(array, 1, array, 1);
-        }).toThrowDeveloperError('Start must be a valid index.');
+        }).toThrowDeveloperError('start must be a valid index.');
     });
     
     it('will throw an error if given an invalid end index', function() {
         expect(function() {
             arrayFill(array, 1, 1, array);
-        }).toThrowDeveloperError('End must be a valid index.');
+        }).toThrowDeveloperError('end must be a valid index.');
     });
 });
