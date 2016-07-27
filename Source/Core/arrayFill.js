@@ -11,32 +11,32 @@ define([
 
     /**
      * Fill an array or a portion of an array with a given value.
-     * @private
      *
      * @param {Array} array The array to fill.
-     * @param {*} value The value to fill the array with.
+     * @param {Object} value The value to fill the array with.
      * @param {Number} start The index to start filling at.
      * @param {Number} end The index to end stop at.
      *
      * @returns {Array} The resulting array.
+     * @private
      */
     function arrayFill(array, value, start, end) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(array) || typeof array !== 'object') {
-            throw new DeveloperError('Array is required.');
+            throw new DeveloperError('array is required.');
         }
         if (!defined(value)) {
-            throw new DeveloperError('Value is required.');
+            throw new DeveloperError('value is required.');
         }
-        if (defined(start) && (typeof start !== 'number')) {
-            throw new DeveloperError('Start must be a valid index.');
+        if (typeof start !== 'number') {
+            throw new DeveloperError('start must be a valid index.');
         }
-        if (defined(end) && (typeof end !== 'number')) {
-            throw new DeveloperError('End must be a valid index.');
+        if (typeof end !== 'number') {
+            throw new DeveloperError('end must be a valid index.');
         }
         //>>includeEnd('debug');
 
-        if (typeof array.fill !== 'undefined') {
+        if (typeof array.fill === 'function') {
             return array.fill(value, start, end);
         }
 
