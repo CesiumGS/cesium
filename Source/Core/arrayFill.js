@@ -42,14 +42,13 @@ define([
 
         var length = array.length >>> 0;
 
-        // Truncate and default to 0
-        var relativeStart = start >> 0;
+        var relativeStart = defaultValue(start, 0);
 
         // If negative, find wrap around position
         var k = (relativeStart < 0) ? Math.max(length + relativeStart, 0) : Math.min(relativeStart, length);
-
-        var relativeEnd = defaultValue(end >> 0, length);
-
+        
+        var relativeEnd = defaultValue(end, length);
+        
         // If negative, find wrap around position
         var final = (relativeEnd < 0) ? Math.max(length + relativeEnd, 0) : Math.min(relativeEnd, length);
 
@@ -58,7 +57,6 @@ define([
             array[k] = value;
             k++;
         }
-
         return array;
     }
     
