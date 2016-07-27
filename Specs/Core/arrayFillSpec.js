@@ -3,7 +3,8 @@ defineSuite([
         'Core/arrayFill'
     ], function(
         arrayFill) {
-
+    'use strict';
+    
     var array;
 
     beforeEach(function() {
