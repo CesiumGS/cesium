@@ -10,15 +10,15 @@ define([
     'use strict';
 
     /**
-     *
+     * Fill an array or a portion of an array with a given value.
      * @private
      *
-     * @param array
-     * @param value
-     * @param start
-     * @param end
+     * @param {Array} array The array to fill.
+     * @param {*} value The value to fill the array with.
+     * @param {Number} start The index to start filling at.
+     * @param {Number} end The index to end stop at.
      *
-     * @returns The resulting array.
+     * @returns {Array} The resulting array.
      */
     function arrayFill(array, value, start, end) {
         //>>includeStart('debug', pragmas.debug);
