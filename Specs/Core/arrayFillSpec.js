@@ -54,5 +54,4 @@ defineSuite([
             arrayFill(array, 1, 1, array);
         }).toThrowDeveloperError('End must be a valid index.');
     });
-
 });
