@@ -134,6 +134,8 @@ define([
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex]   = value._slices;
+
+        return array;
     };
 
     var scratchVertexFormat = new VertexFormat();

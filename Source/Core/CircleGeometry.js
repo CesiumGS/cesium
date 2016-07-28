@@ -95,7 +95,7 @@ define([
             throw new DeveloperError('value is required');
         }
         //>>includeEnd('debug');
-        EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseGeometry({
@@ -176,7 +176,7 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
-    
+
     defineProperties(CircleGeometry.prototype, {
         /**
          * @private

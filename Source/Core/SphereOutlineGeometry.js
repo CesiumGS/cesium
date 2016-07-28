@@ -71,7 +71,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
+        return EllipsoidOutlineGeometry.pack(value._ellipsoidGeometry, array, startingIndex);
     };
 
     var scratchEllipsoidGeometry = new EllipsoidOutlineGeometry();

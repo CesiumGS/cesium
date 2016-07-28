@@ -830,6 +830,8 @@ define([
         array[startingIndex++] = center.y;
         array[startingIndex++] = center.z;
         array[startingIndex] = value.radius;
+
+        return array;
     };
 
     /**

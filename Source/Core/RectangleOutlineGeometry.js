@@ -255,6 +255,8 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
         array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
+
+        return array;
     };
 
     var scratchRectangle = new Rectangle();

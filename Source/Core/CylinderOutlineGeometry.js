@@ -123,6 +123,8 @@ define([
         array[startingIndex++] = value._bottomRadius;
         array[startingIndex++] = value._slices;
         array[startingIndex]   = value._numberOfVerticalLines;
+
+        return array;
     };
 
     var scratchOptions = {

@@ -115,6 +115,8 @@ define([
         array[startingIndex++] = value._stackPartitions;
         array[startingIndex++] = value._slicePartitions;
         array[startingIndex]   = value._subdivisions;
+
+        return array;
     };
 
     var scratchRadii = new Cartesian3();

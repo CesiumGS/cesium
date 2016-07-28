@@ -90,6 +90,8 @@ define([
         array[startingIndex++] = value[6];
         array[startingIndex++] = value[7];
         array[startingIndex++] = value[8];
+
+        return array;
     };
 
     /**
@@ -977,7 +979,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix3.multiply(m, Cesium.Matrix3.fromScale(scale), m);
      * Cesium.Matrix3.multiplyByScale(m, scale, m);
-     * 
+     *
      * @see Matrix3.fromScale
      * @see Matrix3.multiplyByUniformScale
      */

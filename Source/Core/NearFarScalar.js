@@ -101,6 +101,8 @@ define([
         array[startingIndex++] = value.nearValue;
         array[startingIndex++] = value.far;
         array[startingIndex] = value.farValue;
+
+        return array;
     };
 
     /**

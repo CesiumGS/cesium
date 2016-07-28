@@ -128,6 +128,8 @@ define([
 
         array[startingIndex++] = value.x;
         array[startingIndex] = value.y;
+
+        return array;
     };
 
     /**

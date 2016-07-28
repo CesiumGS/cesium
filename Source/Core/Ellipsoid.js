@@ -285,6 +285,8 @@ define([
         startingIndex = defaultValue(startingIndex, 0);
 
         Cartesian3.pack(value._radii, array, startingIndex);
+
+        return array;
     };
 
     /**

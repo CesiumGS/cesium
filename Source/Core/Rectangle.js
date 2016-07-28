@@ -120,6 +120,8 @@ define([
         array[startingIndex++] = value.south;
         array[startingIndex++] = value.east;
         array[startingIndex] = value.north;
+
+        return array;
     };
 
     /**

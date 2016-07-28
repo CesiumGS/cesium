@@ -34,7 +34,7 @@ define([
      * //a SampledProperty(Number) instead.  Note, the actual
      * //return value is in radians, not degrees.
      * property.getValue(time2);
-     * 
+     *
      * @see PackableForInterpolation
      */
     var Rotation = {
@@ -64,6 +64,8 @@ define([
 
             startingIndex = defaultValue(startingIndex, 0);
             array[startingIndex] = value;
+
+            return array;
         },
 
         /**

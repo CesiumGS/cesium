@@ -157,6 +157,8 @@ define([
         array[startingIndex++] = value.y;
         array[startingIndex++] = value.z;
         array[startingIndex] = value.w;
+
+        return array;
     };
 
     /**

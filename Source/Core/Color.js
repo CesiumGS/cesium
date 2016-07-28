@@ -369,7 +369,7 @@ define([
      * @example
      * var cesiumBlue = Cesium.Color.fromCssColorString('#67ADDF');
      * var green = Cesium.Color.fromCssColorString('green');
-     * 
+     *
      * @see {@link http://www.w3.org/TR/css3-color|CSS color values}
      */
     Color.fromCssColorString = function(color, result) {
@@ -456,6 +456,8 @@ define([
         array[startingIndex++] = value.green;
         array[startingIndex++] = value.blue;
         array[startingIndex] = value.alpha;
+
+        return array;
     };
 
     /**
@@ -648,7 +650,7 @@ define([
      *
      * @example
      * var rgba = Cesium.Color.BLUE.toRgba();
-     * 
+     *
      * @see Color.fromRgba
      */
     Color.prototype.toRgba = function() {

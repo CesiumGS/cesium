@@ -180,6 +180,8 @@ define([
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
         array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     /**

@@ -664,6 +664,8 @@ define([
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._closeTop ? 1.0 : 0.0;
         array[startingIndex]   = value._closeBottom ? 1.0 : 0.0;
+
+        return array;
     };
 
     var scratchRectangle = new Rectangle();

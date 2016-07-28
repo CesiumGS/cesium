@@ -91,6 +91,8 @@ define([
         array[startingIndex++] = value.y;
         array[startingIndex++] = value.width;
         array[startingIndex] = value.height;
+
+        return array;
     };
 
     /**

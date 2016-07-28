@@ -246,6 +246,8 @@ define([
         array[startingIndex++] = value.binormal ? 1.0 : 0.0;
         array[startingIndex++] = value.tangent ? 1.0 : 0.0;
         array[startingIndex++] = value.color ? 1.0 : 0.0;
+
+        return array;
     };
 
     /**

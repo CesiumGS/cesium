@@ -774,6 +774,8 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex] = value._extrude ? 1.0 : 0.0;
+
+        return array;
     };
 
     var scratchCenter = new Cartesian3();

@@ -158,6 +158,8 @@ define([
         array[startingIndex++] = value.x;
         array[startingIndex++] = value.y;
         array[startingIndex] = value.z;
+
+        return array;
     };
 
     /**

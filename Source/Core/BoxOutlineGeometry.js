@@ -75,13 +75,13 @@ define([
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
-     * 
+     *
      * @example
      * var box = Cesium.BoxOutlineGeometry.fromDimensions({
      *   dimensions : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0)
      * });
      * var geometry = Cesium.BoxOutlineGeometry.createGeometry(box);
-     * 
+     *
      * @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromDimensions = function(options) {
@@ -122,7 +122,7 @@ define([
      *      -68.0, 40.0
      * ]));
      * var box = Cesium.BoxOutlineGeometry.fromAxisAlignedBoundingBox(aabb);
-     * 
+     *
      *  @see BoxOutlineGeometry.createGeometry
      */
     BoxOutlineGeometry.fromAxisAlignedBoundingBox = function(boundingBox) {
@@ -163,6 +163,7 @@ define([
 
         Cartesian3.pack(value._min, array, startingIndex);
         Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
+        return array;
     };
 
     var scratchMin = new Cartesian3();

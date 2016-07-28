@@ -239,6 +239,8 @@ define([
         array[startingIndex++] = defaultValue(value._extrudedHeight, 0.0);
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex]   = value._numberOfVerticalLines;
+
+        return array;
     };
 
     var scratchCenter = new Cartesian3();

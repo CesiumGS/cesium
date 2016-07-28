@@ -167,6 +167,8 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         array[startingIndex]   = value._granularity;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);

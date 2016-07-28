@@ -87,7 +87,7 @@ define([
             throw new DeveloperError('value is required');
         }
         //>>includeEnd('debug');
-        EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseOutlineGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseOutlineGeometry({

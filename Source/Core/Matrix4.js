@@ -129,6 +129,8 @@ define([
         array[startingIndex++] = value[13];
         array[startingIndex++] = value[14];
         array[startingIndex] = value[15];
+
+        return array;
     };
 
     /**
@@ -1795,7 +1797,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromUniformScale
      * @see Matrix4.multiplyByScale
      */
@@ -1834,7 +1836,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromScale
      * @see Matrix4.multiplyByUniformScale
      */
