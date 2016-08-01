@@ -114,9 +114,9 @@ define([
          * A higher maximum error will render fewer tiles and improve performance, while a lower
          * value will improve visual quality.
          * @type {Number}
-         * @default 2
+         * @default 1.33333333
          */
-        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 2);
+        this.maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 4.0 / 3.0);
 
         /**
          * Gets or sets the maximum number of tiles that will be retained in the tile cache.
@@ -485,7 +485,8 @@ define([
                 // SSE is not good enough and children are loaded, so refine.
                 enqueueVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, tileProvider, frameState, occluders, traversalStack);
             } else {
-                // SSE is not good enough but not all children are loaded, so render this tile anyway.
+                // SSE is not good enough but all children are either not renderable, or they're all upsampled so
+                // there is no point in rendering them.
                 addTileToRenderList(primitive, tile);
             }
         }
@@ -743,16 +744,10 @@ define([
         }
     }
 
-    function tileDistanceSortFunction(a, b) {
-        return a._distance - b._distance;
-    }
-
     function createRenderCommandsForSelectedTiles(primitive, frameState) {
         var tileProvider = primitive._tileProvider;
         var tilesToRender = primitive._tilesToRender;
         var tilesToUpdateHeights = primitive._tileToUpdateHeights;
-
-        tilesToRender.sort(tileDistanceSortFunction);
 
         for (var i = 0, len = tilesToRender.length; i < len; ++i) {
             var tile = tilesToRender[i];
