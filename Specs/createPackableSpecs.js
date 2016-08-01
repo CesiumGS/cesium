@@ -14,8 +14,8 @@ define([
 
         it(namePrefix + ' can pack', function() {
             var packedArray = [];
-            packedArray = packable.pack(instance, packedArray);
-            expect(packedArray).toBeDefined();
+            var returnArray = packable.pack(instance, packedArray);
+            expect(returnArray).toBe(packedArray);
             var packedLength = defined(packable.packedLength) ? packable.packedLength : instance.packedLength;
             expect(packedArray.length).toEqual(packedLength);
             expect(packedArray).toEqualEpsilon(packedInstance, CesiumMath.EPSILON15);
