@@ -12,6 +12,7 @@ Change Log
 * Pack funcions now return the result array  [#4156](https://github.com/AnalyticalGraphicsInc/cesium/pull/4156)
 * Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
 * Removed `MapQuest OpenStreetMap` from the list of demo base layers since direct tile access has been discontinued.  See the [MapQuest Developer Blog](http://devblog.mapquest.com/2016/06/15/modernization-of-mapquest-results-in-changes-to-open-tile-access/) for details.
+* Fixed PolylinePipeline.generateArc to accept an array of heights when there's only one position [#4155](https://github.com/AnalyticalGraphicsInc/cesium/pull/4155)
 
 ### 1.23 - 2016-07-01
 
