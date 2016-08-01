@@ -9,6 +9,7 @@ Change Log
 * Fixed an exception that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
 * Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 * Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
+* Pack funcions now return the result array  [#4156](https://github.com/AnalyticalGraphicsInc/cesium/pull/4156)
 * Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
 * Removed `MapQuest OpenStreetMap` from the list of demo base layers since direct tile access has been discontinued.  See the [MapQuest Developer Blog](http://devblog.mapquest.com/2016/06/15/modernization-of-mapquest-results-in-changes-to-open-tile-access/) for details.
 

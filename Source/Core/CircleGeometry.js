@@ -88,6 +88,8 @@ define([
      * @param {CircleGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     CircleGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -95,7 +97,7 @@ define([
             throw new DeveloperError('value is required');
         }
         //>>includeEnd('debug');
-        EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
+        return EllipseGeometry.pack(value._ellipseGeometry, array, startingIndex);
     };
 
     var scratchEllipseGeometry = new EllipseGeometry({
@@ -176,7 +178,7 @@ define([
             vertexFormat : VertexFormat.POSITION_ONLY
         });
     };
-    
+
     defineProperties(CircleGeometry.prototype, {
         /**
          * @private
