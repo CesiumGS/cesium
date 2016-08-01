@@ -11,6 +11,7 @@ Change Log
 * Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
 * Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
 * Added leap second just prior to Jan 2017. [#4092](https://github.com/AnalyticalGraphicsInc/cesium/issues/4092)
+* Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
 
 ### 1.23 - 2016-07-01
 
