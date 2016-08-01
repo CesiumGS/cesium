@@ -69,10 +69,8 @@ define([
 
     Batch.prototype.remove = function(updater) {
         var id = updater.entity.id;
-        var createPrimitive = this.updaters.remove(id);
-
-        if (createPrimitive) {
-            this.geometry.remove(id);
+        this.createPrimitive = this.geometry.remove(id) || this.createPrimitive;
+        if (this.updaters.remove(id)) {
             this.updatersWithAttributes.remove(id);
             var unsubscribe = this.subscriptions.get(id);
             if (defined(unsubscribe)) {
@@ -80,8 +78,7 @@ define([
                 this.subscriptions.remove(id);
             }
         }
-        this.createPrimitive = createPrimitive;
-        return createPrimitive;
+        return this.createPrimitive;
     };
 
     Batch.prototype.update = function(time) {
