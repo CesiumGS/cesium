@@ -339,15 +339,17 @@ define([
         }
     };
 
+    var scratchAdjustHeightTransform = new Matrix4();
     var scratchAdjustHeightCartographic = new Cartographic();
 
     Camera.prototype._adjustHeightForTerrain = function() {
         var scene = this._scene;
 
-        // TODO: deprecate and move to camera
-        var enableCollisionDetection = scene.screenSpaceCameraController.enableCollisionDetection;
-        var minimumCollisionTerrainHeight = scene.screenSpaceCameraController.minimumCollisionTerrainHeight;
-        var minimumZoomDistance = scene.screenSpaceCameraController.minimumZoomDistance;
+        // Should these be moved to the camera?
+        var screenSpaceCameraController = scene.screenSpaceCameraController;
+        var enableCollisionDetection = screenSpaceCameraController.enableCollisionDetection;
+        var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
+        var minimumZoomDistance = screenSpaceCameraController.minimumZoomDistance;
 
         if (this._suspendTerrainAdjustment || !enableCollisionDetection) {
             return;
@@ -366,7 +368,7 @@ define([
         var transform;
         var mag;
         if (!Matrix4.equals(this.transform, Matrix4.IDENTITY)) {
-            transform = Matrix4.clone(this.transform);
+            transform = Matrix4.clone(this.transform, scratchAdjustHeightTransform);
             mag = Cartesian3.magnitude(this.position);
             this._setTransform(Matrix4.IDENTITY);
         }
@@ -2521,7 +2523,6 @@ define([
     };
 
     var scratchFlyToDestination = new Cartesian3();
-    var scratchFlyToCarto = new Cartographic();
     var newOptions = {
         destination : undefined,
         heading : undefined,
@@ -2620,41 +2621,6 @@ define([
         if (isRectangle) {
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
-
-        /*
-        var sscc = this._scene.screenSpaceCameraController;
-
-        if (defined(sscc) || mode === SceneMode.SCENE2D) {
-            var ellipsoid = this._scene.mapProjection.ellipsoid;
-            var destinationCartographic = ellipsoid.cartesianToCartographic(destination, scratchFlyToCarto);
-            var height = destinationCartographic.height;
-
-            // Make sure camera doesn't zoom outside set limits
-            if (defined(sscc)) {
-                //The computed height for rectangle in 2D/CV is stored in the 'z' component of Cartesian3
-                if (mode !== SceneMode.SCENE3D && isRectangle) {
-                    destination.z = CesiumMath.clamp(destination.z, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                } else {
-                    destinationCartographic.height = CesiumMath.clamp(destinationCartographic.height, sscc.minimumZoomDistance, sscc.maximumZoomDistance);
-                }
-            }
-
-            // The max height in 2D might be lower than the max height for sscc.
-            if (mode === SceneMode.SCENE2D) {
-                var maxHeight = ellipsoid.maximumRadius * Math.PI * 2.0;
-                if (isRectangle) {
-                    destination.z = Math.min(destination.z, maxHeight);
-                } else {
-                    destinationCartographic.height = Math.min(destinationCartographic.height, maxHeight);
-                }
-            }
-
-            //Only change if we clamped the height
-            if (destinationCartographic.height !== height) {
-                destination = ellipsoid.cartographicToCartesian(destinationCartographic, scratchFlyToDestination);
-            }
-        }
-        */
 
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
