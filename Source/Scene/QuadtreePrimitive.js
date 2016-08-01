@@ -95,7 +95,7 @@ define([
         var ellipsoid = tilingScheme.ellipsoid;
 
         this._tilesToRender = [];
-        this._tileTraversalQueue = new Queue();
+        this._tileTraversalStack = [];
         this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
         this._levelZeroTiles = undefined;
@@ -397,8 +397,8 @@ define([
         var tilesToRender = primitive._tilesToRender;
         tilesToRender.length = 0;
 
-        var traversalQueue = primitive._tileTraversalQueue;
-        traversalQueue.clear();
+        var traversalStack = primitive._tileTraversalStack;
+        traversalStack.length = 0;
 
         // We can't render anything before the level zero tiles exist.
         if (!defined(primitive._levelZeroTiles)) {
@@ -441,7 +441,7 @@ define([
                 queueTileLoad(primitive, tile);
             }
             if (tile.renderable && tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
-                traversalQueue.enqueue(tile);
+                traversalStack.push(tile);
             } else {
                 ++debug.tilesCulled;
                 if (!tile.renderable) {
@@ -454,7 +454,7 @@ define([
         // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
         // This maximizes the average detail across the scene and results in fewer sharp transitions
         // between very different LODs.
-        while (defined((tile = traversalQueue.dequeue()))) {
+        while (defined((tile = traversalStack.pop()))) {
             ++debug.tilesVisited;
 
             primitive._tileReplacementQueue.markTileRendered(tile);
@@ -477,7 +477,7 @@ define([
                 // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
                 for (i = 0, len = children.length; i < len; ++i) {
                     if (tileProvider.computeTileVisibility(children[i], frameState, occluders) !== Visibility.NONE) {
-                        traversalQueue.enqueue(children[i]);
+                        traversalStack.push(children[i]);
                     } else {
                         ++debug.tilesCulled;
                     }

@@ -123,6 +123,18 @@ Sandcastle.addDefaultToolbarMenu([{
     }
 }], 'zoomButtons');
 
+Sandcastle.addDefaultToolbarMenu([{
+    text : 'SSE: 2',
+    onselect : function() {
+        viewer.scene.globe.maximumScreenSpaceError = 2.0;
+    }
+}, {
+    text : 'SSE: 4.0 / 3.0',
+    onselect : function() {
+        viewer.scene.globe.maximumScreenSpaceError = 4.0 / 3.0;
+    }
+}], 'zoomButtons');
+
 var terrainSamplePositions;
 
 function sampleTerrainSuccess() {
