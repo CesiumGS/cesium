@@ -450,10 +450,6 @@ define([
             }
         }
 
-        // Traverse the tiles in breadth-first order.
-        // This ordering allows us to load bigger, lower-detail tiles before smaller, higher-detail ones.
-        // This maximizes the average detail across the scene and results in fewer sharp transitions
-        // between very different LODs.
         while (defined((tile = traversalStack.pop()))) {
             ++debug.tilesVisited;
 
@@ -471,17 +467,23 @@ define([
             if (screenSpaceError(primitive, frameState, tile) < primitive.maximumScreenSpaceError) {
                 // This tile meets SSE requirements, so render it.
                 addTileToRenderList(primitive, tile);
-            } else if (queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile)) {
+                continue;
+            }
+
+            var southwestChild = tile.southwestChild;
+            var southeastChild = tile.southeastChild;
+            var northwestChild = tile.northwestChild;
+            var northeastChild = tile.northeastChild;
+            var allAreRenderable = southwestChild.renderable && southeastChild.renderable &&
+                                   northwestChild.renderable && northeastChild.renderable;
+            var allAreUpsampled = southwestChild.upsampledFromParent && southeastChild.upsampledFromParent &&
+                                  northwestChild.upsampledFromParent && northeastChild.upsampledFromParent;
+
+            queueChildTileLoadNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, frameState.camera.positionCartographic);
+
+            if (allAreRenderable && !allAreUpsampled) {
                 // SSE is not good enough and children are loaded, so refine.
-                var children = tile.children;
-                // PERFORMANCE_IDEA: traverse children front-to-back so we can avoid sorting by distance later.
-                for (i = 0, len = children.length; i < len; ++i) {
-                    if (tileProvider.computeTileVisibility(children[i], frameState, occluders) !== Visibility.NONE) {
-                        traversalStack.push(children[i]);
-                    } else {
-                        ++debug.tilesCulled;
-                    }
-                }
+                enqueueVisibleChildrenNearToFar(primitive, southwestChild, southeastChild, northwestChild, northeastChild, tileProvider, frameState, occluders, traversalStack);
             } else {
                 // SSE is not good enough but not all children are loaded, so render this tile anyway.
                 addTileToRenderList(primitive, tile);
@@ -489,6 +491,80 @@ define([
         }
 
         raiseTileLoadProgressEvent(primitive);
+    }
+
+    function enqueueVisibleChildrenNearToFar(primitive, southwest, southeast, northwest, northeast, tileProvider, frameState, occluders, traversalStack) {
+        var cameraPosition = frameState.camera.positionCartographic;
+
+        if (cameraPosition.longitude < southwest.east) {
+            if (cameraPosition.latitude < southwest.north) {
+                // Camera in southwest quadrant
+                enqueueIfVisible(primitive, southwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northeast, tileProvider, frameState, occluders, traversalStack);
+            } else {
+                // Camera in northwest quadrant
+                enqueueIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southeast, tileProvider, frameState, occluders, traversalStack);
+            }
+        } else {
+            if (cameraPosition.latitude < southwest.north) {
+                // Camera southeast quadrant
+                enqueueIfVisible(primitive, southeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
+            } else {
+                // Camera in northeast quadrant
+                enqueueIfVisible(primitive, northeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, northwest, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southeast, tileProvider, frameState, occluders, traversalStack);
+                enqueueIfVisible(primitive, southwest, tileProvider, frameState, occluders, traversalStack);
+            }
+        }
+    }
+
+    function enqueueIfVisible(primitive, tile, tileProvider, frameState, occluders, traversalStack) {
+        if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
+            traversalStack.push(tile);
+        } else {
+            ++primitive._debug.tilesCulled;
+        }
+    }
+
+    function queueChildTileLoadNearToFar(primitive, southwest, southeast, northwest, northeast, cameraPosition) {
+        if (cameraPosition.longitude < southwest.east) {
+            if (cameraPosition.latitude < southwest.north) {
+                // Camera in southwest quadrant
+                queueTileLoad(primitive, southwest);
+                queueTileLoad(primitive, southeast);
+                queueTileLoad(primitive, northwest);
+                queueTileLoad(primitive, northeast);
+            } else {
+                // Camera in northwest quadrant
+                queueTileLoad(primitive, northwest);
+                queueTileLoad(primitive, southwest);
+                queueTileLoad(primitive, northeast);
+                queueTileLoad(primitive, southeast);
+            }
+        } else {
+            if (cameraPosition.latitude < southwest.north) {
+                // Camera southeast quadrant
+                queueTileLoad(primitive, southeast);
+                queueTileLoad(primitive, southwest);
+                queueTileLoad(primitive, northeast);
+                queueTileLoad(primitive, northwest);
+            } else {
+                // Camera in northeast quadrant
+                queueTileLoad(primitive, northeast);
+                queueTileLoad(primitive, northwest);
+                queueTileLoad(primitive, southeast);
+                queueTileLoad(primitive, southwest);
+            }
+        }
     }
 
     /**
@@ -542,34 +618,12 @@ define([
         ++primitive._debug.tilesRendered;
     }
 
-    function queueChildrenLoadAndDetermineIfChildrenAreAllRenderable(primitive, tile) {
-        var allRenderable = true;
-        var allUpsampledOnly = true;
-
-        var children = tile.children;
-        for (var i = 0, len = children.length; i < len; ++i) {
-            var child = children[i];
-
-            primitive._tileReplacementQueue.markTileRendered(child);
-
-            allUpsampledOnly = allUpsampledOnly && child.upsampledFromParent;
-            allRenderable = allRenderable && child.renderable;
-
-            if (child.needsLoading) {
-                queueTileLoad(primitive, child);
-            }
-        }
-
-        if (!allRenderable) {
-            ++primitive._debug.tilesWaitingForChildren;
-        }
-
-        // If all children are upsampled from this tile, we just render this tile instead of its children.
-        return allRenderable && !allUpsampledOnly;
-    }
-
     function queueTileLoad(primitive, tile) {
-        primitive._tileLoadQueue.push(tile);
+        primitive._tileReplacementQueue.markTileRendered(tile);
+
+        if (tile.needsLoading) {
+            primitive._tileLoadQueue.push(tile);
+        }
     }
 
     function processTileLoadQueue(primitive, frameState) {

@@ -52,7 +52,11 @@ define([
         this._level = options.level;
         this._parent = options.parent;
         this._rectangle = this._tilingScheme.tileXYToRectangle(this._x, this._y, this._level);
-        this._children = undefined;
+
+        this._southwestChild = undefined;
+        this._southeastChild = undefined;
+        this._northwestChild = undefined;
+        this._northeastChild = undefined;
 
         // QuadtreeTileReplacementQueue gets/sets these private properties.
         this._replacementPrevious = undefined;
@@ -252,39 +256,63 @@ define([
          */
         children : {
             get : function() {
-                if (!defined(this._children)) {
-                    var tilingScheme = this.tilingScheme;
-                    var level = this.level + 1;
-                    var x = this.x * 2;
-                    var y = this.y * 2;
-                    this._children = [new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x,
-                        y : y,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x + 1,
-                        y : y,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x,
-                        y : y + 1,
-                        level : level,
-                        parent : this
-                    }), new QuadtreeTile({
-                        tilingScheme : tilingScheme,
-                        x : x + 1,
-                        y : y + 1,
-                        level : level,
-                        parent : this
-                    })];
-                }
+                return [this.northwestChild, this.northeastChild, this.southwestChild, this.southeastChild];
+            }
+        },
 
-                return this._children;
+        southwestChild : {
+            get : function() {
+                if (!defined(this._southwestChild)) {
+                    this._southwestChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2,
+                        y : this.y * 2 + 1,
+                        level : this.level + 1
+                    });
+                }
+                return this._southwestChild;
+            }
+        },
+
+        southeastChild : {
+            get : function() {
+                if (!defined(this._southeastChild)) {
+                    this._southeastChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2 + 1,
+                        y : this.y * 2 + 1,
+                        level : this.level + 1
+                    });
+                }
+                return this._southeastChild;
+            }
+        },
+
+        northwestChild : {
+            get : function() {
+                if (!defined(this._northwestChild)) {
+                    this._northwestChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2,
+                        y : this.y * 2,
+                        level : this.level + 1
+                    });
+                }
+                return this._northwestChild;
+            }
+        },
+
+        northeastChild : {
+            get : function() {
+                if (!defined(this._northeastChild)) {
+                    this._northeastChild = new QuadtreeTile({
+                        tilingScheme : this.tilingScheme,
+                        x : this.x * 2 + 1,
+                        y : this.y * 2,
+                        level : this.level + 1
+                    });
+                }
+                return this._northeastChild;
             }
         },
 
@@ -355,13 +383,21 @@ define([
             this.data.freeResources();
         }
 
-        if (defined(this._children)) {
-            for (var i = 0, len = this._children.length; i < len; ++i) {
-                this._children[i].freeResources();
-            }
-            this._children = undefined;
-        }
+        freeTile(this._southwestChild);
+        this._southwestChild = undefined;
+        freeTile(this._southeastChild);
+        this._southeastChild = undefined;
+        freeTile(this._northwestChild);
+        this._northwestChild = undefined;
+        freeTile(this._northeastChild);
+        this._northeastChild = undefined;
     };
+
+    function freeTile(tile) {
+        if (tile) {
+            tile.freeResources();
+        }
+    }
 
     return QuadtreeTile;
 });
