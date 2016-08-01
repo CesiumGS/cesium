@@ -49,7 +49,7 @@ define([
      * }));
      */
     function VelocityOrientationProperty(position, ellipsoid) {
-        this._velocityVectorProperty = new VelocityVectorProperty(position);
+        this._velocityVectorProperty = new VelocityVectorProperty(position, true);
         this._subscription = undefined;
         this._ellipsoid = undefined;
         this._definitionChanged = new Event();
