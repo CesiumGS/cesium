@@ -14,6 +14,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
+        '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
         '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
@@ -45,6 +46,7 @@ define([
         GeometryInstance,
         IndexDatatype,
         Matrix4,
+        OrientedBoundingBox,
         PrimitiveType,
         TranslationRotationScale,
         Buffer,
@@ -81,6 +83,7 @@ define([
         this._quantizedScale = options.quantizedScale;
 
         this._boundingVolume = options.boundingVolume;
+        this._boundingVolumes = new Array(this._offsets.length);
 
         this._batchTableResources = options.batchTableResources;
 
@@ -95,6 +98,17 @@ define([
 
         this._commands = undefined;
         this._pickCommands = undefined;
+    }
+
+    function createBoundingVolume(buffer, offset, count, center) {
+        var positions = new Array(count);
+        for (var i = 0; i < count; ++i) {
+            positions[i] = Cartesian3.unpack(buffer, offset + i * 3);
+        }
+
+        var bv = OrientedBoundingBox.fromPoints(positions);
+        Cartesian3.add(bv.center, center, bv.center);
+        return bv;
     }
 
     var attributeLocations = {
@@ -121,6 +135,7 @@ define([
         var indexOffsets = primitive._indexOffsets;
         var indexCounts = primitive._indexCounts;
         var indices = primitive._indices;
+        var boundingVolumes = primitive._boundingVolumes;
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
 
@@ -140,7 +155,11 @@ define([
         var colorsLength = positionsLength / 3 * 4;
         var batchedPositions = new Float32Array(positionsLength * 2.0);
         var batchedColors = new Uint8Array(colorsLength * 2);
-        var batchedIds = new Uint16Array(positionsLength / 3);
+        var batchedIds = new Uint16Array(positionsLength / 3 * 2);
+        var batchedOffsets = new Array(offsets.length);
+        var batchedCounts = new Array(counts.length);
+        var batchedIndexOffsets = new Array(indexOffsets.length);
+        var batchedIndexCounts = new Array(indexCounts.length);
 
         var wallIndicesLength = positions.length / 3 * 6;
         var indicesLength = indices.length;
@@ -168,6 +187,8 @@ define([
                 buffers[rgba].positionLength += counts[i];
                 buffers[rgba].indexLength += indexCounts[i];
             }
+
+            boundingVolumes[i] = createBoundingVolume(positions, offsets[i], counts[i], center);
         }
 
         var object;
@@ -226,6 +247,9 @@ define([
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
 
+            batchedOffsets[i] = positionOffset;
+            batchedCounts[i] = polygonCount * 2;
+
             for (j = 0; j < polygonCount * 3; j += 3) {
                 var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j, scratchEncodedPosition);
                 var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
@@ -268,6 +292,9 @@ define([
             var indexOffset = indexOffsets[i];
             var indexCount = indexCounts[i];
 
+            batchedIndexOffsets[i] = indicesIndex;
+            batchedIndexCounts[i] = indexCount * 2 + (polygonCount - 1) * 6;
+
             for (j = 0; j < indexCount; j += 3) {
                 var i0 = indices[indexOffset + j] - polygonOffset;
                 var i1 = indices[indexOffset + j + 1] - polygonOffset;
@@ -297,6 +324,10 @@ define([
         }
 
         primitive._positions = undefined;
+        primitive._offsets = batchedOffsets;
+        primitive._counts = batchedCounts;
+        primitive._indexOffsets = batchedIndexOffsets;
+        primitive._indexCounts = batchedIndexCounts;
 
         var positionBuffer = Buffer.createVertexBuffer({
             context : context,
@@ -574,7 +605,7 @@ define([
                 shaderProgram : primitive._spPick,
                 uniformMap : pickUniformMap,
                 modelMatrix : Matrix4.IDENTITY,
-                boundingVolume : primitive._boundingVolume,
+                boundingVolume : primitive._boundingVolumes[i],
                 pass : Pass.GROUND,
                 offset : offsets[i].offset,
                 count : counts[i].count
