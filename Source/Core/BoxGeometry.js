@@ -160,6 +160,8 @@ define([
      * @param {BoxGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     BoxGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
