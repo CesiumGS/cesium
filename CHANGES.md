@@ -3,14 +3,13 @@ Change Log
 
 ### 1.24 - 2016-08-01
 
-* Fixed a crash that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
-* Add the `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of the URL, such as `{x}`, to be padded with zeros to make them a fixed width.
-* Updated the online [model converter](http://cesiumjs.org/convertmodel.html) to convert OBJ model to glTF with [obj2gltf](https://github.com/AnalyticalGraphicsInc/OBJ2GLTF), as well as optimize existing glTF models with the [gltf-pipeline](https://github.com/AnalyticalGraphicsInc/gltf-pipeline).
-* Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 * Added support in CZML for expressing `BillboardGraphics.alignedAxis` as the velocity vector of an entity, using `velocityReference` syntax.
+* Added `urlSchemeZeroPadding` property to `UrlTemplateImageryProvider` to allow the numeric parts of a URL, such as `{x}`, to be padded with zeros to make them a fixed width.
+* Added leap second just prior to January 2017. [#4092](https://github.com/AnalyticalGraphicsInc/cesium/issues/4092)
+* Fixed an exception that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
+* Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 * Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
 * Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
-* Added leap second just prior to Jan 2017. [#4092](https://github.com/AnalyticalGraphicsInc/cesium/issues/4092)
 * Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
 
 ### 1.23 - 2016-07-01
