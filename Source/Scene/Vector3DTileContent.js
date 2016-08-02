@@ -155,6 +155,12 @@ define([
         }
     };
 
+    function createColorChangedCallback(content) {
+        return function(batchId, color) {
+            content._primitive.updateCommands(batchId, color);
+        };
+    }
+
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
@@ -214,7 +220,7 @@ define([
 
         var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons);
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons, createColorChangedCallback(this));
         this.batchTableResources = batchTableResources;
         if (batchTableJSONByteLength > 0) {
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);

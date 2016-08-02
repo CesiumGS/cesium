@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -32,6 +33,7 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
+        BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
@@ -107,6 +109,7 @@ define([
         }
 
         var bv = OrientedBoundingBox.fromPoints(positions);
+        //var bv = BoundingSphere.fromPoints(positions);
         Cartesian3.add(bv.center, center, bv.center);
         return bv;
     }
@@ -161,7 +164,7 @@ define([
         var batchedIndexOffsets = new Array(indexOffsets.length);
         var batchedIndexCounts = new Array(indexCounts.length);
 
-        var wallIndicesLength = positions.length / 3 * 6;
+        var wallIndicesLength = (positions.length / 3)  * 6;
         var indicesLength = indices.length;
         var batchedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
 
@@ -293,7 +296,6 @@ define([
             var indexCount = indexCounts[i];
 
             batchedIndexOffsets[i] = indicesIndex;
-            batchedIndexCounts[i] = indexCount * 2 + (polygonCount - 1) * 6;
 
             for (j = 0; j < indexCount; j += 3) {
                 var i0 = indices[indexOffset + j] - polygonOffset;
@@ -321,6 +323,8 @@ define([
 
             object.offset += polygonCount * 2;
             object.indexOffset = indicesIndex;
+
+            batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
         }
 
         primitive._positions = undefined;
@@ -551,14 +555,15 @@ define([
     }
 
     function createColorCommands(primitive) {
-        if (defined(primitive._commands)) {
+        if (defined(primitive._commands) && primitive._commands.length * 3 === primitive._batchedIndices.length) {
             return;
         }
 
-        primitive._commands = [];
-
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
+
+        var commands = primitive._commands = new Array(length * 3);
+
         for (var i = 0; i < length; ++i) {
             var command = new DrawCommand({
                 owner : primitive,
@@ -581,7 +586,9 @@ define([
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
             colorCommand.renderState = primitive._rsColorPass;
 
-            primitive._commands.push(stencilPreloadCommand, stencilDepthCommand, colorCommand);
+            commands[i * 3] = stencilPreloadCommand;
+            commands[i * 3 + 1] = stencilDepthCommand;
+            commands[i * 3 + 2] = colorCommand;
         }
     }
 
@@ -622,6 +629,54 @@ define([
             primitive._pickCommands.push(stencilPreloadCommand, stencilDepthCommand, colorCommand);
         }
     }
+
+    Cesium3DTileGroundPrimitive.prototype.updateCommands = function(batchId, color) {
+        var offset = this._indexOffsets[batchId];
+        var count = this._indexCounts[batchId];
+
+        var batchedIndices = this._batchedIndices;
+        var length = batchedIndices.length;
+
+        var i = 0;
+        for (; i < length; ++i) {
+            var batchedOffset = batchedIndices[i].offset;
+            var batchedCount = batchedIndices[i].count;
+
+            if (offset > batchedOffset && offset < batchedOffset + batchedCount) {
+                break;
+            }
+        }
+
+        batchedIndices.push({
+            color : color,
+            offset : offset,
+            count : count
+        });
+
+        if (offset + count < batchedIndices[i].offset + batchedIndices[i].count) {
+            batchedIndices.push({
+                color : batchedIndices[i].color,
+                offset : offset + count,
+                count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count)
+            });
+        }
+
+        batchedIndices[i].count = offset - batchedIndices[i].offset;
+
+        // TODO: use the batch table texture color
+        var typedArray = new Uint8Array(4 * this._counts[batchId]);
+        for (i = 0; i < typedArray.length; i += 4) {
+            typedArray[i] = Color.floatToByte(color.red);
+            typedArray[i + 1] = Color.floatToByte(color.green);
+            typedArray[i + 2] = Color.floatToByte(color.blue);
+            typedArray[i + 3] = Color.floatToByte(color.alpha);
+        }
+
+        var offsetInBytes = this._offsets[batchId] * 4 * Uint8Array.BYTES_PER_ELEMENT;
+
+        var vb = this._va.getAttribute(1).vertexBuffer;
+        vb.copyFromArrayView(typedArray, offsetInBytes);
+    };
 
     Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
         var context = frameState.context;
