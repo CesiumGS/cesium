@@ -974,7 +974,14 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 return this.scene.globe.shadows;
             },
             set : function(value) {
-                this.scene.globe.shadows = value;
+                // If the passed in value is a boolean, convert to the ShadowMode enum.
+                if (value === true) {
+                    this.scene.globe.shadows = ShadowMode.ENABLED;
+                } else if (value === false) {
+                    this.scene.globe.shadows = ShadowMode.RECEIVE_ONLY;
+                } else {
+                    this.scene.globe.shadows = value;
+                }
             }
         },
 

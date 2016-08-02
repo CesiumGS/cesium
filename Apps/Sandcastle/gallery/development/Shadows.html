@@ -358,18 +358,6 @@ function updateLightDirection() {
     freeformLightCamera.lookAt(center, offset);
 }
 
-function getShadowMode(castShadows, receiveShadows) {
-    if (castShadows && receiveShadows) {
-        return Cesium.ShadowMode.ENABLED;
-    } else if (castShadows) {
-        return Cesium.ShadowMode.CAST_ONLY;
-    } else if (receiveShadows) {
-        return Cesium.ShadowMode.RECEIVE_ONLY;
-    } else {
-        return Cesium.ShadowMode.DISABLED;
-    }
-}
-
 function updateSettings() {
     shadowMap.maximumDistance = Number(viewModel.distance);
     shadowMap._pointLightRadius = Number(viewModel.radius);
@@ -402,7 +390,7 @@ function updateSettings() {
     // Force all derived commands to update
     shadowMap.dirty = true;
 
-    globe.shadows = getShadowMode(viewModel.terrainCast, viewModel.terrainReceive);
+    globe.shadows = Cesium.ShadowMode.fromCastReceive(viewModel.terrainCast, viewModel.terrainReceive);
     globe.show = viewModel.globe;
     scene.skyAtmosphere.show = viewModel.globe;
 }
@@ -721,7 +709,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
         var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
-        picked.primitive.shadows = getShadowMode(!castShadows, receiveShadows);
+        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(!castShadows, receiveShadows);
     }
 }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
@@ -731,7 +719,7 @@ handler.setInputAction(function(movement) {
     if (Cesium.defined(picked)) {
         var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
         var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
-        picked.primitive.shadows = getShadowMode(castShadows, !receiveShadows);
+        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(castShadows, !receiveShadows);
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
 

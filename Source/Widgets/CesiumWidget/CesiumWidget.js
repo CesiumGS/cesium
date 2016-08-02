@@ -282,7 +282,15 @@ define([
             }
             if (globe !== false) {
                 scene.globe = globe;
-                scene.globe.shadows = defaultValue(options.terrainShadows, ShadowMode.RECEIVE_ONLY);
+                // If the passed in value is a boolean, convert to the ShadowMode enum.
+                var terrainShadows = options.terrainShadows;
+                if (terrainShadows === true) {
+                    scene.globe.shadows = ShadowMode.ENABLED;
+                } else if (terrainShadows === false) {
+                    scene.globe.shadows = ShadowMode.RECEIVE_ONLY;
+                } else {
+                    scene.globe.shadows = defaultValue(terrainShadows, ShadowMode.RECEIVE_ONLY);
+                }
             }
 
             var skyBox = options.skyBox;

@@ -7,6 +7,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -37,6 +38,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -278,6 +280,46 @@ define([
         tileLoadProgressEvent : {
             get: function() {
                 return this._surface.tileLoadProgressEvent;
+            }
+        },
+
+        /**
+         * Determines whether the globe casts shadows from each light source.
+         *
+         * @memberof Globe.prototype
+         * @type {Boolean}
+         * @deprecated
+         */
+        castShadows : {
+            get : function() {
+                deprecationWarning('Globe.castShadows', 'Globe.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Globe.shadows instead.');
+                return ShadowMode.castShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Globe.castShadows', 'Globe.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Globe.shadows instead.');
+                var castShadows = value;
+                var receiveShadows = ShadowMode.receiveShadows(this.shadows);
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
+        },
+
+        /**
+         * Determines whether the globe receives shadows from shadow casters in the scene.
+         *
+         * @memberof Globe.prototype
+         * @type {Boolean}
+         * @deprecated
+         */
+        receiveShadows : {
+            get : function() {
+                deprecationWarning('Globe.receiveShadows', 'Globe.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Globe.shadows instead.');
+                return ShadowMode.receiveShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Globe.receiveShadows', 'Globe.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Globe.shadows instead.');
+                var castShadows = ShadowMode.castShadows(this.shadows);
+                var receiveShadows = value;
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
             }
         }
     });

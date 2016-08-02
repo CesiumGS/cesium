@@ -63,6 +63,21 @@ define([
     ShadowMode.receiveShadows = function(shadowMode) {
         return (shadowMode === ShadowMode.ENABLED) || (shadowMode === ShadowMode.RECEIVE_ONLY);
     };
-    
+
+    /**
+     * @private
+     */
+    ShadowMode.fromCastReceive = function(castShadows, receiveShadows) {
+        if (castShadows && receiveShadows) {
+            return ShadowMode.ENABLED;
+        } else if (castShadows) {
+            return ShadowMode.CAST_ONLY;
+        } else if (receiveShadows) {
+            return ShadowMode.RECEIVE_ONLY;
+        } else {
+            return ShadowMode.DISABLED;
+        }
+    };
+
     return freezeObject(ShadowMode);
 });

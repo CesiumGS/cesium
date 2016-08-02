@@ -6,7 +6,6 @@ Change Log
 * Deprecated
     * Deprecated `castShadows` and `receiveShadows` properties from `Model`, `Primitive`, and `Globe`. They will be removed in 1.26. Use `shadows` instead with the `ShadowMode` enum, e.g. `model.shadows = ShadowMode.ENABLED`.
     * `Viewer.terrainShadows` now uses the `ShadowMode` enum instead of a Boolean, e.g. `viewer.terrainShadows = ShadowMode.RECEIVE_ONLY`. Boolean support will be dropped in 1.26.
-    * Entity `model.shadows` now uses the `ShadowMode` enum instead of a Boolean, e.g. `entity.model.shadows = ShadowMode.ENABLED`. Boolean support will be dropped in 1.26.
 * Added `shadows` property to the entity API for `Box`, `Corridor`, `Cylinder`, `Ellipse`, `Ellipsoid`, `Polygon`, `Polyline`, `PoylineVolume`, `Rectangle`, and `Wall`. [#4005](https://github.com/AnalyticalGraphicsInc/cesium/pull/4005)
 
 ### 1.24 - 2016-08-01
