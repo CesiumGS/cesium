@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.25 - 2016-09-01
+
+* Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
+
 ### 1.24 - 2016-08-01
 
 * Added support in CZML for expressing `BillboardGraphics.alignedAxis` as the velocity vector of an entity, using `velocityReference` syntax.
@@ -9,13 +13,15 @@ Change Log
 * Fixed an exception that would occur when switching to 2D view when shadows are enabled. [#4051](https://github.com/AnalyticalGraphicsInc/cesium/issues/4051)
 * Fixed an issue causing entities to disappear when updating multiple entities simultaneously. [#4096](https://github.com/AnalyticalGraphicsInc/cesium/issues/4096)
 * Normalizing the velocity vector produced by `VelocityVectorProperty` is now optional.
+* Pack functions now return the result array  [#4156](https://github.com/AnalyticalGraphicsInc/cesium/pull/4156)
 * Added optional `rangeMax` parameter to `Math.toSNorm` and `Math.fromSNorm`. [#4121](https://github.com/AnalyticalGraphicsInc/cesium/pull/4121)
-* Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
+* Removed `MapQuest OpenStreetMap` from the list of demo base layers since direct tile access has been discontinued.  See the [MapQuest Developer Blog](http://devblog.mapquest.com/2016/06/15/modernization-of-mapquest-results-in-changes-to-open-tile-access/) for details.
+* Fixed PolylinePipeline.generateArc to accept an array of heights when there's only one position [#4155](https://github.com/AnalyticalGraphicsInc/cesium/pull/4155)
 
 ### 1.23 - 2016-07-01
 
 * Breaking changes
-    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added syncronously.
+    * `GroundPrimitive.initializeTerrainHeights()` must be called and have the returned promise resolve before a `GroundPrimitive` can be added synchronously.
 * Added terrain clamping to entities, KML, and GeoJSON
     * Added `heightReference` property to point, billboard and model entities.
     * Changed corridor, ellipse, polygon and rectangle entities to conform to terrain by using a `GroundPrimitive` if its material is a `ColorMaterialProperty` instance and it doesn't have a `height` or `extrudedHeight`. Entities with any other type of material are not clamped to terrain.
