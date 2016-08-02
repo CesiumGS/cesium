@@ -4,6 +4,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
+        './defaultValue',
         './defined',
         './Math',
         './Matrix3',
@@ -14,6 +15,7 @@ define([
         Cartesian2,
         Cartesian3,
         ComponentDatatype,
+        defaultValue,
         defined,
         CesiumMath,
         Matrix3,
@@ -41,10 +43,11 @@ define([
      * @param {Number} maximumHeight The maximum height.
      * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
      * @param {Boolean} hasVertexNormals If the mesh has vertex normals.
+     * @param {Boolean} [hasWebMercatorY=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
      *
      * @private
      */
-    function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals) {
+    function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorY) {
         var quantization;
         var center;
         var toENU;
@@ -58,11 +61,11 @@ define([
             var hDim = maximumHeight - minimumHeight;
             var maxDim = Math.max(Cartesian3.maximumComponent(dimensions), hDim);
 
-            if (maxDim < SHIFT_LEFT_12 - 1.0) {
-                quantization = TerrainQuantization.BITS12;
-            } else {
+            // if (maxDim < SHIFT_LEFT_12 - 1.0) {
+            //     quantization = TerrainQuantization.BITS12;
+            // } else {
                 quantization = TerrainQuantization.NONE;
-            }
+            // }
 
             center = axisAlignedBoundingBox.center;
             toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
@@ -137,9 +140,15 @@ define([
          * @type {Boolean}
          */
         this.hasVertexNormals = hasVertexNormals;
+
+        /**
+         * The terrain mesh contains a vertical texture coordinate following the Web Mercator projection.
+         * @type {Boolean}
+         */
+        this.hasWebMercatorY = defaultValue(hasWebMercatorY, false);
     }
 
-    TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack) {
+    TerrainEncoding.prototype.encode = function(vertexBuffer, bufferIndex, position, uv, height, normalToPack, webMercatorY) {
         var u = uv.x;
         var v = uv.y;
 
@@ -165,6 +174,8 @@ define([
             vertexBuffer[bufferIndex++] = compressed0;
             vertexBuffer[bufferIndex++] = compressed1;
             vertexBuffer[bufferIndex++] = compressed2;
+
+            // TODO: store webMercatorY
         } else {
             Cartesian3.subtract(position, this.center, cartesian3Scratch);
 
@@ -174,6 +185,10 @@ define([
             vertexBuffer[bufferIndex++] = height;
             vertexBuffer[bufferIndex++] = u;
             vertexBuffer[bufferIndex++] = v;
+
+            if (this.hasWebMercatorY) {
+                vertexBuffer[bufferIndex++] = webMercatorY;
+            }
         }
 
         if (this.hasVertexNormals) {
@@ -254,6 +269,10 @@ define([
                 vertexStride = 6;
         }
 
+        if (this.hasWebMercatorY) {
+            ++vertexStride;
+        }
+
         if (this.hasVertexNormals) {
             ++vertexStride;
         }
@@ -277,6 +296,12 @@ define([
             var position3DAndHeightLength = 4;
             var numTexCoordComponents = this.hasVertexNormals ? 3 : 2;
             var stride = (this.hasVertexNormals ? 7 : 6) * sizeInBytes;
+
+            if (this.hasWebMercatorY) {
+                ++numTexCoordComponents;
+                stride += sizeInBytes;
+            }
+
             return [{
                 index : attributesNone.position3DAndHeight,
                 vertexBuffer : buffer,
@@ -294,6 +319,7 @@ define([
             }];
         }
 
+        // TODO: support hasWebMercatorY
         var numComponents = 3;
         numComponents += this.hasVertexNormals ? 1 : 0;
         return [{
@@ -325,6 +351,7 @@ define([
         result.fromScaledENU = Matrix4.clone(encoding.fromScaledENU);
         result.matrix = Matrix4.clone(encoding.matrix);
         result.hasVertexNormals = encoding.hasVertexNormals;
+        result.hasWebMercatorY = encoding.hasWebMercatorY;
         return result;
     };
 

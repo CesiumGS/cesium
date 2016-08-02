@@ -125,9 +125,9 @@ define([
          * @default 1.0
          */
         this.defaultGamma = 1.0;
-        if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
-            this.defaultGamma = 1.3;
-        }
+        // if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {
+        //     this.defaultGamma = 1.3;
+        // }
 
         this._tilingScheme = new WebMercatorTilingScheme({
             numberOfLevelZeroTilesX : 2,

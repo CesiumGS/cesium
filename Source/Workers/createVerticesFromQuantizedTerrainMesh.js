@@ -15,6 +15,7 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/TerrainEncoding',
         '../Core/Transforms',
+        '../Core/WebMercatorProjection',
         './createTaskProcessorWorker'
     ], function(
         AttributeCompression,
@@ -32,6 +33,7 @@ define([
         OrientedBoundingBox,
         TerrainEncoding,
         Transforms,
+        WebMercatorProjection,
         createTaskProcessorWorker) {
     'use strict';
 
@@ -52,6 +54,7 @@ define([
         var octEncodedNormals = parameters.octEncodedNormals;
         var edgeVertexCount = parameters.westIndices.length + parameters.eastIndices.length +
                               parameters.southIndices.length + parameters.northIndices.length;
+        var includeWebMercatorY = parameters.includeWebMercatorY;
 
         var rectangle = parameters.rectangle;
         var west = rectangle.west;
@@ -69,6 +72,13 @@ define([
         var fromENU = Transforms.eastNorthUpToFixedFrame(center, ellipsoid);
         var toENU = Matrix4.inverseTransformation(fromENU, new Matrix4());
 
+        var southMercatorY;
+        var oneOverMercatorHeight;
+        if (includeWebMercatorY) {
+            southMercatorY = WebMercatorProjection.geodeticLatitudeToMercatorAngle(south);
+            oneOverMercatorHeight = 1.0 / (WebMercatorProjection.geodeticLatitudeToMercatorAngle(north) - southMercatorY);
+        }
+
         var uBuffer = quantizedVertices.subarray(0, quantizedVertexCount);
         var vBuffer = quantizedVertices.subarray(quantizedVertexCount, 2 * quantizedVertexCount);
         var heightBuffer = quantizedVertices.subarray(quantizedVertexCount * 2, 3 * quantizedVertexCount);
@@ -77,6 +87,13 @@ define([
         var uvs = new Array(quantizedVertexCount);
         var heights = new Array(quantizedVertexCount);
         var positions = new Array(quantizedVertexCount);
+
+        var webMercatorYs;
+        if (includeWebMercatorY) {
+            webMercatorYs = new Array(quantizedVertexCount);
+        } else {
+            webMercatorYs = [];
+        }
 
         var minimum = scratchMinimum;
         minimum.x = Number.POSITIVE_INFINITY;
@@ -103,6 +120,10 @@ define([
             heights[i] = height;
             positions[i] = position;
 
+            if (includeWebMercatorY) {
+                webMercatorYs[i] = (WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographicScratch.latitude) - southMercatorY) * oneOverMercatorHeight;
+            }
+
             Matrix4.multiplyByPoint(toENU, position, cartesian3Scratch);
 
             Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
@@ -123,9 +144,9 @@ define([
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.southIndices, parameters.southSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.eastIndices, parameters.eastSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.northIndices, parameters.northSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
-        
+
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, center);
-        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals);
+        var encoding = new TerrainEncoding(aaBox, hMin, maximumHeight, fromENU, hasVertexNormals, includeWebMercatorY);
         var vertexStride = encoding.getStride();
         var size = quantizedVertexCount * vertexStride + edgeVertexCount * vertexStride;
         var vertexBuffer = new Float32Array(size);
@@ -153,7 +174,7 @@ define([
                 }
             }
 
-            bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack);
+            bufferIndex = encoding.encode(vertexBuffer, bufferIndex, positions[j], uvs[j], heights[j], toPack, webMercatorYs[j]);
         }
 
         var edgeTriangleCount = Math.max(0, (edgeVertexCount - 4) * 2);

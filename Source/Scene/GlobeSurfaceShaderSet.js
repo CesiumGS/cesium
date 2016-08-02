@@ -148,13 +148,17 @@ define([
                 }
             }
 
+            // TODO: do this conditionally
+            vs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+            fs.defines.push('INCLUDE_WEB_MERCATOR_Y');
+
             if (enableFog) {
                 vs.defines.push('FOG');
                 fs.defines.push('FOG');
             }
 
             var computeDayColor = '\
-    vec4 computeDayColor(vec4 initialColor, vec2 textureCoordinates)\n\
+    vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
     {\n\
         vec4 color = initialColor;\n';
 
@@ -163,7 +167,7 @@ define([
     color = sampleAndBlend(\n\
         color,\n\
         u_dayTextures[' + i + '],\n\
-        textureCoordinates,\n\
+        u_dayTextureUseWebMercatorY[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
         u_dayTextureTexCoordsRectangle[' + i + '],\n\
         u_dayTextureTranslationAndScale[' + i + '],\n\
         ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\

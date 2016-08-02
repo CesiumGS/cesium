@@ -715,6 +715,9 @@ define([
             u_dayTextureTexCoordsRectangle : function() {
                 return this.properties.dayTextureTexCoordsRectangle;
             },
+            u_dayTextureUseWebMercatorY : function() {
+                return this.properties.dayTextureUseWebMercatorY;
+            },
             u_dayTextureAlpha : function() {
                 return this.properties.dayTextureAlpha;
             },
@@ -771,6 +774,7 @@ define([
                 dayTextures : [],
                 dayTextureTranslationAndScale : [],
                 dayTextureTexCoordsRectangle : [],
+                dayTextureUseWebMercatorY : [],
                 dayTextureAlpha : [],
                 dayTextureBrightness : [],
                 dayTextureContrast : [],
@@ -923,7 +927,7 @@ define([
         var enableFog = frameState.fog.enabled;
         var castShadows = tileProvider.castShadows;
         var receiveShadows = tileProvider.receiveShadows;
-        
+
         if (showReflectiveOcean) {
             --maxTextures;
         }
@@ -1087,9 +1091,10 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
-                uniformMapProperties.dayTextures[numberOfDayTextures] = imagery.texture;
+                uniformMapProperties.dayTextures[numberOfDayTextures] = tileImagery.useWebMercatorY ? imagery.textureWebMercator : imagery.texture;
                 uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                 uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
+                uniformMapProperties.dayTextureUseWebMercatorY[numberOfDayTextures] = tileImagery.useWebMercatorY;
 
                 uniformMapProperties.dayTextureAlpha[numberOfDayTextures] = imageryLayer.alpha;
                 applyAlpha = applyAlpha || uniformMapProperties.dayTextureAlpha[numberOfDayTextures] !== 1.0;

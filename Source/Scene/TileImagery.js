@@ -16,12 +16,14 @@ define([
      * @param {Imagery} imagery The imagery tile.
      * @param {Cartesian4} textureCoordinateRectangle The texture rectangle of the tile that is covered
      *        by the imagery, where X=west, Y=south, Z=east, W=north.
+     * @param {Boolean} useWebMercatorY true to use the Web Mercator texture coordinates for this imagery tile.
      */
-    function TileImagery(imagery, textureCoordinateRectangle) {
+    function TileImagery(imagery, textureCoordinateRectangle, useWebMercatorY) {
         this.readyImagery = undefined;
         this.loadingImagery = imagery;
         this.textureCoordinateRectangle = textureCoordinateRectangle;
         this.textureTranslationAndScale = undefined;
+        this.useWebMercatorY = useWebMercatorY;
     }
 
     /**
@@ -48,7 +50,7 @@ define([
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState);
+        loadingImagery.processStateMachine(frameState, !this.useWebMercatorY);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {

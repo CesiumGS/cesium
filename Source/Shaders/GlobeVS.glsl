@@ -2,7 +2,7 @@
 attribute vec4 compressed;
 #else
 attribute vec4 position3DAndHeight;
-attribute vec3 textureCoordAndEncodedNormals;
+attribute vec4 textureCoordAndEncodedNormals;
 #endif
 
 uniform vec3 u_center3D;
@@ -17,7 +17,7 @@ uniform vec2 u_southMercatorYAndOneOverHeight;
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 
-varying vec2 v_textureCoordinates;
+varying vec3 v_textureCoordinates;
 varying vec3 v_normalMC;
 varying vec3 v_normalEC;
 
@@ -55,7 +55,7 @@ float get2DMercatorYPositionFraction(vec2 textureCoordinates)
         float currentLatitude = mix(southLatitude, northLatitude, textureCoordinates.y);
         currentLatitude = clamp(currentLatitude, -czm_webMercatorMaxLatitude, czm_webMercatorMaxLatitude);
         positionFraction = czm_latitudeToWebMercatorFraction(currentLatitude, southMercatorY, oneOverMercatorHeight);
-    }    
+    }
     return positionFraction;
 }
 
@@ -97,7 +97,7 @@ uniform vec2 u_minMaxHeight;
 uniform mat4 u_scaleAndBias;
 #endif
 
-void main() 
+void main()
 {
 #ifdef QUANTIZATION_BITS12
     vec2 xy = czm_decompressTextureCoordinates(compressed.x);
@@ -112,12 +112,25 @@ void main()
 #else
     vec3 position = position3DAndHeight.xyz;
     float height = position3DAndHeight.w;
-    vec2 textureCoordinates = textureCoordAndEncodedNormals.xy;
+
+#if defined(ENABLE_VERTEX_LIGHTING) && defined(INCLUDE_WEB_MERCATOR_Y)
+    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyz;
+    float encodedNormal = textureCoordAndEncodedNormals.w;
+#elif defined(ENABLE_VERTEX_LIGHTING)
+    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyy;
     float encodedNormal = textureCoordAndEncodedNormals.z;
+#elif defined(INCLUDE_WEB_MERCATOR_Y)
+    vec3 textureCoordinates = textureCoordAndEncodedNormals.xyz;
+    float encodedNormal = 0.0;
+#else
+    vec3 textureCoordinates = vec3(textureCoordAndEncodedNormals.xy, 0.0); //textureCoordAndEncodedNormals.xyy;
+    float encodedNormal = 0.0;
+#endif
+
 #endif
 
     vec3 position3DWC = position + u_center3D;
-    gl_Position = getPosition(position, height, textureCoordinates);
+    gl_Position = getPosition(position, height, textureCoordinates.xy);
 
     v_textureCoordinates = textureCoordinates;
 
@@ -130,7 +143,7 @@ void main()
     v_positionEC = (u_modifiedModelView * vec4(position, 1.0)).xyz;
     v_positionMC = position3DWC;                                 // position in model coordinates
 #endif
-    
+
 #ifdef FOG
     AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(position3DWC);
     v_mieColor = atmosColor.mie;
