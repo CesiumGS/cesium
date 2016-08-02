@@ -57,12 +57,22 @@ defineSuite([
         this.globe = undefined;
         this.mapProjection = new GeographicProjection(ellipsoid);
         this.terrainExaggeration = 1.0;
+        this.screenSpaceCameraController = undefined;
     }
 
     function MockGlobe(ellipsoid) {
         this.ellipsoid = ellipsoid;
         this.getHeight = function(cartographic) {
             return 0.0;
+        };
+        this._surface = {
+            tileProvider : {
+                ready : true
+            },
+            _tileLoadQueue : {},
+            _debug : {
+                tilesWaitingForChildren : 0
+            }
         };
     }
     beforeAll(function() {
@@ -86,6 +96,9 @@ defineSuite([
 
         scene = new MockScene(canvas, camera, Ellipsoid.WGS84);
         controller = new ScreenSpaceCameraController(scene);
+
+        scene.screenSpaceCameraController = controller;
+        camera._scene = scene;
     });
 
     afterEach(function() {
