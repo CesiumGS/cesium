@@ -1,6 +1,10 @@
 Change Log
 ==========
 
+### 1.25 - 2016-09-01
+
+* Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
+
 ### 1.24 - 2016-08-01
 
 * Added support in CZML for expressing `BillboardGraphics.alignedAxis` as the velocity vector of an entity, using `velocityReference` syntax.
