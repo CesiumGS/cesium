@@ -588,7 +588,7 @@ define([
                 owner : primitive,
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : primitive._va,
-                shaderProgram : primitive._spPick,
+                shaderProgram : primitive._sp,
                 uniformMap : pickUniformMap,
                 modelMatrix : Matrix4.IDENTITY,
                 boundingVolume : primitive._boundingVolumes[i],
@@ -603,13 +603,58 @@ define([
 
             stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            colorCommand.renderState = primitive._rsColorPass;
+
+            colorCommand.renderState = primitive._rsPickPass;
+            colorCommand.shaderProgram = primitive._spPick;
 
             commands[i * 3] = stencilPreloadCommand;
             commands[i * 3 + 1] = stencilDepthCommand;
             commands[i * 3 + 2] = colorCommand;
         }
     }
+
+    Cesium3DTileGroundPrimitive.prototype.rebatchCommands = function() {
+        var batchedIndices = this._batchedIndices;
+        var length = batchedIndices.length;
+
+        var needToRebatch = false;
+        var colorCounts = {};
+
+        for (var i = 0; i < length; ++i) {
+            var color = batchedIndices[i].color;
+            var rgba = color.toRgba();
+            if (defined(colorCounts[rgba])) {
+                needToRebatch = true;
+                break;
+            } else {
+                colorCounts[rgba] = true;
+            }
+        }
+
+        if (!needToRebatch) {
+            return;
+        }
+
+        batchedIndices.sort(function(a, b) {
+            return b.offset - a.offset;
+        });
+
+        var newBatchedIndices = [batchedIndices.pop()];
+
+        while (batchedIndices.length > 0) {
+            var current = newBatchedIndices[newBatchedIndices.length - 1];
+            var next = batchedIndices.pop();
+
+            if (!Color.equals(current.color, next.color)) {
+                newBatchedIndices.push(next);
+                continue;
+            }
+
+            current.count = next.offset + next.count - current.offset;
+        }
+
+        this._batchedIndices = newBatchedIndices;
+    };
 
     Cesium3DTileGroundPrimitive.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
@@ -653,6 +698,11 @@ define([
         createRenderStates(this);
         createUniformMap(this, context);
         createColorCommands(this);
+
+        // TODO: how many frames?
+        if (frameState.frameNumber % 240 === 0) {
+            this.rebatchCommands();
+        }
 
         var passes = frameState.passes;
         if (passes.render) {
