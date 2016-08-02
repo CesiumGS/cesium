@@ -138,10 +138,8 @@ var czml = [{
     }
 }];
 
-Cesium.GroundPrimitive.initializeTerrainHeights().then(function() {
-    var viewer = new Cesium.Viewer('cesiumContainer');
-    viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
-});
+var viewer = new Cesium.Viewer('cesiumContainer');
+viewer.dataSources.add(Cesium.CzmlDataSource.load(czml));
 
   //Sandcastle_End
     Sandcastle.finishedLoading();
