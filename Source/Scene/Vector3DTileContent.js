@@ -157,7 +157,9 @@ define([
 
     function createColorChangedCallback(content) {
         return function(batchId, color) {
-            content._primitive.updateCommands(batchId, color);
+            if (defined(content._primitive)) {
+                content._primitive.updateCommands(batchId, color);
+            }
         };
     }
 
@@ -253,8 +255,18 @@ define([
         var quantizedOffset = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_OFFSET);
         var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
 
+        // TODO: get feature colors
+        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        var colors = [];
+        var tempLength = offsets.length;
+        for (var n = 0; n < tempLength; ++n) {
+            colors[n] = randomColors[n % randomColors.length];
+            batchTableResources.setColor(n, colors[n]);
+        }
+
         this._primitive = new Cesium3DTileGroundPrimitive({
             positions : positions,
+            colors : colors,
             offsets : offsets,
             counts : counts,
             indexOffsets : indexOffsets,

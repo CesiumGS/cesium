@@ -402,9 +402,12 @@ define([
         }
 
         var that = this;
-        return function(source) {
+        // TODO: remove handleTranslucent? need vector render order
+        return function(source, handleTranslucent) {
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
+
+            handleTranslucent = defaultValue(handleTranslucent, true);
 
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, perform per-feature show/hide in the vertex shader
@@ -418,24 +421,28 @@ define([
                     '    vec2 st = computeSt(a_batchId); \n' +
                     '    vec4 featureProperties = texture2D(tile_batchTexture, st); \n' +
                     '    float show = ceil(featureProperties.a); \n' +      // 0 - false, non-zeo - true
-                    '    gl_Position *= show; \n' +                         // Per-feature show/hide
+                    '    gl_Position *= show; \n';                          // Per-feature show/hide
 // TODO: Translucent should still write depth for picking?  For example, we want to grab highlighted building that became translucent
 // TODO: Same TODOs below in getFragmentShaderCallback
-                    '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
-                    '    if (czm_pass == czm_passTranslucent) \n' +
-                    '    { \n' +
-                    '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
-                    '        { \n' +
-                    '            gl_Position *= 0.0; \n' +
-                    '        } \n' +
-                    '    } \n' +
-                    '    else \n' +
-                    '    { \n' +
-                    '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
-                    '        { \n' +
-                    '            gl_Position *= 0.0; \n' +
-                    '        } \n' +
-                    '    } \n' +
+                if (handleTranslucent) {
+                    newMain +=
+                        '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
+                        '    if (czm_pass == czm_passTranslucent) \n' +
+                        '    { \n' +
+                        '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
+                        '        { \n' +
+                        '            gl_Position *= 0.0; \n' +
+                        '        } \n' +
+                        '    } \n' +
+                        '    else \n' +
+                        '    { \n' +
+                        '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
+                        '        { \n' +
+                        '            gl_Position *= 0.0; \n' +
+                        '        } \n' +
+                        '    } \n';
+                }
+                newMain +=
                     '    tile_featureColor = featureProperties; \n' +
                     '}';
             } else {
@@ -457,7 +464,8 @@ define([
             return;
         }
 
-        return function(source) {
+        // TODO: remove handleTranslucent? need vector render order
+        return function(source, handleTranslucent) {
             //TODO: generate entire shader at runtime?
             //var diffuse = 'diffuse = u_diffuse;';
             //var diffuseTexture = 'diffuse = texture2D(u_diffuse, v_texcoord0);';
@@ -487,6 +495,8 @@ define([
             var renamedSource = ShaderSource.replaceMain(source, 'tile_main');
             var newMain;
 
+            handleTranslucent = defaultValue(handleTranslucent, true);
+
             if (ContextLimits.maximumVertexTextureImageUnits > 0) {
                 // When VTF is supported, per-feature show/hide already happened in the fragment shader
                 newMain =
@@ -506,22 +516,27 @@ define([
                     '    vec4 featureProperties = texture2D(tile_batchTexture, tile_featureSt); \n' +
                     '    if (featureProperties.a == 0.0) { \n' + // show: alpha == 0 - false, non-zeo - true
                     '        discard; \n' +
-                    '    } \n' +
-                    '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
-                    '    if (czm_pass == czm_passTranslucent) \n' +
-                    '    { \n' +
-                    '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
-                    '        { \n' +
-                    '            discard; \n' +
-                    '        } \n' +
-                    '    } \n' +
-                    '    else \n' +
-                    '    { \n' +
-                    '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
-                    '        { \n' +
-                    '            discard; \n' +
-                    '        } \n' +
-                    '    } \n' +
+                    '    } \n';
+
+                if (handleTranslucent) {
+                    newMain +=
+                        '    bool isStyleTranslucent = (featureProperties.a != 1.0); \n' +
+                        '    if (czm_pass == czm_passTranslucent) \n' +
+                        '    { \n' +
+                        '        if (!isStyleTranslucent && !tile_translucentCommand) \n' + // Do not render opaque features in the translucent pass
+                        '        { \n' +
+                        '            discard; \n' +
+                        '        } \n' +
+                        '    } \n' +
+                        '    else \n' +
+                        '    { \n' +
+                        '        if (isStyleTranslucent) \n' + // Do not render translucent features in the opaque pass
+                        '        { \n' +
+                        '            discard; \n' +
+                        '        } \n' +
+                        '    } \n';
+                }
+                newMain +=
                     '    tile_main(); \n' +
                     '    gl_FragColor *= featureProperties; \n' +
                     '}';

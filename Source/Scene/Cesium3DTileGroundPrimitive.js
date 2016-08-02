@@ -71,6 +71,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._positions = options.positions;
+        this._colors = options.colors;
         this._offsets = options.offsets;
         this._counts = options.counts;
         this._indexOffsets = options.indexOffsets;
@@ -116,8 +117,7 @@ define([
 
     var attributeLocations = {
         position : 0,
-        color : 1,
-        a_batchId : 2
+        a_batchId : 1
     };
 
     var scratchDecodeMatrix = new Matrix4();
@@ -146,18 +146,8 @@ define([
         var quantizedScale = primitive._quantizedScale;
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
 
-        // TODO: get feature colors
-        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
-        primitive._colors = [];
-        var tempLength = offsets.length;
-        for (var n = 0; n < tempLength; ++n) {
-            primitive._colors[n] = randomColors[n % randomColors.length];
-        }
-
         var positionsLength = positions.length;
-        var colorsLength = positionsLength / 3 * 4;
         var batchedPositions = new Float32Array(positionsLength * 2.0);
-        var batchedColors = new Uint8Array(colorsLength * 2);
         var batchedIds = new Uint16Array(positionsLength / 3 * 2);
         var batchedOffsets = new Array(offsets.length);
         var batchedCounts = new Array(counts.length);
@@ -169,7 +159,7 @@ define([
         var batchedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
 
         var colors = primitive._colors;
-        colorsLength = colors.length;
+        var colorsLength = colors.length;
 
         var i;
         var j;
@@ -236,11 +226,6 @@ define([
             color = colors[i];
             rgba = color.toRgba();
 
-            var red = Color.floatToByte(color.red);
-            var green = Color.floatToByte(color.green);
-            var blue = Color.floatToByte(color.blue);
-            var alpha = Color.floatToByte(color.alpha);
-
             object = buffers[rgba];
             var positionOffset = object.offset;
             var positionIndex = positionOffset * 3;
@@ -271,16 +256,6 @@ define([
 
                 Cartesian3.pack(maxHeightPosition, batchedPositions, positionIndex);
                 Cartesian3.pack(minHeightPosition, batchedPositions, positionIndex + 3);
-
-                batchedColors[colorIndex]     = red;
-                batchedColors[colorIndex + 1] = green;
-                batchedColors[colorIndex + 2] = blue;
-                batchedColors[colorIndex + 3] = alpha;
-
-                batchedColors[colorIndex + 4] = red;
-                batchedColors[colorIndex + 5] = green;
-                batchedColors[colorIndex + 6] = blue;
-                batchedColors[colorIndex + 7] = alpha;
 
                 batchedIds[idIndex] = i;
                 batchedIds[idIndex + 1] = i;
@@ -338,11 +313,6 @@ define([
             typedArray : batchedPositions,
             usage : BufferUsage.STATIC_DRAW
         });
-        var colorBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : batchedColors,
-            usage : BufferUsage.STATIC_DRAW
-        });
         var idBuffer = Buffer.createVertexBuffer({
             context : context,
             typedArray : batchedIds,
@@ -360,12 +330,6 @@ define([
             vertexBuffer : positionBuffer,
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3
-        }, {
-            index : attributeLocations.color,
-            vertexBuffer : colorBuffer,
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 4,
-            normalize : true
         }, {
             index : attributeLocations.a_batchId,
             vertexBuffer : idBuffer,
@@ -385,24 +349,37 @@ define([
             return;
         }
 
+        var batchTableResources = primitive._batchTableResources;
+
+        var vsSource = batchTableResources.getVertexShaderCallback()(ShadowVolumeVS, false);
+        var fsSource = batchTableResources.getFragmentShaderCallback()(ShadowVolumeFS, false);
+
         var vs = new ShaderSource({
             defines : ['VECTOR_TILE'],
-            sources : [ShadowVolumeVS]
+            sources : [vsSource]
+        });
+        var fs = new ShaderSource({
+            defines : ['VECTOR_TILE'],
+            sources : [fsSource]
         });
 
         primitive._sp = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
-            fragmentShaderSource : ShadowVolumeFS,
+            fragmentShaderSource : fs,
             attributeLocations : attributeLocations
         });
 
+        vsSource = batchTableResources.getPickVertexShaderCallback()(ShadowVolumeVS);
+        fsSource = batchTableResources.getPickFragmentShaderCallback()(ShadowVolumeFS);
+
         var pickVS = new ShaderSource({
             defines : ['VECTOR_TILE'],
-            sources : [primitive._batchTableResources.getPickVertexShaderCallback()(ShadowVolumeVS)]
+            sources : [vsSource]
         });
         var pickFS = new ShaderSource({
-            sources : [primitive._batchTableResources.getPickFragmentShaderCallback()(ShadowVolumeFS)]
+            defines : ['VECTOR_TILE'],
+            sources : [fsSource]
         });
         primitive._spPick = ShaderProgram.fromCache({
             context : context,
@@ -559,6 +536,7 @@ define([
             return;
         }
 
+        var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
 
@@ -570,7 +548,7 @@ define([
                 primitiveType : PrimitiveType.TRIANGLES,
                 vertexArray : primitive._va,
                 shaderProgram : primitive._sp,
-                uniformMap : primitive._uniformMap,
+                uniformMap : uniformMap,
                 modelMatrix : Matrix4.IDENTITY,
                 boundingVolume : primitive._boundingVolume,
                 pass : Pass.GROUND,
@@ -597,13 +575,14 @@ define([
             return;
         }
 
-        primitive._pickCommands = [];
-
         var pickUniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
         var offsets = primitive._indexOffsets;
         var counts = primitive._indexCounts;
 
         var length = offsets.length;
+
+        var commands = primitive._pickCommands = new Array(length * 3);
+
         for (var i = 0; i < length; ++i) {
             var command = new DrawCommand({
                 owner : primitive,
@@ -626,7 +605,9 @@ define([
             stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
             colorCommand.renderState = primitive._rsColorPass;
 
-            primitive._pickCommands.push(stencilPreloadCommand, stencilDepthCommand, colorCommand);
+            commands[i * 3] = stencilPreloadCommand;
+            commands[i * 3 + 1] = stencilDepthCommand;
+            commands[i * 3 + 2] = colorCommand;
         }
     }
 
@@ -662,20 +643,6 @@ define([
         }
 
         batchedIndices[i].count = offset - batchedIndices[i].offset;
-
-        // TODO: use the batch table texture color
-        var typedArray = new Uint8Array(4 * this._counts[batchId]);
-        for (i = 0; i < typedArray.length; i += 4) {
-            typedArray[i] = Color.floatToByte(color.red);
-            typedArray[i + 1] = Color.floatToByte(color.green);
-            typedArray[i + 2] = Color.floatToByte(color.blue);
-            typedArray[i + 3] = Color.floatToByte(color.alpha);
-        }
-
-        var offsetInBytes = this._offsets[batchId] * 4 * Uint8Array.BYTES_PER_ELEMENT;
-
-        var vb = this._va.getAttribute(1).vertexBuffer;
-        vb.copyFromArrayView(typedArray, offsetInBytes);
     };
 
     Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
