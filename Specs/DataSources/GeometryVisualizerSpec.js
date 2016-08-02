@@ -22,6 +22,7 @@ defineSuite([
         'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
+        'Scene/GroundPrimitive',
         'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene',
@@ -49,6 +50,7 @@ defineSuite([
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
+        GroundPrimitive,
         ShadowMode,
         createDynamicProperty,
         createScene,
@@ -60,10 +62,17 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {

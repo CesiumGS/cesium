@@ -650,7 +650,7 @@ define([
                 }
 
                 this._primitive = groundPrimitives.add(new GroundPrimitive({
-                    geometryInstance : new GeometryInstance({
+                    geometryInstances : new GeometryInstance({
                         id : entity,
                         geometry : new PolygonGeometry(options),
                         attributes: {
