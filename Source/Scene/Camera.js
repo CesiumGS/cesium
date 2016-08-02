@@ -345,7 +345,6 @@ define([
     Camera.prototype._adjustHeightForTerrain = function() {
         var scene = this._scene;
 
-        // Should these be moved to the camera?
         var screenSpaceCameraController = scene.screenSpaceCameraController;
         var enableCollisionDetection = screenSpaceCameraController.enableCollisionDetection;
         var minimumCollisionTerrainHeight = screenSpaceCameraController.minimumCollisionTerrainHeight;
