@@ -35,6 +35,11 @@ defineSuite([
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     afterEach(function() {
@@ -347,6 +352,7 @@ defineSuite([
     it('verify update returns false till terrain heights are initialized', function() {
         GroundPrimitive._initialized = false;
         GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
 
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();
