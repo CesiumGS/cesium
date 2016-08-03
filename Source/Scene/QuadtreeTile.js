@@ -267,7 +267,8 @@ define([
                         tilingScheme : this.tilingScheme,
                         x : this.x * 2,
                         y : this.y * 2 + 1,
-                        level : this.level + 1
+                        level : this.level + 1,
+                        parent : this
                     });
                 }
                 return this._southwestChild;
@@ -281,7 +282,8 @@ define([
                         tilingScheme : this.tilingScheme,
                         x : this.x * 2 + 1,
                         y : this.y * 2 + 1,
-                        level : this.level + 1
+                        level : this.level + 1,
+                        parent : this
                     });
                 }
                 return this._southeastChild;
@@ -295,7 +297,8 @@ define([
                         tilingScheme : this.tilingScheme,
                         x : this.x * 2,
                         y : this.y * 2,
-                        level : this.level + 1
+                        level : this.level + 1,
+                        parent : this
                     });
                 }
                 return this._northwestChild;
@@ -309,7 +312,8 @@ define([
                         tilingScheme : this.tilingScheme,
                         x : this.x * 2 + 1,
                         y : this.y * 2,
-                        level : this.level + 1
+                        level : this.level + 1,
+                        parent : this
                     });
                 }
                 return this._northeastChild;

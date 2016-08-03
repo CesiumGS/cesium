@@ -92,7 +92,7 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorY);
                 return false; // not done loading
             } else {
                 // This imagery tile is failed or invalid, and we have the "best available" substitute.
