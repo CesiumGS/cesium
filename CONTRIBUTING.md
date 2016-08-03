@@ -83,4 +83,4 @@ Our code is our lifeblood so maintaining Cesium's high code quality is important
 
 One of Cesium's strengths is our community.  Our contributors and users are pushing the 3D geospatial field to amazing new levels.  We rely on an open, friendly, inclusive environment to facilitate this.  As such, we follow the [Contributor Covenant](http://contributor-covenant.org/)'s [Code of Conduct](http://contributor-covenant.org/version/1/4/code_of_conduct.md) to ensure a harassment-free experience in the Cesium community.  Any unacceptable behavior can be confidentiality sent to the core team at pcozzi@agi.com.
 
-This applies to the main Cesium repo and forum as well as all forums in the [AnalyticalGraphicsInc](https://github.com/AnalyticalGraphicsInc) GitHub organization.
+This applies to the main Cesium repo and forum as well as all repos in the [AnalyticalGraphicsInc](https://github.com/AnalyticalGraphicsInc) GitHub organization.
