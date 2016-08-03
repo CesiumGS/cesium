@@ -27,6 +27,7 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -58,6 +59,7 @@ defineSuite([
         OrthographicFrustum,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         createScene,
         pollToPromise,
         when) {
@@ -185,8 +187,7 @@ defineSuite([
             }),
             asynchronous : false,
             show : false,
-            castShadows : true,
-            receiveShadows : true
+            shadows : ShadowMode.ENABLED
         }));
     }
 
@@ -222,8 +223,7 @@ defineSuite([
             asynchronous : false,
             rtcCenter : boxGeometry.boundingSphere.center,
             show : false,
-            castShadows : true,
-            receiveShadows : true
+            shadows : ShadowMode.ENABLED
         }));
     }
 
@@ -354,8 +354,8 @@ defineSuite([
     }
 
     function verifyShadows(caster, receiver) {
-        caster.castShadows = true;
-        receiver.receiveShadows = true;
+        caster.shadows = ShadowMode.ENABLED;
+        receiver.shadows = ShadowMode.ENABLED;
 
         // Render without shadows
         scene.shadowMap.enabled = false;
@@ -369,15 +369,15 @@ defineSuite([
         expect(shadowedColor).not.toEqual(unshadowedColor);
 
         // Turn shadow casting off/on
-        caster.castShadows = false;
+        caster.shadows = ShadowMode.DISABLED;
         expect(render()).toEqual(unshadowedColor);
-        caster.castShadows = true;
+        caster.shadows = ShadowMode.ENABLED;
         expect(render()).toEqual(shadowedColor);
 
         // Turn shadow receiving off/on
-        receiver.receiveShadows = false;
+        receiver.shadows = ShadowMode.DISABLED;
         expect(render()).toEqual(unshadowedColor);
-        receiver.receiveShadows = true;
+        receiver.shadows = ShadowMode.ENABLED;
         expect(render()).toEqual(shadowedColor);
 
         // Move the camera away from the shadow
@@ -538,11 +538,11 @@ defineSuite([
 
             // Render with globe casting off
             scene.shadowMap.enabled = true;
-            scene.globe.castShadows = false;
+            scene.globe.shadows = ShadowMode.DISABLED;
             expect(render()).toEqual(unshadowedColor);
 
             // Render with globe casting on
-            scene.globe.castShadows = true;
+            scene.globe.shadows = ShadowMode.ENABLED;
             var shadowedColor = render();
             expect(shadowedColor).not.toEqual(backgroundColor);
             expect(shadowedColor).not.toEqual(unshadowedColor);

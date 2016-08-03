@@ -20,6 +20,7 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -46,6 +47,7 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -58,6 +60,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -106,6 +109,7 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
         this._onTerrain = false;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'polygon', entity.polygon, undefined);
@@ -232,6 +236,19 @@ define([
         outlineWidth : {
             get : function() {
                 return this._outlineWidth;
+            }
+        },
+        /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof PolygonGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
             }
         },
         /**
@@ -468,6 +485,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(polygon.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(polygon.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(polygon.shadows, defaultShadows);
 
         var height = polygon.height;
         var extrudedHeight = polygon.extrudedHeight;
@@ -618,6 +636,8 @@ define([
         options.closeTop = closeTopValue;
         options.closeBottom = closeBottomValue;
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+        
         if (Property.getValueOrDefault(polygon.fill, time, true)) {
             var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
             var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
@@ -637,7 +657,8 @@ define([
                             color: ColorGeometryInstanceAttribute.fromColor(currentColor)
                         }
                     }),
-                    asynchronous : false
+                    asynchronous : false,
+                    shadows : shadows
                 }));
             } else {
                 var appearance = new MaterialAppearance({
@@ -653,7 +674,8 @@ define([
                         geometry : new PolygonGeometry(options)
                     }),
                     appearance : appearance,
-                    asynchronous : false
+                    asynchronous : false,
+                    shadows : shadows
                 }));
             }
         }
@@ -680,7 +702,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };
