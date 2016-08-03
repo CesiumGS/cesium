@@ -123,9 +123,9 @@ define([
          * values will provide better performance but lower visual quality.
          *
          * @type {Number}
-         * @default 2
+         * @default 1.33333333
          */
-        this.maximumScreenSpaceError = 2;
+        this.maximumScreenSpaceError = 4.0 / 3.0;
 
         /**
          * The size of the terrain tile cache, expressed as a number of tiles.  Any additional

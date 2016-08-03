@@ -24,6 +24,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
 <div id="terrainMenu"></div>
+<div id="sse"></div>
 <div id="zoomButtons"></div>
 <div id="toggleLighting"></div>
 <div id="sampleButtons"></div>
@@ -31,6 +32,10 @@
     <tr>
         <td>Enable fog</td>
         <td><input type="checkbox" data-bind="checked: fogEnabled"/></td>
+    </tr>
+    <tr>
+        <td>Enable wireframe</td>
+        <td><input type="checkbox" data-bind="checked: wireframe"/></td>
     </tr>
 </tbody></table>
 </div>
@@ -97,6 +102,18 @@ Sandcastle.addToolbarMenu([{
     }
 }], 'terrainMenu');
 
+Sandcastle.addToolbarMenu([{
+    text : 'SSE: 1.3333',
+    onselect : function() {
+        viewer.scene.globe.maximumScreenSpaceError = 4.0 / 3.0;
+    }
+}, {
+    text : 'SSE: 2',
+    onselect : function() {
+        viewer.scene.globe.maximumScreenSpaceError = 2.0;
+    }
+}], 'sse');
+
 Sandcastle.addDefaultToolbarMenu([{
     text : 'Mount Everest',
     onselect : function() {
@@ -120,18 +137,6 @@ Sandcastle.addDefaultToolbarMenu([{
         var offset = new Cesium.Cartesian3(70642.66030209465, -31661.517948317807, 35505.179997143336);
         viewer.camera.lookAt(target, offset);
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    }
-}], 'zoomButtons');
-
-Sandcastle.addDefaultToolbarMenu([{
-    text : 'SSE: 2',
-    onselect : function() {
-        viewer.scene.globe.maximumScreenSpaceError = 2.0;
-    }
-}, {
-    text : 'SSE: 4.0 / 3.0',
-    onselect : function() {
-        viewer.scene.globe.maximumScreenSpaceError = 4.0 / 3.0;
     }
 }], 'zoomButtons');
 
@@ -196,7 +201,7 @@ Sandcastle.addToolbarButton('Sample Everest Terrain', function() {
     Cesium.when(Cesium.sampleTerrain(viewer.terrainProvider, 9, terrainSamplePositions), sampleTerrainSuccess);
 }, 'sampleButtons');
 
-var viewModel = { fogEnabled : true };
+var viewModel = { fogEnabled : true, wireframe : false };
 Cesium.knockout.track(viewModel);
 
 var toolbar = document.getElementById('toolbar');
@@ -204,7 +209,10 @@ Cesium.knockout.applyBindings(viewModel, toolbar);
 Cesium.knockout.getObservable(viewModel, 'fogEnabled').subscribe(function(newValue) {
     viewer.scene.fog.enabled = newValue;
 });
-viewModel.enabled = viewer.scene.fog.enabled;
+Cesium.knockout.getObservable(viewModel, 'wireframe').subscribe(function(newValue) {
+    viewer.scene.globe._surface.tileProvider._debug.wireframe = newValue;
+});
+viewModel.fogEnabled = viewer.scene.fog.enabled;
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
