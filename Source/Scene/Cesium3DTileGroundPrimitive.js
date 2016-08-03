@@ -90,6 +90,8 @@ define([
 
         this._batchTableResources = options.batchTableResources;
 
+        this._batchedIndices = undefined;
+
         this._va = undefined;
         this._sp = undefined;
         this._spPick = undefined;
@@ -174,11 +176,13 @@ define([
                     positionLength : counts[i],
                     indexLength : indexCounts[i],
                     offset : 0,
-                    indexOffset : 0
+                    indexOffset : 0,
+                    batchIds : [i]
                 };
             } else {
                 buffers[rgba].positionLength += counts[i];
                 buffers[rgba].indexLength += indexCounts[i];
+                buffers[rgba].batchIds.push(i);
             }
 
             boundingVolumes[i] = createBoundingVolume(positions, offsets[i], counts[i], center);
@@ -212,7 +216,8 @@ define([
                 batchedDrawCalls.push({
                     color : Color.fromRgba(parseInt(rgba)),
                     offset : object.indexOffset,
-                    count : object.indexLength
+                    count : object.indexLength,
+                    batchIds : object.batchIds
                 });
             }
         }
@@ -305,8 +310,19 @@ define([
         primitive._positions = undefined;
         primitive._offsets = batchedOffsets;
         primitive._counts = batchedCounts;
+        primitive._indices = batchedIndices;
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
+
+        // TODO: fix this
+        for (var m = 0; m < primitive._batchedIndices.length; ++m) {
+            var tempIds = primitive._batchedIndices[m].batchIds;
+            var count = 0;
+            for (var n = 0; n < tempIds.length; ++n) {
+                count += batchedIndexCounts[tempIds[n]];
+            }
+            primitive._batchedIndices[m].count = count;
+        }
 
         var positionBuffer = Buffer.createVertexBuffer({
             context : context,
@@ -531,8 +547,90 @@ define([
         };
     }
 
+    function copyIndices(indices, newIndices, currentOffset, offsets, counts, batchedIds) {
+        var sizeInBytes = indices.constructor.BYTES_PER_ELEMENT;
+
+        var batchedIdsLength = batchedIds.length;
+        for (var j = 0; j < batchedIdsLength; ++j) {
+            var batchedId = batchedIds[j];
+            var offset = offsets[batchedId];
+            var count = counts[batchedId];
+
+            var subarray = new indices.constructor(indices.buffer, sizeInBytes * offset, count);
+            //newIndices.set(subarray, currentOffset * sizeInBytes);
+            newIndices.set(subarray, currentOffset);
+
+            offsets[batchedId] = currentOffset;
+            currentOffset += count;
+        }
+
+        return currentOffset;
+    }
+
+    function rebatchCommands(primitive) {
+        var batchedIndices = primitive._batchedIndices;
+        var length = batchedIndices.length;
+
+        var needToRebatch = false;
+        var colorCounts = {};
+
+        for (var i = 0; i < length; ++i) {
+            var color = batchedIndices[i].color;
+            var rgba = color.toRgba();
+            if (defined(colorCounts[rgba])) {
+                needToRebatch = true;
+                break;
+            } else {
+                colorCounts[rgba] = true;
+            }
+        }
+
+        if (!needToRebatch) {
+            return false;
+        }
+
+        batchedIndices.sort(function(a, b) {
+            //return a.color.toRgba() - b.color.toRgba();
+            return b.color.toRgba() - a.color.toRgba();
+        });
+
+        var newIndices = new primitive._indices.constructor(primitive._indices.length);
+
+        var current = batchedIndices.pop();
+        var newBatchedIndices = [current];
+
+        var currentOffset = copyIndices(primitive._indices, newIndices, 0, primitive._indexOffsets, primitive._indexCounts, current.batchIds);
+
+        current.offset = 0;
+        current.count = currentOffset;
+
+        while (batchedIndices.length > 0) {
+            var next = batchedIndices.pop();
+            if (Color.equals(next.color, current.color)) {
+                currentOffset = copyIndices(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+                current.batchIds = current.batchIds.concat(next.batchIds);
+                current.count = currentOffset - current.offset;
+            } else {
+                var offset = currentOffset;
+                currentOffset = copyIndices(primitive._indices, newIndices, currentOffset, primitive._indexOffsets, primitive._indexCounts, next.batchIds);
+
+                next.offset = offset;
+                next.count = currentOffset - offset;
+                newBatchedIndices.push(next);
+                current = next;
+            }
+        }
+
+        primitive._va.indexBuffer.copyFromArrayView(newIndices);
+
+        primitive._indices = newIndices;
+        primitive._batchedIndices = newBatchedIndices;
+
+        return true;
+    }
+
     function createColorCommands(primitive) {
-        if (defined(primitive._commands) && primitive._commands.length * 3 === primitive._batchedIndices.length) {
+        if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length * 3 === primitive._batchedIndices.length) {
             return;
         }
 
@@ -613,49 +711,6 @@ define([
         }
     }
 
-    Cesium3DTileGroundPrimitive.prototype.rebatchCommands = function() {
-        var batchedIndices = this._batchedIndices;
-        var length = batchedIndices.length;
-
-        var needToRebatch = false;
-        var colorCounts = {};
-
-        for (var i = 0; i < length; ++i) {
-            var color = batchedIndices[i].color;
-            var rgba = color.toRgba();
-            if (defined(colorCounts[rgba])) {
-                needToRebatch = true;
-                break;
-            } else {
-                colorCounts[rgba] = true;
-            }
-        }
-
-        if (!needToRebatch) {
-            return;
-        }
-
-        batchedIndices.sort(function(a, b) {
-            return b.offset - a.offset;
-        });
-
-        var newBatchedIndices = [batchedIndices.pop()];
-
-        while (batchedIndices.length > 0) {
-            var current = newBatchedIndices[newBatchedIndices.length - 1];
-            var next = batchedIndices.pop();
-
-            if (!Color.equals(current.color, next.color)) {
-                newBatchedIndices.push(next);
-                continue;
-            }
-
-            current.count = next.offset + next.count - current.offset;
-        }
-
-        this._batchedIndices = newBatchedIndices;
-    };
-
     Cesium3DTileGroundPrimitive.prototype.updateCommands = function(batchId, color) {
         var offset = this._indexOffsets[batchId];
         var count = this._indexCounts[batchId];
@@ -668,7 +723,7 @@ define([
             var batchedOffset = batchedIndices[i].offset;
             var batchedCount = batchedIndices[i].count;
 
-            if (offset > batchedOffset && offset < batchedOffset + batchedCount) {
+            if (offset >= batchedOffset && offset < batchedOffset + batchedCount) {
                 break;
             }
         }
@@ -676,18 +731,44 @@ define([
         batchedIndices.push({
             color : color,
             offset : offset,
-            count : count
+            count : count,
+            batchIds : [batchId]
         });
 
-        if (offset + count < batchedIndices[i].offset + batchedIndices[i].count) {
+        var startIds = [];
+        var endIds = [];
+
+        var batchIds = batchedIndices[i].batchIds;
+        var batchIdsLength = batchIds.length;
+
+        for (var j = 0; j < batchIdsLength; ++j) {
+            var id = batchIds[j];
+            if (id === batchId) {
+                continue;
+            }
+
+            if (this._indexOffsets[id] < offset) {
+                startIds.push(id);
+            } else {
+                endIds.push(id);
+            }
+        }
+
+        if (endIds.length !== 0) {
             batchedIndices.push({
                 color : batchedIndices[i].color,
                 offset : offset + count,
-                count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count)
+                count : batchedIndices[i].offset + batchedIndices[i].count - (offset + count),
+                batchIds : endIds
             });
         }
 
-        batchedIndices[i].count = offset - batchedIndices[i].offset;
+        if (startIds.length !== 0) {
+            batchedIndices[i].count = offset - batchedIndices[i].offset;
+            batchedIndices[i].batchIds = startIds;
+        } else {
+            batchedIndices.splice(i, 1);
+        }
     };
 
     Cesium3DTileGroundPrimitive.prototype.update = function(frameState) {
@@ -697,15 +778,10 @@ define([
         createShaders(this, context);
         createRenderStates(this);
         createUniformMap(this, context);
-        createColorCommands(this);
-
-        // TODO: how many frames?
-        if (frameState.frameNumber % 240 === 0) {
-            this.rebatchCommands();
-        }
 
         var passes = frameState.passes;
         if (passes.render) {
+            createColorCommands(this);
             var commandLength = this._commands.length;
             for (var i = 0; i < commandLength; ++i) {
                 frameState.commandList.push(this._commands[i]);
