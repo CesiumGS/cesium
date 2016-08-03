@@ -7,6 +7,8 @@ Change Log
     * Deprecated `castShadows` and `receiveShadows` properties from `Model`, `Primitive`, and `Globe`. They will be removed in 1.26. Use `shadows` instead with the `ShadowMode` enum, e.g. `model.shadows = ShadowMode.ENABLED`.
     * `Viewer.terrainShadows` now uses the `ShadowMode` enum instead of a Boolean, e.g. `viewer.terrainShadows = ShadowMode.RECEIVE_ONLY`. Boolean support will be dropped in 1.26.
 * Added `shadows` property to the entity API for `Box`, `Corridor`, `Cylinder`, `Ellipse`, `Ellipsoid`, `Polygon`, `Polyline`, `PoylineVolume`, `Rectangle`, and `Wall`. [#4005](https://github.com/AnalyticalGraphicsInc/cesium/pull/4005)
+* Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
+* Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
 
 ### 1.24 - 2016-08-01
 
