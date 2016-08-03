@@ -151,8 +151,6 @@ define([
         var positionsLength = positions.length;
         var batchedPositions = new Float32Array(positionsLength * 2.0);
         var batchedIds = new Uint16Array(positionsLength / 3 * 2);
-        var batchedOffsets = new Array(offsets.length);
-        var batchedCounts = new Array(counts.length);
         var batchedIndexOffsets = new Array(indexOffsets.length);
         var batchedIndexCounts = new Array(indexCounts.length);
 
@@ -240,9 +238,6 @@ define([
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
 
-            batchedOffsets[i] = positionOffset;
-            batchedCounts[i] = polygonCount * 2;
-
             for (j = 0; j < polygonCount * 3; j += 3) {
                 var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j, scratchEncodedPosition);
                 var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
@@ -308,8 +303,8 @@ define([
         }
 
         primitive._positions = undefined;
-        primitive._offsets = batchedOffsets;
-        primitive._counts = batchedCounts;
+        primitive._offsets = undefined;
+        primitive._counts = undefined;
         primitive._indices = batchedIndices;
         primitive._indexOffsets = batchedIndexOffsets;
         primitive._indexCounts = batchedIndexCounts;
@@ -557,7 +552,6 @@ define([
             var count = counts[batchedId];
 
             var subarray = new indices.constructor(indices.buffer, sizeInBytes * offset, count);
-            //newIndices.set(subarray, currentOffset * sizeInBytes);
             newIndices.set(subarray, currentOffset);
 
             offsets[batchedId] = currentOffset;
@@ -590,7 +584,6 @@ define([
         }
 
         batchedIndices.sort(function(a, b) {
-            //return a.color.toRgba() - b.color.toRgba();
             return b.color.toRgba() - a.color.toRgba();
         });
 
@@ -669,9 +662,7 @@ define([
     }
 
     function createPickCommands(primitive) {
-        if (defined(primitive._pickCommands)) {
-            return;
-        }
+        // TODO: only update the commands after a rebatch
 
         var pickUniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
         var offsets = primitive._indexOffsets;
