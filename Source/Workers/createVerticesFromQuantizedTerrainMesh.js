@@ -87,13 +87,7 @@ define([
         var uvs = new Array(quantizedVertexCount);
         var heights = new Array(quantizedVertexCount);
         var positions = new Array(quantizedVertexCount);
-
-        var webMercatorYs;
-        if (includeWebMercatorY) {
-            webMercatorYs = new Array(quantizedVertexCount);
-        } else {
-            webMercatorYs = [];
-        }
+        var webMercatorYs = includeWebMercatorY ? new Array(quantizedVertexCount) : [];
 
         var minimum = scratchMinimum;
         minimum.x = Number.POSITIVE_INFINITY;

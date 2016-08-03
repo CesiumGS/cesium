@@ -62,6 +62,10 @@ define([
             return true; // done loading
         }
 
+        if (this.readyImagery && this.readyImagery.state !== ImageryState.READY) {
+            console.log('wat');
+        }
+
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
         var closestAncestorThatNeedsLoading;

@@ -89,7 +89,7 @@ define([
      *   childTileMask : childTileMask,
      *   waterMask : waterMask
      * });
-     * 
+     *
      * @see TerrainData
      * @see QuantizedMeshTerrainData
      */
@@ -198,6 +198,7 @@ define([
         var verticesPromise = taskProcessor.scheduleTask({
             heightmap : this._buffer,
             structure : structure,
+            includeWebMercatorY : true, // TODO: only include web mercator Y if it's needed.
             width : this._width,
             height : this._height,
             nativeRectangle : nativeRectangle,

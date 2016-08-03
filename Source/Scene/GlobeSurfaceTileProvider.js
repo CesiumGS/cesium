@@ -1081,9 +1081,18 @@ define([
                 var imagery = tileImagery.readyImagery;
                 ++imageryIndex;
 
-                if (!defined(imagery) || imagery.state !== ImageryState.READY || imagery.imageryLayer.alpha === 0.0) {
+                if (!defined(imagery) || imagery.imageryLayer.alpha === 0.0) {
                     continue;
                 }
+
+                var texture = tileImagery.useWebMercatorY ? imagery.textureWebMercator : imagery.texture;
+
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(texture)) {
+                    // Our "ready" texture isn't actually ready.  This should never happen.
+                    throw new DeveloperError('readyImagery is not actually ready!');
+                }
+                //>>includeEnd('debug');
 
                 var imageryLayer = imagery.imageryLayer;
 
@@ -1091,7 +1100,7 @@ define([
                     tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);
                 }
 
-                uniformMapProperties.dayTextures[numberOfDayTextures] = tileImagery.useWebMercatorY ? imagery.textureWebMercator : imagery.texture;
+                uniformMapProperties.dayTextures[numberOfDayTextures] = texture;
                 uniformMapProperties.dayTextureTranslationAndScale[numberOfDayTextures] = tileImagery.textureTranslationAndScale;
                 uniformMapProperties.dayTextureTexCoordsRectangle[numberOfDayTextures] = tileImagery.textureCoordinateRectangle;
                 uniformMapProperties.dayTextureUseWebMercatorY[numberOfDayTextures] = tileImagery.useWebMercatorY;
