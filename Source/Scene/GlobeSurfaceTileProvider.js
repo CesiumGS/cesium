@@ -1090,6 +1090,14 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(texture)) {
                     // Our "ready" texture isn't actually ready.  This should never happen.
+                    // Side note: It IS possible for it to not be in the READY state, though.
+                    // This can happen when a single imagery tile is shared by two terrain tiles (common)
+                    // and one of them (A) needs a geographic version of the tile because it is near the poles,
+                    // and the other (B) does not.  B can and will transition the imagery tile to the READY state
+                    // without reprojecting to geographic.  Then, later, A will deem that same tile not-ready-yet
+                    // because it only has the Web Mercator texture, and flip it back to the TRANSITIONING state.
+                    // The imagery tile won't be in the READY state anymore, but it's still READY enough for B's
+                    // purposes.
                     throw new DeveloperError('readyImagery is not actually ready!');
                 }
                 //>>includeEnd('debug');
