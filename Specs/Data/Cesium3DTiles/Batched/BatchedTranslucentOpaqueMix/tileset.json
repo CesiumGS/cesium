@@ -21,8 +21,8 @@
     }
   },
   "geometricError": 70,
-  "refine": "add",
   "root": {
+    "refine": "add",
     "boundingVolume": {
       "region": [
         -1.3197004795898053,
