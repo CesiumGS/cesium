@@ -53,4 +53,4 @@ defineSuite([
         return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, tilesetOfTilesetsUrl);
     });
 
-});
+}, 'WebGL');
