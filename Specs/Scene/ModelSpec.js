@@ -1862,7 +1862,15 @@ defineSuite([
                 getHeight : function() {
                     return 0.0;
                 },
-                _surface : {},
+                _surface : {
+                    tileProvider : {
+                        ready : true
+                    },
+                    _tileLoadQueue : {},
+                    _debug : {
+                        tilesWaitingForChildren : 0
+                    }
+                },
                 destroy : function() {}
             };
 

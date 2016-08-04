@@ -36,7 +36,7 @@ define([
      * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
      * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
      * @param {Property} [options.rotation=0] A numeric Property specifying the rotation about the alignedAxis.
-     * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the axis of rotation.
+     * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
      * @param {Property} [options.width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
      * @param {Property} [options.height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
      * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
@@ -146,7 +146,7 @@ define([
         rotation : createPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the {@link Cartesian3} Property specifying the axis of rotation
+         * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
          * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
          * @memberof BillboardGraphics.prototype
          * @type {Property}

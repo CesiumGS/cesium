@@ -3827,4 +3827,28 @@ defineSuite([
             expect(entity.polygon.height.getValue()).toEqual(0);
         });
     });
+
+    it('when a LineString is clamped to ground and tesselated, entity has a corridor geometry and ColorProperty', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <Placemark>\
+                <Style>\
+                    <LineStyle>\
+                        <color>FFFF0000</color>\
+                    </LineStyle>\
+                </Style>\
+                <LineString>\
+                    <altitudeMode>clampToGround</altitudeMode>\
+                    <tessellate>true</tessellate>\
+                    <coordinates>1,2,3\
+                                4,5,6\
+                    </coordinates>\
+                </LineString>\
+            </Placemark>';
+        var clampToGroundOptions = Object.assign({ clampToGround : true }, options);
+        return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+            expect(entity.corridor).toBeDefined();
+            expect(entity.corridor.material).toBeInstanceOf(ColorMaterialProperty);
+        });
+    });
 });

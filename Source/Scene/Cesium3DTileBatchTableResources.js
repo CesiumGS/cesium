@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/arrayFill',
         '../Core/Cartesian2',
         '../Core/Cartesian4',
         '../Core/clone',
@@ -23,6 +24,7 @@ define([
         './CullFace',
         './Pass'
     ], function(
+        arrayFill,
         Cartesian2,
         Cartesian4,
         clone,
@@ -113,7 +115,7 @@ define([
             // Default batch texture to RGBA = 255: white highlight (RGB) and show/alpha = true/255 (A).
             var byteLength = getByteLength(batchTableResources);
             var bytes = new Uint8Array(byteLength);
-            bytes.fill(255);
+            arrayFill(bytes, 255);
             batchTableResources._batchValues = bytes;
         }
 
@@ -125,7 +127,7 @@ define([
             var byteLength = 2 * batchTableResources.featuresLength;
             var bytes = new Uint8Array(byteLength);
             // [Show = true, Alpha = 255]
-            bytes.fill(255);
+            arrayFill(bytes, 255);
             batchTableResources._showAlphaProperties = bytes;
         }
         return batchTableResources._showAlphaProperties;

@@ -1152,7 +1152,7 @@ define([
                 entity.corridor = corridor;
                 corridor.positions = coordinates;
                 if (defined(polyline)) {
-                    corridor.material = defined(polyline.material) ? polyline.material.color : Color.WHITE;
+                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
                     corridor.width = defaultValue(polyline.width, 1.0);
                 } else {
                     corridor.material = Color.WHITE;
