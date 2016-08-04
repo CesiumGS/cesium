@@ -2307,13 +2307,14 @@ define([
         }
 
         this._tweens.update();
-        this._camera.update(this._mode);
-        this._camera._updateCameraChanged();
 
         this._screenSpaceCameraController.update();
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
+        
+        this._camera.update(this._mode);
+        this._camera._updateCameraChanged();
     };
 
     var scratchEyeTranslation = new Cartesian3();

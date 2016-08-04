@@ -151,10 +151,6 @@ define([
         var startRoll = adjustAngleForLERP(camera.roll, roll);
 
         var destCart = ellipsoid.cartesianToCartographic(destination, scratchEndCart);
-        if (destCart.height <= 0.0) {
-            destCart.height = startCart.height;
-        }
-
         startCart.longitude = CesiumMath.zeroToTwoPi(startCart.longitude);
         destCart.longitude = CesiumMath.zeroToTwoPi(destCart.longitude);
 

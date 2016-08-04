@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -42,6 +43,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
@@ -100,6 +102,7 @@ defineSuite([
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
+        expect(updater.shadowsProperty).toBe(undefined);
         updater.destroy();
         expect(updater.isDestroyed()).toBe(true);
     });
@@ -158,6 +161,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
     });
 
     it('Ellipse material is correctly exposed.', function() {
