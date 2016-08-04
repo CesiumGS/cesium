@@ -216,4 +216,4 @@ defineSuite([
             expect(tile._debugBoundingVolume).toBeDefined();
         });
     });
-});
+}, 'WebGL');
