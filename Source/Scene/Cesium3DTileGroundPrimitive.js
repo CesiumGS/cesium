@@ -636,7 +636,7 @@ define([
     }
 
     function createColorCommands(primitive) {
-        if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length * 3 === primitive._batchedIndices.length) {
+        if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
             return;
         }
 
@@ -808,6 +808,7 @@ define([
     Cesium3DTileGroundPrimitive.prototype.destroy = function() {
         this._va = this._va && this._va.destroy();
         this._sp = this._sp && this._sp.destroy();
+        this._spPick = this._spPick && this._spPick.destroy();
         return destroyObject(this);
     };
 
