@@ -1,7 +1,7 @@
 /*global define*/
 define([
-        '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/ComponentDatatype',
@@ -17,6 +17,7 @@ define([
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
         '../Core/PrimitiveType',
+        '../Core/Rectangle',
         '../Core/TranslationRotationScale',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
@@ -33,8 +34,8 @@ define([
         './StencilFunction',
         './StencilOperation'
     ], function(
-        BoundingSphere,
         Cartesian3,
+        Cartographic,
         Color,
         ColorGeometryInstanceAttribute,
         ComponentDatatype,
@@ -50,6 +51,7 @@ define([
         Matrix4,
         OrientedBoundingBox,
         PrimitiveType,
+        Rectangle,
         TranslationRotationScale,
         Buffer,
         BufferUsage,
@@ -105,18 +107,6 @@ define([
         this._pickCommands = undefined;
     }
 
-    function createBoundingVolume(buffer, offset, count, center) {
-        var positions = new Array(count);
-        for (var i = 0; i < count; ++i) {
-            positions[i] = Cartesian3.unpack(buffer, offset + i * 3);
-        }
-
-        var bv = OrientedBoundingBox.fromPoints(positions);
-        //var bv = BoundingSphere.fromPoints(positions);
-        Cartesian3.add(bv.center, center, bv.center);
-        return bv;
-    }
-
     var attributeLocations = {
         position : 0,
         a_batchId : 1
@@ -128,6 +118,8 @@ define([
     var scratchScaledNormal = new Cartesian3();
     var scratchMinHeightPosition = new Cartesian3();
     var scratchMaxHeightPosition = new Cartesian3();
+    var scratchBVCartographic = new Cartographic();
+    var scratchBVRectangle = new Rectangle();
 
     function createVertexArray(primitive, context) {
         if (!defined(primitive._positions)) {
@@ -144,6 +136,9 @@ define([
         var center = primitive._center;
         var ellipsoid = primitive._ellispoid;
 
+        var minHeight = primitive._minimumHeight;
+        var maxHeight = primitive._maximumHeight;
+
         var quantizedOffset = primitive._quantizedOffset;
         var quantizedScale = primitive._quantizedScale;
         var decodeMatrix = Matrix4.fromTranslationRotationScale(new TranslationRotationScale(quantizedOffset, undefined, quantizedScale), scratchDecodeMatrix);
@@ -154,9 +149,8 @@ define([
         var batchedIndexOffsets = new Array(indexOffsets.length);
         var batchedIndexCounts = new Array(indexCounts.length);
 
-        var wallIndicesLength = (positions.length / 3)  * 6;
-        var indicesLength = indices.length;
-        var batchedIndices = new Uint32Array(indicesLength * 2 + wallIndicesLength);
+        // TODO: compute length and create typed array
+        var batchedIndices = [];
 
         var colors = primitive._colors;
         var colorsLength = colors.length;
@@ -182,8 +176,6 @@ define([
                 buffers[rgba].indexLength += indexCounts[i];
                 buffers[rgba].batchIds.push(i);
             }
-
-            boundingVolumes[i] = createBoundingVolume(positions, offsets[i], counts[i], center);
         }
 
         var object;
@@ -222,9 +214,6 @@ define([
 
         primitive._batchedIndices = batchedDrawCalls;
 
-        var minHeight = primitive._minimumHeight;
-        var maxHeight = primitive._maximumHeight;
-
         for (i = 0; i < colorsLength; ++i) {
             color = colors[i];
             rgba = color.toRgba();
@@ -238,10 +227,24 @@ define([
             var polygonOffset = offsets[i];
             var polygonCount = counts[i];
 
-            for (j = 0; j < polygonCount * 3; j += 3) {
-                var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j, scratchEncodedPosition);
+            var minLat = Number.POSITIVE_INFINITY;
+            var maxLat = Number.NEGATIVE_INFINITY;
+            var minLon = Number.POSITIVE_INFINITY;
+            var maxLon = Number.NEGATIVE_INFINITY;
+
+            for (j = 0; j < polygonCount; ++j) {
+                var encodedPosition = Cartesian3.unpack(positions, polygonOffset * 3 + j * 3, scratchEncodedPosition);
                 var rtcPosition = Matrix4.multiplyByPoint(decodeMatrix, encodedPosition, encodedPosition);
                 var position = Cartesian3.add(rtcPosition, center, rtcPosition);
+
+                var carto = ellipsoid.cartesianToCartographic(position, scratchBVCartographic);
+                var lat = carto.latitude;
+                var lon = carto.longitude;
+
+                minLat = Math.min(lat, minLat);
+                maxLat = Math.max(lat, maxLat);
+                minLon = Math.min(lon, minLon);
+                maxLon = Math.max(lon, maxLon);
 
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
                 var scaledPosition = ellipsoid.scaleToGeodeticSurface(position, position);
@@ -264,6 +267,14 @@ define([
                 colorIndex += 8;
                 idIndex += 2;
             }
+
+            var rectangle = scratchBVRectangle;
+            rectangle.west = minLon;
+            rectangle.east = maxLon;
+            rectangle.south = minLat;
+            rectangle.north = maxLat;
+
+            boundingVolumes[i] = OrientedBoundingBox.fromRectangle(rectangle, minHeight, maxHeight, ellipsoid);
 
             var indicesIndex = object.indexOffset;
 
@@ -301,6 +312,8 @@ define([
 
             batchedIndexCounts[i] = indicesIndex - batchedIndexOffsets[i];
         }
+
+        batchedIndices = new Uint32Array(batchedIndices);
 
         primitive._positions = undefined;
         primitive._offsets = undefined;
