@@ -51,11 +51,13 @@
         }
 
         require([
+        'Core/RequestScheduler',
         'Specs/customizeJasmine'
     ], function(
+        RequestScheduler,
         customizeJasmine) {
                     // Disable request prioritization since it interferes with tests that expect a request to go through immediately.
-                    Cesium.RequestScheduler.prioritize = false;
+                    RequestScheduler.prioritize = false;
 
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, release);
 
