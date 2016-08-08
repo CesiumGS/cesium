@@ -7,6 +7,7 @@ defineSuite([
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
+        'Scene/GroundPrimitive',
         'Specs/createScene',
         'Specs/MockDataSource'
     ], function(
@@ -17,6 +18,7 @@ defineSuite([
         BoundingSphereState,
         DataSourceCollection,
         Entity,
+        GroundPrimitive,
         createScene,
         MockDataSource) {
     'use strict';
@@ -27,10 +29,17 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     afterEach(function() {
@@ -338,5 +347,29 @@ defineSuite([
         expect(function(){
             return display.update();
         }).toThrowDeveloperError();
+    });
+
+    it('verify update returns false till terrain heights are initialized', function() {
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
+
+        var source1 = new MockDataSource();
+        var source2 = new MockDataSource();
+
+        display = new DataSourceDisplay({
+            scene : scene,
+            dataSourceCollection : dataSourceCollection,
+            visualizersCallback : visualizersCallback
+        });
+        dataSourceCollection.add(source1);
+        dataSourceCollection.add(source2);
+        display.update(Iso8601.MINIMUM_VALUE);
+        expect(display.ready).toBe(false);
+
+        return GroundPrimitive.initializeTerrainHeights().then(function() {
+            display.update(Iso8601.MINIMUM_VALUE);
+            expect(display.ready).toBe(true);
+        });
     });
 }, 'WebGL');
