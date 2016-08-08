@@ -371,7 +371,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
     return getCredentials()
     .then(function() {
-        return listAll(s3, bucketName, uploadDirectory, existingBlobs)
+        var prefix = uploadDirectory + '/';
+        return listAll(s3, bucketName, prefix, existingBlobs)
         .then(function() {
             return globby([
                 'Apps/**',
@@ -538,11 +539,11 @@ function getMimeType(filename) {
 }
 
 // get all files currently in bucket asynchronously
-function listAll(s3, bucketName, directory, files, marker) {
+function listAll(s3, bucketName, prefix, files, marker) {
     return s3.listObjectsAsync({
         Bucket : bucketName,
         MaxKeys : 1000,
-        Prefix: directory,
+        Prefix : prefix,
         Marker : marker
     })
     .then(function(data) {
@@ -553,7 +554,7 @@ function listAll(s3, bucketName, directory, files, marker) {
 
         if (data.IsTruncated) {
             // get next page of results
-            return listAll(s3, bucketName, directory, files, files[files.length - 1]);
+            return listAll(s3, bucketName, prefix, files, files[files.length - 1]);
         }
     });
 }
