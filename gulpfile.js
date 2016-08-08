@@ -699,19 +699,14 @@ gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
     var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
-    var filesChecked = 0;
 
     var fsReadFile = Promise.promisify(fs.readFile);
     var fsWriteFile = Promise.promisify(fs.writeFile);
 
     var files = globby.sync(filesToSortRequires);
     return Promise.map(files, function(file) {
-        if (filesChecked > 0 && filesChecked % 50 === 0) {
-            console.log('Sorted requires in ' + filesChecked + ' files');
-        }
-        ++filesChecked;
 
-        fsReadFile(file).then(function(contents) {
+        return fsReadFile(file).then(function(contents) {
 
             var result = requiresRegex.exec(contents);
 
