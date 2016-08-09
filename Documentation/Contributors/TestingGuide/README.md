@@ -171,9 +171,9 @@ It is also possible for Karma to run all tests against each browser installed on
 `npm run test-webgl`
 
 #### Run Only Non-WebGL Tests with Karma
- 
+
  `npm run test-non-webgl`
- 
+
 #### Run All Tests Against the Minified Release Version of Cesium
 
  `npm run test-release`
@@ -381,7 +381,7 @@ afterAll(function() {
     context.destroyForSpecs();
 });
 
-it('has czm_tranpose (2x2)', function() {
+it('has czm_transpose (2x2)', function() {
     var fs =
         'void main() { ' +
         '  mat2 m = mat2(1.0, 2.0, 3.0, 4.0); ' +
