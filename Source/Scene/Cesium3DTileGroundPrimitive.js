@@ -575,9 +575,6 @@ define([
     }
 
     function rebatchCommands(primitive) {
-        return false;
-
-        /*
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
 
@@ -636,14 +633,13 @@ define([
         primitive._batchedIndices = newBatchedIndices;
 
         return true;
-        */
     }
 
     function createColorCommands(primitive) {
         if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
             return;
         }
-        
+
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length * 3;
 
