@@ -383,6 +383,22 @@ define([
     }
 
     /**
+     * Clears the request scheduler before each spec.
+     *
+     * @private
+     */
+    RequestScheduler.clearForSpecs = function() {
+        activeRequestsByServer = {};
+        activeRequests = 0;
+        budgets = [];
+        leftoverRequests = [];
+        deferredRequests = new Queue();
+        stats = {
+            numberOfRequestsThisFrame : 0
+        };
+    };
+
+    /**
      * Specifies the maximum number of requests that can be simultaneously open to a single server.  If this value is higher than
      * the number of requests per server actually allowed by the web browser, Cesium's ability to prioritize requests will be adversely
      * affected.

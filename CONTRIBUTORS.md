@@ -100,3 +100,4 @@
 * [Mati Ostrovsky](https://github.com/mati-o)
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
+* [Andy Fry](https://github.com/andyfry01)
