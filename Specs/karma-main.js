@@ -56,9 +56,6 @@
     ], function(
         RequestScheduler,
         customizeJasmine) {
-                    // Disable request prioritization since it interferes with tests that expect a request to go through immediately.
-                    RequestScheduler.prioritize = false;
-
                     customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, release, RequestScheduler);
 
                     var specFiles = Object.keys(__karma__.files).filter(function(file) {
