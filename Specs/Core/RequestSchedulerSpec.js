@@ -448,6 +448,7 @@ defineSuite([
         deferreds[0].resolve();
         deferreds[1].resolve();
 
+        RequestScheduler.debugShowStatistics = false;
         RequestScheduler.resetBudgets();
     });
 });
