@@ -384,6 +384,8 @@ define([
 
     /**
      * Clears the request scheduler before each spec.
+     *
+     * @private
      */
     RequestScheduler.clearForSpecs = function() {
         activeRequestsByServer = {};
