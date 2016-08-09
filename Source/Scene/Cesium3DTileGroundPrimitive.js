@@ -103,8 +103,8 @@ define([
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
 
-        this._commands = undefined;
-        this._pickCommands = undefined;
+        this._commands = [];
+        this._pickCommands = [];
     }
 
     var attributeLocations = {
@@ -575,6 +575,9 @@ define([
     }
 
     function rebatchCommands(primitive) {
+        return false;
+
+        /*
         var batchedIndices = primitive._batchedIndices;
         var length = batchedIndices.length;
 
@@ -633,85 +636,145 @@ define([
         primitive._batchedIndices = newBatchedIndices;
 
         return true;
+        */
     }
 
     function createColorCommands(primitive) {
         if (defined(primitive._commands) && !rebatchCommands(primitive) && primitive._commands.length / 3 === primitive._batchedIndices.length) {
             return;
         }
-
-        var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
+        
         var batchedIndices = primitive._batchedIndices;
-        var length = batchedIndices.length;
+        var length = batchedIndices.length * 3;
 
-        var commands = primitive._commands = new Array(length * 3);
+        var commands = primitive._commands;
+        commands.length = length;
 
-        for (var i = 0; i < length; ++i) {
-            var command = new DrawCommand({
-                owner : primitive,
-                primitiveType : PrimitiveType.TRIANGLES,
-                vertexArray : primitive._va,
-                shaderProgram : primitive._sp,
-                uniformMap : uniformMap,
-                modelMatrix : Matrix4.IDENTITY,
-                boundingVolume : primitive._boundingVolume,
-                pass : Pass.GROUND,
-                offset : batchedIndices[i].offset,
-                count : batchedIndices[i].count
-            });
+        var vertexArray = primitive._va;
+        var uniformMap = primitive._batchTableResources.getUniformMapCallback()(primitive._uniformMap);
+        var bv = primitive._boundingVolume;
 
-            var stencilPreloadCommand = command;
-            var stencilDepthCommand = DrawCommand.shallowClone(command);
-            var colorCommand = DrawCommand.shallowClone(command);
+        for (var j = 0; j < length; j += 3) {
+            var offset = batchedIndices[j / 3].offset;
+            var count = batchedIndices[j / 3].count;
 
-            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
-            colorCommand.renderState = primitive._rsColorPass;
+            // stencil preload command
+            var command = commands[j];
+            if (!defined(command)) {
+                command = commands[j] = new DrawCommand({
+                    owner : primitive
+                });
+            }
 
-            commands[i * 3] = stencilPreloadCommand;
-            commands[i * 3 + 1] = stencilDepthCommand;
-            commands[i * 3 + 2] = colorCommand;
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsStencilPreloadPass;
+            command.shaderProgram = primitive._sp;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
+
+            // stencil depth command
+            command = commands[j + 1];
+            if (!defined(command)) {
+                command = commands[j + 1] = new DrawCommand({
+                    owner : primitive
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsStencilDepthPass;
+            command.shaderProgram = primitive._sp;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
+
+            // color command
+            command = commands[j + 2];
+            if (!defined(command)) {
+                command = commands[j + 2] = new DrawCommand({
+                    owner : primitive
+                });
+            }
+
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsColorPass;
+            command.shaderProgram = primitive._sp;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
         }
     }
 
     function createPickCommands(primitive) {
         // TODO: only update the commands after a rebatch
+        var length = primitive._indexOffsets.length * 3;
+        var pickCommands = primitive._pickCommands;
+        pickCommands.length = length;
 
-        var pickUniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
-        var offsets = primitive._indexOffsets;
-        var counts = primitive._indexCounts;
+        var vertexArray = primitive._va;
+        var uniformMap = primitive._batchTableResources.getPickUniformMapCallback()(primitive._uniformMap);
 
-        var length = offsets.length;
+        for (var j = 0; j < length; j += 3) {
+            var offset = primitive._indexOffsets[j / 3];
+            var count = primitive._indexCounts[j / 3];
+            var bv = primitive._boundingVolumes[j / 3];
 
-        var commands = primitive._pickCommands = new Array(length * 3);
+            // stencil preload command
+            var command = pickCommands[j];
+            if (!defined(command)) {
+                command = pickCommands[j] = new DrawCommand({
+                    owner : primitive
+                });
+            }
 
-        for (var i = 0; i < length; ++i) {
-            var command = new DrawCommand({
-                owner : primitive,
-                primitiveType : PrimitiveType.TRIANGLES,
-                vertexArray : primitive._va,
-                shaderProgram : primitive._sp,
-                uniformMap : pickUniformMap,
-                modelMatrix : Matrix4.IDENTITY,
-                boundingVolume : primitive._boundingVolumes[i],
-                pass : Pass.GROUND,
-                offset : offsets[i].offset,
-                count : counts[i].count
-            });
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsStencilPreloadPass;
+            command.shaderProgram = primitive._sp;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
 
-            var stencilPreloadCommand = command;
-            var stencilDepthCommand = DrawCommand.shallowClone(command);
-            var colorCommand = DrawCommand.shallowClone(command);
+            // stencil depth command
+            command = pickCommands[j + 1];
+            if (!defined(command)) {
+                command = pickCommands[j + 1] = new DrawCommand({
+                    owner : primitive
+                });
+            }
 
-            stencilPreloadCommand.renderState = primitive._rsStencilPreloadPass;
-            stencilDepthCommand.renderState = primitive._rsStencilDepthPass;
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsStencilDepthPass;
+            command.shaderProgram = primitive._sp;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
 
-            colorCommand.renderState = primitive._rsPickPass;
-            colorCommand.shaderProgram = primitive._spPick;
+            // color command
+            command = pickCommands[j + 2];
+            if (!defined(command)) {
+                command = pickCommands[j + 2] = new DrawCommand({
+                    owner : primitive
+                });
+            }
 
-            commands[i * 3] = stencilPreloadCommand;
-            commands[i * 3 + 1] = stencilDepthCommand;
-            commands[i * 3 + 2] = colorCommand;
+            command.vertexArray = vertexArray;
+            command.offset = offset;
+            command.count = count;
+            command.renderState = primitive._rsPickPass;
+            command.shaderProgram = primitive._spPick;
+            command.uniformMap = uniformMap;
+            command.boundingVolume = bv;
+            command.pass = Pass.GROUND;
         }
     }
 
