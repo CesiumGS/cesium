@@ -261,7 +261,7 @@ define([
          * @memberof UniformState.prototype
          * @private
          */
-        inverseTranposeModel : {
+        inverseTransposeModel : {
             get : function() {
                 var m = this._inverseTransposeModel;
                 if (this._inverseTransposeModelDirty) {

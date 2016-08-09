@@ -1671,7 +1671,7 @@ define([
         }
         return undefined;
     }
-    
+
     function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
         var quantizedUniforms = {};
         model._quantizedUniforms[programName] = quantizedUniforms;
@@ -2428,7 +2428,7 @@ define([
         },
         MODELINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
-                return uniformState.inverseTranposeModel;
+                return uniformState.inverseTransposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
