@@ -22,6 +22,7 @@ define([
     './Cesium3DTileBatchTableResources',
     './Cesium3DTileContentState',
     './Cesium3DTileFeature',
+    './Cesium3DTileGroundPolylines',
     './Cesium3DTileGroundPrimitive'
 ], function(
     BoundingSphere,
@@ -46,6 +47,7 @@ define([
     Cesium3DTileBatchTableResources,
     Cesium3DTileContentState,
     Cesium3DTileFeature,
+    Cesium3DTileGroundPolylines,
     Cesium3DTileGroundPrimitive) {
     'use strict';
 
@@ -60,7 +62,8 @@ define([
         this._tileset = tileset;
         this._tile = tile;
 
-        this._primitive = undefined;
+        this._polygons = undefined;
+        this._polylines = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -155,10 +158,10 @@ define([
         }
     };
 
-    function createColorChangedCallback(content) {
+    function createColorChangedCallback(content, numberOfPolygons) {
         return function(batchId, color) {
-            if (defined(content._primitive)) {
-                content._primitive.updateCommands(batchId, color);
+            if (defined(content._polygons) && batchId < numberOfPolygons) {
+                content._polygons.updateCommands(batchId, color);
             }
         };
     }
@@ -212,6 +215,8 @@ define([
         byteOffset += sizeOfUint32;
         var positionByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
+        var polylinePositionByteLength = view.getUint32(byteOffset, true);
+        byteOffset += sizeOfUint32;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
         var featureTableJSON = JSON.parse(featureTableString);
@@ -221,8 +226,9 @@ define([
         byteOffset += featureTableBinaryByteLength;
 
         var numberOfPolygons = featureTableJSON.NUMBER_OF_POLYGONS;
+        var numberOfPolylines = featureTableJSON.NUMBER_OF_POLYLINES;
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons, createColorChangedCallback(this));
+        var batchTableResources = new Cesium3DTileBatchTableResources(this, numberOfPolygons + numberOfPolylines, createColorChangedCallback(this, numberOfPolygons));
         this.batchTableResources = batchTableResources;
         if (batchTableJSONByteLength > 0) {
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
@@ -236,6 +242,8 @@ define([
         var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
         byteOffset += indicesByteLength;
         var positions = new Uint16Array(arrayBuffer, byteOffset, positionByteLength / sizeOfUint16);
+        byteOffset += positionByteLength;
+        var polylinePositions = new Uint16Array(arrayBuffer, byteOffset, polylinePositionByteLength / sizeOfUint16);
 
         byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_POSITION_OFFSETS.offset;
         var offsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
@@ -249,6 +257,12 @@ define([
         byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYGON_INDICES_COUNTS.offset;
         var indexCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolygons);
 
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYLINE_POSITION_OFFSETS.offset;
+        var polylineOffsets = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
+
+        byteOffset = featureTableBinary.byteOffset + featureTableJSON.POLYLINE_POSITION_COUNTS.offset;
+        var polylineCounts = new Uint32Array(featureTableBinary.buffer, byteOffset, numberOfPolylines);
+
         var center = Cartesian3.unpack(featureTableJSON.CENTER);
         var minHeight = featureTableJSON.MINIMUM_HEIGHT;
         var maxHeight = featureTableJSON.MAXIMUM_HEIGHT;
@@ -259,12 +273,13 @@ define([
         var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         var colors = [];
         var tempLength = offsets.length;
-        for (var n = 0; n < tempLength; ++n) {
+        var n;
+        for (n = 0; n < tempLength; ++n) {
             colors[n] = randomColors[n % randomColors.length];
             batchTableResources.setColor(n, colors[n]);
         }
 
-        this._primitive = new Cesium3DTileGroundPrimitive({
+        this._polygons = new Cesium3DTileGroundPrimitive({
             positions : positions,
             colors : colors,
             offsets : offsets,
@@ -281,6 +296,31 @@ define([
             batchTableResources : this.batchTableResources
         });
 
+        // TODO: get feature colors/widths
+        colors = [];
+        var widths = [];
+        var batchIds = [];
+        tempLength = polylineOffsets.length;
+        for (n = 0; n < tempLength; ++n) {
+            colors[n] = randomColors[n % randomColors.length];
+            batchTableResources.setColor(n + numberOfPolygons, colors[n]);
+
+            widths[n] = 2.0;
+            batchIds[n] = numberOfPolygons + n;
+        }
+
+        this._polylines = new Cesium3DTileGroundPolylines({
+            positions : polylinePositions,
+            widths : widths,
+            offsets : polylineOffsets,
+            counts : polylineCounts,
+            batchIds : batchIds,
+            center : center,
+            quantizedOffset : quantizedOffset,
+            quantizedScale : quantizedScale,
+            boundingVolume : this._tile._boundingVolume.boundingVolume,
+            batchTableResources : this.batchTableResources
+        });
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
@@ -299,9 +339,16 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._primitive)) {
+        if (defined(this.batchTableResources)) {
             this.batchTableResources.update(tileset, frameState);
-            this._primitive.update(frameState);
+        }
+
+        if (defined(this._polygons)) {
+            this._polygons.update(frameState);
+        }
+
+        if (defined(this._polylines)) {
+            this._polylines.update(frameState);
         }
     };
 
@@ -316,7 +363,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Vector3DTileContent.prototype.destroy = function() {
-        this._primitive = this._primitive && this._primitive.destroy();
+        this._polygons = this._polygons && this._polygons.destroy();
+        this._polylines = this._polylines && this._polylines.destroy();
         return destroyObject(this);
     };
 
