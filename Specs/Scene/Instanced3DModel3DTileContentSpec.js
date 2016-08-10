@@ -87,17 +87,25 @@ defineSuite([
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('i3dm');
     });
 
+    var mockTile = {
+        contentBoundingVolume : new TileBoundingSphere(),
+        _header : {
+            content : {
+                boundingVolume : {
+                    sphere : [0.0, 0.0, 0.0, 1.0]
+                }
+            }
+        }
+    };
+
     it('loads with no instances, but does not become ready', function() {
         var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             featuresLength : 0
         });
 
         var tileset = {};
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var instancedTile = new Instanced3DModel3DTileContent(tileset, tile, url);
+        var instancedTile = new Instanced3DModel3DTileContent(tileset, mockTile, url);
         instancedTile.initialize(arrayBuffer);
         // Expect the tile to never reach the ready state due to returning early in ModelInstanceCollection
         for (var i = 0; i < 10; ++i) {
