@@ -32,7 +32,7 @@ defineSuite([
 
         // Point the camera to the center of the tile
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 10.0));
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
     });
 
     afterAll(function() {
@@ -63,12 +63,6 @@ defineSuite([
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
             version: 2
         });
-        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
-    });
-
-    it('throws with no points', function() {
-        // Throws in Buffer due to vertex buffer size of zero
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer();
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 

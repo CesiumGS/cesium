@@ -236,7 +236,7 @@ define([
             uniformMapLoaded : batchTableResources.getUniformMapCallback(),
             pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
             pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback(),
+            pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback()
         });
 
         this._model = model;

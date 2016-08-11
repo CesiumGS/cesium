@@ -2,15 +2,15 @@
   "asset": {
     "version": "0.0"
   },
-  "geometricError": 346.4,
+  "geometricError": 17.32,
   "root": {
     "refine": "add",
     "boundingVolume": {
       "sphere": [
-        1215011.9317263428,
-        -4736309.3434217675,
-        4081602.0044800863,
-        100
+        1215012.8828876738,
+        -4736313.051199594,
+        4081605.22126042,
+        5
       ]
     },
     "geometricError": 0,
