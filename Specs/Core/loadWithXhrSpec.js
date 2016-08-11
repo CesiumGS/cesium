@@ -1,11 +1,21 @@
 /*global defineSuite*/
 defineSuite([
-        'Core/loadWithXhr',
-        'Core/loadImage'
-    ], function(
-        loadWithXhr,
-        loadImage) {
+    'Core/loadWithXhr',
+    'Core/loadImage',
+    'Core/RequestErrorEvent',
+    'Core/RuntimeError'
+], function(
+    loadWithXhr,
+    loadImage,
+    RequestErrorEvent,
+    RuntimeError) {
     'use strict';
+
+    it('throws with no url', function() {
+        expect(function() {
+            loadWithXhr();
+        }).toThrowDeveloperError();
+    });
 
     describe('data URI loading', function() {
         it('can load URI escaped text with default response type', function() {
@@ -33,7 +43,7 @@ defineSuite([
             });
         });
 
-        it ('can load Base64 encoded text with responseType=text', function() {
+        it('can load Base64 encoded text with responseType=text', function() {
             return loadWithXhr({
                 url : 'data:text/plain;base64,SGVsbG8sIFdvcmxkIQ==',
                 responseType : 'text'
@@ -133,17 +143,363 @@ defineSuite([
             });
         });
 
-        xit('can support 2xx HTTP status (other than 200)', function(){
+        xit('can support 2xx HTTP status (other than 200)', function() {
             return loadWithXhr({
-                method: 'POST',
-                url: 'http://jsonplaceholder.typicode.com/posts',
-                data: {
-                    title: 'foo',
-                    body: 'bar',
-                    userId: 1
+                method : 'POST',
+                url : 'http://jsonplaceholder.typicode.com/posts',
+                data : {
+                    title : 'foo',
+                    body : 'bar',
+                    userId : 1
                 }
-            }).then(function(result){
+            }).then(function(result) {
                 expect(JSON.parse(result).id).toEqual(101);
+            });
+        });
+    });
+
+    describe('URL loading', function() {
+        var fakeXHR;
+
+        beforeEach(function() {
+            fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
+            fakeXHR.simulateLoad = function(response) {
+                fakeXHR.status = 200;
+                fakeXHR.response = response;
+                if (typeof fakeXHR.onload === 'function') {
+                    fakeXHR.onload();
+                }
+            };
+            fakeXHR.simulateError = function() {
+                fakeXHR.response = '';
+                if (typeof fakeXHR.onerror === 'function') {
+                    fakeXHR.onerror();
+                }
+            };
+            fakeXHR.simulateHttpError = function(statusCode, response) {
+                fakeXHR.status = statusCode;
+                fakeXHR.response = response;
+                if (typeof fakeXHR.onload === 'function') {
+                    fakeXHR.onload();
+                }
+            };
+            fakeXHR.simulateResponseXMLLoad = function(responseXML) {
+                fakeXHR.status = 200;
+                fakeXHR.responseXML = responseXML;
+                if (typeof fakeXHR.onload === 'function') {
+                    fakeXHR.onload();
+                }
+            };
+            fakeXHR.simulateResponseTextLoad = function(responseText) {
+                fakeXHR.status = 200;
+                fakeXHR.responseText = responseText;
+                if (typeof fakeXHR.onload === 'function') {
+                    fakeXHR.onload();
+                }
+            };
+
+            spyOn(window, 'XMLHttpRequest').and.returnValue(fakeXHR);
+        });
+
+        describe('returns a promise that rejects when the request', function() {
+            it('errors', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateError();
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('results in an HTTP status code less than 200', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateHttpError(199);
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('results in an HTTP status code greater than or equal to 300', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateHttpError(300);
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+            });
+
+            it('loads an invalid JSON string response with a json responseType', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'json'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var response = '<h1>Hello, World!</h1>';
+                fakeXHR.simulateLoad(response);
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof SyntaxError).toBe(true);
+            });
+
+            it('loads a null response with an unknown XMLHttpRequest response type', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'json'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                fakeXHR.simulateLoad();
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError instanceof RuntimeError).toBe(true);
+                expect(rejectedError.message).toBe('unknown XMLHttpRequest response type.');
+            });
+        });
+
+        describe('returns a promise that resolves when the request loads', function() {
+            it('a non-null response', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var response = 'hello world';
+                fakeXHR.simulateLoad(response);
+                expect(resolvedValue).toEqual(response);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a valid JSON string response as JSON with a json responseType', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'json'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var jsonResponse = {"hello" : "world"};
+                var stringResponse = JSON.stringify(jsonResponse);
+                fakeXHR.simulateLoad(stringResponse);
+                expect(resolvedValue).toEqual(jsonResponse);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a valid JSON response as JSON with a json responseType', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'json'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var response = {"hello" : "world"};
+                fakeXHR.simulateLoad(response);
+                expect(resolvedValue).toEqual(response);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a null response with a \'\' responseType and non-null responseXML with child nodes', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : ''
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var responseXML = {
+                    hasChildNodes : jasmine.createSpy('hasChildNodes').and.returnValue(true)
+                };
+                fakeXHR.simulateResponseXMLLoad(responseXML);
+                expect(resolvedValue).toEqual(responseXML);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a null response with a document responseType and non-null responseXML with child nodes', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'document'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var responseXML = {
+                    hasChildNodes : jasmine.createSpy('hasChildNodes').and.returnValue(true)
+                };
+                fakeXHR.simulateResponseXMLLoad(responseXML);
+                expect(resolvedValue).toEqual(responseXML);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a null response with a \'\' responseType and non-null responseText', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : ''
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var responseText = 'hello world';
+                fakeXHR.simulateResponseTextLoad(responseText);
+                expect(resolvedValue).toEqual(responseText);
+                expect(rejectedError).toBeUndefined();
+            });
+
+            it('a null response with a text responseType and non-null responseText', function() {
+                var promise = loadWithXhr({
+                    url : 'http://example.invalid',
+                    responseType : 'text'
+                });
+
+                expect(promise).toBeDefined();
+
+                var resolvedValue;
+                var rejectedError;
+                promise.then(function(value) {
+                    resolvedValue = value;
+                }, function(error) {
+                    rejectedError = error;
+                });
+
+                expect(resolvedValue).toBeUndefined();
+                expect(rejectedError).toBeUndefined();
+
+                var responseText = 'hello world';
+                fakeXHR.simulateResponseTextLoad(responseText);
+                expect(resolvedValue).toEqual(responseText);
+                expect(rejectedError).toBeUndefined();
             });
         });
     });
