@@ -28,7 +28,7 @@ var yargs = require('yargs');
 var aws = require('aws-sdk');
 var mime = require('mime');
 var compressible = require('compressible');
-
+var express = require('express');
 var packageJson = require('./package.json');
 var version = packageJson.version;
 if (/\.0$/.test(version)) {
@@ -117,6 +117,11 @@ gulp.task('build', function(done) {
 
 gulp.task('build-watch', function() {
     gulp.watch(buildFiles, ['build']);
+});
+
+gulp.task('dev-watch', function(){
+    (express()).use(express.static('.')).listen(8080);
+    (require('livereload').createServer()).watch(__dirname + "/Source");
 });
 
 gulp.task('buildApps', function() {

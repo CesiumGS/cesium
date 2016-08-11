@@ -10,7 +10,8 @@
   <!-- Make the application on mobile take up the full browser screen and disable user scaling. -->
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
   <title>Hello World!</title>
-  <script src="../Build/Cesium/Cesium.js"></script>
+  <script src="../node_modules/requirejs/require.js"></script>
+  <script src="./main.js"></script>
   <style>
       @import url(../Build/Cesium/Widgets/widgets.css);
       html, body, #cesiumContainer {
@@ -21,8 +22,28 @@
 <body>
   <div id="cesiumContainer"></div>
   <script>
-    var viewer = new Cesium.Viewer('cesiumContainer');
+    document.onreadystatechange = function(event) {
+      console.log(event)
+      window.viewer = new Cesium.Viewer('cesiumContainer',{
+        skyAtmosphere:false,
+        timeline:false,
+        creditContainer:new DocumentFragment('p'),
+        animation:false,
+        skyBox:false,
+        navigationHelpButton:false,
+        shadows:false,
+        terrainShadows:false,
+        showRenderLoopErrors:false
+      });
+  
+      
 
+    }.bind(this);
+   
+   document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +
+  ':35729/livereload.js?snipver=1"></' + 'script>');
+ 
+</script>
   </script>
 </body>
 </html>
