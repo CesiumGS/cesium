@@ -22,6 +22,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
         '../Renderer/RenderState',
+        '../Renderer/ShaderSource',
         '../Renderer/ShaderProgram',
         '../Renderer/VertexArray',
         '../Renderer/WebGLConstants',
@@ -53,6 +54,7 @@ define([
         BufferUsage,
         DrawCommand,
         RenderState,
+        ShaderSource,
         ShaderProgram,
         VertexArray,
         WebGLConstants,
@@ -82,6 +84,8 @@ define([
         this._parsedContent = undefined;
 
         this._drawCommand = undefined;
+        this._pickCommand = undefined;
+        this._pickId = undefined;
         this._isTranslucent = false;
         this._constantColor = Color.clone(Color.WHITE);
         this._rtcCenter = undefined;
@@ -571,6 +575,40 @@ define([
             pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
             owner : content
         });
+
+        content._pickId = context.createPickId({
+            primitive : content
+        });
+
+        var pickUniformMap = combine(uniformMap, {
+            czm_pickColor : function() {
+                return content._pickId.color;
+            }
+        });
+
+        var pickVS = vs;
+        var pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
+
+        var pickShaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : pickVS,
+            fragmentShaderSource : pickFS,
+            attributeLocations : attributeLocations
+        });
+
+        content._pickCommand = new DrawCommand({
+            boundingVolume : content._tile.contentBoundingVolume.boundingSphere,
+            cull : false, // Already culled by 3D tiles
+            modelMatrix : new Matrix4(),
+            primitiveType : PrimitiveType.POINTS,
+            vertexArray : vertexArray,
+            count : pointsLength,
+            shaderProgram : pickShaderProgram,
+            uniformMap : pickUniformMap,
+            renderState : isTranslucent ? content._translucentRenderState : content._opaqueRenderState,
+            pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE,
+            owner : content
+        });
     }
 
     /**
@@ -602,6 +640,7 @@ define([
             } else {
                 Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
             }
+            Matrix4.clone(this._drawCommand.modelMatrix, this._pickCommand.modelMatrix);
         }
 
         // Update the render state
@@ -609,7 +648,13 @@ define([
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
         this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-        frameState.addCommand(this._drawCommand);
+        var passes = frameState.passes;
+        if (passes.render) {
+            frameState.addCommand(this._drawCommand);
+        }
+        if (passes.pick) {
+            frameState.addCommand(this._pickCommand);
+        }
     };
 
     /**
@@ -624,9 +669,11 @@ define([
      */
     Points3DTileContent.prototype.destroy = function() {
         var command = this._drawCommand;
+        var pickCommand = this._pickCommand;
         if (defined(command)) {
             command.vertexArray = command.vertexArray && command.vertexArray.destroy();
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
+            pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
         return destroyObject(this);
     };
