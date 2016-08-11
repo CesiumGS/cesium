@@ -2,6 +2,7 @@
 define([
         'Core/Color',
         'Core/defaultValue',
+        'Core/defined',
         'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTileset',
@@ -10,6 +11,7 @@ define([
     ], function(
         Color,
         defaultValue,
+        defined,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileset,
@@ -29,6 +31,17 @@ define([
     };
 
     function Cesium3DTilesTester() {
+    }
+
+    function padStringToByteAlignment(string, byteAlignment) {
+        var length = string.length;
+        var paddedLength = Math.ceil(length / byteAlignment) * byteAlignment; // Round up to the required alignment
+        var padding = paddedLength - length;
+        var whitespace = '';
+        for (var i = 0; i < padding; ++i) {
+            whitespace += ' ';
+        }
+        return string + whitespace;
     }
 
     function expectRender(scene, tileset) {
@@ -249,21 +262,46 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [112, 110, 116, 115]);
         var version = defaultValue(options.version, 1);
+        var featureTableJSON = options.featureTableJSON;
+        if (!defined(featureTableJSON)) {
+            featureTableJSON = {
+                POINTS_LENGTH : 1,
+                POSITIONS : {
+                    byteOffset : 0
+                }
+            };
+        }
 
-        var headerByteLength = 24;
-        var byteLength = headerByteLength;
+        var featureTableJSONString = JSON.stringify(featureTableJSON);
+        featureTableJSONString = padStringToByteAlignment(featureTableJSONString, 4);
+        var featureTableJSONByteLength = defaultValue(options.featureTableJSONByteLength, featureTableJSONString.length);
+
+        var featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats
+        var featureTableBinaryByteLength = featureTableBinary.byteLength;
+
+        var headerByteLength = 20;
+        var byteLength = headerByteLength + featureTableJSONByteLength + featureTableBinaryByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
         view.setUint8(1, magic[1]);
         view.setUint8(2, magic[2]);
         view.setUint8(3, magic[3]);
-        view.setUint32(4, version, true);          // version
-        view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, 0, true);               // pointsLength
-        view.setUint32(16, 0, true);               // batchTableJSONByteLength
-        view.setUint32(20, 0, true);               // batchTableBinaryByteLength
+        view.setUint32(4, version, true);                       // version
+        view.setUint32(8, byteLength, true);                    // byteLength
+        view.setUint32(12, featureTableJSONByteLength, true);   // featureTableJSONByteLength
+        view.setUint32(16, featureTableBinaryByteLength, true); // featureTableBinaryByteLength
 
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < featureTableJSONByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJSONString.charCodeAt(i));
+            byteOffset++;
+        }
+        for (i = 0; i < featureTableBinaryByteLength; i++) {
+            view.setUint8(byteOffset, featureTableBinary[i]);
+            byteOffset++;
+        }
         return buffer;
     };
 

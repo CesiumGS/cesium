@@ -21,6 +21,11 @@ defineSuite([
     var pointsRGBAUrl = './Data/Cesium3DTiles/Points/PointsRGBA';
     var pointsNoColorUrl = './Data/Cesium3DTiles/Points/PointsNoColor';
     var pointsConstantColorUrl = './Data/Cesium3DTiles/Points/PointsConstantColor';
+    var pointsNormalsUrl = './Data/Cesium3DTiles/Points/PointsNormals';
+    var pointsNormalsOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsNormalsOctEncoded';
+    var pointsQuantizedUrl = './Data/Cesium3DTiles/Points/PointsQuantized';
+    var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsQuantizedOctEncoded';
+    var pointsWGS84Url = './Data/Cesium3DTiles/Points/PointsWGS84';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -66,6 +71,59 @@ defineSuite([
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
+    it('throws if featureTableJSONByteLength is 0', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJSONByteLength : 0
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('throws if the feature table does not contain POINTS_LENGTH', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJSON : {
+                POSITION : {
+                    byteOffset : 0
+                }
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('throws if the feature table does not contain POSITION or POSITION_QUANTIZED', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJSON : {
+                POINTS_LENGTH : 1
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJSON : {
+                POINTS_LENGTH : 1,
+                POSITION_QUANTIZED : {
+                    byteOffset : 0
+                },
+                QUANTIZED_VOLUME_OFFSET : [0.0, 0.0, 0.0]
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJSON : {
+                POINTS_LENGTH : 1,
+                POSITION_QUANTIZED : {
+                    byteOffset : 0
+                },
+                QUANTIZED_VOLUME_SCALE : [1.0, 1.0, 1.0]
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
     it('resolves readyPromise', function() {
         return Cesium3DTilesTester.resolvesReadyPromise(scene, pointsRGBUrl);
     });
@@ -88,6 +146,26 @@ defineSuite([
 
     it('renders points with constant colors', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointsConstantColorUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsNormalsUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with oct encoded normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsNormalsOctEncodedUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with quantized positions', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsQuantizedUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with quantized positions and oct-encoded normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsQuantizedOctEncodedUrl).then(expectRenderPoints);
+    });
+
+    it('renders points that are not defined relative to center', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWGS84Url).then(expectRenderPoints);
     });
 
     it('renders with debug color', function() {
