@@ -153,12 +153,20 @@ define([
         xhr.onload = function() {
             if (xhr.status >= 200 && xhr.status < 300) {
                 if (defined(xhr.response)) {
-                    deferred.resolve(xhr.response);
+                    if (responseType === 'json' && typeof xhr.response === 'string') { //IE doesn't support responseType = 'json'
+                        try{
+                            deferred.resolve(JSON.parse(xhr.response));
+                        } catch (e) {
+                            deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
+                        }
+                    } else {
+                        deferred.resolve(xhr.response);
+                    }
                 } else {
                     // busted old browsers.
-                    if (defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                    if ((xhr.responseType === '' || xhr.responseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
                         deferred.resolve(xhr.responseXML);
-                    } else if (defined(xhr.responseText)) {
+                    } else if ((xhr.responseType === '' || xhr.responseType === 'text') && defined(xhr.responseText)) {
                         deferred.resolve(xhr.responseText);
                     } else {
                         deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
