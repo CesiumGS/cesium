@@ -159,6 +159,8 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
+     * @returns {Boolean} Whether the request was initiated. May be false if the RequestScheduler is full.
+     *
      * @private
      */
     Cesium3DTileContent.prototype.request = function() {

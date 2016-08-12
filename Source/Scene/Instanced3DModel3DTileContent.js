@@ -178,7 +178,9 @@ define([
                 that.state = Cesium3DTileContentState.FAILED;
                 that._readyPromise.reject(error);
             });
+            return true;
         }
+        return false;
     };
 
     /**

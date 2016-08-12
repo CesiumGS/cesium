@@ -202,7 +202,9 @@ define([
 
         this._createContent = createContent;
         this._content = createContent();
-        addContentReadyPromise(this);
+        if (!hasContent && !hasTilesetContent) {
+            addContentReadyPromise(this);
+        }
 
         this._requestServer = requestServer;
 
@@ -408,7 +410,9 @@ define([
      * @private
      */
     Cesium3DTile.prototype.requestContent = function() {
-        this._content.request();
+        if (this._content.request()) {
+            addContentReadyPromise(this);
+        }
     };
 
     /**
@@ -440,7 +444,9 @@ define([
 
         this._content = this._content && this._content.destroy();
         this._content = this._createContent();
-        addContentReadyPromise(this);
+        if (!this.hasContent && !this.hasTilesetContent) {
+            addContentReadyPromise(this);
+        }
 
         this.replacementNode = undefined;
 
