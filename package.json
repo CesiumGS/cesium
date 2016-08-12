@@ -28,6 +28,7 @@
     "email": "cesium-dev@googlegroups.com"
   },
   "dependencies": {
+    "livereload": "^0.5.0",
     "requirejs": "2.2.0"
   },
   "devDependencies": {

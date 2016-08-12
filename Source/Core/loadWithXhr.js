@@ -52,7 +52,9 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     function loadWithXhr(options) {
+
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        options.preferences = defaultValue(options.preferences, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
@@ -65,11 +67,12 @@ define([
         var data = options.data;
         var headers = options.headers;
         var overrideMimeType = options.overrideMimeType;
+        var withCredentials = options.preferences.withCredentials;
 
         return when(options.url, function(url) {
             var deferred = when.defer();
 
-            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType);
+            loadWithXhr.load(url, responseType, method, data, headers, deferred, overrideMimeType, withCredentials);
 
             return deferred.promise;
         });
@@ -123,7 +126,7 @@ define([
     }
 
     // This is broken out into a separate function so that it can be mocked for testing purposes.
-    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+    loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType, withCredentials) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
             deferred.resolve(decodeDataUri(dataUriRegexResult, responseType));
@@ -134,6 +137,10 @@ define([
 
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
+        }
+
+        if(defined(withCredentials) && withCredentials){
+            xhr.withCredentials = true;
         }
 
         xhr.open(method, url, true);

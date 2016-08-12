@@ -114,7 +114,7 @@ define([
         this._tileDiscardPolicy = options.tileDiscardPolicy;
         this._proxy = options.proxy;
         this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
-
+        this._withCredentials = defaultValue(options.withCredentials, false);
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
          * By default, this is set to 1.3 for the "aerial" and "aerial with labels" map styles and 1.0 for
@@ -234,7 +234,17 @@ define([
                 return this._url;
             }
         },
-
+        /**
+         * Gets whether to send credentials with each request.
+         * @memberof BingMapsImageryProvider.prototype
+         * @type {Boolean}
+         * @readonly
+         */
+        withCredentials : {
+            get : function() {
+                return this._withCredentials;
+            }
+        },
         /**
          * Gets the proxy used by this provider.
          * @memberof BingMapsImageryProvider.prototype

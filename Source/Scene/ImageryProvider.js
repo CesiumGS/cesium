@@ -87,6 +87,14 @@ define([
          */
         this.defaultGamma = undefined;
 
+        /**
+         * The default credential setting to apply to this provider.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.withCredentials = false;
+
         DeveloperError.throwInstantiationError();
     }
 
@@ -307,9 +315,9 @@ define([
      */
     ImageryProvider.loadImage = function(imageryProvider, url) {
         if (defined(imageryProvider.tileDiscardPolicy)) {
-            return throttleRequestByServer(url, loadImageViaBlob);
+            return throttleRequestByServer(url, loadImageViaBlob, imageryProvider);
         }
-        return throttleRequestByServer(url, loadImage);
+        return throttleRequestByServer(url, loadImage, imageProvider);
     };
 
     return ImageryProvider;
