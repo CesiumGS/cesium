@@ -2,10 +2,12 @@
 define([
         '../ThirdParty/when',
         './loadBlob',
+        '../Core/defaultValue',
         './loadImage'
     ], function(
         when,
         loadBlob,
+        defaultValue,
         loadImage) {
     'use strict';
 
@@ -46,12 +48,14 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadImageViaBlob(url) {
+    function loadImageViaBlob(url, options) {
         if (dataUriRegex.test(url)) {
             return loadImage(url);
         }
 
-        return loadBlob(url).then(function(blob) {
+        var headers = (options && options.hasOwnProperty('headers'))?options.headers : defaultValue.EMPTY_OBJECT;
+      
+        return loadBlob(url, headers, options).then(function(blob) {
             var blobUrl = window.URL.createObjectURL(blob);
 
             return loadImage(blobUrl, false).then(function(image) {

@@ -23,20 +23,20 @@
   <div id="cesiumContainer"></div>
   <script>
     document.onreadystatechange = function(event) {
-      console.log(event)
-      window.viewer = new Cesium.Viewer('cesiumContainer',{
-        skyAtmosphere:false,
-        timeline:false,
-        creditContainer:new DocumentFragment('p'),
-        animation:false,
-        skyBox:false,
-        navigationHelpButton:false,
-        shadows:false,
-        terrainShadows:false,
-        showRenderLoopErrors:false
-      });
-  
       
+      if(document.readyState==="complete"){
+        window.viewer = new Cesium.Viewer('cesiumContainer',{
+          skyAtmosphere:false,
+          timeline:false,
+          creditContainer:new DocumentFragment('p'),
+          animation:false,
+          skyBox:false,
+          navigationHelpButton:false,
+          shadows:false,
+          terrainShadows:false,
+          showRenderLoopErrors:false
+        });
+      }
 
     }.bind(this);
    
