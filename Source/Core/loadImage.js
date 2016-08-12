@@ -50,9 +50,11 @@ define([
             throw new DeveloperError('url is required.');
         }
         //>>includeEnd('debug');
-
-        allowCrossOrigin = defaultValue(allowCrossOrigin, true);
-
+        if(allowCrossOrigin && allowCrossOrigin.hasOwnProperty('withCredentials')){
+            allowCrossOrigin = 'use-credentials';
+        }else{
+            allowCrossOrigin = defaultValue(allowCrossOrigin, true);
+        }
         return when(url, function(url) {
             var crossOrigin;
 
@@ -60,7 +62,7 @@ define([
             if (dataUriRegex.test(url) || !allowCrossOrigin) {
                 crossOrigin = false;
             } else {
-                crossOrigin = isCrossOriginUrl(url);
+                crossOrigin = allowCrossOrigin || isCrossOriginUrl(url);
             }
 
             var deferred = when.defer();
@@ -75,6 +77,8 @@ define([
     loadImage.createImage = function(url, crossOrigin, deferred) {
         var image = new Image();
 
+        crossOrigin = (typeof crossOrigin === "string")? crossOrigin : (crossOrigin)?'':false;
+
         image.onload = function() {
             deferred.resolve(image);
         };
@@ -84,7 +88,7 @@ define([
         };
 
         if (crossOrigin) {
-            image.crossOrigin = '';
+            image.crossOrigin = crossOrigin;
         }
 
         image.src = url;

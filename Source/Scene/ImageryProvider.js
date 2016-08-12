@@ -317,7 +317,7 @@ define([
         if (defined(imageryProvider.tileDiscardPolicy)) {
             return throttleRequestByServer(url, loadImageViaBlob, imageryProvider);
         }
-        return throttleRequestByServer(url, loadImage);
+        return throttleRequestByServer(url, loadImage, imageProvider);
     };
 
     return ImageryProvider;
