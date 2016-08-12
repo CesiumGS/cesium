@@ -801,8 +801,8 @@ define([
             ++stats.numberOfPendingRequests;
 
             var removeFunction = removeFromProcessingQueue(tileset, tile);
-            when(tile.content.contentReadyToProcessPromise).then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
-            when(tile.content.readyPromise).then(removeFunction).otherwise(removeFunction);
+            tile.content.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile)).otherwise(removeFunction);
+            tile.content.readyPromise.then(removeFunction).otherwise(removeFunction);
         }
     }
 
