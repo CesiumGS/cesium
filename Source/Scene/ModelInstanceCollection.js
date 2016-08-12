@@ -789,7 +789,7 @@ define([
             this._state = LoadState.LOADING;
             createModel(this, context);
             var that = this;
-            when(this._model.readyPromise).otherwise(function(error) {
+            this._model.readyPromise.otherwise(function(error) {
                 that._state = LoadState.FAILED;
                 that._readyPromise.reject(error);
             });

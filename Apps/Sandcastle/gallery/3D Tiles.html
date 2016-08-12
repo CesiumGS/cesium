@@ -65,7 +65,7 @@ function loadTileset(url) {
         maximumNumberOfLoadedTiles : 3
     }));
 
-    return Cesium.when(tileset.readyPromise).then(function(tileset) {
+    return tileset.readyPromise.then(function(tileset) {
         var boundingSphere = tileset.boundingSphere;
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);

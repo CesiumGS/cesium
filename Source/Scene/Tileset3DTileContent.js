@@ -32,10 +32,11 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.contentReadyToProcessPromise = when.defer();
-        this.readyPromise = when.defer();
         this.batchTableResources = undefined;
         this.featurePropertiesDirty = false;
+
+        this._contentReadyToProcessPromise = when.defer();
+        this._readyPromise = when.defer();
     }
 
     defineProperties(Tileset3DTileContent.prototype, {
@@ -54,6 +55,24 @@ define([
         innerContents : {
             get : function() {
                 return undefined;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        contentReadyToProcessPromise : {
+            get : function() {
+                return this._contentReadyToProcessPromise.promise;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         }
     });
@@ -83,12 +102,12 @@ define([
         this.state = Cesium3DTileContentState.LOADING;
         this._tileset.loadTileset(this._url, this._tile).then(function() {
             that.state = Cesium3DTileContentState.PROCESSING;
-            that.contentReadyToProcessPromise.resolve(that);
+            that._contentReadyToProcessPromise.resolve(that);
             that.state = Cesium3DTileContentState.READY;
-            that.readyPromise.resolve(that);
+            that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
+            that._readyPromise.reject(error);
         });
     };
 

@@ -21,7 +21,6 @@ define([
         '../Core/RequestScheduler',
         '../Core/SphereOutlineGeometry',
         '../ThirdParty/Uri',
-        '../ThirdParty/when',
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileRefine',
@@ -54,7 +53,6 @@ define([
         RequestScheduler,
         SphereOutlineGeometry,
         Uri,
-        when,
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileRefine,
@@ -390,7 +388,7 @@ define([
 
     function addContentReadyPromise(tile) {
         // Content enters the READY state
-        when(tile._content.readyPromise).then(function(content) {
+        tile._content.readyPromise.then(function(content) {
             if (defined(tile.parent)) {
                 --tile.parent.numberOfChildrenWithoutContent;
             }
