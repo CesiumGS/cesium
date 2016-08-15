@@ -150,18 +150,22 @@ define([
             type : RequestType.TILES3D,
             distance : distance
         }));
-        if (defined(promise)) {
-            this.state = Cesium3DTileContentState.LOADING;
-            promise.then(function(arrayBuffer) {
-                if (that.isDestroyed()) {
-                    return when.reject('tileset is destroyed');
-                }
-                that.initialize(arrayBuffer);
-            }).otherwise(function(error) {
-                that.state = Cesium3DTileContentState.FAILED;
-                that._readyPromise.reject(error);
-            });
+
+        if (!defined(promise)) {
+            return false;
         }
+
+        this.state = Cesium3DTileContentState.LOADING;
+        promise.then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            that.initialize(arrayBuffer);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that._readyPromise.reject(error);
+        });
+        return true;
     };
 
     /**
