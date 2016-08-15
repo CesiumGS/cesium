@@ -49,7 +49,7 @@
     "jasmine-core": "2.4.1",
     "jsdoc": "3.4.0",
     "jshint": "2.9.2",
-    "jshint-stylish": "2.2.0",
+    "jshint-stylish": "2.2.1",
     "karma": "1.2.0",
     "karma-chrome-launcher": "1.0.1",
     "karma-detect-browsers": "2.1.0",
