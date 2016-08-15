@@ -151,29 +151,31 @@ define([
         }
 
         xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                if (defined(xhr.response)) {
-                    if (responseType === 'json' && typeof xhr.response === 'string') { //IE doesn't support responseType = 'json'
-                        try {
-                            deferred.resolve(JSON.parse(xhr.response));
-                        } catch (e) {
-                            deferred.reject(e);
-                        }
-                    } else {
-                        deferred.resolve(xhr.response);
-                    }
-                } else {
-                    // busted old browsers.
-                    if ((xhr.responseType === '' || xhr.responseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
-                        deferred.resolve(xhr.responseXML);
-                    } else if ((xhr.responseType === '' || xhr.responseType === 'text') && defined(xhr.responseText)) {
-                        deferred.resolve(xhr.responseText);
-                    } else {
-                        deferred.reject(new RuntimeError('unknown XMLHttpRequest response type.'));
-                    }
-                }
-            } else {
+            if (xhr.status < 200 || xhr.status >= 300) {
                 deferred.reject(new RequestErrorEvent(xhr.status, xhr.response, xhr.getAllResponseHeaders()));
+                return;
+            }
+
+            var response = xhr.response;
+            var browserResponseType = xhr.responseType;
+
+            //All modern browsers will go into either the first if block or last else block.
+            //Other code paths support older browsers that either do not support the supplied responseType
+            //or do not support the xhr.response property.
+            if (defined(response) && (!defined(responseType) || (browserResponseType === responseType))) {
+                deferred.resolve(response);
+            } else if ((responseType === 'json') && typeof response === 'string') {
+                try {
+                    deferred.resolve(JSON.parse(response));
+                } catch (e) {
+                    deferred.reject(e);
+                }
+            } else if ((browserResponseType === '' || browserResponseType === 'document') && defined(xhr.responseXML) && xhr.responseXML.hasChildNodes()) {
+                deferred.resolve(xhr.responseXML);
+            } else if ((browserResponseType === '' || browserResponseType === 'text') && defined(xhr.responseText)) {
+                deferred.resolve(xhr.responseText);
+            } else {
+                deferred.reject(new RuntimeError('Invalid XMLHttpRequest response type.'));
             }
         };
 

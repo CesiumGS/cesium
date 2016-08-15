@@ -158,7 +158,66 @@ defineSuite([
         });
     });
 
-    describe('URL loading', function() {
+    describe('URL loading using XHR', function() {
+        describe('returns a promise that rejects when the request', function() {
+            it('results in an HTTP status code greater than or equal to 300', function() {
+                return loadWithXhr({
+                    url : 'http://example.invalid'
+                }).then(function(resolvedValue) {
+                    expect(resolvedValue).toBeUndefined();
+                }, function(rejectedError) {
+                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                });
+            });
+
+            it('loads an invalid JSON string response as JSON with a json responseType', function() {
+                return loadWithXhr({
+                    url : 'Data/htmlString.txt',
+                    responseType : 'json'
+                }).then(function(resolvedValue) {
+                    expect(resolvedValue).toBeUndefined();
+                }, function(rejectedError) {
+                    expect(rejectedError instanceof RuntimeError).toBe(true);
+                });
+            });
+        });
+
+        describe('returns a promise that resolves when the request loads', function() {
+            it('a non-null response with default responseType', function() {
+                return loadWithXhr({
+                    url : 'Data/Models/Box/ReadMe.txt'
+                }).then(function(resolvedValue) {
+                    expect(resolvedValue).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
+                }, function(rejectedError) {
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+
+            it('a non-null response with a browser-supported responseType', function() {
+                return loadWithXhr({
+                    url : 'Data/Models/Box/ReadMe.txt',
+                    responseType : 'text'
+                }).then(function(resolvedValue) {
+                    expect(resolvedValue).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
+                }, function(rejectedError) {
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+
+            it('a valid JSON string response as JSON with a json responseType', function() {
+                return loadWithXhr({
+                    url : 'Data/jsonString.txt',
+                    responseType : 'json'
+                }).then(function(resolvedValue) {
+                    expect(resolvedValue).toEqual(jasmine.objectContaining({hello : 'world'}));
+                }, function(rejectedError) {
+                    expect(rejectedError).toBeUndefined();
+                });
+            });
+        });
+    });
+
+    describe('URL loading using mocked XHR', function() {
         var fakeXHR;
 
         beforeEach(function() {
@@ -247,157 +306,9 @@ defineSuite([
                 expect(resolvedValue).toBeUndefined();
                 expect(rejectedError instanceof RequestErrorEvent).toBe(true);
             });
-
-            it('results in an HTTP status code greater than or equal to 300', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                fakeXHR.simulateHttpError(300);
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError instanceof RequestErrorEvent).toBe(true);
-            });
-
-            it('loads an invalid JSON string response with a json responseType', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid',
-                    responseType : 'json'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                var response = '<h1>Hello, World!</h1>';
-                fakeXHR.simulateLoad(response);
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError instanceof SyntaxError).toBe(true);
-            });
-
-            it('loads a null response with an unknown XMLHttpRequest response type', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid',
-                    responseType : 'json'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                fakeXHR.simulateLoad();
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError instanceof RuntimeError).toBe(true);
-                expect(rejectedError.message).toBe('unknown XMLHttpRequest response type.');
-            });
         });
 
         describe('returns a promise that resolves when the request loads', function() {
-            it('a non-null response', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                var response = 'hello world';
-                fakeXHR.simulateLoad(response);
-                expect(resolvedValue).toEqual(response);
-                expect(rejectedError).toBeUndefined();
-            });
-
-            it('a valid JSON string response as JSON with a json responseType', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid',
-                    responseType : 'json'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                var jsonResponse = {"hello" : "world"};
-                var stringResponse = JSON.stringify(jsonResponse);
-                fakeXHR.simulateLoad(stringResponse);
-                expect(resolvedValue).toEqual(jsonResponse);
-                expect(rejectedError).toBeUndefined();
-            });
-
-            it('a valid JSON response as JSON with a json responseType', function() {
-                var promise = loadWithXhr({
-                    url : 'http://example.invalid',
-                    responseType : 'json'
-                });
-
-                expect(promise).toBeDefined();
-
-                var resolvedValue;
-                var rejectedError;
-                promise.then(function(value) {
-                    resolvedValue = value;
-                }, function(error) {
-                    rejectedError = error;
-                });
-
-                expect(resolvedValue).toBeUndefined();
-                expect(rejectedError).toBeUndefined();
-
-                var response = {"hello" : "world"};
-                fakeXHR.simulateLoad(response);
-                expect(resolvedValue).toEqual(response);
-                expect(rejectedError).toBeUndefined();
-            });
-
             it('a null response with a \'\' responseType and non-null responseXML with child nodes', function() {
                 var promise = loadWithXhr({
                     url : 'http://example.invalid',
