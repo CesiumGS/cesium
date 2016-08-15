@@ -180,6 +180,19 @@ defineSuite([
         });
     });
 
+    it('picks', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            tileset.show = false;
+            var picked = scene.pickForSpecs();
+            expect(picked).toBeUndefined();
+            tileset.show = true;
+            picked = scene.pickForSpecs();
+            expect(picked).toBeDefined();
+            expect(picked.primitive).toBe(content);
+        });
+    });
+
     it('destroys', function() {
         return Cesium3DTilesTester.tileDestroys(scene, pointsRGBUrl);
     });
