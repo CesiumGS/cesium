@@ -293,16 +293,14 @@ defineSuite([
     });
 
     it('computing rectangle property with zero rotation', function() {
-        var rectangle = Rectangle.MAX_VALUE;
-        var geometry = new RectangleGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            rectangle : rectangle,
-            granularity : 1.0,
-            rotation : 0
-        });
-
-        var r = geometry.rectangle;
-        expect(r).toEqual(rectangle);
+        expect(function() {
+            return RectangleGeometry.createGeometry(new RectangleGeometry({
+                vertexFormat : VertexFormat.POSITION_ONLY,
+                rectangle : Rectangle.MAX_VALUE,
+                granularity : 1.0,
+                rotation : 0
+            }));
+        }).not.toThrowDeveloperError();
     });
 
     var rectangle = new RectangleGeometry({
