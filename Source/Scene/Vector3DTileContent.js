@@ -270,7 +270,8 @@ define([
         var quantizedScale = Cartesian3.unpack(featureTableJSON.QUANTIZED_VOLUME_SCALE);
 
         // TODO: get feature colors
-        var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        //var randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
+        var randomColors = [Color.WHITE.withAlpha(0.5)];
         var colors = [];
         var tempLength = offsets.length;
         var n;
@@ -297,6 +298,7 @@ define([
         });
 
         // TODO: get feature colors/widths
+        randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
         colors = [];
         var widths = [];
         var batchIds = [];
