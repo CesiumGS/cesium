@@ -34,6 +34,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
+
 var scene = viewer.scene;
 scene.fog.enabled = false;
 scene.debugShowFramesPerSecond = true;

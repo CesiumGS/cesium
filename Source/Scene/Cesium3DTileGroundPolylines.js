@@ -273,19 +273,27 @@ define([
             return;
         }
 
+        var polygonOffset = {
+            enabled : true,
+            factor : -5.0,
+            units : -5.0
+        };
+
         primitive._rs = RenderState.fromCache({
             blending : BlendingState.ALPHA_BLEND,
             depthMask : false,
             depthTest : {
                 enabled : true
-            }
+            },
+            polygonOffset : polygonOffset
         });
 
         primitive._rsPick = RenderState.fromCache({
             depthMask : false,
             depthTest : {
                 enabled : true
-            }
+            },
+            polygonOffset : polygonOffset
         });
     }
 

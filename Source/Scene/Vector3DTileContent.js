@@ -280,22 +280,24 @@ define([
             batchTableResources.setColor(n, colors[n]);
         }
 
-        this._polygons = new Cesium3DTileGroundPrimitive({
-            positions : positions,
-            colors : colors,
-            offsets : offsets,
-            counts : counts,
-            indexOffsets : indexOffsets,
-            indexCounts : indexCounts,
-            indices : indices,
-            minimumHeight : minHeight,
-            maximumHeight : maxHeight,
-            center : center,
-            quantizedOffset : quantizedOffset,
-            quantizedScale : quantizedScale,
-            boundingVolume : this._tile._boundingVolume.boundingVolume,
-            batchTableResources : this.batchTableResources
-        });
+        if (positions.length > 0 && false) {
+            this._polygons = new Cesium3DTileGroundPrimitive({
+                positions : positions,
+                colors : colors,
+                offsets : offsets,
+                counts : counts,
+                indexOffsets : indexOffsets,
+                indexCounts : indexCounts,
+                indices : indices,
+                minimumHeight : minHeight,
+                maximumHeight : maxHeight,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTableResources : this.batchTableResources
+            });
+        }
 
         // TODO: get feature colors/widths
         randomColors = [Color.fromRandom({alpha : 0.5}), Color.fromRandom({alpha : 0.5})];
@@ -311,18 +313,20 @@ define([
             batchIds[n] = numberOfPolygons + n;
         }
 
-        this._polylines = new Cesium3DTileGroundPolylines({
-            positions : polylinePositions,
-            widths : widths,
-            offsets : polylineOffsets,
-            counts : polylineCounts,
-            batchIds : batchIds,
-            center : center,
-            quantizedOffset : quantizedOffset,
-            quantizedScale : quantizedScale,
-            boundingVolume : this._tile._boundingVolume.boundingVolume,
-            batchTableResources : this.batchTableResources
-        });
+        if (polylinePositions.length > 0) {
+            this._polylines = new Cesium3DTileGroundPolylines({
+                positions : polylinePositions,
+                widths : widths,
+                offsets : polylineOffsets,
+                counts : polylineCounts,
+                batchIds : batchIds,
+                center : center,
+                quantizedOffset : quantizedOffset,
+                quantizedScale : quantizedScale,
+                boundingVolume : this._tile._boundingVolume.boundingVolume,
+                batchTableResources : this.batchTableResources
+            });
+        }
 
         this.state = Cesium3DTileContentState.PROCESSING;
         this.contentReadyToProcessPromise.resolve(this);
