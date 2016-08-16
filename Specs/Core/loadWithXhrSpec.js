@@ -163,10 +163,10 @@ defineSuite([
             it('results in an HTTP status code greater than or equal to 300', function() {
                 return loadWithXhr({
                     url : 'http://example.invalid'
-                }).then(function(resolvedValue) {
-                    expect(resolvedValue).toBeUndefined();
-                }, function(rejectedError) {
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                }).then(function() {
+                    fail('expected promise to reject');
+                }).otherwise(function(err) {
+                    expect(err instanceof RequestErrorEvent).toBe(true);
                 });
             });
 
@@ -174,11 +174,11 @@ defineSuite([
                 return loadWithXhr({
                     url : 'Data/htmlString.txt',
                     responseType : 'json'
-                }).then(function(resolvedValue) {
-                    expect(resolvedValue).toBeUndefined();
-                }, function(rejectedError) {
-                    expect(rejectedError).toBeDefined();
-                    expect(rejectedError instanceof Error).toBe(true);
+                }).then(function() {
+                    fail('expected promise to reject');
+                }).otherwise(function(err) {
+                    expect(err).toBeDefined();
+                    expect(err instanceof Error).toBe(true);
                 });
             });
         });
@@ -187,10 +187,8 @@ defineSuite([
             it('a non-null response with default responseType', function() {
                 return loadWithXhr({
                     url : 'Data/Models/Box/ReadMe.txt'
-                }).then(function(resolvedValue) {
-                    expect(resolvedValue).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
-                }, function(rejectedError) {
-                    expect(rejectedError).toBeUndefined();
+                }).then(function(result) {
+                    expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
                 });
             });
 
@@ -198,10 +196,8 @@ defineSuite([
                 return loadWithXhr({
                     url : 'Data/Models/Box/ReadMe.txt',
                     responseType : 'text'
-                }).then(function(resolvedValue) {
-                    expect(resolvedValue).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
-                }, function(rejectedError) {
-                    expect(rejectedError).toBeUndefined();
+                }).then(function(result) {
+                    expect(result).toBe('CesiumBoxTest-NoTechnique.gltf is a modified glTF that has techniques, shaders & programs removed.');
                 });
             });
 
@@ -209,10 +205,8 @@ defineSuite([
                 return loadWithXhr({
                     url : 'Data/jsonString.txt',
                     responseType : 'json'
-                }).then(function(resolvedValue) {
-                    expect(resolvedValue).toEqual(jasmine.objectContaining({hello : 'world'}));
-                }, function(rejectedError) {
-                    expect(rejectedError).toBeUndefined();
+                }).then(function(result) {
+                    expect(result).toEqual(jasmine.objectContaining({hello : 'world'}));
                 });
             });
         });
@@ -266,7 +260,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
@@ -289,7 +283,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
@@ -315,7 +309,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
@@ -342,7 +336,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
@@ -369,7 +363,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
@@ -394,7 +388,7 @@ defineSuite([
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }, function(error) {
+                }).otherwise(function (error) {
                     rejectedError = error;
                 });
 
