@@ -170,14 +170,15 @@ defineSuite([
                 });
             });
 
-            it('loads an invalid JSON string response as JSON with a json responseType', function() {
+            it('loads an invalid JSON string response with a json responseType', function() {
                 return loadWithXhr({
                     url : 'Data/htmlString.txt',
                     responseType : 'json'
                 }).then(function(resolvedValue) {
                     expect(resolvedValue).toBeUndefined();
                 }, function(rejectedError) {
-                    expect(rejectedError instanceof RuntimeError).toBe(true);
+                    expect(rejectedError).toBeDefined();
+                    expect(rejectedError instanceof Error).toBe(true);
                 });
             });
         });
