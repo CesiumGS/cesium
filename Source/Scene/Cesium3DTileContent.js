@@ -43,28 +43,6 @@ define([
         this.state = undefined;
 
         /**
-         * Gets the promise that will be resolved when the tile's content is ready to process.
-         * This happens after the content is downloaded but before the content is ready
-         * to render.
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        this.contentReadyToProcessPromise = undefined;
-
-        /**
-         * Gets the promise that will be resolved when the tile's content is ready to render.
-         *
-         * @type {Promise.<Cesium3DTileContent>}
-         * @readonly
-         *
-         * @private
-         */
-        this.readyPromise = undefined;
-
-        /**
          * Gets the batch table texture for this tile.
          *
          * @type {Cesium3DTileBatchTableResources}
@@ -113,6 +91,36 @@ define([
             get : function() {
                 DeveloperError.throwInstantiationError();
             }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the tile's content is ready to process.
+         * This happens after the content is downloaded but before the content is ready
+         * to render.
+         *
+         * @type {Promise.<Cesium3DTileContent>}
+         * @readonly
+         *
+         * @private
+         */
+        contentReadyToProcessPromise : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
+        },
+
+        /**
+         * Gets the promise that will be resolved when the tile's content is ready to render.
+         *
+         * @type {Promise.<Cesium3DTileContent>}
+         * @readonly
+         *
+         * @private
+         */
+        readyPromise : {
+            get : function() {
+                DeveloperError.throwInstantiationError();
+            }
         }
     });
 
@@ -150,6 +158,8 @@ define([
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
+     *
+     * @returns {Boolean} Whether the request was initiated. May be false if the RequestScheduler is full.
      *
      * @private
      */
