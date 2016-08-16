@@ -26,18 +26,19 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = undefined;
-        this.contentReadyToProcessPromise = when.defer();
-        this.readyPromise = when.defer();
         this.batchTableResources = undefined;
         this.featurePropertiesDirty = false;
 
+        this._contentReadyToProcessPromise = when.defer();
+        this._readyPromise = when.defer();
+
         // Transition into the PROCESSING state.
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.contentReadyToProcessPromise.resolve(this);
+        this._contentReadyToProcessPromise.resolve(this);
 
         // Transition into the READY state.
         this.state = Cesium3DTileContentState.READY;
-        this.readyPromise.resolve(this);
+        this._readyPromise.resolve(this);
     }
 
     defineProperties(Empty3DTileContent.prototype, {
@@ -56,6 +57,24 @@ define([
         innerContents : {
             get : function() {
                 return undefined;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        contentReadyToProcessPromise : {
+            get : function() {
+                return this._contentReadyToProcessPromise.promise;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         }
     });

@@ -112,7 +112,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (defined(rotation)) { // rotation doesn't work when center is on/near IDL
+        if (defined(rotation) && rotation !== 0) { // rotation doesn't work when center is on/near IDL
             var cosRotation = Math.cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
