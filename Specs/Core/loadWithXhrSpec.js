@@ -223,13 +223,6 @@ defineSuite([
 
         beforeEach(function() {
             fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
-            fakeXHR.simulateLoad = function(response) {
-                fakeXHR.status = 200;
-                fakeXHR.response = response;
-                if (typeof fakeXHR.onload === 'function') {
-                    fakeXHR.onload();
-                }
-            };
             fakeXHR.simulateError = function() {
                 fakeXHR.response = '';
                 if (typeof fakeXHR.onerror === 'function') {
