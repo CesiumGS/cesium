@@ -1102,9 +1102,11 @@ define([
 
     function updateDerivedCommands(scene, command) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowMaps;
         var context = scene._context;
         var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
+        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
 
         var shadowsDirty = false;
         if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
@@ -1123,12 +1125,12 @@ define([
             var derivedCommands = command.derivedCommands;
 
             if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
-                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
             var oit = scene._oit;
             if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-                if (shadowsEnabled && command.receiveShadows) {
+                if (lightShadowsEnabled && command.receiveShadows) {
                     derivedCommands.oit = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit);
                 } else {
                     derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
@@ -1485,9 +1487,12 @@ define([
             return;
         }
 
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length) > 0;
+
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-        } else if (scene.frameState.shadowHints.shadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
@@ -1863,7 +1868,7 @@ define([
 
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowMaps;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
         var shadowMapLength = shadowMaps.length;
 
         if (!frameState.shadowHints.shadowsEnabled) {
@@ -2145,9 +2150,18 @@ define([
             return;
         }
 
+        frameState.shadowHints.shadowMaps.length = 0;
+        frameState.shadowHints.lightShadowMaps.length = 0;
+
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
+
+            frameState.shadowHints.shadowMaps.push(shadowMap);
+
+            if (shadowMap.fromLightSource) {
+                frameState.shadowHints.lightShadowMaps.push(shadowMap);
+            }
 
             if (shadowMap.dirty) {
                 ++frameState.shadowHints.lastDirtyTime;
