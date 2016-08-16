@@ -1,14 +1,14 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/loadWithXhr',
-    'Core/loadImage',
-    'Core/RequestErrorEvent',
-    'Core/RuntimeError'
-], function(
-    loadWithXhr,
-    loadImage,
-    RequestErrorEvent,
-    RuntimeError) {
+        'Core/loadWithXhr',
+        'Core/loadImage',
+        'Core/RequestErrorEvent',
+        'Core/RuntimeError'
+    ], function(
+        loadWithXhr,
+        loadImage,
+        RequestErrorEvent,
+        RuntimeError) {
     'use strict';
 
     it('throws with no url', function() {
