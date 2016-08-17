@@ -1488,7 +1488,7 @@ define([
         }
 
         var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
-        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length) > 0;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
@@ -1837,14 +1837,13 @@ define([
             var command = commandList[i];
             updateDerivedCommands(scene, command);
 
-            // Don't insert globe commands with the rest of the scene commands since they are handled separately
             if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
                 if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
                             passes[k].commandList.push(command);
                         }
-                    } else if (numberOfPasses <= 1) {
+                    } else if (numberOfPasses === 1) {
                         passes[0].commandList.push(command);
                     } else {
                         var wasVisible = false;
