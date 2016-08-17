@@ -2149,6 +2149,15 @@ define([
             return;
         }
 
+        // Check if the shadow maps are different than the shadow maps last frame.
+        // If so, the derived commands need to be updated.
+        for (var j = 0; j < length; ++j) {
+            if (shadowMaps[j] !== frameState.shadowHints.shadowMaps[j]) {
+                ++frameState.shadowHints.lastDirtyTime;
+                break;
+            }
+        }
+
         frameState.shadowHints.shadowMaps.length = 0;
         frameState.shadowHints.lightShadowMaps.length = 0;
 
