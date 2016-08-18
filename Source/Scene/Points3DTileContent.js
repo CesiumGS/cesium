@@ -64,10 +64,11 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.contentReadyToProcessPromise = when.defer();
-        this.readyPromise = when.defer();
         this.batchTableResources = undefined;
         this.featurePropertiesDirty = false;
+
+        this._contentReadyToProcessPromise = when.defer();
+        this._readyPromise = when.defer();
     }
 
     defineProperties(Points3DTileContent.prototype, {
@@ -87,6 +88,24 @@ define([
         innerContents : {
             get : function() {
                 return undefined;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        contentReadyToProcessPromise : {
+            get : function() {
+                return this._contentReadyToProcessPromise.promise;
+            }
+        },
+
+        /**
+         * Part of the {@link Cesium3DTileContent} interface.
+         */
+        readyPromise : {
+            get : function() {
+                return this._readyPromise.promise;
             }
         }
     });
@@ -124,18 +143,22 @@ define([
             type : RequestType.TILES3D,
             distance : distance
         }));
-        if (defined(promise)) {
-            this.state = Cesium3DTileContentState.LOADING;
-            promise.then(function(arrayBuffer) {
-                if (that.isDestroyed()) {
-                    return when.reject('tileset is destroyed');
-                }
-                that.initialize(arrayBuffer);
-            }).otherwise(function(error) {
-                that.state = Cesium3DTileContentState.FAILED;
-                that.readyPromise.reject(error);
-            });
+
+        if (!defined(promise)) {
+            return false;
         }
+
+        this.state = Cesium3DTileContentState.LOADING;
+        promise.then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                return when.reject('tileset is destroyed');
+            }
+            that.initialize(arrayBuffer);
+        }).otherwise(function(error) {
+            that.state = Cesium3DTileContentState.FAILED;
+            that._readyPromise.reject(error);
+        });
+        return true;
     };
 
     /**
@@ -288,16 +311,16 @@ define([
 
         this._primitive = primitive;
         this.state = Cesium3DTileContentState.PROCESSING;
-        this.contentReadyToProcessPromise.resolve(this);
+        this._contentReadyToProcessPromise.resolve(this);
 
         var that = this;
 
-        when(primitive.readyPromise).then(function(primitive) {
+        primitive.readyPromise.then(function(primitive) {
             that.state = Cesium3DTileContentState.READY;
-            that.readyPromise.resolve(that);
+            that._readyPromise.resolve(that);
         }).otherwise(function(error) {
             that.state = Cesium3DTileContentState.FAILED;
-            that.readyPromise.reject(error);
+            that._readyPromise.reject(error);
         });
     };
 

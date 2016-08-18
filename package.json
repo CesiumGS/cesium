@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "almond": "0.3.2",
-    "aws-sdk": "2.4.14",
+    "aws-sdk": "2.5.1",
     "bluebird": "3.4.1",
     "compressible": "2.0.8",
     "compression": "1.6.2",
@@ -48,10 +48,10 @@
     "gulp-zip": "3.0.2",
     "jasmine-core": "2.4.1",
     "jsdoc": "3.4.0",
-    "jshint": "2.9.2",
-    "jshint-stylish": "2.2.0",
-    "karma": "1.1.2",
-    "karma-chrome-launcher": "1.0.1",
+    "jshint": "2.9.3",
+    "jshint-stylish": "2.2.1",
+    "karma": "1.2.0",
+    "karma-chrome-launcher": "2.0.0",
     "karma-detect-browsers": "2.1.0",
     "karma-electron-launcher": "0.1.0",
     "karma-firefox-launcher": "1.0.0",
@@ -65,7 +65,7 @@
     "request": "2.74.0",
     "rimraf": "2.5.3",
     "strip-comments": "0.3.2",
-    "yargs": "4.8.1"
+    "yargs": "5.0.0"
   },
   "scripts": {
     "start": "node server.js",

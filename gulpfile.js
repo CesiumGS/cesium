@@ -21,6 +21,7 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var os = require('os');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var karma = require('karma').Server;
@@ -797,15 +798,15 @@ gulp.task('sortRequires', function() {
 
             var outputNames = ']';
             if (sortedNames.length > 0) {
-                outputNames = '\r\n        ' +
-                              sortedNames.join(',\r\n        ') +
-                              '\r\n    ]';
+                outputNames = os.EOL + '        ' +
+                              sortedNames.join(',' + os.EOL + '        ') +
+                              os.EOL + '    ]';
             }
 
             var outputIdentifiers = '(';
             if (sortedIdentifiers.length > 0) {
-                outputIdentifiers = '(\r\n        ' +
-                                    sortedIdentifiers.join(',\r\n        ');
+                outputIdentifiers = '(' + os.EOL + '        ' +
+                                    sortedIdentifiers.join(',' + os.EOL + '        ');
             }
 
             contents = result[1] +
