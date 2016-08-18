@@ -1092,6 +1092,9 @@ define([
 
         // World to window coordinates
         var positionWC = SceneTransforms.wgs84WithEyeOffsetToWindowCoordinates(scene, positionWorld, eyeOffset, result);
+        if (!defined(positionWC)) {
+            return undefined;
+        }
 
         // Apply pixel offset
         pixelOffset = Cartesian2.clone(pixelOffset, scratchComputePixelOffset);
