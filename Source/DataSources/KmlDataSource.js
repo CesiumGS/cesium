@@ -1718,7 +1718,7 @@ define([
     }
 
     function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -2018,8 +2018,7 @@ define([
         if (defined(featureProcessor)) {
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
-            console.log('KML - Unsupported feature node: ' + node.localName);
+            processUnsupported(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver);
         }
     }
 
