@@ -51,7 +51,7 @@
     "jshint": "2.9.2",
     "jshint-stylish": "2.2.1",
     "karma": "1.2.0",
-    "karma-chrome-launcher": "1.0.1",
+    "karma-chrome-launcher": "2.0.0",
     "karma-detect-browsers": "2.1.0",
     "karma-electron-launcher": "0.1.0",
     "karma-firefox-launcher": "1.0.0",
