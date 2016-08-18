@@ -60,6 +60,21 @@ define([
         return jsonValue;
     };
 
+    Cesium3DTileFeatureTableResources.prototype.getPropertyArray = function(semantic, componentType, featureSize) {
+        var jsonValue = this.json[semantic];
+        if (defined(jsonValue)) {
+            var byteOffset = jsonValue.byteOffset;
+            if (defined(byteOffset)) {
+                // This is a reference to the binary
+                featureSize = defaultValue(featureSize, 1);
+                return this.getTypedArrayForSemantic(semantic, byteOffset, componentType, this.featuresLength, featureSize);
+            }
+            // If the data is a json array, convert to a typed array
+            return ComponentDatatype.createTypedArray(componentType, jsonValue);
+        }
+        return jsonValue;
+    };
+
     Cesium3DTileFeatureTableResources.prototype.getProperty = function(semantic, featureId, componentType, featureSize) {
         var jsonValue = this.json[semantic];
         if (defined(jsonValue)) {

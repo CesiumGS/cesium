@@ -258,13 +258,13 @@ define([
         var isQuantized = false;
 
         if (defined(featureTableJSON.POSITION)) {
-            positions = featureTableResources.getGlobalProperty('POSITION', ComponentDatatype.FLOAT, pointsLength * 3);
+            positions = featureTableResources.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
             var rtcCenter = featureTableResources.getGlobalProperty('RTC_CENTER');
             if (defined(rtcCenter)) {
                 this._rtcCenter = Cartesian3.unpack(rtcCenter);
             }
         } else if (defined(featureTableJSON.POSITION_QUANTIZED)) {
-            positions = featureTableResources.getGlobalProperty('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, pointsLength * 3);
+            positions = featureTableResources.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
             isQuantized = true;
 
             var quantizedVolumeScale = featureTableResources.getGlobalProperty('QUANTIZED_VOLUME_SCALE');
@@ -295,10 +295,10 @@ define([
         var isTranslucent = false;
 
         if (defined(featureTableJSON.RGBA)) {
-            colors = featureTableResources.getGlobalProperty('RGBA', ComponentDatatype.UNSIGNED_BYTE, pointsLength * 4);
+            colors = featureTableResources.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
             isTranslucent = true;
         } else if (defined(featureTableJSON.RGB)) {
-            colors = featureTableResources.getGlobalProperty('RGB', ComponentDatatype.UNSIGNED_BYTE, pointsLength * 3);
+            colors = featureTableResources.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
         } else if (defined(featureTableJSON.CONSTANT_RGBA)) {
             var constantRGBA  = featureTableResources.getGlobalProperty('CONSTANT_RGBA');
             this._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], this._constantColor);
@@ -314,9 +314,9 @@ define([
         var isOctEncoded16P = false;
 
         if (defined(featureTableJSON.NORMAL)) {
-            normals = featureTableResources.getGlobalProperty('NORMAL', ComponentDatatype.FLOAT, pointsLength * 3);
+            normals = featureTableResources.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
         } else if (defined(featureTableJSON.NORMAL_OCT16P)) {
-            normals = featureTableResources.getGlobalProperty('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, pointsLength * 2);
+            normals = featureTableResources.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
             isOctEncoded16P = true;
         }
 
