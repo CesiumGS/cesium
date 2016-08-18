@@ -22,6 +22,8 @@ defineSuite([
         'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/StaticOutlineGeometryBatch',
+        'Scene/GroundPrimitive',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -48,6 +50,8 @@ defineSuite([
         StaticGeometryPerMaterialBatch,
         StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch,
+        GroundPrimitive,
+        ShadowMode,
         createDynamicProperty,
         createScene,
         pollToPromise) {
@@ -58,10 +62,17 @@ defineSuite([
     var scene;
     beforeAll(function() {
         scene = createScene();
+
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     it('Can create and destroy', function() {
@@ -283,6 +294,60 @@ defineSuite([
         });
     });
 
+    function createAndRemoveGeometryWithShadows(shadows) {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new ConstantProperty(2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+        ellipse.extrudedHeight = new ConstantProperty(1000);
+        ellipse.shadows = new ConstantProperty(shadows);
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = visualizer.update(time);
+            scene.render(time);
+            return isUpdated;
+        }).then(function() {
+            var primitive = scene.primitives.get(0);
+            expect(primitive.shadows).toBe(shadows);
+
+            objects.remove(entity);
+
+            return pollToPromise(function() {
+                scene.initializeFrame();
+                expect(visualizer.update(time)).toBe(true);
+                scene.render(time);
+                return scene.primitives.length === 0;
+            }).then(function(){
+                visualizer.destroy();
+            });
+        });
+    }
+
+    it('Creates and removes geometry with shadows disabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.DISABLED);
+    });
+
+    it('Creates and removes geometry with shadows enabled', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.ENABLED);
+    });
+
+    it('Creates and removes geometry with shadow casting only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.CAST_ONLY);
+    });
+
+    it('Creates and removes geometry with shadow receiving only', function() {
+        return createAndRemoveGeometryWithShadows(ShadowMode.RECEIVE_ONLY);
+    });
+
     it('Correctly handles geometry changing batches', function() {
         var objects = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
@@ -393,6 +458,7 @@ defineSuite([
         ellipse.semiMajorAxis = new SampledProperty(Number);
         ellipse.semiMajorAxis.addSample(time, 2);
         ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.extrudedHeight = new ConstantProperty(1000);
         ellipse.material = new ColorMaterialProperty();
 
         var entity = new Entity();
@@ -441,7 +507,7 @@ defineSuite([
     });
 
     it('StaticGeometryPerMaterialBatch handles shared material being invalidated', function() {
-        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryPerMaterialBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -488,7 +554,7 @@ defineSuite([
     });
 
     it('StaticGeometryColorBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false);
+        var batch = new StaticGeometryColorBatch(scene.primitives, EllipseGeometryUpdater.materialAppearanceType, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -604,7 +670,7 @@ defineSuite([
     });
 
     it('StaticOutlineGeometryBatch updates color attribute after rebuilding primitive', function() {
-        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false);
+        var batch = new StaticOutlineGeometryBatch(scene.primitives, scene, false, ShadowMode.DISABLED);
 
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
@@ -774,7 +840,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic fill color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic fill color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 
@@ -818,7 +884,7 @@ defineSuite([
         });
     });
 
-    it('Sets static geometry  primitive show attribute when using dynamic outline color', function() {
+    it('Sets static geometry primitive show attribute when using dynamic outline color', function() {
         var entities = new EntityCollection();
         var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, entities);
 

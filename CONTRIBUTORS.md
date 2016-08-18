@@ -60,6 +60,8 @@
    * [Erik Andersson](https://github.com/e-andersson)
 * [Simulation Curriculum](http://www.simulationcurriculum.com/)
    * [Dave Whipps](https://github.com/dwhipps)
+* [Geoscan](https://www.geoscan.aero)
+   * [Andrey Orlov](https://github.com/AndreyOrlov)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -98,3 +100,4 @@
 * [Mati Ostrovsky](https://github.com/mati-o)
 * [Tom Novacek](https://github.com/novacto2)
 * [Olivier Guyot-Roullot](https://github.com/theOgrable)
+* [Andy Fry](https://github.com/andyfry01)

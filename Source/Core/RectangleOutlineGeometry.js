@@ -230,6 +230,8 @@ define([
      * @param {RectangleOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     RectangleOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -255,6 +257,8 @@ define([
         array[startingIndex++] = value._rotation;
         array[startingIndex++] = defined(value._extrudedHeight) ? 1.0 : 0.0;
         array[startingIndex] = defaultValue(value._extrudedHeight, 0.0);
+
+        return array;
     };
 
     var scratchRectangle = new Rectangle();

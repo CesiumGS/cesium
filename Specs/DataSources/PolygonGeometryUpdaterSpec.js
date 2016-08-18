@@ -20,6 +20,7 @@ defineSuite([
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -44,6 +45,7 @@ defineSuite([
         SampledProperty,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
@@ -102,6 +104,7 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.onTerrain).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
@@ -143,6 +146,7 @@ defineSuite([
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
         expect(updater.isDynamic).toBe(false);
     });
 
