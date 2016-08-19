@@ -1,24 +1,30 @@
 /*global define*/
 define([
     '../Core/BoundingRectangle',
+    '../Core/Cartesian2',
     '../Core/Cartesian3',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/destroyObject',
     '../Core/EllipsoidalOccluder',
+    '../Core/Matrix4',
     '../ThirdParty/kdbush',
+    './Billboard',
     './HorizontalOrigin',
     './LabelCollection',
     './SceneTransforms',
     './VerticalOrigin'
 ], function(
     BoundingRectangle,
+    Cartesian2,
     Cartesian3,
     defaultValue,
     defined,
     destroyObject,
     EllipsoidalOccluder,
+    Matrix4,
     kdbush,
+    Billboard,
     HorizontalOrigin,
     LabelCollection,
     SceneTransforms,
@@ -33,7 +39,7 @@ define([
         return point.coord.y;
     }
 
-    function getBBox(label, coord) {
+    function getLabelBoundingBox(label, coord, pixelRange) {
         // TODO: create this at label creation time
         var width = 0;
         var height = Number.NEGATIVE_INFINITY;
@@ -65,15 +71,50 @@ define([
             y -= height * 0.5;
         }
 
+        x += pixelRange;
+        y += pixelRange;
+        width += pixelRange * 0.5;
+        height += pixelRange * 0.5;
+
         return new BoundingRectangle(x, y, width, height);
+    }
+
+    function cloneLabel(label) {
+        return {
+            text : label.text,
+            show : label.show,
+            font : label.font,
+            fillColor : label.fillColor,
+            outlineColor : label.outlineColor,
+            outlineWidth : label.outlineWidth,
+            style : label.outlineStyle,
+            verticalOrigin : label.verticalOrigin,
+            horizontalOrigin : label.horizontalOrigin,
+            pixelOffset : label.pixelOffset,
+            eyeOffset : label.eyeOffset,
+            position : label.position,
+            scale : label.scale,
+            id : label.id,
+            translucencyByDistance : label.translucencyByDistance,
+            pixelOffsetScaleByDistance : label.pixelOffsetScaleByDistance,
+            heightReference : label.heightReference
+        };
     }
 
     function createDeclutterCallback(labelCollectionDeclutter) {
         return function() {
+            var scene = labelCollectionDeclutter._scene;
+
             var labelCollection = labelCollectionDeclutter._labelCollection;
             var renderCollection = labelCollectionDeclutter._renderCollection;
-            var scene = labelCollectionDeclutter._scene;
+
             var pixelRange = labelCollectionDeclutter._pixelRange;
+
+            var clusters = labelCollectionDeclutter._previousClusters;
+            var newClusters = [];
+
+            var previousHeight = labelCollectionDeclutter._previousHeight;
+            var currentHeight = scene.camera.positionCartographic.height;
 
             if (defined(renderCollection)) {
                 renderCollection.removeAll();
@@ -87,6 +128,7 @@ define([
 
             var i;
             var label;
+            var coord;
             var length = labelCollection.length;
             var points = [];
 
@@ -96,7 +138,7 @@ define([
                     continue;
                 }
 
-                var coord = label.computeScreenSpacePosition(scene);
+                coord = label.computeScreenSpacePosition(scene);
                 if (!defined(coord) || coord.x < 0.0 || coord.x > scene.drawingBufferWidth || coord.y < 0.0 || coord.y > scene.drawingBufferHeight) {
                     continue;
                 }
@@ -108,9 +150,53 @@ define([
                 });
             }
 
-            var index = kdbush(points, getX, getY, 64, Int32Array);
-            length = points.length;
+            var j;
+            var bbox;
+            var neighbors;
+            var neighborLength;
+            var neighborIndex;
+            var neighborPoint;
 
+            var index = kdbush(points, getX, getY, 64, Int32Array);
+
+            if (currentHeight <= previousHeight) {
+                length = clusters.length;
+                for (i = 0; i < length; ++i) {
+                    var cluster = clusters[i];
+
+                    if (!occluder.isPointVisible(cluster.position)) {
+                        continue;
+                    }
+
+                    coord = Billboard._computeScreenSpacePosition(Matrix4.IDENTITY, cluster.position, Cartesian3.ZERO, Cartesian2.ZERO, scene);
+                    if (!defined(coord) || coord.x < 0.0 || coord.x > scene.drawingBufferWidth || coord.y < 0.0 || coord.y > scene.drawingBufferHeight) {
+                        continue;
+                    }
+
+                    neighbors = index.within(coord.x, coord.y, cluster.radius);
+                    neighborLength = neighbors.length;
+                    numPoints = 0;
+
+                    for (j = 0; j < neighborLength; ++j) {
+                        neighborIndex = neighbors[j];
+                        neighborPoint = points[neighborIndex];
+                        if (!neighborPoint.clustered) {
+                            neighborPoint.clustered = true;
+                            ++numPoints;
+                        }
+                    }
+
+                    if (numPoints > 1) {
+                        newClusters.push(cluster);
+                        renderCollection.add({
+                            text : '' + numPoints,
+                            position : cluster.position
+                        });
+                    }
+                }
+            }
+
+            length = points.length;
             for (i = 0; i < length; ++i) {
                 var point = points[i];
                 if (point.clustered) {
@@ -120,58 +206,39 @@ define([
                 point.clustered = true;
 
                 label = labelCollection.get(point.labelIndex);
-                var bbox = getBBox(label, point.coord);
+                bbox = getLabelBoundingBox(label, point.coord, pixelRange);
 
-                bbox.x += pixelRange;
-                bbox.y += pixelRange;
-                bbox.width += pixelRange * 0.5;
-                bbox.height += pixelRange * 0.5;
+                neighbors = index.within(bbox.x, bbox.y, bbox.width);
+                neighborLength = neighbors.length;
 
-                var neighbors = index.within(bbox.x, bbox.y, bbox.width);
+                var clusterPosition = Cartesian3.clone(label.position);
+                var numPoints = 1;
 
-                var neighborsFound = false;
-                var clusterPosition = new Cartesian3();
-                var numPoints = 0;
-
-                var neighborLength = neighbors.length;
-                for (var j = 0; j < neighborLength; ++j) {
-                    var neighborIndex = neighbors[j];
-                    var neighborPoint = points[neighborIndex];
+                for (j = 0; j < neighborLength; ++j) {
+                    neighborIndex = neighbors[j];
+                    neighborPoint = points[neighborIndex];
                     if (!neighborPoint.clustered) {
                         neighborPoint.clustered = true;
-                        neighborsFound = true;
 
-                        Cartesian3.add(clusterPosition, labelCollection.get(neighborPoint.labelIndex).position, clusterPosition);
+                        var neighborLabel = labelCollection.get(neighborPoint.labelIndex);
+                        Cartesian3.add(clusterPosition, neighborLabel.position, clusterPosition);
+                        BoundingRectangle.union(bbox, getLabelBoundingBox(neighborLabel, neighborPoint.coord, pixelRange), bbox);
                         ++numPoints;
                     }
                 }
 
-                if (!neighborsFound) {
-                    var clone = {
-                        text : label.text,
-                        show : label.show,
-                        font : label.font,
-                        fillColor : label.fillColor,
-                        outlineColor : label.outlineColor,
-                        outlineWidth : label.outlineWidth,
-                        style : label.outlineStyle,
-                        verticalOrigin : label.verticalOrigin,
-                        horizontalOrigin : label.horizontalOrigin,
-                        pixelOffset : label.pixelOffset,
-                        eyeOffset : label.eyeOffset,
-                        position : label.position,
-                        scale : label.scale,
-                        id : label.id,
-                        translucencyByDistance : label.translucencyByDistance,
-                        pixelOffsetScaleByDistance : label.pixelOffsetScaleByDistance,
-                        heightReference : label.heightReference
-                    };
-                    renderCollection.add(clone);
+                if (numPoints === 1) {
+                    renderCollection.add(cloneLabel(label));
                 } else {
                     var position = Cartesian3.multiplyByScalar(clusterPosition, 1.0 / numPoints, clusterPosition);
                     renderCollection.add({
-                        text : '' + (numPoints + 1),
+                        text : '' + numPoints,
                         position : position
+                    });
+
+                    newClusters.push({
+                        position : position,
+                        radius : Math.max(bbox.width, bbox.height) * 0.5
                     });
                 }
             }
@@ -182,6 +249,8 @@ define([
             }
 
             labelCollectionDeclutter._renderCollection = renderCollection;
+            labelCollectionDeclutter._previousClusters = newClusters;
+            labelCollectionDeclutter._previousHeight = currentHeight;
         };
     }
 
@@ -191,6 +260,9 @@ define([
         this._renderCollection = undefined;
 
         this._pixelRange = defaultValue(options.pixelRange, 5);
+
+        this._previousClusters = [];
+        this._previousHeight = undefined;
 
         this._removeEventListener = this._scene.camera.moveEnd.addEventListener(createDeclutterCallback(this));
     }
