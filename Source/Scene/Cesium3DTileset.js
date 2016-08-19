@@ -860,7 +860,8 @@ define([
         root.distanceToCamera = root.distanceToTile(frameState);
         root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
-        if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
+        var sse = getScreenSpaceError(tileset._geometricError, root, frameState);
+        if (sse <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
