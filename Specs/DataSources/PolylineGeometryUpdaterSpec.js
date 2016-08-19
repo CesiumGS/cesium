@@ -21,6 +21,7 @@ defineSuite([
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/Globe',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicProperty',
         'Specs/createScene'
     ], function(
@@ -45,6 +46,7 @@ defineSuite([
         TimeIntervalCollectionProperty,
         Globe,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicProperty,
         createScene) {
     'use strict';
@@ -91,6 +93,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
@@ -129,6 +132,7 @@ defineSuite([
         expect(updater.hasConstantFill).toBe(true);
         expect(updater.hasConstantOutline).toBe(true);
         expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
         expect(updater.isDynamic).toBe(false);
     });
 

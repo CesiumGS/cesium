@@ -25,7 +25,7 @@ defineSuite([
         var options = {
             image : '0',
             rotation : 1,
-            alignedAxis : new Cartesian3(2, 3, 4),
+            alignedAxis : Cartesian3.UNIT_Z,
             color : Color.RED,
             heightReference: HeightReference.CLAMP_TO_GROUND,
             horizontalOrigin : HorizontalOrigin.LEFT,
