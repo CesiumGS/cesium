@@ -3,8 +3,8 @@
     "version": "0.0"
   },
   "geometricError": 346.4,
-  "refine": "add",
   "root": {
+    "refine": "add",
     "boundingVolume": {
       "sphere": [
         1215011.9317263428,
@@ -15,7 +15,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "points.pnts"
+      "url": "pointsNoColor.pnts"
     }
   }
 }

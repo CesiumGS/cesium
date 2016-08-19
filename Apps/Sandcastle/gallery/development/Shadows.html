@@ -395,8 +395,7 @@ function updateSettings() {
     // Force all derived commands to update
     shadowMap.dirty = true;
 
-    globe.castShadows = viewModel.terrainCast;
-    globe.receiveShadows = viewModel.terrainReceive;
+    globe.shadows = Cesium.ShadowMode.fromCastReceive(viewModel.terrainCast, viewModel.terrainReceive);
     globe.show = viewModel.globe;
     scene.skyAtmosphere.show = viewModel.globe;
 }
@@ -654,8 +653,7 @@ function createBoxRTC(origin) {
         }),
         asynchronous : false,
         rtcCenter : boxGeometry.boundingSphere.center,
-        castShadows : true,
-        receiveShadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     });
 
     scene.primitives.add(box);
@@ -680,8 +678,7 @@ function createBox(origin) {
             closed : true
         }),
         asynchronous : false,
-        castShadows : true,
-        receiveShadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     });
 
     scene.primitives.add(box);
@@ -706,8 +703,7 @@ function createSphere(origin) {
             closed : true
         }),
         asynchronous : false,
-        castShadows : true,
-        receiveShadows : true
+        shadows : Cesium.ShadowMode.ENABLED
     });
 
     scene.primitives.add(sphere);
@@ -726,7 +722,9 @@ var handler = new Cesium.ScreenSpaceEventHandler(canvas);
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked) && Cesium.defined(picked.primitive)) {
-        picked.primitive.castShadows = !picked.primitive.castShadows;
+        var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
+        var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
+        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(!castShadows, receiveShadows);
     }
 }, Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 
@@ -734,7 +732,9 @@ handler.setInputAction(function(movement) {
 handler.setInputAction(function(movement) {
     var picked = scene.pick(movement.position);
     if (Cesium.defined(picked)) {
-        picked.primitive.receiveShadows = !picked.primitive.receiveShadows;
+        var castShadows = Cesium.ShadowMode.castShadows(picked.primitive.shadows);
+        var receiveShadows = Cesium.ShadowMode.receiveShadows(picked.primitive.shadows);
+        picked.primitive.shadows = Cesium.ShadowMode.fromCastReceive(castShadows, !receiveShadows);
     }
 }, Cesium.ScreenSpaceEventType.MIDDLE_DOUBLE_CLICK);
 

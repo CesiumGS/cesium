@@ -240,14 +240,6 @@ void main()
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
 #endif
-    
-#ifdef CLAMPED_TO_GROUND
-    // move slightly closer to camera to avoid depth issues.
-    positionEC.z *= 0.995;
-    
-    // Force bottom vertical origin
-    origin.y = 1.0;
-#endif
 
     float dist = length(positionEC.xyz);
     if (dist < 5000.0)

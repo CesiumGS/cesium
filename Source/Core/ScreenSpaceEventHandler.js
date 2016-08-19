@@ -7,6 +7,7 @@ define([
         './destroyObject',
         './DeveloperError',
         './FeatureDetection',
+        './getTimestamp',
         './KeyboardEventModifier',
         './ScreenSpaceEventType'
     ], function(
@@ -17,6 +18,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        getTimestamp,
         KeyboardEventModifier,
         ScreenSpaceEventType) {
     'use strict';
@@ -122,8 +124,16 @@ define([
         position : new Cartesian2()
     };
 
+    function gotTouchEvent(screenSpaceEventHandler) {
+        screenSpaceEventHandler._lastSeenTouchEvent = getTimestamp();
+    }
+
+    function canProcessMouseEvent(screenSpaceEventHandler) {
+        return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
+    }
+
     function handleMouseDown(screenSpaceEventHandler, event) {
-        if (screenSpaceEventHandler._seenAnyTouchEvents) {
+        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
             return;
         }
 
@@ -166,7 +176,7 @@ define([
     };
 
     function handleMouseUp(screenSpaceEventHandler, event) {
-        if (screenSpaceEventHandler._seenAnyTouchEvents) {
+        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
             return;
         }
 
@@ -223,7 +233,7 @@ define([
     };
 
     function handleMouseMove(screenSpaceEventHandler, event) {
-        if (screenSpaceEventHandler._seenAnyTouchEvents) {
+        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
             return;
         }
 
@@ -318,7 +328,7 @@ define([
     }
 
     function handleTouchStart(screenSpaceEventHandler, event) {
-        screenSpaceEventHandler._seenAnyTouchEvents = true;
+        gotTouchEvent(screenSpaceEventHandler);
 
         var changedTouches = event.changedTouches;
 
@@ -346,7 +356,7 @@ define([
     }
 
     function handleTouchEnd(screenSpaceEventHandler, event) {
-        screenSpaceEventHandler._seenAnyTouchEvents = true;
+        gotTouchEvent(screenSpaceEventHandler);
 
         var changedTouches = event.changedTouches;
 
@@ -475,7 +485,7 @@ define([
     }
 
     function handleTouchMove(screenSpaceEventHandler, event) {
-        screenSpaceEventHandler._seenAnyTouchEvents = true;
+        gotTouchEvent(screenSpaceEventHandler);
 
         var changedTouches = event.changedTouches;
 
@@ -619,8 +629,12 @@ define([
             var positions = screenSpaceEventHandler._positions;
 
             var identifier = event.pointerId;
-            getPosition(screenSpaceEventHandler, event, positions.get(identifier));
+            var position = positions.get(identifier);
+            if(!defined(position)){
+                return;
+            }
 
+            getPosition(screenSpaceEventHandler, event, position);
             fireTouchMoveEvents(screenSpaceEventHandler, event);
 
             var previousPositions = screenSpaceEventHandler._previousPositions;
@@ -644,7 +658,7 @@ define([
         this._inputEvents = {};
         this._buttonDown = undefined;
         this._isPinching = false;
-        this._seenAnyTouchEvents = false;
+        this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 
         this._primaryStartPosition = new Cartesian2();
         this._primaryPosition = new Cartesian2();
@@ -759,7 +773,7 @@ define([
      *
      * @example
      * handler = handler && handler.destroy();
-     * 
+     *
      * @see ScreenSpaceEventHandler#isDestroyed
      */
     ScreenSpaceEventHandler.prototype.destroy = function() {
@@ -767,6 +781,13 @@ define([
 
         return destroyObject(this);
     };
+
+    /**
+     * The amount of time, in milliseconds, that mouse events will be disabled after
+     * receiving any touch events, such that any emulated mouse events will be ignored.
+     * @default 800
+     */
+    ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds = 800;
 
     return ScreenSpaceEventHandler;
 });

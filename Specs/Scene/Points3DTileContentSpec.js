@@ -17,7 +17,10 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointsUrl = './Data/Cesium3DTiles/Points/Points';
+    var pointsRGBUrl = './Data/Cesium3DTiles/Points/PointsRGB';
+    var pointsRGBAUrl = './Data/Cesium3DTiles/Points/PointsRGBA';
+    var pointsNoColorUrl = './Data/Cesium3DTiles/Points/PointsNoColor';
+    var pointsConstantColorUrl = './Data/Cesium3DTiles/Points/PointsConstantColor';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -70,19 +73,31 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, pointsUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, pointsRGBUrl);
     });
 
     it('rejects readyPromise on failed request', function() {
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('pnts');
     });
 
-    it('renders points', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsUrl).then(expectRenderPoints);
+    it('renders points with rgb colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with rgba colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBAUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with no colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsNoColorUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with constant colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsConstantColorUrl).then(expectRenderPoints);
     });
 
     it('renders with debug color', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
             var color = expectRenderPoints(tileset);
             tileset.debugColorizeTiles = true;
             var debugColor = expectRenderPoints(tileset);
@@ -94,11 +109,11 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return Cesium3DTilesTester.tileDestroys(scene, pointsUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, pointsRGBUrl);
     });
 
     it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointsUrl);
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointsRGBUrl);
     });
 
 }, 'WebGL');

@@ -19,8 +19,10 @@ define([
         BoundingSphereState) {
     'use strict';
 
-    function Batch(primitives, translucent, width) {
+    function Batch(primitives, translucent, width, shadows) {
         this.translucent = translucent;
+        this.width = width;
+        this.shadows = shadows;
         this.primitives = primitives;
         this.createPrimitive = false;
         this.waitingOnCreate = false;
@@ -31,7 +33,6 @@ define([
         this.updatersWithAttributes = new AssociativeArray();
         this.attributes = new AssociativeArray();
         this.itemsToRemove = [];
-        this.width = width;
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
     }
@@ -110,7 +111,8 @@ define([
                         renderState : {
                             lineWidth : this.width
                         }
-                    })
+                    }),
+                    shadows : this.shadows
                 });
 
                 primitives.add(primitive);
@@ -240,9 +242,10 @@ define([
     /**
      * @private
      */
-    function StaticOutlineGeometryBatch(primitives, scene) {
+    function StaticOutlineGeometryBatch(primitives, scene, shadows) {
         this._primitives = primitives;
         this._scene = scene;
+        this._shadows = shadows;
         this._solidBatches = new AssociativeArray();
         this._translucentBatches = new AssociativeArray();
     }
@@ -255,7 +258,7 @@ define([
             batches = this._solidBatches;
             batch = batches.get(width);
             if (!defined(batch)) {
-                batch = new Batch(this._primitives, false, width);
+                batch = new Batch(this._primitives, false, width, this._shadows);
                 batches.set(width, batch);
             }
             batch.add(updater, instance);
@@ -263,7 +266,7 @@ define([
             batches = this._translucentBatches;
             batch = batches.get(width);
             if (!defined(batch)) {
-                batch = new Batch(this._primitives, true, width);
+                batch = new Batch(this._primitives, true, width, this._shadows);
                 batches.set(width, batch);
             }
             batch.add(updater, instance);

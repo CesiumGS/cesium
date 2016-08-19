@@ -2144,7 +2144,7 @@ define([
         var shadowMaps = frameState.shadowMaps;
         var length = shadowMaps.length;
 
-        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick;
+        frameState.shadowHints.shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
         if (!frameState.shadowHints.shadowsEnabled) {
             return;
         }
@@ -2307,12 +2307,14 @@ define([
         }
 
         this._tweens.update();
-        this._camera.update(this._mode);
 
         this._screenSpaceCameraController.update();
         if (defined(this._deviceOrientationCameraController)) {
             this._deviceOrientationCameraController.update();
         }
+        
+        this._camera.update(this._mode);
+        this._camera._updateCameraChanged();
     };
 
     var scratchEyeTranslation = new Cartesian3();

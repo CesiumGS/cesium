@@ -10,12 +10,15 @@ define([
         '../Core/Event',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/RectangleGeometry',
         '../Core/RectangleOutlineGeometry',
         '../Core/ShowGeometryInstanceAttribute',
+        '../Scene/GroundPrimitive',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -32,12 +35,15 @@ define([
         Event,
         GeometryInstance,
         Iso8601,
+        oneTimeWarning,
         RectangleGeometry,
         RectangleOutlineGeometry,
         ShowGeometryInstanceAttribute,
+        GroundPrimitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -50,6 +56,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -98,7 +105,10 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
+        this._onTerrain = false;
         this._options = new GeometryOptions(entity);
+
         this._onEntityPropertyChanged(entity, 'rectangle', entity.rectangle, undefined);
     }
 
@@ -226,6 +236,19 @@ define([
             }
         },
         /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof RectangleGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
+            }
+        },
+        /**
          * Gets a value indicating if the geometry is time-varying.
          * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
          * returned by GeometryUpdater#createDynamicUpdater.
@@ -250,6 +273,18 @@ define([
         isClosed : {
             get : function() {
                 return this._isClosed;
+            }
+        },
+        /**
+         * Gets a value indicating if the geometry should be drawn on terrain.
+         * @memberof RectangleGeometryUpdater.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         */
+        onTerrain : {
+            get : function() {
+                return this._onTerrain;
             }
         },
         /**
@@ -444,6 +479,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(rectangle.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(rectangle.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(rectangle.shadows, defaultShadows);
 
         var height = rectangle.height;
         var extrudedHeight = rectangle.extrudedHeight;
@@ -453,8 +489,16 @@ define([
         var outlineWidth = rectangle.outlineWidth;
         var closeBottom = rectangle.closeBottom;
         var closeTop = rectangle.closeTop;
+        var onTerrain = fillEnabled && !defined(height) && !defined(extrudedHeight) &&
+                        isColorMaterial && GroundPrimitive.isSupported(this._scene);
+
+        if (outlineEnabled && onTerrain) {
+            oneTimeWarning(oneTimeWarning.geometryOutlines);
+            outlineEnabled = false;
+        }
 
         this._fillEnabled = fillEnabled;
+        this._onTerrain = onTerrain;
         this._outlineEnabled = outlineEnabled;
 
         if (!coordinates.isConstant || //
@@ -492,11 +536,12 @@ define([
      * Creates the dynamic updater to be used when GeometryUpdater#isDynamic is true.
      *
      * @param {PrimitiveCollection} primitives The primitive collection to use.
+     * @param {PrimitiveCollection} primitives The primitive collection to use for GroundPrimitives.
      * @returns {DynamicGeometryUpdater} The dynamic updater used to update the geometry each frame.
      *
      * @exception {DeveloperError} This instance does not represent dynamic geometry.
      */
-    RectangleGeometryUpdater.prototype.createDynamicUpdater = function(primitives) {
+    RectangleGeometryUpdater.prototype.createDynamicUpdater = function(primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._dynamic) {
             throw new DeveloperError('This instance does not represent dynamic geometry.');
@@ -507,14 +552,15 @@ define([
         }
         //>>includeEnd('debug');
 
-        return new DynamicGeometryUpdater(primitives, this);
+        return new DynamicGeometryUpdater(primitives, groundPrimitives, this);
     };
 
     /**
      * @private
      */
-    function DynamicGeometryUpdater(primitives, geometryUpdater) {
+    function DynamicGeometryUpdater(primitives, groundPrimitives, geometryUpdater) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._primitive = undefined;
         this._outlinePrimitive = undefined;
         this._geometryUpdater = geometryUpdater;
@@ -527,13 +573,20 @@ define([
         }
         //>>includeEnd('debug');
 
-        var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
-        primitives.removeAndDestroy(this._outlinePrimitive);
-        this._primitive = undefined;
-        this._outlinePrimitive = undefined;
-
         var geometryUpdater = this._geometryUpdater;
+        var onTerrain = geometryUpdater._onTerrain;
+
+        var primitives = this._primitives;
+        var groundPrimitives = this._groundPrimitives;
+        if (onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+            primitives.removeAndDestroy(this._outlinePrimitive);
+            this._outlinePrimitive = undefined;
+        }
+        this._primitive = undefined;
+
         var entity = geometryUpdater._entity;
         var rectangle = entity.rectangle;
         if (!entity.isShowing || !entity.isAvailable(time) || !Property.getValueOrDefault(rectangle.show, time, true)) {
@@ -555,28 +608,52 @@ define([
         options.closeBottom = Property.getValueOrUndefined(rectangle.closeBottom, time);
         options.closeTop = Property.getValueOrUndefined(rectangle.closeTop, time);
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
         if (Property.getValueOrDefault(rectangle.fill, time, true)) {
-            var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
+            var fillMaterialProperty = geometryUpdater.fillMaterialProperty;
+            var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
             this._material = material;
 
-            var appearance = new MaterialAppearance({
-                material : material,
-                translucent : material.isTranslucent(),
-                closed : defined(options.extrudedHeight)
-            });
-            options.vertexFormat = appearance.vertexFormat;
+            if (onTerrain) {
+                var currentColor = Color.WHITE;
+                if (defined(fillMaterialProperty.color)) {
+                    currentColor = fillMaterialProperty.color.getValue(time);
+                }
 
-            this._primitive = primitives.add(new Primitive({
-                geometryInstances : new GeometryInstance({
-                    id : entity,
-                    geometry : new RectangleGeometry(options)
-                }),
-                appearance : appearance,
-                asynchronous : false
-            }));
+                this._primitive = groundPrimitives.add(new GroundPrimitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new RectangleGeometry(options),
+                        attributes: {
+                            color: ColorGeometryInstanceAttribute.fromColor(currentColor)
+                        }
+                    }),
+                    asynchronous : false,
+                    shadows : shadows
+                }));
+            } else {
+                var appearance = new MaterialAppearance({
+                    material : material,
+                    translucent : material.isTranslucent(),
+                    closed : defined(options.extrudedHeight)
+                });
+
+                options.vertexFormat = appearance.vertexFormat;
+
+                this._primitive = primitives.add(new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        id : entity,
+                        geometry : new RectangleGeometry(options)
+                    }),
+                    appearance : appearance,
+                    asynchronous : false,
+                    shadows : shadows
+                }));
+            }
         }
 
-        if (Property.getValueOrDefault(rectangle.outline, time, false)) {
+        if (!onTerrain && Property.getValueOrDefault(rectangle.outline, time, false)) {
             options.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
             var outlineColor = Property.getValueOrClonedDefault(rectangle.outlineColor, time, Color.BLACK, scratchColor);
@@ -598,7 +675,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };
@@ -613,7 +691,12 @@ define([
 
     DynamicGeometryUpdater.prototype.destroy = function() {
         var primitives = this._primitives;
-        primitives.removeAndDestroy(this._primitive);
+        var groundPrimitives = this._groundPrimitives;
+        if (this._geometryUpdater._onTerrain) {
+            groundPrimitives.removeAndDestroy(this._primitive);
+        } else {
+            primitives.removeAndDestroy(this._primitive);
+        }
         primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };

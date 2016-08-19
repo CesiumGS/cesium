@@ -70,7 +70,7 @@
         }, {
             name : 'Composite', url : '../../../Specs/Data/Cesium3DTiles/Composite/Composite/'
         }, {
-            name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/Points/'
+            name : 'Points', url : '../../../Specs/Data/Cesium3DTiles/Points/PointsRGB/'
         }];
 
         var tileset;
@@ -84,7 +84,7 @@
                 maximumNumberOfLoadedTiles : 3
             }));
 
-            return Cesium.when(tileset.readyPromise).then(function(tileset) {
+            return tileset.readyPromise.then(function(tileset) {
                 //var boundingSphere = tileset.boundingSphere;
                 //viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0, -2.0, 0));
                 //viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -108,12 +108,9 @@
                             }
                         },
 //              "show": false
-                        "show" : "${Height} > 0",
-                        "meta" : {
-                            "description" : "'Building id ${id} has height ${Height}.'"
-                        }
-                    });
-                    addStyleUI();
+//              "show" : "${Height} >= 0",
+                "meta" : {
+                    "description" : "'Building id ${id} has height ${Height}.'"
                 }
 
                 tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
@@ -428,12 +425,12 @@
             }
             conditions['true'] = getRandomColor();
 
-            tileset.style = new Cesium.Cesium3DTileStyle({
-                color : {
-                    conditions : conditions
-                },
-                show : '${' + name + '} > 0'
-            });
+    tileset.style = new Cesium.Cesium3DTileStyle({
+        color : {
+            conditions : conditions
+        },
+        show : '${' + name + '} >= 0'
+    });
 
             currentPropertyName = name;
         }
