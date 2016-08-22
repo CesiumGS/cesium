@@ -121,7 +121,8 @@ defineSuite([
         // Instanced3DModel3DTileContent, and Composite3DTileContent.
         var arrayBuffer = Cesium3DTilesTester.generateCompositeTileBuffer({
             tiles : [Cesium3DTilesTester.generateInstancedTileBuffer({
-                gltfFormat : 0
+                gltfFormat : 0,
+                gltfUri : 'invalid'
             })]
         });
         return Cesium3DTilesTester.rejectsReadyPromiseOnError(scene, arrayBuffer, 'cmpt');
