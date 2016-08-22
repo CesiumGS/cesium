@@ -93,10 +93,10 @@ define([
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
 
-        // Uniforms
         this._highlightColor = this._constantColor;
         this._pointSize = 2.0;
         this._quantizedVolumeScale = undefined;
+        this._quantizedVolumeOffset = undefined;
 
         /**
          * The following properties are part of the {@link Cesium3DTileContent} interface.
@@ -281,7 +281,7 @@ define([
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
             }
             //>>includeEnd('debug');
-            this._rtcCenter = Cartesian3.unpack(quantizedVolumeOffset);
+            this._quantizedVolumeOffset = Cartesian3.unpack(quantizedVolumeOffset);
         }
 
         //>>includeStart('debug', pragmas.debug);
@@ -398,8 +398,7 @@ define([
         }
 
         if (isQuantized) {
-            // Transform a_position from [0 to 1] to [-0.5 to 0.5] before scaling
-            vs += '    vec3 position = (a_position - 0.5) * u_quantizedVolumeScale; \n';
+            vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
         } else {
             vs += '    vec3 position = a_position; \n';
         }
@@ -637,6 +636,8 @@ define([
         if (updateModelMatrix) {
             if (defined(this._rtcCenter)) {
                 Matrix4.multiplyByTranslation(this._tile.computedTransform, this._rtcCenter, this._drawCommand.modelMatrix);
+            } else if (defined(this._quantizedVolumeOffset)) {
+                Matrix4.multiplyByTranslation(this._tile.computedTransform, this._quantizedVolumeOffset, this._drawCommand.modelMatrix);
             } else {
                 Matrix4.clone(this._tile.computedTransform, this._drawCommand.modelMatrix);
             }
