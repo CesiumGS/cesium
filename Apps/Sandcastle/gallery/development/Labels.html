@@ -64,6 +64,19 @@ function startup(Cesium) {
         labelCollection : labels,
         scene : scene
     }));
+
+    var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    handler.setInputAction(function(movement) {
+        var pickedLabel = scene.pick(movement.position);
+        if (Cesium.defined(pickedLabel)) {
+            var ids = pickedLabel.id;
+            if (Cesium.isArray(ids)) {
+                for (var i = 0; i < ids.length; ++i) {
+                    ids[i].fillColor = Cesium.Color.RED;
+                }
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

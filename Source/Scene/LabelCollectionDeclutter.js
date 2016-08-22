@@ -166,6 +166,8 @@ define([
             var neighborLength;
             var neighborIndex;
             var neighborPoint;
+            var ids;
+            var numPoints;
 
             var index = kdbush(points, getX, getY, 64, Int32Array);
 
@@ -186,6 +188,7 @@ define([
                     neighbors = index.within(coord.x, coord.y, cluster.radius);
                     neighborLength = neighbors.length;
                     numPoints = 0;
+                    ids = [];
 
                     for (j = 0; j < neighborLength; ++j) {
                         neighborIndex = neighbors[j];
@@ -193,6 +196,8 @@ define([
                         if (!neighborPoint.clustered) {
                             neighborPoint.clustered = true;
                             ++numPoints;
+
+                            ids.push(labelCollection.get(neighborPoint.labelIndex));
                         }
                     }
 
@@ -200,7 +205,8 @@ define([
                         newClusters.push(cluster);
                         renderCollection.add({
                             text : '' + numPoints,
-                            position : cluster.position
+                            position : cluster.position,
+                            id : ids
                         });
                     }
                 }
@@ -222,7 +228,8 @@ define([
                 neighborLength = neighbors.length;
 
                 var clusterPosition = Cartesian3.clone(label.position);
-                var numPoints = 1;
+                numPoints = 1;
+                ids = [];
 
                 for (j = 0; j < neighborLength; ++j) {
                     neighborIndex = neighbors[j];
@@ -234,6 +241,8 @@ define([
                         Cartesian3.add(clusterPosition, neighborLabel.position, clusterPosition);
                         BoundingRectangle.union(bbox, getLabelBoundingBox(neighborLabel, neighborPoint.coord, pixelRange), bbox);
                         ++numPoints;
+
+                        ids.push(labelCollection.get(neighborPoint.labelIndex));
                     }
                 }
 
@@ -243,7 +252,8 @@ define([
                     var position = Cartesian3.multiplyByScalar(clusterPosition, 1.0 / numPoints, clusterPosition);
                     renderCollection.add({
                         text : '' + numPoints,
-                        position : position
+                        position : position,
+                        id : ids
                     });
 
                     newClusters.push({
