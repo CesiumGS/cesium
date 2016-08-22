@@ -49,6 +49,10 @@ define([
         for (var i = 0; i < length; ++i) {
             var glyph = glyphs[i];
             var billboard = glyph.billboard;
+            if (!defined(billboard)) {
+                continue;
+            }
+
             width += billboard.width;
             height = Math.max(height, billboard.height);
         }
@@ -102,7 +106,11 @@ define([
     }
 
     function createDeclutterCallback(labelCollectionDeclutter) {
-        return function() {
+        return function(amount) {
+            if (defined(amount) && amount < 0.05) {
+                return;
+            }
+
             var scene = labelCollectionDeclutter._scene;
 
             var labelCollection = labelCollectionDeclutter._labelCollection;
@@ -119,7 +127,9 @@ define([
             if (defined(renderCollection)) {
                 renderCollection.removeAll();
             } else {
-                renderCollection = new LabelCollection();
+                renderCollection = new LabelCollection({
+                    scene : scene
+                });
             }
 
             var ellipsoid = scene.mapProjection.ellipsoid;
@@ -264,7 +274,8 @@ define([
         this._previousClusters = [];
         this._previousHeight = undefined;
 
-        this._removeEventListener = this._scene.camera.moveEnd.addEventListener(createDeclutterCallback(this));
+        //this._removeEventListener = this._scene.camera.moveEnd.addEventListener(createDeclutterCallback(this));
+        this._removeEventListener = this._scene.camera.changed.addEventListener(createDeclutterCallback(this));
     }
 
     LabelCollectionDeclutter.prototype.update = function(frameState) {
