@@ -215,7 +215,7 @@ define([
                 var content = contentFactory(this._tileset, this._tile, this._url);
                 content.initialize(arrayBuffer, byteOffset);
                 this._contents.push(content);
-                contentPromises.push(content._readyPromise);
+                contentPromises.push(content.readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
