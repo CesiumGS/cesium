@@ -221,7 +221,7 @@ define([
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
-        // Skip byteLength
+        var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -240,14 +240,6 @@ define([
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
-
-        var gltfByteLength = view.getUint32(byteOffset, true);
-        //>>includeStart('debug', pragmas.debug);
-        if (gltfByteLength === 0) {
-            throw new DeveloperError('glTF byte length is zero, i3dm must have a glTF to instance.');
-        }
-        //>>includeEnd('debug');
-        byteOffset += sizeOfUint32;
         
         var gltfFormat = view.getUint32(byteOffset, true);
         //>>includeStart('debug', pragmas.debug);
@@ -256,6 +248,8 @@ define([
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
+
+        var gltfByteLength = byteLength - 32 - featureTableJSONByteLength - featureTableBinaryByteLength - batchTableJSONByteLength - batchTableBinaryByteLength;
 
         var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
         var featureTableJSON = JSON.parse(featureTableString);
