@@ -229,7 +229,7 @@ define([
         view.setUint32(16, 0, true);                             // featureTableBinaryByteLength
         view.setUint32(20, 0, true);                             // batchTableJSONByteLength
         view.setUint32(24, 0, true);                             // batchTableBinaryByteLength
-        view.setUint32(38, gltfFormat, true);                    // gltfFormat
+        view.setUint32(28, gltfFormat, true);                    // gltfFormat
 
         var i;
         var byteOffset = headerByteLength;
