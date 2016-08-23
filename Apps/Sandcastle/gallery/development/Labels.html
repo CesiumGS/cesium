@@ -28,7 +28,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
     var viewer = new Cesium.Viewer('cesiumContainer');
-    var scene = viewer.scene;
 
     var minLat = 22.0;
     var maxLat = 51.0;
@@ -41,8 +40,6 @@ function startup(Cesium) {
     var minWordLength = 4;
     var maxWordLength = 9;
 
-    var labels = new Cesium.LabelCollection();
-
     for(var i = minLat; i < maxLat; i += latIncrement) {
         for (var j = minLon; j < maxLon; j += lonIncrement) {
             var position = Cesium.Cartesian3.fromDegrees(j, i);
@@ -53,18 +50,16 @@ function startup(Cesium) {
                 text += String.fromCharCode(Math.floor((Math.random() * 25.0 + 65.0)));
             }
 
-            labels.add({
+            viewer.entities.add({
                 position : position,
-                text : text
+                label : {
+                    text : text
+                }
             });
         }
     }
 
-    scene.primitives.add(new Cesium.LabelCollectionDeclutter({
-        labelCollection : labels,
-        scene : scene
-    }));
-
+    /*
     var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
     handler.setInputAction(function(movement) {
         var pickedLabel = scene.pick(movement.position);
@@ -77,6 +72,7 @@ function startup(Cesium) {
             }
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    */
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

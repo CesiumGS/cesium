@@ -76,6 +76,7 @@ define([
         this._show = true;
         this._firing = false;
         this._refire  = false;
+        this._cluster = undefined;
     }
 
     /**

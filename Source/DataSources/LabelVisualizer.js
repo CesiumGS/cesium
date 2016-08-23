@@ -11,7 +11,6 @@ define([
         '../Core/NearFarScalar',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
-        '../Scene/LabelCollection',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
         './BoundingSphereState',
@@ -28,7 +27,6 @@ define([
         NearFarScalar,
         HeightReference,
         HorizontalOrigin,
-        LabelCollection,
         LabelStyle,
         VerticalOrigin,
         BoundingSphereState,
@@ -82,9 +80,6 @@ define([
 
         entityCollection.collectionChanged.addEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
 
-        this._scene = scene;
-        this._unusedIndexes = [];
-        this._labelCollection = undefined;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
 
@@ -106,7 +101,8 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var unusedIndexes = this._unusedIndexes;
+        var cluster = this._entityCollection._cluster;
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -123,28 +119,12 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                returnLabel(item, unusedIndexes);
+                cluster.removeLabel(entity);
                 continue;
             }
 
             if (!defined(label)) {
-                var labelCollection = this._labelCollection;
-                if (!defined(labelCollection)) {
-                    labelCollection = this._scene.primitives.add(new LabelCollection({
-                        scene : this._scene
-                    }));
-                    this._labelCollection = labelCollection;
-                }
-
-                var length = unusedIndexes.length;
-                if (length > 0) {
-                    var index = unusedIndexes.pop();
-                    item.index = index;
-                    label = labelCollection.get(index);
-                } else {
-                    label = labelCollection.add();
-                    item.index = labelCollection.length - 1;
-                }
+                label = cluster.getLabel(entity);
                 label.id = entity;
                 item.label = label;
             }
@@ -215,17 +195,14 @@ define([
      */
     LabelVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(LabelVisualizer.prototype._onCollectionChanged, this);
-        if (defined(this._labelCollection)) {
-            this._scene.primitives.remove(this._labelCollection);
-        }
         return destroyObject(this);
     };
 
     LabelVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedIndexes = this._unusedIndexes;
         var items = this._items;
+        var cluster = this._entityCollection._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
@@ -241,30 +218,17 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnLabel(items.get(entity.id), unusedIndexes);
+                cluster.removeLabel(entity);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnLabel(items.get(entity.id), unusedIndexes);
+            cluster.removeLabel(entity);
             items.remove(entity.id);
         }
     };
-
-    function returnLabel(item, unusedIndexes) {
-        if (defined(item)) {
-            var label = item.label;
-            if (defined(label)) {
-                unusedIndexes.push(item.index);
-                label.id = undefined;
-                label.show = false;
-                item.label = undefined;
-                item.index = -1;
-            }
-        }
-    }
 
     return LabelVisualizer;
 });
