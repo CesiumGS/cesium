@@ -24,10 +24,9 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-
         // One item in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 50.0));
     });
 
     afterAll(function() {

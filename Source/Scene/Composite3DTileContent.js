@@ -225,7 +225,7 @@ define([
 
         var that = this;
 
-        when.all(contentPromises, function() {
+        when.all(contentPromises).then(function() {
             that.state = Cesium3DTileContentState.READY;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {

@@ -202,6 +202,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Instanced3DModel3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+        var byteStart = defaultValue(byteOffset, 0);
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -221,7 +222,7 @@ define([
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
-        // Skip byteLength
+        var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var featureTableJSONByteLength = view.getUint32(byteOffset, true);
@@ -239,14 +240,6 @@ define([
         byteOffset += sizeOfUint32;
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
-        byteOffset += sizeOfUint32;
-
-        var gltfByteLength = view.getUint32(byteOffset, true);
-        //>>includeStart('debug', pragmas.debug);
-        if (gltfByteLength === 0) {
-            throw new DeveloperError('glTF byte length is zero, i3dm must have a glTF to instance.');
-        }
-        //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
         
         var gltfFormat = view.getUint32(byteOffset, true);
@@ -288,6 +281,12 @@ define([
         // TODO: Right now batchTableResources doesn't support binary
         byteOffset += batchTableBinaryByteLength;
 
+        var gltfByteLength = byteStart + byteLength - byteOffset;
+        //>>includeStart('debug', pragmas.debug);
+        if (gltfByteLength === 0) {
+            throw new DeveloperError('glTF byte length is zero, i3dm must have a glTF to instance.');
+        }
+        //>>includeEnd('debug');
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
