@@ -215,7 +215,7 @@ define([
                 var content = contentFactory(this._tileset, this._tile, this._url);
                 content.initialize(arrayBuffer, byteOffset);
                 this._contents.push(content);
-                contentPromises.push(content.readyPromise);
+                contentPromises.push(content._readyPromise);
             } else {
                 throw new DeveloperError('Unknown tile content type, ' + tileType + ', inside Composite tile');
             }
@@ -225,7 +225,7 @@ define([
 
         var that = this;
 
-        when.all(contentPromises, function() {
+        when.all(contentPromises).then(function() {
             that.state = Cesium3DTileContentState.READY;
             that._readyPromise.resolve(that);
         }).otherwise(function(error) {
