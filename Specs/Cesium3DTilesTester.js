@@ -64,7 +64,7 @@ define([
         // Verify render before being picked
         expectRender(scene, tileset);
 
-        // Change the color of the picked instance to yellow
+        // Change the color of the picked feature to yellow
         var picked = scene.pickForSpecs();
         expect(picked).toBeDefined();
         picked.color = Color.clone(Color.YELLOW, picked.color);
@@ -112,6 +112,16 @@ define([
             content.initialize(arrayBuffer);
             content.update(tileset, scene.frameState);
         }).toThrowDeveloperError();
+        return content;
+    };
+
+    Cesium3DTilesTester.loadTile = function(scene, arrayBuffer, type) {
+        var tileset = {};
+        var url = '';
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
+        content.initialize(arrayBuffer);
+        content.update(tileset, scene.frameState);
+        return content;
     };
 
     // Use counter to prevent models from sharing the same cache key,
@@ -193,7 +203,7 @@ define([
         var version = defaultValue(options.version, 1);
         var featuresLength = defaultValue(options.featuresLength, 1);
 
-        var headerByteLength = 20;
+        var headerByteLength = 24;
         var byteLength = headerByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
@@ -203,8 +213,9 @@ define([
         view.setUint8(3, magic[3]);
         view.setUint32(4, version, true);          // version
         view.setUint32(8, byteLength, true);       // byteLength
-        view.setUint32(12, featuresLength, true);  // featuresLength
-        view.setUint32(16, 0, true);               // batchTableByteLength
+        view.setUint32(12, 0, true);               // batchTableJsonByteLength
+        view.setUint32(16, 0, true);               // batchTableBinaryByteLength
+        view.setUint32(20, featuresLength, true);  // batchLength
 
         return buffer;
     };
@@ -220,16 +231,16 @@ define([
         var gltfUriByteLength = gltfUri.length;
 
         var featuresLength = defaultValue(options.featuresLength, 1);
-        var featureTableJSON = {
+        var featureTableJson = {
             INSTANCES_LENGTH : featuresLength,
             POSITION : new Array(featuresLength * 3).fill(0)
         };
-        var featureTableJSONString = JSON.stringify(featureTableJSON);
-        var featureTableJSONByteLength = featureTableJSONString.length;
+        var featureTableJsonString = JSON.stringify(featureTableJson);
+        var featureTableJsonByteLength = featureTableJsonString.length;
 
         var headerByteLength = 32;
         var uriByteLength = gltfUri.length;
-        var byteLength = headerByteLength + featureTableJSONByteLength + uriByteLength;
+        var byteLength = headerByteLength + featureTableJsonByteLength + uriByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
@@ -238,16 +249,16 @@ define([
         view.setUint8(3, magic[3]);
         view.setUint32(4, version, true);                        // version
         view.setUint32(8, byteLength, true);                     // byteLength
-        view.setUint32(12, featureTableJSONByteLength, true);    // featureTableJSONByteLength
+        view.setUint32(12, featureTableJsonByteLength, true);    // featureTableJsonByteLength
         view.setUint32(16, 0, true);                             // featureTableBinaryByteLength
-        view.setUint32(20, 0, true);                             // batchTableJSONByteLength
+        view.setUint32(20, 0, true);                             // batchTableJsonByteLength
         view.setUint32(24, 0, true);                             // batchTableBinaryByteLength
         view.setUint32(28, gltfFormat, true);                    // gltfFormat
 
         var i;
         var byteOffset = headerByteLength;
-        for (i = 0; i < featureTableJSONByteLength; i++) {
-            view.setUint8(byteOffset, featureTableJSONString.charCodeAt(i));
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
             byteOffset++;
         }
         for (i = 0; i < gltfUriByteLength; i++) {
@@ -262,9 +273,9 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [112, 110, 116, 115]);
         var version = defaultValue(options.version, 1);
-        var featureTableJSON = options.featureTableJSON;
-        if (!defined(featureTableJSON)) {
-            featureTableJSON = {
+        var featureTableJson = options.featureTableJson;
+        if (!defined(featureTableJson)) {
+            featureTableJson = {
                 POINTS_LENGTH : 1,
                 POSITIONS : {
                     byteOffset : 0
@@ -272,15 +283,15 @@ define([
             };
         }
 
-        var featureTableJSONString = JSON.stringify(featureTableJSON);
-        featureTableJSONString = padStringToByteAlignment(featureTableJSONString, 4);
-        var featureTableJSONByteLength = defaultValue(options.featureTableJSONByteLength, featureTableJSONString.length);
+        var featureTableJsonString = JSON.stringify(featureTableJson);
+        featureTableJsonString = padStringToByteAlignment(featureTableJsonString, 4);
+        var featureTableJsonByteLength = defaultValue(options.featureTableJsonByteLength, featureTableJsonString.length);
 
         var featureTableBinary = new ArrayBuffer(12); // Enough space to hold 3 floats
         var featureTableBinaryByteLength = featureTableBinary.byteLength;
 
-        var headerByteLength = 20;
-        var byteLength = headerByteLength + featureTableJSONByteLength + featureTableBinaryByteLength;
+        var headerByteLength = 28;
+        var byteLength = headerByteLength + featureTableJsonByteLength + featureTableBinaryByteLength;
         var buffer = new ArrayBuffer(byteLength);
         var view = new DataView(buffer);
         view.setUint8(0, magic[0]);
@@ -289,13 +300,15 @@ define([
         view.setUint8(3, magic[3]);
         view.setUint32(4, version, true);                       // version
         view.setUint32(8, byteLength, true);                    // byteLength
-        view.setUint32(12, featureTableJSONByteLength, true);   // featureTableJSONByteLength
+        view.setUint32(12, featureTableJsonByteLength, true);   // featureTableJsonByteLength
         view.setUint32(16, featureTableBinaryByteLength, true); // featureTableBinaryByteLength
+        view.setUint32(20, 0, true);                            // batchTableJsonByteLength
+        view.setUint32(24, 0, true);                            // batchTableBinaryByteLength
 
         var i;
         var byteOffset = headerByteLength;
-        for (i = 0; i < featureTableJSONByteLength; i++) {
-            view.setUint8(byteOffset, featureTableJSONString.charCodeAt(i));
+        for (i = 0; i < featureTableJsonByteLength; i++) {
+            view.setUint8(byteOffset, featureTableJsonString.charCodeAt(i));
             byteOffset++;
         }
         for (i = 0; i < featureTableBinaryByteLength; i++) {

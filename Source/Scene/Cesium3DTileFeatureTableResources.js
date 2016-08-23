@@ -14,8 +14,8 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileFeatureTableResources(featureTableJSON, featureTableBinary) {
-        this.json = featureTableJSON;
+    function Cesium3DTileFeatureTableResources(featureTableJson, featureTableBinary) {
+        this.json = featureTableJson;
         this.buffer = featureTableBinary;
         this._cachedArrayBufferViews = {};
         this.featuresLength = 0;

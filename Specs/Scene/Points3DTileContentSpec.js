@@ -2,12 +2,16 @@
 defineSuite([
         'Scene/Points3DTileContent',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/ComponentDatatype',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Points3DTileContent,
         Cartesian3,
+        Color,
+        ComponentDatatype,
         HeadingPitchRange,
         Cesium3DTilesTester,
         createScene) {
@@ -26,6 +30,7 @@ defineSuite([
     var pointsQuantizedUrl = './Data/Cesium3DTiles/Points/PointsQuantized';
     var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsQuantizedOctEncoded';
     var pointsWGS84Url = './Data/Cesium3DTiles/Points/PointsWGS84';
+    var pointsWithBatchTableUrl = './Data/Cesium3DTiles/Points/PointsWithBatchTable';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -71,16 +76,16 @@ defineSuite([
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
-    it('throws if featureTableJSONByteLength is 0', function() {
+    it('throws if featureTableJsonByteLength is 0', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
-            featureTableJSONByteLength : 0
+            featureTableJsonByteLength : 0
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the feature table does not contain POINTS_LENGTH', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
-            featureTableJSON : {
+            featureTableJson : {
                 POSITION : {
                     byteOffset : 0
                 }
@@ -91,7 +96,7 @@ defineSuite([
 
     it('throws if the feature table does not contain POSITION or POSITION_QUANTIZED', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
-            featureTableJSON : {
+            featureTableJson : {
                 POINTS_LENGTH : 1
             }
         });
@@ -100,7 +105,7 @@ defineSuite([
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
-            featureTableJSON : {
+            featureTableJson : {
                 POINTS_LENGTH : 1,
                 POSITION_QUANTIZED : {
                     byteOffset : 0
@@ -113,7 +118,7 @@ defineSuite([
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET', function() {
         var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
-            featureTableJSON : {
+            featureTableJson : {
                 POINTS_LENGTH : 1,
                 POSITION_QUANTIZED : {
                     byteOffset : 0
@@ -122,6 +127,30 @@ defineSuite([
             }
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('throws if the BATCH_ID semantic is defined but BATCHES_LENGTH is not', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJson : {
+                POINTS_LENGTH : 2,
+                POSITION : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+                BATCH_ID : [0, 1]
+            }
+        });
+        return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
+    });
+
+    it('BATCH_ID semantic uses componentType of UNSIGNED_SHORT by default', function() {
+        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+            featureTableJson : {
+                POINTS_LENGTH : 2,
+                POSITION : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
+                BATCH_ID : [0, 1],
+                BATCH_LENGTH : 2
+            }
+        });
+        var content = Cesium3DTilesTester.loadTile(scene, arrayBuffer, 'pnts');
+        expect(content._drawCommand._vertexArray._attributes[1].componentDatatype).toEqual(ComponentDatatype.UNSIGNED_SHORT);
     });
 
     it('resolves readyPromise', function() {
@@ -168,6 +197,10 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, pointsWGS84Url).then(expectRenderPoints);
     });
 
+    it('renders points with batch table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(expectRenderPoints);
+    });
+
     it('renders with debug color', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
             var color = expectRenderPoints(tileset);
@@ -190,6 +223,61 @@ defineSuite([
             picked = scene.pickForSpecs();
             expect(picked).toBeDefined();
             expect(picked.primitive).toBe(content);
+        });
+    });
+
+    it('picks a feature in the point cloud', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+            var pixelColor = scene.renderForSpecs();
+
+            // Change the color of the picked feature to yellow
+            var picked = scene.pickForSpecs();
+            expect(picked).toBeDefined();
+            picked.color = Color.clone(Color.YELLOW, picked.color);
+
+            // Expect the pixel color to be some shade of yellow
+            var newPixelColor = scene.renderForSpecs();
+            expect(newPixelColor).not.toEqual(pixelColor);
+
+            // Turn show off. Expect a different feature to get picked.
+            picked.show = false;
+            var newPicked = scene.pickForSpecs();
+            expect(newPicked).not.toBe(picked);
+        });
+    });
+
+    it('points without batch table works', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(0);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty('name')).toBe(false);
+            expect(content.getFeature(0)).toBeUndefined();
+        });
+    });
+
+    it('points with batch table works', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(8);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty('name')).toBe(true);
+            expect(content.getFeature(0)).toBeDefined();
+        });
+    });
+
+    it('throws when calling getFeature with invalid index', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(function(){
+                content.getFeature(-1);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature(1000);
+            }).toThrowDeveloperError();
+            expect(function(){
+                content.getFeature();
+            }).toThrowDeveloperError();
         });
     });
 

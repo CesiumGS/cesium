@@ -154,7 +154,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Instanced3DModel3DTileContent.prototype.getFeature = function(batchId) {
-        var featuresLength = this._modelInstanceCollection.length;
+        var featuresLength = this.featuresLength;
         //>>includeStart('debug', pragmas.debug);
         if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
             throw new DeveloperError('batchId is required and between zero and featuresLength - 1 (' + (featuresLength - 1) + ').');
@@ -225,10 +225,10 @@ define([
         var byteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var featureTableJSONByteLength = view.getUint32(byteOffset, true);
+        var featureTableJsonByteLength = view.getUint32(byteOffset, true);
         //>>includeStart('debug', pragmas.debug);
-        if (featureTableJSONByteLength === 0) {
-            throw new DeveloperError('featureTableJSONByteLength is zero, the feature table must be defined.');
+        if (featureTableJsonByteLength === 0) {
+            throw new DeveloperError('featureTableJsonByteLength is zero, the feature table must be defined.');
         }
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
@@ -236,7 +236,7 @@ define([
         var featureTableBinaryByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
-        var batchTableJSONByteLength = view.getUint32(byteOffset, true);
+        var batchTableJsonByteLength = view.getUint32(byteOffset, true);
         byteOffset += sizeOfUint32;
 
         var batchTableBinaryByteLength = view.getUint32(byteOffset, true);
@@ -250,18 +250,15 @@ define([
         //>>includeEnd('debug');
         byteOffset += sizeOfUint32;
 
-        var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJSONByteLength);
-        var featureTableJSON = JSON.parse(featureTableString);
-        byteOffset += featureTableJSONByteLength;
+        var featureTableString = getStringFromTypedArray(uint8Array, byteOffset, featureTableJsonByteLength);
+        var featureTableJson = JSON.parse(featureTableString);
+        byteOffset += featureTableJsonByteLength;
 
         var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
         byteOffset += featureTableBinaryByteLength;
 
-        var featureTableResources = new Cesium3DTileFeatureTableResources(featureTableJSON, featureTableBinary);
+        var featureTableResources = new Cesium3DTileFeatureTableResources(featureTableJson, featureTableBinary);
         var instancesLength = featureTableResources.getGlobalProperty('INSTANCES_LENGTH', ComponentDatatype.UNSIGNED_INT);
-        if (Array.isArray(instancesLength)) {
-            instancesLength = instancesLength[0];
-        }
         featureTableResources.featuresLength = instancesLength;
 
         //>>includeStart('debug', pragmas.debug);
@@ -272,14 +269,19 @@ define([
 
         var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
         this.batchTableResources = batchTableResources;
-        if (batchTableJSONByteLength > 0) {
-            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJSONByteLength);
-            batchTableResources.batchTable = JSON.parse(batchTableString);
-            byteOffset += batchTableJSONByteLength;
-        }
+        if (batchTableJsonByteLength > 0) {
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJsonByteLength);
+            var batchTableJson = JSON.parse(batchTableString);
+            byteOffset += batchTableJsonByteLength;
 
-        // TODO: Right now batchTableResources doesn't support binary
-        byteOffset += batchTableBinaryByteLength;
+            var batchTableBinary;
+            if (batchTableBinaryByteLength > 0) {
+                // Has a batch table binary
+                batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
+                byteOffset += batchTableBinaryByteLength;
+            }
+            batchTableResources.setBatchTable(batchTableJson, batchTableBinary);
+        }
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
         //>>includeStart('debug', pragmas.debug);

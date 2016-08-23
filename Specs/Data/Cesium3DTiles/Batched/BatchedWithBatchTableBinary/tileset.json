@@ -8,16 +8,24 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3197000541327293,
-      "maximum": -1.3196647916486712
+      "minimum": -1.3196930452470341,
+      "maximum": -1.3196617964314208
     },
     "Latitude": {
-      "minimum": 0.6988632475321589,
-      "maximum": 0.6988890296629459
+      "minimum": 0.6988594477444204,
+      "maximum": 0.698883763781271
     },
     "Height": {
       "minimum": 6,
       "maximum": 14
+    },
+    "code": {
+      "minimum": 0,
+      "maximum": 9
+    },
+    "cartographic": {
+      "minimum": null,
+      "maximum": null
     }
   },
   "geometricError": 70,
@@ -35,7 +43,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "batchedTranslucentOpaqueMix.b3dm"
+      "url": "batchedWithBatchTableBinary.b3dm"
     }
   }
 }

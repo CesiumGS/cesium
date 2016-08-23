@@ -1,17 +1,27 @@
 /*global defineSuite*/
 defineSuite([
         'Scene/Cesium3DTileBatchTableResources',
+        'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/Color',
         'Core/HeadingPitchRange',
+        'Core/Matrix2',
+        'Core/Matrix3',
+        'Core/Matrix4',
         'Renderer/ContextLimits',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Cesium3DTileBatchTableResources,
+        Cartesian2,
         Cartesian3,
+        Cartesian4,
         Color,
         HeadingPitchRange,
+        Matrix2,
+        Matrix3,
+        Matrix4,
         ContextLimits,
         Cesium3DTilesTester,
         createScene) {
@@ -229,9 +239,11 @@ defineSuite([
     it('hasProperty', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
         expect(resources.hasProperty('height')).toEqual(false);
-        resources.batchTable = {
+        var batchTableJson = {
             height: [0.0]
         };
+        resources.setBatchTable(batchTableJson);
+
         expect(resources.hasProperty('height')).toEqual(true);
         expect(resources.hasProperty('id')).toEqual(false);
     });
@@ -239,10 +251,11 @@ defineSuite([
     it('getPropertyNames', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
         expect(resources.getPropertyNames()).toEqual([]);
-        resources.batchTable = {
+        var batchTableJson = {
             height: [0.0],
             id : [0]
         };
+        resources.setBatchTable(batchTableJson);
         expect(resources.getPropertyNames()).toEqual(['height', 'id']);
     });
 
@@ -269,9 +282,10 @@ defineSuite([
     it('getProperty', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
         expect(resources.getProperty(0, 'height')).toBeUndefined();
-        resources.batchTable = {
+        var batchTableJson = {
             height: [1.0]
         };
+        resources.setBatchTable(batchTableJson);
         expect(resources.getProperty(0, 'height')).toEqual(1.0);
         expect(resources.getProperty(0, 'id')).toBeUndefined();
     });
@@ -301,7 +315,7 @@ defineSuite([
         var resources = new Cesium3DTileBatchTableResources(mockContent, 3);
         resources.setProperty(0, 'height', 1.0);
 
-        expect(resources.batchTable.height.length).toEqual(3);
+        expect(resources.batchTableJson.height.length).toEqual(3);
         expect(resources.getProperty(0, 'height')).toEqual(1.0);
         expect(resources.getProperty(1, 'height')).toBeUndefined();
         expect(resources.getProperty(2, 'height')).toBeUndefined();
@@ -309,9 +323,10 @@ defineSuite([
 
     it('setProperty with existing batch table', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
-        resources.batchTable = {
+        var batchTableJson = {
             height : [1.0, 2.0]
         };
+        resources.setBatchTable(batchTableJson);
         resources.setProperty(0, 'height', 3.0);
 
         expect(resources.getProperty(0, 'height')).toEqual(3.0);
@@ -320,9 +335,10 @@ defineSuite([
 
     it('setProperty with object value', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
-        resources.batchTable = {
+        var batchTableJson = {
             info : [{name : 'building0', year : 2000}, {name : 'building1', year : 2001}]
         };
+        resources.setBatchTable(batchTableJson);
         resources.setProperty(0, 'info', {name : 'building0_new', year : 2002});
 
         expect(resources.getProperty(0, 'info')).toEqual({name : 'building0_new', year : 2002});
@@ -331,20 +347,161 @@ defineSuite([
 
     it('setProperty with array value', function() {
         var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
-        resources.batchTable = {
+        var batchTableJson = {
             rooms : [['room1', 'room2'], ['room3', 'room4']]
         };
+        resources.setBatchTable(batchTableJson);
         resources.setProperty(0, 'rooms', ['room1_new', 'room2']);
 
         expect(resources.getProperty(0, 'rooms')).toEqual(['room1_new', 'room2']);
         expect(resources.getProperty(1, 'rooms')).toEqual(['room3', 'room4']);
     });
 
+    it('setBatchTable throws if the binary property does not specify a componentType', function() {
+        var batchTableJson = {
+            propertyScalar : {
+                byteOffset : 0,
+                type : 'SCALAR'
+            }
+        };
+        var batchTableBinary = new Float64Array([0, 1]);
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        expect(function() {
+            resources.setBatchTable(batchTableJson, batchTableBinary);
+        }).toThrowDeveloperError();
+    });
+
+    it('setBatchTable throws if the binary property does not specify a type', function() {
+        var batchTableJson = {
+            propertyScalar : {
+                byteOffset : 0,
+                componentType : 'DOUBLE'
+            }
+        };
+        var batchTableBinary = new Float64Array([0, 1]);
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        expect(function() {
+            resources.setBatchTable(batchTableJson, batchTableBinary);
+        }).toThrowDeveloperError();
+    });
+
+    it('setBatchTable throws if a binary property exists but there is no batchTableBinary', function() {
+        var batchTableJson = {
+            propertyScalar : {
+                byteOffset : 0,
+                componentType : 'DOUBLE',
+                type : 'SCALAR'
+            }
+        };
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        expect(function() {
+            resources.setBatchTable(batchTableJson);
+        }).toThrowDeveloperError();
+    });
+
+    function concatTypedArrays(arrays) {
+        var i;
+        var length = arrays.length;
+
+        var byteLength = 0;
+        for (i = 0; i < length; ++i) {
+            byteLength += arrays[i].byteLength;
+        }
+        var buffer = new Uint8Array(byteLength);
+
+        var byteOffset = 0;
+        for (i = 0; i < length; ++i) {
+            var data = new Uint8Array(arrays[i].buffer);
+            byteLength = data.length;
+            for (var j = 0; j < byteLength; ++j) {
+                buffer[byteOffset++] = data[j];
+            }
+        }
+        return buffer;
+    }
+
+    it('getProperty and setProperty work for binary properties', function() {
+        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
+        var propertyScalarBinary = new Float64Array([0, 1]);
+        var propertyVec2Binary = new Float32Array([2, 3, 4, 5]);
+        var propertyVec3Binary = new Int32Array([6, 7, 8, 9, 10, 11]);
+        var propertyVec4Binary = new Uint32Array([12, 13, 14, 15, 16, 17, 18, 19]);
+        var propertyMat2Binary = new Int16Array([20, 21, 22, 23, 24, 25, 26, 27]);
+        var propertyMat3Binary = new Uint16Array([28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45]);
+        var propertyMat4Binary = new Uint8Array([46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77]);
+
+        var buffers = [propertyScalarBinary, propertyVec2Binary, propertyVec3Binary, propertyVec4Binary, propertyMat2Binary, propertyMat3Binary, propertyMat4Binary];
+        var batchTableBinary = concatTypedArrays(buffers);
+        var batchTableJson = {
+            propertyScalar : {
+                byteOffset : 0,
+                componentType : 'DOUBLE',
+                type : 'SCALAR'
+            },
+            propertyVec2 : {
+                byteOffset : 16,
+                componentType : 'FLOAT',
+                type : 'VEC2'
+            },
+            propertyVec3 : {
+                byteOffset : 32,
+                componentType : 'INT',
+                type : 'VEC3'
+            },
+            propertyVec4 : {
+                byteOffset : 56,
+                componentType : 'UNSIGNED_INT',
+                type : 'VEC4'
+            },
+            propertyMat2 : {
+                byteOffset : 88,
+                componentType : 'SHORT',
+                type : 'MAT2'
+            },
+            propertyMat3 : {
+                byteOffset : 104,
+                componentType : 'UNSIGNED_SHORT',
+                type : 'MAT3'
+            },
+            propertyMat4 : {
+                byteOffset : 140,
+                componentType : 'UNSIGNED_BYTE',
+                type : 'MAT4'
+            }
+        };
+
+        resources.setBatchTable(batchTableJson, batchTableBinary);
+
+        expect(resources.getProperty(1, 'propertyScalar')).toEqual(1);
+        expect(resources.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(4, 5));
+        expect(resources.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(9, 10, 11));
+        expect(resources.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(16, 17, 18, 19));
+        expect(resources.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(24, 26, 25, 27)); // Constructor is row-major, data is column major
+        expect(resources.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(37, 40, 43, 38, 41, 44, 39, 42, 45));  // Constructor is row-major, data is column major
+        expect(resources.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(62, 66, 70, 74, 63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77));  // Constructor is row-major, data is column major
+
+        resources.setProperty(1, 'propertyScalar', 2);
+        resources.setProperty(1, 'propertyVec2', new Cartesian2(5, 6));
+        resources.setProperty(1, 'propertyVec3', new Cartesian3(10, 11, 12));
+        resources.setProperty(1, 'propertyVec4', new Cartesian4(17, 18, 19, 20));
+        resources.setProperty(1, 'propertyMat2', new Matrix2(25, 27, 26, 28));
+        resources.setProperty(1, 'propertyMat3', new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
+        resources.setProperty(1, 'propertyMat4', new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
+
+        expect(resources.getProperty(1, 'propertyScalar')).toEqual(2);
+        expect(resources.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(5, 6));
+        expect(resources.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(10, 11, 12));
+        expect(resources.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(17, 18, 19, 20));
+        expect(resources.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(25, 27, 26, 28));
+        expect(resources.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
+        expect(resources.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
+    });
+
     it('renders tileset with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
 
-            // Each feature in the b3dm file has an id property from 0 to 99,
+            // Each feature in the b3dm file has an id property from 0 to 9,
             // check that the 2nd resource has an id of 2
             expect(content.getFeature(2).getProperty('id')).toEqual(2);
 
@@ -382,9 +539,9 @@ defineSuite([
     });
 
     it('renders with featuresLength greater than maximumTextureSize', function() {
-        // Set maximum texture size to 64 temporarily. Batch length of b3dm file is 100.
+        // Set maximum texture size to 4 temporarily. Batch length of b3dm file is 10.
         var maximumTextureSize = ContextLimits.maximumTextureSize;
-        ContextLimits._maximumTextureSize = 64;
+        ContextLimits._maximumTextureSize = 4;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;

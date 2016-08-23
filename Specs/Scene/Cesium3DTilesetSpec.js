@@ -211,7 +211,7 @@ defineSuite([
             expect(properties).toBeDefined();
             expect(properties.id).toBeDefined();
             expect(properties.id.minimum).toEqual(0);
-            expect(properties.id.maximum).toEqual(99);
+            expect(properties.id.maximum).toEqual(9);
 
             expect(tileset._geometricError).toEqual(240.0);
             expect(tileset._root).toBeDefined();
@@ -942,12 +942,12 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
-            // Each feature in the b3dm file has an id property from 0 to 99
-            // ${id} >= 100 will always evaluate to false
+            // Each feature in the b3dm file has an id property from 0 to 9
+            // ${id} >= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({show : '${id} >= 50 * 2'});
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
-            // ${id} < 100 will always evaluate to true
+            // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({show : '${id} < 200 / 2'});
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
@@ -1040,8 +1040,8 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var showColor = scene.renderForSpecs();
 
-            // Initially, all feature ids are less than 100
-            tileset.style = new Cesium3DTileStyle({show : '${id} < 100'});
+            // Initially, all feature ids are less than 10
+            tileset.style = new Cesium3DTileStyle({show : '${id} < 10'});
             expect(scene.renderForSpecs()).toEqual(showColor);
 
             // Change feature ids so the show expression will evaluate to false
@@ -1051,14 +1051,14 @@ defineSuite([
             var feature;
             for (i = 0; i < length; ++i) {
                 feature = content.getFeature(i);
-                feature.setProperty('id', feature.getProperty('id') + 100);
+                feature.setProperty('id', feature.getProperty('id') + 10);
             }
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             // Change ids back
             for (i = 0; i < length; ++i) {
                 feature = content.getFeature(i);
-                feature.setProperty('id', feature.getProperty('id') - 100);
+                feature.setProperty('id', feature.getProperty('id') - 10);
             }
             expect(scene.renderForSpecs()).toEqual(showColor);
         });
@@ -1066,8 +1066,8 @@ defineSuite([
 
     it('applies style with complex color expression to a tileset', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            // Each feature in the b3dm file has an id property from 0 to 99
-            // ${id} >= 100 will always evaluate to false
+            // Each feature in the b3dm file has an id property from 0 to 9
+            // ${id} >= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({color : '(${id} >= 50 * 2) ? color("red") : color("blue")'});
             var color = scene.renderForSpecs();
             expect(color[0]).toEqual(0);
@@ -1075,7 +1075,7 @@ defineSuite([
             expect(color[2]).toBeGreaterThan(0);
             expect(color[3]).toEqual(255);
 
-            // ${id} < 100 will always evaluate to true
+            // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({color : '(${id} < 50 * 2) ? color("red") : color("blue")'});
             color = scene.renderForSpecs();
             expect(color[0]).toBeGreaterThan(0);
@@ -1087,11 +1087,11 @@ defineSuite([
 
     it('applies conditional color style to a tileset', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            // ${id} < 100 will always evaluate to true
+            // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle({
                 color : {
                     conditions : {
-                        '${id} < 100' : 'color("red")',
+                        '${id} < 10' : 'color("red")',
                         'true' : 'color("blue")'
                     }
                 }
@@ -1102,11 +1102,11 @@ defineSuite([
             expect(color[2]).toEqual(0);
             expect(color[3]).toEqual(255);
 
-            // ${id}>= 100 will always evaluate to false
+            // ${id}>= 10 will always evaluate to false
             tileset.style = new Cesium3DTileStyle({
                 color : {
                     conditions : {
-                        '${id} >= 100' : 'color("red")',
+                        '${id} >= 10' : 'color("red")',
                         'true' : 'color("blue")'
                     }
                 }
@@ -1121,7 +1121,7 @@ defineSuite([
 
     it('loads style from uri', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            // ${id} < 100 will always evaluate to true
+            // ${id} < 10 will always evaluate to true
             tileset.style = new Cesium3DTileStyle(styleUrl);
             return tileset.style.readyPromise.then(function(style) {
                 var color = scene.renderForSpecs();
