@@ -16,13 +16,13 @@
       "maximum": 0.6988894207110236
     },
     "Height": {
-      "minimum": 15,
-      "maximum": 15
+      "minimum": 0,
+      "maximum": 80
     }
   },
   "geometricError": 40,
+  "refine": "add",
   "root": {
-    "refine": "add",
     "boundingVolume": {
       "region": [
         -1.3197004795898053,
@@ -30,12 +30,12 @@
         -1.3196595204101946,
         0.6988897891,
         0,
-        15
+        80
       ]
     },
     "geometricError": 0,
     "content": {
-      "url": "instancedGltfEmbedded.i3dm"
+      "url": "instancedScaleNonUniformWithBatchTable.i3dm"
     }
   }
 }
