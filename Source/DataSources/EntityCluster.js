@@ -290,6 +290,9 @@ define([
         this._billboardCollection = undefined;
         this._clusteredBillboardCollection = undefined;
 
+        this._unusedLabelIndices = [];
+        this._unusedBillboardIndices = [];
+
         this._previousClusters = [];
         this._previousHeight = undefined;
 
@@ -297,18 +300,30 @@ define([
     }
 
     EntityCluster.prototype.getLabel = function(entity) {
-        if (defined(this._labelCollection) && defined(entity._labelIndex)) {
-            return this._labelCollection.get(entity._labelIndex);
+        var labelCollection = this._labelCollection;
+        if (defined(labelCollection) && defined(entity._labelIndex)) {
+            return labelCollection.get(entity._labelIndex);
         }
 
-        if (!defined(this._labelCollection)) {
-            this._labelCollection = new LabelCollection({
+        if (!defined(labelCollection)) {
+            labelCollection = this._labelCollection = new LabelCollection({
                 scene : this._scene
             });
         }
 
-        var label = this._labelCollection.add();
-        entity._labelIndex = this._labelCollection.length - 1;
+        var index;
+        var label;
+
+        var unusedIndices = this._unusedLabelIndices;
+        if (unusedIndices.length > 0) {
+            index = unusedIndices.pop();
+            label = labelCollection.get(index);
+        } else {
+            label = labelCollection.add();
+            index = labelCollection.length - 1;
+        }
+
+        entity._labelIndex = index;
         return label;
     };
 
@@ -317,23 +332,40 @@ define([
             return;
         }
 
-        var label = this._labelCollection.get(entity._labelIndex);
+        var index = entity._labelIndex;
+        entity._labelIndex = undefined;
+
+        var label = this._labelCollection.get(index);
         label.show = false;
+
+        this._unusedLabelIndices.push(index);
     };
 
     EntityCluster.prototype.getBillboard = function(entity) {
-        if (defined(this._billboardCollection) && defined(entity._billboardIndex)) {
-            return this._billboardCollection.get(entity._billboardIndex);
+        var billboardCollection = this._billboardCollection;
+        if (defined(billboardCollection) && defined(entity._billboardIndex)) {
+            return billboardCollection.get(entity._billboardIndex);
         }
 
-        if (!defined(this._billboardCollection)) {
-            this._billboardCollection = new BillboardCollection({
+        if (!defined(billboardCollection)) {
+            billboardCollection = this._billboardCollection = new BillboardCollection({
                 scene : this._scene
             });
         }
 
-        var billboard = this._billboardCollection.add();
-        entity._billboardIndex = this._billboardCollection.length - 1;
+        var index;
+        var billboard;
+
+        var unusedIndices = this._unusedBillboardIndices;
+        if (unusedIndices.length > 0) {
+            index = unusedIndices.pop();
+            billboard = billboardCollection.get(index);
+        } else {
+            billboard = billboardCollection.add();
+            index = billboardCollection.length - 1;
+        }
+
+        entity._billboardIndex = index;
         return billboard;
     };
 
@@ -342,8 +374,13 @@ define([
             return;
         }
 
-        var billboard = this._billboardCollection.get(entity._billboardIndex);
+        var index = entity._billboardIndex;
+        entity._billboardIndex = undefined;
+
+        var billboard = this._billboardCollection.get(index);
         billboard.show = false;
+
+        this._unusedBillboardIndices.push(index);
     };
 
     EntityCluster.prototype.update = function(frameState) {
