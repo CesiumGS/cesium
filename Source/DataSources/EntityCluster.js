@@ -9,6 +9,7 @@ define([
     '../Core/EllipsoidalOccluder',
     '../Core/Matrix4',
     '../Scene/Billboard',
+    '../Scene/BillboardCollection',
     '../Scene/HorizontalOrigin',
     '../Scene/LabelCollection',
     '../Scene/SceneTransforms',
@@ -24,6 +25,7 @@ define([
     EllipsoidalOccluder,
     Matrix4,
     Billboard,
+    BillboardCollection,
     HorizontalOrigin,
     LabelCollection,
     SceneTransforms,
@@ -114,7 +116,7 @@ define([
             var scene = entityCluster._scene;
 
             var labelCollection = entityCluster._labelCollection;
-            var renderCollection = entityCluster._renderCollection;
+            var clusteredLabelCollection = entityCluster._clusteredLabelCollection;
 
             if (!defined(labelCollection)) {
                 return;
@@ -128,10 +130,10 @@ define([
             var previousHeight = entityCluster._previousHeight;
             var currentHeight = scene.camera.positionCartographic.height;
 
-            if (defined(renderCollection)) {
-                renderCollection.removeAll();
+            if (defined(clusteredLabelCollection)) {
+                clusteredLabelCollection.removeAll();
             } else {
-                renderCollection = new LabelCollection({
+                clusteredLabelCollection = new LabelCollection({
                     scene : scene
                 });
             }
@@ -148,7 +150,7 @@ define([
 
             for (i = 0; i < length; ++i) {
                 label = labelCollection.get(i);
-                if (!occluder.isPointVisible(label.position)) {
+                if (!label.show || !occluder.isPointVisible(label.position)) {
                     continue;
                 }
 
@@ -207,7 +209,7 @@ define([
 
                     if (numPoints > 1) {
                         newClusters.push(cluster);
-                        renderCollection.add({
+                        clusteredLabelCollection.add({
                             text : '' + numPoints,
                             position : cluster.position,
                             id : ids
@@ -251,10 +253,10 @@ define([
                 }
 
                 if (numPoints === 1) {
-                    renderCollection.add(cloneLabel(label));
+                    clusteredLabelCollection.add(cloneLabel(label));
                 } else {
                     var position = Cartesian3.multiplyByScalar(clusterPosition, 1.0 / numPoints, clusterPosition);
-                    renderCollection.add({
+                    clusteredLabelCollection.add({
                         text : '' + numPoints,
                         position : position,
                         id : ids
@@ -267,12 +269,12 @@ define([
                 }
             }
 
-            if (renderCollection.length === 0) {
-                renderCollection.destroy();
-                renderCollection = undefined;
+            if (clusteredLabelCollection.length === 0) {
+                clusteredLabelCollection.destroy();
+                clusteredLabelCollection = undefined;
             }
 
-            entityCluster._renderCollection = renderCollection;
+            entityCluster._clusteredLabelCollection = clusteredLabelCollection;
             entityCluster._previousClusters = newClusters;
             entityCluster._previousHeight = currentHeight;
         };
@@ -283,7 +285,10 @@ define([
         this._pixelRange = defaultValue(options.pixelRange, 5);
 
         this._labelCollection = undefined;
-        this._renderCollection = undefined;
+        this._clusteredLabelCollection = undefined;
+
+        this._billboardCollection = undefined;
+        this._clusteredBillboardCollection = undefined;
 
         this._previousClusters = [];
         this._previousHeight = undefined;
@@ -307,7 +312,7 @@ define([
         return label;
     };
 
-    EntityCluster.prototype.remove = function(entity) {
+    EntityCluster.prototype.removeLabel = function(entity) {
         if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
             return;
         }
@@ -316,15 +321,46 @@ define([
         label.show = false;
     };
 
-    EntityCluster.prototype.update = function(frameState) {
-        if (!defined(this._labelCollection)) {
+    EntityCluster.prototype.getBillboard = function(entity) {
+        if (defined(this._billboardCollection) && defined(entity._billboardIndex)) {
+            return this._billboardCollection.get(entity._billboardIndex);
+        }
+
+        if (!defined(this._billboardCollection)) {
+            this._billboardCollection = new BillboardCollection({
+                scene : this._scene
+            });
+        }
+
+        var billboard = this._billboardCollection.add();
+        entity._billboardIndex = this._billboardCollection.length - 1;
+        return billboard;
+    };
+
+    EntityCluster.prototype.removeBillboard = function(entity) {
+        if (!defined(this._billboardCollection) || !defined(entity._billboardIndex)) {
             return;
         }
 
-        if (!defined(this._renderCollection)) {
-            this._labelCollection.update(frameState);
-        } else {
-            this._renderCollection.update(frameState);
+        var billboard = this._billboardCollection.get(entity._billboardIndex);
+        billboard.show = false;
+    };
+
+    EntityCluster.prototype.update = function(frameState) {
+        if (defined(this._labelCollection)) {
+            if (!defined(this._clusteredLabelCollection)) {
+                this._labelCollection.update(frameState);
+            } else {
+                this._clusteredLabelCollection.update(frameState);
+            }
+        }
+
+        if (defined(this._billboardCollection)) {
+            if (!defined(this._clusteredBillboardCollection)) {
+                this._billboardCollection.update(frameState);
+            } else {
+                this._clusteredBillboardCollection.update(frameState);
+            }
         }
     };
 
@@ -334,6 +370,9 @@ define([
 
     EntityCluster.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
+        this._clusteredLabelCollection = this._clusteredLabelCollection && this._clusteredLabelCollection.destroy();
+        this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
+        this._clusteredBillboardCollection = this._clusteredBillboardCollection && this._clusteredBillboardCollection.destroy();
         this._removeEventListener();
         return destroyObject(this);
     };

@@ -10,7 +10,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
-        '../Scene/BillboardCollection',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
@@ -27,7 +26,6 @@ define([
         destroyObject,
         DeveloperError,
         NearFarScalar,
-        BillboardCollection,
         HeightReference,
         HorizontalOrigin,
         VerticalOrigin,
@@ -81,9 +79,6 @@ define([
 
         entityCollection.collectionChanged.addEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
 
-        this._scene = scene;
-        this._unusedIndexes = [];
-        this._billboardCollection = undefined;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
@@ -104,7 +99,8 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var unusedIndexes = this._unusedIndexes;
+        var cluster = this._entityCollection._cluster;
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -121,26 +117,12 @@ define([
 
             if (!show) {
                 //don't bother creating or updating anything else
-                returnBillboard(item, unusedIndexes);
+                cluster.removeBillboard(entity);
                 continue;
             }
 
             if (!defined(billboard)) {
-                var billboardCollection = this._billboardCollection;
-                if (!defined(billboardCollection)) {
-                    billboardCollection = this._scene.primitives.add(new BillboardCollection({
-                        scene : this._scene
-                    }));
-                    this._billboardCollection = billboardCollection;
-                }
-
-                var length = unusedIndexes.length;
-                if (length > 0) {
-                    billboard = billboardCollection.get(unusedIndexes.pop());
-                } else {
-                    billboard = billboardCollection.add();
-                }
-
+                billboard = cluster.getBillboard(entity);
                 billboard.id = entity;
                 billboard.image = undefined;
                 item.billboard = billboard;
@@ -229,17 +211,14 @@ define([
      */
     BillboardVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(BillboardVisualizer.prototype._onCollectionChanged, this);
-        if (defined(this._billboardCollection)) {
-            this._scene.primitives.remove(this._billboardCollection);
-        }
         return destroyObject(this);
     };
 
     BillboardVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedIndexes = this._unusedIndexes;
         var items = this._items;
+        var cluster = this._entityCollection._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
@@ -255,31 +234,17 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnBillboard(items.get(entity.id), unusedIndexes);
+                cluster.removeBillboard(entity);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnBillboard(items.get(entity.id), unusedIndexes);
+            cluster.removeBillboard(entity);
             items.remove(entity.id);
         }
     };
-
-    function returnBillboard(item, unusedIndexes) {
-        if (defined(item)) {
-            var billboard = item.billboard;
-            if (defined(billboard)) {
-                item.textureValue = undefined;
-                item.billboard = undefined;
-                billboard.id = undefined;
-                billboard.show = false;
-                billboard.image = undefined;
-                unusedIndexes.push(billboard._index);
-            }
-        }
-    }
 
     return BillboardVisualizer;
 });

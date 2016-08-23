@@ -52,8 +52,13 @@ function startup(Cesium) {
 
             viewer.entities.add({
                 position : position,
+                /*
                 label : {
                     text : text
+                },
+                */
+                billboard : {
+                    image : '../images/facility.gif'
                 }
             });
         }
