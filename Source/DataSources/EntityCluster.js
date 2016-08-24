@@ -5,6 +5,7 @@ define([
     '../Core/Cartesian3',
     '../Core/defaultValue',
     '../Core/defined',
+    '../Core/defineProperties',
     '../Core/destroyObject',
     '../Core/EllipsoidalOccluder',
     '../Core/Matrix4',
@@ -22,6 +23,7 @@ define([
     Cartesian3,
     defaultValue,
     defined,
+    defineProperties,
     destroyObject,
     EllipsoidalOccluder,
     Matrix4,
@@ -116,12 +118,26 @@ define([
         return new BoundingRectangle(x, y, width, height);
     }
 
-    function getBoundingBox(item, coord, pixelRange) {
-        if (defined(item._glyphs)) {
-            return getLabelBoundingBox(item, coord, pixelRange);
-        }
+    function getPointBoundingBox(point, coord, pixelRange) {
+        var size = point.pixelSize;
+        var halfSize = size * 0.5;
 
-        return getBillboardBoundingBox(item, coord, pixelRange);
+        var x = coord.x - halfSize - pixelRange * 0.5;
+        var y = coord.y - halfSize - pixelRange * 0.5;
+        var width = size + pixelRange;
+        var height = size + pixelRange;
+
+        return new BoundingRectangle(x, y, width, height);
+    }
+
+    function getBoundingBox(item, coord, pixelRange) {
+        if (defined(item._labelCollection)) {
+            return getLabelBoundingBox(item, coord, pixelRange);
+        } else if (defined(item._billboardCollection)) {
+            return getBillboardBoundingBox(item, coord, pixelRange);
+        } else if (defined(item._pointPrimitiveCollection)) {
+            return getPointBoundingBox(item, coord, pixelRange);
+        }
     }
 
     function cloneLabel(label) {
@@ -171,11 +187,27 @@ define([
         };
     }
 
+    function clonePoint(point) {
+        return {
+            show : point.show,
+            position : point.position,
+            scaleByDistance : point.scaleByDistance,
+            translucencyByDistance : point.translucencyByDistance,
+            pixelSize : point.pixelSize,
+            color : point.color,
+            outlineColor : point.outlineColor,
+            outlineWidth : point.outlineWidth,
+            id : point.id
+        };
+    }
+
     function addNonClusteredItem(item, entityCluster) {
-        if (item._glyphs) {
+        if (defined(item._labelCollection)) {
             entityCluster._clusterLabelCollection.add(cloneLabel(item));
-        } else {
+        } else if (defined(item._billboardCollection)) {
             entityCluster._clusterBillboardCollection.add(cloneBillboard(item));
+        } else if (defined(item._pointPrimitiveCollection)) {
+            entityCluster._clusterPointCollection.add(clonePoint(item));
         }
     }
 
@@ -215,7 +247,7 @@ define([
 
     function createDeclutterCallback(entityCluster) {
         return function(amount) {
-            if (defined(amount) && amount < 0.05) {
+            if ((defined(amount) && amount < 0.05) || !entityCluster.enabled) {
                 return;
             }
 
@@ -223,13 +255,15 @@ define([
 
             var labelCollection = entityCluster._labelCollection;
             var billboardCollection = entityCluster._billboardCollection;
+            var pointCollection = entityCluster._pointCollection;
 
-            if (!defined(labelCollection) && !defined(billboardCollection)) {
+            if (!defined(labelCollection) && !defined(billboardCollection) && !defined(pointCollection)) {
                 return;
             }
 
             var clusteredLabelCollection = entityCluster._clusterLabelCollection;
             var clusteredBillboardCollection = entityCluster._clusterBillboardCollection;
+            var clusteredPointCollection = entityCluster._clusterPointCollection;
 
             if (defined(clusteredLabelCollection)) {
                 clusteredLabelCollection.removeAll();
@@ -247,6 +281,12 @@ define([
                 });
             }
 
+            if (defined(clusteredPointCollection)) {
+                clusteredPointCollection.removeAll();
+            } else {
+                clusteredPointCollection = entityCluster._clusterPointCollection = new PointPrimitiveCollection();
+            }
+
             var pixelRange = entityCluster._pixelRange;
 
             var clusters = entityCluster._previousClusters;
@@ -262,6 +302,7 @@ define([
             var points = [];
             getScreenSpacePositions(labelCollection, points, scene, occluder);
             getScreenSpacePositions(billboardCollection, points, scene, occluder);
+            getScreenSpacePositions(pointCollection, points, scene, occluder);
 
             var i;
             var j;
@@ -384,6 +425,11 @@ define([
                 entityCluster._clusterBillboardCollection = undefined;
             }
 
+            if (clusteredPointCollection.length === 0) {
+                clusteredPointCollection.destroy();
+                entityCluster._clusterPointCollection = undefined;
+            }
+
             entityCluster._previousClusters = newClusters;
             entityCluster._previousHeight = currentHeight;
         };
@@ -391,7 +437,7 @@ define([
 
     function EntityCluster(options) {
         this._scene = options.scene;
-        this._enabled = defaultValue(options.enabled, false);
+        this._enabled = true;//defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
 
         this._labelCollection = undefined;
@@ -409,8 +455,22 @@ define([
         this._previousClusters = [];
         this._previousHeight = undefined;
 
+        this._enabledDirty = false;
+
         this._removeEventListener = this._scene.camera.changed.addEventListener(createDeclutterCallback(this));
     }
+
+    defineProperties(EntityCluster.prototype, {
+        enabled : {
+            get : function() {
+                return this._enabled;
+            },
+            set : function(value) {
+                this._enabledDirty = value !== this._enabled;
+                this._enabled = value;
+            }
+        }
+    });
 
     EntityCluster.prototype.getLabel = function(entity) {
         var labelCollection = this._labelCollection;
@@ -537,6 +597,24 @@ define([
     };
 
     EntityCluster.prototype.update = function(frameState) {
+        if (this._enabledDirty) {
+            this._enabledDirty = false;
+
+            if (defined(this._clusterLabelCollection)) {
+                this._clusterLabelCollection.destroy();
+            }
+            if (defined(this._clusterBillboardCollection)) {
+                this._clusterBillboardCollection.destroy();
+            }
+            if (defined(this.__clusterPointCollection)) {
+                this._clusterPointCollection.destroy();
+            }
+
+            this._clusterLabelCollection = undefined;
+            this._clusterBillboardCollection = undefined;
+            this._clusterPointCollection = undefined;
+        }
+
         if (defined(this._clusterLabelCollection)) {
             this._clusterLabelCollection.update(frameState);
         } else if (defined(this._labelCollection)) {
@@ -549,7 +627,7 @@ define([
             this._billboardCollection.update(frameState);
         }
 
-        if (defined(this.__clusterPointCollection)) {
+        if (defined(this._clusterPointCollection)) {
             this._clusterPointCollection.update(frameState);
         } else if (defined(this._pointCollection)) {
             this._pointCollection.update(frameState);
@@ -563,9 +641,11 @@ define([
     EntityCluster.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
         this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
+        this._pointCollection = this._pointCollection && this._pointCollection.destroy();
 
         this._clusterLabelCollection = this._clusterLabelCollection && this._clusterLabelCollection.destroy();
         this._clusterBillboardCollection = this._clusterBillboardCollection && this._clusterBillboardCollection.destroy();
+        this._clusterPointCollection = this._clusterPointCollection && this._clusterPointCollection.destroy();
 
         this._removeEventListener();
         return destroyObject(this);
