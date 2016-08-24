@@ -356,7 +356,12 @@ define([
                         continue;
                     }
 
-                    neighbors = index.within(coord.x, coord.y, cluster.radius);
+                    var minX = coord.x - cluster.width * 0.5;
+                    var minY = coord.y - cluster.height * 0.5;
+                    var maxX = coord.x + cluster.width;
+                    var maxY = coord.y + cluster.height;
+
+                    neighbors = index.range(minX, minY, maxX, maxY);
                     neighborLength = neighbors.length;
                     numPoints = 0;
                     ids = [];
@@ -396,11 +401,7 @@ define([
                 var item = collection.get(collectionIndex);
                 bbox = getBoundingBox(item, point.coord, pixelRange, entityCluster);
 
-                var x = bbox.x + bbox.width * 0.5;
-                var y = bbox.y + bbox.height * 0.5;
-                var radius = Math.max(bbox.width, bbox.height) * 0.5;
-
-                neighbors = index.within(x, y, radius);
+                neighbors = index.range(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
                 neighborLength = neighbors.length;
 
                 var clusterPosition = Cartesian3.clone(item.position);
@@ -432,7 +433,8 @@ define([
                     addCluster(position, numPoints, ids, entityCluster);
                     newClusters.push({
                         position : position,
-                        radius : Math.max(bbox.width, bbox.height) * 0.5
+                        width : bbox.width,
+                        height : bbox.height
                     });
                 }
             }
