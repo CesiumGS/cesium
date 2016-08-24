@@ -130,14 +130,24 @@ define([
         return new BoundingRectangle(x, y, width, height);
     }
 
-    function getBoundingBox(item, coord, pixelRange) {
+    function getBoundingBox(item, coord, pixelRange, entityCluster) {
+        var bbox;
+
         if (defined(item._labelCollection)) {
-            return getLabelBoundingBox(item, coord, pixelRange);
+            bbox = getLabelBoundingBox(item, coord, pixelRange);
         } else if (defined(item._billboardCollection)) {
-            return getBillboardBoundingBox(item, coord, pixelRange);
+            bbox = getBillboardBoundingBox(item, coord, pixelRange);
         } else if (defined(item._pointPrimitiveCollection)) {
-            return getPointBoundingBox(item, coord, pixelRange);
+            bbox = getPointBoundingBox(item, coord, pixelRange);
         }
+
+        if (!defined(item._labelCollection) && defined(item.id._label)) {
+            var labelIndex = item.id._labelIndex;
+            var label = entityCluster._labelCollection.get(labelIndex);
+            bbox = BoundingRectangle.union(bbox, getLabelBoundingBox(label, coord, pixelRange), bbox);
+        }
+
+        return bbox;
     }
 
     function cloneLabel(label) {
@@ -209,6 +219,12 @@ define([
         } else if (defined(item._pointPrimitiveCollection)) {
             entityCluster._clusterPointCollection.add(clonePoint(item));
         }
+
+        if (!defined(item._labelCollection) && defined(item.id._label)) {
+            var labelIndex = item.id._labelIndex;
+            var label = entityCluster._labelCollection.get(labelIndex);
+            entityCluster._clusterLabelCollection.add(cloneLabel(label));
+        }
     }
 
     function addCluster(position, numPoints, ids, entityCluster) {
@@ -228,6 +244,10 @@ define([
         for (var i = 0; i < length; ++i) {
             var item = collection.get(i);
             if (!item.show || !occluder.isPointVisible(item.position)) {
+                continue;
+            }
+
+            if (defined(item._labelCollection) && (defined(item.id._billboard) || defined(item.id._point))) {
                 continue;
             }
 
@@ -372,7 +392,7 @@ define([
                 collectionIndex = point.index;
 
                 var item = collection.get(collectionIndex);
-                bbox = getBoundingBox(item, point.coord, pixelRange);
+                bbox = getBoundingBox(item, point.coord, pixelRange, entityCluster);
 
                 var x = bbox.x + bbox.width * 0.5;
                 var y = bbox.y + bbox.height * 0.5;
@@ -392,7 +412,7 @@ define([
                         neighborPoint.clustered = true;
 
                         var neighborItem = neighborPoint.collection.get(neighborPoint.index);
-                        var neighborBBox = getBoundingBox(neighborItem, neighborPoint.coord, pixelRange);
+                        var neighborBBox = getBoundingBox(neighborItem, neighborPoint.coord, pixelRange, entityCluster);
 
                         Cartesian3.add(neighborItem.position, clusterPosition, clusterPosition);
 
@@ -606,7 +626,7 @@ define([
             if (defined(this._clusterBillboardCollection)) {
                 this._clusterBillboardCollection.destroy();
             }
-            if (defined(this.__clusterPointCollection)) {
+            if (defined(this._clusterPointCollection)) {
                 this._clusterPointCollection.destroy();
             }
 
