@@ -11,6 +11,7 @@ define([
     '../Core/Matrix4',
     '../Scene/Billboard',
     '../Scene/BillboardCollection',
+    '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
     '../Scene/LabelCollection',
     '../Scene/PointPrimitiveCollection',
@@ -29,6 +30,7 @@ define([
     Matrix4,
     Billboard,
     BillboardCollection,
+    HeightReference,
     HorizontalOrigin,
     LabelCollection,
     PointPrimitiveCollection,
@@ -620,19 +622,21 @@ define([
         if (this._enabledDirty) {
             this._enabledDirty = false;
 
-            if (defined(this._clusterLabelCollection)) {
-                this._clusterLabelCollection.destroy();
-            }
-            if (defined(this._clusterBillboardCollection)) {
-                this._clusterBillboardCollection.destroy();
-            }
-            if (defined(this._clusterPointCollection)) {
-                this._clusterPointCollection.destroy();
-            }
+            if (!this._enabled) {
+                if (defined(this._clusterLabelCollection)) {
+                    this._clusterLabelCollection.destroy();
+                }
+                if (defined(this._clusterBillboardCollection)) {
+                    this._clusterBillboardCollection.destroy();
+                }
+                if (defined(this._clusterPointCollection)) {
+                    this._clusterPointCollection.destroy();
+                }
 
-            this._clusterLabelCollection = undefined;
-            this._clusterBillboardCollection = undefined;
-            this._clusterPointCollection = undefined;
+                this._clusterLabelCollection = undefined;
+                this._clusterBillboardCollection = undefined;
+                this._clusterPointCollection = undefined;
+            }
         }
 
         if (defined(this._clusterLabelCollection)) {
@@ -643,13 +647,13 @@ define([
 
         if (defined(this._clusterBillboardCollection)) {
             this._clusterBillboardCollection.update(frameState);
-        } else if (defined(this._billboardCollection)) {
+        } else if (defined(this._billboardCollection) && !defined(this._clusterLabelCollection)) {
             this._billboardCollection.update(frameState);
         }
 
         if (defined(this._clusterPointCollection)) {
             this._clusterPointCollection.update(frameState);
-        } else if (defined(this._pointCollection)) {
+        } else if (defined(this._pointCollection) && defined(this._clusterLabelCollection)) {
             this._pointCollection.update(frameState);
         }
     };
