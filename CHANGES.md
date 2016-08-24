@@ -14,7 +14,7 @@ Change Log
 * Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
 * Added support for Int32 and Uint32 in ComponentDatatypeSpec.
 * Added `GeocoderViewModel.keepExpanded` which when set to true will always keep the GeoCoder in its expanded state.
-
+* Added `ComponentDatatype.fromName` for getting a `ComponentDatatype` from its name.
 
 ### 1.24 - 2016-08-01
 
