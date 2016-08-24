@@ -8,9 +8,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
-        '../Scene/BillboardCollection',
         '../Scene/HeightReference',
-        '../Scene/PointPrimitiveCollection',
         './BoundingSphereState',
         './Property'
     ], function(
@@ -22,9 +20,7 @@ define([
         destroyObject,
         DeveloperError,
         NearFarScalar,
-        BillboardCollection,
         HeightReference,
-        PointPrimitiveCollection,
         BoundingSphereState,
         Property) {
     'use strict';
@@ -70,12 +66,7 @@ define([
 
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
-        this._scene = scene;
-        this._unusedPointIndexes = [];
-        this._unusedBillboardIndexes = [];
         this._entityCollection = entityCollection;
-        this._pointPrimitiveCollection = undefined;
-        this._billboardCollection = undefined;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
     }
@@ -94,10 +85,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var scene = this._scene;
         var items = this._items.values;
-        var unusedPointIndexes = this._unusedPointIndexes;
-        var unusedBillboardIndexes = this._unusedBillboardIndexes;
+        var cluster = this._entityCollection._cluster;
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -111,53 +100,29 @@ define([
                 show = defined(position);
             }
             if (!show) {
-                returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
+                returnPrimitive(item, entity, cluster);
                 continue;
             }
 
             var needsRedraw = false;
             if ((heightReference !== HeightReference.NONE) && !defined(billboard)) {
                 if (defined(pointPrimitive)) {
-                    returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
+                    returnPrimitive(item, entity, cluster);
                     pointPrimitive = undefined;
                 }
 
-                var billboardCollection = this._billboardCollection;
-                if (!defined(billboardCollection)) {
-                    billboardCollection = new BillboardCollection({scene: scene});
-                    this._billboardCollection = billboardCollection;
-                    scene.primitives.add(billboardCollection);
-                }
-
-                if (unusedBillboardIndexes.length > 0) {
-                    billboard = billboardCollection.get(unusedBillboardIndexes.pop());
-                } else {
-                    billboard = billboardCollection.add();
-                }
-
+                billboard = cluster.getBillboard(entity);
                 billboard.id = entity;
                 billboard.image = undefined;
                 item.billboard = billboard;
                 needsRedraw = true;
             } else if ((heightReference === HeightReference.NONE) && !defined(pointPrimitive)) {
                 if (defined(billboard)) {
-                    returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes);
+                    returnPrimitive(item, entity, cluster);
                     billboard = undefined;
                 }
 
-                var pointPrimitiveCollection = this._pointPrimitiveCollection;
-                if (!defined(pointPrimitiveCollection)) {
-                    pointPrimitiveCollection = new PointPrimitiveCollection();
-                    this._pointPrimitiveCollection = pointPrimitiveCollection;
-                    scene.primitives.add(pointPrimitiveCollection);
-                }
-
-                if (unusedPointIndexes.length > 0) {
-                    pointPrimitive = pointPrimitiveCollection.get(unusedPointIndexes.pop());
-                } else {
-                    pointPrimitive = pointPrimitiveCollection.add();
-                }
-
+                pointPrimitive = cluster.getPoint(entity);
                 pointPrimitive.id = entity;
                 item.pointPrimitive = pointPrimitive;
             }
@@ -271,21 +236,14 @@ define([
      */
     PointVisualizer.prototype.destroy = function() {
         this._entityCollection.collectionChanged.removeEventListener(PointVisualizer.prototype._onCollectionChanged, this);
-        if (defined(this._pointPrimitiveCollection)) {
-            this._scene.primitives.remove(this._pointPrimitiveCollection);
-        }
-        if (defined(this._billboardCollection)) {
-            this._scene.primitives.remove(this._billboardCollection);
-        }
         return destroyObject(this);
     };
 
     PointVisualizer.prototype._onCollectionChanged = function(entityCollection, added, removed, changed) {
         var i;
         var entity;
-        var unusedPointIndexes = this._unusedPointIndexes;
-        var unusedBillboardIndexes = this._unusedBillboardIndexes;
         var items = this._items;
+        var cluster = this._entityCollection._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];
@@ -301,34 +259,28 @@ define([
                     items.set(entity.id, new EntityData(entity));
                 }
             } else {
-                returnPrimitive(items.get(entity.id), unusedPointIndexes, unusedBillboardIndexes);
+                returnPrimitive(items.get(entity.id), entity, cluster);
                 items.remove(entity.id);
             }
         }
 
         for (i = removed.length - 1; i > -1; i--) {
             entity = removed[i];
-            returnPrimitive(items.get(entity.id), unusedPointIndexes, unusedBillboardIndexes);
+            returnPrimitive(items.get(entity.id), entity, cluster);
             items.remove(entity.id);
         }
     };
 
-    function returnPrimitive(item, unusedPointIndexes, unusedBillboardIndexes) {
+    function returnPrimitive(item, entity, cluster) {
         if (defined(item)) {
             var pointPrimitive = item.pointPrimitive;
             if (defined(pointPrimitive)) {
-                item.pointPrimitive = undefined;
-                pointPrimitive.id = undefined;
-                pointPrimitive.show = false;
-                unusedPointIndexes.push(pointPrimitive._index);
+                cluster.removePoint(entity);
                 return;
             }
             var billboard = item.billboard;
             if (defined(billboard)) {
-                item.billboard = undefined;
-                billboard.id = undefined;
-                billboard.show = false;
-                unusedBillboardIndexes.push(billboard._index);
+                cluster.removeBillboard(entity);
             }
         }
     }

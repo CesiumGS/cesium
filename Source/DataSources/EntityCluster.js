@@ -12,6 +12,7 @@ define([
     '../Scene/BillboardCollection',
     '../Scene/HorizontalOrigin',
     '../Scene/LabelCollection',
+    '../Scene/PointPrimitiveCollection',
     '../Scene/SceneTransforms',
     '../Scene/VerticalOrigin',
     '../ThirdParty/kdbush'
@@ -28,6 +29,7 @@ define([
     BillboardCollection,
     HorizontalOrigin,
     LabelCollection,
+    PointPrimitiveCollection,
     SceneTransforms,
     VerticalOrigin,
     kdbush) {
@@ -389,17 +391,20 @@ define([
 
     function EntityCluster(options) {
         this._scene = options.scene;
+        this._enabled = defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
 
         this._labelCollection = undefined;
         this._billboardCollection = undefined;
+        this._pointCollection = undefined;
 
         this._clusterBillboardCollection = undefined;
         this._clusterLabelCollection = undefined;
-        //this._clusterPointCollection = undefined;
+        this._clusterPointCollection = undefined;
 
         this._unusedLabelIndices = [];
         this._unusedBillboardIndices = [];
+        this._unusedPointIndices = [];
 
         this._previousClusters = [];
         this._previousHeight = undefined;
@@ -491,6 +496,46 @@ define([
         this._unusedBillboardIndices.push(index);
     };
 
+    EntityCluster.prototype.getPoint = function(entity) {
+        var pointCollection = this._pointCollection;
+        if (defined(pointCollection) && defined(entity._pointIndex)) {
+            return pointCollection.get(entity._pointIndex);
+        }
+
+        if (!defined(pointCollection)) {
+            pointCollection = this._pointCollection = new PointPrimitiveCollection();
+        }
+
+        var index;
+        var point;
+
+        var unusedIndices = this._unusedPointIndices;
+        if (unusedIndices.length > 0) {
+            index = unusedIndices.pop();
+            point = pointCollection.get(index);
+        } else {
+            point = pointCollection.add();
+            index = pointCollection.length - 1;
+        }
+
+        entity._pointIndex = index;
+        return point;
+    };
+
+    EntityCluster.prototype.removePoint = function(entity) {
+        if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
+            return;
+        }
+
+        var index = entity._billboardIndex;
+        entity._pointIndex = undefined;
+
+        var point = this._pointCollection.get(index);
+        point.show = false;
+
+        this._unusedPointIndices.push(index);
+    };
+
     EntityCluster.prototype.update = function(frameState) {
         if (defined(this._clusterLabelCollection)) {
             this._clusterLabelCollection.update(frameState);
@@ -502,6 +547,12 @@ define([
             this._clusterBillboardCollection.update(frameState);
         } else if (defined(this._billboardCollection)) {
             this._billboardCollection.update(frameState);
+        }
+
+        if (defined(this.__clusterPointCollection)) {
+            this._clusterPointCollection.update(frameState);
+        } else if (defined(this._pointCollection)) {
+            this._pointCollection.update(frameState);
         }
     };
 

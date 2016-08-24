@@ -56,9 +56,14 @@ function startup(Cesium) {
                 label : {
                     text : text
                 },
-                */
                 billboard : {
-                    image : '../images/facility.gif'
+                    image : '../images/facility.gif',
+                    scale : 2.0
+                }
+                */
+                point : {
+                    pixelSize : 10,
+                    color : Cesium.Color.YELLOW
                 }
             });
         }
