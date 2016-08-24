@@ -15,11 +15,12 @@ define([
         MaterialProperty) {
     'use strict';
 
-    function Batch(primitives, appearanceType, materialProperty, closed) {
+    function Batch(primitives, appearanceType, materialProperty, closed, shadows) {
         this.primitives = primitives;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.closed = closed;
+        this.shadows = shadows;
         this.updaters = new AssociativeArray();
         this.createPrimitive = true;
         this.primitive = undefined;
@@ -122,7 +123,8 @@ define([
                         material : this.material,
                         translucent : this.material.isTranslucent(),
                         closed : this.closed
-                    })
+                    }),
+                    shadows : this.shadows
                 });
 
                 primitives.add(primitive);
@@ -211,7 +213,7 @@ define([
             return BoundingSphereState.PENDING;
         }
         var attributes = primitive.getGeometryInstanceAttributes(entity);
-        if (!defined(attributes) || !defined(attributes.boundingSphere) ||//
+        if (!defined(attributes) || !defined(attributes.boundingSphere) ||
             (defined(attributes.show) && attributes.show[0] === 0)) {
             return BoundingSphereState.FAILED;
         }
@@ -235,11 +237,12 @@ define([
     /**
      * @private
      */
-    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed) {
+    function StaticGeometryPerMaterialBatch(primitives, appearanceType, closed, shadows) {
         this._items = [];
         this._primitives = primitives;
         this._appearanceType = appearanceType;
         this._closed = closed;
+        this._shadows = shadows;
     }
     StaticGeometryPerMaterialBatch.prototype.add = function(time, updater) {
         var items = this._items;
@@ -251,7 +254,7 @@ define([
                 return;
             }
         }
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._closed);
+        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, this._closed, this._shadows);
         batch.add(time, updater);
         items.push(batch);
     };

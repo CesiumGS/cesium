@@ -1150,7 +1150,7 @@ define([
                 entity.corridor = corridor;
                 corridor.positions = coordinates;
                 if (defined(polyline)) {
-                    corridor.material = defined(polyline.material) ? polyline.material.color : Color.WHITE;
+                    corridor.material = defined(polyline.material) ? polyline.material.color.getValue(Iso8601.MINIMUM_VALUE) : Color.WHITE;
                     corridor.width = defaultValue(polyline.width, 1.0);
                 } else {
                     corridor.material = Color.WHITE;
@@ -1525,8 +1525,16 @@ define([
         }
         entity.availability = availability;
 
+        // Per KML spec "A Feature is visible only if it and all its ancestors are visible."
+        function ancestryIsVisible(parentEntity) {
+            if (!parentEntity) {
+              return true;
+            }
+            return parentEntity.show && ancestryIsVisible(parentEntity.parent);
+        }
+
         var visibility = queryBooleanValue(featureNode, 'visibility', namespaces.kml);
-        entity.show = defaultValue(visibility, true);
+        entity.show = ancestryIsVisible(parent) && defaultValue(visibility, true);
         //var open = queryBooleanValue(featureNode, 'open', namespaces.kml);
 
         var authorNode = queryFirstNode(featureNode, 'author', namespaces.atom);
@@ -1717,8 +1725,8 @@ define([
         }
     }
 
-    function processUnsupported(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
+    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         console.log('KML - Unsupported feature: ' + node.localName);
     }
 
@@ -2008,9 +2016,9 @@ define([
         Placemark : processPlacemark,
         NetworkLink : processNetworkLink,
         GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupported,
-        ScreenOverlay : processUnsupported,
-        Tour : processUnsupported
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processUnsupportedFeature
     };
 
     function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceUri, uriResolver) {
@@ -2018,8 +2026,7 @@ define([
         if (defined(featureProcessor)) {
             featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         } else {
-            dataSource._unsupportedNode.raiseEvent(dataSource, node, uriResolver);
-            console.log('KML - Unsupported feature node: ' + node.localName);
+            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceUri, uriResolver);
         }
     }
 

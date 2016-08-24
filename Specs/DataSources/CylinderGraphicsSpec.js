@@ -4,6 +4,7 @@ defineSuite([
         'Core/Color',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -11,6 +12,7 @@ defineSuite([
         Color,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -27,7 +29,8 @@ defineSuite([
             fill : false,
             outline : false,
             outlineColor : Color.RED,
-            outlineWidth : 6
+            outlineWidth : 6,
+            shadows : ShadowMode.DISABLED
         };
 
         var cylinder = new CylinderGraphics(options);
@@ -42,6 +45,7 @@ defineSuite([
         expect(cylinder.outline).toBeInstanceOf(ConstantProperty);
         expect(cylinder.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(cylinder.outlineWidth).toBeInstanceOf(ConstantProperty);
+        expect(cylinder.shadows).toBeInstanceOf(ConstantProperty);
 
         expect(cylinder.material.color.getValue()).toEqual(options.material);
         expect(cylinder.show.getValue()).toEqual(options.show);
@@ -54,6 +58,7 @@ defineSuite([
         expect(cylinder.outline.getValue()).toEqual(options.outline);
         expect(cylinder.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(cylinder.outlineWidth.getValue()).toEqual(options.outlineWidth);
+        expect(cylinder.shadows.getValue()).toEqual(options.shadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -68,6 +73,7 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new CylinderGraphics();
         target.merge(source);
@@ -82,6 +88,7 @@ defineSuite([
         expect(target.outline).toBe(source.outline);
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
+        expect(target.shadows).toBe(source.shadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -97,6 +104,7 @@ defineSuite([
         var outline = new ConstantProperty();
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
+        var shadows = new ConstantProperty();
 
         var target = new CylinderGraphics();
         target.material = material;
@@ -109,6 +117,7 @@ defineSuite([
         target.outline = outline;
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
+        target.shadows = shadows;
 
         target.merge(source);
 
@@ -122,6 +131,7 @@ defineSuite([
         expect(target.outline).toBe(outline);
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
+        expect(target.shadows).toBe(shadows);
     });
 
     it('clone works', function() {
@@ -136,6 +146,7 @@ defineSuite([
         source.outline = new ConstantProperty();
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
+        source.shadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -148,6 +159,7 @@ defineSuite([
         expect(result.outline).toBe(source.outline);
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.shadows).toBe(source.shadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -169,5 +181,6 @@ defineSuite([
         testDefinitionChanged(property, 'outline', true, false);
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });

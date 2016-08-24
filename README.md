@@ -46,6 +46,15 @@ We appreciate attribution by including the Cesium logo and link in your app.
 ### Demos ###
 
 <p align="center">
+<a href="http://cesiumjs.org/demos/ShakeFinder.html"><img src="http://cesiumjs.org/demos/images/ShakeFinder.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GeoPort3D.html"><img src="http://cesiumjs.org/demos/images/GeoPort3D.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/HurricaneHunters.html"><img src="http://cesiumjs.org/demos/images/HurricaneHunters.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/HWRF.html"><img src="http://cesiumjs.org/demos/images/HWRF.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/GPMNRTView.html"><img src="http://cesiumjs.org/demos/images/GPMNRTView.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/STORMVG.html"><img src="http://cesiumjs.org/demos/images/STORMVG.jpg" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/CubeCities.html"><img src="http://cesiumjs.org/demos/images/CubeCities.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/VirES.html"><img src="http://cesiumjs.org/demos/images/VirES.png" height="150" /></a>&nbsp;
+<a href="http://cesiumjs.org/demos/NASAweather.html"><img src="http://cesiumjs.org/demos/images/NASAweather.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/Citisens.html"><img src="http://cesiumjs.org/demos/images/citisens.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/ParalogPerformance.html"><img src="http://cesiumjs.org/demos/images/ParalogPerformance.jpg" height="150" /></a>&nbsp;
 <a href="http://cesiumjs.org/demos/FlightClub.html"><img src="http://cesiumjs.org/demos/images/FlightClub.jpg" height="150" /></a>&nbsp;

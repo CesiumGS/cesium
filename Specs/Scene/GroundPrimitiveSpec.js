@@ -70,20 +70,23 @@ defineSuite([
     var primitive;
     var depthPrimitive;
 
-    beforeAll(function(done) {
+    beforeAll(function() {
         scene = createScene();
         scene.fxaa = false;
 
         context = scene.context;
 
         ellipsoid = Ellipsoid.WGS84;
-        GroundPrimitive.initializeTerrainHeights().then(function() {
-           done();
-        });
+        return GroundPrimitive.initializeTerrainHeights();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        // Leave ground primitive uninitialized
+        GroundPrimitive._initialized = false;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._terrainHeights = undefined;
     });
 
     function MockGlobePrimitive(primitive) {
