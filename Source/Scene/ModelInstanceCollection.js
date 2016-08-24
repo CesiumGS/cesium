@@ -56,8 +56,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTableResources is defined.
-     * @param {Cesium3DTileBatchTableResources} [options.batchTableResources] The batch table of the instanced 3D Tile.
+     * @param {Object[]} [options.instances] An array of instances, where each instance contains a modelMatrix and optional batchId when options.batchTable is defined.
+     * @param {Cesium3DTileBatchTable} [options.batchTable] The batch table of the instanced 3D Tile.
      * @param {Object} [options.boundingVolume] The bounding volume, typically the bounding volume of the 3D Tile.
      * @param {Cartesian3} [options.center] The center point of the instances.
      * @param {Matrix4} [options.transform=Matrix4.IDENTITY] An additional transform to apply to all instances, typically the transform of the 3D Tile.
@@ -105,7 +105,7 @@ define([
 
         // When the model instance collection is backed by an instanced 3d-tile,
         // use its batch table resources to modify the shaders, attributes, and uniform maps.
-        this._batchTableResources = options.batchTableResources;
+        this._batchTable = options.batchTable;
 
         this._model = undefined;
         this._vertexBufferValues = undefined;
@@ -303,7 +303,7 @@ define([
                 modelView = 'czm_instanced_modelView = czm_instanced_collectionModelView * czm_instanced_model;\n';
             }
 
-            var usesBatchTable = defined(collection._batchTableResources);
+            var usesBatchTable = defined(collection._batchTable);
             var batchIdAttribute = usesBatchTable ? 'attribute float a_batchId;\n' : '';
 
             var instancedSource =
@@ -326,7 +326,7 @@ define([
             vertexShaderCached = instancedSource;
 
             if (usesBatchTable) {
-                instancedSource = collection._batchTableResources.getVertexShaderCallback()(instancedSource);
+                instancedSource = collection._batchTable.getVertexShaderCallback()(instancedSource);
             }
 
             return instancedSource;
@@ -335,8 +335,8 @@ define([
 
     function getFragmentShaderCallback(collection) {
         return function(fs) {
-            if (defined(collection._batchTableResources)) {
-                fs = collection._batchTableResources.getFragmentShaderCallback()(fs);
+            if (defined(collection._batchTable)) {
+                fs = collection._batchTable.getFragmentShaderCallback()(fs);
             }
             return fs;
         };
@@ -346,8 +346,8 @@ define([
         return function (vs) {
             // Use the vertex shader that was generated earlier
             vs = vertexShaderCached;
-            if (defined(collection._batchTableResources)) {
-                vs = collection._batchTableResources.getPickVertexShaderCallback()(vs);
+            if (defined(collection._batchTable)) {
+                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
             }
             return vs;
         };
@@ -355,8 +355,8 @@ define([
 
     function getPickFragmentShaderCallback(collection) {
         return function(fs) {
-            if (defined(collection._batchTableResources)) {
-                fs = collection._batchTableResources.getPickFragmentShaderCallback()(fs);
+            if (defined(collection._batchTable)) {
+                fs = collection._batchTable.getPickFragmentShaderCallback()(fs);
             }
             return fs;
         };
@@ -394,8 +394,8 @@ define([
                 }
             }
 
-            if (defined(collection._batchTableResources)) {
-                uniformMap = collection._batchTableResources.getUniformMapCallback()(uniformMap);
+            if (defined(collection._batchTable)) {
+                uniformMap = collection._batchTable.getUniformMapCallback()(uniformMap);
             }
 
             return uniformMap;
@@ -405,8 +405,8 @@ define([
     function getPickUniformMapCallback(collection) {
         return function(uniformMap) {
             // Uses the uniform map generated from getUniformMapCallback
-            if (defined(collection._batchTableResources)) {
-                uniformMap = collection._batchTableResources.getPickUniformMapCallback()(uniformMap);
+            if (defined(collection._batchTable)) {
+                uniformMap = collection._batchTable.getPickUniformMapCallback()(uniformMap);
             }
             return uniformMap;
         };
@@ -414,8 +414,8 @@ define([
 
     function getVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
-            if (defined(collection._batchTableResources)) {
-                vs = collection._batchTableResources.getVertexShaderCallback()(vs);
+            if (defined(collection._batchTable)) {
+                vs = collection._batchTable.getVertexShaderCallback()(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -425,8 +425,8 @@ define([
 
     function getPickVertexShaderNonInstancedCallback(collection) {
         return function(vs) {
-            if (defined(collection._batchTableResources)) {
-                vs = collection._batchTableResources.getPickVertexShaderCallback()(vs);
+            if (defined(collection._batchTable)) {
+                vs = collection._batchTable.getPickVertexShaderCallback()(vs);
                 // Treat a_batchId as a uniform rather than a vertex attribute
                 vs = 'uniform float a_batchId\n;' + vs;
             }
@@ -436,8 +436,8 @@ define([
 
     function getUniformMapNonInstancedCallback(collection) {
         return function(uniformMap) {
-            if (defined(collection._batchTableResources)) {
-                uniformMap = collection._batchTableResources.getUniformMapCallback()(uniformMap);
+            if (defined(collection._batchTable)) {
+                uniformMap = collection._batchTable.getUniformMapCallback()(uniformMap);
             }
 
             return uniformMap;
@@ -462,7 +462,7 @@ define([
         var collectionCenter = collection._center;
 
         // When using a batch table, add a batch id attribute to each vertex
-        var usesBatchTable = defined(collection._batchTableResources);
+        var usesBatchTable = defined(collection._batchTable);
         var vertexSizeInFloats = usesBatchTable ? 13 : 12;
 
         if (createVertexBuffer) {
@@ -554,7 +554,7 @@ define([
         if (instancingSupported) {
             updateVertexBuffer(collection, context);
 
-            var usesBatchTable = defined(collection._batchTableResources);
+            var usesBatchTable = defined(collection._batchTable);
             var vertexSizeInFloats = usesBatchTable ? 13 : 12;
             var componentSizeInBytes = ComponentDatatype.getSizeInBytes(ComponentDatatype.FLOAT);
 
@@ -647,7 +647,7 @@ define([
         var commandsLength = drawCommands.length;
         var instancesLength = collection.length;
         var allowPicking = collection.allowPicking;
-        var usesBatchTable = defined(collection._batchTableResources);
+        var usesBatchTable = defined(collection._batchTable);
 
         var boundingVolume = collection._boundingVolume;
 

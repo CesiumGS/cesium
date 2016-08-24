@@ -14,7 +14,7 @@ define([
         '../Core/RequestType',
         '../ThirdParty/when',
         './Cesium3DTileFeature',
-        './Cesium3DTileBatchTableResources',
+        './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
         './Model'
     ], function(
@@ -32,7 +32,7 @@ define([
         RequestType,
         when,
         Cesium3DTileFeature,
-        Cesium3DTileBatchTableResources,
+        Cesium3DTileBatchTable,
         Cesium3DTileContentState,
         Model) {
     'use strict';
@@ -57,7 +57,7 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
         this._contentReadyToProcessPromise = when.defer();
@@ -120,7 +120,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Batched3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTableResources.hasProperty(name);
+        return this.batchTable.hasProperty(name);
     };
 
     /**
@@ -218,13 +218,13 @@ define([
             batchLength = batchTableJsonByteLength;
             batchTableJsonByteLength = batchTableBinaryByteLength;
             batchTableBinaryByteLength = 0;
-            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. Please update to the latest b3dm format: https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
+            console.log('Warning: b3dm header is using the legacy format [batchLength] [batchTableByteLength]. The new format is [batchTableJsonByteLength] [batchTableBinaryByteLength] [batchLength] from https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Batched3DModel/README.md.');
         }
 
         this._featuresLength = batchLength;
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
-        this.batchTableResources = batchTableResources;
 
+        var batchTableJson;
+        var batchTableBinary;
         if (batchTableJsonByteLength > 0) {
             // PERFORMANCE_IDEA: is it possible to allocate this on-demand?  Perhaps keep the
             // arraybuffer/string compressed in memory and then decompress it when it is first accessed.
@@ -232,17 +232,18 @@ define([
             // We could also make another request for it, but that would make the property set/get
             // API async, and would double the number of numbers in some cases.
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJsonByteLength);
-            var batchTableJson = JSON.parse(batchTableString);
+            batchTableJson = JSON.parse(batchTableString);
             byteOffset += batchTableJsonByteLength;
 
-            var batchTableBinary;
             if (batchTableBinaryByteLength > 0) {
                 // Has a batch table binary
                 batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
                 byteOffset += batchTableBinaryByteLength;
             }
-            batchTableResources.setBatchTable(batchTableJson, batchTableBinary);
         }
+
+        var batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
+        this.batchTable = batchTable;
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
@@ -255,12 +256,12 @@ define([
             releaseGltfJson : true, // Models are unique and will not benefit from caching so save memory
             basePath : this._url,
             modelMatrix : this._tile.computedTransform,
-            vertexShaderLoaded : batchTableResources.getVertexShaderCallback(),
-            fragmentShaderLoaded : batchTableResources.getFragmentShaderCallback(),
-            uniformMapLoaded : batchTableResources.getUniformMapCallback(),
-            pickVertexShaderLoaded : batchTableResources.getPickVertexShaderCallback(),
-            pickFragmentShaderLoaded : batchTableResources.getPickFragmentShaderCallback(),
-            pickUniformMapLoaded : batchTableResources.getPickUniformMapCallback()
+            vertexShaderLoaded : batchTable.getVertexShaderCallback(),
+            fragmentShaderLoaded : batchTable.getFragmentShaderCallback(),
+            uniformMapLoaded : batchTable.getUniformMapCallback(),
+            pickVertexShaderLoaded : batchTable.getPickVertexShaderCallback(),
+            pickFragmentShaderLoaded : batchTable.getPickFragmentShaderCallback(),
+            pickUniformMapLoaded : batchTable.getPickUniformMapCallback()
         });
 
         this._model = model;
@@ -283,7 +284,7 @@ define([
      */
     Batched3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
-        this.batchTableResources.setAllColor(color);
+        this.batchTable.setAllColor(color);
     };
 
     /**
@@ -292,13 +293,13 @@ define([
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {
-            frameState.addCommand = this.batchTableResources.getAddCommand();
+            frameState.addCommand = this.batchTable.getAddCommand();
         }
 
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this.batchTableResources.update(tileset, frameState);
+        this.batchTable.update(tileset, frameState);
         this._model.update(frameState);
 
         frameState.addCommand = oldAddCommand;
@@ -316,7 +317,7 @@ define([
      */
     Batched3DModel3DTileContent.prototype.destroy = function() {
         this._model = this._model && this._model.destroy();
-        this.batchTableResources = this.batchTableResources && this.batchTableResources.destroy();
+        this.batchTable = this.batchTable && this.batchTable.destroy();
 
         return destroyObject(this);
     };

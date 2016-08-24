@@ -30,7 +30,8 @@ defineSuite([
     var pointsQuantizedUrl = './Data/Cesium3DTiles/Points/PointsQuantized';
     var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsQuantizedOctEncoded';
     var pointsWGS84Url = './Data/Cesium3DTiles/Points/PointsWGS84';
-    var pointsWithBatchTableUrl = './Data/Cesium3DTiles/Points/PointsWithBatchTable';
+    var pointsBatchedUrl = './Data/Cesium3DTiles/Points/PointsBatched';
+    var pointsWithPerPointPropertiesUrl = './Data/Cesium3DTiles/Points/PointsWithPerPointProperties';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -198,7 +199,11 @@ defineSuite([
     });
 
     it('renders points with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(expectRenderPoints);
+        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(expectRenderPoints);
+    });
+
+    it('renders points with per-point properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithPerPointPropertiesUrl).then(expectRenderPoints);
     });
 
     it('renders with debug color', function() {
@@ -226,8 +231,8 @@ defineSuite([
         });
     });
 
-    it('picks a feature in the point cloud', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+    it('picks based on batchId', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
             var pixelColor = scene.renderForSpecs();
 
             // Change the color of the picked feature to yellow
@@ -256,8 +261,8 @@ defineSuite([
         });
     });
 
-    it('points with batch table works', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+    it('batched points work', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
@@ -266,8 +271,21 @@ defineSuite([
         });
     });
 
+    it('points with per-point properties work', function() {
+        // When the batch table contains per-point properties, aka no batching, then a Cesium3DTileBatchTable is not
+        // created. There is no per-point show/color/pickId because the overhead is too high. Instead points are styled
+        // based on their properties, and these are not accessible from the API.
+        return Cesium3DTilesTester.loadTileset(scene, pointsWithPerPointPropertiesUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(0);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty('name')).toBe(false);
+            expect(content.getFeature(0)).toBeUndefined();
+        });
+    });
+
     it('throws when calling getFeature with invalid index', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
                 content.getFeature(-1);

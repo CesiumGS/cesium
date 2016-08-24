@@ -28,10 +28,10 @@ define([
         '../Renderer/WebGLConstants',
         '../ThirdParty/when',
         './BlendingState',
-        './Cesium3DTileBatchTableResources',
+        './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
         './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTableResources',
+        './Cesium3DTileFeatureTable',
         './Pass'
     ], function(
         Cartesian3,
@@ -62,10 +62,10 @@ define([
         WebGLConstants,
         when,
         BlendingState,
-        Cesium3DTileBatchTableResources,
+        Cesium3DTileBatchTable,
         Cesium3DTileContentState,
         Cesium3DTileFeature,
-        Cesium3DTileFeatureTableResources,
+        Cesium3DTileFeatureTable,
         Pass) {
     'use strict';
 
@@ -89,7 +89,7 @@ define([
 
         this._drawCommand = undefined;
         this._pickCommand = undefined;
-        this._pickId = undefined; // Only defined when batchTableResources is undefined
+        this._pickId = undefined; // Only defined when batchTable is undefined
         this._isTranslucent = false;
         this._constantColor = Color.clone(Color.WHITE);
         this._rtcCenter = undefined;
@@ -106,7 +106,7 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
         this._contentReadyToProcessPromise = when.defer();
@@ -120,8 +120,8 @@ define([
          */
         featuresLength : {
             get : function() {
-                if (defined(this.batchTableResources)) {
-                    return this.batchTableResources.featuresLength;
+                if (defined(this.batchTable)) {
+                    return this.batchTable.featuresLength;
                 }
                 return 0;
             }
@@ -171,8 +171,8 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Points3DTileContent.prototype.hasProperty = function(name) {
-        if (defined(this.batchTableResources)) {
-            return this.batchTableResources.hasProperty(name);
+        if (defined(this.batchTable)) {
+            return this.batchTable.hasProperty(name);
         }
         return false;
     };
@@ -181,7 +181,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Points3DTileContent.prototype.getFeature = function(batchId) {
-        if (defined(this.batchTableResources)) {
+        if (defined(this.batchTable)) {
             var featuresLength = this.featuresLength;
             //>>includeStart('debug', pragmas.debug);
             if (!defined(batchId) || (batchId < 0) || (batchId >= featuresLength)) {
@@ -277,10 +277,26 @@ define([
         var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
         byteOffset += featureTableBinaryByteLength;
 
-        var featureTableResources = new Cesium3DTileFeatureTableResources(featureTableJson, featureTableBinary);
+        // Get the batch table JSON and binary
+        var batchTableJson;
+        var batchTableBinary;
+        if (batchTableJsonByteLength > 0) {
+            // Has a batch table JSON
+            var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJsonByteLength);
+            batchTableJson = JSON.parse(batchTableString);
+            byteOffset += batchTableJsonByteLength;
 
-        var pointsLength = featureTableResources.getGlobalProperty('POINTS_LENGTH');
-        featureTableResources.featuresLength = pointsLength;
+            if (batchTableBinaryByteLength > 0) {
+                // Has a batch table binary
+                batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
+                byteOffset += batchTableBinaryByteLength;
+            }
+        }
+
+        var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
+
+        var pointsLength = featureTable.getGlobalProperty('POINTS_LENGTH');
+        featureTable.featuresLength = pointsLength;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(pointsLength)) {
@@ -293,16 +309,16 @@ define([
         var isQuantized = false;
 
         if (defined(featureTableJson.POSITION)) {
-            positions = featureTableResources.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
-            var rtcCenter = featureTableResources.getGlobalProperty('RTC_CENTER');
+            positions = featureTable.getPropertyArray('POSITION', ComponentDatatype.FLOAT, 3);
+            var rtcCenter = featureTable.getGlobalProperty('RTC_CENTER');
             if (defined(rtcCenter)) {
                 this._rtcCenter = Cartesian3.unpack(rtcCenter);
             }
         } else if (defined(featureTableJson.POSITION_QUANTIZED)) {
-            positions = featureTableResources.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
+            positions = featureTable.getPropertyArray('POSITION_QUANTIZED', ComponentDatatype.UNSIGNED_SHORT, 3);
             isQuantized = true;
 
-            var quantizedVolumeScale = featureTableResources.getGlobalProperty('QUANTIZED_VOLUME_SCALE');
+            var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE');
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeScale)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
@@ -310,7 +326,7 @@ define([
             //>>includeEnd('debug');
             this._quantizedVolumeScale = Cartesian3.unpack(quantizedVolumeScale);
 
-            var quantizedVolumeOffset = featureTableResources.getGlobalProperty('QUANTIZED_VOLUME_OFFSET');
+            var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET');
             //>>includeStart('debug', pragmas.debug);
             if (!defined(quantizedVolumeOffset)) {
                 throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
@@ -330,12 +346,12 @@ define([
         var isTranslucent = false;
 
         if (defined(featureTableJson.RGBA)) {
-            colors = featureTableResources.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
+            colors = featureTable.getPropertyArray('RGBA', ComponentDatatype.UNSIGNED_BYTE, 4);
             isTranslucent = true;
         } else if (defined(featureTableJson.RGB)) {
-            colors = featureTableResources.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
+            colors = featureTable.getPropertyArray('RGB', ComponentDatatype.UNSIGNED_BYTE, 3);
         } else if (defined(featureTableJson.CONSTANT_RGBA)) {
-            var constantRGBA  = featureTableResources.getGlobalProperty('CONSTANT_RGBA');
+            var constantRGBA  = featureTable.getGlobalProperty('CONSTANT_RGBA');
             this._constantColor = Color.fromBytes(constantRGBA[0], constantRGBA[1], constantRGBA[2], constantRGBA[3], this._constantColor);
         } else {
             // Use a default constant color
@@ -349,9 +365,9 @@ define([
         var isOctEncoded16P = false;
 
         if (defined(featureTableJson.NORMAL)) {
-            normals = featureTableResources.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
+            normals = featureTable.getPropertyArray('NORMAL', ComponentDatatype.FLOAT, 3);
         } else if (defined(featureTableJson.NORMAL_OCT16P)) {
-            normals = featureTableResources.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
+            normals = featureTable.getPropertyArray('NORMAL_OCT16P', ComponentDatatype.UNSIGNED_BYTE, 2);
             isOctEncoded16P = true;
         }
 
@@ -367,32 +383,22 @@ define([
                 componentType = ComponentDatatype.UNSIGNED_SHORT;
             }
 
-            batchIds = featureTableResources.getPropertyArray('BATCH_ID', componentType, 1);
+            batchIds = featureTable.getPropertyArray('BATCH_ID', componentType, 1);
 
-            var batchLength = featureTableResources.getGlobalProperty('BATCH_LENGTH');
+            var batchLength = featureTable.getGlobalProperty('BATCH_LENGTH');
             //>>includeStart('debug', pragmas.debug);
             if (!defined(batchLength)) {
                 throw new DeveloperError('Global property: BATCH_LENGTH must be defined when BATCH_ID is defined.');
             }
             //>>includeEnd('debug');
 
-            var batchTableResources = new Cesium3DTileBatchTableResources(this, batchLength);
-            this.batchTableResources = batchTableResources;
+            this.batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
+        }
 
-            if (batchTableJsonByteLength > 0) {
-                // Has a batch table JSON
-                var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJsonByteLength);
-                var batchTableJson = JSON.parse(batchTableString);
-                byteOffset += batchTableJsonByteLength;
-
-                var batchTableBinary;
-                if (batchTableBinaryByteLength > 0) {
-                    // Has a batch table binary
-                    batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
-                    byteOffset += batchTableBinaryByteLength;
-                }
-                batchTableResources.setBatchTable(batchTableJson, batchTableBinary);
-            }
+        // If points are not batched and there there are per-point properties, use these properties for styling purposes
+        var styleableProperties;
+        if (!defined(batchIds) && defined(batchTableBinary)) {
+            styleableProperties = Cesium3DTileBatchTable.getBinaryProperties(pointsLength, batchTableJson, batchTableBinary);
         }
 
         this._parsedContent = {
@@ -402,7 +408,8 @@ define([
             normals : normals,
             batchIds : batchIds,
             isQuantized : isQuantized,
-            isOctEncoded16P : isOctEncoded16P
+            isOctEncoded16P : isOctEncoded16P,
+            styleableProperties : styleableProperties
         };
 
         this.state = Cesium3DTileContentState.PROCESSING;
@@ -419,13 +426,77 @@ define([
         var batchIds = parsedContent.batchIds;
         var isQuantized = parsedContent.isQuantized;
         var isOctEncoded16P = parsedContent.isOctEncoded16P;
+        var styleableProperties = parsedContent.styleableProperties;
         var isTranslucent = content._isTranslucent;
 
         var hasColors = defined(colors);
         var hasNormals = defined(normals);
         var hasBatchIds = defined(batchIds);
 
-        var batchTableResources = content.batchTableResources;
+        var batchTable = content.batchTable;
+        var hasBatchTable = defined(batchTable);
+        var hasStyleableProperties = defined(styleableProperties);
+
+        // Use per-point normals to hide back-facing points.
+        var backFaceCulling = true;
+
+        var positionAttributeLocation = 0;
+        var colorAttributeLocation = 1;
+        var normalAttributeLocation = 2;
+        var batchIdAttributeLocation = 3;
+        var numberOfAttributes = 4;
+
+        var styleableShaderAttributes;
+        var styleableVertexAttributes;
+        var styleableVertexAttributeLocations;
+
+        if (hasStyleableProperties) {
+            styleableShaderAttributes = '';
+            styleableVertexAttributes = [];
+            styleableVertexAttributeLocations = {};
+
+            var attributeLocation = numberOfAttributes;
+
+            for (var name in styleableProperties) {
+                if (styleableProperties.hasOwnProperty(name)) {
+                    var property = styleableProperties[name];
+                    // TODO : this will not handle matrix types currently
+                    var componentCount = property.componentCount;
+                    var typedArray = property.typedArray;
+                    var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
+
+                    // Append attributes to shader
+                    var attributeName = 'style_' + name;
+                    var attributeType;
+                    if (componentCount === 1) {
+                        attributeType = 'float';
+                    } else {
+                        attributeType = 'vec' + componentCount;
+                    }
+                    styleableShaderAttributes += 'attribute ' + attributeType + ' ' + attributeName + '; \n';
+
+                    var vertexBuffer = Buffer.createVertexBuffer({
+                        context : context,
+                        typedArray : property.typedArray,
+                        usage : BufferUsage.STATIC_DRAW
+                    });
+
+                    var vertexAttribute = {
+                        index : attributeLocation,
+                        vertexBuffer : vertexBuffer,
+                        componentsPerAttribute : componentCount,
+                        componentDatatype : componentDatatype,
+                        normalize : false, // TODO : support this in batch table binary spec?
+                        offsetInBytes : 0,
+                        strideInBytes : 0
+                    };
+
+                    styleableVertexAttributes.push(vertexAttribute);
+                    styleableVertexAttributeLocations[attributeName] = attributeLocation;
+                    ++attributeLocation;
+                }
+            }
+        }
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
@@ -449,6 +520,10 @@ define([
 
         if (hasBatchIds) {
             vs += 'attribute float a_batchId; \n';
+        }
+
+        if (hasStyleableProperties) {
+            vs += styleableShaderAttributes;
         }
 
         if (isQuantized) {
@@ -487,10 +562,21 @@ define([
             vs += '    vec3 position = a_position; \n';
         }
 
+        // TODO : only for testing
+        if (hasStyleableProperties) {
+            vs += '    color = vec4(style_secondaryColor * style_temperature, 1.0); \n';
+        }
+
         vs += '    v_color = color; \n' +
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n' +
-              '    gl_PointSize = u_pointSize; \n' +
-              '} \n';
+              '    gl_PointSize = u_pointSize; \n';
+
+        if (hasNormals && backFaceCulling) {
+            vs += '    float visible = step(-normal.z, 0.0); \n' +
+                  '    gl_Position *= visible; \n';
+        }
+
+        vs += '} \n';
 
         var fs = 'varying vec4 v_color; \n' +
                  'void main() \n' +
@@ -547,11 +633,6 @@ define([
                 usage : BufferUsage.STATIC_DRAW
             });
         }
-
-        var positionAttributeLocation = 0;
-        var colorAttributeLocation = 1;
-        var normalAttributeLocation = 2;
-        var batchIdAttributeLocation = 3;
 
         var attributes = [];
         if (isQuantized) {
@@ -625,6 +706,10 @@ define([
             });
         }
 
+        if (hasStyleableProperties) {
+            attributes = attributes.concat(styleableVertexAttributes);
+        }
+
         var vertexArray = new VertexArray({
             context : context,
             attributes : attributes
@@ -652,14 +737,18 @@ define([
             });
         }
 
+        if (hasStyleableProperties) {
+            attributeLocations = combine(attributeLocations, styleableVertexAttributeLocations);
+        }
+
         var drawVS = vs;
         var drawFS = fs;
         var drawUniformMap = uniformMap;
 
-        if (hasBatchIds) {
-            drawVS = batchTableResources.getVertexShaderCallback()(vs, false);
-            drawFS = batchTableResources.getFragmentShaderCallback()(fs, false);
-            drawUniformMap = batchTableResources.getUniformMapCallback()(uniformMap);
+        if (hasBatchTable) {
+            drawVS = batchTable.getVertexShaderCallback()(vs, false);
+            drawFS = batchTable.getFragmentShaderCallback()(fs, false);
+            drawUniformMap = batchTable.getUniformMapCallback()(uniformMap);
         }
 
         var shaderProgram = ShaderProgram.fromCache({
@@ -701,10 +790,10 @@ define([
         var pickFS;
         var pickUniformMap;
 
-        if (hasBatchIds) {
-            pickVS = batchTableResources.getPickVertexShaderCallback()(vs);
-            pickFS = batchTableResources.getPickFragmentShaderCallback()(fs);
-            pickUniformMap = batchTableResources.getPickUniformMapCallback()(uniformMap);
+        if (hasBatchTable) {
+            pickVS = batchTable.getPickVertexShaderCallback()(vs);
+            pickFS = batchTable.getPickFragmentShaderCallback()(fs);
+            pickUniformMap = batchTable.getPickUniformMapCallback()(uniformMap);
         } else {
             content._pickId = context.createPickId({
                 primitive : content
@@ -781,8 +870,8 @@ define([
         this._drawCommand.renderState = isTranslucent ? this._translucentRenderState : this._opaqueRenderState;
         this._drawCommand.pass = isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
 
-        if (defined(this.batchTableResources)) {
-            this.batchTableResources.update(tileset, frameState);
+        if (defined(this.batchTable)) {
+            this.batchTable.update(tileset, frameState);
         }
 
         var passes = frameState.passes;
@@ -812,7 +901,7 @@ define([
             command.shaderProgram = command.shaderProgram && command.shaderProgram.destroy();
             pickCommand.shaderProgram = pickCommand.shaderProgram && pickCommand.shaderProgram.destroy();
         }
-        this.batchTableResources = this.batchTableResources && this.batchTableResources.destroy();
+        this.batchTable = this.batchTable && this.batchTable.destroy();
         return destroyObject(this);
     };
 

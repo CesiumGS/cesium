@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Cesium3DTileBatchTableResources',
+        'Scene/Cesium3DTileBatchTable',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -13,7 +13,7 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Cesium3DTileBatchTableResources,
+        Cesium3DTileBatchTable,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -69,295 +69,291 @@ defineSuite([
     }
 
     it('setShow throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setShow();
+            batchTable.setShow();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setShow(-1);
+            batchTable.setShow(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setShow(2);
+            batchTable.setShow(2);
         }).toThrowDeveloperError();
     });
 
     it('setShow throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setShow(0);
+            batchTable.setShow(0);
         }).toThrowDeveloperError();
     });
 
     it('setShow', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
 
-        // Batch resources are undefined by default
-        expect(resources._batchValues).toBeUndefined();
-        expect(resources._batchTexture).toBeUndefined();
+        // Batch table resources are undefined by default
+        expect(batchTable._batchValues).toBeUndefined();
+        expect(batchTable._batchTexture).toBeUndefined();
 
-        // Check that batch resources are still undefined because value is true by default
-        resources.setShow(0, true);
-        resources.update(mockContent, scene.frameState);
-        expect(resources._batchValues).toBeUndefined();
-        expect(resources._batchTexture).toBeUndefined();
-        expect(resources.getShow(0)).toEqual(true);
+        // Check that batch table resources are still undefined because value is true by default
+        batchTable.setShow(0, true);
+        batchTable.update(mockContent, scene.frameState);
+        expect(batchTable._batchValues).toBeUndefined();
+        expect(batchTable._batchTexture).toBeUndefined();
+        expect(batchTable.getShow(0)).toEqual(true);
 
         // Check that batch values are dirty and resources are created when value changes
-        resources.setShow(0, false);
-        expect(resources._batchValuesDirty).toEqual(true);
-        resources.update(mockContent, scene.frameState);
-        expect(resources._batchValues).toBeDefined();
-        expect(resources._batchTexture).toBeDefined();
-        expect(resources._batchValuesDirty).toEqual(false);
-        expect(resources.getShow(0)).toEqual(false);
+        batchTable.setShow(0, false);
+        expect(batchTable._batchValuesDirty).toEqual(true);
+        batchTable.update(mockContent, scene.frameState);
+        expect(batchTable._batchValues).toBeDefined();
+        expect(batchTable._batchTexture).toBeDefined();
+        expect(batchTable._batchValuesDirty).toEqual(false);
+        expect(batchTable.getShow(0)).toEqual(false);
 
         // Check that dirty stays false when value is the same
-        resources.setShow(0, false);
-        expect(resources._batchValuesDirty).toEqual(false);
-        expect(resources.getShow(0)).toEqual(false);
+        batchTable.setShow(0, false);
+        expect(batchTable._batchValuesDirty).toEqual(false);
+        expect(batchTable.getShow(0)).toEqual(false);
     });
 
     it('getShow throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.getShow();
+            batchTable.getShow();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getShow(-1);
+            batchTable.getShow(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getShow(2);
+            batchTable.getShow(2);
         }).toThrowDeveloperError();
     });
 
     it('getShow', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         // Show is true by default
-        expect(resources.getShow(0)).toEqual(true);
-        resources.setShow(0, false);
-        expect(resources.getShow(0)).toEqual(false);
+        expect(batchTable.getShow(0)).toEqual(true);
+        batchTable.setShow(0, false);
+        expect(batchTable.getShow(0)).toEqual(false);
     });
     
     it('setColor throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setColor();
+            batchTable.setColor();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setColor(-1);
+            batchTable.setColor(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setColor(2);
+            batchTable.setColor(2);
         }).toThrowDeveloperError();
     });
 
     it('setColor throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setColor(0);
+            batchTable.setColor(0);
         }).toThrowDeveloperError();
     });
 
     it('setColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
 
-        // Batch resources are undefined by default
-        expect(resources._batchValues).toBeUndefined();
-        expect(resources._batchTexture).toBeUndefined();
+        // Batch table resources are undefined by default
+        expect(batchTable._batchValues).toBeUndefined();
+        expect(batchTable._batchTexture).toBeUndefined();
 
-        // Check that batch resources are still undefined because value is true by default
-        resources.setColor(0, Color.WHITE);
-        resources.update(mockContent, scene.frameState);
-        expect(resources._batchValues).toBeUndefined();
-        expect(resources._batchTexture).toBeUndefined();
-        expect(resources.getColor(0, result)).toEqual(Color.WHITE);
+        // Check that batch table resources are still undefined because value is true by default
+        batchTable.setColor(0, Color.WHITE);
+        batchTable.update(mockContent, scene.frameState);
+        expect(batchTable._batchValues).toBeUndefined();
+        expect(batchTable._batchTexture).toBeUndefined();
+        expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
 
         // Check that batch values are dirty and resources are created when value changes
-        resources.setColor(0, Color.YELLOW);
-        expect(resources._batchValuesDirty).toEqual(true);
-        resources.update(mockContent, scene.frameState);
-        expect(resources._batchValues).toBeDefined();
-        expect(resources._batchTexture).toBeDefined();
-        expect(resources._batchValuesDirty).toEqual(false);
-        expect(resources.getColor(0, result)).toEqual(Color.YELLOW);
+        batchTable.setColor(0, Color.YELLOW);
+        expect(batchTable._batchValuesDirty).toEqual(true);
+        batchTable.update(mockContent, scene.frameState);
+        expect(batchTable._batchValues).toBeDefined();
+        expect(batchTable._batchTexture).toBeDefined();
+        expect(batchTable._batchValuesDirty).toEqual(false);
+        expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
 
         // Check that dirty stays false when value is the same
-        resources.setColor(0, Color.YELLOW);
-        expect(resources._batchValuesDirty).toEqual(false);
-        expect(resources.getColor(0, result)).toEqual(Color.YELLOW);
+        batchTable.setColor(0, Color.YELLOW);
+        expect(batchTable._batchValuesDirty).toEqual(false);
+        expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
     });
 
     it('setAllColor throws with undefined value', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setAllColor();
+            batchTable.setAllColor();
         }).toThrowDeveloperError();
     });
 
     it('setAllColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
-        resources.setAllColor(Color.YELLOW);
-        expect(resources.getColor(0, result)).toEqual(Color.YELLOW);
-        expect(resources.getColor(1, result)).toEqual(Color.YELLOW);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 2);
+        batchTable.setAllColor(Color.YELLOW);
+        expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
+        expect(batchTable.getColor(1, result)).toEqual(Color.YELLOW);
     });
 
     it('getColor throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.getColor();
+            batchTable.getColor();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getColor(-1);
+            batchTable.getColor(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getColor(2);
+            batchTable.getColor(2);
         }).toThrowDeveloperError();
     });
 
     it('getColor throws with undefined result', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.getColor(0);
+            batchTable.getColor(0);
         }).toThrowDeveloperError();
     });
 
     it('getColor', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         // Color is true by default
-        expect(resources.getColor(0, result)).toEqual(Color.WHITE);
-        resources.setColor(0, Color.YELLOW);
-        expect(resources.getColor(0, result)).toEqual(Color.YELLOW);
+        expect(batchTable.getColor(0, result)).toEqual(Color.WHITE);
+        batchTable.setColor(0, Color.YELLOW);
+        expect(batchTable.getColor(0, result)).toEqual(Color.YELLOW);
     });
 
     it('hasProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.hasProperty();
+            batchTable.hasProperty();
         }).toThrowDeveloperError();
     });
 
     it('hasProperty', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
-        expect(resources.hasProperty('height')).toEqual(false);
         var batchTableJson = {
             height: [0.0]
         };
-        resources.setBatchTable(batchTableJson);
-
-        expect(resources.hasProperty('height')).toEqual(true);
-        expect(resources.hasProperty('id')).toEqual(false);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        expect(batchTable.hasProperty('height')).toEqual(true);
+        expect(batchTable.hasProperty('id')).toEqual(false);
     });
 
     it('getPropertyNames', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
-        expect(resources.getPropertyNames()).toEqual([]);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        expect(batchTable.getPropertyNames()).toEqual([]);
+
         var batchTableJson = {
             height: [0.0],
             id : [0]
         };
-        resources.setBatchTable(batchTableJson);
-        expect(resources.getPropertyNames()).toEqual(['height', 'id']);
+        batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        expect(batchTable.getPropertyNames()).toEqual(['height', 'id']);
     });
 
     it('getProperty throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.getProperty();
+            batchTable.getProperty();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getProperty(-1);
+            batchTable.getProperty(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.getProperty(2);
+            batchTable.getProperty(2);
         }).toThrowDeveloperError();
     });
 
     it('getProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.getProperty(0);
+            batchTable.getProperty(0);
         }).toThrowDeveloperError();
     });
 
     it('getProperty', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
-        expect(resources.getProperty(0, 'height')).toBeUndefined();
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
+        expect(batchTable.getProperty(0, 'height')).toBeUndefined();
+
         var batchTableJson = {
             height: [1.0]
         };
-        resources.setBatchTable(batchTableJson);
-        expect(resources.getProperty(0, 'height')).toEqual(1.0);
-        expect(resources.getProperty(0, 'id')).toBeUndefined();
+        batchTable = new Cesium3DTileBatchTable(mockContent, 1, batchTableJson);
+        expect(batchTable.getProperty(0, 'height')).toEqual(1.0);
+        expect(batchTable.getProperty(0, 'id')).toBeUndefined();
     });
 
     it('setProperty throws with invalid batchId', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setProperty();
+            batchTable.setProperty();
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setProperty(-1);
+            batchTable.setProperty(-1);
         }).toThrowDeveloperError();
         expect(function() {
-            resources.setProperty(2);
+            batchTable.setProperty(2);
         }).toThrowDeveloperError();
     });
 
     it('setProperty throws with undefined name', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 1);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 1);
         expect(function() {
-            resources.setProperty(0);
+            batchTable.setProperty(0);
         }).toThrowDeveloperError();
     });
 
     it('setProperty without existing batch table', function() {
         // Check that a batch table is created with a height of 1.0 for the first resource and undefined for the others
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 3);
-        resources.setProperty(0, 'height', 1.0);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 3);
+        batchTable.setProperty(0, 'height', 1.0);
 
-        expect(resources.batchTableJson.height.length).toEqual(3);
-        expect(resources.getProperty(0, 'height')).toEqual(1.0);
-        expect(resources.getProperty(1, 'height')).toBeUndefined();
-        expect(resources.getProperty(2, 'height')).toBeUndefined();
+        expect(batchTable.batchTableJson.height.length).toEqual(3);
+        expect(batchTable.getProperty(0, 'height')).toEqual(1.0);
+        expect(batchTable.getProperty(1, 'height')).toBeUndefined();
+        expect(batchTable.getProperty(2, 'height')).toBeUndefined();
     });
 
     it('setProperty with existing batch table', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         var batchTableJson = {
             height : [1.0, 2.0]
         };
-        resources.setBatchTable(batchTableJson);
-        resources.setProperty(0, 'height', 3.0);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        batchTable.setProperty(0, 'height', 3.0);
 
-        expect(resources.getProperty(0, 'height')).toEqual(3.0);
-        expect(resources.getProperty(1, 'height')).toEqual(2.0);
+        expect(batchTable.getProperty(0, 'height')).toEqual(3.0);
+        expect(batchTable.getProperty(1, 'height')).toEqual(2.0);
     });
 
     it('setProperty with object value', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         var batchTableJson = {
             info : [{name : 'building0', year : 2000}, {name : 'building1', year : 2001}]
         };
-        resources.setBatchTable(batchTableJson);
-        resources.setProperty(0, 'info', {name : 'building0_new', year : 2002});
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        batchTable.setProperty(0, 'info', {name : 'building0_new', year : 2002});
 
-        expect(resources.getProperty(0, 'info')).toEqual({name : 'building0_new', year : 2002});
-        expect(resources.getProperty(1, 'info')).toEqual({name : 'building1', year : 2001});
+        expect(batchTable.getProperty(0, 'info')).toEqual({name : 'building0_new', year : 2002});
+        expect(batchTable.getProperty(1, 'info')).toEqual({name : 'building1', year : 2001});
     });
 
     it('setProperty with array value', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         var batchTableJson = {
             rooms : [['room1', 'room2'], ['room3', 'room4']]
         };
-        resources.setBatchTable(batchTableJson);
-        resources.setProperty(0, 'rooms', ['room1_new', 'room2']);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
+        batchTable.setProperty(0, 'rooms', ['room1_new', 'room2']);
 
-        expect(resources.getProperty(0, 'rooms')).toEqual(['room1_new', 'room2']);
-        expect(resources.getProperty(1, 'rooms')).toEqual(['room3', 'room4']);
+        expect(batchTable.getProperty(0, 'rooms')).toEqual(['room1_new', 'room2']);
+        expect(batchTable.getProperty(1, 'rooms')).toEqual(['room3', 'room4']);
     });
 
-    it('setBatchTable throws if the binary property does not specify a componentType', function() {
+    it('throws if the binary property does not specify a componentType', function() {
         var batchTableJson = {
             propertyScalar : {
                 byteOffset : 0,
@@ -365,13 +361,12 @@ defineSuite([
             }
         };
         var batchTableBinary = new Float64Array([0, 1]);
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         expect(function() {
-            resources.setBatchTable(batchTableJson, batchTableBinary);
+            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
         }).toThrowDeveloperError();
     });
 
-    it('setBatchTable throws if the binary property does not specify a type', function() {
+    it('throws if the binary property does not specify a type', function() {
         var batchTableJson = {
             propertyScalar : {
                 byteOffset : 0,
@@ -379,13 +374,12 @@ defineSuite([
             }
         };
         var batchTableBinary = new Float64Array([0, 1]);
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         expect(function() {
-            resources.setBatchTable(batchTableJson, batchTableBinary);
+            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
         }).toThrowDeveloperError();
     });
 
-    it('setBatchTable throws if a binary property exists but there is no batchTableBinary', function() {
+    it('throws if a binary property exists but there is no batchTableBinary', function() {
         var batchTableJson = {
             propertyScalar : {
                 byteOffset : 0,
@@ -393,9 +387,8 @@ defineSuite([
                 type : 'SCALAR'
             }
         };
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         expect(function() {
-            resources.setBatchTable(batchTableJson);
+            return new Cesium3DTileBatchTable(mockContent, 2, batchTableJson);
         }).toThrowDeveloperError();
     });
 
@@ -421,7 +414,6 @@ defineSuite([
     }
 
     it('getProperty and setProperty work for binary properties', function() {
-        var resources = new Cesium3DTileBatchTableResources(mockContent, 2);
         var propertyScalarBinary = new Float64Array([0, 1]);
         var propertyVec2Binary = new Float32Array([2, 3, 4, 5]);
         var propertyVec3Binary = new Int32Array([6, 7, 8, 9, 10, 11]);
@@ -470,31 +462,31 @@ defineSuite([
             }
         };
 
-        resources.setBatchTable(batchTableJson, batchTableBinary);
+        var batchTable = new Cesium3DTileBatchTable(mockContent, 2, batchTableJson, batchTableBinary);
 
-        expect(resources.getProperty(1, 'propertyScalar')).toEqual(1);
-        expect(resources.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(4, 5));
-        expect(resources.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(9, 10, 11));
-        expect(resources.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(16, 17, 18, 19));
-        expect(resources.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(24, 26, 25, 27)); // Constructor is row-major, data is column major
-        expect(resources.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(37, 40, 43, 38, 41, 44, 39, 42, 45));  // Constructor is row-major, data is column major
-        expect(resources.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(62, 66, 70, 74, 63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77));  // Constructor is row-major, data is column major
+        expect(batchTable.getProperty(1, 'propertyScalar')).toEqual(1);
+        expect(batchTable.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(4, 5));
+        expect(batchTable.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(9, 10, 11));
+        expect(batchTable.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(16, 17, 18, 19));
+        expect(batchTable.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(24, 26, 25, 27)); // Constructor is row-major, data is column major
+        expect(batchTable.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(37, 40, 43, 38, 41, 44, 39, 42, 45));  // Constructor is row-major, data is column major
+        expect(batchTable.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(62, 66, 70, 74, 63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77));  // Constructor is row-major, data is column major
 
-        resources.setProperty(1, 'propertyScalar', 2);
-        resources.setProperty(1, 'propertyVec2', new Cartesian2(5, 6));
-        resources.setProperty(1, 'propertyVec3', new Cartesian3(10, 11, 12));
-        resources.setProperty(1, 'propertyVec4', new Cartesian4(17, 18, 19, 20));
-        resources.setProperty(1, 'propertyMat2', new Matrix2(25, 27, 26, 28));
-        resources.setProperty(1, 'propertyMat3', new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
-        resources.setProperty(1, 'propertyMat4', new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
+        batchTable.setProperty(1, 'propertyScalar', 2);
+        batchTable.setProperty(1, 'propertyVec2', new Cartesian2(5, 6));
+        batchTable.setProperty(1, 'propertyVec3', new Cartesian3(10, 11, 12));
+        batchTable.setProperty(1, 'propertyVec4', new Cartesian4(17, 18, 19, 20));
+        batchTable.setProperty(1, 'propertyMat2', new Matrix2(25, 27, 26, 28));
+        batchTable.setProperty(1, 'propertyMat3', new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
+        batchTable.setProperty(1, 'propertyMat4', new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
 
-        expect(resources.getProperty(1, 'propertyScalar')).toEqual(2);
-        expect(resources.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(5, 6));
-        expect(resources.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(10, 11, 12));
-        expect(resources.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(17, 18, 19, 20));
-        expect(resources.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(25, 27, 26, 28));
-        expect(resources.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
-        expect(resources.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
+        expect(batchTable.getProperty(1, 'propertyScalar')).toEqual(2);
+        expect(batchTable.getProperty(1, 'propertyVec2')).toEqual(new Cartesian2(5, 6));
+        expect(batchTable.getProperty(1, 'propertyVec3')).toEqual(new Cartesian3(10, 11, 12));
+        expect(batchTable.getProperty(1, 'propertyVec4')).toEqual(new Cartesian4(17, 18, 19, 20));
+        expect(batchTable.getProperty(1, 'propertyMat2')).toEqual(new Matrix2(25, 27, 26, 28));
+        expect(batchTable.getProperty(1, 'propertyMat3')).toEqual(new Matrix3(38, 41, 44, 39, 42, 45, 40, 43, 46));
+        expect(batchTable.getProperty(1, 'propertyMat4')).toEqual(new Matrix4(63, 67, 71, 75, 64, 68, 72, 76, 65, 69, 73, 77, 66, 70, 74, 78));
     });
 
     it('renders tileset with batch table', function() {
@@ -577,26 +569,26 @@ defineSuite([
 
     it('renders translucent style', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var resources = tileset._root.content.batchTableResources;
+            var batchTable = tileset._root.content.batchTable;
 
             var opaqueColor = expectRender(tileset);
 
             // Render transparent
-            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
+            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
             var translucentColor = expectRender(tileset);
             expect(translucentColor).not.toEqual(opaqueColor);
 
             // Render restored to opaque
-            resources.setAllColor(Color.WHITE);
+            batchTable.setAllColor(Color.WHITE);
             var restoredOpaque = expectRender(tileset);
             expect(restoredOpaque).toEqual(opaqueColor);
 
             // Generate both translucent and opaque commands
-            resources.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
+            batchTable.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
             expectRender(tileset);
 
             // Fully transparent
-            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
+            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         });
     });
@@ -607,26 +599,26 @@ defineSuite([
         ContextLimits._maximumVertexTextureImageUnits = 0;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var resources = tileset._root.content.batchTableResources;
+            var batchTable = tileset._root.content.batchTable;
 
             var opaqueColor = expectRender(tileset);
 
             // Render transparent
-            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
+            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.5));
             var translucentColor = expectRender(tileset);
             expect(translucentColor).not.toEqual(opaqueColor);
 
             // Render restored to opaque
-            resources.setAllColor(Color.WHITE);
+            batchTable.setAllColor(Color.WHITE);
             var restoredOpaque = expectRender(tileset);
             expect(restoredOpaque).toEqual(opaqueColor);
 
             // Generate both translucent and opaque commands
-            resources.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
+            batchTable.setColor(0, new Color(1.0, 1.0, 1.0, 0.5));
             expectRender(tileset);
 
             // Fully transparent
-            resources.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
+            batchTable.setAllColor(new Color(1.0, 1.0, 1.0, 0.0));
             expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
 
             // Re-enable VTF
@@ -637,10 +629,10 @@ defineSuite([
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             var content = tileset._root.content;
-            var resources = content.batchTableResources;
-            expect(resources.isDestroyed()).toEqual(false);
+            var batchTable = content.batchTable;
+            expect(batchTable.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
-            expect(resources.isDestroyed()).toEqual(true);
+            expect(batchTable.isDestroyed()).toEqual(true);
         });
     });
 

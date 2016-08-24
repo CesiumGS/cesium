@@ -83,9 +83,9 @@ defineSuite([
 
         // Expect to throw DeveloperError in Model due to invalid gltf magic
         var tile = Cesium3DTilesTester.loadTileExpectError(scene, buffer, 'b3dm');
-        expect(tile.batchTableResources.batchTableJson).toEqual(batchTableJson);
-        expect(tile.batchTableResources.batchTableBinary).toBeUndefined();
-        expect(tile.batchTableResources.featuresLength).toEqual(1);
+        expect(tile.batchTable.batchTableJson).toEqual(batchTableJson);
+        expect(tile.batchTable.batchTableBinary).toBeUndefined();
+        expect(tile.batchTable.featuresLength).toEqual(1);
     });
 
     it('throws with empty gltf', function() {

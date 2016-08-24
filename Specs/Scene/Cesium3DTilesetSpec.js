@@ -727,7 +727,7 @@ defineSuite([
     });
 
     it('debugColorizeTiles', function() {
-        // More precise test is in Cesium3DTileBatchTableResourcesSpec
+        // More precise test is in Cesium3DTileBatchTableSpec
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             viewRootOnly();
             tileset.debugColorizeTiles = true;

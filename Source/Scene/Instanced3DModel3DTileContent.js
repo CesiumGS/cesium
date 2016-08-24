@@ -27,9 +27,9 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Cesium3DTileFeature',
-        './Cesium3DTileBatchTableResources',
+        './Cesium3DTileBatchTable',
         './Cesium3DTileContentState',
-        './Cesium3DTileFeatureTableResources',
+        './Cesium3DTileFeatureTable',
         './ModelInstanceCollection'
     ], function(
         AttributeCompression,
@@ -59,9 +59,9 @@ define([
         Uri,
         when,
         Cesium3DTileFeature,
-        Cesium3DTileBatchTableResources,
+        Cesium3DTileBatchTable,
         Cesium3DTileContentState,
-        Cesium3DTileFeatureTableResources,
+        Cesium3DTileFeatureTable,
         ModelInstanceCollection) {
     'use strict';
 
@@ -85,7 +85,7 @@ define([
          * The following properties are part of the {@link Cesium3DTileContent} interface.
          */
         this.state = Cesium3DTileContentState.UNLOADED;
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
         this.featurePropertiesDirty = false;
 
         this._contentReadyToProcessPromise = when.defer();
@@ -147,7 +147,7 @@ define([
      * Part of the {@link Cesium3DTileContent} interface.
      */
     Instanced3DModel3DTileContent.prototype.hasProperty = function(name) {
-        return this.batchTableResources.hasProperty(name);
+        return this.batchTable.hasProperty(name);
     };
 
     /**
@@ -257,9 +257,9 @@ define([
         var featureTableBinary = new Uint8Array(arrayBuffer, byteOffset, featureTableBinaryByteLength);
         byteOffset += featureTableBinaryByteLength;
 
-        var featureTableResources = new Cesium3DTileFeatureTableResources(featureTableJson, featureTableBinary);
-        var instancesLength = featureTableResources.getGlobalProperty('INSTANCES_LENGTH', ComponentDatatype.UNSIGNED_INT);
-        featureTableResources.featuresLength = instancesLength;
+        var featureTable = new Cesium3DTileFeatureTable(featureTableJson, featureTableBinary);
+        var instancesLength = featureTable.getGlobalProperty('INSTANCES_LENGTH', ComponentDatatype.UNSIGNED_INT);
+        featureTable.featuresLength = instancesLength;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(instancesLength)) {
@@ -267,21 +267,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        var batchTableResources = new Cesium3DTileBatchTableResources(this, instancesLength);
-        this.batchTableResources = batchTableResources;
+        var batchTableJson;
+        var batchTableBinary;
         if (batchTableJsonByteLength > 0) {
             var batchTableString = getStringFromTypedArray(uint8Array, byteOffset, batchTableJsonByteLength);
-            var batchTableJson = JSON.parse(batchTableString);
+            batchTableJson = JSON.parse(batchTableString);
             byteOffset += batchTableJsonByteLength;
 
-            var batchTableBinary;
             if (batchTableBinaryByteLength > 0) {
                 // Has a batch table binary
                 batchTableBinary = new Uint8Array(arrayBuffer, byteOffset, batchTableBinaryByteLength);
                 byteOffset += batchTableBinaryByteLength;
             }
-            batchTableResources.setBatchTable(batchTableJson, batchTableBinary);
         }
+
+        this.batchTable = new Cesium3DTileBatchTable(this, instancesLength, batchTableJson, batchTableBinary);
 
         var gltfByteLength = byteStart + byteLength - byteOffset;
         //>>includeStart('debug', pragmas.debug);
@@ -306,7 +306,7 @@ define([
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
-            batchTableResources : batchTableResources,
+            batchTable : this.batchTable,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
             center : center,
             transform : this._tile.computedTransform,
@@ -339,22 +339,22 @@ define([
         var instanceTransform = new Matrix4();
         for (var i = 0; i < instancesLength; i++) {
             // Get the instance position
-            var position = featureTableResources.getProperty('POSITION', i, ComponentDatatype.FLOAT, 3);
+            var position = featureTable.getProperty('POSITION', i, ComponentDatatype.FLOAT, 3);
             if (!defined(position)) {
                 position = instancePositionArray;
-                var positionQuantized = featureTableResources.getProperty('POSITION_QUANTIZED', i, ComponentDatatype.UNSIGNED_SHORT, 3);
+                var positionQuantized = featureTable.getProperty('POSITION_QUANTIZED', i, ComponentDatatype.UNSIGNED_SHORT, 3);
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(positionQuantized)) {
                     throw new DeveloperError('Either POSITION or POSITION_QUANTIZED must be defined for each instance.');
                 }
                 //>>includeEnd('debug');
-                var quantizedVolumeOffset = featureTableResources.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
+                var quantizedVolumeOffset = featureTable.getGlobalProperty('QUANTIZED_VOLUME_OFFSET', ComponentDatatype.FLOAT, 3);
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(quantizedVolumeOffset)) {
                     throw new DeveloperError('Global property: QUANTIZED_VOLUME_OFFSET must be defined for quantized positions.');
                 }
                 //>>includeEnd('debug');
-                var quantizedVolumeScale = featureTableResources.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
+                var quantizedVolumeScale = featureTable.getGlobalProperty('QUANTIZED_VOLUME_SCALE', ComponentDatatype.FLOAT, 3);
                 //>>includeStart('debug', pragmas.debug);
                 if (!defined(quantizedVolumeScale)) {
                     throw new DeveloperError('Global property: QUANTIZED_VOLUME_SCALE must be defined for quantized positions.');
@@ -368,8 +368,8 @@ define([
             instanceTranslationRotationScale.translation = instancePosition;
 
             // Get the instance rotation
-            var normalUp = featureTableResources.getProperty('NORMAL_UP', i, ComponentDatatype.FLOAT, 3);
-            var normalRight = featureTableResources.getProperty('NORMAL_RIGHT', i, ComponentDatatype.FLOAT, 3);
+            var normalUp = featureTable.getProperty('NORMAL_UP', i, ComponentDatatype.FLOAT, 3);
+            var normalRight = featureTable.getProperty('NORMAL_RIGHT', i, ComponentDatatype.FLOAT, 3);
             var hasCustomOrientation = false;
             if (defined(normalUp)) {
                 //>>includeStart('debug', pragmas.debug);
@@ -381,8 +381,8 @@ define([
                 Cartesian3.unpack(normalRight, 0, instanceNormalRight);
                 hasCustomOrientation = true;
             } else {
-                var octNormalUp = featureTableResources.getProperty('NORMAL_UP_OCT32P', i, ComponentDatatype.UNSIGNED_SHORT, 2);
-                var octNormalRight = featureTableResources.getProperty('NORMAL_RIGHT_OCT32P', i, ComponentDatatype.UNSIGNED_SHORT, 2);
+                var octNormalUp = featureTable.getProperty('NORMAL_UP_OCT32P', i, ComponentDatatype.UNSIGNED_SHORT, 2);
+                var octNormalRight = featureTable.getProperty('NORMAL_RIGHT_OCT32P', i, ComponentDatatype.UNSIGNED_SHORT, 2);
                 if (defined(octNormalUp)) {
                     //>>includeStart('debug', pragmas.debug);
                     if (!defined(octNormalRight)) {
@@ -412,11 +412,11 @@ define([
             instanceScale.x = 1.0;
             instanceScale.y = 1.0;
             instanceScale.z = 1.0;
-            var scale = featureTableResources.getProperty('SCALE', i, ComponentDatatype.FLOAT);
+            var scale = featureTable.getProperty('SCALE', i, ComponentDatatype.FLOAT);
             if (defined(scale)) {
                 Cartesian3.multiplyByScalar(instanceScale, scale, instanceScale);
             }
-            var nonUniformScale = featureTableResources.getProperty('SCALE_NON_UNIFORM', i, ComponentDatatype.FLOAT, 3);
+            var nonUniformScale = featureTable.getProperty('SCALE_NON_UNIFORM', i, ComponentDatatype.FLOAT, 3);
             if (defined(nonUniformScale)) {
                 instanceScale.x *= nonUniformScale[0];
                 instanceScale.y *= nonUniformScale[1];
@@ -425,7 +425,7 @@ define([
             instanceTranslationRotationScale.scale = instanceScale;
 
             // Get the batchId
-            var batchId = featureTableResources.getProperty('BATCH_ID', i , ComponentDatatype.UNSIGNED_SHORT);
+            var batchId = featureTable.getProperty('BATCH_ID', i , ComponentDatatype.UNSIGNED_SHORT);
             if (!defined(batchId)) {
                 // If BATCH_ID semantic is undefined, batchId is just the instance number
                 batchId = i;
@@ -460,7 +460,7 @@ define([
      */
     Instanced3DModel3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         color = enabled ? color : Color.WHITE;
-        this.batchTableResources.setAllColor(color);
+        this.batchTable.setAllColor(color);
     };
 
     /**
@@ -469,13 +469,13 @@ define([
     Instanced3DModel3DTileContent.prototype.update = function(tileset, frameState) {
         var oldAddCommand = frameState.addCommand;
         if (frameState.passes.render) {
-            frameState.addCommand = this.batchTableResources.getAddCommand();
+            frameState.addCommand = this.batchTable.getAddCommand();
         }
 
         // In the PROCESSING state we may be calling update() to move forward
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
-        this.batchTableResources.update(tileset, frameState);
+        this.batchTable.update(tileset, frameState);
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;
@@ -493,7 +493,7 @@ define([
      */
     Instanced3DModel3DTileContent.prototype.destroy = function() {
         this._modelInstanceCollection = this._modelInstanceCollection && this._modelInstanceCollection.destroy();
-        this.batchTableResources = this.batchTableResources && this.batchTableResources.destroy();
+        this.batchTable = this.batchTable && this.batchTable.destroy();
 
         return destroyObject(this);
     };
