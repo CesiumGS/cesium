@@ -19,10 +19,39 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table>
+        <tbody><tr>
+            <td>pixel range</td>
+            <td>
+                <input type="range" min="1" max="200" step="1" data-bind="value: pixelRange, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: pixelRange">
+            </td>
+        </tr>
+        <tr>
+            <td>minimum cluster size</td>
+            <td>
+                <input type="range" min="2" max="20" step="1" data-bind="value: minimumClusterSize, valueUpdate: 'input'">
+                <input type="text" size="2" data-bind="value: minimumClusterSize">
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div id="toggleClustering"></div>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -59,15 +88,40 @@ function startup(Cesium) {
                     image : '../images/facility.gif',
                     scale : 2.0
                 }
-                /*
-                point : {
-                    pixelSize : 10,
-                    color : Cesium.Color.YELLOW
-                }
-                */
             });
         }
     }
+
+    var viewModel = {
+        pixelRange: 80,
+        minimumClusterSize: 2
+    };
+    Cesium.knockout.track(viewModel);
+
+    var toolbar = document.getElementById('toolbar');
+    Cesium.knockout.applyBindings(viewModel, toolbar);
+
+    function subscribeParameter(name) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(
+                function(newValue) {
+                    //viewer.dataSourceDisplay.defaultDataSource[name] = newValue;
+                    if (Cesium.defined(viewer.entities._cluster)) {
+                        viewer.entities._cluster[name] = parseInt(newValue);
+                    }
+                }
+        );
+    }
+
+    subscribeParameter('pixelRange');
+    subscribeParameter('minimumClusterSize');
+
+    Sandcastle.addToolbarButton('Toggle Clustering', function() {
+        //var dataSource = viewer.dataSourceDisplay.defaultDataSource;
+        //dataSource.enableClustering = !dataSource.enableClustering;
+        if (Cesium.defined(viewer.entities._cluster)) {
+            viewer.entities._cluster.enabled = !viewer.entities._cluster.enabled;
+        }
+    }, 'toggleClustering');
 
     /*
     var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);

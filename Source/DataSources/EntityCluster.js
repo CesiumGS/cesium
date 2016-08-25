@@ -407,7 +407,7 @@ define([
 
     function EntityCluster(options) {
         this._scene = options.scene;
-        this._enabled = true;//defaultValue(options.enabled, false);
+        this._enabled = defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
         this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
 
@@ -427,8 +427,12 @@ define([
         this._previousHeight = undefined;
 
         this._enabledDirty = false;
+        this._pixelRangeDirty = false;
+        this._minimumClusterSizeDirty = false;
 
-        this._removeEventListener = this._scene.camera.changed.addEventListener(createDeclutterCallback(this));
+        var cluster = createDeclutterCallback(this);
+        this._cluster = cluster;
+        this._removeEventListener = this._scene.camera.changed.addEventListener(cluster);
     }
 
     defineProperties(EntityCluster.prototype, {
@@ -439,6 +443,24 @@ define([
             set : function(value) {
                 this._enabledDirty = value !== this._enabled;
                 this._enabled = value;
+            }
+        },
+        pixelRange : {
+            get : function() {
+                return this._pixelSize;
+            },
+            set : function(value) {
+                this._pixelRangeDirty = value !== this._pixelRange;
+                this._pixelRange = value;
+            }
+        },
+        minimumClusterSize : {
+            get : function() {
+                return this._minimumClusterSize;
+            },
+            set : function(value) {
+                this._minimumClusterSizeDirty = value !== this._minimumClusterSize;
+                this._minimumClusterSize = value;
             }
         }
     });
@@ -567,25 +589,52 @@ define([
         this._unusedPointIndices.push(index);
     };
 
+    function disableCollectionClustering(collection) {
+        if (!defined(collection)) {
+            return;
+        }
+
+        var length = collection.length;
+        for (var i = 0; i < length; ++i) {
+            collection.get(i)._clusterRender = true;
+        }
+    }
+
+    function updateEnable(entityCluster) {
+        if (entityCluster.enabled) {
+            entityCluster._cluster();
+            return;
+        }
+
+        if (defined(entityCluster._clusterLabelCollection)) {
+            entityCluster._clusterLabelCollection.destroy();
+        }
+        if (defined(entityCluster._clusterBillboardCollection)) {
+            entityCluster._clusterBillboardCollection.destroy();
+        }
+        if (defined(entityCluster._clusterPointCollection)) {
+            entityCluster._clusterPointCollection.destroy();
+        }
+
+        entityCluster._clusterLabelCollection = undefined;
+        entityCluster._clusterBillboardCollection = undefined;
+        entityCluster._clusterPointCollection = undefined;
+
+        disableCollectionClustering(entityCluster._labelCollection);
+        disableCollectionClustering(entityCluster._billboardCollection);
+        disableCollectionClustering(entityCluster._pointCollection);
+    }
+
     EntityCluster.prototype.update = function(frameState) {
         if (this._enabledDirty) {
             this._enabledDirty = false;
+            updateEnable(this);
+        }
 
-            if (!this._enabled) {
-                if (defined(this._clusterLabelCollection)) {
-                    this._clusterLabelCollection.destroy();
-                }
-                if (defined(this._clusterBillboardCollection)) {
-                    this._clusterBillboardCollection.destroy();
-                }
-                if (defined(this._clusterPointCollection)) {
-                    this._clusterPointCollection.destroy();
-                }
-
-                this._clusterLabelCollection = undefined;
-                this._clusterBillboardCollection = undefined;
-                this._clusterPointCollection = undefined;
-            }
+        if (this._pixelRangeDirty || this._minimumClusterSizeDirty) {
+            this._pixelRangeDirty = false;
+            this._minimumClusterSizeDirty = false;
+            this._cluster();
         }
 
         if (defined(this._clusterLabelCollection)) {
