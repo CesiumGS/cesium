@@ -590,19 +590,21 @@ define([
 
         if (defined(this._clusterLabelCollection)) {
             this._clusterLabelCollection.update(frameState);
-        } else if (defined(this._labelCollection)) {
-            this._labelCollection.update(frameState);
         }
-
         if (defined(this._clusterBillboardCollection)) {
             this._clusterBillboardCollection.update(frameState);
-        } else if (defined(this._billboardCollection) && !defined(this._clusterLabelCollection)) {
-            this._billboardCollection.update(frameState);
         }
-
         if (defined(this._clusterPointCollection)) {
             this._clusterPointCollection.update(frameState);
-        } else if (defined(this._pointCollection) && !defined(this._clusterLabelCollection)) {
+        }
+
+        if (defined(this._labelCollection)) {
+            this._labelCollection.update(frameState);
+        }
+        if (defined(this._billboardCollection)) {
+            this._billboardCollection.update(frameState);
+        }
+        if (defined(this._pointCollection)) {
             this._pointCollection.update(frameState);
         }
     };
