@@ -2536,6 +2536,17 @@ define([
     };
 
     /**
+     * Cancels the current camera flight if one is in progress.
+     * The camera is left at it's current location.
+     */
+    Camera.prototype.cancelFlight = function () {
+        if (defined(this._currentFlight)) {
+            this._currentFlight.cancelTween();
+            this._currentFlight = undefined;
+        }
+    };
+
+    /**
      * Flies the camera from its current position to a new position.
      *
      * @param {Object} options Object with the following properties:
@@ -2596,6 +2607,8 @@ define([
             return;
         }
 
+        this.cancelFlight();
+
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
         if (defined(orientation.direction)) {
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
@@ -2621,12 +2634,22 @@ define([
             destination = this.getRectangleCameraCoordinates(destination, scratchFlyToDestination);
         }
 
+        var that = this;
+        var flightTween;
+
         newOptions.destination = destination;
         newOptions.heading = orientation.heading;
         newOptions.pitch = orientation.pitch;
         newOptions.roll = orientation.roll;
         newOptions.duration = options.duration;
-        newOptions.complete = options.complete;
+        newOptions.complete = function () {
+            if(flightTween === that._currentFlight){
+                that._currentFlight = undefined;
+            }
+            if (defined(options.complete)) {
+                options.complete();
+            }
+        };
         newOptions.cancel = options.cancel;
         newOptions.endTransform = options.endTransform;
         newOptions.convert = isRectangle ? false : options.convert;
@@ -2634,7 +2657,8 @@ define([
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        this._currentFlight = flightTween;
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
