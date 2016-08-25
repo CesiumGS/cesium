@@ -152,80 +152,13 @@ define([
         return bbox;
     }
 
-    function cloneLabel(label) {
-        return {
-            text : label.text,
-            show : label.show,
-            font : label.font,
-            fillColor : label.fillColor,
-            outlineColor : label.outlineColor,
-            outlineWidth : label.outlineWidth,
-            style : label.outlineStyle,
-            verticalOrigin : label.verticalOrigin,
-            horizontalOrigin : label.horizontalOrigin,
-            pixelOffset : label.pixelOffset,
-            eyeOffset : label.eyeOffset,
-            position : label.position,
-            scale : label.scale,
-            id : label.id,
-            translucencyByDistance : label.translucencyByDistance,
-            pixelOffsetScaleByDistance : label.pixelOffsetScaleByDistance,
-            heightReference : label.heightReference
-        };
-    }
-
-    function cloneBillboard(billboard) {
-        return {
-            show : billboard.show,
-            position : billboard.position,
-            heightReference : billboard.heightReference,
-            pixelOffset : billboard.pixelOffset,
-            scaleByDistance : billboard.scaleByDistance,
-            translucencyByDistance : billboard.translucencyByDistance,
-            pixelOffsetScaleByDistance : billboard.pixelOffsetScaleByDistance,
-            eyeOffset : billboard.eyeOffset,
-            horizontalOrigin : billboard.horizontalOrigin,
-            verticalOrigin : billboard.verticalOrigin,
-            scale : billboard.scale,
-            color : billboard.color,
-            rotation : billboard.rotation,
-            alignedAxis : billboard.alignedAxis,
-            width : billboard.width,
-            height : billboard.height,
-            sizeInMeters : billboard.sizeInMeters,
-            id : billboard.id,
-            pickPrimitive : billboard.pickPrimitive,
-            image : billboard.image
-        };
-    }
-
-    function clonePoint(point) {
-        return {
-            show : point.show,
-            position : point.position,
-            scaleByDistance : point.scaleByDistance,
-            translucencyByDistance : point.translucencyByDistance,
-            pixelSize : point.pixelSize,
-            color : point.color,
-            outlineColor : point.outlineColor,
-            outlineWidth : point.outlineWidth,
-            id : point.id
-        };
-    }
-
     function addNonClusteredItem(item, entityCluster) {
-        if (defined(item._labelCollection)) {
-            entityCluster._clusterLabelCollection.add(cloneLabel(item));
-        } else if (defined(item._billboardCollection)) {
-            entityCluster._clusterBillboardCollection.add(cloneBillboard(item));
-        } else if (defined(item._pointPrimitiveCollection)) {
-            entityCluster._clusterPointCollection.add(clonePoint(item));
-        }
+        item._clusterRender = true;
 
         if (!defined(item._labelCollection) && defined(item.id._label)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
-            entityCluster._clusterLabelCollection.add(cloneLabel(label));
+            label._clusterRender = true;
         }
     }
 
@@ -245,6 +178,8 @@ define([
         var length = collection.length;
         for (var i = 0; i < length; ++i) {
             var item = collection.get(i);
+            item._clusterRender = false;
+
             if (!item.show || !occluder.isPointVisible(item.position)) {
                 continue;
             }

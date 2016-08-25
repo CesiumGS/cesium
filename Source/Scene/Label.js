@@ -100,6 +100,8 @@ define([
         this._removeCallbackFunc = undefined;
         this._mode = undefined;
 
+        this._clusterShow = true;
+
         this._updateClamping();
     }
 
@@ -698,6 +700,27 @@ define([
                         glyph.billboard._position = value;
                         glyph.billboard._actualPosition = value;
                         glyph.billboard._clampedPosition = value;
+                    }
+                }
+            }
+        },
+
+        _clusterRender : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            // Set all the private values here, because we already clamped to ground
+                            //  so we don't want to do it again for every glyph
+                            glyph.billboard._clusterRender = value;
+                        }
                     }
                 }
             }

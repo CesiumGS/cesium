@@ -75,6 +75,8 @@ define([
         this._id = options.id;
         this._collection = defaultValue(options.collection, pointPrimitiveCollection);
 
+        this._clusterShow = true;
+
         this._pickId = undefined;
         this._pointPrimitiveCollection = pointPrimitiveCollection;
         this._dirty = false;
@@ -352,6 +354,18 @@ define([
                 this._id = value;
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
+                }
+            }
+        },
+
+        _clusterRender : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+                    makeDirty(this, SHOW_INDEX);
                 }
             }
         }

@@ -151,6 +151,8 @@ define([
         this._removeCallbackFunc = undefined;
         this._mode = SceneMode.SCENE3D;
 
+        this._clusterShow = true;
+
         this._updateClamping();
     }
 
@@ -820,6 +822,18 @@ define([
             set : function(value) {
                 this._actualClampedPosition = Cartesian3.clone(value, this._actualClampedPosition);
                 makeDirty(this, POSITION_INDEX);
+            }
+        },
+
+        _clusterRender : {
+            get : function() {
+                return this._clusterShow;
+            },
+            set : function(value) {
+                if (this._clusterShow !== value) {
+                    this._clusterShow = value;
+                    makeDirty(this, SHOW_INDEX);
+                }
             }
         }
     });
