@@ -189,7 +189,7 @@ define([
             }
 
             var coord = item.computeScreenSpacePosition(scene);
-            if (!defined(coord) || coord.x < 0.0 || coord.x > scene.drawingBufferWidth || coord.y < 0.0 || coord.y > scene.drawingBufferHeight) {
+            if (!defined(coord)) {
                 continue;
             }
 
@@ -288,7 +288,7 @@ define([
                     }
 
                     var coord = Billboard._computeScreenSpacePosition(Matrix4.IDENTITY, cluster.position, Cartesian3.ZERO, Cartesian2.ZERO, scene);
-                    if (!defined(coord) || coord.x < 0.0 || coord.x > scene.drawingBufferWidth || coord.y < 0.0 || coord.y > scene.drawingBufferHeight) {
+                    if (!defined(coord)) {
                         continue;
                     }
 
