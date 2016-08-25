@@ -5,11 +5,13 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/NearFarScalar',
         '../Scene/HeightReference',
         './BoundingSphereState',
+        './EntityCluster',
         './Property'
     ], function(
         AssociativeArray,
@@ -17,11 +19,13 @@ define([
         Color,
         defaultValue,
         defined,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         NearFarScalar,
         HeightReference,
         BoundingSphereState,
+        EntityCluster,
         Property) {
     'use strict';
 
@@ -51,21 +55,29 @@ define([
      * @alias PointVisualizer
      * @constructor
      *
-     * @param {Scene} scene The scene the primitives will be rendered in.
+     * @param {EntityCluster} entityCluster The entity cluster to manage the collection of billboards and optionally cluster with other entities.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
      */
-    function PointVisualizer(scene, entityCollection) {
+    function PointVisualizer(entityCluster, entityCollection) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
+        if (!defined(entityCluster)) {
+            throw new DeveloperError('entityCluster is required.');
         }
         if (!defined(entityCollection)) {
             throw new DeveloperError('entityCollection is required.');
         }
         //>>includeEnd('debug');
 
+        if (!entityCluster.minimumClusterSize) {
+            deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
+            entityCluster = new EntityCluster({
+                enabled : false
+            });
+        }
+
         entityCollection.collectionChanged.addEventListener(PointVisualizer.prototype._onCollectionChanged, this);
 
+        this._cluster = entityCluster;
         this._entityCollection = entityCollection;
         this._items = new AssociativeArray();
         this._onCollectionChanged(entityCollection, entityCollection.values, [], []);
@@ -86,7 +98,7 @@ define([
         //>>includeEnd('debug');
 
         var items = this._items.values;
-        var cluster = this._entityCollection._cluster;
+        var cluster = this._cluster;
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
@@ -243,7 +255,7 @@ define([
         var i;
         var entity;
         var items = this._items;
-        var cluster = this._entityCollection._cluster;
+        var cluster = this._cluster;
 
         for (i = added.length - 1; i > -1; i--) {
             entity = added[i];

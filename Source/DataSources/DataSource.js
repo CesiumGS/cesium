@@ -85,6 +85,10 @@ define([
          */
         show : {
             get : DeveloperError.throwInstantiationError
+        },
+
+        clustering : {
+            get : DeveloperError.throwInstantiationError
         }
     });
 

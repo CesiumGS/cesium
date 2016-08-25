@@ -406,6 +406,8 @@ define([
     }
 
     function EntityCluster(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         this._scene = options.scene;
         this._enabled = defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
@@ -430,10 +432,17 @@ define([
         this._pixelRangeDirty = false;
         this._minimumClusterSizeDirty = false;
 
+        this._cluster = undefined;
+        this._removeEventListener = undefined;
+    }
+
+    EntityCluster.prototype._initialize = function(scene) {
+        this._scene = scene;
+
         var cluster = createDeclutterCallback(this);
         this._cluster = cluster;
-        this._removeEventListener = this._scene.camera.changed.addEventListener(cluster);
-    }
+        this._removeEventListener = scene.camera.changed.addEventListener(cluster);
+    };
 
     defineProperties(EntityCluster.prototype, {
         enabled : {
@@ -447,7 +456,7 @@ define([
         },
         pixelRange : {
             get : function() {
-                return this._pixelSize;
+                return this._pixelRange;
             },
             set : function(value) {
                 this._pixelRangeDirty = value !== this._pixelRange;
@@ -672,7 +681,27 @@ define([
         this._clusterPointCollection = this._clusterPointCollection && this._clusterPointCollection.destroy();
 
         this._removeEventListener();
-        return destroyObject(this);
+
+        this._labelCollection = undefined;
+        this._billboardCollection = undefined;
+        this._pointCollection = undefined;
+
+        this._clusterBillboardCollection = undefined;
+        this._clusterLabelCollection = undefined;
+        this._clusterPointCollection = undefined;
+
+        this._unusedLabelIndices = [];
+        this._unusedBillboardIndices = [];
+        this._unusedPointIndices = [];
+
+        this._previousClusters = [];
+        this._previousHeight = undefined;
+
+        this._enabledDirty = false;
+        this._pixelRangeDirty = false;
+        this._minimumClusterSizeDirty = false;
+
+        return undefined;
     };
 
     return EntityCluster;

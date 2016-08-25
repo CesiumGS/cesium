@@ -104,10 +104,7 @@ function startup(Cesium) {
     function subscribeParameter(name) {
         Cesium.knockout.getObservable(viewModel, name).subscribe(
                 function(newValue) {
-                    //viewer.dataSourceDisplay.defaultDataSource[name] = newValue;
-                    if (Cesium.defined(viewer.entities._cluster)) {
-                        viewer.entities._cluster[name] = parseInt(newValue);
-                    }
+                    viewer.dataSourceDisplay.defaultDataSource.clustering[name] = newValue;
                 }
         );
     }
@@ -116,11 +113,8 @@ function startup(Cesium) {
     subscribeParameter('minimumClusterSize');
 
     Sandcastle.addToolbarButton('Toggle Clustering', function() {
-        //var dataSource = viewer.dataSourceDisplay.defaultDataSource;
-        //dataSource.enableClustering = !dataSource.enableClustering;
-        if (Cesium.defined(viewer.entities._cluster)) {
-            viewer.entities._cluster.enabled = !viewer.entities._cluster.enabled;
-        }
+        var dataSource = viewer.dataSourceDisplay.defaultDataSource;
+        dataSource.clustering.enabled = !dataSource.clustering.enabled;
     }, 'toggleClustering');
 
     /*

@@ -46,6 +46,7 @@ define([
         './DataSource',
         './DataSourceClock',
         './Entity',
+        './EntityCluster',
         './EntityCollection',
         './LabelGraphics',
         './PathGraphics',
@@ -105,6 +106,7 @@ define([
         DataSource,
         DataSourceClock,
         Entity,
+        EntityCluster,
         EntityCollection,
         LabelGraphics,
         PathGraphics,
@@ -2228,6 +2230,7 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
+        this._entityCluster = new EntityCluster();
 
         this._canvas = canvas;
         this._camera = camera;
@@ -2363,6 +2366,20 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });

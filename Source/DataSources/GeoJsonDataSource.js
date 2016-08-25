@@ -24,6 +24,7 @@ define([
         './ConstantProperty',
         './CorridorGraphics',
         './DataSource',
+        './EntityCluster',
         './EntityCollection',
         './PolygonGraphics',
         './PolylineGraphics'
@@ -52,6 +53,7 @@ define([
         ConstantProperty,
         CorridorGraphics,
         DataSource,
+        EntityCluster,
         EntityCollection,
         PolygonGraphics,
         PolylineGraphics) {
@@ -512,6 +514,7 @@ define([
         this._entityCollection = new EntityCollection(this);
         this._promises = [];
         this._pinBuilder = new PinBuilder();
+        this._entityCluster = new EntityCluster();
     }
 
     /**
@@ -763,6 +766,20 @@ define([
             },
             set : function(value) {
                 this._entityCollection.show = value;
+            }
+        },
+
+        clustering : {
+            get : function() {
+                return this._entityCluster;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (!defined(value)) {
+                    throw new DeveloperError('value must be defined.');
+                }
+                //>>includeEnd('debug');
+                this._entityCluster = value;
             }
         }
     });
