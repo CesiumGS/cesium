@@ -310,6 +310,7 @@ define([
             }
 
             var pixelRange = entityCluster._pixelRange;
+            var minimumClusterSize = entityCluster._minimumClusterSize;
 
             var clusters = entityCluster._previousClusters;
             var newClusters = [];
@@ -356,10 +357,17 @@ define([
                         continue;
                     }
 
-                    var minX = coord.x - cluster.width * 0.5;
-                    var minY = coord.y - cluster.height * 0.5;
-                    var maxX = coord.x + cluster.width;
-                    var maxY = coord.y + cluster.height;
+                    var factor = 1.0 - currentHeight / previousHeight;
+                    var width = cluster.width = cluster.width * factor;
+                    var height = cluster.height = cluster.height * factor;
+
+                    width = Math.max(width, cluster.minimumWidth);
+                    height = Math.max(height, cluster.minimumHeight);
+
+                    var minX = coord.x - width * 0.5;
+                    var minY = coord.y - height * 0.5;
+                    var maxX = coord.x + width;
+                    var maxY = coord.y + height;
 
                     neighbors = index.range(minX, minY, maxX, maxY);
                     neighborLength = neighbors.length;
@@ -379,7 +387,7 @@ define([
                         }
                     }
 
-                    if (numPoints > 1) {
+                    if (numPoints >= minimumClusterSize) {
                         addCluster(cluster.position, numPoints, ids, entityCluster);
                         newClusters.push(cluster);
                     }
@@ -400,6 +408,7 @@ define([
 
                 var item = collection.get(collectionIndex);
                 bbox = getBoundingBox(item, point.coord, pixelRange, entityCluster);
+                var totalBBox = BoundingRectangle.clone(bbox);
 
                 neighbors = index.range(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
                 neighborLength = neighbors.length;
@@ -419,23 +428,25 @@ define([
 
                         Cartesian3.add(neighborItem.position, clusterPosition, clusterPosition);
 
-                        BoundingRectangle.union(bbox, neighborBBox, bbox);
+                        BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
                         ++numPoints;
 
                         ids.push(neighborItem);
                     }
                 }
 
-                if (numPoints === 1) {
-                    addNonClusteredItem(item, entityCluster);
-                } else {
+                if (numPoints >= minimumClusterSize) {
                     var position = Cartesian3.multiplyByScalar(clusterPosition, 1.0 / numPoints, clusterPosition);
                     addCluster(position, numPoints, ids, entityCluster);
                     newClusters.push({
                         position : position,
-                        width : bbox.width,
-                        height : bbox.height
+                        width : totalBBox.width,
+                        height : totalBBox.height,
+                        minimumWidth : bbox.width,
+                        minimumHeight : bbox.height
                     });
+                } else {
+                    addNonClusteredItem(item, entityCluster);
                 }
             }
 
@@ -463,6 +474,7 @@ define([
         this._scene = options.scene;
         this._enabled = true;//defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
+        this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
 
         this._labelCollection = undefined;
         this._billboardCollection = undefined;
@@ -655,7 +667,7 @@ define([
 
         if (defined(this._clusterPointCollection)) {
             this._clusterPointCollection.update(frameState);
-        } else if (defined(this._pointCollection) && defined(this._clusterLabelCollection)) {
+        } else if (defined(this._pointCollection) && !defined(this._clusterLabelCollection)) {
             this._pointCollection.update(frameState);
         }
     };
