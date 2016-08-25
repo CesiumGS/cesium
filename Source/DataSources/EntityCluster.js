@@ -313,7 +313,6 @@ define([
                         neighborIndex = neighbors[j];
                         neighborPoint = points[neighborIndex];
                         if (!neighborPoint.clustered) {
-                            neighborPoint.clustered = true;
                             ++numPoints;
 
                             collection = neighborPoint.collection;
@@ -325,6 +324,10 @@ define([
                     if (numPoints >= minimumClusterSize) {
                         addCluster(cluster.position, numPoints, ids, entityCluster);
                         newClusters.push(cluster);
+
+                        for (j = 0; j < neighborLength; ++j) {
+                            points[neighbors[j]].clustered = true;
+                        }
                     }
                 }
             }
@@ -356,8 +359,6 @@ define([
                     neighborIndex = neighbors[j];
                     neighborPoint = points[neighborIndex];
                     if (!neighborPoint.clustered) {
-                        neighborPoint.clustered = true;
-
                         var neighborItem = neighborPoint.collection.get(neighborPoint.index);
                         var neighborBBox = getBoundingBox(neighborItem, neighborPoint.coord, pixelRange, entityCluster);
 
@@ -380,6 +381,10 @@ define([
                         minimumWidth : bbox.width,
                         minimumHeight : bbox.height
                     });
+
+                    for (j = 0; j < neighborLength; ++j) {
+                        points[neighbors[j]].clustered = true;
+                    }
                 } else {
                     addNonClusteredItem(item, entityCluster);
                 }
