@@ -179,6 +179,15 @@ define([
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
+     *
+     * In this context a feature refers to a group of points that share the same BATCH_ID.
+     * For example all the points that represent a door in a house point cloud would be a feature.
+     *
+     * Features are backed by a batch table, and can be colored, shown/hidden, picked, etc like features
+     * in b3dm and i3dm.
+     *
+     * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
+     * are not accessible by getFeature. They are only used for dynamic styling.
      */
     Points3DTileContent.prototype.getFeature = function(batchId) {
         if (defined(this.batchTable)) {
@@ -392,6 +401,8 @@ define([
             }
             //>>includeEnd('debug');
 
+            // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+            batchTableBinary = new Uint8Array(batchTableBinary);
             this.batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
         }
 
@@ -437,6 +448,7 @@ define([
         var hasBatchTable = defined(batchTable);
         var hasStyleableProperties = defined(styleableProperties);
 
+        // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
         // Use per-point normals to hide back-facing points.
         var backFaceCulling = true;
 
@@ -466,7 +478,7 @@ define([
                     var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
                     // Append attributes to shader
-                    var attributeName = 'style_' + name;
+                    var attributeName = 'czm_pnts_' + name;
                     var attributeType;
                     if (componentCount === 1) {
                         attributeType = 'float';
@@ -486,7 +498,7 @@ define([
                         vertexBuffer : vertexBuffer,
                         componentsPerAttribute : componentCount,
                         componentDatatype : componentDatatype,
-                        normalize : false, // TODO : support this in batch table binary spec?
+                        normalize : false,
                         offsetInBytes : 0,
                         strideInBytes : 0
                     };
@@ -560,11 +572,6 @@ define([
             vs += '    vec3 position = a_position * u_quantizedVolumeScale; \n';
         } else {
             vs += '    vec3 position = a_position; \n';
-        }
-
-        // TODO : only for testing
-        if (hasStyleableProperties) {
-            vs += '    color = vec4(style_secondaryColor * style_temperature, 1.0); \n';
         }
 
         vs += '    v_color = color; \n' +
