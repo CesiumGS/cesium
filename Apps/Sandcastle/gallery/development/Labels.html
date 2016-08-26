@@ -148,27 +148,21 @@ function startup(Cesium) {
             } else {
                 entity.billboard.image = singleDigitPins[cluster.length - 2];
             }
-
-            if (!Cesium.defined(entity.billboard.image)) {
-                debugger;
-            }
         });
     }, 'customStyling');
 
-    /*
-    var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {
-        var pickedLabel = scene.pick(movement.position);
+        var pickedLabel = viewer.scene.pick(movement.position);
         if (Cesium.defined(pickedLabel)) {
             var ids = pickedLabel.id;
             if (Cesium.isArray(ids)) {
                 for (var i = 0; i < ids.length; ++i) {
-                    ids[i].fillColor = Cesium.Color.RED;
+                    ids[i].label.fillColor = Cesium.Color.RED;
                 }
             }
         }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-    */
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }

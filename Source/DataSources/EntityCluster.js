@@ -209,6 +209,8 @@ define([
             label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, undefined, defaultFillColor);
             label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, undefined, defaultOutlineColor);
             label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, undefined, defaultOutlineWidth);
+
+            label.id = ids;
         }
 
         var billboardGraphics = entity._billboard;
@@ -218,6 +220,8 @@ define([
             billboard.show = true;
             billboard.position = position;
             billboard.image = billboardGraphics._image.getValue();
+
+            billboard.id = ids;
         }
     }
 
