@@ -48,7 +48,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './getModelAccessor',
+        './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -108,7 +108,7 @@ define([
         gltfDefaults,
         Uri,
         when,
-        getModelAccessor,
+        getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -2214,7 +2214,7 @@ define([
                                 attributes.push({
                                     index : attributeLocation,
                                     vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
+                                    componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
                                     componentDatatype : a.componentType,
                                     normalize : false,
                                     offsetInBytes : a.byteOffset,
@@ -2922,7 +2922,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getModelAccessor(positions);
+                    var accessorInfo = getBinaryAccessor(positions);
                     offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
                 }
 
