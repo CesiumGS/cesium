@@ -149,4 +149,21 @@ defineSuite([
             ComponentDatatype.createTypedArray(ComponentDatatype.BYTE, undefined, 0, 1);
         }).toThrowDeveloperError();
     });
+
+    it('fromName works', function() {
+        expect(ComponentDatatype.fromName('BYTE')).toEqual(ComponentDatatype.BYTE);
+        expect(ComponentDatatype.fromName('UNSIGNED_BYTE')).toEqual(ComponentDatatype.UNSIGNED_BYTE);
+        expect(ComponentDatatype.fromName('SHORT')).toEqual(ComponentDatatype.SHORT);
+        expect(ComponentDatatype.fromName('UNSIGNED_SHORT')).toEqual(ComponentDatatype.UNSIGNED_SHORT);
+        expect(ComponentDatatype.fromName('INT')).toEqual(ComponentDatatype.INT);
+        expect(ComponentDatatype.fromName('UNSIGNED_INT')).toEqual(ComponentDatatype.UNSIGNED_INT);
+        expect(ComponentDatatype.fromName('FLOAT')).toEqual(ComponentDatatype.FLOAT);
+        expect(ComponentDatatype.fromName('DOUBLE')).toEqual(ComponentDatatype.DOUBLE);
+    });
+
+    it('fromName throws without name', function() {
+        expect(function() {
+            ComponentDatatype.fromName();
+        }).toThrowDeveloperError();
+    });
 });
