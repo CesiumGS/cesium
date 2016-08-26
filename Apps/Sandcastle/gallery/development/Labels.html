@@ -51,6 +51,7 @@
         </tbody>
     </table>
     <div id="toggleClustering"></div>
+    <div id="customStyling"></div>
 </div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
@@ -116,6 +117,43 @@ function startup(Cesium) {
         var dataSource = viewer.dataSourceDisplay.defaultDataSource;
         dataSource.clustering.enabled = !dataSource.clustering.enabled;
     }, 'toggleClustering');
+
+    var removeListener;
+
+    var pinBuilder = new Cesium.PinBuilder();
+    var pin20 = pinBuilder.fromText('20+', Cesium.Color.RED, 48).toDataURL();
+    var pin10 = pinBuilder.fromText('10+', Cesium.Color.BLUE, 48).toDataURL();
+
+    var singleDigitPins = new Array(8);
+    for (var i = 0; i < singleDigitPins.length; ++i) {
+        singleDigitPins[i] = pinBuilder.fromText('' + (i + 2), Cesium.Color.GREEN, 48).toDataURL();
+    }
+
+    Sandcastle.addToolbarButton('Toggle Custom Styling', function() {
+        if (Cesium.defined(removeListener)) {
+            removeListener();
+            removeListener = undefined;
+            return;
+        }
+
+        var dataSource = viewer.dataSourceDisplay.defaultDataSource;
+        removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
+            entity.label = undefined;
+            entity.billboard = {};
+
+            if (cluster.length >= 20) {
+                entity.billboard.image = pin20;
+            } else if (cluster.length >= 10) {
+                entity.billboard.image = pin10;
+            } else {
+                entity.billboard.image = singleDigitPins[cluster.length - 2];
+            }
+
+            if (!Cesium.defined(entity.billboard.image)) {
+                debugger;
+            }
+        });
+    }, 'customStyling');
 
     /*
     var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);

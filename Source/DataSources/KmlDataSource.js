@@ -2230,7 +2230,9 @@ define([
         this._pinBuilder = new PinBuilder();
         this._promises = [];
         this._networkLinks = new AssociativeArray();
-        this._entityCluster = new EntityCluster();
+        this._entityCluster = new EntityCluster({
+            enabled : true
+        });
 
         this._canvas = canvas;
         this._camera = camera;

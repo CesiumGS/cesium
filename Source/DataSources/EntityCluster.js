@@ -3,40 +3,50 @@ define([
     '../Core/BoundingRectangle',
     '../Core/Cartesian2',
     '../Core/Cartesian3',
+    '../Core/Color',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
     '../Core/destroyObject',
     '../Core/EllipsoidalOccluder',
+    '../Core/Event',
     '../Core/Matrix4',
     '../Scene/Billboard',
     '../Scene/BillboardCollection',
     '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
     '../Scene/LabelCollection',
+    '../Scene/LabelStyle',
     '../Scene/PointPrimitiveCollection',
     '../Scene/SceneTransforms',
     '../Scene/VerticalOrigin',
-    '../ThirdParty/kdbush'
+    '../ThirdParty/kdbush',
+    './Entity',
+    './Property'
 ], function(
     BoundingRectangle,
     Cartesian2,
     Cartesian3,
+    Color,
     defaultValue,
     defined,
     defineProperties,
     destroyObject,
     EllipsoidalOccluder,
+    Event,
     Matrix4,
     Billboard,
     BillboardCollection,
     HeightReference,
     HorizontalOrigin,
     LabelCollection,
+    LabelStyle,
     PointPrimitiveCollection,
     SceneTransforms,
     VerticalOrigin,
-    kdbush) {
+    kdbush,
+    Entity,
+    Property) {
     'use strict';
 
     function getX(point) {
@@ -162,12 +172,53 @@ define([
         }
     }
 
+    var defaultFont = '30px sans-serif';
+    var defaultStyle = LabelStyle.FILL;
+    var defaultFillColor = Color.WHITE;
+    var defaultOutlineColor = Color.BLACK;
+    var defaultOutlineWidth = 1.0;
+
     function addCluster(position, numPoints, ids, entityCluster) {
-        entityCluster._clusterLabelCollection.add({
-            text : '' + numPoints,
+        var entity = new Entity({
             position : position,
-            id : ids
+            label : {
+                text : '' + numPoints
+            }
         });
+
+        entityCluster._clusterEvent.raiseEvent(ids, entity);
+
+        var labelGraphics = entity._label;
+
+        var hasLabel = defined(labelGraphics);
+        hasLabel = hasLabel && defined(labelGraphics._text) && Property.isConstant(labelGraphics._text);
+        hasLabel = hasLabel && (!defined(labelGraphics._font) || Property.isConstant(labelGraphics._font));
+        hasLabel = hasLabel && (!defined(labelGraphics._style) || Property.isConstant(labelGraphics._style));
+        hasLabel = hasLabel && (!defined(labelGraphics._fillColor) || Property.isConstant(labelGraphics._fillColor));
+        hasLabel = hasLabel && (!defined(labelGraphics._outlineColor) || Property.isConstant(labelGraphics._outlineColor));
+        hasLabel = hasLabel && (!defined(labelGraphics._outlineWidth) || Property.isConstant(labelGraphics._outlineWidth));
+
+        if (hasLabel) {
+            var label = entityCluster._clusterLabelCollection.add();
+
+            label.show = true;
+            label.position = position;
+            label.text = Property.getValueOrUndefined(labelGraphics._text, undefined);
+            label.font = Property.getValueOrDefault(labelGraphics._font, undefined, defaultFont);
+            label.style = Property.getValueOrDefault(labelGraphics._style, undefined, defaultStyle);
+            label.fillColor = Property.getValueOrDefault(labelGraphics._fillColor, undefined, defaultFillColor);
+            label.outlineColor = Property.getValueOrDefault(labelGraphics._outlineColor, undefined, defaultOutlineColor);
+            label.outlineWidth = Property.getValueOrDefault(labelGraphics._outlineWidth, undefined, defaultOutlineWidth);
+        }
+
+        var billboardGraphics = entity._billboard;
+        if (defined(billboardGraphics) && defined(billboardGraphics._image) && Property.isConstant(billboardGraphics._image)) {
+            var billboard = entityCluster._clusterBillboardCollection.add();
+
+            billboard.show = true;
+            billboard.position = position;
+            billboard.image = billboardGraphics._image.getValue();
+        }
     }
 
     function getScreenSpacePositions(collection, points, scene, occluder) {
@@ -317,7 +368,7 @@ define([
 
                             collection = neighborPoint.collection;
                             collectionIndex = neighborPoint.index;
-                            ids.push(collection.get(collectionIndex));
+                            ids.push(collection.get(collectionIndex).id);
                         }
                     }
 
@@ -353,7 +404,7 @@ define([
 
                 var clusterPosition = Cartesian3.clone(item.position);
                 numPoints = 1;
-                ids = [];
+                ids = [item.id];
 
                 for (j = 0; j < neighborLength; ++j) {
                     neighborIndex = neighbors[j];
@@ -367,7 +418,7 @@ define([
                         BoundingRectangle.union(totalBBox, neighborBBox, totalBBox);
                         ++numPoints;
 
-                        ids.push(neighborItem);
+                        ids.push(neighborItem.id);
                     }
                 }
 
@@ -439,6 +490,8 @@ define([
 
         this._cluster = undefined;
         this._removeEventListener = undefined;
+
+        this._clusterEvent = new Event();
     }
 
     EntityCluster.prototype._initialize = function(scene) {
@@ -475,6 +528,11 @@ define([
             set : function(value) {
                 this._minimumClusterSizeDirty = value !== this._minimumClusterSize;
                 this._minimumClusterSize = value;
+            }
+        },
+        clusterEvent : {
+            get : function() {
+                return this._clusterEvent;
             }
         }
     });
