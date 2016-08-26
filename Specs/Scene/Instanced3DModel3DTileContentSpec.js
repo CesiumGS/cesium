@@ -23,6 +23,7 @@ defineSuite([
 
     var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
     var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/';
     var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientationWithBatchTable/';
@@ -128,6 +129,12 @@ defineSuite([
 
     it('renders with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with batch table binary', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });

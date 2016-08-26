@@ -45,12 +45,12 @@ define([
         /**
          * Gets the batch table texture for this tile.
          *
-         * @type {Cesium3DTileBatchTableResources}
+         * @type {Cesium3DTileBatchTable}
          * @readonly
          *
          * @private
          */
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
 
         /**
          * Gets or sets if any feature's property changed.  Used to

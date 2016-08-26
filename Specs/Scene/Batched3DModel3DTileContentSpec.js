@@ -18,6 +18,7 @@ defineSuite([
     var centerLatitude = 0.698874;
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
     var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
@@ -52,6 +53,41 @@ defineSuite([
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'b3dm');
     });
 
+    it('recognizes the legacy b3dm format', function() {
+        var headerByteLength = 20;
+        var batchTableJson = {name:['test']};
+        var batchTableString = JSON.stringify(batchTableJson);
+        var batchTableByteLength = batchTableString.length;
+        var byteLength = headerByteLength + batchTableByteLength;
+        var buffer = new ArrayBuffer(byteLength);
+        var view = new DataView(buffer);
+        var magic = [98, 51, 100, 109];
+        var version = 1;
+        var batchLength = 1;
+
+        view.setUint8(0, magic[0]);
+        view.setUint8(1, magic[1]);
+        view.setUint8(2, magic[2]);
+        view.setUint8(3, magic[3]);
+        view.setUint32(4, version, true);
+        view.setUint32(8, byteLength, true);
+        view.setUint32(12, batchLength, true);
+        view.setUint32(16, batchTableByteLength, true);
+
+        var i;
+        var byteOffset = headerByteLength;
+        for (i = 0; i < batchTableByteLength; i++) {
+            view.setUint8(byteOffset, batchTableString.charCodeAt(i));
+            byteOffset++;
+        }
+
+        // Expect to throw DeveloperError in Model due to invalid gltf magic
+        var tile = Cesium3DTilesTester.loadTileExpectError(scene, buffer, 'b3dm');
+        expect(tile.batchTable.batchTableJson).toEqual(batchTableJson);
+        expect(tile.batchTable.batchTableBinary).toBeUndefined();
+        expect(tile.batchTable.featuresLength).toEqual(1);
+    });
+
     it('throws with empty gltf', function() {
         // Expect to throw DeveloperError in Model due to invalid gltf magic
         var arrayBuffer = Cesium3DTilesTester.generateBatchedTileBuffer();
@@ -72,6 +108,12 @@ defineSuite([
         });
     });
 
+    it('renders with batch table binary', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
     it('renders without batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -87,6 +129,16 @@ defineSuite([
     it('renders with a mix of opaque and translucent features', function() {
         return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('can get features and properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            var content = tileset._root.content;
+            expect(content.featuresLength).toBe(10);
+            expect(content.innerContents).toBeUndefined();
+            expect(content.hasProperty('id')).toBe(true);
+            expect(content.getFeature(0)).toBeDefined();
         });
     });
 

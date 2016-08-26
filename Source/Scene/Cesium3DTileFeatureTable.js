@@ -14,14 +14,14 @@ define([
     /**
      * @private
      */
-    function Cesium3DTileFeatureTableResources(featureTableJSON, featureTableBinary) {
-        this.json = featureTableJSON;
+    function Cesium3DTileFeatureTable(featureTableJson, featureTableBinary) {
+        this.json = featureTableJson;
         this.buffer = featureTableBinary;
         this._cachedArrayBufferViews = {};
         this.featuresLength = 0;
     }
 
-    Cesium3DTileFeatureTableResources.prototype.getTypedArrayForSemantic = function(semantic, byteOffset, componentType, count, featureSize) {
+    Cesium3DTileFeatureTable.prototype.getTypedArrayForSemantic = function(semantic, byteOffset, componentType, count, featureSize) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(byteOffset)) {
             throw new DeveloperError('byteOffset must be defined to read from binary data for semantic: ' + semantic);
@@ -42,7 +42,7 @@ define([
         return arrayBuffer;
     };
 
-    Cesium3DTileFeatureTableResources.prototype.getGlobalProperty = function(semantic, componentType, count) {
+    Cesium3DTileFeatureTable.prototype.getGlobalProperty = function(semantic, componentType, count) {
         var jsonValue = this.json[semantic];
         if (defined(jsonValue)) {
             var byteOffset = jsonValue.byteOffset;
@@ -60,7 +60,7 @@ define([
         return jsonValue;
     };
 
-    Cesium3DTileFeatureTableResources.prototype.getPropertyArray = function(semantic, componentType, featureSize) {
+    Cesium3DTileFeatureTable.prototype.getPropertyArray = function(semantic, componentType, featureSize) {
         var jsonValue = this.json[semantic];
         if (defined(jsonValue)) {
             var byteOffset = jsonValue.byteOffset;
@@ -75,7 +75,7 @@ define([
         return jsonValue;
     };
 
-    Cesium3DTileFeatureTableResources.prototype.getProperty = function(semantic, featureId, componentType, featureSize) {
+    Cesium3DTileFeatureTable.prototype.getProperty = function(semantic, featureId, componentType, featureSize) {
         var jsonValue = this.json[semantic];
         if (defined(jsonValue)) {
             var byteOffset = jsonValue.byteOffset;
@@ -96,5 +96,5 @@ define([
         return jsonValue;
     };
 
-    return Cesium3DTileFeatureTableResources;
+    return Cesium3DTileFeatureTable;
 });

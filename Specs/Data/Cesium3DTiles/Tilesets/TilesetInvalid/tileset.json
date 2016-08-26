@@ -5,7 +5,7 @@
   "properties": {
     "id": {
       "minimum": 0,
-      "maximum": 99
+      "maximum": 9
     }
   },
   "geometricError": 70,

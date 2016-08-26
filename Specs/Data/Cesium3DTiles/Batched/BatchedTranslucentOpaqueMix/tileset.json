@@ -5,15 +5,15 @@
   "properties": {
     "id": {
       "minimum": 0,
-      "maximum": 99
+      "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.319699786622918,
-      "maximum": -1.3196599027619818
+      "minimum": -1.3197000541327293,
+      "maximum": -1.3196647916486712
     },
     "Latitude": {
-      "minimum": 0.6988587817979215,
-      "maximum": 0.6988896073997394
+      "minimum": 0.6988632475321589,
+      "maximum": 0.6988890296629459
     },
     "Height": {
       "minimum": 6,
