@@ -3,13 +3,13 @@ define([
         './Batched3DModel3DTileContent',
         './Composite3DTileContent',
         './Instanced3DModel3DTileContent',
-        './Points3DTileContent',
+        './PointCloud3DTileContent',
         './Tileset3DTileContent'
     ], function(
         Batched3DModel3DTileContent,
         Composite3DTileContent,
         Instanced3DModel3DTileContent,
-        Points3DTileContent,
+        PointCloud3DTileContent,
         Tileset3DTileContent) {
     'use strict';
 
@@ -24,7 +24,7 @@ define([
             return new Batched3DModel3DTileContent(tileset, tile, url);
         },
         pnts : function(tileset, tile, url) {
-            return new Points3DTileContent(tileset, tile, url);
+            return new PointCloud3DTileContent(tileset, tile, url);
         },
         i3dm : function(tileset, tile, url) {
             return new Instanced3DModel3DTileContent(tileset, tile, url);

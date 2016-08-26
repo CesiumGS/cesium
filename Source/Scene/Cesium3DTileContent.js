@@ -21,7 +21,7 @@ define([
      *
      * @see Batched3DModel3DTileContent
      * @see Instanced3DModel3DTileContent
-     * @see Points3DTileContent
+     * @see PointCloud3DTileContent
      * @see Composite3DTileContent
      * @see Tileset3DTileContent
      * @see Empty3DTileContent

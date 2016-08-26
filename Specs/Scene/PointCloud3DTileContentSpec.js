@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-        'Scene/Points3DTileContent',
+        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -8,7 +8,7 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Points3DTileContent,
+        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,

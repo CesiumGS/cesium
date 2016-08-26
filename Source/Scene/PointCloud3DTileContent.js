@@ -71,15 +71,15 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Points/README.md|Points}
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md|Points}
      * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      *
-     * @alias Points3DTileContent
+     * @alias PointCloud3DTileContent
      * @constructor
      *
      * @private
      */
-    function Points3DTileContent(tileset, tile, url) {
+    function PointCloud3DTileContent(tileset, tile, url) {
         this._url = url;
         this._tileset = tileset;
         this._tile = tile;
@@ -114,7 +114,7 @@ define([
         this._features = undefined;
     }
 
-    defineProperties(Points3DTileContent.prototype, {
+    defineProperties(PointCloud3DTileContent.prototype, {
         /**
          * Part of the {@link Cesium3DTileContent} interface.
          */
@@ -170,7 +170,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.hasProperty = function(name) {
+    PointCloud3DTileContent.prototype.hasProperty = function(name) {
         if (defined(this.batchTable)) {
             return this.batchTable.hasProperty(name);
         }
@@ -189,7 +189,7 @@ define([
      * When the BATCH_ID semantic is omitted and the point cloud stores per-point properties, they
      * are not accessible by getFeature. They are only used for dynamic styling.
      */
-    Points3DTileContent.prototype.getFeature = function(batchId) {
+    PointCloud3DTileContent.prototype.getFeature = function(batchId) {
         if (defined(this.batchTable)) {
             var featuresLength = this.featuresLength;
             //>>includeStart('debug', pragmas.debug);
@@ -208,7 +208,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.request = function() {
+    PointCloud3DTileContent.prototype.request = function() {
         var that = this;
 
         var distance = this._tile.distanceToCamera;
@@ -240,7 +240,7 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
+    PointCloud3DTileContent.prototype.initialize = function(arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
         var uint8Array = new Uint8Array(arrayBuffer);
@@ -841,14 +841,14 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
+    PointCloud3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         this._highlightColor = enabled ? color : this._constantColor;
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.update = function(tileset, frameState) {
+    PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var updateModelMatrix = this._tile.transformDirty;
 
         if (!defined(this._drawCommand)) {
@@ -893,14 +893,14 @@ define([
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.isDestroyed = function() {
+    PointCloud3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * Part of the {@link Cesium3DTileContent} interface.
      */
-    Points3DTileContent.prototype.destroy = function() {
+    PointCloud3DTileContent.prototype.destroy = function() {
         var command = this._drawCommand;
         var pickCommand = this._pickCommand;
         if (defined(command)) {
@@ -912,5 +912,5 @@ define([
         return destroyObject(this);
     };
 
-    return Points3DTileContent;
+    return PointCloud3DTileContent;
 });
