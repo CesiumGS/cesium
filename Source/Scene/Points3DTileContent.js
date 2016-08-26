@@ -450,7 +450,7 @@ define([
 
         // TODO : How to expose this? Will this be part of the point cloud styling or a property of the tileset?
         // Use per-point normals to hide back-facing points.
-        var backFaceCulling = true;
+        var backFaceCulling = false;
 
         var positionAttributeLocation = 0;
         var colorAttributeLocation = 1;
