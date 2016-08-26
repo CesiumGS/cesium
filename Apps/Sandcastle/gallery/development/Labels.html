@@ -10,159 +10,167 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        require.config({
+            baseUrl : '../../../Source',
+            waitSeconds : 60
+        });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
-    #toolbar {
-        background: rgba(42, 42, 42, 0.8);
-        padding: 4px;
-        border-radius: 4px;
-    }
-    #toolbar input {
-        vertical-align: middle;
-        padding-top: 2px;
-        padding-bottom: 2px;
-    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar">
-    <table>
-        <tbody><tr>
-            <td>pixel range</td>
-            <td>
-                <input type="range" min="1" max="200" step="1" data-bind="value: pixelRange, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: pixelRange">
-            </td>
-        </tr>
-        <tr>
-            <td>minimum cluster size</td>
-            <td>
-                <input type="range" min="2" max="20" step="1" data-bind="value: minimumClusterSize, valueUpdate: 'input'">
-                <input type="text" size="2" data-bind="value: minimumClusterSize">
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <div id="toggleClustering"></div>
-    <div id="customStyling"></div>
-</div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-    var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer');
+var scene = viewer.scene;
 
-    var minLat = 22.0;
-    var maxLat = 51.0;
-    var minLon = -127.0;
-    var maxLon = -71.0;
+function addLabel() {
+    Sandcastle.declare(addLabel);
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    labels.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        text     : 'Philadelphia'
+    });
+}
 
-    var lonIncrement = 0.5;
-    var latIncrement = 0.5;
+function setFont() {
+    Sandcastle.declare(setFont);
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    labels.add({
+        position  : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        text      : 'Philadelphia',
+        // CSS font-family
+        font      : '24px Helvetica',
+        fillColor : new Cesium.Color(0.6, 0.9, 1.0),
+        outlineColor : Cesium.Color.BLACK,
+        outlineWidth : 2,
+        style : Cesium.LabelStyle.FILL_AND_OUTLINE
+    });
+}
 
-    var minWordLength = 4;
-    var maxWordLength = 9;
+function setProperties() {
+    Sandcastle.declare(setProperties);
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    var l = labels.add({
+        position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+        text     : 'Philadelphia'
+    });
 
-    for(var i = minLat; i < maxLat; i += latIncrement) {
-        for (var j = minLon; j < maxLon; j += lonIncrement) {
-            var position = Cesium.Cartesian3.fromDegrees(j, i);
+    l.position = Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222, 300000.0);
+    l.scale = 2.0;
+}
 
-            var text = '';
-            var textLength = Math.random() * (maxWordLength - minWordLength) + minWordLength;
-            for (var k = 0; k < textLength; ++k) {
-                text += String.fromCharCode(Math.floor((Math.random() * 25.0 + 65.0)));
-            }
+function inReferenceFrame() {
+    Sandcastle.declare(inReferenceFrame);
+    scene.primitives.removeAll();
+    var center = Cesium.Cartesian3.fromDegrees(-75.59777, 40.03883);
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    labels.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+    labels.add({
+        position : new Cesium.Cartesian3(0.0, 0.0, 0.0),
+        text     : 'Center'
+    });
+    labels.add({
+        position : new Cesium.Cartesian3(1000000.0, 0.0, 0.0),
+        text     : 'East'
+    });
+    labels.add({
+        position : new Cesium.Cartesian3(0.0, 1000000.0, 0.0),
+        text     : 'North'
+    });
+    labels.add({
+        position : new Cesium.Cartesian3(0.0, 0.0, 1000000.0),
+        text     : 'Up'
+    });
+}
 
-            viewer.entities.add({
-                position : position,
-                label : {
-                    text : text
-                },
-                billboard : {
-                    image : '../images/facility.gif',
-                    scale : 2.0
-                }
-            });
-        }
-    }
-
-    var viewModel = {
-        pixelRange: 80,
-        minimumClusterSize: 2
-    };
-    Cesium.knockout.track(viewModel);
-
-    var toolbar = document.getElementById('toolbar');
-    Cesium.knockout.applyBindings(viewModel, toolbar);
-
-    function subscribeParameter(name) {
-        Cesium.knockout.getObservable(viewModel, name).subscribe(
-                function(newValue) {
-                    viewer.dataSourceDisplay.defaultDataSource.clustering[name] = newValue;
-                }
-        );
-    }
-
-    subscribeParameter('pixelRange');
-    subscribeParameter('minimumClusterSize');
-
-    Sandcastle.addToolbarButton('Toggle Clustering', function() {
-        var dataSource = viewer.dataSourceDisplay.defaultDataSource;
-        dataSource.clustering.enabled = !dataSource.clustering.enabled;
-    }, 'toggleClustering');
-
-    var removeListener;
-
-    var pinBuilder = new Cesium.PinBuilder();
-    var pin20 = pinBuilder.fromText('20+', Cesium.Color.RED, 48).toDataURL();
-    var pin10 = pinBuilder.fromText('10+', Cesium.Color.BLUE, 48).toDataURL();
-
-    var singleDigitPins = new Array(8);
-    for (var i = 0; i < singleDigitPins.length; ++i) {
-        singleDigitPins[i] = pinBuilder.fromText('' + (i + 2), Cesium.Color.GREEN, 48).toDataURL();
-    }
-
-    Sandcastle.addToolbarButton('Toggle Custom Styling', function() {
-        if (Cesium.defined(removeListener)) {
-            removeListener();
-            removeListener = undefined;
-            return;
-        }
-
-        var dataSource = viewer.dataSourceDisplay.defaultDataSource;
-        removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
-            entity.label = undefined;
-            entity.billboard = {};
-
-            if (cluster.length >= 20) {
-                entity.billboard.image = pin20;
-            } else if (cluster.length >= 10) {
-                entity.billboard.image = pin10;
-            } else {
-                entity.billboard.image = singleDigitPins[cluster.length - 2];
-            }
+function offsetByDistance() {
+    Sandcastle.declare(offsetByDistance);
+    scene.primitives.removeAll();
+    var image = new Image();
+    image.onload = function() {
+        var billboards = scene.primitives.add(new Cesium.BillboardCollection());
+        billboards.add({
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            scaleByDistance : new Cesium.NearFarScalar(1.5e2, 5.0, 1.5e7, 0.5),
+            image : image
         });
-    }, 'customStyling');
 
-    var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
-    handler.setInputAction(function(movement) {
-        var pickedLabel = viewer.scene.pick(movement.position);
-        if (Cesium.defined(pickedLabel)) {
-            var ids = pickedLabel.id;
-            if (Cesium.isArray(ids)) {
-                for (var i = 0; i < ids.length; ++i) {
-                    ids[i].label.fillColor = Cesium.Color.RED;
-                }
-            }
-        }
-    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+        var labels = scene.primitives.add(new Cesium.LabelCollection());
+        labels.add({
+            position : Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+            text     : 'Label on top of scaling billboard',
+            font : '20px sans-serif',
+            horizontalOrigin : Cesium.HorizontalOrigin.CENTER,
+            pixelOffset : new Cesium.Cartesian2(0.0, -image.height),
+            pixelOffsetScaleByDistance : new Cesium.NearFarScalar(1.5e2, 3.0, 1.5e7, 0.5)
+        });
+    };
+    image.src = '../images/facility.gif';
+}
+
+function fadeByDistance() {
+    Sandcastle.declare(fadeByDistance);
+    scene.primitives.removeAll();
+    var labels = scene.primitives.add(new Cesium.LabelCollection());
+    labels.add({
+        position : Cesium.Cartesian3.fromDegrees(-73.94, 40.67),
+        text     : 'New York',
+        translucencyByDistance : new Cesium.NearFarScalar(1.5e2, 1.0, 1.5e8, 0.0)
+    });
+    labels.add({
+        position : Cesium.Cartesian3.fromDegrees(-84.39, 33.75),
+        text     : 'Atlanta',
+        translucencyByDistance : new Cesium.NearFarScalar(1.5e5, 1.0, 1.5e7, 0.0)
+    });
+}
+
+Sandcastle.addToolbarMenu([{
+    text : 'Add label',
+    onselect : function() {
+        addLabel();
+        Sandcastle.highlight(addLabel);
+    }
+}, {
+    text : 'Set font',
+    onselect : function() {
+        setFont();
+        Sandcastle.highlight(setFont);
+    }
+}, {
+    text : 'Set properties',
+    onselect : function() {
+        setProperties();
+        Sandcastle.highlight(setProperties);
+    }
+}, {
+    text : 'Add labels in reference frame',
+    onselect : function() {
+        inReferenceFrame();
+        Sandcastle.highlight(inReferenceFrame);
+    }
+}, {
+    text : 'Offset label by distance',
+    onselect : function() {
+        offsetByDistance();
+        Sandcastle.highlight(offsetByDistance);
+    }
+}, {
+    text : 'Fade label by distance',
+    onselect : function() {
+        fadeByDistance();
+        Sandcastle.highlight(fadeByDistance);
+    }
+}]);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
