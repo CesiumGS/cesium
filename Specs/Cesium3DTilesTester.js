@@ -268,7 +268,7 @@ define([
         return buffer;
     };
 
-    Cesium3DTilesTester.generatePointsTileBuffer = function(options) {
+    Cesium3DTilesTester.generatePointCloudTileBuffer = function(options) {
         // Procedurally generate the tile array buffer for testing purposes
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var magic = defaultValue(options.magic, [112, 110, 116, 115]);

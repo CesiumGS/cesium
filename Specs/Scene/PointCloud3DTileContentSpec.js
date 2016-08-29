@@ -21,17 +21,17 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointsRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
-    var pointsRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA';
-    var pointsNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
-    var pointsConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor';
-    var pointsNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals';
-    var pointsNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
-    var pointsQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
-    var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
-    var pointsWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
-    var pointsBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
-    var pointsWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
+    var pointCloudRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointCloudRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA';
+    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
+    var pointCloudConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor';
+    var pointCloudNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals';
+    var pointCloudNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
+    var pointCloudQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
+    var pointCloudQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
+    var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
+    var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
+    var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -54,7 +54,7 @@ defineSuite([
         scene.primitives.removeAll();
     });
 
-    function expectRenderPoints(tileset) {
+    function expectRenderPointCloud(tileset) {
         tileset.show = false;
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
         tileset.show = true;
@@ -64,28 +64,28 @@ defineSuite([
     }
 
     it('throws with invalid magic', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             magic : [120, 120, 120, 120]
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws with invalid version', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             version: 2
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if featureTableJsonByteLength is 0', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJsonByteLength : 0
         });
         return Cesium3DTilesTester.loadTileExpectError(scene, arrayBuffer, 'pnts');
     });
 
     it('throws if the feature table does not contain POINTS_LENGTH', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POSITION : {
                     byteOffset : 0
@@ -96,7 +96,7 @@ defineSuite([
     });
 
     it('throws if the feature table does not contain POSITION or POSITION_QUANTIZED', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POINTS_LENGTH : 1
             }
@@ -105,7 +105,7 @@ defineSuite([
     });
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_SCALE', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POINTS_LENGTH : 1,
                 POSITION_QUANTIZED : {
@@ -118,7 +118,7 @@ defineSuite([
     });
 
     it('throws if the positions are quantized and the feature table does not contain QUANTIZED_VOLUME_OFFSET', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POINTS_LENGTH : 1,
                 POSITION_QUANTIZED : {
@@ -131,7 +131,7 @@ defineSuite([
     });
 
     it('throws if the BATCH_ID semantic is defined but BATCHES_LENGTH is not', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POINTS_LENGTH : 2,
                 POSITION : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
@@ -142,7 +142,7 @@ defineSuite([
     });
 
     it('BATCH_ID semantic uses componentType of UNSIGNED_SHORT by default', function() {
-        var arrayBuffer = Cesium3DTilesTester.generatePointsTileBuffer({
+        var arrayBuffer = Cesium3DTilesTester.generatePointCloudTileBuffer({
             featureTableJson : {
                 POINTS_LENGTH : 2,
                 POSITION : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0],
@@ -155,71 +155,71 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, pointsRGBUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, pointCloudRGBUrl);
     });
 
     it('rejects readyPromise on failed request', function() {
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('pnts');
     });
 
-    it('renders points with rgb colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(expectRenderPoints);
+    it('renders point cloud with rgb colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with rgba colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsRGBAUrl).then(expectRenderPoints);
+    it('renders point cloud with rgba colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with no colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsNoColorUrl).then(expectRenderPoints);
+    it('renders point cloud with no colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with constant colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsConstantColorUrl).then(expectRenderPoints);
+    it('renders point cloud with constant colors', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudConstantColorUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsNormalsUrl).then(expectRenderPoints);
+    it('renders point cloud with normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with oct encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsNormalsOctEncodedUrl).then(expectRenderPoints);
+    it('renders point cloud with oct encoded normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsOctEncodedUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with quantized positions', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsQuantizedUrl).then(expectRenderPoints);
+    it('renders point cloud with quantized positions', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with quantized positions and oct-encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsQuantizedOctEncodedUrl).then(expectRenderPoints);
+    it('renders point cloud with quantized positions and oct-encoded normals', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points that are not defined relative to center', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWGS84Url).then(expectRenderPoints);
+    it('renders point cloud that are not defined relative to center', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(expectRenderPointCloud);
     });
 
-    it('renders points with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(expectRenderPoints);
+    it('renders point cloud with batch table', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(expectRenderPointCloud);
     });
 
-    it('renders points with per-point properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithPerPointPropertiesUrl).then(expectRenderPoints);
+    it('renders point cloud with per-point properties', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(expectRenderPointCloud);
     });
 
     it('renders with debug color', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
-            var color = expectRenderPoints(tileset);
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
+            var color = expectRenderPointCloud(tileset);
             tileset.debugColorizeTiles = true;
-            var debugColor = expectRenderPoints(tileset);
+            var debugColor = expectRenderPointCloud(tileset);
             expect(debugColor).not.toEqual(color);
             tileset.debugColorizeTiles = false;
-            debugColor = expectRenderPoints(tileset);
+            debugColor = expectRenderPointCloud(tileset);
             expect(debugColor).toEqual(color);
         });
     });
 
     it('picks', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
             tileset.show = false;
             var picked = scene.pickForSpecs();
@@ -232,7 +232,7 @@ defineSuite([
     });
 
     it('picks based on batchId', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var pixelColor = scene.renderForSpecs();
 
             // Change the color of the picked feature to yellow
@@ -251,8 +251,8 @@ defineSuite([
         });
     });
 
-    it('points without batch table works', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsRGBUrl).then(function(tileset) {
+    it('point cloud without batch table works', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
@@ -261,8 +261,8 @@ defineSuite([
         });
     });
 
-    it('batched points work', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
+    it('batched point cloud works', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
@@ -271,11 +271,11 @@ defineSuite([
         });
     });
 
-    it('points with per-point properties work', function() {
+    it('point cloud with per-point properties work', function() {
         // When the batch table contains per-point properties, aka no batching, then a Cesium3DTileBatchTable is not
         // created. There is no per-point show/color/pickId because the overhead is too high. Instead points are styled
         // based on their properties, and these are not accessible from the API.
-        return Cesium3DTilesTester.loadTileset(scene, pointsWithPerPointPropertiesUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
@@ -285,7 +285,7 @@ defineSuite([
     });
 
     it('throws when calling getFeature with invalid index', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointsBatchedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset._root.content;
             expect(function(){
                 content.getFeature(-1);
@@ -300,11 +300,11 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return Cesium3DTilesTester.tileDestroys(scene, pointsRGBUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, pointCloudRGBUrl);
     });
 
     it('destroys before loading finishes', function() {
-        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointsRGBUrl);
+        return Cesium3DTilesTester.tileDestroysBeforeLoad(scene, pointCloudRGBUrl);
     });
 
 }, 'WebGL');
