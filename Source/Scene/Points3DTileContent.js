@@ -66,7 +66,6 @@ define([
         this.state = Cesium3DTileContentState.UNLOADED;
         this.batchTableResources = undefined;
         this.featurePropertiesDirty = false;
-        this.boundingSphere = tile.contentBoundingVolume.boundingSphere;
 
         this._contentReadyToProcessPromise = when.defer();
         this._readyPromise = when.defer();
@@ -283,12 +282,14 @@ define([
 
         fs += '} \n';
 
+        var boundingSphere = this._tile.contentBoundingVolume.boundingSphere;
+
         // TODO: performance test with 'interleave : true'
         var instance = new GeometryInstance({
             geometry : new PointGeometry({
                 positionsTypedArray : positions,
                 colorsTypedArray : colors,
-                boundingSphere : this.boundingSphere
+                boundingSphere : boundingSphere
             })
         });
 
@@ -305,7 +306,7 @@ define([
             asynchronous : false,
             allowPicking : false,
             cull : false,
-            rtcCenter : this.boundingSphere.center
+            rtcCenter : boundingSphere.center
         });
 
         this._primitive = primitive;

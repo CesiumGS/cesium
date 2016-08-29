@@ -290,15 +290,27 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
+        // Get the center of the bounding volume before tile.computedTransform is applied.
+        var center;
+        var boundingVolumeHeader = defaultValue(this._tile._header.content.boundingVolume, this._tile._header.boundingVolume);
+        if (defined(boundingVolumeHeader.box)) {
+            var box = boundingVolumeHeader.box;
+            center = new Cartesian3(box[0], box[1], box[2]);
+        } else if (defined(boundingVolumeHeader.sphere)) {
+            var sphere = boundingVolumeHeader.sphere;
+            center = new Cartesian3(sphere[0], sphere[1], sphere[2]);
+        }
+
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTableResources : batchTableResources,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
+            center : center,
+            transform : this._tile.computedTransform,
             cull : false,
             url : undefined,
-            headers : undefined,
-            type : RequestType.TILES3D,
+            requestType : RequestType.TILES3D,
             gltf : undefined,
             basePath : undefined
         };

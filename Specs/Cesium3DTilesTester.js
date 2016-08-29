@@ -17,6 +17,17 @@ define([
         pollToPromise) {
     'use strict';
 
+    var mockTile = {
+        contentBoundingVolume : new TileBoundingSphere(),
+        _header : {
+            content : {
+                boundingVolume : {
+                    sphere : [0.0, 0.0, 0.0, 1.0]
+                }
+            }
+        }
+    };
+
     function Cesium3DTilesTester() {
     }
 
@@ -82,11 +93,8 @@ define([
 
     Cesium3DTilesTester.loadTileExpectError = function(scene, arrayBuffer, type) {
         var tileset = {};
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         expect(function() {
             content.initialize(arrayBuffer);
             content.update(tileset, scene.frameState);
@@ -100,11 +108,8 @@ define([
         var tileset = {
             baseUrl : counter++
         };
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         content.initialize(arrayBuffer);
         content.update(tileset, scene.frameState);
 
@@ -119,11 +124,8 @@ define([
         var tileset = {
             loadTileset : Cesium3DTileset.prototype.loadTileset
         };
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = 'invalid';
-        var content = Cesium3DTileContentFactory[type](tileset, tile, url);
+        var content = Cesium3DTileContentFactory[type](tileset, mockTile, url);
         content.request();
 
         return content.readyPromise.then(function(content) {
@@ -227,7 +229,7 @@ define([
         view.setUint32(16, 0, true);                             // featureTableBinaryByteLength
         view.setUint32(20, 0, true);                             // batchTableJSONByteLength
         view.setUint32(24, 0, true);                             // batchTableBinaryByteLength
-        view.setUint32(38, gltfFormat, true);                    // gltfFormat
+        view.setUint32(28, gltfFormat, true);                    // gltfFormat
 
         var i;
         var byteOffset = headerByteLength;
