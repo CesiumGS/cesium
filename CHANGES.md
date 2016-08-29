@@ -21,6 +21,7 @@ Change Log
 * Added `GeocoderViewModel.keepExpanded` which when set to true will always keep the GeoCoder in its expanded state.
 * Added support for `INT` and `UNSIGNED_INT` in `ComponentDatatype`.
 * Added `ComponentDatatype.fromName` for getting a `ComponentDatatype` from its name.
+* Improve label quality for oblique and italic fonts. [#3782](https://github.com/AnalyticalGraphicsInc/cesium/issues/3782)
 
 ### 1.24 - 2016-08-01
 
