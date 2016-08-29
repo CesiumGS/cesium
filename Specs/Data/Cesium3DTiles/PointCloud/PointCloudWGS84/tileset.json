@@ -15,7 +15,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "pointsRGB.pnts"
+      "url": "pointCloudWGS84.pnts"
     }
   }
 }

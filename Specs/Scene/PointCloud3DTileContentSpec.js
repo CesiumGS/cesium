@@ -21,17 +21,17 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointsRGBUrl = './Data/Cesium3DTiles/Points/PointsRGB';
-    var pointsRGBAUrl = './Data/Cesium3DTiles/Points/PointsRGBA';
-    var pointsNoColorUrl = './Data/Cesium3DTiles/Points/PointsNoColor';
-    var pointsConstantColorUrl = './Data/Cesium3DTiles/Points/PointsConstantColor';
-    var pointsNormalsUrl = './Data/Cesium3DTiles/Points/PointsNormals';
-    var pointsNormalsOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsNormalsOctEncoded';
-    var pointsQuantizedUrl = './Data/Cesium3DTiles/Points/PointsQuantized';
-    var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/Points/PointsQuantizedOctEncoded';
-    var pointsWGS84Url = './Data/Cesium3DTiles/Points/PointsWGS84';
-    var pointsBatchedUrl = './Data/Cesium3DTiles/Points/PointsBatched';
-    var pointsWithPerPointPropertiesUrl = './Data/Cesium3DTiles/Points/PointsWithPerPointProperties';
+    var pointsRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB';
+    var pointsRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA';
+    var pointsNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
+    var pointsConstantColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudConstantColor';
+    var pointsNormalsUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormals';
+    var pointsNormalsOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNormalsOctEncoded';
+    var pointsQuantizedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantized';
+    var pointsQuantizedOctEncodedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudQuantizedOctEncoded';
+    var pointsWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
+    var pointsBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
+    var pointsWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
