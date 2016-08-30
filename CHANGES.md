@@ -14,6 +14,7 @@ Change Log
 * Added `Camera.cancelFlight` to cancel the existing camera flight if it exists.
 * Fix overlapping camera flights by always cancelling the previous flight when a new one is created.
 * Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
+* Fixed a crash that would cocur if quickly toggling imagery visibility. [#4083](https://github.com/AnalyticalGraphicsInc/cesium/issues/4083)
 * Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
 * Added logic to `KmlDataSource` defaulting KML Feature node to hidden unless all ancestors are visible. This better matches the KML specification.
 * Fixed position of KML point features with an altitude mode of `relativeToGround` and `clampToGround`.
