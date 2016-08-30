@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+### 1.26 - 2016-10-03
+* Breaking changes
+    * 
+* Deprecated
+    * 
+* Added support for glTF 1.0.1. [#4009](https://github.com/AnalyticalGraphicsInc/cesium/issues/4009)
+
 ### 1.25 - 2016-09-01
 * Breaking changes
     * The number and order of arguments passed to `KmlDataSource` `unsupportedNodeEvent` listeners have changed to allow better handling of unsupported KML Features.
