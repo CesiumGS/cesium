@@ -6,7 +6,7 @@ Change Log
     * 
 * Deprecated
     * 
-* Added support for glTF 1.0.1. [#4009](https://github.com/AnalyticalGraphicsInc/cesium/issues/4009)
+* Added support for glTF 1.0.1 and updated sample models to glTF 1.0.1. [#4009](https://github.com/AnalyticalGraphicsInc/cesium/issues/4009)
 
 ### 1.25 - 2016-09-01
 * Breaking changes
