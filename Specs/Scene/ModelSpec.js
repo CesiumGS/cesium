@@ -1677,7 +1677,7 @@ defineSuite([
         }
     }
 
-    it('loads a gltf with color attributes', function() {
+    it('loads a gltf with normalized color attributes', function() {
          return loadModel(boxColorUrl).then(function(m) {
              expect(m.ready).toBe(true);
              expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
