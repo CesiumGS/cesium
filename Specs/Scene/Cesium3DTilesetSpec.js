@@ -6,6 +6,7 @@ defineSuite([
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/loadWithXhr',
+        'Core/Matrix4',
         'Core/RequestScheduler',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
@@ -23,6 +24,7 @@ defineSuite([
         defined,
         HeadingPitchRange,
         loadWithXhr,
+        Matrix4,
         RequestScheduler,
         Cesium3DTile,
         Cesium3DTileContentState,
@@ -70,6 +72,9 @@ defineSuite([
 
     // 1 tile with opaque and translucent features
     var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+
+    // Root tile is transformed from local space to wgs84, child tile is rotated, scales, and translated locally
+    var tilesetWithTransformsUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
 
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
@@ -1429,6 +1434,29 @@ defineSuite([
         expect(function() {
             tileset.maximumScreenSpaceError = -1;
         }).toThrowDeveloperError();
+    });
+
+    it('propagates tile transform down the tree', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
+            scene.renderForSpecs();
+            var root = tileset._root;
+            var rootTransform = Matrix4.unpack(root._header.transform);
+
+            var child = root.children[0];
+            var childTransform = Matrix4.unpack(child._header.transform);
+            var computedTransform = Matrix4.multiply(rootTransform, childTransform, new Matrix4());
+
+            expect(tileset._selectedTiles.length).toBe(2);
+            expect(root.computedTransform).toEqual(rootTransform);
+            expect(child.computedTransform).toEqual(computedTransform);
+
+            // Set the tileset's modelMatrix
+            var tilesetTransform = Matrix4.fromTranslation(new Cartesian3(0.0, 1.0, 0.0));
+            tileset.modelMatrix = tilesetTransform;
+            computedTransform = Matrix4.multiply(tilesetTransform, computedTransform, computedTransform);
+            scene.renderForSpecs();
+            expect(child.computedTransform).toEqual(computedTransform);
+        });
     });
 
 }, 'WebGL');

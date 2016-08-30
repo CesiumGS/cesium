@@ -294,25 +294,14 @@ define([
         var gltfView = new Uint8Array(arrayBuffer, byteOffset, gltfByteLength);
         byteOffset += gltfByteLength;
 
-        // Get the center of the bounding volume before tile.computedTransform is applied.
-        var center;
-        var boundingVolumeHeader = defaultValue(this._tile._header.content.boundingVolume, this._tile._header.boundingVolume);
-        if (defined(boundingVolumeHeader.box)) {
-            var box = boundingVolumeHeader.box;
-            center = new Cartesian3(box[0], box[1], box[2]);
-        } else if (defined(boundingVolumeHeader.sphere)) {
-            var sphere = boundingVolumeHeader.sphere;
-            center = new Cartesian3(sphere[0], sphere[1], sphere[2]);
-        }
-
         // Create model instance collection
         var collectionOptions = {
             instances : new Array(instancesLength),
             batchTable : this.batchTable,
             boundingVolume : this._tile.contentBoundingVolume.boundingVolume,
-            center : center,
+            center : undefined,
             transform : this._tile.computedTransform,
-            cull : false,
+            cull : false, // Already culled by 3D Tiles
             url : undefined,
             requestType : RequestType.TILES3D,
             gltf : undefined,
@@ -327,6 +316,10 @@ define([
             collectionOptions.gltf = gltfView;
             collectionOptions.basePath = this._url;
         }
+
+        var eastNorthUp = featureTable.getGlobalProperty('EAST_NORTH_UP');
+
+        var center = new Cartesian3();
 
         var instances = collectionOptions.instances;
         var instancePosition = new Cartesian3();
@@ -368,6 +361,7 @@ define([
             }
             Cartesian3.unpack(position, 0, instancePosition);
             instanceTranslationRotationScale.translation = instancePosition;
+            Cartesian3.add(center, instancePosition, center);
 
             // Get the instance rotation
             var normalUp = featureTable.getProperty('NORMAL_UP', i, ComponentDatatype.FLOAT, 3);
@@ -394,10 +388,11 @@ define([
                     AttributeCompression.octDecodeInRange(octNormalUp[0], octNormalUp[1], 65535, instanceNormalUp);
                     AttributeCompression.octDecodeInRange(octNormalRight[0], octNormalRight[1], 65535, instanceNormalRight);
                     hasCustomOrientation = true;
-                } else {
-                    // Custom orientation is not defined, default to WGS84
+                } else if (eastNorthUp) {
                     Transforms.eastNorthUpToFixedFrame(instancePosition, Ellipsoid.WGS84, instanceTransform);
                     Matrix4.getRotation(instanceTransform, instanceRotation);
+                } else {
+                    Matrix3.clone(Matrix3.IDENTITY, instanceRotation);
                 }
             }
             if (hasCustomOrientation) {
@@ -441,6 +436,9 @@ define([
             };
         }
 
+        center = Cartesian3.divideByScalar(center, instancesLength, center);
+        collectionOptions.center = center;
+
         var modelInstanceCollection = new ModelInstanceCollection(collectionOptions);
         this._modelInstanceCollection = modelInstanceCollection;
         this.state = Cesium3DTileContentState.PROCESSING;
@@ -478,6 +476,7 @@ define([
         // the content's resource loading.  In the READY state, it will
         // actually generate commands.
         this.batchTable.update(tileset, frameState);
+        this._modelInstanceCollection.transform = this._tile.computedTransform;
         this._modelInstanceCollection.update(frameState);
 
         frameState.addCommand = oldAddCommand;

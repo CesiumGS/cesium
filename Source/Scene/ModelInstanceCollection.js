@@ -121,8 +121,7 @@ define([
         this._boundingVolumeExpand = !defined(options.boundingVolume); // Expand the bounding volume by the radius of the loaded model
 
         this._center = defaultValue(options.center, this._boundingVolume.center);
-        this._transform = defined(options.transform) ? options.transform : Matrix4.clone(Matrix4.IDENTITY);
-        this._rtcTransform = Matrix4.multiplyByTranslation(this._transform, this._center, new Matrix4());
+        this.transform = defined(options.transform) ? options.transform : Matrix4.clone(Matrix4.IDENTITY);
         this._rtcViewTransform = new Matrix4(); // Holds onto uniform
 
         // Passed on to Model
@@ -333,7 +332,8 @@ define([
 
     function createModifiedModelView(collection, context) {
         return function() {
-            return Matrix4.multiply(context.uniformState.view, collection._rtcTransform, collection._rtcViewTransform);
+            var rtcTransform = Matrix4.multiplyByTranslation(collection.transform, collection._center, scratchMatrix);
+            return Matrix4.multiply(context.uniformState.view, rtcTransform, collection._rtcViewTransform);
         };
     }
 
@@ -688,7 +688,7 @@ define([
             for (var j = 0; j < instancesLength; ++j) {
                 var commandIndex = i * instancesLength + j;
                 var drawCommand = collection._drawCommands[commandIndex];
-                var collectionTransform = collection._transform;
+                var collectionTransform = collection.transform;
                 var instanceMatrix = collection._instances[j].modelMatrix;
                 instanceMatrix = Matrix4.multiply(collectionTransform, instanceMatrix, scratchMatrix);
                 var nodeMatrix = modelCommand.modelMatrix;

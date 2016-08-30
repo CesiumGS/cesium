@@ -3,12 +3,14 @@ defineSuite([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
+        'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
         Batched3DModel3DTileContent,
         Cartesian3,
         HeadingPitchRange,
+        Transforms,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -22,17 +24,26 @@ defineSuite([
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
     var translucentUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucent/';
     var translucentOpaqueMixUrl = './Data/Cesium3DTiles/Batched/BatchedTranslucentOpaqueMix/';
+    var withTransformBoxUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformBox/';
+    var withTransformSphereUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformSphere/';
+    var withTransformRegionUrl = './Data/Cesium3DTiles/Batched/BatchedWithTransformRegion/';
+
+    function setCamera(longitude, latitude) {
+        // One instance is located at the center, point the camera there
+        var center = Cartesian3.fromRadians(longitude, latitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
+    }
 
     beforeAll(function() {
         scene = createScene();
-
-        // One building in each data set is always located in the center, so point the camera there
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15.0));
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        setCamera(centerLongitude, centerLatitude);
     });
 
     afterEach(function() {
@@ -128,6 +139,39 @@ defineSuite([
 
     it('renders with a mix of opaque and translucent features', function() {
         return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    function expectRenderWithTransform(url) {
+        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+
+            var newLongitude = -1.31962;
+            var newLatitude = 0.698874;
+            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 0.0);
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+
+            // Update tile transform
+            tileset._root.transform = newTransform;
+            scene.renderForSpecs();
+
+            // Move the camera to the new location
+            setCamera(newLongitude, newLatitude);
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    }
+
+    it('renders with a tile transform and box bounding volume', function() {
+        return expectRenderWithTransform(withTransformBoxUrl);
+    });
+
+    it('renders with a tile transform and sphere bounding volume', function() {
+        return expectRenderWithTransform(withTransformSphereUrl);
+    });
+
+    it('renders with a tile transform and region bounding volume', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withTransformRegionUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
