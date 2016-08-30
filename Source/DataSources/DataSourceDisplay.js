@@ -238,6 +238,7 @@ define([
         //>>includeEnd('debug');
 
         if (!GroundPrimitive._initialized) {
+            this._ready = false;
             return false;
         }
         
@@ -301,6 +302,10 @@ define([
             throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
+
+        if (!this._ready) {
+            return BoundingSphereState.PENDING;
+        }
 
         var i;
         var length;
