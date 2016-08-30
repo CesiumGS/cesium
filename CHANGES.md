@@ -21,6 +21,7 @@ Change Log
 * Added `GeocoderViewModel.keepExpanded` which when set to true will always keep the Geocoder in its expanded state.
 * Added support for `INT` and `UNSIGNED_INT` in `ComponentDatatype`.
 * Added `ComponentDatatype.fromName` for getting a `ComponentDatatype` from its name.
+* Fixed a crash caused by draping dynamic geometry over terrain. [#4255](https://github.com/AnalyticalGraphicsInc/cesium/pull/4255)
 
 ### 1.24 - 2016-08-01
 

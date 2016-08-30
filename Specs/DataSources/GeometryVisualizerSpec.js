@@ -477,6 +477,32 @@ defineSuite([
         visualizer.destroy();
     });
 
+    it('Creates and removes dynamic geometry on terrain ', function() {
+        var objects = new EntityCollection();
+        var visualizer = new GeometryVisualizer(EllipseGeometryUpdater, scene, objects);
+
+        var ellipse = new EllipseGraphics();
+        ellipse.semiMajorAxis = new SampledProperty(Number);
+        ellipse.semiMajorAxis.addSample(time, 2);
+        ellipse.semiMinorAxis = new ConstantProperty(1);
+        ellipse.material = new ColorMaterialProperty();
+
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(new Cartesian3(1234, 5678, 9101112));
+        entity.ellipse = ellipse;
+        objects.add(entity);
+
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        objects.remove(entity);
+        scene.initializeFrame();
+        expect(visualizer.update(time)).toBe(true);
+        scene.render(time);
+        expect(scene.primitives.length).toBe(0);
+        visualizer.destroy();
+    });
+
     it('Constructor throws without type', function() {
         var objects = new EntityCollection();
         expect(function() {
