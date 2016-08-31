@@ -2216,7 +2216,7 @@ define([
                                     vertexBuffer : rendererBuffers[a.bufferView],
                                     componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
                                     componentDatatype : a.componentType,
-                                    normalize : false,
+                                    normalize : defaultValue(a.normalized, false),
                                     offsetInBytes : a.byteOffset,
                                     strideInBytes : a.byteStride
                                 });
