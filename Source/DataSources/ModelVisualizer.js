@@ -6,6 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/Cartesian4',
         '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
@@ -19,6 +20,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
+        Cartesian4,
         HeightReference,
         Model,
         ModelAnimationLoop,
@@ -32,6 +34,7 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
+    var defaultHighlightColor = new Cartesian4(1.0, 0.0, 0.0, 1.0);
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -147,6 +150,8 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.shadows = shadows;
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
+            model.highlight = Property.getValueOrDefault(modelGraphics.highlight, time, false);
+            model.highlightColor = Property.getValueOrDefault(modelGraphics.highlightColor, time, defaultHighlightColor);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);

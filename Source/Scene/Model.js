@@ -400,6 +400,25 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
+         * Determines if the model will be highlighted.
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.highlight = defaultValue(options.highlight, false);
+
+        /**
+         * The highlight color
+         * 
+         * @type {Cartesian4}
+         *
+         * @default new Cartesian4(1.0, 0.0, 0.0, 1.0)
+         */
+        this.highlightColor = defaultValue(options.highlightColor, new Cartesian4(1.0, 0.0, 0.0, 1.0));
+
+
+        /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
          * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
          * Local reference frames can be used by providing a different transformation matrix, like that returned
@@ -598,6 +617,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
+            hilightPrograms: {},
             textures : {},
 
             samplers : {},
@@ -1801,6 +1821,37 @@ define([
                 attributeLocations : attributeLocations
             });
         }
+
+        // TODO:  This is just the shader for the plane.  Need to be more generic.
+
+        var hilightVS = "precision highp float;\n" +
+                        "attribute vec3 a_position;\n" +
+                        "attribute vec3 a_normal;\n" +
+                        "varying vec3 v_normal;\n" +
+                        "uniform mat3 u_normalMatrix;\n" +
+                        "uniform mat4 u_modelViewMatrix;\n" +
+                        "uniform mat4 u_projectionMatrix;\n" +
+                        "attribute vec2 a_texcoord0;\n" +
+                        "varying vec2 v_texcoord0;\n" +
+                        "void main(void) {\n" +
+                        "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n" +                        
+                        "  v_normal = u_normalMatrix * a_normal;\n" +
+                        "  pos.xyz += v_normal * 0.2;\n" +
+                        "  v_texcoord0 = a_texcoord0;\n" +
+                        "  gl_Position = u_projectionMatrix * pos;\n" +
+                        "}\n";
+
+        var hilightFS = 'uniform vec4 u_highlightColor;\n' +
+                        'void main() \n' +
+                        '{ \n' +
+                        '    gl_FragColor = u_highlightColor;\n' +
+                        '}';
+        model._rendererResources.hilightPrograms[id] = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : hilightVS,
+                fragmentShaderSource : hilightFS,
+                attributeLocations : attributeLocations
+            });
     }
 
     function createPrograms(model, context) {
@@ -2768,6 +2819,7 @@ define([
                 u.jointMatrixUniformName = jointMatrixUniformName;
             }
         }
+
     }
 
     function scaleFromMatrix5Array(matrix) {
@@ -2877,6 +2929,7 @@ define([
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
+        var rendererHilightPrograms = resources.hilightPrograms;
         var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
@@ -2959,6 +3012,27 @@ define([
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
+
+                // Setup the stencil for the first pass
+                var drawRS = clone(rs);
+                drawRS.stencilTest = {
+                    enabled : true,
+                    frontFunction : WebGLConstants.ALWAYS,
+                    backFunction : WebGLConstants.ALWAYS,
+                    reference : 1,
+                    mask : ~0,
+                    frontOperation : {
+                        fail : WebGLConstants.KEEP,
+                        zFail : WebGLConstants.KEEP,
+                        zPass : WebGLConstants.REPLACE
+                    },
+                    backOperation : {
+                        fail : WebGLConstants.KEEP,
+                        zFail : WebGLConstants.KEEP,
+                        zPass : WebGLConstants.REPLACE
+                    }
+                };
+                drawRS = RenderState.fromCache(drawRS);
                 
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
@@ -2972,10 +3046,58 @@ define([
                     castShadows : castShadows,
                     receiveShadows : receiveShadows,
                     uniformMap : uniformMap,
-                    renderState : rs,
+                    renderState : drawRS,
                     owner : owner,
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
+
+                // Setup the stencil command for the hilight
+                var hilightRS = clone(rs);
+                hilightRS.stencilTest = {
+                    enabled : true,
+                    frontFunction : WebGLConstants.NOTEQUAL,
+                    backFunction : WebGLConstants.NOTEQUAL,
+                    reference : 1,
+                    mask : ~0,
+                    frontOperation : {
+                        fail : WebGLConstants.KEEP,
+                        zFail : WebGLConstants.KEEP,
+                        zPass : WebGLConstants.REPLACE
+                    },
+                    backOperation : {
+                        fail : WebGLConstants.KEEP,
+                        zFail : WebGLConstants.KEEP,
+                        zPass : WebGLConstants.REPLACE
+                    }                 
+                };
+                hilightRS.cull = {
+                        enabled : true,
+                        face : WebGLConstants.FRONT
+                };
+                hilightRS.depthTest = false;
+
+                hilightRS = RenderState.fromCache(hilightRS);
+
+                // Setup the highlight color uniform.
+                uniformMap.u_highlightColor = function(){
+                    return model.highlightColor;
+                };                
+
+                var hilightCommand = new DrawCommand({
+                        boundingVolume : new BoundingSphere(), // updated in update()
+                        cull : model.cull,
+                        modelMatrix : new Matrix4(),           // computed in update()
+                        primitiveType : primitive.mode,                        
+                        vertexArray : vertexArray,
+                        count : count,
+                        offset : offset,
+                        shaderProgram : rendererHilightPrograms[technique.program],
+                        uniformMap : uniformMap,
+                        renderState : hilightRS,
+                        owner : owner,
+                        pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
+                });
+
 
                 var pickCommand;
 
@@ -3037,7 +3159,8 @@ define([
                     command : command,
                     pickCommand : pickCommand,
                     command2D : command2D,
-                    pickCommand2D : pickCommand2D
+                    pickCommand2D : pickCommand2D,
+                    hilightCommand: hilightCommand
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3233,6 +3356,12 @@ define([
                                 Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
+
+                            var hilightCommand = primitiveCommand.hilightCommand;
+                            Matrix4.clone(command.modelMatrix, hilightCommand.modelMatrix);
+                            //Matrix4.multiplyByUniformScale(hilightCommand.modelMatrix, 1.04, hilightCommand.modelMatrix);
+                            BoundingSphere.clone(command.boundingVolume, hilightCommand.boundingVolume);                            
+
 
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
@@ -3805,7 +3934,9 @@ define([
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
-            if (passes.render) {
+            if (passes.render) {                
+
+                // The actual render commands
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
@@ -3818,6 +3949,16 @@ define([
                             commandList.push(nc.command2D);
                         }
                     }
+                }
+
+                if (this.highlight) {
+                    // Hilight commands second.
+                    for (i = 0; i < length; ++i) {
+                        nc = nodeCommands[i];
+                        if (nc.show) {
+                            commandList.push(nc.hilightCommand);
+                        }
+                    } 
                 }
             }
 

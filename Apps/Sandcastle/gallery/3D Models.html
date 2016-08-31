@@ -33,6 +33,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 
+var entity = null;
+
+var highlight = false;
+
 function createModel(url, height) {
     viewer.entities.removeAll();
 
@@ -42,7 +46,7 @@ function createModel(url, height) {
     var roll = 0;
     var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
 
-    var entity = viewer.entities.add({
+    entity = viewer.entities.add({
         name : url,
         position : position,
         orientation : orientation,
@@ -83,6 +87,18 @@ var options = [{
 }];
 
 Sandcastle.addToolbarMenu(options);
+
+Sandcastle.addToolbarButton('Toggle Highlight', function() {
+    highlight = !highlight;
+    entity.model.highlight = new Cesium.ConstantProperty(highlight);
+});
+
+Sandcastle.addToolbarButton('Change Highlight Color', function() {
+    entity.model.highlightColor = new Cesium.ConstantProperty(new Cesium.Cartesian4(Math.random(), Math.random(), Math.random(), 1.0));
+});
+
+
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

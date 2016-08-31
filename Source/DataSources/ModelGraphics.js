@@ -80,6 +80,8 @@ define([
         this._nodeTransformationsSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
+        this._highlight = undefined;
+        this._highlightColor = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -200,7 +202,10 @@ define([
          * @type {Property}
          * @default HeightReference.NONE
          */
-        heightReference : createPropertyDescriptor('heightReference')
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        highlight: createPropertyDescriptor('highlight'),
+        highlightColor: createPropertyDescriptor('highlightColor')
     });
 
     /**
@@ -225,6 +230,8 @@ define([
         result.runAnimations = this.runAnimations;
         result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
+        result.highlight = this.highlight;
+        result.highlightColor = this.highlightColor;
 
         return result;
     };
@@ -253,6 +260,8 @@ define([
         this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.highlight = defaultValue(this.highlight, source.highlight);
+        this.highlightColor = defaultValue(this.highlightColor, source.highlightColor);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {
