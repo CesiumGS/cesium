@@ -303,15 +303,6 @@ defineSuite([
                     factor : 0.0,
                     units : 0.0
                 },
-                scissorTest : {
-                    enabled : false,
-                    rectangle : {
-                        x : 0.0,
-                        y : 0.0,
-                        width : 0.0,
-                        height : 0.0
-                    }
-                },
                 depthRange : {
                     near : 0.0,
                     far : 1.0
@@ -1598,6 +1589,32 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with WEB3D_quantized_attributes and accessor.normalized', function() {
+        return loadModel(boxQuantizedUrl).then(function(m) {
+            verifyRender(m);
+            var gltf = m.gltf;
+            var accessors = gltf.accessors;
+            var normalAccessor = accessors.accessor_25;
+            var positionAccessor = accessors.accessor_23;
+            normalAccessor.normalized = true;
+            positionAccessor.normalized = true;
+            var decodeMatrixArray = normalAccessor.extensions.WEB3D_quantized_attributes.decodeMatrix;
+            var decodeMatrix = new Matrix4();
+            Matrix4.unpack(decodeMatrixArray, 0, decodeMatrix);
+            Matrix4.multiplyByUniformScale(decodeMatrix, 65535.0, decodeMatrix);
+            Matrix4.pack(decodeMatrix, decodeMatrixArray);
+            decodeMatrixArray = positionAccessor.extensions.WEB3D_quantized_attributes.decodeMatrix;
+            Matrix4.unpack(decodeMatrixArray, 0, decodeMatrix);
+            Matrix4.multiplyByUniformScale(decodeMatrix, 65535.0, decodeMatrix);
+            Matrix4.pack(decodeMatrix, decodeMatrixArray);
+            primitives.remove(m);
+            return loadModelJson(gltf, {}).then(function(m) {
+                verifyRender(m);
+                primitives.remove(m);
+            });
+        });
+    });
+
     it('loads a glTF with WEB3D_quantized_attributes POSITION and NORMAL where primitives with different accessors use the same shader', function() {
         return loadModel(milkTruckQuantizedUrl).then(function(m) {
             verifyRender(m);
@@ -1651,7 +1668,7 @@ defineSuite([
         }
     }
 
-    it('loads a gltf with color attributes', function() {
+    it('loads a gltf with normalized color attributes', function() {
          return loadModel(boxColorUrl).then(function(m) {
              expect(m.ready).toBe(true);
              expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
