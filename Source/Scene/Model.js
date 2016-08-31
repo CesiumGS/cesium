@@ -2261,7 +2261,6 @@ define([
         booleanStates[WebGLConstants.CULL_FACE] = false;
         booleanStates[WebGLConstants.DEPTH_TEST] = false;
         booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-        booleanStates[WebGLConstants.SCISSOR_TEST] = false;
 
         var enable = states.enable;
         var length = enable.length;
@@ -2307,7 +2306,6 @@ define([
         var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
         var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
         var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
 
         rendererRenderStates[id] = RenderState.fromCache({
             frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
@@ -2320,15 +2318,6 @@ define([
                 enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
                 factor : polygonOffset[0],
                 units : polygonOffset[1]
-            },
-            scissorTest : {
-                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                rectangle : {
-                    x : scissor[0],
-                    y : scissor[1],
-                    width : scissor[2],
-                    height : scissor[3]
-                }
             },
             depthRange : {
                 near : depthRange[0],

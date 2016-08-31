@@ -303,15 +303,6 @@ defineSuite([
                     factor : 0.0,
                     units : 0.0
                 },
-                scissorTest : {
-                    enabled : false,
-                    rectangle : {
-                        x : 0.0,
-                        y : 0.0,
-                        width : 0.0,
-                        height : 0.0
-                    }
-                },
                 depthRange : {
                     near : 0.0,
                     far : 1.0
