@@ -58,7 +58,7 @@
 
         var tilesets = [{
             //name : 'Tileset', url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset/'
-            name : 'Tileset', url : 'http://localhost:8002/tilesets/Names-Test/'
+            name : 'Tileset', url : 'http://localhost:8002/tilesets/Noms/'
         }, {
             name : 'Translucent', url : '../../../Specs/Data/Cesium3DTiles/Batched/BatchedTranslucent/'
         }, {
@@ -92,10 +92,10 @@
                 var properties = tileset.properties;
                 if (Cesium.defined(properties) && Cesium.defined(properties.Height)) {
                     tileset.style = new Cesium.Cesium3DTileStyle({
-//              "color" : "color('#BAA5EC')",
-//              "color" : "color('cyan', 0.5)",
-//              "color" : "rgb(100, 255, 190)",
-//              "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
+//                      "color" : "color('#BAA5EC')",
+//                      "color" : "color('cyan', 0.5)",
+//                      "color" : "rgb(100, 255, 190)",
+//                      "color" : "hsla(0.9, 0.6, 0.7, 0.75)",
                         "color" : {
                             "conditions" : {
                                 "${Height} >= 83" : "color('purple', 0.5)",
@@ -107,10 +107,12 @@
                                 "true" : "color('blue')"
                             }
                         },
-//              "show": false
-//              "show" : "${Height} >= 0",
-                "meta" : {
-                    "description" : "'Building id ${id} has height ${Height}.'"
+//                      "show": false
+//                      "show" : "${Height} >= 0",
+                        "meta" : {
+                            "description" : "'Building id ${id} has height ${Height}.'"
+                        }
+                    });
                 }
 
                 tileset.loadProgress.addEventListener(function(numberOfPendingRequests, numberProcessing) {
