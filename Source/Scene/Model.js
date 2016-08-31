@@ -417,6 +417,15 @@ define([
          */
         this.highlightColor = defaultValue(options.highlightColor, new Cartesian4(1.0, 0.0, 0.0, 1.0));
 
+        /**
+         * The size of the highlight
+         * 
+         * @type {Float}
+         *
+         * @default 0.2
+         */
+        this.highlightSize = 0.2;
+
 
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -1831,12 +1840,13 @@ define([
                         "uniform mat3 u_normalMatrix;\n" +
                         "uniform mat4 u_modelViewMatrix;\n" +
                         "uniform mat4 u_projectionMatrix;\n" +
+                        "uniform float u_highlightSize;\n" + 
                         "attribute vec2 a_texcoord0;\n" +
                         "varying vec2 v_texcoord0;\n" +
                         "void main(void) {\n" +
                         "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n" +                        
                         "  v_normal = u_normalMatrix * a_normal;\n" +
-                        "  pos.xyz += v_normal * 0.2;\n" +
+                        "  pos.xyz += v_normal * u_highlightSize;\n" +
                         "  v_texcoord0 = a_texcoord0;\n" +
                         "  gl_Position = u_projectionMatrix * pos;\n" +
                         "}\n";
@@ -3071,8 +3081,8 @@ define([
                     }                 
                 };
                 hilightRS.cull = {
-                        enabled : true,
-                        face : WebGLConstants.FRONT
+                    enabled : true,
+                    face : WebGLConstants.FRONT
                 };
                 hilightRS.depthTest = false;
 
@@ -3081,7 +3091,11 @@ define([
                 // Setup the highlight color uniform.
                 uniformMap.u_highlightColor = function(){
                     return model.highlightColor;
-                };                
+                };               
+
+                uniformMap.u_highlightSize = function() {
+                    return model.highlightSize;
+                };
 
                 var hilightCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()

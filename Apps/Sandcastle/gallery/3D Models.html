@@ -19,10 +19,31 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }    
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table>
+    <tbody><tr>
+        <td>Highlight Size</td>
+        <td>
+            <input type="range" min="0" max="10" step="0.02" data-bind="value: highlightSize, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: highlightSize">
+        </td>
+    </tr>
+
+</tbody></table>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -35,7 +56,19 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var entity = null;
 
-var highlight = false;
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    highlight: false,
+    highlightSize: 0.2
+};
+
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
 
 function createModel(url, height) {
     viewer.entities.removeAll();
@@ -89,13 +122,19 @@ var options = [{
 Sandcastle.addToolbarMenu(options);
 
 Sandcastle.addToolbarButton('Toggle Highlight', function() {
-    highlight = !highlight;
-    entity.model.highlight = new Cesium.ConstantProperty(highlight);
+    viewModel.highlight = !viewModel.highlight;
+    entity.model.highlight = new Cesium.ConstantProperty(viewModel.highlight);
 });
 
 Sandcastle.addToolbarButton('Change Highlight Color', function() {
     entity.model.highlightColor = new Cesium.ConstantProperty(new Cesium.Cartesian4(Math.random(), Math.random(), Math.random(), 1.0));
 });
+
+Cesium.knockout.getObservable(viewModel, "highlightSize").subscribe(
+    function(newValue) {
+        entity.model.highlightSize = newValue;
+    }
+);
 
 
 
