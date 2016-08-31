@@ -2959,7 +2959,7 @@ define([
 
                 var castShadows = ShadowMode.castShadows(model._shadows);
                 var receiveShadows = ShadowMode.receiveShadows(model._shadows);
-                
+
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -3479,6 +3479,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
+                    extension !== 'BLENDER_actions' && extension !== 'BLENDER_physics' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
