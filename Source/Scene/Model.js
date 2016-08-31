@@ -410,7 +410,7 @@ define([
 
         /**
          * The highlight color
-         * 
+         *
          * @type {Cartesian4}
          *
          * @default new Cartesian4(1.0, 0.0, 0.0, 1.0)
@@ -419,7 +419,7 @@ define([
 
         /**
          * The size of the highlight
-         * 
+         *
          * @type {Float}
          *
          * @default 0.2
@@ -1840,15 +1840,19 @@ define([
                         "uniform mat3 u_normalMatrix;\n" +
                         "uniform mat4 u_modelViewMatrix;\n" +
                         "uniform mat4 u_projectionMatrix;\n" +
-                        "uniform float u_highlightSize;\n" + 
+                        "uniform float u_highlightSize;\n" +
                         "attribute vec2 a_texcoord0;\n" +
                         "varying vec2 v_texcoord0;\n" +
                         "void main(void) {\n" +
-                        "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n" +                        
+                        "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n" +
                         "  v_normal = u_normalMatrix * a_normal;\n" +
-                        "  pos.xyz += v_normal * u_highlightSize;\n" +
                         "  v_texcoord0 = a_texcoord0;\n" +
-                        "  gl_Position = u_projectionMatrix * pos;\n" +
+                        "  vec4 clip = u_projectionMatrix * pos;\n" +
+                        "  vec3 n = normalize(v_normal);\n" +
+                        "  n.x *= u_projectionMatrix[0][0];\n" +
+                        "  n.y *= u_projectionMatrix[1][1];\n" +
+                        "  clip.xy += n.xy * clip.w * u_highlightSize;\n" +
+                        "  gl_Position = clip;\n" +
                         "}\n";
 
         var hilightFS = 'uniform vec4 u_highlightColor;\n' +
@@ -3043,7 +3047,7 @@ define([
                     }
                 };
                 drawRS = RenderState.fromCache(drawRS);
-                
+
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -3078,10 +3082,10 @@ define([
                         fail : WebGLConstants.KEEP,
                         zFail : WebGLConstants.KEEP,
                         zPass : WebGLConstants.REPLACE
-                    }                 
+                    }
                 };
                 hilightRS.cull = {
-                    enabled : true,
+                    enabled : false,
                     face : WebGLConstants.FRONT
                 };
                 hilightRS.depthTest = false;
@@ -3091,7 +3095,7 @@ define([
                 // Setup the highlight color uniform.
                 uniformMap.u_highlightColor = function(){
                     return model.highlightColor;
-                };               
+                };
 
                 uniformMap.u_highlightSize = function() {
                     return model.highlightSize;
@@ -3101,7 +3105,7 @@ define([
                         boundingVolume : new BoundingSphere(), // updated in update()
                         cull : model.cull,
                         modelMatrix : new Matrix4(),           // computed in update()
-                        primitiveType : primitive.mode,                        
+                        primitiveType : primitive.mode,
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
@@ -3373,8 +3377,7 @@ define([
 
                             var hilightCommand = primitiveCommand.hilightCommand;
                             Matrix4.clone(command.modelMatrix, hilightCommand.modelMatrix);
-                            //Matrix4.multiplyByUniformScale(hilightCommand.modelMatrix, 1.04, hilightCommand.modelMatrix);
-                            BoundingSphere.clone(command.boundingVolume, hilightCommand.boundingVolume);                            
+                            BoundingSphere.clone(command.boundingVolume, hilightCommand.boundingVolume);
 
 
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
@@ -3948,7 +3951,7 @@ define([
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
-            if (passes.render) {                
+            if (passes.render) {
 
                 // The actual render commands
                 for (i = 0; i < length; ++i) {
@@ -3972,7 +3975,7 @@ define([
                         if (nc.show) {
                             commandList.push(nc.hilightCommand);
                         }
-                    } 
+                    }
                 }
             }
 
