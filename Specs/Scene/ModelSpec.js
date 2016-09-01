@@ -76,7 +76,6 @@ defineSuite([
     var animBoxesUrl = './Data/Models/anim-test-1-boxes/anim-test-1-boxes.gltf';
     var riggedFigureUrl = './Data/Models/rigged-figure-test/rigged-figure-test.gltf';
     var riggedSimpleUrl = './Data/Models/rigged-simple/rigged-simple.gltf';
-
     var boxConstantUrl = './Data/Models/MaterialsCommon/BoxConstant.gltf';
     var boxLambertUrl = './Data/Models/MaterialsCommon/BoxLambert.gltf';
     var boxBlinnUrl = './Data/Models/MaterialsCommon/BoxBlinn.gltf';
@@ -88,6 +87,7 @@ defineSuite([
     var boxSpotLightUrl = './Data/Models/MaterialsCommon/BoxSpotLight.gltf';
     var boxTransparentUrl = './Data/Models/MaterialsCommon/BoxTransparent.gltf';
     var boxColorUrl = './Data/Models/Box-Color/Box-Color.gltf';
+    var boxUint32Indices = './Data/Models/Box-Uint32Indices/Box-Uint32Indices.gltf';
     var boxQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Quantized.gltf';
     var boxColorQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Color-Quantized.gltf';
     var boxScalarQuantizedUrl = './Data/Models/WEB3DQuantizedAttributes/Box-Scalar-Quantized.gltf';
@@ -1677,6 +1677,22 @@ defineSuite([
              testBoxSideColors(m);
              primitives.remove(m);
          });
+    });
+
+    it('loads a gltf with uint32 indices', function() {
+        return loadModel(boxUint32Indices).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('throws runtime error when loading a gltf with uint32 indices if OES_element_index_uint is disabled', function() {
+        var context = scene.context;
+        context._elementIndexUint = false;
+        return loadModel(boxUint32Indices).otherwise(function(e) {
+            expect(e).toBeDefined();
+            context._elementIndexUint = true;
+        });
     });
 
     it('loads a gltf with WEB3D_quantized_attributes COLOR', function() {

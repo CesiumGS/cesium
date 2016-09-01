@@ -3115,6 +3115,7 @@ define([
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
 
+        checkSupportedGlExtensions(model, context);
         if (model._loadRendererResourcesFromCache) {
             var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
@@ -3470,6 +3471,21 @@ define([
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
                     extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+            }
+        }
+    }
+
+    function checkSupportedGlExtensions(model, context) {
+        var glExtensionsUsed = model.gltf.glExtensionsUsed;
+        if (defined(glExtensionsUsed)) {
+            var glExtensionsUsedLength = glExtensionsUsed.length;
+            for (var i = 0; i < glExtensionsUsedLength; i++) {
+                var extension = glExtensionsUsed[i];
+                if (extension !== 'OES_element_index_uint') {
+                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension)
+                } else if (!context.elementIndexUint) {
+                    throw new RuntimeError('OES_element_index_uint WebGL extension is not enabled.');
                 }
             }
         }
