@@ -3483,7 +3483,7 @@ define([
             for (var i = 0; i < glExtensionsUsedLength; i++) {
                 var extension = glExtensionsUsed[i];
                 if (extension !== 'OES_element_index_uint') {
-                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension)
+                    throw new RuntimeError('Unsupported WebGL Extension: ' + extension);
                 } else if (!context.elementIndexUint) {
                     throw new RuntimeError('OES_element_index_uint WebGL extension is not enabled.');
                 }
