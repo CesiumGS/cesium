@@ -176,7 +176,7 @@ define([
      *   }),
      *   appearance : new Cesium.PerInstanceColorAppearance()
      * }));
-     * 
+     *
      * @see GeometryInstance
      * @see Appearance
      */
@@ -1480,7 +1480,7 @@ define([
     }
 
     var readOnlyInstanceAttributesScratch = ['boundingSphere', 'boundingSphereCV'];
-    
+
     /**
      * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
      *
@@ -1603,7 +1603,7 @@ define([
      *
      * @example
      * e = e && e.destroy();
-     * 
+     *
      * @see Primitive#isDestroyed
      */
     Primitive.prototype.destroy = function() {

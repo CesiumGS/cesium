@@ -126,9 +126,9 @@ define([
 
                     var glyphs = this._glyphs;
                     for (var i = 0, len = glyphs.length; i < len; i++) {
-                        var glyph = glyphs[i];
-                        if (defined(glyph.billboard)) {
-                            glyph.billboard.show = value;
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.show = value;
                         }
                     }
                 }
@@ -158,9 +158,9 @@ define([
                     if (this._heightReference === HeightReference.NONE) {
                         var glyphs = this._glyphs;
                         for (var i = 0, len = glyphs.length; i < len; i++) {
-                            var glyph = glyphs[i];
-                            if (defined(glyph.billboard)) {
-                                glyph.billboard.position = value;
+                            var billboard = glyphs[i].billboard;
+                            if (defined(billboard)) {
+                                billboard.position = value;
                             }
                         }
                     } else {
@@ -188,6 +188,17 @@ define([
 
                 if (value !== this._heightReference) {
                     this._heightReference = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var billboard = glyphs[i].billboard;
+                        if (defined(billboard)) {
+                            billboard.heightReference = value;
+                        }
+                    }
+
+                    repositionAllGlyphs(this);
+
                     this._updateClamping();
                 }
             }
@@ -682,7 +693,11 @@ define([
                 for (var i = 0, len = glyphs.length; i < len; i++) {
                     var glyph = glyphs[i];
                     if (defined(glyph.billboard)) {
-                        glyph.billboard.position = value;
+                        // Set all the private values here, because we already clamped to ground
+                        //  so we don't want to do it again for every glyph
+                        glyph.billboard._position = value;
+                        glyph.billboard._actualPosition = value;
+                        glyph.billboard._clampedPosition = value;
                     }
                 }
             }
@@ -744,6 +759,7 @@ define([
                this._style === other._style &&
                this._verticalOrigin === other._verticalOrigin &&
                this._horizontalOrigin === other._horizontalOrigin &&
+               this._heightReference === other._heightReference &&
                this._text === other._text &&
                this._font === other._font &&
                Cartesian3.equals(this._position, other._position) &&

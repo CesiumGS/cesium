@@ -70,13 +70,16 @@ defineSuite([
     var primitive;
     var depthPrimitive;
 
-    beforeAll(function() {
+    beforeAll(function(done) {
         scene = createScene();
         scene.fxaa = false;
 
         context = scene.context;
 
         ellipsoid = Ellipsoid.WGS84;
+        GroundPrimitive.initializeTerrainHeights().then(function() {
+           done();
+        });
     });
 
     afterAll(function() {
@@ -836,5 +839,25 @@ defineSuite([
 
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
+    });
+
+    it('creating a synchronous primitive throws if initializeTerrainHeights wasn\'t called', function() {
+        // Make it seem like initializeTerrainHeights was never called
+        var initPromise = GroundPrimitive._initPromise;
+        GroundPrimitive._initPromise = undefined;
+        GroundPrimitive._initialized = false;
+
+        primitive = new GroundPrimitive({
+            geometryInstances : rectangleInstance,
+            asynchronous : false
+        });
+        
+        expect(function() {
+            primitive.update(scene.frameState);
+        }).toThrowDeveloperError();
+
+        // Set back to initialized state
+        GroundPrimitive._initPromise = initPromise;
+        GroundPrimitive._initialized = true;
     });
 }, 'WebGL');

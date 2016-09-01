@@ -524,18 +524,19 @@ define([
 
         var i;
         if (isBigEndian) {
-            for (i = 0; i < elementsPerHeight; ++i) {
+            for (i = 0; i < elementsPerHeight - 1; ++i) {
                 heights[index + i] = (height / divisor) | 0;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }
         } else {
-            for (i = elementsPerHeight - 1; i >= 0; --i) {
+            for (i = elementsPerHeight - 1; i > 0; --i) {
                 heights[index + i] = (height / divisor) | 0;
                 height -= heights[index + i] * divisor;
                 divisor /= elementMultiplier;
             }
         }
+        heights[index + i] = height;
     }
 
     return HeightmapTerrainData;

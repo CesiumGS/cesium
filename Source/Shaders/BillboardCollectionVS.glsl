@@ -226,28 +226,6 @@ void main()
     }
 #endif
 
-
-// HACK to pass billboard position and cut distance
-#ifdef EYE_DISTANCE_PIXEL_OFFSET
-    float position = pixelOffsetScaleByDistance.x;
-    float cutDistSq = pixelOffsetScaleByDistance.z * pixelOffsetScaleByDistance.z;
-    float cameraDistSq = lengthSq;
-    if (cutDistSq > 0.0 && cameraDistSq > cutDistSq)
-    {
-        positionEC.xyz = vec3(0.0);
-    }
-    else if (position > 0.0)
-    {
-        // Empirical formula to create levels according to the distance x
-        // set xrange [0:40000]; plot floor(x / 1000), floor(sqrt(x/1000))
-        float level = floor(pow(cameraDistSq / 1000000.0, 0.20));
-        if (mod(position, pow(2.0, level)) > 0.5)
-        {
-            positionEC.xyz = vec3(0.0);
-        }
-    }
-#endif
-
     float translucency = 1.0;
 #ifdef EYE_DISTANCE_TRANSLUCENCY
     translucency = czm_nearFarScalar(translucencyByDistance, lengthSq);
@@ -261,14 +239,6 @@ void main()
 #ifdef EYE_DISTANCE_PIXEL_OFFSET
     float pixelOffsetScale = czm_nearFarScalar(pixelOffsetScaleByDistance, lengthSq);
     pixelOffset *= pixelOffsetScale;
-#endif
-
-#ifdef CLAMPED_TO_GROUND
-    // move slightly closer to camera to avoid depth issues.
-    positionEC.z *= 0.995;
-    
-    // Force bottom vertical origin
-    origin.y = 1.0;
 #endif
 
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);

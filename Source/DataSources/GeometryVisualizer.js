@@ -9,6 +9,7 @@ define([
         './ColorMaterialProperty',
         './StaticGeometryColorBatch',
         './StaticGeometryPerMaterialBatch',
+        './StaticGroundGeometryColorBatch',
         './StaticOutlineGeometryBatch'
     ], function(
         AssociativeArray,
@@ -20,17 +21,19 @@ define([
         ColorMaterialProperty,
         StaticGeometryColorBatch,
         StaticGeometryPerMaterialBatch,
+        StaticGroundGeometryColorBatch,
         StaticOutlineGeometryBatch) {
     'use strict';
 
     var emptyArray = [];
 
-    function DynamicGeometryBatch(primitives) {
+    function DynamicGeometryBatch(primitives, groundPrimitives) {
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._dynamicUpdaters = new AssociativeArray();
     }
     DynamicGeometryBatch.prototype.add = function(time, updater) {
-        this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives));
+        this._dynamicUpdaters.set(updater.entity.id, updater.createDynamicUpdater(this._primitives, this._groundPrimitives));
     };
 
     DynamicGeometryBatch.prototype.remove = function(updater) {
@@ -86,17 +89,21 @@ define([
         }
 
         if (updater.fillEnabled) {
-            if (updater.isClosed) {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._closedColorBatch.add(time, updater);
-                } else {
-                    that._closedMaterialBatch.add(time, updater);
-                }
+            if (updater.onTerrain) {
+                that._groundColorBatch.add(time, updater);
             } else {
-                if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
-                    that._openColorBatch.add(time, updater);
+                if (updater.isClosed) {
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._closedColorBatch.add(time, updater);
+                    } else {
+                        that._closedMaterialBatch.add(time, updater);
+                    }
                 } else {
-                    that._openMaterialBatch.add(time, updater);
+                    if (updater.fillMaterialProperty instanceof ColorMaterialProperty) {
+                        that._openColorBatch.add(time, updater);
+                    } else {
+                        that._openMaterialBatch.add(time, updater);
+                    }
                 }
             }
         }
@@ -127,8 +134,10 @@ define([
         this._type = type;
 
         var primitives = scene.primitives;
+        var groundPrimitives = scene.groundPrimitives;
         this._scene = scene;
         this._primitives = primitives;
+        this._groundPrimitives = groundPrimitives;
         this._entityCollection = undefined;
         this._addedObjects = new AssociativeArray();
         this._removedObjects = new AssociativeArray();
@@ -139,8 +148,10 @@ define([
         this._closedMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, true);
         this._openColorBatch = new StaticGeometryColorBatch(primitives, type.perInstanceColorAppearanceType, false);
         this._openMaterialBatch = new StaticGeometryPerMaterialBatch(primitives, type.materialAppearanceType, false);
-        this._dynamicBatch = new DynamicGeometryBatch(primitives);
-        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch, this._dynamicBatch, this._outlineBatch];
+        this._groundColorBatch = new StaticGroundGeometryColorBatch(groundPrimitives);
+        this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
+        this._batches = [this._closedColorBatch, this._closedMaterialBatch, this._openColorBatch, this._openMaterialBatch,
+                         this._groundColorBatch, this._dynamicBatch, this._outlineBatch];
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
