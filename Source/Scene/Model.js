@@ -422,9 +422,9 @@ define([
          *
          * @type {Float}
          *
-         * @default 0.2
+         * @default 0.002
          */
-        this.highlightSize = 0.2;
+        this.highlightSize = 0.002;
 
 
         /**

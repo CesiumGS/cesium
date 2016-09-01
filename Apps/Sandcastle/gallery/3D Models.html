@@ -28,7 +28,7 @@
         vertical-align: middle;
         padding-top: 2px;
         padding-bottom: 2px;
-    }    
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
@@ -37,7 +37,7 @@
     <tbody><tr>
         <td>Highlight Size</td>
         <td>
-            <input type="range" min="0" max="10" step="0.02" data-bind="value: highlightSize, valueUpdate: 'input'">
+            <input type="range" min="0" max="0.5" step="0.0001" data-bind="value: highlightSize, valueUpdate: 'input'">
             <input type="text" size="5" data-bind="value: highlightSize">
         </td>
     </tr>
@@ -59,7 +59,7 @@ var entity = null;
 // The viewModel tracks the state of our mini application.
 var viewModel = {
     highlight: false,
-    highlightSize: 0.2
+    highlightSize: 0.002
 };
 
 // Convert the viewModel members into knockout observables.
@@ -86,7 +86,9 @@ function createModel(url, height) {
         model : {
             uri : url,
             minimumPixelSize : 128,
-            maximumScale : 20000
+            maximumScale : 20000,
+            highlight: viewModel.highlight,
+            highlightSize: viewModel.highlightSize
         }
     });
     viewer.trackedEntity = entity;

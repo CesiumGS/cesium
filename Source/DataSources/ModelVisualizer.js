@@ -35,7 +35,8 @@ define([
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
     var defaultHighlightColor = new Cartesian4(1.0, 0.0, 0.0, 1.0);
-    var defaultHighlightSize = 0.2;
+    var defaultHighlightSize = 0.002;
+    var defaultHighlight = false;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -151,7 +152,7 @@ define([
             model.modelMatrix = Matrix4.clone(modelMatrix, model.modelMatrix);
             model.shadows = shadows;
             model.heightReference = Property.getValueOrDefault(modelGraphics._heightReference, time, defaultHeightReference);
-            model.highlight = Property.getValueOrDefault(modelGraphics.highlight, time, false);
+            model.highlight = Property.getValueOrDefault(modelGraphics.highlight, time, defaultHighlight);
             model.highlightColor = Property.getValueOrDefault(modelGraphics.highlightColor, time, defaultHighlightColor);
             model.highlightSize = Property.getValueOrDefault(modelGraphics.highlightSize, time, defaultHighlightSize);
 

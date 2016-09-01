@@ -51,6 +51,9 @@ define([
      * @param {Property} [options.receiveShadows=true] Deprecated, use options.shadows instead. A boolean Property specifying whether the model receives shadows from shadow casters in the scene.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.highlight=false] Whether to highlight the model using an outline
+     * @param {Property} [options.highlightColor=Cartesian4(1.0, 0.0, 0.0, 1.0)] The highlight color for the outline.
+     * @param {Property} [options.highlightSize=0.002] The highlight color for the outline.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
@@ -205,8 +208,28 @@ define([
          */
         heightReference : createPropertyDescriptor('heightReference'),
 
+        /**
+         * Gets or sets the boolean Property specifying whether this model should be highlighted or not.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
         highlight: createPropertyDescriptor('highlight'),
+
+        /**
+         * Gets or sets the Cartesian4 Property specifying the highlight color of this model.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default Cartesian4(1.0,0.0,1.0,1.0)
+         */
         highlightColor: createPropertyDescriptor('highlightColor'),
+
+        /**
+         * Gets or sets the float Property specifying the size of the highlight of this model.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         * @default 0.002
+         */
         highlightSize: createPropertyDescriptor('highlightSize')
     });
 
