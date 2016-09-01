@@ -18,6 +18,7 @@ defineSuite([
         'Scene/CameraFlightPath',
         'Scene/ImageryLayerCollection',
         'Scene/SceneMode',
+        'Scene/ShadowMode',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
         'Specs/MockDataSource',
@@ -52,6 +53,7 @@ defineSuite([
         CameraFlightPath,
         ImageryLayerCollection,
         SceneMode,
+        ShadowMode,
         createViewer,
         DomEventSimulator,
         MockDataSource,
@@ -363,9 +365,9 @@ defineSuite([
 
     it('can set terrain shadows', function() {
         viewer = createViewer(container, {
-            terrainShadows : true
+            terrainShadows : ShadowMode.ENABLED
         });
-        expect(viewer.terrainShadows).toBe(true);
+        expect(viewer.terrainShadows).toBe(ShadowMode.ENABLED);
     });
 
     it('can set terrainProvider', function() {

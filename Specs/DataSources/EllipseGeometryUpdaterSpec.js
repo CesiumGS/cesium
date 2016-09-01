@@ -18,7 +18,9 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection',
+        'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
         'Specs/createScene'
@@ -41,7 +43,9 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        GroundPrimitive,
         PrimitiveCollection,
+        ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
         createScene) {
@@ -49,10 +53,12 @@ defineSuite([
 
     var scene;
     var time;
+    var groundPrimitiveSupported;
 
     beforeAll(function() {
         scene = createScene();
         time = JulianDate.now();
+        groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
     });
 
     afterAll(function() {
@@ -100,6 +106,7 @@ defineSuite([
         expect(updater.isDynamic).toBe(false);
         expect(updater.isOutlineVisible(time)).toBe(false);
         expect(updater.isFilled(time)).toBe(false);
+        expect(updater.shadowsProperty).toBe(undefined);
         updater.destroy();
         expect(updater.isDestroyed()).toBe(true);
     });
@@ -158,6 +165,7 @@ defineSuite([
         expect(updater.outlineColorProperty).toBe(undefined);
         expect(updater.outlineWidth).toBe(1.0);
         expect(updater.isDynamic).toBe(false);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
     });
 
     it('Ellipse material is correctly exposed.', function() {
@@ -432,8 +440,13 @@ defineSuite([
 
         var updater = new EllipseGeometryUpdater(entity, scene);
 
-        expect(updater.onTerrain).toBe(true);
-        expect(updater.outlineEnabled).toBe(false);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+            expect(updater.outlineEnabled).toBe(false);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+            expect(updater.outlineEnabled).toBe(true);
+        }
     });
 
     it('Checks that an entity with height isn\'t on terrain', function() {
@@ -569,8 +582,14 @@ defineSuite([
         expect(groundPrimitives.length).toBe(0);
 
         dynamicUpdater.update(time);
-        expect(primitives.length).toBe(0);
-        expect(groundPrimitives.length).toBe(1);
+
+        if (groundPrimitiveSupported) {
+            expect(primitives.length).toBe(0);
+            expect(groundPrimitives.length).toBe(1);
+        } else {
+            expect(primitives.length).toBe(2);
+            expect(groundPrimitives.length).toBe(0);
+        }
 
         dynamicUpdater.destroy();
         updater.destroy();
@@ -684,7 +703,11 @@ defineSuite([
         var entity = createBasicEllipseWithoutHeight();
         entity.ellipse.fill = true;
         var updater = new EllipseGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('fill is false sets onTerrain to false', function() {
@@ -715,7 +738,11 @@ defineSuite([
         entity.ellipse.fill = true;
         entity.ellipse.material = new ColorMaterialProperty(Color.WHITE);
         var updater = new EllipseGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('non-color material sets onTerrain to false', function() {

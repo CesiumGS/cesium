@@ -19,6 +19,7 @@ define([
         '../../Scene/Moon',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
+        '../../Scene/ShadowMode',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
         '../../Scene/Sun',
@@ -43,6 +44,7 @@ define([
         Moon,
         Scene,
         SceneMode,
+        ShadowMode,
         SkyAtmosphere,
         SkyBox,
         Sun,
@@ -162,7 +164,7 @@ define([
      *        to the bottom of the widget itself.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
-     * @param {Boolean} [options.terrainShadows=false] Determines if the terrain casts shadows from the sun.
+     * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -285,7 +287,15 @@ define([
             }
             if (globe !== false) {
                 scene.globe = globe;
-                scene.globe.castShadows = defaultValue(options.terrainShadows, false);
+                // If the passed in value is a boolean, convert to the ShadowMode enum.
+                var terrainShadows = options.terrainShadows;
+                if (terrainShadows === true) {
+                    scene.globe.shadows = ShadowMode.ENABLED;
+                } else if (terrainShadows === false) {
+                    scene.globe.shadows = ShadowMode.RECEIVE_ONLY;
+                } else {
+                    scene.globe.shadows = defaultValue(terrainShadows, ShadowMode.RECEIVE_ONLY);
+                }
             }
 
             var skyBox = options.skyBox;

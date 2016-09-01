@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
+        '../Scene/GroundPrimitive',
         './BillboardVisualizer',
         './BoundingSphereState',
         './BoxGeometryUpdater',
@@ -33,6 +34,7 @@ define([
         destroyObject,
         DeveloperError,
         EventHelper,
+        GroundPrimitive,
         BillboardVisualizer,
         BoundingSphereState,
         BoxGeometryUpdater,
@@ -77,6 +79,8 @@ define([
             throw new DeveloperError('dataSourceCollection is required.');
         }
         //>>includeEnd('debug');
+        
+        GroundPrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -231,6 +235,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        if (!GroundPrimitive._initialized) {
+            this._ready = false;
+            return false;
+        }
+        
         var result = true;
 
         var i;
@@ -291,6 +300,10 @@ define([
             throw new DeveloperError('result is required.');
         }
         //>>includeEnd('debug');
+
+        if (!this._ready) {
+            return BoundingSphereState.PENDING;
+        }
 
         var i;
         var length;

@@ -69,7 +69,7 @@ define([
 value: searchText,\
 valueUpdate: "afterkeydown",\
 disable: isSearchInProgress,\
-css: { "cesium-geocoder-input-wide" : searchText.length > 0 }');
+css: { "cesium-geocoder-input-wide" : keepExpanded || searchText.length > 0 }');
         form.appendChild(textBox);
 
         var searchButton = document.createElement('span');
