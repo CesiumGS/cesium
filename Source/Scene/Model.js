@@ -1782,6 +1782,22 @@ define([
         return shader;
     }
 
+    function createHighlightVertexShaderSource(vertexShaderSource) {
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
+        var highlightMain = 'uniform float u_highlightSize;\n' +
+            'void main() \n' +
+            '{ \n' +
+            '  czm_old_main(); \n' +
+            '  vec3 n = normalize(v_normal);\n' +
+            '  n.x *= u_projectionMatrix[0][0];\n' +
+            '  n.y *= u_projectionMatrix[1][1];\n' +
+            '  vec4 clip = gl_Position;\n' +
+            '  clip.xy += n.xy * clip.w * u_highlightSize;\n' +
+            '  gl_Position = clip;\n' +
+            '}';
+        return renamedVS + '\n' + highlightMain;
+    }
+
     function createProgram(id, model, context) {
         var programs = model.gltf.programs;
         var shaders = model._loadResources.shaders;
@@ -1833,29 +1849,7 @@ define([
             });
         }
 
-        // TODO:  This is just the shader for the plane.  Need to be more generic.
-
-        var hilightVS = "precision highp float;\n" +
-                        "attribute vec3 a_position;\n" +
-                        "attribute vec3 a_normal;\n" +
-                        "varying vec3 v_normal;\n" +
-                        "uniform mat3 u_normalMatrix;\n" +
-                        "uniform mat4 u_modelViewMatrix;\n" +
-                        "uniform mat4 u_projectionMatrix;\n" +
-                        "uniform float u_highlightSize;\n" +
-                        "attribute vec2 a_texcoord0;\n" +
-                        "varying vec2 v_texcoord0;\n" +
-                        "void main(void) {\n" +
-                        "  vec4 pos = u_modelViewMatrix * vec4(a_position,1.0);\n" +
-                        "  v_normal = u_normalMatrix * a_normal;\n" +
-                        "  v_texcoord0 = a_texcoord0;\n" +
-                        "  vec4 clip = u_projectionMatrix * pos;\n" +
-                        "  vec3 n = normalize(v_normal);\n" +
-                        "  n.x *= u_projectionMatrix[0][0];\n" +
-                        "  n.y *= u_projectionMatrix[1][1];\n" +
-                        "  clip.xy += n.xy * clip.w * u_highlightSize;\n" +
-                        "  gl_Position = clip;\n" +
-                        "}\n";
+        var hilightVS = createHighlightVertexShaderSource(vs);
 
         var hilightFS = 'uniform vec4 u_highlightColor;\n' +
                         'void main() \n' +
