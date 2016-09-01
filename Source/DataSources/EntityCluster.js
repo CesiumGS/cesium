@@ -579,6 +579,7 @@ define([
 
         var label = this._labelCollection.get(index);
         label.show = false;
+        label.id = undefined;
 
         this._unusedLabelIndices.push(index);
     };
@@ -620,7 +621,9 @@ define([
         entity._billboardIndex = undefined;
 
         var billboard = this._billboardCollection.get(index);
+        billboard.id = undefined;
         billboard.show = false;
+        billboard.image = undefined;
 
         this._unusedBillboardIndices.push(index);
     };
@@ -656,11 +659,12 @@ define([
             return;
         }
 
-        var index = entity._billboardIndex;
+        var index = entity._pointIndex;
         entity._pointIndex = undefined;
 
         var point = this._pointCollection.get(index);
         point.show = false;
+        point.id = undefined;
 
         this._unusedPointIndices.push(index);
     };
@@ -747,7 +751,10 @@ define([
         this._clusterBillboardCollection = this._clusterBillboardCollection && this._clusterBillboardCollection.destroy();
         this._clusterPointCollection = this._clusterPointCollection && this._clusterPointCollection.destroy();
 
-        this._removeEventListener();
+        if (defined(this._removeEventListener)) {
+            this._removeEventListener();
+            this._removeEventListener = undefined;
+        }
 
         this._labelCollection = undefined;
         this._billboardCollection = undefined;
