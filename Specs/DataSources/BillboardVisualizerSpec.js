@@ -53,7 +53,6 @@ defineSuite([
     });
 
     afterAll(function() {
-        entityCluster.destroy();
         scene.destroyForSpecs();
     });
 

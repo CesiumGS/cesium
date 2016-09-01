@@ -124,8 +124,8 @@ define([
 
         x -= pixelRange;
         y -= pixelRange;
-        width += pixelRange * 0.5;
-        height += pixelRange * 0.5;
+        width += pixelRange * 2.0;
+        height += pixelRange * 2.0;
 
         return new BoundingRectangle(x, y, width, height);
     }
@@ -333,7 +333,7 @@ define([
 
             var index = kdbush(points, getX, getY, 64, Int32Array);
 
-            if (currentHeight <= previousHeight) {
+            if (currentHeight < previousHeight) {
                 length = clusters.length;
                 for (i = 0; i < length; ++i) {
                     var cluster = clusters[i];
