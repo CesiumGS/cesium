@@ -19,6 +19,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/GroundPrimitive',
         'Scene/PrimitiveCollection',
         'Scene/ShadowMode',
         'Specs/createDynamicGeometryBoundingSphereSpecs',
@@ -44,6 +45,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        GroundPrimitive,
         PrimitiveCollection,
         ShadowMode,
         createDynamicGeometryBoundingSphereSpecs,
@@ -53,10 +55,12 @@ defineSuite([
 
     var scene;
     var time;
+    var groundPrimitiveSupported;
 
     beforeAll(function() {
         scene = createScene();
         time = JulianDate.now();
+        groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
     });
 
     afterAll(function() {
@@ -408,8 +412,13 @@ defineSuite([
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
-        expect(updater.onTerrain).toBe(true);
-        expect(updater.outlineEnabled).toBe(false);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+            expect(updater.outlineEnabled).toBe(false);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+            expect(updater.outlineEnabled).toBe(true);
+        }
     });
 
     it('Checks that an entity with height isn\'t on terrain', function() {
@@ -458,7 +467,11 @@ defineSuite([
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('createFillGeometryInstance obeys Entity.show is false.', function() {
@@ -484,11 +497,11 @@ defineSuite([
     it('dynamic updater sets properties', function() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
-                                                                                                       0, 0,
-                                                                                                       1, 0,
-                                                                                                       1, 1,
-                                                                                                       0, 1
-                                                                                                   ])));
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ])));
         polygon.show = createDynamicProperty(true);
         polygon.height = createDynamicProperty(3);
         polygon.extrudedHeight = createDynamicProperty(2);
@@ -556,11 +569,11 @@ defineSuite([
     it('dynamic updater on terrain', function() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
-                                                                                                       0, 0,
-                                                                                                       1, 0,
-                                                                                                       1, 1,
-                                                                                                       0, 1
-                                                                                                   ])));
+            0, 0,
+            1, 0,
+            1, 1,
+            0, 1
+        ])));
         polygon.show = createDynamicProperty(true);
         polygon.outline = createDynamicProperty(true);
         polygon.fill = createDynamicProperty(true);
@@ -579,8 +592,14 @@ defineSuite([
         expect(groundPrimitives.length).toBe(0);
 
         dynamicUpdater.update(time);
-        expect(primitives.length).toBe(0);
-        expect(groundPrimitives.length).toBe(1);
+
+        if (groundPrimitiveSupported) {
+            expect(primitives.length).toBe(0);
+            expect(groundPrimitives.length).toBe(1);
+        } else {
+            expect(primitives.length).toBe(2);
+            expect(groundPrimitives.length).toBe(0);
+        }
 
         dynamicUpdater.destroy();
         updater.destroy();
@@ -692,7 +711,11 @@ defineSuite([
         var entity = createBasicPolygonWithoutHeight();
         entity.polygon.fill = true;
         var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('fill is false sets onTerrain to false', function() {
@@ -731,7 +754,11 @@ defineSuite([
         entity.polygon.fill = true;
         entity.polygon.material = new ColorMaterialProperty(Color.WHITE);
         var updater = new PolygonGeometryUpdater(entity, scene);
-        expect(updater.onTerrain).toBe(true);
+        if (groundPrimitiveSupported) {
+            expect(updater.onTerrain).toBe(true);
+        } else {
+            expect(updater.onTerrain).toBe(false);
+        }
     });
 
     it('non-color material sets onTerrain to false', function() {
