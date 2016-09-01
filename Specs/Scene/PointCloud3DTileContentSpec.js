@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/ComponentDatatype',
         'Core/HeadingPitchRange',
+        'Core/Transforms',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         Color,
         ComponentDatatype,
         HeadingPitchRange,
+        Transforms,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -32,6 +34,13 @@ defineSuite([
     var pointCloudWGS84Url = './Data/Cesium3DTiles/PointCloud/PointCloudWGS84';
     var pointCloudBatchedUrl = './Data/Cesium3DTiles/PointCloud/PointCloudBatched';
     var pointCloudWithPerPointPropertiesUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithPerPointProperties';
+    var pointCloudWithTransformUrl = './Data/Cesium3DTiles/PointCloud/PointCloudWithTransform';
+
+    function setCamera(longitude, latitude) {
+        // Point the camera to the center of the tile
+        var center = Cartesian3.fromRadians(longitude, latitude, 5.0);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
+    }
 
     beforeAll(function() {
         // Point tiles use RTC, which for now requires scene3DOnly to be true
@@ -40,14 +49,14 @@ defineSuite([
         });
 
         scene.frameState.passes.render = true;
-
-        // Point the camera to the center of the tile
-        var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 5.0);
-        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 5.0));
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        setCamera(centerLongitude, centerLatitude);
     });
 
     afterEach(function() {
@@ -204,6 +213,25 @@ defineSuite([
 
     it('renders point cloud with per-point properties', function() {
         return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(expectRenderPointCloud);
+    });
+
+    it('renders point cloud with tile transform', function() {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithTransformUrl).then(function(tileset) {
+            expectRenderPointCloud(tileset);
+
+            var newLongitude = -1.31962;
+            var newLatitude = 0.698874;
+            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 5.0);
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+
+            // Update tile transform
+            tileset._root.transform = newTransform;
+            scene.renderForSpecs();
+
+            // Move the camera to the new location
+            setCamera(newLongitude, newLatitude);
+            expectRenderPointCloud(tileset);
+        });
     });
 
     it('renders with debug color', function() {
