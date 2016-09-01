@@ -85,6 +85,8 @@ defineSuite([
 
     beforeEach(function() {
         scene.morphTo3D(0);
+        scene.frameState.passes.render = true;
+        scene.frameState.passes.pick = false;
 
         rectangle1 = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
         rectangle2 = Rectangle.fromDegrees(70.0, 20.0, 80.0, 30.0);
