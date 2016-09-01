@@ -129,7 +129,9 @@ Sandcastle.addToolbarButton('Toggle Highlight', function() {
 });
 
 Sandcastle.addToolbarButton('Change Highlight Color', function() {
-    entity.model.highlightColor = new Cesium.ConstantProperty(new Cesium.Cartesian4(Math.random(), Math.random(), Math.random(), 1.0));
+    entity.model.highlightColor = new Cesium.ConstantProperty(Cesium.Color.fromRandom({
+          alpha : 1.0
+    }));
 });
 
 Cesium.knockout.getObservable(viewModel, "highlightSize").subscribe(

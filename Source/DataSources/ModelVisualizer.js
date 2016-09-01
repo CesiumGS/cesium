@@ -6,7 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/Cartesian4',
+        '../Core/Color',
         '../Scene/HeightReference',
         '../Scene/Model',
         '../Scene/ModelAnimationLoop',
@@ -20,7 +20,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
-        Cartesian4,
+        Color,
         HeightReference,
         Model,
         ModelAnimationLoop,
@@ -34,7 +34,7 @@ define([
     var defaultIncrementallyLoadTextures = true;
     var defaultShadows = ShadowMode.ENABLED;
     var defaultHeightReference = HeightReference.NONE;
-    var defaultHighlightColor = new Cartesian4(1.0, 0.0, 0.0, 1.0);
+    var defaultHighlightColor = new Color(1.0, 0.0, 0.0, 1.0);
     var defaultHighlightSize = 0.002;
     var defaultHighlight = false;
 

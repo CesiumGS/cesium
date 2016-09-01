@@ -52,7 +52,7 @@ define([
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.highlight=false] Whether to highlight the model using an outline
-     * @param {Property} [options.highlightColor=Cartesian4(1.0, 0.0, 0.0, 1.0)] The highlight color for the outline.
+     * @param {Property} [options.highlightColor=Color(1.0, 0.0, 0.0, 1.0)] The highlight color for the outline.
      * @param {Property} [options.highlightSize=0.002] The highlight color for the outline.
      *
      * @see {@link http://cesiumjs.org/2014/03/03/Cesium-3D-Models-Tutorial/|3D Models Tutorial}
@@ -217,10 +217,10 @@ define([
         highlight: createPropertyDescriptor('highlight'),
 
         /**
-         * Gets or sets the Cartesian4 Property specifying the highlight color of this model.
+         * Gets or sets the Color Property specifying the highlight color of this model.
          * @memberof ModelGraphics.prototype
          * @type {Property}
-         * @default Cartesian4(1.0,0.0,1.0,1.0)
+         * @default Color(1.0,0.0,1.0,1.0)
          */
         highlightColor: createPropertyDescriptor('highlightColor'),
 

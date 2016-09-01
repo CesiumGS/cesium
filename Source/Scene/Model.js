@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/clone',
         '../Core/combine',
         '../Core/ComponentDatatype',
@@ -65,6 +66,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Color,
         clone,
         combine,
         ComponentDatatype,
@@ -413,9 +415,9 @@ define([
          *
          * @type {Cartesian4}
          *
-         * @default new Cartesian4(1.0, 0.0, 0.0, 1.0)
+         * @default Color(1.0, 0.0, 0.0, 1.0)
          */
-        this.highlightColor = defaultValue(options.highlightColor, new Cartesian4(1.0, 0.0, 0.0, 1.0));
+        this.highlightColor = defaultValue(options.highlightColor, new Color(1.0, 0.0, 0.0, 1.0));
 
         /**
          * The size of the highlight
