@@ -1782,15 +1782,15 @@ define([
         return shader;
     }
 
-    function createHighlightVertexShaderSource(vertexShaderSource) {
+    function createHighlightVertexShaderSource(vertexShaderSource, projectionMatrixName) {
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
         var highlightMain = 'uniform float u_highlightSize;\n' +
             'void main() \n' +
             '{ \n' +
             '  czm_old_main(); \n' +
             '  vec3 n = normalize(v_normal);\n' +
-            '  n.x *= u_projectionMatrix[0][0];\n' +
-            '  n.y *= u_projectionMatrix[1][1];\n' +
+            '  n.x *= ' + projectionMatrixName + '[0][0];\n' +
+            '  n.y *= ' + projectionMatrixName + '[1][1];\n' +
             '  vec4 clip = gl_Position;\n' +
             '  clip.xy += n.xy * clip.w * u_highlightSize;\n' +
             '  gl_Position = clip;\n' +
@@ -1849,7 +1849,33 @@ define([
             });
         }
 
-        var hilightVS = createHighlightVertexShaderSource(vs);
+        // Get the projection matrix name.  There is probably a better way to do this.
+        var projectionMatrixUniformName = null;
+        for (var techniqueName in model.gltf.techniques) {
+            var projectionMatrixParameterName = "";
+            var technique = model.gltf.techniques[techniqueName];
+            for (var parameterName in technique.parameters) {
+                var parameter = technique.parameters[parameterName];
+                if (parameter.semantic === "PROJECTION") {
+                    projectionMatrixParameterName = parameterName;
+                    break;
+                }
+            }
+
+            for (var uniformName in technique.uniforms) {
+                var paramName = technique.uniforms[uniformName];
+                if (paramName == projectionMatrixParameterName) {
+                    projectionMatrixUniformName = uniformName;
+                    break;
+                }
+            }
+
+            if (projectionMatrixUniformName) {
+                break;
+            }
+        }
+
+        var hilightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName);
 
         var hilightFS = 'uniform vec4 u_highlightColor;\n' +
                         'void main() \n' +
