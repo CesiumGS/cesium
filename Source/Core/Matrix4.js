@@ -99,6 +99,8 @@ define([
      * @param {Matrix4} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     Matrix4.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -129,6 +131,8 @@ define([
         array[startingIndex++] = value[13];
         array[startingIndex++] = value[14];
         array[startingIndex] = value[15];
+
+        return array;
     };
 
     /**
@@ -652,7 +656,7 @@ define([
       * @param {Matrix4} result The object in which the result will be stored.
       * @returns {Matrix4} The modified result parameter.
       *
-      * @exception {DeveloperError} fovY must be in [0, PI).
+      * @exception {DeveloperError} fovY must be in (0, PI].
       * @exception {DeveloperError} aspectRatio must be greater than zero.
       * @exception {DeveloperError} near must be greater than zero.
       * @exception {DeveloperError} far must be greater than zero.
@@ -660,7 +664,7 @@ define([
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
         if (fovY <= 0.0 || fovY > Math.PI) {
-            throw new DeveloperError('fovY must be in [0, PI).');
+            throw new DeveloperError('fovY must be in (0, PI].');
         }
         if (aspectRatio <= 0.0) {
             throw new DeveloperError('aspectRatio must be greater than zero.');
@@ -1795,7 +1799,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromUniformScale(scale), m);
      * Cesium.Matrix4.multiplyByUniformScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromUniformScale
      * @see Matrix4.multiplyByScale
      */
@@ -1834,7 +1838,7 @@ define([
      * @example
      * // Instead of Cesium.Matrix4.multiply(m, Cesium.Matrix4.fromScale(scale), m);
      * Cesium.Matrix4.multiplyByScale(m, scale, m);
-     * 
+     *
      * @see Matrix4.fromScale
      * @see Matrix4.multiplyByUniformScale
      */

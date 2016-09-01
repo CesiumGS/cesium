@@ -3,12 +3,14 @@ defineSuite([
         'DataSources/PointGraphics',
         'Core/Color',
         'Core/NearFarScalar',
-        'DataSources/ConstantProperty'
+        'DataSources/ConstantProperty',
+        'Scene/HeightReference'
     ], function(
         PointGraphics,
         Color,
         NearFarScalar,
-        ConstantProperty) {
+        ConstantProperty,
+        HeightReference) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -18,7 +20,8 @@ defineSuite([
             outlineColor : Color.BLUE,
             outlineWidth : 2,
             show : false,
-            scaleByDistance : new NearFarScalar(3, 4, 5, 6)
+            scaleByDistance : new NearFarScalar(3, 4, 5, 6),
+            heightReference : HeightReference.RELATIVE_TO_GROUND
         };
 
         var point = new PointGraphics(options);
@@ -28,6 +31,7 @@ defineSuite([
         expect(point.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(point.show).toBeInstanceOf(ConstantProperty);
         expect(point.scaleByDistance).toBeInstanceOf(ConstantProperty);
+        expect(point.heightReference).toBeInstanceOf(ConstantProperty);
 
         expect(point.color.getValue()).toEqual(options.color);
         expect(point.pixelSize.getValue()).toEqual(options.pixelSize);
@@ -35,6 +39,7 @@ defineSuite([
         expect(point.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(point.show.getValue()).toEqual(options.show);
         expect(point.scaleByDistance.getValue()).toEqual(options.scaleByDistance);
+        expect(point.heightReference.getValue()).toEqual(options.heightReference);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -45,6 +50,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
 
         var target = new PointGraphics();
         target.merge(source);
@@ -54,6 +60,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.show).toBe(source.show);
         expect(target.scaleByDistance).toBe(source.scaleByDistance);
+        expect(target.heightReference).toBe(source.heightReference);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -64,12 +71,14 @@ defineSuite([
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
 
         var color = new ConstantProperty(Color.WHITE);
         var pixelSize = new ConstantProperty(1);
         var outlineColor = new ConstantProperty(Color.WHITE);
         var outlineWidth = new ConstantProperty(1);
         var show = new ConstantProperty(true);
+        var heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
 
         var target = new PointGraphics();
         target.color = color;
@@ -78,6 +87,7 @@ defineSuite([
         target.outlineWidth = outlineWidth;
         target.show = show;
         target.scaleByDistance = show;
+        target.heightReference = heightReference;
 
         target.merge(source);
         expect(target.color).toBe(color);
@@ -86,6 +96,7 @@ defineSuite([
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.show).toBe(show);
         expect(target.scaleByDistance).toBe(show);
+        expect(target.heightReference).toBe(heightReference);
     });
 
     it('clone works', function() {
@@ -96,6 +107,7 @@ defineSuite([
         source.outlineWidth = new ConstantProperty(1);
         source.show = new ConstantProperty(true);
         source.scaleByDistance = new ConstantProperty(new NearFarScalar());
+        source.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
 
         var result = source.clone();
         expect(result.color).toBe(source.color);
@@ -104,6 +116,7 @@ defineSuite([
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.show).toBe(source.show);
         expect(result.scaleByDistance).toBe(source.scaleByDistance);
+        expect(result.heightReference).toBe(source.heightReference);
     });
 
     it('merge throws if source undefined', function() {

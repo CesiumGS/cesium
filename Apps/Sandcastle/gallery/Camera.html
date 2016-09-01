@@ -190,6 +190,18 @@ function cameraEvents() {
     });
 }
 
+var removeChanged;
+
+function cameraChanges() {
+    Sandcastle.declare(cameraChanges);
+
+    var i = 0;
+    removeChanged = viewer.camera.changed.addEventListener(function(percentage) {
+        ++i;
+        console.log('camera changed: ' + i + ', ' + percentage);
+    });
+}
+
 function flyInACity() {
     Sandcastle.declare(flyInACity);
     
@@ -261,7 +273,7 @@ Sandcastle.addToolbarMenu([{
         setHeadingPitchRoll();
         Sandcastle.highlight(setHeadingPitchRoll);
     }
-},{
+}, {
     text : 'View in ICRF',
     onselect : function() {
         viewInICRF();
@@ -272,6 +284,12 @@ Sandcastle.addToolbarMenu([{
     onselect : function() {
         cameraEvents();
         Sandcastle.highlight(cameraEvents);
+    }
+}, {
+    text : 'Camera changed event',
+    onselect : function() {
+        cameraChanges();
+        Sandcastle.highlight(cameraChanges);
     }
 }]);
 
@@ -288,6 +306,11 @@ Sandcastle.reset = function() {
         
         removeStart = undefined;
         removeEnd = undefined;
+    }
+
+    if (Cesium.defined(removeChanged)) {
+        removeChanged();
+        removeChanged = undefined;
     }
     
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
