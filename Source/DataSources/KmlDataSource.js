@@ -651,7 +651,6 @@ define([
         var heading = queryNumericValue(node, 'heading', namespaces.kml);
         var color = queryColorValue(node, 'color', namespaces.kml);
 
-
         var iconNode = queryFirstNode(node, 'Icon', namespaces.kml);
         var icon = getIconHref(iconNode, dataSource, sourceUri, uriResolver, false);
         var x = queryNumericValue(iconNode, 'x', namespaces.gx);
@@ -700,19 +699,20 @@ define([
             } else if (hotSpotXUnit === 'insetPixels') {
                 xOffset = (hotSpotX - BILLBOARD_SIZE) * scale;
             } else if (hotSpotXUnit === 'fraction') {
-                xOffset = -BILLBOARD_SIZE * scale * hotSpotX;
+                xOffset = -hotSpotX * BILLBOARD_SIZE * scale;
             }
             xOffset += BILLBOARD_SIZE * 0.5 * scale;
         }
 
         if (defined(hotSpotY)) {
             if (hotSpotYUnit === 'pixels') {
-                yOffset = hotSpotY;
+                yOffset = hotSpotY * scale;
             } else if (hotSpotYUnit === 'insetPixels') {
-                yOffset = -hotSpotY;
+                yOffset = (-hotSpotY + BILLBOARD_SIZE) * scale;
             } else if (hotSpotYUnit === 'fraction') {
-                yOffset = hotSpotY * BILLBOARD_SIZE;
+                yOffset = hotSpotY * BILLBOARD_SIZE * scale;
             }
+
             yOffset -= BILLBOARD_SIZE * 0.5 * scale;
         }
 
@@ -1066,8 +1066,9 @@ define([
             billboard.image = dataSource._pinBuilder.fromColor(Color.YELLOW, 64);
         }
 
+        var scale = 1.0;
         if (defined(billboard.scale)) {
-            var scale = billboard.scale.getValue();
+            scale = billboard.scale.getValue();
             if (scale !== 0) {
                 label.pixelOffset = new Cartesian2((scale * 16) + 1, 0);
             } else {
