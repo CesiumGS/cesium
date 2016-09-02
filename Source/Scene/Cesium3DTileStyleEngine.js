@@ -110,7 +110,7 @@ define([
         }
 
         // PERFORMANCE_IDEA: we can create a slightly faster internal interface by directly
-        // using Cesium3DTileBatchTableResources.  We might also be able to use less memory
+        // using Cesium3DTileBatchTable.  We might also be able to use less memory
         // by using reusing a batchValues array across tiles.
         for (var i = 0; i < length; ++i) {
             var feature = content.getFeature(i);

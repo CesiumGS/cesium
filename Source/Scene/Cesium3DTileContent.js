@@ -21,7 +21,7 @@ define([
      *
      * @see Batched3DModel3DTileContent
      * @see Instanced3DModel3DTileContent
-     * @see Points3DTileContent
+     * @see PointCloud3DTileContent
      * @see Composite3DTileContent
      * @see Tileset3DTileContent
      * @see Empty3DTileContent
@@ -45,12 +45,12 @@ define([
         /**
          * Gets the batch table texture for this tile.
          *
-         * @type {Cesium3DTileBatchTableResources}
+         * @type {Cesium3DTileBatchTable}
          * @readonly
          *
          * @private
          */
-        this.batchTableResources = undefined;
+        this.batchTable = undefined;
 
         /**
          * Gets or sets if any feature's property changed.  Used to

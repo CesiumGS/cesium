@@ -3,6 +3,7 @@ defineSuite([
         'Scene/Instanced3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
+        'Core/Transforms',
         'Scene/Cesium3DTileContentState',
         'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
@@ -11,6 +12,7 @@ defineSuite([
         Instanced3DModel3DTileContent,
         Cartesian3,
         HeadingPitchRange,
+        Transforms,
         Cesium3DTileContentState,
         TileBoundingSphere,
         Cesium3DTilesTester,
@@ -18,11 +20,12 @@ defineSuite([
     'use strict';
 
     var scene;
-    var originLongitude = -1.3197004048940548;
-    var originLatitude = 0.6988585409308616;
+    var centerLongitude = -1.31968;
+    var centerLatitude = 0.698874;
 
     var gltfExternalUrl = './Data/Cesium3DTiles/Instanced/InstancedGltfExternal/';
     var withBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTable/';
+    var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Instanced/InstancedWithBatchTableBinary/';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Instanced/InstancedWithoutBatchTable/';
     var orientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOrientationWithBatchTable/';
     var oct16POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedOct32POrientationWithBatchTable/';
@@ -30,12 +33,20 @@ defineSuite([
     var scaleNonUniformUrl = './Data/Cesium3DTiles/Instanced/InstancedScaleNonUniformWithBatchTable/';
     var quantizedUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedWithBatchTable/';
     var quantizedOct32POrientationUrl = './Data/Cesium3DTiles/Instanced/InstancedQuantizedOct32POrientationWithBatchTable/';
+    var withTransformUrl = './Data/Cesium3DTiles/Instanced/InstancedWithTransform/';
+
+    function setCamera(longitude, latitude) {
+        // One instance is located at the center, point the camera there
+        var center = Cartesian3.fromRadians(longitude, latitude);
+        scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 36.0));
+    }
 
     beforeAll(function() {
         scene = createScene();
-        // One instance is located on the bottom corner, point the camera there
-        var bottomCorner = Cartesian3.fromRadians(originLongitude, originLatitude, 5.0);
-        scene.camera.lookAt(bottomCorner, new HeadingPitchRange(0.0, -1.57, 50.0));
+    });
+
+    beforeEach(function() {
+        setCamera(centerLongitude, centerLatitude);
     });
 
     afterAll(function() {
@@ -92,6 +103,17 @@ defineSuite([
         return Cesium3DTilesTester.rejectsReadyPromiseOnFailedRequest('i3dm');
     });
 
+    var mockTile = {
+        contentBoundingVolume : new TileBoundingSphere(),
+        _header : {
+            content : {
+                boundingVolume : {
+                    sphere : [0.0, 0.0, 0.0, 1.0]
+                }
+            }
+        }
+    };
+
     it('loads with no instances, but does not become ready', function() {
         var arrayBuffer = Cesium3DTilesTester.generateInstancedTileBuffer({
             featuresLength : 0,
@@ -99,11 +121,8 @@ defineSuite([
         });
 
         var tileset = {};
-        var tile = {
-            contentBoundingVolume : new TileBoundingSphere()
-        };
         var url = '';
-        var instancedTile = new Instanced3DModel3DTileContent(tileset, tile, url);
+        var instancedTile = new Instanced3DModel3DTileContent(tileset, mockTile, url);
         instancedTile.initialize(arrayBuffer);
         // Expect the tile to never reach the ready state due to returning early in ModelInstanceCollection
         for (var i = 0; i < 10; ++i) {
@@ -120,6 +139,12 @@ defineSuite([
 
     it('renders with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with batch table binary', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
@@ -162,6 +187,25 @@ defineSuite([
 
     it('renders with feature defined quantized position and Oct32P encoded orientation', function() {
         return Cesium3DTilesTester.loadTileset(scene, quantizedOct32POrientationUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+        });
+    });
+
+    it('renders with tile transform', function() {
+        return Cesium3DTilesTester.loadTileset(scene, withTransformUrl).then(function(tileset) {
+            Cesium3DTilesTester.expectRenderTileset(scene, tileset);
+
+            var newLongitude = -1.31962;
+            var newLatitude = 0.698874;
+            var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude, 15.0);
+            var newTransform = Transforms.headingPitchRollToFixedFrame(newCenter, 0.0, 0.0, 0.0);
+
+            // Update tile transform
+            tileset._root.transform = newTransform;
+            scene.renderForSpecs();
+
+            // Move the camera to the new location
+            setCamera(newLongitude, newLatitude);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
