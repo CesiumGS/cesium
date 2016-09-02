@@ -401,8 +401,10 @@ define([
             }
             //>>includeEnd('debug');
 
-            // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
-            batchTableBinary = new Uint8Array(batchTableBinary);
+            if (defined(batchTableBinary)) {
+                // Copy the batchTableBinary section and let the underlying ArrayBuffer be freed
+                batchTableBinary = new Uint8Array(batchTableBinary);
+            }
             this.batchTable = new Cesium3DTileBatchTable(this, batchLength, batchTableJson, batchTableBinary);
         }
 
