@@ -87,6 +87,12 @@ define([
             get : DeveloperError.throwInstantiationError
         },
 
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof DataSource.prototype
+         * @type {EntityCluster}
+         */
         clustering : {
             get : DeveloperError.throwInstantiationError
         }

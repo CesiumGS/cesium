@@ -465,10 +465,22 @@ define([
         };
     }
 
+    /**
+     * Defines how screen space objects (billboards, points, labels) are clustered.
+     *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
+     * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
+     * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
+     *
+     * @alias EntityCluster
+     * @constructor
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     */
     function EntityCluster(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._scene = options.scene;
         this._enabled = defaultValue(options.enabled, false);
         this._pixelRange = defaultValue(options.pixelRange, 80);
         this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
@@ -507,6 +519,11 @@ define([
     };
 
     defineProperties(EntityCluster.prototype, {
+        /**
+         * Gets or sets whether clustering is enabled.
+         * @memberof EntityCluster.prototype
+         * @type {Boolean}
+         */
         enabled : {
             get : function() {
                 return this._enabled;
@@ -516,6 +533,11 @@ define([
                 this._enabled = value;
             }
         },
+        /**
+         * Gets or sets the pixel range to extend the screen space bounding box.
+         * @memberof EntityCluster.prototype
+         * @type {Number}
+         */
         pixelRange : {
             get : function() {
                 return this._pixelRange;
@@ -525,6 +547,11 @@ define([
                 this._pixelRange = value;
             }
         },
+        /**
+         * Gets or sets the minimum number of screen space objects that can be clustered.
+         * @memberof EntityCluster.prototype
+         * @type {Number}
+         */
         minimumClusterSize : {
             get : function() {
                 return this._minimumClusterSize;
@@ -534,6 +561,11 @@ define([
                 this._minimumClusterSize = value;
             }
         },
+        /**
+         * Gets the event that will be raised when a new cluster will be displayed. The signature of the event listener is {@link EntityCluster~newClusterCallback}.
+         * @memberof EntityCluster.prototype
+         * @type {Event}
+         */
         clusterEvent : {
             get : function() {
                 return this._clusterEvent;
@@ -541,6 +573,13 @@ define([
         }
     });
 
+    /**
+     * Returns a new {@link Label}.
+     * @param {Entity} entity The entity that will use the returned {@link Label} for visualization.
+     * @returns {Label} The label that will be used to visualize an entity.
+     *
+     * @private
+     */
     EntityCluster.prototype.getLabel = function(entity) {
         var labelCollection = this._labelCollection;
         if (defined(labelCollection) && defined(entity._labelIndex)) {
@@ -569,6 +608,12 @@ define([
         return label;
     };
 
+    /**
+     * Removes the {@link Label} associated with an entity so it can be reused by another entity.
+     * @param {Entity} entity The entity that will uses the returned {@link Label} for visualization.
+     *
+     * @private
+     */
     EntityCluster.prototype.removeLabel = function(entity) {
         if (!defined(this._labelCollection) || !defined(entity._labelIndex)) {
             return;
@@ -584,6 +629,13 @@ define([
         this._unusedLabelIndices.push(index);
     };
 
+    /**
+     * Returns a new {@link Billboard}.
+     * @param {Entity} entity The entity that will use the returned {@link Billboard} for visualization.
+     * @returns {Billboard} The label that will be used to visualize an entity.
+     *
+     * @private
+     */
     EntityCluster.prototype.getBillboard = function(entity) {
         var billboardCollection = this._billboardCollection;
         if (defined(billboardCollection) && defined(entity._billboardIndex)) {
@@ -612,6 +664,12 @@ define([
         return billboard;
     };
 
+    /**
+     * Removes the {@link Billboard} associated with an entity so it can be reused by another entity.
+     * @param {Entity} entity The entity that will uses the returned {@link Billboard} for visualization.
+     *
+     * @private
+     */
     EntityCluster.prototype.removeBillboard = function(entity) {
         if (!defined(this._billboardCollection) || !defined(entity._billboardIndex)) {
             return;
@@ -628,6 +686,13 @@ define([
         this._unusedBillboardIndices.push(index);
     };
 
+    /**
+     * Returns a new {@link Point}.
+     * @param {Entity} entity The entity that will use the returned {@link Point} for visualization.
+     * @returns {Point} The label that will be used to visualize an entity.
+     *
+     * @private
+     */
     EntityCluster.prototype.getPoint = function(entity) {
         var pointCollection = this._pointCollection;
         if (defined(pointCollection) && defined(entity._pointIndex)) {
@@ -654,6 +719,12 @@ define([
         return point;
     };
 
+    /**
+     * Removes the {@link Point} associated with an entity so it can be reused by another entity.
+     * @param {Entity} entity The entity that will uses the returned {@link Point} for visualization.
+     *
+     * @private
+     */
     EntityCluster.prototype.removePoint = function(entity) {
         if (!defined(this._pointCollection) || !defined(entity._pointIndex)) {
             return;
@@ -705,6 +776,11 @@ define([
         disableCollectionClustering(entityCluster._pointCollection);
     }
 
+    /**
+     * Gets the draw commands for the clustered billboards/points/labels if enabled, otherwise,
+     * queues the draw commands for billboards/points/labels created for entities.
+     * @private
+     */
     EntityCluster.prototype.update = function(frameState) {
         if (this._enabledDirty) {
             this._enabledDirty = false;
@@ -738,10 +814,16 @@ define([
         }
     };
 
-    EntityCluster.prototype.isDestroyed = function() {
-        return false;
-    };
-
+    /**
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Unlike other objects that use WebGL resources, this object can be reused. For example, if a data source is removed
+     * from a data source collection and added to another.
+     * </p>
+     *
+     * @returns {undefined}
+     */
     EntityCluster.prototype.destroy = function() {
         this._labelCollection = this._labelCollection && this._labelCollection.destroy();
         this._billboardCollection = this._billboardCollection && this._billboardCollection.destroy();
@@ -777,6 +859,21 @@ define([
 
         return undefined;
     };
+
+    /**
+     * A event listener function used to style clusters.
+     * @callback EntityCluster~newClusterCallback
+     *
+     * @param {Entity[]} clusteredEntities An array of the entities contained in the cluster.
+     * @param {Entity} entity The entity that will be display for the cluster.
+     *
+     * @example
+     * dataSource.clustering.clusterEvent.addEventListener(function(entities, entity) {
+     *     entity.label = {
+     *         text : '' + entities.length
+     *     };
+     * });
+     */
 
     return EntityCluster;
 });

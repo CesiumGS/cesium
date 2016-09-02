@@ -2370,6 +2370,12 @@ define([
             }
         },
 
+        /**
+         * Gets or sets the clustering options for this data source. This object can be shared between multiple data sources.
+         *
+         * @memberof KmlDataSource.prototype
+         * @type {EntityCluster}
+         */
         clustering : {
             get : function() {
                 return this._entityCluster;
