@@ -339,4 +339,46 @@ defineSuite([
         expect(cluster._clusterLabelCollection.length).toEqual(1);
         expect(cluster._clusterLabelCollection.get(0).position).toEqual(position);
     });
+
+    it('custom cluster styling', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        cluster.clusterEvent.addEventListener(function(cluster, entity) {
+            entity.billboard = {
+                image : createBillboardImage()
+            };
+            entity.label = {
+                text : 'cluster'
+            };
+        });
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterBillboardCollection).not.toBeDefined();
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+        expect(cluster._clusterLabelCollection.get(0).text).toEqual('cluster');
+
+        expect(cluster._clusterBillboardCollection).toBeDefined();
+        expect(cluster._clusterBillboardCollection.length).toEqual(1);
+    });
 });

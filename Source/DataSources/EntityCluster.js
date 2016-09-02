@@ -136,8 +136,8 @@ define([
 
         var x = coord.x - halfSize - pixelRange * 0.5;
         var y = coord.y - halfSize - pixelRange * 0.5;
-        var width = size + pixelRange;
-        var height = size + pixelRange;
+        var width = size + pixelRange * 2.0;
+        var height = size + pixelRange * 2.0;
 
         return new BoundingRectangle(x, y, width, height);
     }
