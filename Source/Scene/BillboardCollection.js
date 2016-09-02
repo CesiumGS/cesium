@@ -790,7 +790,7 @@ define([
 
         var horizontalOrigin = billboard.horizontalOrigin;
         var verticalOrigin = billboard._verticalOrigin;
-        var show = billboard.show && billboard._clusterRender;
+        var show = billboard.show && billboard.clusterShow;
 
         // If the color alpha is zero, do not show this billboard.  This lets us avoid providing
         // color during the pick pass and also eliminates a discard in the fragment shader.

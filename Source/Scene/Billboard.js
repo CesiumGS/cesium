@@ -825,7 +825,13 @@ define([
             }
         },
 
-        _clusterRender : {
+        /**
+         * Determines whether or not this billboard will be shown or hidden because it was clustered.
+         * @memberof Billboard.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
             get : function() {
                 return this._clusterShow;
             },

@@ -707,7 +707,13 @@ define([
             }
         },
 
-        _clusterRender : {
+        /**
+         * Determines whether or not this label will be shown or hidden because it was clustered.
+         * @memberof Label.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
             get : function() {
                 return this._clusterShow;
             },
@@ -721,7 +727,7 @@ define([
                         if (defined(glyph.billboard)) {
                             // Set all the private values here, because we already clamped to ground
                             //  so we don't want to do it again for every glyph
-                            glyph.billboard._clusterRender = value;
+                            glyph.billboard.clusterShow = value;
                         }
                     }
                 }

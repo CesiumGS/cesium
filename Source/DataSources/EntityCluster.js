@@ -138,12 +138,12 @@ define([
     }
 
     function addNonClusteredItem(item, entityCluster) {
-        item._clusterRender = true;
+        item.clusterShow = true;
 
         if (!defined(item._labelCollection) && defined(item.id._label)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
-            label._clusterRender = true;
+            label.clusterShow = true;
         }
     }
 
@@ -208,7 +208,7 @@ define([
         var length = collection.length;
         for (var i = 0; i < length; ++i) {
             var item = collection.get(i);
-            item._clusterRender = false;
+            item.clusterShow = false;
 
             if (!item.show || !occluder.isPointVisible(item.position)) {
                 continue;
@@ -681,7 +681,7 @@ define([
 
         var length = collection.length;
         for (var i = 0; i < length; ++i) {
-            collection.get(i)._clusterRender = true;
+            collection.get(i).clusterShow = true;
         }
     }
 

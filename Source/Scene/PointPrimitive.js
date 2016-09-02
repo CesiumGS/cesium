@@ -360,7 +360,13 @@ define([
             }
         },
 
-        _clusterRender : {
+        /**
+         * Determines whether or not this point will be shown or hidden because it was clustered.
+         * @memberof PointPrimitive.prototype
+         * @type {Boolean}
+         * @private
+         */
+        clusterShow : {
             get : function() {
                 return this._clusterShow;
             },
