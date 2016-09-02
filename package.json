@@ -8,10 +8,12 @@
     "name": "Analytical Graphics, Inc.",
     "url": "http://www.agi.com"
   },
-  "contributors": [{
-    "name": "Cesium community",
-    "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
-  }],
+  "contributors": [
+    {
+      "name": "Cesium community",
+      "url": "https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTORS.md"
+    }
+  ],
   "keywords": [
     "3D",
     "webgl",
@@ -36,7 +38,7 @@
     "bluebird": "3.4.5",
     "compressible": "2.0.8",
     "compression": "1.6.2",
-    "electron-prebuilt": "1.3.4",
+    "electron-prebuilt": "1.3.5",
     "event-stream": "3.3.4",
     "express": "4.14.0",
     "globby": "6.0.0",
