@@ -829,7 +829,7 @@ define([
         result.height = height;
 
         return result;
-    }
+    };
 
     /**
      * Determines if this label equals another label.  Labels are equal if all their properties

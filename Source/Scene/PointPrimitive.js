@@ -483,7 +483,7 @@ define([
         result.height = height;
 
         return result;
-    }
+    };
 
     /**
      * Determines if this point equals another point.  Points are equal if all their properties

@@ -1212,7 +1212,7 @@ define([
         result.height = height;
 
         return result;
-    }
+    };
 
     /**
      * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
