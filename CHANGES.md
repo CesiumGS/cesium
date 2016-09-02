@@ -1,7 +1,14 @@
 Change Log
 ==========
 
+### 1.26 - 2016-10-03
+
+* Deprecated
+    * The `scene` parameter for creating `BillboardVisualizer`, `LabelVisualizer`, and `PointVisualizer` has been deprecated and will be removed in 1.28. Instead, pass an instance of `EntityCluster`.
+* Added support for clustering `Billboard`, `Label` and `Point` entities. [#4240](https://github.com/AnalyticalGraphicsInc/cesium/pull/4240)
+
 ### 1.25 - 2016-09-01
+
 * Breaking changes
     * The number and order of arguments passed to `KmlDataSource` `unsupportedNodeEvent` listeners have changed to allow better handling of unsupported KML Features.
     * Changed billboards and labels that are clamped to terrain to have the `verticalOrigin` set to `CENTER` by default instead of `BOTTOM`.

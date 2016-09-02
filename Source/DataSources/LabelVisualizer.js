@@ -82,7 +82,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (!entityCluster.minimumClusterSize) {
+        if (!defined(entityCluster.minimumClusterSize)) {
             deprecationWarning('BillboardVisualizer scene constructor parameter', 'The scene is no longer a parameter the BillboardVisualizer. An EntityCluster is required.');
             entityCluster = new EntityCluster({
                 enabled : false
