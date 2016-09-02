@@ -1166,6 +1166,49 @@ define([
     };
 
     /**
+     * Gets a billboard's screen space bounding box centered around screenSpacePosition.
+     * @param {Billboard} billboard The billboard to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    Billboard.getScreenSpaceBoundingBox = function(billboard, screenSpacePosition, result) {
+        var width = billboard.width;
+        var height = billboard.height;
+
+        var scale = billboard.scale;
+        width *= scale;
+        height *= scale;
+
+        var x = screenSpacePosition.x;
+        if (billboard.horizontalOrigin === HorizontalOrigin.RIGHT) {
+            x += width * 0.5;
+        } else if (billboard.horizontalOrigin === HorizontalOrigin.LEFT) {
+            x -= width * 0.5;
+        }
+
+        var y = screenSpacePosition.y;
+        if (billboard.verticalOrigin === VerticalOrigin.TOP) {
+            y -= height;
+        } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
+            y -= height * 0.5;
+        }
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
+    }
+
+    /**
      * Determines if this billboard equals another billboard.  Billboards are equal if all their properties
      * are equal.  Billboards in different collections can be equal.
      *

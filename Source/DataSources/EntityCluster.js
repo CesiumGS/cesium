@@ -15,8 +15,10 @@ define([
     '../Scene/BillboardCollection',
     '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
+    '../Scene/Label',
     '../Scene/LabelCollection',
     '../Scene/LabelStyle',
+    '../Scene/PointPrimitive',
     '../Scene/PointPrimitiveCollection',
     '../Scene/SceneTransforms',
     '../Scene/VerticalOrigin',
@@ -39,8 +41,10 @@ define([
     BillboardCollection,
     HeightReference,
     HorizontalOrigin,
+    Label,
     LabelCollection,
     LabelStyle,
+    PointPrimitive,
     PointPrimitiveCollection,
     SceneTransforms,
     VerticalOrigin,
@@ -48,6 +52,51 @@ define([
     Entity,
     Property) {
     'use strict';
+
+    /**
+     * Defines how screen space objects (billboards, points, labels) are clustered.
+     *
+     * @param {Object} [options] An object with the following properties:
+     * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
+     * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
+     * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
+     *
+     * @alias EntityCluster
+     * @constructor
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
+     */
+    function EntityCluster(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        this._enabled = defaultValue(options.enabled, false);
+        this._pixelRange = defaultValue(options.pixelRange, 80);
+        this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
+
+        this._labelCollection = undefined;
+        this._billboardCollection = undefined;
+        this._pointCollection = undefined;
+
+        this._clusterBillboardCollection = undefined;
+        this._clusterLabelCollection = undefined;
+        this._clusterPointCollection = undefined;
+
+        this._unusedLabelIndices = [];
+        this._unusedBillboardIndices = [];
+        this._unusedPointIndices = [];
+
+        this._previousClusters = [];
+        this._previousHeight = undefined;
+
+        this._enabledDirty = false;
+        this._pixelRangeDirty = false;
+        this._minimumClusterSizeDirty = false;
+
+        this._cluster = undefined;
+        this._removeEventListener = undefined;
+
+        this._clusterEvent = new Event();
+    }
 
     function getX(point) {
         return point.coord.x;
@@ -57,109 +106,35 @@ define([
         return point.coord.y;
     }
 
-    function getLabelBoundingBox(label, coord, pixelRange) {
-        var width = 0;
-        var height = Number.NEGATIVE_INFINITY;
-
-        var glyphs = label._glyphs;
-        var length = glyphs.length;
-        for (var i = 0; i < length; ++i) {
-            var glyph = glyphs[i];
-            var billboard = glyph.billboard;
-            if (!defined(billboard)) {
-                continue;
-            }
-
-            width += billboard.width;
-            height = Math.max(height, billboard.height);
-        }
-
-        var scale = label.scale;
-        width *= scale;
-        height *= scale;
-
-        var x = coord.x;
-        if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
-            x -= width;
-        } else if (label.horizontalOrigin === HorizontalOrigin.CENTER) {
-            x -= width * 0.5;
-        }
-
-        var y = coord.y;
-        if (label.verticalOrigin === VerticalOrigin.TOP) {
-            y -= height;
-        } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
-            y -= height * 0.5;
-        }
-
-        x -= pixelRange;
-        y -= pixelRange;
-        width += pixelRange * 2.0;
-        height += pixelRange * 2.0;
-
-        return new BoundingRectangle(x, y, width, height);
+    function expandBoundingBox(bbox, pixelRange) {
+        bbox.x -= pixelRange;
+        bbox.y -= pixelRange;
+        bbox.width += pixelRange * 2.0;
+        bbox.height += pixelRange * 2.0;
     }
 
-    function getBillboardBoundingBox(billboard, coord, pixelRange) {
-        var width = billboard.width;
-        var height = billboard.height;
+    var labelBoundingBoxScratch = new BoundingRectangle();
 
-        var scale = billboard.scale;
-        width *= scale;
-        height *= scale;
-
-        var x = coord.x;
-        if (billboard.horizontalOrigin === HorizontalOrigin.RIGHT) {
-            x += width * 0.5;
-        } else if (billboard.horizontalOrigin === HorizontalOrigin.LEFT) {
-            x -= width * 0.5;
-        }
-
-        var y = coord.y;
-        if (billboard.verticalOrigin === VerticalOrigin.TOP) {
-            y -= height;
-        } else if (billboard.verticalOrigin === VerticalOrigin.CENTER) {
-            y -= height * 0.5;
-        }
-
-        x -= pixelRange;
-        y -= pixelRange;
-        width += pixelRange * 2.0;
-        height += pixelRange * 2.0;
-
-        return new BoundingRectangle(x, y, width, height);
-    }
-
-    function getPointBoundingBox(point, coord, pixelRange) {
-        var size = point.pixelSize;
-        var halfSize = size * 0.5;
-
-        var x = coord.x - halfSize - pixelRange * 0.5;
-        var y = coord.y - halfSize - pixelRange * 0.5;
-        var width = size + pixelRange * 2.0;
-        var height = size + pixelRange * 2.0;
-
-        return new BoundingRectangle(x, y, width, height);
-    }
-
-    function getBoundingBox(item, coord, pixelRange, entityCluster) {
-        var bbox;
-
+    function getBoundingBox(item, coord, pixelRange, entityCluster, result) {
         if (defined(item._labelCollection)) {
-            bbox = getLabelBoundingBox(item, coord, pixelRange);
+            result = Label.getScreenSpaceBoundingBox(item, coord, result);
         } else if (defined(item._billboardCollection)) {
-            bbox = getBillboardBoundingBox(item, coord, pixelRange);
+            result = Billboard.getScreenSpaceBoundingBox(item, coord, result);
         } else if (defined(item._pointPrimitiveCollection)) {
-            bbox = getPointBoundingBox(item, coord, pixelRange);
+            result = PointPrimitive.getScreenSpaceBoundingBox(item, coord, result);
         }
+
+        expandBoundingBox(result, pixelRange);
 
         if (!defined(item._labelCollection) && defined(item.id._label)) {
             var labelIndex = item.id._labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
-            bbox = BoundingRectangle.union(bbox, getLabelBoundingBox(label, coord, pixelRange), bbox);
+            var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
+            expandBoundingBox(labelBBox, pixelRange);
+            result = BoundingRectangle.union(result, labelBBox, result);
         }
 
-        return bbox;
+        return result;
     }
 
     function addNonClusteredItem(item, entityCluster) {
@@ -256,6 +231,10 @@ define([
             });
         }
     }
+
+    var pointBoundinRectangleScratch = new BoundingRectangle();
+    var totalBoundingRectangleScratch = new BoundingRectangle();
+    var neighborBoundingRectangleScratch = new BoundingRectangle();
 
     function createDeclutterCallback(entityCluster) {
         return function(amount) {
@@ -400,8 +379,8 @@ define([
                 collectionIndex = point.index;
 
                 var item = collection.get(collectionIndex);
-                bbox = getBoundingBox(item, point.coord, pixelRange, entityCluster);
-                var totalBBox = BoundingRectangle.clone(bbox);
+                bbox = getBoundingBox(item, point.coord, pixelRange, entityCluster, pointBoundinRectangleScratch);
+                var totalBBox = BoundingRectangle.clone(bbox, totalBoundingRectangleScratch);
 
                 neighbors = index.range(bbox.x, bbox.y, bbox.x + bbox.width, bbox.y + bbox.height);
                 neighborLength = neighbors.length;
@@ -415,7 +394,7 @@ define([
                     neighborPoint = points[neighborIndex];
                     if (!neighborPoint.clustered) {
                         var neighborItem = neighborPoint.collection.get(neighborPoint.index);
-                        var neighborBBox = getBoundingBox(neighborItem, neighborPoint.coord, pixelRange, entityCluster);
+                        var neighborBBox = getBoundingBox(neighborItem, neighborPoint.coord, pixelRange, entityCluster, neighborBoundingRectangleScratch);
 
                         Cartesian3.add(neighborItem.position, clusterPosition, clusterPosition);
 
@@ -463,51 +442,6 @@ define([
             entityCluster._previousClusters = newClusters;
             entityCluster._previousHeight = currentHeight;
         };
-    }
-
-    /**
-     * Defines how screen space objects (billboards, points, labels) are clustered.
-     *
-     * @param {Object} [options] An object with the following properties:
-     * @param {Boolean} [options.enabled=false] Whether or not to enable clustering.
-     * @param {Number} [options.pixelRange=80] The pixel range to extend the screen space bounding box.
-     * @param {Number} [options.minimumClusterSize=2] The minimum number of screen space objects that can be clustered.
-     *
-     * @alias EntityCluster
-     * @constructor
-     *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Clustering.html|Cesium Sandcastle Clustering Demo}
-     */
-    function EntityCluster(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        this._enabled = defaultValue(options.enabled, false);
-        this._pixelRange = defaultValue(options.pixelRange, 80);
-        this._minimumClusterSize = defaultValue(options.minimumClusterSize, 2);
-
-        this._labelCollection = undefined;
-        this._billboardCollection = undefined;
-        this._pointCollection = undefined;
-
-        this._clusterBillboardCollection = undefined;
-        this._clusterLabelCollection = undefined;
-        this._clusterPointCollection = undefined;
-
-        this._unusedLabelIndices = [];
-        this._unusedBillboardIndices = [];
-        this._unusedPointIndices = [];
-
-        this._previousClusters = [];
-        this._previousHeight = undefined;
-
-        this._enabledDirty = false;
-        this._pixelRangeDirty = false;
-        this._minimumClusterSizeDirty = false;
-
-        this._cluster = undefined;
-        this._removeEventListener = undefined;
-
-        this._clusterEvent = new Event();
     }
 
     EntityCluster.prototype._initialize = function(scene) {

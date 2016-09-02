@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -14,6 +15,7 @@ define([
         './LabelStyle',
         './VerticalOrigin'
     ], function(
+        BoundingRectangle,
         Cartesian2,
         Cartesian3,
         Color,
@@ -766,6 +768,62 @@ define([
                 this._eyeOffset, this._pixelOffset, scene, result);
         return windowCoordinates;
     };
+
+    /**
+     * Gets a label's screen space bounding box centered around screenSpacePosition.
+     * @param {Label} label The label to get the screen space bounding box for.
+     * @param {Cartesian2} screenSpacePosition The screen space center of the label.
+     * @param {BoundingRectangle} [result] The object onto which to store the result.
+     * @returns {BoundingRectangle} The screen space bounding box.
+     *
+     * @private
+     */
+    Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
+        var width = 0;
+        var height = Number.NEGATIVE_INFINITY;
+
+        var glyphs = label._glyphs;
+        var length = glyphs.length;
+        for (var i = 0; i < length; ++i) {
+            var glyph = glyphs[i];
+            var billboard = glyph.billboard;
+            if (!defined(billboard)) {
+                continue;
+            }
+
+            width += billboard.width;
+            height = Math.max(height, billboard.height);
+        }
+
+        var scale = label.scale;
+        width *= scale;
+        height *= scale;
+
+        var x = screenSpacePosition.x;
+        if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
+            x -= width;
+        } else if (label.horizontalOrigin === HorizontalOrigin.CENTER) {
+            x -= width * 0.5;
+        }
+
+        var y = screenSpacePosition.y;
+        if (label.verticalOrigin === VerticalOrigin.TOP) {
+            y -= height;
+        } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
+            y -= height * 0.5;
+        }
+
+        if (!defined(result)) {
+            result = new BoundingRectangle();
+        }
+
+        result.x = x;
+        result.y = y;
+        result.width = width;
+        result.height = height;
+
+        return result;
+    }
 
     /**
      * Determines if this label equals another label.  Labels are equal if all their properties
