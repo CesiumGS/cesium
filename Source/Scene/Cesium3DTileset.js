@@ -865,7 +865,7 @@ define([
         // may be potentially replaced.  Tiles are moved to the right of the sentinel
         // when they are selected so they will not be replaced.
         var replacementList = tileset._replacementList;
-        tileset._replacementList.splice(replacementList.tail, tileset._replacementSentinel);
+        replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
         var root = tileset._root;
         root.distanceToCamera = root.distanceToTile(frameState);
