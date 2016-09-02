@@ -381,4 +381,4 @@ defineSuite([
         expect(cluster._clusterBillboardCollection).toBeDefined();
         expect(cluster._clusterBillboardCollection.length).toEqual(1);
     });
-});
+}, 'WebGL');
