@@ -854,10 +854,12 @@ defineSuite([
             geometryInstances : rectangleInstance,
             asynchronous : false
         });
-        
-        expect(function() {
-            primitive.update(scene.frameState);
-        }).toThrowDeveloperError();
+
+        if (GroundPrimitive.isSupported(scene)) {
+            expect(function() {
+                primitive.update(scene.frameState);
+            }).toThrowDeveloperError();
+        }
 
         // Set back to initialized state
         GroundPrimitive._initPromise = initPromise;

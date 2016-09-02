@@ -7,6 +7,7 @@ defineSuite([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
+        'Core/combine',
         'Core/DefaultProxy',
         'Core/Event',
         'Core/Iso8601',
@@ -37,6 +38,7 @@ defineSuite([
         ClockRange,
         ClockStep,
         Color,
+        combine,
         DefaultProxy,
         Event,
         Iso8601,
@@ -3848,7 +3850,7 @@ defineSuite([
                     </coordinates>\
                 </LineString>\
             </Placemark>';
-        var clampToGroundOptions = Object.assign({ clampToGround : true }, options);
+        var clampToGroundOptions = combine(options, { clampToGround : true });
         return KmlDataSource.load(parser.parseFromString(kml, "text/xml"), clampToGroundOptions).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             expect(entity.corridor).toBeDefined();
