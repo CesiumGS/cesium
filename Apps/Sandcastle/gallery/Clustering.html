@@ -68,6 +68,7 @@ dataSourcePromise.then(function(dataSource) {
     var pixelRange = 15;
     var minimumClusterSize = 3;
 
+    dataSource.clustering.enabled = true;
     dataSource.clustering.pixelRange = pixelRange;
     dataSource.clustering.minimumClusterSize = minimumClusterSize;
 
@@ -125,6 +126,11 @@ dataSourcePromise.then(function(dataSource) {
                 entity.billboard.image = singleDigitPins[cluster.length - 2];
             }
         });
+
+        // force a re-cluster with the new styling
+        var pixelRange = dataSource.clustering.pixelRange;
+        dataSource.clustering.pixelRange = 0;
+        dataSource.clustering.pixelRange = pixelRange;
     }, 'customStyling');
 
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);

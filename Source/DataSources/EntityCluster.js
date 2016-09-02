@@ -182,7 +182,7 @@ define([
         var entity = new Entity({
             position : position,
             label : {
-                text : '' + numPoints
+                text : numPoints.toLocaleString()
             }
         });
 
