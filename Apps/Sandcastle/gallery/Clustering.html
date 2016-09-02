@@ -111,21 +111,20 @@ dataSourcePromise.then(function(dataSource) {
         if (Cesium.defined(removeListener)) {
             removeListener();
             removeListener = undefined;
-            return;
+        } else {
+            removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
+                entity.label = undefined;
+                entity.billboard = {};
+
+                if (cluster.length >= 20) {
+                    entity.billboard.image = pin20;
+                } else if (cluster.length >= 10) {
+                    entity.billboard.image = pin10;
+                } else {
+                    entity.billboard.image = singleDigitPins[cluster.length - 2];
+                }
+            });
         }
-
-        removeListener = dataSource.clustering.clusterEvent.addEventListener(function(cluster, entity) {
-            entity.label = undefined;
-            entity.billboard = {};
-
-            if (cluster.length >= 20) {
-                entity.billboard.image = pin20;
-            } else if (cluster.length >= 10) {
-                entity.billboard.image = pin10;
-            } else {
-                entity.billboard.image = singleDigitPins[cluster.length - 2];
-            }
-        });
 
         // force a re-cluster with the new styling
         var pixelRange = dataSource.clustering.pixelRange;
