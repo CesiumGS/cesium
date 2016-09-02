@@ -158,6 +158,72 @@ defineSuite([
         expect(cluster._clusterLabelCollection).not.toBeDefined();
     });
 
+    it('clusters labels', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var label = cluster.getLabel(entity);
+        label.id = entity;
+        label.text = 'a';
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        label = cluster.getLabel(entity);
+        label.id = entity;
+        label.text = 'b';
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        cluster.enabled = false;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('clusters points', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+
+        entity = new Entity();
+        point = cluster.getPoint(entity);
+        point.id = entity;
+        point.pixelSize = 1;
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        cluster.enabled = false;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
     it('pixel range', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
@@ -234,5 +300,43 @@ defineSuite([
         cluster.update(frameState);
 
         expect(cluster._clusterLabelCollection).not.toBeDefined();
+    });
+
+    it('clusters around the same point', function() {
+        cluster = new EntityCluster();
+        cluster._initialize(scene);
+
+        var entity = new Entity();
+        var billboard = cluster.getBillboard(entity);
+        billboard.id = entity;
+        billboard.image = createBillboardImage();
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9);
+
+        entity = new Entity();
+        billboard = cluster.getBillboard(entity);
+        billboard.id = entity;
+        billboard.image = createBillboardImage();
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9);
+
+        var frameState = scene.frameState;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).not.toBeDefined();
+
+        cluster.enabled = true;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+
+        var position = Cartesian3.clone(cluster._clusterLabelCollection.get(0).position);
+
+        scene.camera.moveForward(1.0e-6);
+        cluster.pixelRange = cluster.pixelRange - 1;
+        cluster.update(frameState);
+
+        expect(cluster._clusterLabelCollection).toBeDefined();
+        expect(cluster._clusterLabelCollection.length).toEqual(1);
+        expect(cluster._clusterLabelCollection.get(0).position).toEqual(position);
     });
 });

@@ -92,10 +92,10 @@ define([
             y -= height * 0.5;
         }
 
-        x += pixelRange;
-        y += pixelRange;
-        width += pixelRange * 0.5;
-        height += pixelRange * 0.5;
+        x -= pixelRange;
+        y -= pixelRange;
+        width += pixelRange * 2.0;
+        height += pixelRange * 2.0;
 
         return new BoundingRectangle(x, y, width, height);
     }
