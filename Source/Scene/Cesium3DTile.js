@@ -504,8 +504,8 @@ define([
     };
 
     /**
-     * Assuming the tile's bounding volume intersects the culling volume, determines
-     * whether the tile's content's bounding volume intersects the culling volume.
+     * Determines whether the tile's content's bounding volume intersects the culling volume. If the tile doesn't
+     * have content it checks the tile's bounding volume instead.
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile's content is to be tested.
      * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
