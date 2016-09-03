@@ -174,7 +174,7 @@ define([
             // Loading stats
             numberOfPendingRequests : 0,
             numberProcessing : 0,
-            numberContentReady : 0, // Number of tiles with content loaded
+            numberContentReady : 0, // Number of tiles with content loaded, does not include empty tiles
             numberTotal : 0, // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
             // Styling stats
             numberOfTilesStyled : 0,
