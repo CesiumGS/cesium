@@ -5,6 +5,7 @@ defineSuite([
         'Core/Color',
         'Core/defined',
         'Core/HeadingPitchRange',
+        'Core/Intersect',
         'Core/loadWithXhr',
         'Core/Matrix4',
         'Core/RequestScheduler',
@@ -23,6 +24,7 @@ defineSuite([
         Color,
         defined,
         HeadingPitchRange,
+        Intersect,
         loadWithXhr,
         Matrix4,
         RequestScheduler,
@@ -362,6 +364,26 @@ defineSuite([
             expect(stats.visited).toEqual(1); // Visits the root, but stops early
             expect(stats.numberOfCommands).toEqual(0);
             expect(tileset._root.visibility(scene.frameState.cullingVolume)).toEqual(CullingVolume.MASK_OUTSIDE);
+            expect(tileset._root.contentsVisibility(scene.frameState.cullingVolume)).toEqual(Intersect.OUTSIDE);
+        });
+    });
+
+    it('does not select empty tiles when outside of view frustum', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetEmptyRootUrl).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.visited).toEqual(5);
+            expect(stats.numberOfCommands).toEqual(4);
+
+            // Orient camera to face the sky
+            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude, 100);
+            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 1.57, 10.0));
+
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(1); // Visits the root, but stops early
+            expect(stats.numberOfCommands).toEqual(0);
+            expect(tileset._root.visibility(scene.frameState.cullingVolume)).toEqual(CullingVolume.MASK_OUTSIDE);
+            expect(tileset._root.contentsVisibility(scene.frameState.cullingVolume)).toEqual(Intersect.OUTSIDE);
         });
     });
 
