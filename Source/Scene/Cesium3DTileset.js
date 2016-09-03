@@ -838,7 +838,10 @@ define([
         }
     }
 
-    function touch(tileset, tile) {
+    function touch(tileset, tile, outOfCore) {
+        if (!outOfCore) {
+            return;
+        }
         var node = tile.replacementNode;
         if (defined(node)) {
             tileset._replacementList.splice(tileset._replacementSentinel, node);
@@ -903,7 +906,7 @@ define([
             }
             var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
 
-            touch(tileset, t);
+            touch(tileset, t, outOfCore);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
             var sse = getScreenSpaceError(t.geometricError, t, frameState);
@@ -1013,7 +1016,7 @@ define([
                                     // Touch loaded child even though it is not selected this frame since
                                     // we want to keep it in the cache for when all children are loaded
                                     // and this tile can refine to them.
-                                    touch(tileset, child);
+                                    touch(tileset, child, outOfCore);
                                 }
                             }
                         }
@@ -1028,7 +1031,7 @@ define([
                             // Touch the child tile now even if it turns out not to be visible when
                             // it comes off the stack.  Since replacement refinement requires all child
                             // tiles to be loaded to refine to them, we want to keep it in the cache.
-                            touch(tileset, child);
+                            touch(tileset, child, outOfCore);
                         }
 
                         t.replaced = true;
