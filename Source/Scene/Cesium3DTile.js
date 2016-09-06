@@ -294,6 +294,13 @@ define([
         this.replaced = false;
 
         /**
+         * The stored plane mask from the visibility check during tree traversal.
+         *
+         * @type {Boolean}
+         */
+        this.planeMask = true;
+
+        /**
          * The last frame number the tile was selected in.
          *
          * @type {Number}
