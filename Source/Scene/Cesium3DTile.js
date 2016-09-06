@@ -520,9 +520,13 @@ define([
      * @private
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
+        var boundingVolume = this._contentBoundingVolume;
+        if (!defined(boundingVolume)) {
+            return Intersect.INSIDE;
+        }
         // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
         // tile's (not the content's) bounding volume intersects the culling volume?
-        return cullingVolume.computeVisibility(this.contentBoundingVolume);
+        return cullingVolume.computeVisibility(boundingVolume);
     };
 
     /**
