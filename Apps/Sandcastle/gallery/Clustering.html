@@ -83,9 +83,9 @@ dataSourcePromise.then(function(dataSource) {
 
     function subscribeParameter(name) {
         Cesium.knockout.getObservable(viewModel, name).subscribe(
-                function(newValue) {
-                    dataSource.clustering[name] = newValue;
-                }
+            function(newValue) {
+                dataSource.clustering[name] = newValue;
+            }
         );
     }
 
@@ -99,15 +99,18 @@ dataSourcePromise.then(function(dataSource) {
     var removeListener;
 
     var pinBuilder = new Cesium.PinBuilder();
-    var pin20 = pinBuilder.fromText('20+', Cesium.Color.RED, 48).toDataURL();
+    var pin50 = pinBuilder.fromText('50+', Cesium.Color.RED, 48).toDataURL();
+    var pin40 = pinBuilder.fromText('40+', Cesium.Color.ORANGE, 48).toDataURL();
+    var pin30 = pinBuilder.fromText('30+', Cesium.Color.YELLOW, 48).toDataURL();
+    var pin20 = pinBuilder.fromText('20+', Cesium.Color.GREEN, 48).toDataURL();
     var pin10 = pinBuilder.fromText('10+', Cesium.Color.BLUE, 48).toDataURL();
 
     var singleDigitPins = new Array(8);
     for (var i = 0; i < singleDigitPins.length; ++i) {
-        singleDigitPins[i] = pinBuilder.fromText('' + (i + 2), Cesium.Color.GREEN, 48).toDataURL();
+        singleDigitPins[i] = pinBuilder.fromText('' + (i + 2), Cesium.Color.VIOLET, 48).toDataURL();
     }
 
-    Sandcastle.addToolbarButton('Toggle Custom Styling', function() {
+    function customStyle() {
         if (Cesium.defined(removeListener)) {
             removeListener();
             removeListener = undefined;
@@ -116,7 +119,13 @@ dataSourcePromise.then(function(dataSource) {
                 entity.label = undefined;
                 entity.billboard = {};
 
-                if (cluster.length >= 20) {
+                if (cluster.length >= 50) {
+                    entity.billboard.image = pin50;
+                } else if (cluster.length >= 40) {
+                    entity.billboard.image = pin40;
+                } else if (cluster.length >= 30) {
+                    entity.billboard.image = pin30;
+                } else if (cluster.length >= 20) {
                     entity.billboard.image = pin20;
                 } else if (cluster.length >= 10) {
                     entity.billboard.image = pin10;
@@ -130,7 +139,12 @@ dataSourcePromise.then(function(dataSource) {
         var pixelRange = dataSource.clustering.pixelRange;
         dataSource.clustering.pixelRange = 0;
         dataSource.clustering.pixelRange = pixelRange;
-    }, 'customStyling');
+    }
+
+    // start with custom style
+    customStyle();
+
+    Sandcastle.addToolbarButton('Toggle Custom Styling', customStyle, 'customStyling');
 
     var handler = new Cesium.ScreenSpaceEventHandler(viewer.scene.canvas);
     handler.setInputAction(function(movement) {

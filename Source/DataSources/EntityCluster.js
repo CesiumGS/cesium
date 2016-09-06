@@ -716,15 +716,29 @@ define([
      * @private
      */
     EntityCluster.prototype.update = function(frameState) {
+        // If clustering is enabled before the label collection is updated,
+        // the glyphs haven't been created so the screen space bounding boxes
+        // are incorrect.
+        if (defined(this._labelCollection) && this._labelCollection.length > 0 && this._labelCollection.get(0)._glyphs.length === 0) {
+            var commandList = frameState.commandList;
+            frameState.commandList = [];
+            this._labelCollection.update(frameState);
+            frameState.commandList = commandList;
+        }
+
+        var clustered = false;
         if (this._enabledDirty) {
             this._enabledDirty = false;
             updateEnable(this);
+            clustered = this._enabled;
         }
 
         if (this._pixelRangeDirty || this._minimumClusterSizeDirty) {
             this._pixelRangeDirty = false;
             this._minimumClusterSizeDirty = false;
-            this._cluster();
+            if (!clustered) {
+                this._cluster();
+            }
         }
 
         if (defined(this._clusterLabelCollection)) {
