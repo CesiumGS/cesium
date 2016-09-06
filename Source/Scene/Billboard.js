@@ -1190,8 +1190,8 @@ define([
 
         var x = screenSpacePosition.x;
         if (billboard.horizontalOrigin === HorizontalOrigin.RIGHT) {
-            x += width * 0.5;
-        } else if (billboard.horizontalOrigin === HorizontalOrigin.LEFT) {
+            x -= width;
+        } else if (billboard.horizontalOrigin === HorizontalOrigin.CENTER) {
             x -= width * 0.5;
         }
 

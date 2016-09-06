@@ -786,29 +786,24 @@ define([
      */
     Label.getScreenSpaceBoundingBox = function(label, screenSpacePosition, result) {
         var width = 0;
-        var height = Number.NEGATIVE_INFINITY;
+        var height = 0;
 
         var glyphs = label._glyphs;
         var length = glyphs.length;
-        if (length > 0) {
-            for (var i = 0; i < length; ++i) {
-                var glyph = glyphs[i];
-                var billboard = glyph.billboard;
-                if (!defined(billboard)) {
-                    continue;
-                }
-
-                width += billboard.width;
-                height = Math.max(height, billboard.height);
+        for (var i = 0; i < length; ++i) {
+            var glyph = glyphs[i];
+            var billboard = glyph.billboard;
+            if (!defined(billboard)) {
+                continue;
             }
 
-            var scale = label.scale;
-            width *= scale;
-            height *= scale;
-        } else {
-            width = 0.0;
-            height = 0.0;
+            width += billboard.width;
+            height = Math.max(height, billboard.height);
         }
+
+        var scale = label.scale;
+        width *= scale;
+        height *= scale;
 
         var x = screenSpacePosition.x;
         if (label.horizontalOrigin === HorizontalOrigin.RIGHT) {
