@@ -1072,7 +1072,7 @@ define([
             for (j = 0; j < descendantsLength; ++j) {
                 descendant = refiningTile.descendantsWithContent[j];
                 if (!descendant.selected && !descendant.replaced &&
-                    (descendant.contentsVisibility(frameState.cullingVolume) !== Intersect.OUTSIDE)) {
+                    (frameState.cullingVolume.computeVisibility(descendant.contentBoundingVolume) !== Intersect.OUTSIDE)) {
                         refinable = false;
                         break;
                 }
