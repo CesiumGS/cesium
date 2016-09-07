@@ -182,7 +182,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see DebugModelMatrixPrimitive#destroy
+     * @see DebugCameraPrimitive#destroy
      */
     DebugCameraPrimitive.prototype.isDestroyed = function() {
         return false;
@@ -204,7 +204,7 @@ define([
      * @example
      * p = p && p.destroy();
      *
-     * @see DebugModelMatrixPrimitive#isDestroyed
+     * @see DebugCameraPrimitive#isDestroyed
      */
     DebugCameraPrimitive.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
