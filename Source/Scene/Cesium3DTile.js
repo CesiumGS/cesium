@@ -293,7 +293,7 @@ define([
          *
          * @private
          */
-        this.planeMask = true;
+        this.visibilityPlaneMask = true;
 
         /**
          * The last frame number the tile was selected in.
@@ -484,7 +484,7 @@ define([
 
         // Restore properties set per frame to their defaults
         this.distanceToCamera = 0;
-        this.planeMask = 0;
+        this.visibilityPlaneMask = 0;
         this.selected = false;
         this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
@@ -497,13 +497,13 @@ define([
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
-     * @param {Number} parentPlaneMask The parent's plane mask to speed up the visibility check.
+     * @param {Number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      *
      * @private
      */
-    Cesium3DTile.prototype.visibility = function(cullingVolume, parentPlaneMask) {
-        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, parentPlaneMask);
+    Cesium3DTile.prototype.visibility = function(cullingVolume, parentVisibilityPlaneMask) {
+        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, parentVisibilityPlaneMask);
     };
 
     /**

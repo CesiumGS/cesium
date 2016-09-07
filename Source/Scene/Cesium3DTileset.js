@@ -797,8 +797,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function isVisible(planeMask) {
-        return planeMask !== CullingVolume.MASK_OUTSIDE;
+    function isVisible(visibilityPlaneMask) {
+        return visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
     }
 
     function requestContent(tileset, tile, outOfCore) {
@@ -882,8 +882,8 @@ define([
             return;
         }
 
-        root.planeMask = root.visibility(cullingVolume, CullingVolume.MASK_INDETERMINATE);
-        if (root.planeMask === CullingVolume.MASK_OUTSIDE) {
+        root.visibilityPlaneMask = root.visibility(cullingVolume, CullingVolume.MASK_INDETERMINATE);
+        if (root.visibilityPlaneMask === CullingVolume.MASK_OUTSIDE) {
             return;
         }
 
@@ -906,8 +906,8 @@ define([
             var parentTransform = defined(t.parent) ? t.parent.computedTransform : tileset.modelMatrix;
             t.computedTransform = Matrix4.multiply(parentTransform, t.transform, t.computedTransform);
 
-            var planeMask = t.planeMask;
-            var fullyVisible = (planeMask === CullingVolume.MASK_INSIDE);
+            var visibilityPlaneMask = t.visibilityPlaneMask;
+            var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
 
             touch(tileset, t, outOfCore);
 
@@ -927,7 +927,7 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.contentReady) {
                     child = t.children[0];
-                    child.planeMask = t.planeMask;
+                    child.visibilityPlaneMask = t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
                     if (child.contentUnloaded) {
                         requestContent(tileset, child, outOfCore);
@@ -961,9 +961,9 @@ define([
                             child = children[k];
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                child.planeMask = child.visibility(cullingVolume, planeMask);
+                                child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
                                 // If the child is visible...
-                                if (isVisible(child.planeMask)) {
+                                if (isVisible(child.visibilityPlaneMask)) {
                                     if (child.contentUnloaded) {
                                         requestContent(tileset, child, outOfCore);
                                     } else {
@@ -994,8 +994,8 @@ define([
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
-                        child.planeMask = child.visibility(frameState.cullingVolume, planeMask);
-                        if (isVisible(child.planeMask)) {
+                        child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
                             } else {
@@ -1029,7 +1029,7 @@ define([
 
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (isVisible(child.planeMask)) {
+                            if (isVisible(child.visibilityPlaneMask)) {
                                 if (child.contentUnloaded) {
                                     requestContent(tileset, child, outOfCore);
                                 } else {
@@ -1041,7 +1041,7 @@ define([
                         // Tile does not meet SSE and its visible children are loaded. Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (isVisible(child.planeMask)) {
+                            if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
                             }
                         }
