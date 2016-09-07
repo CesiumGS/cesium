@@ -962,7 +962,6 @@ define([
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
-                                // If the child is visible...
                                 if (isVisible(child.visibilityPlaneMask)) {
                                     if (child.contentUnloaded) {
                                         requestContent(tileset, child, outOfCore);
