@@ -241,14 +241,6 @@ void main()
     pixelOffset *= pixelOffsetScale;
 #endif
 
-    float dist = length(positionEC.xyz);
-    if (dist < 5000.0)
-    {
-        //color = vec4(1.0, 1.0, 0.0, 1.0);
-        float scale = czm_currentFrustum.x + 1.0;
-        positionEC.xyz = scale * normalize(positionEC.xyz);
-    }
-
     vec4 positionWC = computePositionWindowCoordinates(positionEC, imageSize, scale, direction, origin, translate, pixelOffset, alignedAxis, validAlignedAxis, rotation, sizeInMeters);
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
     v_textureCoordinates = textureCoordinates;
