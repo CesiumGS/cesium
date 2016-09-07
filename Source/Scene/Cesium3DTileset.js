@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -24,8 +25,10 @@ define([
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
+        './DebugCameraPrimitive',
         './SceneMode'
     ], function(
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -50,6 +53,7 @@ define([
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
+        DebugCameraPrimitive,
         SceneMode) {
     'use strict';
 
@@ -196,6 +200,8 @@ define([
          * @default false
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+        this._debugFreezeFrame = this.debugFreezeFrame;
+        this._debugCameraFrustum = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -1276,6 +1282,26 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function applyDebugSettings(tileset, frameState) {
+        // Draw a debug camera in freeze frame mode
+        var enterFreezeFrame = tileset.debugFreezeFrame && !tileset._debugFreezeFrame;
+        tileset._debugFreezeFrame = tileset.debugFreezeFrame;
+        if (tileset.debugFreezeFrame) {
+            if (enterFreezeFrame) {
+                // Recreate debug camera when entering freeze frame mode
+                tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
+                tileset._debugCameraFrustum = new DebugCameraPrimitive({
+                    camera : frameState.camera,
+                    color : Color.CYAN,
+                    updateOnChange : false
+                });
+            }
+            tileset._debugCameraFrustum.update(frameState);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1297,6 +1323,8 @@ define([
         var passes = frameState.passes;
         var isPick = (passes.pick && !passes.render);
         var outOfCore = !isPick;
+
+        applyDebugSettings(this, frameState);
 
         clearStats(this);
 
@@ -1370,6 +1398,7 @@ define([
         }
 
         this._root = undefined;
+        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         return destroyObject(this);
     };
 
