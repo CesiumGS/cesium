@@ -514,7 +514,6 @@ defineSuite([
         });
     });
 
-
     it('replacement refinement - refines to visible ready children', function() {
         viewRootOnly();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
