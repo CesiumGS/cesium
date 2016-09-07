@@ -797,6 +797,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function isVisible(planeMask) {
+        return planeMask !== CullingVolume.MASK_OUTSIDE;
+    }
+
     function requestContent(tileset, tile, outOfCore) {
         if (!outOfCore) {
             return;
@@ -872,14 +876,13 @@ define([
 
         var root = tileset._root;
         root.distanceToCamera = root.distanceToTile(frameState);
-        root.parentPlaneMask = CullingVolume.MASK_INDETERMINATE;
 
         if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
 
-        root.planeMask = root.visibility(cullingVolume);
+        root.planeMask = root.visibility(cullingVolume, CullingVolume.MASK_INDETERMINATE);
         if (root.planeMask === CullingVolume.MASK_OUTSIDE) {
             return;
         }
@@ -924,7 +927,6 @@ define([
                 // and geometric error are equal to its parent.
                 if (t.contentReady) {
                     child = t.children[0];
-                    child.parentPlaneMask = t.parentPlaneMask;
                     child.planeMask = t.planeMask;
                     child.distanceToCamera = t.distanceToCamera;
                     if (child.contentUnloaded) {
@@ -959,11 +961,9 @@ define([
                             child = children[k];
                             // Use parent's geometric error with child's box to see if we already meet the SSE
                             if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                // Store the plane mask so that the child can optimize based on its parent's returned mask
-                                child.parentPlaneMask = planeMask;
-                                child.planeMask = child.visibility(cullingVolume);
+                                child.planeMask = child.visibility(cullingVolume, planeMask);
                                 // If the child is visible...
-                                if (child.planeMask !== CullingVolume.MASK_OUTSIDE) {
+                                if (isVisible(child.planeMask)) {
                                     if (child.contentUnloaded) {
                                         requestContent(tileset, child, outOfCore);
                                     } else {
@@ -989,14 +989,13 @@ define([
                     // Tile does not meet SSE.
 
                     // Get visibility for all children. Check if any visible children are not loaded.
+                    // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
                     var allVisibleChildrenLoaded = true;
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
-                        child.parentPlaneMask = planeMask;
-                        child.planeMask = child.visibility(frameState.cullingVolume);
-                        // If the child is visible...
-                        if (child.planeMask !== CullingVolume.MASK_OUTSIDE) {
+                        child.planeMask = child.visibility(frameState.cullingVolume, planeMask);
+                        if (isVisible(child.planeMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;
                             } else {
@@ -1019,15 +1018,18 @@ define([
                     }
 
                     if (!allVisibleChildrenLoaded) {
-                        // Tile does not meet SSE.  Add its commands and the commands of its visible children.
+                        // Tile does not meet SSE.  Add its commands and push its visible children to the stack.
                         // This will cause the parent tile and child tiles to render simultaneously until
                         // all visible children are loaded.
+                        //
+                        // The visible children need to be pushed so that they remain loaded while the other siblings load in.
+                        // Otherwise only the parent will be selected and the child tiles may be unloaded from the cache. This
+                        // unloading effect is especially apparent for parent tiles that are empty.
                         selectTile(tileset, t, fullyVisible, frameState);
 
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            // If child is visible...
-                            if (child.planeMask !== CullingVolume.MASK_OUTSIDE) {
+                            if (isVisible(child.planeMask)) {
                                 if (child.contentUnloaded) {
                                     requestContent(tileset, child, outOfCore);
                                 } else {
@@ -1039,7 +1041,7 @@ define([
                         // Tile does not meet SSE and its visible children are loaded. Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            if (child.planeMask !== CullingVolume.MASK_OUTSIDE) {
+                            if (isVisible(child.planeMask)) {
                                 stack.push(child);
                             }
                         }
