@@ -65,6 +65,7 @@ define([
      * @param {Boolean} [options.show=true] Determines if the tileset will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
+     * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -122,6 +123,8 @@ define([
         this._replacementList = replacementList; // Tiles with content loaded.  For cache management.
         this._replacementSentinel  = replacementList.add();
         this._trimTiles = false;
+
+        this._refineToVisible = defaultValue(options.refineToVisible, false);
 
         /**
          * Determines if the tileset will be shown.
@@ -984,8 +987,64 @@ define([
                     // This tile meets the SSE so add its commands.
                     // Select tile if it's a leaf (childrenLength === 0)
                     selectTile(tileset, t, fullyVisible, frameState);
+                } else if (!tileset._refineToVisible) {
+                    // Tile does not meet SSE.
+                    // Refine when all children (visible or not) are loaded.
+
+                    // Only sort children by distance if we are going to refine to them
+                    // or slots are available to request them.  If we are just rendering the
+                    // tile (and can't make child requests because no slots are available)
+                    // then the children do not need to be sorted.
+
+                    var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
+                    if (allChildrenLoaded || t.canRequestContent()) {
+                        // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
+                        computeDistanceToCamera(children, frameState);
+
+                        // Sort children by distance for (1) request ordering, and (2) early-z
+                        children.sort(sortChildrenByDistanceToCamera);
+                    }
+
+                    if (!allChildrenLoaded) {
+                        // Tile does not meet SSE.  Add its commands since it is the best we have and request its children.
+                        selectTile(tileset, t, fullyVisible, frameState);
+
+                        if (outOfCore) {
+                            for (k = 0; (k < childrenLength) && t.canRequestContent(); ++k) {
+                                child = children[k];
+                                // PERFORMANCE_IDEA: we could spin a bit less CPU here by keeping separate lists for unloaded/ready children.
+                                if (child.contentUnloaded) {
+                                    requestContent(tileset, child, outOfCore);
+                                } else {
+                                    // Touch loaded child even though it is not selected this frame since
+                                    // we want to keep it in the cache for when all children are loaded
+                                    // and this tile can refine to them.
+                                    touch(tileset, child, outOfCore);
+                                }
+                            }
+                        }
+                    } else {
+                        // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
+                        for (k = 0; k < childrenLength; ++k) {
+                            child = children[k];
+                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            if (isVisible(child.visibilityPlaneMask)) {
+                                stack.push(child);
+                            } else {
+                                // Touch the child tile even if it is not visible. Since replacement refinement
+                                // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
+                                touch(tileset, child, outOfCore);
+                            }
+                        }
+
+                        t.replaced = true;
+                        if (defined(t.descendantsWithContent)) {
+                            scratchRefiningTiles.push(t);
+                        }
+                    }
                 } else {
                     // Tile does not meet SSE.
+                    // Refine when all visible children are loaded.
 
                     // Get visibility for all children. Check if any visible children are not loaded.
                     // PERFORMANCE_IDEA: exploit temporal coherence to avoid checking visibility every frame
@@ -1017,13 +1076,12 @@ define([
                     }
 
                     if (!allVisibleChildrenLoaded) {
+                        // TODO : render parent against a plane mask of its visible children so there is no overlap
+
                         // Tile does not meet SSE.  Add its commands and push its visible children to the stack.
-                        // This will cause the parent tile and child tiles to render simultaneously until
-                        // all visible children are loaded.
-                        //
-                        // The visible children need to be pushed so that they remain loaded while the other siblings load in.
-                        // Otherwise only the parent will be selected and the child tiles may be unloaded from the cache. This
-                        // unloading effect is especially apparent for parent tiles that are empty.
+                        // The parent tile and child tiles will render simultaneously until all visible children
+                        // are ready. This allows the visible children to stay loaded while other children stream in,
+                        // otherwise if only the parent is selected the subtree may be unloaded from the cache.
                         selectTile(tileset, t, fullyVisible, frameState);
 
                         for (k = 0; k < childrenLength; ++k) {
