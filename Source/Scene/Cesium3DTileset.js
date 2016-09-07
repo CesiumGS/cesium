@@ -1076,7 +1076,8 @@ define([
                     }
 
                     if (!allVisibleChildrenLoaded) {
-                        // TODO : render parent against a plane mask of its visible children so there is no overlap
+                        // TODO : render parent against a plane mask of its visible children so there is no overlap,
+                        //        then the refineToVisible flags can be removed.
 
                         // Tile does not meet SSE.  Add its commands and push its visible children to the stack.
                         // The parent tile and child tiles will render simultaneously until all visible children
