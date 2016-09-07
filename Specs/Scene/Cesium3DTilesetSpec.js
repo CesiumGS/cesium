@@ -547,7 +547,6 @@ defineSuite([
                 expect(stats.visited).toEqual(5); // All tiles are visited
                 expect(stats.numberContentReady).toEqual(5); // All tiles are loaded
                 expect(stats.numberOfCommands).toEqual(4); // Root is replaced by its 4 children
-
             });
         });
     });
