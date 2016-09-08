@@ -778,12 +778,18 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
+            expect(tileset._debugCameraFrustum).toBeUndefined();
 
             tileset.debugFreezeFrame = true;
             viewAllTiles();
             scene.renderForSpecs();
             expect(stats.visited).toEqual(0); // selectTiles returns early, so no tiles are visited
             expect(stats.numberOfCommands).toEqual(1); // root tile is still in selectedTiles list
+            expect(tileset._debugCameraFrustum).toBeDefined();
+
+            tileset.debugFreezeFrame = false;
+            scene.renderForSpecs();
+            expect(tileset._debugCameraFrustum).toBeUndefined();
         });
     });
 
