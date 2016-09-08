@@ -698,10 +698,10 @@ define([
             '{ \n' +
             '    czm_non_distanceDisplayCondition_main(); \n' +
             '    vec4 centerRTE = czm_computeBoundingSphereCenter(); \n' +
-            '    float distance = length(centerRTE) - boundingSphereRadius; \n' +
-            '    float near = distanceDisplayCondition.x; \n' +
-            '    float far = distanceDisplayCondition.y; \n' +
-            '    float show = (distance >= near && distance <= far) ? 1.0 : 0.0; \n' +
+            '    float distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - boundingSphereRadius * boundingSphereRadius; \n' +
+            '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
+            '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
+            '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
             '    gl_Position *= show; \n' +
             '}';
         return renamedVS + '\n' + distanceDisplayConditionMain;

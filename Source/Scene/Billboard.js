@@ -11,6 +11,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
         './HeightReference',
@@ -30,6 +31,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
         HeightReference,
@@ -104,6 +106,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -168,7 +171,8 @@ define([
     var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
     var TRANSLUCENCY_BY_DISTANCE_INDEX = Billboard.TRANSLUCENCY_BY_DISTANCE_INDEX = 12;
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
-    Billboard.NUMBER_OF_PROPERTIES = 14;
+    var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
+    Billboard.NUMBER_OF_PROPERTIES = 15;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -710,6 +714,24 @@ define([
                 if (this._sizeInMeters !== value) {
                     this._sizeInMeters = value;
                     makeDirty(this, COLOR_INDEX);
+                }
+            }
+        },
+
+        /**
+         * DOC_TBA
+         * @memberof Billboard.prototype
+         * @type {DistanceDisplayCondition}
+         * @default undefined
+         */
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                if (DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = value;
+                    makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
             }
         },

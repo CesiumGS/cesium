@@ -2,11 +2,13 @@
 define([
     './Cartesian3',
     './defaultValue',
+    './defined',
     './defineProperties',
     './Matrix4'
 ], function(
     Cartesian3,
     defaultValue,
+    defined,
     defineProperties,
     Matrix4) {
     'use strict';
@@ -70,6 +72,17 @@ define([
         var position = Matrix4.getTranslation(primitive.modelMatrix, scratchPosition);
         var distance2 = Cartesian3.distanceSquared(position, frameState.camera.positionWC);
         return (distance2 >= this._near2) && (distance2 <= this._far2);
+    };
+
+    /**
+     * DOC_TBA
+     */
+    DistanceDisplayCondition.equals = function(left, right) {
+        return left === right ||
+               (defined(left) &&
+                defined(right) &&
+                left.near === right.near &&
+                left.far === right.far);
     };
 
     return DistanceDisplayCondition;
