@@ -628,6 +628,10 @@ defineSuite([
     });
 
     it('StaticGroundGeometryColorBatch updates color attribute after rebuilding primitive', function() {
+        if (!GroundPrimitive.isSupported(scene)) {
+            return;
+        }
+
         var batch = new StaticGroundGeometryColorBatch(scene.groundPrimitives);
 
         function computeKey(color) {

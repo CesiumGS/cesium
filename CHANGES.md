@@ -1,7 +1,12 @@
 Change Log
 ==========
 
+### 1.26 - 2016-10-03
+
+* Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
+
 ### 1.25 - 2016-09-01
+
 * Breaking changes
     * The number and order of arguments passed to `KmlDataSource` `unsupportedNodeEvent` listeners have changed to allow better handling of unsupported KML Features.
     * Changed billboards and labels that are clamped to terrain to have the `verticalOrigin` set to `CENTER` by default instead of `BOTTOM`.
@@ -14,8 +19,8 @@ Change Log
 * Added `Camera.cancelFlight` to cancel the existing camera flight if it exists.
 * Fix overlapping camera flights by always cancelling the previous flight when a new one is created.
 * Camera flights now disable collision with the terrain until all of the terrain in the area has finished loading. This prevents the camera from being moved to be above lower resolution terrain when flying to a position close to higher resolution terrain. [#4075](https://github.com/AnalyticalGraphicsInc/cesium/issues/4075)
-* Fixed a crash that would cocur if quickly toggling imagery visibility. [#4083](https://github.com/AnalyticalGraphicsInc/cesium/issues/4083)
-* Fixed an issue causing error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
+* Fixed a crash that would occur if quickly toggling imagery visibility. [#4083](https://github.com/AnalyticalGraphicsInc/cesium/issues/4083)
+* Fixed an issue causing an error if KML has a clamped to ground LineString with color. [#4131](https://github.com/AnalyticalGraphicsInc/cesium/issues/4131)
 * Added logic to `KmlDataSource` defaulting KML Feature node to hidden unless all ancestors are visible. This better matches the KML specification.
 * Fixed position of KML point features with an altitude mode of `relativeToGround` and `clampToGround`.
 * Added `GeocoderViewModel.keepExpanded` which when set to true will always keep the Geocoder in its expanded state.
