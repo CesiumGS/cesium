@@ -628,7 +628,7 @@ define([
             vertexArrays : {},
             programs : {},
             pickPrograms : {},
-            hilightPrograms: {},
+            highlightPrograms: {},
             textures : {},
 
             samplers : {},
@@ -1875,17 +1875,17 @@ define([
             }
         }
 
-        var hilightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName);
+        var highlightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName);
 
-        var hilightFS = 'uniform vec4 u_highlightColor;\n' +
+        var highlightFS = 'uniform vec4 u_highlightColor;\n' +
                         'void main() \n' +
                         '{ \n' +
                         '    gl_FragColor = u_highlightColor;\n' +
                         '}';
-        model._rendererResources.hilightPrograms[id] = ShaderProgram.fromCache({
+        model._rendererResources.highlightPrograms[id] = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : hilightVS,
-                fragmentShaderSource : hilightFS,
+                vertexShaderSource : highlightVS,
+                fragmentShaderSource : highlightFS,
                 attributeLocations : attributeLocations
             });
     }
@@ -2965,7 +2965,7 @@ define([
         var rendererPrograms = resources.programs;
         var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
-        var rendererHilightPrograms = resources.hilightPrograms;
+        var rendererhighlightPrograms = resources.highlightPrograms;
         var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
@@ -3087,9 +3087,9 @@ define([
                     pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
 
-                // Setup the stencil command for the hilight
-                var hilightRS = clone(rs);
-                hilightRS.stencilTest = {
+                // Setup the stencil command for the highlight
+                var highlightRS = clone(rs);
+                highlightRS.stencilTest = {
                     enabled : true,
                     frontFunction : WebGLConstants.NOTEQUAL,
                     backFunction : WebGLConstants.NOTEQUAL,
@@ -3106,13 +3106,13 @@ define([
                         zPass : WebGLConstants.REPLACE
                     }
                 };
-                hilightRS.cull = {
+                highlightRS.cull = {
                     enabled : false,
                     face : WebGLConstants.FRONT
                 };
-                hilightRS.depthTest = false;
+                highlightRS.depthTest = false;
 
-                hilightRS = RenderState.fromCache(hilightRS);
+                highlightRS = RenderState.fromCache(highlightRS);
 
                 // Setup the highlight color uniform.
                 uniformMap.u_highlightColor = function(){
@@ -3123,7 +3123,7 @@ define([
                     return model.highlightSize;
                 };
 
-                var hilightCommand = new DrawCommand({
+                var highlightCommand = new DrawCommand({
                         boundingVolume : new BoundingSphere(), // updated in update()
                         cull : model.cull,
                         modelMatrix : new Matrix4(),           // computed in update()
@@ -3131,9 +3131,9 @@ define([
                         vertexArray : vertexArray,
                         count : count,
                         offset : offset,
-                        shaderProgram : rendererHilightPrograms[technique.program],
+                        shaderProgram : rendererhighlightPrograms[technique.program],
                         uniformMap : uniformMap,
-                        renderState : hilightRS,
+                        renderState : highlightRS,
                         owner : owner,
                         pass : isTranslucent ? Pass.TRANSLUCENT : Pass.OPAQUE
                 });
@@ -3181,6 +3181,7 @@ define([
 
                 var command2D;
                 var pickCommand2D;
+                var highlightCommand2D;
                 if (!scene3DOnly) {
                     command2D = DrawCommand.shallowClone(command);
                     command2D.boundingVolume = new BoundingSphere();
@@ -3191,6 +3192,10 @@ define([
                         pickCommand2D.boundingVolume = new BoundingSphere();
                         pickCommand2D.modelMatrix = new Matrix4();
                     }
+
+                    highlightCommand2D = DrawCommand.shallowClone(highlightCommand);
+                    highlightCommand2D.boundingVolume = new BoundingSphere();
+                    highlightCommand2D.modelMatrix = new Matrix4();
                 }
 
                 var nodeCommand = {
@@ -3200,7 +3205,9 @@ define([
                     pickCommand : pickCommand,
                     command2D : command2D,
                     pickCommand2D : pickCommand2D,
-                    hilightCommand: hilightCommand
+                    highlightCommand: highlightCommand,
+                    highlightCommand2D: highlightCommand2D
+
                 };
                 runtimeNode.commands.push(nodeCommand);
                 nodeCommands.push(nodeCommand);
@@ -3397,9 +3404,9 @@ define([
                                 BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
                             }
 
-                            var hilightCommand = primitiveCommand.hilightCommand;
-                            Matrix4.clone(command.modelMatrix, hilightCommand.modelMatrix);
-                            BoundingSphere.clone(command.boundingVolume, hilightCommand.boundingVolume);
+                            var highlightCommand = primitiveCommand.highlightCommand;
+                            Matrix4.clone(command.modelMatrix, highlightCommand.modelMatrix);
+                            BoundingSphere.clone(command.boundingVolume, highlightCommand.boundingVolume);
 
 
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
@@ -3417,6 +3424,10 @@ define([
                                     Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
                                     BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
                                 }
+
+                                var highlightCommand2D = primitiveCommand.highlightCommand2D;
+                                Matrix4.clone(command.modelMatrix, highlightCommand2D.modelMatrix);
+                                BoundingSphere.clone(command.boundingVolume, highlightCommand2D.boundingVolume);
                             }
                         }
                     }
@@ -3991,11 +4002,17 @@ define([
                 }
 
                 if (this.highlight) {
-                    // Hilight commands second.
+                    // highlight commands second.
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
                         if (nc.show) {
-                            commandList.push(nc.hilightCommand);
+                            commandList.push(nc.highlightCommand);
+
+                            boundingVolume = command.boundingVolume;
+                            if (frameState.mode === SceneMode.SCENE2D &&
+                                (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
+                                commandList.push(nc.highlightCommand2D);
+                            }
                         }
                     }
                 }
