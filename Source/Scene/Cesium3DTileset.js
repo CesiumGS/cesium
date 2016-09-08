@@ -138,13 +138,7 @@ define([
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
-        /**
-         * A 4x4 transformation matrix that transforms the tileset's root tile.
-         *
-         * @type {Matrix4}
-         * @default Matrix4.IDENTITY
-         */
-        this.modelMatrix = defined(options.modelMatrix) ? options.modelMatrix : Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -630,6 +624,24 @@ define([
         },
 
         /**
+         * A 4x4 transformation matrix that transforms the tileset's root tile.
+         *
+         * @type {Matrix4}
+         * @default Matrix4.IDENTITY
+         */
+        modelMatrix : {
+            get : function() {
+                return this._modelMatrix;
+            },
+            set : function(value) {
+                this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
+                if (defined(this._root)) {
+                    this._root.updateTransform();
+                }
+            }
+        },
+
+        /**
          * @private
          */
         styleEngine : {
@@ -787,6 +799,7 @@ define([
         var length = children.length;
         for (var i = 0; i < length; ++i) {
             var child = children[i];
+            child.updateTransform(); // Need to update transform and bounding volumes before checking distance
             child.distanceToCamera = child.distanceToTile(frameState);
         }
     }
@@ -878,6 +891,7 @@ define([
         replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
         var root = tileset._root;
+        root.updateTransform();
         root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
@@ -906,9 +920,6 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var parentTransform = defined(t.parent) ? t.parent.computedTransform : tileset.modelMatrix;
-            t.computedTransform = Matrix4.multiply(parentTransform, t.transform, t.computedTransform);
-
             var visibilityPlaneMask = t.visibilityPlaneMask;
             var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
 
@@ -932,6 +943,7 @@ define([
                     child = t.children[0];
                     child.visibilityPlaneMask = t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
+                    child.updateTransform();
                     if (child.contentUnloaded) {
                         requestContent(tileset, child, outOfCore);
                     } else {

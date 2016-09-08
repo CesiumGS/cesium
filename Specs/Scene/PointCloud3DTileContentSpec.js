@@ -226,7 +226,6 @@ defineSuite([
 
             // Update tile transform
             tileset._root.transform = newTransform;
-            scene.renderForSpecs();
 
             // Move the camera to the new location
             setCamera(newLongitude, newLatitude);

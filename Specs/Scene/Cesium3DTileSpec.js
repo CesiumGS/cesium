@@ -256,8 +256,8 @@ defineSuite([
             // Change the transform
             var newLongitude = -1.012;
             var newLatitude = 0.698874;
-            tile.computedTransform = getTileTransform(newLongitude, newLatitude);
-            tile.update(mockTileset);
+            tile.transform = getTileTransform(newLongitude, newLatitude);
+            tile.updateTransform();
 
             // Check the new transform
             var newCenter = Cartesian3.fromRadians(newLongitude, newLatitude);
