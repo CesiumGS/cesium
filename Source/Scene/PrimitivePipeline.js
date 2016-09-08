@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -18,6 +19,7 @@ define([
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
+        Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
@@ -144,6 +146,9 @@ define([
         return attributesInAllInstances;
     }
 
+    var centerValuesScratch = new Array(3);
+    var radiusValuesScratch = new Array(1);
+
     function addPerInstanceAttributesToGeometry(instanceAttributes, geometry, names) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
@@ -165,6 +170,37 @@ define([
                 componentsPerAttribute : componentsPerAttribute,
                 normalize : attribute.normalize,
                 values : buffer
+            });
+        }
+
+        if (defined(geometry.attributes.distanceDisplayCondition)) {
+            var boundingSphere = geometry.boundingSphere;
+            var center = boundingSphere.center;
+            var radius = boundingSphere.radius;
+
+            var centerValues = Cartesian3.pack(center, centerValuesScratch);
+            var radiusValues = radiusValuesScratch;
+            radiusValues[0] = radius;
+
+            var centerBuffer = new Float64Array(numberOfVertices * 3);
+            var radiusBuffer = new Float32Array(numberOfVertices);
+
+            for (var i = 0; i < numberOfVertices; ++i) {
+                centerBuffer.set(centerValues, i * 3);
+                radiusBuffer.set(radiusValues, i);
+            }
+
+            geometry.attributes.boundingSphereCenter = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                normalize : false,
+                values : centerBuffer
+            });
+            geometry.attributes.boundingSphereRadius = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1,
+                normalize : false,
+                values : radiusBuffer
             });
         }
     }

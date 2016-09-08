@@ -683,6 +683,30 @@ define([
         return renamedVS + '\n' + showMain;
     };
 
+    Primitive._appendDistanceDisplayConditionToShader = function(primitive, vertexShaderSource) {
+        if (!defined(primitive._attributeLocations.distanceDisplayCondition)) {
+            return vertexShaderSource;
+        }
+
+        var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_non_distanceDisplayCondition_main');
+        var distanceDisplayConditionMain =
+            'attribute vec3 boundingSphereCenter3DHigh; \n' +
+            'attribute vec3 boundingSphereCenter3DLow; \n' +
+            'attribute float boundingSphereRadius; \n' +
+            'attribute vec2 distanceDisplayCondition; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_distanceDisplayCondition_main(); \n' +
+            '    vec4 centerRTE = czm_computeBoundingSphereCenter(); \n' +
+            '    float distance = length(centerRTE) - boundingSphereRadius; \n' +
+            '    float near = distanceDisplayCondition.x; \n' +
+            '    float far = distanceDisplayCondition.y; \n' +
+            '    float show = (distance >= near && distance <= far) ? 1.0 : 0.0; \n' +
+            '    gl_Position *= show; \n' +
+            '}';
+        return renamedVS + '\n' + distanceDisplayConditionMain;
+    };
+
     function modifyForEncodedNormals(primitive, vertexShaderSource) {
         if (!primitive.compressVertices) {
             return vertexShaderSource;
@@ -1149,9 +1173,10 @@ define([
 
         var attributeLocations = primitive._attributeLocations;
 
-        var vs = Primitive._modifyShaderPosition(primitive, appearance.vertexShaderSource, frameState.scene3DOnly);
-        vs = Primitive._appendShowToShader(primitive, vs);
+        var vs = Primitive._appendShowToShader(primitive, appearance.vertexShaderSource);
+        vs = Primitive._appendDistanceDisplayConditionToShader(primitive, vs);
         vs = modifyForEncodedNormals(primitive, vs);
+        vs = Primitive._modifyShaderPosition(primitive, vs, frameState.scene3DOnly);
         var fs = appearance.getFragmentShaderSource();
 
         // Create pick program
@@ -1535,6 +1560,7 @@ define([
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
      * attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(Cesium.Color.AQUA);
      * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true);
+     * attributes.distanceDisplayCondition = Cesium.DistanceDisplayConditionGeometryInstanceAttribute.toValue(100.0, 10000.0);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         //>>includeStart('debug', pragmas.debug);
