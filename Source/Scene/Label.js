@@ -7,6 +7,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         './Billboard',
         './HeightReference',
@@ -21,6 +22,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         Billboard,
         HeightReference,
@@ -89,6 +91,7 @@ define([
         this._translucencyByDistance = options.translucencyByDistance;
         this._pixelOffsetScaleByDistance = options.pixelOffsetScaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -652,6 +655,25 @@ define([
             }
         },
 
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = value;
+
+                    var glyphs = this._glyphs;
+                    for (var i = 0, len = glyphs.length; i < len; i++) {
+                        var glyph = glyphs[i];
+                        if (defined(glyph.billboard)) {
+                            glyph.billboard.distanceDisplayCondition = value;
+                        }
+                    }
+                }
+            }
+        },
+
         /**
          * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
@@ -769,6 +791,7 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
                NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition) &&
                this._id === other._id;
     };
 

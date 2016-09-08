@@ -729,7 +729,7 @@ define([
                 return this._distanceDisplayCondition;
             },
             set : function(value) {
-                if (DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
                     this._distanceDisplayCondition = value;
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
@@ -1195,7 +1195,8 @@ define([
                Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
                NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance) &&
                NearFarScalar.equals(this._translucencyByDistance, other._translucencyByDistance) &&
-               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance);
+               NearFarScalar.equals(this._pixelOffsetScaleByDistance, other._pixelOffsetScaleByDistance) &&
+               DistanceDisplayCondition.equals(this._distanceDisplayCondition, other._distanceDisplayCondition);
     };
 
     Billboard.prototype._destroy = function() {
