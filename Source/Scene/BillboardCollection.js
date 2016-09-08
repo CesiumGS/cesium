@@ -283,7 +283,8 @@ define([
                               BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_BY_DISTANCE_INDEX
                               BufferUsage.STATIC_DRAW, // TRANSLUCENCY_BY_DISTANCE_INDEX
-                              BufferUsage.STATIC_DRAW  // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW, // PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX
+                              BufferUsage.STATIC_DRAW  // DISTANCE_DISPLAY_CONDITION_INDEX
                           ];
 
         var that = this;
