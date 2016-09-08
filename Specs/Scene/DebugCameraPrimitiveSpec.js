@@ -67,7 +67,7 @@ defineSuite([
     });
 
     it('renders', function() {
-        var p = scene.primitives.add(new DebugCameraPrimitive({
+        scene.primitives.add(new DebugCameraPrimitive({
             camera : camera
         }));
         expect(scene.renderForSpecs()).not.toEqual([0, 0, 0, 255]);
