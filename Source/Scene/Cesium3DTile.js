@@ -269,15 +269,6 @@ define([
         this.distanceToCamera = 0;
 
         /**
-         * The plane mask of the parent for use with {@link CullingVolume#computeVisibilityWithPlaneMask}).
-         *
-         * @type {Number}
-         *
-         * @private
-         */
-        this.parentPlaneMask = 0;
-
-        /**
          * Marks if the tile is selected this frame.
          *
          * @type {Boolean}
@@ -290,8 +281,19 @@ define([
          * Marks if the tile is replaced this frame.
          *
          * @type {Boolean}
+         *
+         * @private
          */
         this.replaced = false;
+
+        /**
+         * The stored plane mask from the visibility check during tree traversal.
+         *
+         * @type {Number}
+         *
+         * @private
+         */
+        this.visibilityPlaneMask = true;
 
         /**
          * The last frame number the tile was selected in.
@@ -482,7 +484,7 @@ define([
 
         // Restore properties set per frame to their defaults
         this.distanceToCamera = 0;
-        this.parentPlaneMask = 0;
+        this.visibilityPlaneMask = 0;
         this.selected = false;
         this.lastSelectedFrameNumber = 0;
         this.lastStyleTime = 0;
@@ -495,17 +497,18 @@ define([
      * Determines whether the tile's bounding volume intersects the culling volume.
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile is to be tested.
+     * @param {Number} parentVisibilityPlaneMask The parent's plane mask to speed up the visibility check.
      * @returns {Number} A plane mask as described above in {@link CullingVolume#computeVisibilityWithPlaneMask}.
      *
      * @private
      */
-    Cesium3DTile.prototype.visibility = function(cullingVolume) {
-        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, this.parentPlaneMask);
+    Cesium3DTile.prototype.visibility = function(cullingVolume, parentVisibilityPlaneMask) {
+        return cullingVolume.computeVisibilityWithPlaneMask(this._boundingVolume, parentVisibilityPlaneMask);
     };
 
     /**
-     * Determines whether the tile's content's bounding volume intersects the culling volume. If the tile doesn't
-     * have content it checks the tile's bounding volume instead.
+     * Assuming the tile's bounding volume intersects the culling volume, determines
+     * whether the tile's content's bounding volume intersects the culling volume.
      *
      * @param {CullingVolume} cullingVolume The culling volume whose intersection with the tile's content is to be tested.
      * @returns {Intersect} The result of the intersection: the tile's content is completely outside, completely inside, or intersecting the culling volume.
@@ -513,9 +516,15 @@ define([
      * @private
      */
     Cesium3DTile.prototype.contentsVisibility = function(cullingVolume) {
+        // Assumes the tile's bounding volume intersects the culling volume already, so
+        // just return Intersect.INSIDE if there is no content bounding volume.
+        var boundingVolume = this._contentBoundingVolume;
+        if (!defined(boundingVolume)) {
+            return Intersect.INSIDE;
+        }
         // PERFORMANCE_IDEA: is it possible to burn less CPU on this test since we know the
         // tile's (not the content's) bounding volume intersects the culling volume?
-        return cullingVolume.computeVisibility(this.contentBoundingVolume);
+        return cullingVolume.computeVisibility(boundingVolume);
     };
 
     /**

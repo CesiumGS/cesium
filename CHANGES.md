@@ -10,7 +10,13 @@ Change Log
    * `Cesium3DTileContent`
    * `Cesium3DTileFeature`
 
+### 1.26 - 2016-10-03
+
+* Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
+* Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
+
 ### 1.25 - 2016-09-01
+
 * Breaking changes
     * The number and order of arguments passed to `KmlDataSource` `unsupportedNodeEvent` listeners have changed to allow better handling of unsupported KML Features.
     * Changed billboards and labels that are clamped to terrain to have the `verticalOrigin` set to `CENTER` by default instead of `BOTTOM`.

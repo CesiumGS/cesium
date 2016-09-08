@@ -69,8 +69,9 @@ function loadTileset(url) {
 
     tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
-        debugShowStatistics : true,
-        maximumNumberOfLoadedTiles : 3
+        debugShowStatistics : true
+//        , maximumNumberOfLoadedTiles : 3
+//       , refineToVisible : true
     }));
 
     return tileset.readyPromise.then(function(tileset) {
