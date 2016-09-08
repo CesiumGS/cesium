@@ -330,6 +330,8 @@ define([
      * @param {PolygonOutlineGeometry} value The value to pack.
      * @param {Number[]} array The array to pack into.
      * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @returns {Number[]} The array that was packed into
      */
     PolygonOutlineGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
@@ -354,6 +356,8 @@ define([
         array[startingIndex++] = value._extrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
         array[startingIndex++] = value.packedLength;
+
+        return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);

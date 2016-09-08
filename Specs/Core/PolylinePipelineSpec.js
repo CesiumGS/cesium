@@ -57,6 +57,19 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('generateArc accepts a height array for single value', function() {
+        var positions = [Cartesian3.fromDegrees(0, 0)];
+        var height = [30];
+
+        var newPositions = PolylinePipeline.generateArc({
+            positions: positions,
+            height: height
+        });
+
+        expect(newPositions.length).toEqual(3);
+        expect(Cartesian3.fromArray(newPositions, 0)).toEqualEpsilon(Cartesian3.fromDegrees(0, 0, 30), CesiumMath.EPSILON6);
+    });
+
     it('generateArc subdivides in half', function() {
         var p1 = Cartesian3.fromDegrees(0, 0);
         var p2 = Cartesian3.fromDegrees(90, 0);

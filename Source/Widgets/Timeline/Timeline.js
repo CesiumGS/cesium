@@ -784,6 +784,7 @@ define([
         this._trackListEle.height = trackListHeight;
         this._makeTics();
 
+        this._lastXPos = undefined;
         this._lastWidth = width;
         this._lastHeight = height;
     };

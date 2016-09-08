@@ -11,6 +11,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
@@ -47,7 +48,7 @@ define([
         '../ThirdParty/gltfDefaults',
         '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './getModelAccessor',
+        './getBinaryAccessor',
         './HeightReference',
         './ModelAnimationCache',
         './ModelAnimationCollection',
@@ -56,7 +57,8 @@ define([
         './ModelMesh',
         './ModelNode',
         './Pass',
-        './SceneMode'
+        './SceneMode',
+        './ShadowMode'
     ], function(
         BoundingSphere,
         Cartesian2,
@@ -69,6 +71,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         DeveloperError,
         FeatureDetection,
@@ -105,7 +108,7 @@ define([
         gltfDefaults,
         Uri,
         when,
-        getModelAccessor,
+        getBinaryAccessor,
         HeightReference,
         ModelAnimationCache,
         ModelAnimationCollection,
@@ -114,7 +117,8 @@ define([
         ModelMesh,
         ModelNode,
         Pass,
-        SceneMode) {
+        SceneMode,
+        ShadowMode) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -311,8 +315,9 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {Boolean} [options.castShadows=true] Deprecated, use options.shadows instead. Determines whether the model casts shadows from each light source.
+     * @param {Boolean} [options.receiveShadows=true] Deprecated, use options.shadows instead. Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
@@ -502,25 +507,19 @@ define([
         this._incrementallyLoadTextures = defaultValue(options.incrementallyLoadTextures, true);
         this._asynchronous = defaultValue(options.asynchronous, true);
 
-        /**
-         * Determines whether the model casts shadows from each light source.
-         *
-         * @type {Boolean}
-         *
-         * @default true
-         */
-        this.castShadows = defaultValue(options.castShadows, true);
-        this._castShadows = this.castShadows;
+        // Deprecated options
+        var castShadows = defaultValue(options.castShadows, true);
+        var receiveShadows = defaultValue(options.receiveShadows, true);
 
         /**
-         * Determines whether the model receives shadows from shadow casters in the scene.
+         * Determines whether the model casts or receives shadows from each light source.
          *
-         * @type {Boolean}
+         * @type {ShadowMode}
          *
-         * @default true
+         * @default ShadowMode.ENABLED
          */
-        this.receiveShadows = defaultValue(options.receiveShadows, true);
-        this._receiveShadows = this.receiveShadows;
+        this.shadows = defaultValue(options.shadows, ShadowMode.fromCastReceive(castShadows, receiveShadows));
+        this._shadows = this.shadows;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -590,8 +589,11 @@ define([
             materialsById : undefined     // Indexed with the material's property name
         };
 
-        this._uniformMaps = {};       // Not cached since it can be targeted by glTF animation
-        this._rendererResources = {   // Cached between models with the same url/cache-key
+        this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
+        this._extensionsUsed = undefined; // Cached used extensions in a hash-map so we don't have to search the gltf array
+        this._quantizedUniforms = {};     // Quantized uniforms for each program for WEB3D_quantized_attributes
+        this._programPrimitives = {};
+        this._rendererResources = {       // Cached between models with the same url/cache-key
             buffers : {},
             vertexArrays : {},
             programs : {},
@@ -865,6 +867,50 @@ define([
             get : function() {
                 return this._dirty;
             }
+        },
+
+        /**
+         * Determines whether the model casts shadows from each light source.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @deprecated
+         */
+        castShadows : {
+            get : function() {
+                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                return ShadowMode.castShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Model.castShadows', 'Model.castShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                var castShadows = value;
+                var receiveShadows = ShadowMode.receiveShadows(this.shadows);
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
+        },
+
+        /**
+         * Determines whether the model receives shadows from shadow casters in the scene.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Boolean}
+         *
+         * @deprecated
+         */
+        receiveShadows : {
+            get : function() {
+                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                return ShadowMode.receiveShadows(this.shadows);
+            },
+            set : function(value) {
+                deprecationWarning('Model.receiveShadows', 'Model.receiveShadows was deprecated in Cesium 1.25. It will be removed in 1.26. Use Model.shadows instead.');
+                var castShadows = ShadowMode.castShadows(this.shadows);
+                var receiveShadows = value;
+                this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
         }
     });
 
@@ -943,8 +989,7 @@ define([
      * @param {Boolean} [options.allowPicking=true] When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.
      * @param {Boolean} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
-     * @param {Boolean} [options.castShadows=true] Determines whether the model casts shadows from each light source.
-     * @param {Boolean} [options.receiveShadows=true] Determines whether the model receives shadows from shadow casters in the scene.
+     * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      *
@@ -1108,10 +1153,28 @@ define([
     var aMinScratch = new Cartesian3();
     var aMaxScratch = new Cartesian3();
 
+    function getAccessorMinMax(gltf, accessorId) {
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        var accessorMin = accessor.min;
+        var accessorMax = accessor.max;
+        // If this accessor is quantized, we should use the decoded min and max
+        if (defined(extensions)) {
+            var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+            if (defined(quantizedAttributes)) {
+                accessorMin = quantizedAttributes.decodedMin;
+                accessorMax = quantizedAttributes.decodedMax;
+            }
+        }
+        return {
+            min : accessorMin,
+            max : accessorMax
+        };
+    }
+
     function computeBoundingSphere(gltf) {
         var gltfNodes = gltf.nodes;
         var gltfMeshes = gltf.meshes;
-        var gltfAccessors = gltf.accessors;
         var rootNodes = gltf.scenes[gltf.scene].nodes;
         var rootNodesLength = rootNodes.length;
 
@@ -1136,11 +1199,11 @@ define([
                         var primitives = gltfMeshes[meshes[j]].primitives;
                         var primitivesLength = primitives.length;
                         for (var m = 0; m < primitivesLength; ++m) {
-                            var position = primitives[m].attributes.POSITION;
-                            if (defined(position)) {
-                                var accessor = gltfAccessors[position];
-                                var aMin = Cartesian3.fromArray(accessor.min, 0, aMinScratch);
-                                var aMax = Cartesian3.fromArray(accessor.max, 0, aMaxScratch);
+                            var positionAccessor = primitives[m].attributes.POSITION;
+                            if (defined(positionAccessor)) {
+                                var minMax = getAccessorMinMax(gltf, positionAccessor);
+                                var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
+                                var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
                                 if (defined(min) && defined(max)) {
                                     Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
                                     Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
@@ -1415,11 +1478,27 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
         var meshes = model.gltf.meshes;
+        var usesQuantizedAttributes = usesExtension(model, 'WEB3D_quantized_attributes');
 
         for (var id in meshes) {
             if (meshes.hasOwnProperty(id)) {
                 var mesh = meshes[id];
                 runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+                if (usesQuantizedAttributes) {
+                    // Cache primitives according to their program
+                    var primitives = mesh.primitives;
+                    var primitivesLength = primitives.length;
+                    for (var i = 0; i < primitivesLength; i++) {
+                        var primitive = primitives[i];
+                        var programId = getProgramForPrimitive(model, primitive);
+                        var programPrimitives = model._programPrimitives[programId];
+                        if (!defined(programPrimitives)) {
+                            programPrimitives = [];
+                            model._programPrimitives[programId] = programPrimitives;
+                        }
+                        programPrimitives.push(primitive);
+                    }
+                }
             }
         }
 
@@ -1434,10 +1513,22 @@ define([
             parsePrograms(model);
             parseTextures(model);
         }
-
         parseMaterials(model);
         parseMeshes(model);
         parseNodes(model);
+    }
+
+    function usesExtension(model, extension) {
+        var cachedExtensionsUsed = model._extensionsUsed;
+        if (!defined(cachedExtensionsUsed)) {
+            var extensionsUsed = model.gltf.extensionsUsed;
+            cachedExtensionsUsed = {};
+            var extensionsLength = extensionsUsed.length;
+            for (var i = 0; i < extensionsLength; i++) {
+                cachedExtensionsUsed[extensionsUsed[i]] = true;
+            }
+        }
+        return defined(cachedExtensionsUsed[extension]);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1530,6 +1621,129 @@ define([
         return getStringFromTypedArray(loadResources.getBuffer(bufferView));
     }
 
+    function replaceAllButFirstInString(string, find, replace) {
+        var index = string.indexOf(find);
+        return string.replace(new RegExp(find, 'g'), function(match, offset, all) {
+            return index === offset ? match : replace;
+        });
+    }
+
+    function getProgramForPrimitive(model, primitive) {
+        var gltf = model.gltf;
+        var materialId = primitive.material;
+        var material = gltf.materials[materialId];
+        var techniqueId = material.technique;
+        var technique = gltf.techniques[techniqueId];
+        return technique.program;
+    }
+
+    function getQuantizedAttributes(model, accessorId) {
+        var gltf = model.gltf;
+        var accessor = gltf.accessors[accessorId];
+        var extensions = accessor.extensions;
+        if (defined(extensions)) {
+            return extensions.WEB3D_quantized_attributes;
+        }
+        return undefined;
+    }
+
+    function getAttributeVariableName(model, primitive, attributeSemantic) {
+        var gltf = model.gltf;
+        var materialId = primitive.material;
+        var material = gltf.materials[materialId];
+        var techniqueId = material.technique;
+        var technique = gltf.techniques[techniqueId];
+        for (var parameter in technique.parameters) {
+            if (technique.parameters.hasOwnProperty(parameter)) {
+                var semantic = technique.parameters[parameter].semantic;
+                if (semantic === attributeSemantic) {
+                    var attributes = technique.attributes;
+                    for (var attributeVarName in attributes) {
+                        if (attributes.hasOwnProperty(attributeVarName)) {
+                            var name = attributes[attributeVarName];
+                            if (name === parameter) {
+                                return attributeVarName;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
+    function modifyShaderForQuantizedAttributes(shader, programName, model, context) {
+        var quantizedUniforms = {};
+        model._quantizedUniforms[programName] = quantizedUniforms;
+
+        var primitives = model._programPrimitives[programName];
+        for (var i = 0; i < primitives.length; i++) {
+            var primitive = primitives[i];
+            if (getProgramForPrimitive(model, primitive) === programName) {
+                for (var attributeSemantic in primitive.attributes) {
+                    if (primitive.attributes.hasOwnProperty(attributeSemantic)) {
+                        var decodeUniformVarName = 'czm_u_dec_' + attributeSemantic.toLowerCase();
+                        var decodeUniformVarNameScale = decodeUniformVarName + '_scale';
+                        var decodeUniformVarNameTranslate = decodeUniformVarName + '_translate';
+                        if (!defined(quantizedUniforms[decodeUniformVarName]) && !defined(quantizedUniforms[decodeUniformVarNameScale])) {
+                            var accessorId = primitive.attributes[attributeSemantic];
+                            var quantizedAttributes = getQuantizedAttributes(model, accessorId);
+                            if (defined(quantizedAttributes)) {
+                                var attributeVarName = getAttributeVariableName(model, primitive, attributeSemantic);
+                                var decodeMatrix = quantizedAttributes.decodeMatrix;
+                                var newMain = 'czm_decoded_' + attributeSemantic;
+                                var decodedAttributeVarName = attributeVarName.replace('a_', 'czm_a_dec_');
+                                var size = Math.floor(Math.sqrt(decodeMatrix.length));
+
+                                // replace usages of the original attribute with the decoded version, but not the declaration
+                                shader = replaceAllButFirstInString(shader, attributeVarName, decodedAttributeVarName);
+                                // declare decoded attribute
+                                var variableType;
+                                if (size > 2) {
+                                    variableType = 'vec' + (size - 1);
+                                } else {
+                                    variableType = 'float';
+                                }
+                                shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
+                                // splice decode function into the shader - attributes are pre-multiplied with the decode matrix
+                                // uniform in the shader (32-bit floating point)
+                                var decode = '';
+                                if (size === 5) {
+                                    // separate scale and translate since glsl doesn't have mat5
+                                    shader = 'uniform mat4 ' + decodeUniformVarNameScale + ';\n' + shader;
+                                    shader = 'uniform vec4 ' + decodeUniformVarNameTranslate + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameScale + ' * ' + attributeVarName + ' + ' + decodeUniformVarNameTranslate + ';\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
+
+                                    quantizedUniforms[decodeUniformVarNameScale] = {mat : 4};
+                                    quantizedUniforms[decodeUniformVarNameTranslate] = {vec : 4};
+                                }
+                                else {
+                                    shader = 'uniform mat' + size + ' ' + decodeUniformVarName + ';\n' + shader;
+                                    decode = '\n' +
+                                             'void main() {\n' +
+                                             '    ' + decodedAttributeVarName + ' = ' + variableType + '(' + decodeUniformVarName + ' * vec' + size + '(' + attributeVarName + ',1.0));\n' +
+                                             '    ' + newMain + '();\n' +
+                                             '}\n';
+
+                                    quantizedUniforms[decodeUniformVarName] = {mat : size};
+                                }
+                                shader = ShaderSource.replaceMain(shader, newMain);
+                                shader += decode;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
+        return shader;
+    }
+
     function modifyShader(shader, programName, callback) {
         if (defined(callback)) {
             shader = callback(shader, programName);
@@ -1555,6 +1769,10 @@ define([
                     attributeLocations[attrName] = attributesLength++;
                 }
             }
+        }
+
+        if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+            vs = modifyShaderForQuantizedAttributes(vs, id, model, context);
         }
 
         var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
@@ -1994,13 +2212,13 @@ define([
                             if (defined(attributeLocation)) {
                                 var a = accessors[primitiveAttributes[attributeName]];
                                 attributes.push({
-                                    index                  : attributeLocation,
-                                    vertexBuffer           : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : getModelAccessor(a).componentsPerAttribute,
-                                    componentDatatype      : a.componentType,
-                                    normalize              : false,
-                                    offsetInBytes          : a.byteOffset,
-                                    strideInBytes          : a.byteStride
+                                    index : attributeLocation,
+                                    vertexBuffer : rendererBuffers[a.bufferView],
+                                    componentsPerAttribute : getBinaryAccessor(a).componentsPerAttribute,
+                                    componentDatatype : a.componentType,
+                                    normalize : false,
+                                    offsetInBytes : a.byteOffset,
+                                    strideInBytes : a.byteStride
                                 });
                             }
                         }
@@ -2057,87 +2275,92 @@ define([
 
     function createRenderStates(model, context) {
         var loadResources = model._loadResources;
+        var techniques = model.gltf.techniques;
 
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
-            var rendererRenderStates = model._rendererResources.renderStates;
-            var techniques = model.gltf.techniques;
             for (var id in techniques) {
                 if (techniques.hasOwnProperty(id)) {
-                    var technique = techniques[id];
-                    var states = technique.states;
-
-                    var booleanStates = getBooleanStates(states);
-                    var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
-                    var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
-                    var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
-                        WebGLConstants.FUNC_ADD,
-                        WebGLConstants.FUNC_ADD]);
-                    var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
-                        WebGLConstants.ONE,
-                        WebGLConstants.ONE,
-                        WebGLConstants.ZERO,
-                        WebGLConstants.ZERO]);
-                    var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
-                    var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
-                    var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
-                    var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
-
-                    rendererRenderStates[id] = RenderState.fromCache({
-                        frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
-                        cull : {
-                            enabled : booleanStates[WebGLConstants.CULL_FACE],
-                            face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-                        },
-                        lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-                        polygonOffset : {
-                            enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                            factor : polygonOffset[0],
-                            units : polygonOffset[1]
-                        },
-                        scissorTest : {
-                            enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
-                            rectangle : {
-                                x : scissor[0],
-                                y : scissor[1],
-                                width : scissor[2],
-                                height : scissor[3]
-                            }
-                        },
-                        depthRange : {
-                            near : depthRange[0],
-                            far : depthRange[1]
-                        },
-                        depthTest : {
-                            enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                            func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
-                        },
-                        colorMask : {
-                            red : colorMask[0],
-                            green : colorMask[1],
-                            blue : colorMask[2],
-                            alpha : colorMask[3]
-                        },
-                        depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
-                        blending : {
-                            enabled : booleanStates[WebGLConstants.BLEND],
-                            color : {
-                                red : blendColor[0],
-                                green : blendColor[1],
-                                blue : blendColor[2],
-                                alpha : blendColor[3]
-                            },
-                            equationRgb : blendEquationSeparate[0],
-                            equationAlpha : blendEquationSeparate[1],
-                            functionSourceRgb : blendFuncSeparate[0],
-                            functionSourceAlpha : blendFuncSeparate[1],
-                            functionDestinationRgb : blendFuncSeparate[2],
-                            functionDestinationAlpha : blendFuncSeparate[3]
-                        }
-                    });
+                    createRenderStateForTechnique(model, id, context);
                 }
             }
         }
+    }
+
+    function createRenderStateForTechnique(model, id, context) {
+        var rendererRenderStates = model._rendererResources.renderStates;
+        var techniques = model.gltf.techniques;
+        var technique = techniques[id];
+        var states = technique.states;
+
+        var booleanStates = getBooleanStates(states);
+        var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
+        var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
+        var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
+            WebGLConstants.FUNC_ADD,
+            WebGLConstants.FUNC_ADD]);
+        var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
+            WebGLConstants.ONE,
+            WebGLConstants.ONE,
+            WebGLConstants.ZERO,
+            WebGLConstants.ZERO]);
+        var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
+        var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
+        var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
+        var scissor = defaultValue(statesFunctions.scissor, [0.0, 0.0, 0.0, 0.0]);
+
+        rendererRenderStates[id] = RenderState.fromCache({
+            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
+            cull : {
+                enabled : booleanStates[WebGLConstants.CULL_FACE],
+                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
+            },
+            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
+            polygonOffset : {
+                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
+                factor : polygonOffset[0],
+                units : polygonOffset[1]
+            },
+            scissorTest : {
+                enabled : booleanStates[WebGLConstants.SCISSOR_TEST],
+                rectangle : {
+                    x : scissor[0],
+                    y : scissor[1],
+                    width : scissor[2],
+                    height : scissor[3]
+                }
+            },
+            depthRange : {
+                near : depthRange[0],
+                far : depthRange[1]
+            },
+            depthTest : {
+                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
+                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
+            },
+            colorMask : {
+                red : colorMask[0],
+                green : colorMask[1],
+                blue : colorMask[2],
+                alpha : colorMask[3]
+            },
+            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+            blending : {
+                enabled : booleanStates[WebGLConstants.BLEND],
+                color : {
+                    red : blendColor[0],
+                    green : blendColor[1],
+                    blue : blendColor[2],
+                    alpha : blendColor[3]
+                },
+                equationRgb : blendEquationSeparate[0],
+                equationAlpha : blendEquationSeparate[1],
+                functionSourceRgb : blendFuncSeparate[0],
+                functionSourceAlpha : blendFuncSeparate[1],
+                functionDestinationRgb : blendFuncSeparate[2],
+                functionDestinationAlpha : blendFuncSeparate[3]
+            }
+        });
     }
 
     // This doesn't support LOCAL, which we could add if it is ever used.
@@ -2205,7 +2428,7 @@ define([
         },
         MODELINVERSETRANSPOSE : function(uniformState, model) {
             return function() {
-                return uniformState.inverseTranposeModel;
+                return uniformState.inverseTransposeModel;
             };
         },
         MODELVIEWINVERSETRANSPOSE : function(uniformState, model) {
@@ -2547,6 +2770,90 @@ define([
         }
     }
 
+    function scaleFromMatrix5Array(matrix) {
+        return [matrix[0], matrix[1], matrix[2], matrix[3],
+                matrix[5], matrix[6], matrix[7], matrix[8],
+                matrix[10], matrix[11], matrix[12], matrix[13],
+                matrix[15], matrix[16], matrix[17], matrix[18]];
+    }
+
+    function translateFromMatrix5Array(matrix) {
+        return [matrix[20], matrix[21], matrix[22], matrix[23]];
+    }
+
+    function createUniformsForQuantizedAttributes(model, primitive, context) {
+        var gltf = model.gltf;
+        var accessors = gltf.accessors;
+        var programId = getProgramForPrimitive(model, primitive);
+        var quantizedUniforms = model._quantizedUniforms[programId];
+        var setUniforms = {};
+        var uniformMap = {};
+
+        for (var attribute in primitive.attributes) {
+            if (primitive.attributes.hasOwnProperty(attribute)) {
+                var accessorId = primitive.attributes[attribute];
+                var a = accessors[accessorId];
+                var extensions = a.extensions;
+
+                if (defined(extensions)) {
+                    var quantizedAttributes = extensions.WEB3D_quantized_attributes;
+                    if (defined(quantizedAttributes)) {
+                        var decodeMatrix = quantizedAttributes.decodeMatrix;
+                        var uniformVariable = 'czm_u_dec_' + attribute.toLowerCase();
+
+                        switch (a.type) {
+                            case 'SCALAR':
+                                uniformMap[uniformVariable] = getMat2UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC2':
+                                uniformMap[uniformVariable] = getMat3UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC3':
+                                uniformMap[uniformVariable] = getMat4UniformFunction(decodeMatrix, model).func;
+                                setUniforms[uniformVariable] = true;
+                                break;
+                            case 'VEC4':
+                                // VEC4 attributes are split into scale and translate because there is no mat5 in GLSL
+                                var uniformVariableScale = uniformVariable + '_scale';
+                                var uniformVariableTranslate = uniformVariable + '_translate';
+                                uniformMap[uniformVariableScale] = getMat4UniformFunction(scaleFromMatrix5Array(decodeMatrix), model).func;
+                                uniformMap[uniformVariableTranslate] = getVec4UniformFunction(translateFromMatrix5Array(decodeMatrix), model).func;
+                                setUniforms[uniformVariableScale] = true;
+                                setUniforms[uniformVariableTranslate] = true;
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // If there are any unset quantized uniforms in this program, they should be set to the identity
+        for (var quantizedUniform in quantizedUniforms) {
+            if (quantizedUniforms.hasOwnProperty(quantizedUniform)) {
+                if (!setUniforms[quantizedUniform]) {
+                    var properties = quantizedUniforms[quantizedUniform];
+                    if (defined(properties.mat)) {
+                        if (properties.mat === 2) {
+                            uniformMap[quantizedUniform] = getMat2UniformFunction(Matrix2.IDENTITY, model).func;
+                        } else if (properties.mat === 3) {
+                            uniformMap[quantizedUniform] = getMat3UniformFunction(Matrix3.IDENTITY, model).func;
+                        } else if (properties.mat === 4) {
+                            uniformMap[quantizedUniform] = getMat4UniformFunction(Matrix4.IDENTITY, model).func;
+                        }
+                    }
+                    if (defined(properties.vec)) {
+                        if (properties.vec === 4) {
+                            uniformMap[quantizedUniform] = getVec4UniformFunction([0, 0, 0, 0], model).func;
+                        }
+                    }
+                }
+            }
+        }
+        return uniformMap;
+    }
+
     function createPickColorFunction(color) {
         return function() {
             return color;
@@ -2599,10 +2906,10 @@ define([
                 var programId = technique.program;
 
                 var boundingSphere;
-                var positionAttribute = primitive.attributes.POSITION;
-                if (defined(positionAttribute)) {
-                    var a = accessors[positionAttribute];
-                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+                var positionAccessor = primitive.attributes.POSITION;
+                if (defined(positionAccessor)) {
+                    var minMax = getAccessorMinMax(gltf, positionAccessor);
+                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
                 }
 
                 var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
@@ -2615,7 +2922,7 @@ define([
                 else {
                     var positions = accessors[primitive.attributes.POSITION];
                     count = positions.count;
-                    var accessorInfo = getModelAccessor(positions);
+                    var accessorInfo = getBinaryAccessor(positions);
                     offset = (positions.byteOffset / (accessorInfo.componentsPerAttribute*ComponentDatatype.getSizeInBytes(positions.componentType)));
                 }
 
@@ -2633,6 +2940,12 @@ define([
                     uniformMap = model._uniformMapLoaded(uniformMap, programId, runtimeNode);
                 }
 
+                // Add uniforms for decoding quantized attributes if used
+                if (usesExtension(model, 'WEB3D_quantized_attributes')) {
+                    var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive, context);
+                    uniformMap = combine(uniformMap, quantizedUniformMap);
+                }
+
                 var rs = rendererRenderStates[material.technique];
 
                 // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
@@ -2644,6 +2957,9 @@ define([
                     mesh : runtimeMeshesByName[mesh.name]
                 };
 
+                var castShadows = ShadowMode.castShadows(model._shadows);
+                var receiveShadows = ShadowMode.receiveShadows(model._shadows);
+                
                 var command = new DrawCommand({
                     boundingVolume : new BoundingSphere(), // updated in update()
                     cull : model.cull,
@@ -2653,8 +2969,8 @@ define([
                     count : count,
                     offset : offset,
                     shaderProgram : rendererPrograms[technique.program],
-                    castShadows : model._castShadows,
-                    receiveShadows : model._receiveShadows,
+                    castShadows : castShadows,
+                    receiveShadows : receiveShadows,
                     uniformMap : uniformMap,
                     renderState : rs,
                     owner : owner,
@@ -2840,7 +3156,6 @@ define([
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
             createRenderStates(model, context); // using glTF materials/techniques/states
-
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
@@ -3083,12 +3398,11 @@ define([
     }
 
     function updateShadows(model) {
-        if ((model.castShadows !== model._castShadows) || (model.receiveShadows !== model._receiveShadows)) {
-            model._castShadows = model.castShadows;
-            model._receiveShadows = model.receiveShadows;
+        if (model.shadows !== model._shadows) {
+            model._shadows = model.shadows;
 
-            var castShadows = model.castShadows;
-            var receiveShadows = model.receiveShadows;
+            var castShadows = ShadowMode.castShadows(model.shadows);
+            var receiveShadows = ShadowMode.receiveShadows(model.shadows);
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
 
@@ -3165,7 +3479,7 @@ define([
                 var extension = extensionsUsed[index];
 
                 if (extension !== 'CESIUM_RTC' && extension !== 'KHR_binary_glTF' &&
-                    extension !== 'KHR_materials_common') {
+                    extension !== 'KHR_materials_common' && extension !== 'WEB3D_quantized_attributes') {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
             }
@@ -3229,10 +3543,6 @@ define([
             }
 
             var clampedModelMatrix = model._clampedModelMatrix;
-            if (!defined(clampedModelMatrix)) {
-                clampedModelMatrix = new Matrix4();
-                model._clampedModelMatrix = clampedModelMatrix;
-            }
 
             // Modify clamped model matrix to use new height
             Matrix4.clone(model.modelMatrix, clampedModelMatrix);
@@ -3270,6 +3580,10 @@ define([
         scratchPosition.y = modelMatrix[13];
         scratchPosition.z = modelMatrix[14];
         var cartoPosition = ellipsoid.cartesianToCartographic(scratchPosition);
+
+        if (!defined(model._clampedModelMatrix)) {
+            model._clampedModelMatrix = Matrix4.clone(modelMatrix, new Matrix4());
+        }
 
         // Install callback to handle updating of terrain tiles
         var surface = globe._surface;

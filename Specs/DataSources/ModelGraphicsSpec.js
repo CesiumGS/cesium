@@ -6,7 +6,8 @@ defineSuite([
         'Core/Quaternion',
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
-        'DataSources/PropertyBag'
+        'DataSources/PropertyBag',
+        'Scene/ShadowMode'
     ], function(
         ModelGraphics,
         Cartesian3,
@@ -14,7 +15,8 @@ defineSuite([
         Quaternion,
         ConstantProperty,
         NodeTransformationProperty,
-        PropertyBag) {
+        PropertyBag,
+        ShadowMode) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -25,9 +27,8 @@ defineSuite([
             minimumPixelSize : 2,
             maximumScale : 200,
             incrementallyLoadTextures : false,
-            castShadows : false,
-            receiveShadows : false,
             runAnimations : false,
+            shadows : ShadowMode.DISABLED,
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
@@ -44,8 +45,7 @@ defineSuite([
         expect(model.minimumPixelSize).toBeInstanceOf(ConstantProperty);
         expect(model.maximumScale).toBeInstanceOf(ConstantProperty);
         expect(model.incrementallyLoadTextures).toBeInstanceOf(ConstantProperty);
-        expect(model.castShadows).toBeInstanceOf(ConstantProperty);
-        expect(model.receiveShadows).toBeInstanceOf(ConstantProperty);
+        expect(model.shadows).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
@@ -56,8 +56,7 @@ defineSuite([
         expect(model.minimumPixelSize.getValue()).toEqual(options.minimumPixelSize);
         expect(model.maximumScale.getValue()).toEqual(options.maximumScale);
         expect(model.incrementallyLoadTextures.getValue()).toEqual(options.incrementallyLoadTextures);
-        expect(model.castShadows.getValue()).toEqual(options.castShadows);
-        expect(model.receiveShadows.getValue()).toEqual(options.receiveShadows);
+        expect(model.shadows.getValue()).toEqual(options.shadows);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
 
         var actualNodeTransformations = model.nodeTransformations.getValue(new JulianDate());
@@ -77,8 +76,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty({
@@ -100,8 +98,7 @@ defineSuite([
         expect(target.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(target.maximumScale).toBe(source.maximumScale);
         expect(target.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
-        expect(target.castShadows).toBe(source.castShadows);
-        expect(target.receiveShadows).toBe(source.receiveShadows);
+        expect(target.shadows).toBe(source.shadows);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
     });
@@ -114,8 +111,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
@@ -127,8 +123,7 @@ defineSuite([
         var minimumPixelSize = new ConstantProperty(2.0);
         var maximumScale = new ConstantProperty(200.0);
         var incrementallyLoadTextures = new ConstantProperty(true);
-        var castShadows = new ConstantProperty(true);
-        var receiveShadows = new ConstantProperty(true);
+        var shadows = new ConstantProperty(ShadowMode.ENABLED);
         var runAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
@@ -141,8 +136,7 @@ defineSuite([
         target.minimumPixelSize = minimumPixelSize;
         target.maximumScale = maximumScale;
         target.incrementallyLoadTextures = incrementallyLoadTextures;
-        target.castShadows = castShadows;
-        target.receiveShadows = receiveShadows;
+        target.shadows = shadows;
         target.runAnimations = runAnimations;
         target.nodeTransformations = nodeTransformations;
 
@@ -154,8 +148,7 @@ defineSuite([
         expect(target.minimumPixelSize).toBe(minimumPixelSize);
         expect(target.maximumScale).toBe(maximumScale);
         expect(target.incrementallyLoadTextures).toBe(incrementallyLoadTextures);
-        expect(target.castShadows).toBe(castShadows);
-        expect(target.receiveShadows).toBe(receiveShadows);
+        expect(target.shadows).toBe(shadows);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
     });
@@ -168,8 +161,7 @@ defineSuite([
         source.minimumPixelSize = new ConstantProperty(2.0);
         source.maximumScale = new ConstantProperty(200.0);
         source.incrementallyLoadTextures = new ConstantProperty(true);
-        source.castShadows = new ConstantProperty(true);
-        source.receiveShadows = new ConstantProperty(true);
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.runAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
@@ -183,8 +175,7 @@ defineSuite([
         expect(result.minimumPixelSize).toBe(source.minimumPixelSize);
         expect(result.maximumScale).toBe(source.maximumScale);
         expect(result.incrementallyLoadTextures).toBe(source.incrementallyLoadTextures);
-        expect(result.castShadows).toBe(source.castShadows);
-        expect(result.receiveShadows).toBe(source.receiveShadows);
+        expect(result.shadows).toBe(source.shadows);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
     });

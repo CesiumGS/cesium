@@ -162,6 +162,14 @@ define([
         this.dirty = true;
 
         /**
+         * Specifies whether the shadow map originates from a light source. Shadow maps that are used for analytical
+         * purposes should set this to false so as not to affect scene rendering.
+         *
+         * @private
+         */
+        this.fromLightSource = defaultValue(options.fromLightSource, true);
+
+        /**
          * Determines the darkness of the shadows.
          *
          * @type {Number}
@@ -1483,6 +1491,8 @@ define([
         }
 
         result = DrawCommand.shallowClone(command, result);
+        result.castShadows = true;
+        result.receiveShadows = false;
 
         if (!defined(castShader) || oldShaderId !== command.shaderProgram.id || shadowsDirty) {
             if (defined(castShader)) {
@@ -1533,11 +1543,12 @@ define([
         return result;
     }
 
-    ShadowMap.createDerivedCommands = function(shadowMaps, command, shadowsDirty, context, result) {
+    ShadowMap.createDerivedCommands = function(shadowMaps, lightShadowMaps, command, shadowsDirty, context, result) {
         if (!defined(result)) {
             result = {};
         }
 
+        var lightShadowMapsEnabled = (lightShadowMaps.length > 0);
         var shaderProgram = command.shaderProgram;
         var vertexShaderSource = shaderProgram.vertexShaderSource;
         var fragmentShaderSource = shaderProgram.fragmentShaderSource;
@@ -1566,7 +1577,8 @@ define([
             result.castShaderProgramId = command.shaderProgram.id;
         }
 
-        if (command.receiveShadows) {
+        if (command.receiveShadows && lightShadowMapsEnabled) {
+            // Only generate a receiveCommand if there is a shadow map originating from a light source.
             var receiveShader;
             var receiveUniformMap;
             if (defined(result.receiveCommand)) {
@@ -1575,6 +1587,8 @@ define([
             }
 
             result.receiveCommand = DrawCommand.shallowClone(command, result.receiveCommand);
+            result.castShadows = false;
+            result.receiveShadows = true;
 
             // If castShadows changed, recompile the receive shadows shader. The normal shading technique simulates
             // self-shadowing so it should be turned off if castShadows is false.
@@ -1587,7 +1601,7 @@ define([
                 }
 
                 var receiveVS = ShadowMapShader.createShadowReceiveVertexShader(vertexShaderSource, isTerrain, hasTerrainNormal);
-                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, shadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
+                var receiveFS = ShadowMapShader.createShadowReceiveFragmentShader(fragmentShaderSource, lightShadowMaps[0], command.castShadows, isTerrain, hasTerrainNormal);
 
                 receiveShader = ShaderProgram.fromCache({
                     context : context,
@@ -1596,7 +1610,7 @@ define([
                     attributeLocations : shaderProgram._attributeLocations
                 });
 
-                receiveUniformMap = combineUniforms(shadowMaps[0], command.uniformMap, isTerrain);
+                receiveUniformMap = combineUniforms(lightShadowMaps[0], command.uniformMap, isTerrain);
             }
 
             result.receiveCommand.shaderProgram = receiveShader;

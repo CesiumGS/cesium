@@ -40,6 +40,7 @@ define([
      * @param {Property} [options.perPositionHeight=false] A boolean specifying whether or not the the height of each position is used.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
+     * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
      *
      * @see Entity
      * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polygon.html|Cesium Sandcastle Polygon Demo}
@@ -67,13 +68,15 @@ define([
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
-        this._definitionChanged = new Event();
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._definitionChanged = new Event();
         this._closeTop = undefined;
         this._closeTopSubscription = undefined;
         this._closeBottom = undefined;
         this._closeBottomSubscription = undefined;
+        this._shadows = undefined;
+        this._shadowsSubscription = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -201,7 +204,16 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        closeBottom : createPropertyDescriptor('closeBottom')
+        closeBottom : createPropertyDescriptor('closeBottom'),
+
+        /**
+         * Get or sets the enum Property specifying whether the polygon
+         * casts or receives shadows from each light source.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default ShadowMode.DISABLED
+         */
+        shadows : createPropertyDescriptor('shadows')
     });
 
     /**
@@ -228,6 +240,7 @@ define([
         result.perPositionHeight = this.perPositionHeight;
         result.closeTop = this.closeTop;
         result.closeBottom = this.closeBottom;
+        result.shadows = this.shadows;
         return result;
     };
 
@@ -258,6 +271,7 @@ define([
         this.perPositionHeight = defaultValue(this.perPositionHeight, source.perPositionHeight);
         this.closeTop = defaultValue(this.closeTop, source.closeTop);
         this.closeBottom = defaultValue(this.closeBottom, source.closeBottom);
+        this.shadows = defaultValue(this.shadows, source.shadows);
     };
 
     return PolygonGraphics;

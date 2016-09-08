@@ -192,4 +192,20 @@ defineSuite([
         expect(drawingBufferCoordinates.x).toBeLessThan(1.0);
         expect(drawingBufferCoordinates.y).toBeLessThan(1.0);
     });
+
+    it('should not error when zoomed out and in 2D', function(done) {
+        var scene = createScene();
+        scene.camera.setView({
+            destination : Cartesian3.fromDegrees(75, 15, 30000000.0)
+        });
+
+        // Update scene state
+        scene.morphTo2D(0);
+        scene.renderForSpecs();
+
+        var position = Cartesian3.fromDegrees(-80, 25);
+        var windowCoordinates = SceneTransforms.wgs84ToWindowCoordinates(scene, position);
+        expect(windowCoordinates).toBeDefined();
+        scene.destroyForSpecs();
+    });
 }, 'WebGL');

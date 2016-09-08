@@ -21,6 +21,7 @@ defineSuite([
         'Scene/OrthographicFrustum',
         'Scene/TextureAtlas',
         'Scene/VerticalOrigin',
+        'Specs/createGlobe',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -46,6 +47,7 @@ defineSuite([
         OrthographicFrustum,
         TextureAtlas,
         VerticalOrigin,
+        createGlobe,
         createScene,
         pollToPromise,
         when) {
@@ -150,7 +152,7 @@ defineSuite([
                 alpha : 4.0
             },
             rotation : 1.0,
-            alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
+            alignedAxis : Cartesian3.UNIT_Z,
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0),
@@ -173,7 +175,7 @@ defineSuite([
         expect(b.color.blue).toEqual(3.0);
         expect(b.color.alpha).toEqual(4.0);
         expect(b.rotation).toEqual(1.0);
-        expect(b.alignedAxis).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
         expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0, 1.0, 1.0e6, 0.0));
@@ -195,7 +197,7 @@ defineSuite([
         b.image = greenImage;
         b.color = new Color(1.0, 2.0, 3.0, 4.0);
         b.rotation = 1.0;
-        b.alignedAxis = new Cartesian3(1.0, 2.0, 3.0);
+        b.alignedAxis = Cartesian3.UNIT_Z;
         b.width = 300.0;
         b.height = 200.0;
         b.scaleByDistance = new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0);
@@ -216,7 +218,7 @@ defineSuite([
         expect(b.color.blue).toEqual(3.0);
         expect(b.color.alpha).toEqual(4.0);
         expect(b.rotation).toEqual(1.0);
-        expect(b.alignedAxis).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.alignedAxis).toEqual(Cartesian3.UNIT_Z);
         expect(b.scaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.translucencyByDistance).toEqual(new NearFarScalar(1.0e6, 1.0, 1.0e8, 0.0));
         expect(b.pixelOffsetScaleByDistance).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
@@ -1563,48 +1565,9 @@ defineSuite([
     });
 
     describe('height referenced billboards', function() {
-        function createMockGlobe() {
-            var globe = {
-                callback : undefined,
-                removedCallback : false,
-                ellipsoid : Ellipsoid.WGS84,
-                update : function() {},
-                getHeight : function() {
-                    return 0.0;
-                },
-                _surface : {},
-                destroy : function() {}
-            };
-
-            globe.beginFrame = function() {
-            };
-
-            globe.endFrame = function() {
-            };
-
-            globe.terrainProviderChanged = new Event();
-            defineProperties(globe, {
-                terrainProvider : {
-                    set : function(value) {
-                        this.terrainProviderChanged.raiseEvent(value);
-                    }
-                }
-            });
-
-            globe._surface.updateHeight = function(position, callback) {
-                globe.callback = callback;
-                return function() {
-                    globe.removedCallback = true;
-                    globe.callback = undefined;
-                };
-            };
-
-            return globe;
-        }
-
         var billboardsWithHeight;
         beforeEach(function() {
-            scene.globe = createMockGlobe();
+            scene.globe = createGlobe();
             billboardsWithHeight = new BillboardCollection({
                 scene : scene
             });
@@ -1643,6 +1606,7 @@ defineSuite([
         });
 
         it('updates the callback when the height reference changes', function() {
+
             var b = billboardsWithHeight.add({
                 heightReference : HeightReference.CLAMP_TO_GROUND,
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
@@ -1718,7 +1682,7 @@ defineSuite([
             var b = billboards.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
-            
+
             expect(function() {
                 b.heightReference = HeightReference.CLAMP_TO_GROUND;
             }).toThrowDeveloperError();

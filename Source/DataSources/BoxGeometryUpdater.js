@@ -16,6 +16,7 @@ define([
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
+        '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
         './dynamicGeometryGetBoundingSphere',
@@ -38,6 +39,7 @@ define([
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
         dynamicGeometryGetBoundingSphere,
@@ -50,6 +52,7 @@ define([
     var defaultFill = new ConstantProperty(true);
     var defaultOutline = new ConstantProperty(false);
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
+    var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var scratchColor = new Color();
 
     function GeometryOptions(entity) {
@@ -90,6 +93,7 @@ define([
         this._showOutlineProperty = undefined;
         this._outlineColorProperty = undefined;
         this._outlineWidth = 1.0;
+        this._shadowsProperty = undefined;
         this._options = new GeometryOptions(entity);
         this._onEntityPropertyChanged(entity, 'box', entity.box, undefined);
     }
@@ -215,6 +219,19 @@ define([
         outlineWidth : {
             get : function() {
                 return this._outlineWidth;
+            }
+        },
+        /**
+         * Gets the property specifying whether the geometry
+         * casts or receives shadows from each light source.
+         * @memberof BoxGeometryUpdater.prototype
+         * 
+         * @type {Property}
+         * @readonly
+         */
+        shadowsProperty : {
+            get : function() {
+                return this._shadowsProperty;
             }
         },
         /**
@@ -436,6 +453,7 @@ define([
         this._showProperty = defaultValue(show, defaultShow);
         this._showOutlineProperty = defaultValue(box.outline, defaultOutline);
         this._outlineColorProperty = outlineEnabled ? defaultValue(box.outlineColor, defaultOutlineColor) : undefined;
+        this._shadowsProperty = defaultValue(box.shadows, defaultShadows);
 
         var outlineWidth = box.outlineWidth;
 
@@ -521,6 +539,8 @@ define([
 
         options.dimensions = dimensions;
 
+        var shadows = this._geometryUpdater.shadowsProperty.getValue(time);
+
         if (Property.getValueOrDefault(box.fill, time, true)) {
             var material = MaterialProperty.getValue(time, geometryUpdater.fillMaterialProperty, this._material);
             this._material = material;
@@ -539,7 +559,8 @@ define([
                     modelMatrix : modelMatrix
                 }),
                 appearance : appearance,
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
 
@@ -566,7 +587,8 @@ define([
                         lineWidth : geometryUpdater._scene.clampLineWidth(outlineWidth)
                     }
                 }),
-                asynchronous : false
+                asynchronous : false,
+                shadows : shadows
             }));
         }
     };
