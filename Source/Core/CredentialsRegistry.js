@@ -129,7 +129,7 @@ define([
      */
     CredentialsRegistry.clear = function() {
         _credentials = [];
-    }
+    };
     
     return CredentialsRegistry;
 });
