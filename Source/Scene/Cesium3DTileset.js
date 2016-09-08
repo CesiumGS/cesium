@@ -1358,6 +1358,7 @@ define([
     function applyDebugSettings(tileset, frameState) {
         // Draw a debug camera in freeze frame mode
         var enterFreezeFrame = tileset.debugFreezeFrame && !tileset._debugFreezeFrame;
+        var exitFreezeFrame = !tileset.debugFreezeFrame && tileset._debugFreezeFrame;
         tileset._debugFreezeFrame = tileset.debugFreezeFrame;
         if (tileset.debugFreezeFrame) {
             if (enterFreezeFrame) {
@@ -1365,11 +1366,13 @@ define([
                 tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
                 tileset._debugCameraFrustum = new DebugCameraPrimitive({
                     camera : frameState.camera,
-                    color : Color.CYAN,
                     updateOnChange : false
                 });
             }
             tileset._debugCameraFrustum.update(frameState);
+        } else if (exitFreezeFrame) {
+            // Destroy debug camera when exiting freeze frame
+            tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
         }
     }
 
