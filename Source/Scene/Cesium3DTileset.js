@@ -834,7 +834,7 @@ define([
         var dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
         var horizonFactor = 1.0 - dot;
 
-        // Weaken the horizontal factor as the camera height increases, implying the camera is further away from the tileset.
+        // Weaken the horizon factor as the camera height increases, implying the camera is further away from the tileset.
         // The goal is to increase density for the "street view", not when viewing the tileset from a distance.
         horizonFactor = horizonFactor * (1.0 - t);
 
