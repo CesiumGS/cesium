@@ -803,12 +803,18 @@ defineSuite([
             var stats = tileset._statistics;
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
+            expect(tileset._debugCameraFrustum).toBeUndefined();
 
             tileset.debugFreezeFrame = true;
             viewAllTiles();
             scene.renderForSpecs();
             expect(stats.visited).toEqual(0); // selectTiles returns early, so no tiles are visited
             expect(stats.numberOfCommands).toEqual(1); // root tile is still in selectedTiles list
+            expect(tileset._debugCameraFrustum).toBeDefined();
+
+            tileset.debugFreezeFrame = false;
+            scene.renderForSpecs();
+            expect(tileset._debugCameraFrustum).toBeUndefined();
         });
     });
 
@@ -1541,6 +1547,7 @@ defineSuite([
     it('propagates tile transform down the tree', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetWithTransformsUrl).then(function(tileset) {
             scene.renderForSpecs();
+            var stats = tileset._statistics;
             var root = tileset._root;
             var rootTransform = Matrix4.unpack(root._header.transform);
 
@@ -1548,7 +1555,7 @@ defineSuite([
             var childTransform = Matrix4.unpack(child._header.transform);
             var computedTransform = Matrix4.multiply(rootTransform, childTransform, new Matrix4());
 
-            expect(tileset._selectedTiles.length).toBe(2);
+            expect(stats.numberOfCommands).toBe(2);
             expect(root.computedTransform).toEqual(rootTransform);
             expect(child.computedTransform).toEqual(computedTransform);
 
@@ -1558,6 +1565,24 @@ defineSuite([
             computedTransform = Matrix4.multiply(tilesetTransform, computedTransform, computedTransform);
             scene.renderForSpecs();
             expect(child.computedTransform).toEqual(computedTransform);
+
+            // Set the modelMatrix somewhere off screen
+            tileset.modelMatrix = Matrix4.fromTranslation(new Cartesian3(0.0, 100000.0, 0.0));
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toBe(0);
+
+            // Now bring it back
+            tileset.modelMatrix = Matrix4.IDENTITY;
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toBe(2);
+
+            // Do the same steps for a tile transform
+            child.transform = Matrix4.fromTranslation(new Cartesian3(0.0, 100000.0, 0.0));
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toBe(1);
+            child.transform = Matrix4.IDENTITY;
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toBe(2);
         });
     });
 

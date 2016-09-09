@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -25,9 +26,11 @@ define([
         './Cesium3DTileRefine',
         './Cesium3DTileStyleEngine',
         './CullingVolume',
+        './DebugCameraPrimitive',
         './SceneMode'
     ], function(
         Cartesian3,
+        Color,
         defaultValue,
         defined,
         defineProperties,
@@ -52,6 +55,7 @@ define([
         Cesium3DTileRefine,
         Cesium3DTileStyleEngine,
         CullingVolume,
+        DebugCameraPrimitive,
         SceneMode) {
     'use strict';
 
@@ -162,13 +166,7 @@ define([
         this._maximumNumberOfLoadedTiles = defaultValue(options.maximumNumberOfLoadedTiles, 256);
         this._styleEngine = new Cesium3DTileStyleEngine();
 
-        /**
-         * A 4x4 transformation matrix that transforms the tileset's root tile.
-         *
-         * @type {Matrix4}
-         * @default Matrix4.IDENTITY
-         */
-        this.modelMatrix = defined(options.modelMatrix) ? options.modelMatrix : Matrix4.clone(Matrix4.IDENTITY);
+        this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -223,6 +221,8 @@ define([
          * @default false
          */
         this.debugFreezeFrame = defaultValue(options.debugFreezeFrame, false);
+        this._debugFreezeFrame = this.debugFreezeFrame;
+        this._debugCameraFrustum = undefined;
 
         /**
          * This property is for debugging only; it is not optimized for production use.
@@ -654,6 +654,26 @@ define([
         },
 
         /**
+         * A 4x4 transformation matrix that transforms the tileset's root tile.
+         *
+         * @type {Matrix4}
+         * @default Matrix4.IDENTITY
+         */
+        modelMatrix : {
+            get : function() {
+                return this._modelMatrix;
+            },
+            set : function(value) {
+                this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
+                if (defined(this._root)) {
+                    // Update the root transform right away instead of waiting for the next update loop.
+                    // Useful, for example, when setting the modelMatrix and then having the camera view the tileset.
+                    this._root.updateTransform(this._modelMatrix);
+                }
+            }
+        },
+
+        /**
          * @private
          */
         styleEngine : {
@@ -853,6 +873,14 @@ define([
         }
     }
 
+    function updateTransforms(children, parentTransform) {
+        var length = children.length;
+        for (var i = 0; i < length; ++i) {
+            var child = children[i];
+            child.updateTransform(parentTransform);
+        }
+    }
+
     // PERFORMANCE_IDEA: is it worth exploiting frame-to-frame coherence in the sort, i.e., the
     // list of children are probably fully or mostly sorted unless the camera moved significantly?
     function sortChildrenByDistanceToCamera(a, b) {
@@ -940,6 +968,7 @@ define([
         replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
         var root = tileset._root;
+        root.updateTransform(tileset._modelMatrix);
         root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
@@ -968,9 +997,6 @@ define([
             t.replaced = false;
             ++stats.visited;
 
-            var parentTransform = defined(t.parent) ? t.parent.computedTransform : tileset.modelMatrix;
-            t.computedTransform = Matrix4.multiply(parentTransform, t.transform, t.computedTransform);
-
             var visibilityPlaneMask = t.visibilityPlaneMask;
             var fullyVisible = (visibilityPlaneMask === CullingVolume.MASK_INSIDE);
 
@@ -994,6 +1020,7 @@ define([
                     child = t.children[0];
                     child.visibilityPlaneMask = t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
+                    child.updateTransform(t.computedTransform);
                     if (child.contentUnloaded) {
                         requestContent(tileset, child, outOfCore);
                     } else {
@@ -1015,6 +1042,8 @@ define([
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
                     if (anyChildrenLoaded || t.canRequestContent()) {
+                        updateTransforms(children, t.computedTransform);
+
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -1060,6 +1089,8 @@ define([
 
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || t.canRequestContent()) {
+                        updateTransforms(children, t.computedTransform);
+
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -1114,6 +1145,7 @@ define([
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
+                        child.updateTransform(t.computedTransform);
                         child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
@@ -1411,6 +1443,29 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function applyDebugSettings(tileset, frameState) {
+        // Draw a debug camera in freeze frame mode
+        var enterFreezeFrame = tileset.debugFreezeFrame && !tileset._debugFreezeFrame;
+        var exitFreezeFrame = !tileset.debugFreezeFrame && tileset._debugFreezeFrame;
+        tileset._debugFreezeFrame = tileset.debugFreezeFrame;
+        if (tileset.debugFreezeFrame) {
+            if (enterFreezeFrame) {
+                // Recreate debug camera when entering freeze frame mode
+                tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
+                tileset._debugCameraFrustum = new DebugCameraPrimitive({
+                    camera : frameState.camera,
+                    updateOnChange : false
+                });
+            }
+            tileset._debugCameraFrustum.update(frameState);
+        } else if (exitFreezeFrame) {
+            // Destroy debug camera when exiting freeze frame
+            tileset._debugCameraFrustum = tileset._debugCameraFrustum && tileset._debugCameraFrustum.destroy();
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * Called when {@link Viewer} or {@link CesiumWidget} render the scene to
      * get the draw commands needed to render this primitive.
@@ -1432,6 +1487,8 @@ define([
         var passes = frameState.passes;
         var isPick = (passes.pick && !passes.render);
         var outOfCore = !isPick;
+
+        applyDebugSettings(this, frameState);
 
         clearStats(this);
 
@@ -1509,6 +1566,7 @@ define([
         }
 
         this._root = undefined;
+        this._debugCameraFrustum = this._debugCameraFrustum && this._debugCameraFrustum.destroy();
         return destroyObject(this);
     };
 
