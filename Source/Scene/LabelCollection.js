@@ -259,17 +259,17 @@ define([
         var heightOffset = 0;
 
 
-        var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
         var totalHeight = (maxGlyphHeight * numberOfLines) + (maxGlyphDescent * (numberOfLines-1));
 
         var heightReference = label._heightReference;
         var verticalOrigin = (heightReference === HeightReference.NONE) ? label._verticalOrigin : VerticalOrigin.BOTTOM;
         if (verticalOrigin === VerticalOrigin.CENTER) {
             // Subtract maxGlyphDescent for backwards compatibility
-            heightOffset += totalHeight / 2 * scale - maxGlyphDescent;
+            heightOffset += (totalHeight / 2 * scale) - maxGlyphDescent;
         }
         else if (verticalOrigin === VerticalOrigin.BOTTOM) {
-            heightOffset += maxLineHeight * (numberOfLines-1) * scale;
+            // Subtract maxGlyphHeight for backwards compatibility
+            heightOffset += (totalHeight * scale) - maxGlyphHeight;
         }
         else if (verticalOrigin === VerticalOrigin.TOP) {
             // Don't modify
@@ -278,6 +278,7 @@ define([
         glyphPixelOffset.x = widthOffset * resolutionScale;
         glyphPixelOffset.y = 0;
 
+        var maxLineHeight = maxGlyphHeight + maxGlyphDescent;
         var glyphNewlineOffset = 0;
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             glyph = glyphs[glyphIndex];
