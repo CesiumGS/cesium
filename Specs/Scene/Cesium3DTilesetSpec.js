@@ -442,7 +442,7 @@ defineSuite([
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
 
-            // Set dynamic SSE to true and now farther away tiles should not meet SSE
+            // Set dynamic SSE to true, now the root is not rendered
             tileset.useDynamicScreenSpaceError = true;
             tileset.dynamicScreenSpaceErrorDensity = 1.0;
             tileset.dynamicScreenSpaceErrorFactor = 10.0;
