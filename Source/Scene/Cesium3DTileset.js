@@ -76,6 +76,7 @@ define([
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile.
      * @param {Boolean} [options.debugShowContentBoundingVolume=false] For debugging only. When true, renders the bounding volume for each tile's content.
+     * @param {Boolean} [options.debugShowViewerRequestVolume=false] For debugging only. When true, renders the viewer request volume for each tile.
      *
      * @example
      * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
@@ -236,6 +237,17 @@ define([
          * @default false
          */
         this.debugShowContentBoundingVolume = defaultValue(options.debugShowContentBoundingVolume, false);
+
+        /**
+         * This property is for debugging only; it is not optimized for production use.
+         * <p>
+         * When true, renders the viewer request volume for each tile.
+         * </p>
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.debugShowViewerRequestVolume = defaultValue(options.debugShowViewerRequestVolume, false);
 
         /**
          * The event fired to indicate progress of loading new tiles.  This event is fired when a new tile
@@ -907,6 +919,11 @@ define([
 
         var root = tileset._root;
         root.updateTransform(tileset._modelMatrix);
+
+        if (!root.insideViewerRequestVolume(frameState)) {
+            return;
+        }
+
         root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
@@ -991,14 +1008,16 @@ define([
                         // With additive refinement, we only request or refine when children are visible
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            // Use parent's geometric error with child's box to see if we already meet the SSE
-                            if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
-                                child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
-                                if (isVisible(child.visibilityPlaneMask)) {
-                                    if (child.contentUnloaded) {
-                                        requestContent(tileset, child, outOfCore);
-                                    } else {
-                                        stack.push(child);
+                            if (child.insideViewerRequestVolume(frameState)) {
+                                // Use parent's geometric error with child's box to see if we already meet the SSE
+                                if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
+                                    child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
+                                    if (isVisible(child.visibilityPlaneMask)) {
+                                        if (child.contentUnloaded) {
+                                            requestContent(tileset, child, outOfCore);
+                                        } else {
+                                            stack.push(child);
+                                        }
                                     }
                                 }
                             }
@@ -1058,7 +1077,12 @@ define([
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
-                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            if (child.insideViewerRequestVolume(frameState)) {
+                                child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                            } else {
+                                child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                            }
+
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
                             } else {
@@ -1084,7 +1108,11 @@ define([
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
                         child.updateTransform(t.computedTransform);
-                        child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        if (child.insideViewerRequestVolume(frameState)) {
+                            child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
+                        } else {
+                            child.visibilityPlaneMask = CullingVolume.MASK_OUTSIDE;
+                        }
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {
                                 someVisibleChildrenLoaded = true;

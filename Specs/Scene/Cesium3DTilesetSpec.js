@@ -76,6 +76,9 @@ defineSuite([
     // Root tile is transformed from local space to wgs84, child tile is rotated, scales, and translated locally
     var tilesetWithTransformsUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithTransforms';
 
+    // Root tile with 4 b3dm children and 1 pnts child with a viewer request volume
+    var tilesetWithViewerRequestVolumeUrl = './Data/Cesium3DTiles/Tilesets/TilesetWithViewerRequestVolume';
+
     var styleUrl = './Data/Cesium3DTiles/Style/style.json';
 
     var originalMaximumRequests;
@@ -466,6 +469,24 @@ defineSuite([
         });
     });
 
+    it('additive refinement - selects tile when inside viewer request volume', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
+            var stats = tileset._statistics;
+            // Force root tile to always not meet SSE since this is just checking the request volume
+            tileset.maximumScreenSpaceError = 0.0;
+
+            // Renders all 5 tiles
+            setZoom(20.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(5);
+
+            // No longer renders the tile with a request volume
+            setZoom(1500.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(4);
+        });
+    });
+
     it('replacement refinement - selects root when sse is met', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             tileset._root.refine = Cesium3DTileRefine.REPLACE;
@@ -587,6 +608,41 @@ defineSuite([
                     expect(stats.numberOfCommands).toEqual(4); // Renders children, root is replaced because all visible children are ready
                 });
             });
+        });
+    });
+
+    it('replacement refinement - selects tile when inside viewer request volume', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
+            var stats = tileset._statistics;
+
+            var root = tileset._root;
+            root.refine = Cesium3DTileRefine.REPLACE;
+            // Force root tile to always not meet SSE since this is just checking the request volume
+            tileset.maximumScreenSpaceError = 0.0;
+
+            // Renders all 5 tiles
+            setZoom(20.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(5);
+
+            // No longer renders the tile with a request volume
+            setZoom(1500.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(4);
+
+            // Now test when refineToVisible is true
+            tileset._refineToVisible = true;
+
+            // Renders all 5 tiles
+            setZoom(20.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(5);
+
+            // No longer renders the tile with a request volume
+            setZoom(1500.0);
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(4);
+
         });
     });
 
@@ -852,6 +908,21 @@ defineSuite([
             tileset.debugShowContentBoundingVolume = false;
             scene.renderForSpecs();
             expect(stats.numberOfCommands).toEqual(1);
+        });
+    });
+
+    it('debugShowViewerRequestVolume', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetWithViewerRequestVolumeUrl).then(function(tileset) {
+            console.log('start');
+            tileset.debugShowViewerRequestVolume = true;
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+            expect(stats.visited).toEqual(6); // 1 empty root tile + 4 b3dm tiles + 1 pnts tile
+            expect(stats.numberOfCommands).toEqual(6); // 5 tile commands + viewer request volume command
+
+            tileset.debugShowViewerRequestVolume = false;
+            scene.renderForSpecs();
+            expect(stats.numberOfCommands).toEqual(5);
         });
     });
 
