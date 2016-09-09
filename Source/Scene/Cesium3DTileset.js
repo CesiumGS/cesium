@@ -636,7 +636,9 @@ define([
             set : function(value) {
                 this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
                 if (defined(this._root)) {
-                    this._root.updateTransform();
+                    // Update the root transform right away instead of waiting for the next update loop.
+                    // Useful, for example, when setting the modelMatrix and then having the camera view the tileset.
+                    this._root.updateTransform(this._modelMatrix);
                 }
             }
         },
@@ -799,8 +801,15 @@ define([
         var length = children.length;
         for (var i = 0; i < length; ++i) {
             var child = children[i];
-            child.updateTransform(); // Need to update transform and bounding volumes before checking distance
             child.distanceToCamera = child.distanceToTile(frameState);
+        }
+    }
+
+    function updateTransforms(children, parentTransform) {
+        var length = children.length;
+        for (var i = 0; i < length; ++i) {
+            var child = children[i];
+            child.updateTransform(parentTransform);
         }
     }
 
@@ -891,7 +900,7 @@ define([
         replacementList.splice(replacementList.tail, tileset._replacementSentinel);
 
         var root = tileset._root;
-        root.updateTransform();
+        root.updateTransform(tileset._modelMatrix);
         root.distanceToCamera = root.distanceToTile(frameState);
 
         if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
@@ -943,7 +952,7 @@ define([
                     child = t.children[0];
                     child.visibilityPlaneMask = t.visibilityPlaneMask;
                     child.distanceToCamera = t.distanceToCamera;
-                    child.updateTransform();
+                    child.updateTransform(t.computedTransform);
                     if (child.contentUnloaded) {
                         requestContent(tileset, child, outOfCore);
                     } else {
@@ -965,6 +974,8 @@ define([
                     // children are loaded or request slots are available.
                     var anyChildrenLoaded = (t.numberOfChildrenWithoutContent < childrenLength);
                     if (anyChildrenLoaded || t.canRequestContent()) {
+                        updateTransforms(children, t.computedTransform);
+
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -1010,6 +1021,8 @@ define([
 
                     var allChildrenLoaded = t.numberOfChildrenWithoutContent === 0;
                     if (allChildrenLoaded || t.canRequestContent()) {
+                        updateTransforms(children, t.computedTransform);
+
                         // Distance is used for sorting now and for computing SSE when the tile comes off the stack.
                         computeDistanceToCamera(children, frameState);
 
@@ -1064,6 +1077,7 @@ define([
                     var someVisibleChildrenLoaded = false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
+                        child.updateTransform(t.computedTransform);
                         child.visibilityPlaneMask = child.visibility(frameState.cullingVolume, visibilityPlaneMask);
                         if (isVisible(child.visibilityPlaneMask)) {
                             if (child.contentReady) {

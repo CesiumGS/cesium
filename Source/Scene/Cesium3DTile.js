@@ -87,17 +87,18 @@ define([
          */
         this.transform = defined(header.transform) ? Matrix4.unpack(header.transform) : Matrix4.clone(Matrix4.IDENTITY);
 
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
+        var computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
+
         /**
          * The final computed transform of this tile
          * @type {Matrix4}
          */
-        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
-        this.computedTransform = Matrix4.multiply(parentTransform, this.transform, new Matrix4());
-        this._computedTransform = Matrix4.clone(this.computedTransform);
+        this.computedTransform = computedTransform;
 
         this._transformDirty = true;
 
-        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform);
+        this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
 
         var contentBoundingVolume;
 
@@ -107,7 +108,7 @@ define([
             // but not for culling for traversing the tree since it is not spatial coherence, i.e.,
             // since it only bounds models in the tile, not the entire tile, children may be
             // outside of this box.
-            contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, this.computedTransform);
+            contentBoundingVolume = this.createBoundingVolume(contentHeader.boundingVolume, computedTransform);
         }
         this._contentBoundingVolume = contentBoundingVolume;
 
@@ -606,25 +607,27 @@ define([
         }
     };
 
+    var scratchTransform = new Matrix4();
+
     /**
      * Update the tile's transform. The transform is applied to the tile's bounding volumes.
      *
      * @private
      */
-    Cesium3DTile.prototype.updateTransform = function() {
-        var parentTransform = defined(this.parent) ? this.parent.computedTransform : this._tileset.modelMatrix;
-        this.computedTransform = Matrix4.multiply(parentTransform, this.transform, this.computedTransform);
-        var transformDirty = !Matrix4.equals(this.computedTransform, this._computedTransform);
+    Cesium3DTile.prototype.updateTransform = function(parentTransform) {
+        parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
+        var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
+        var transformDirty = !Matrix4.equals(computedTransform, this.computedTransform);
         if (transformDirty) {
             this._transformDirty = true;
-            Matrix4.clone(this.computedTransform, this._computedTransform);
+            Matrix4.clone(computedTransform, this.computedTransform);
 
             // Update the bounding volumes
             var header = this._header;
             var content = this._header.content;
-            this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform, this._boundingVolume);
+            this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform, this._boundingVolume);
             if (defined(this._contentBoundingVolume)) {
-                this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, this.computedTransform, this._contentBoundingVolume);
+                this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, computedTransform, this._contentBoundingVolume);
             }
 
             // Destroy the debug bounding volumes. They will be generated fresh.
