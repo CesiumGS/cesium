@@ -1,16 +1,16 @@
 /*global define*/
 define([
-    './ComponentDatatype',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './DeveloperError'
-], function(
-    ComponentDatatype,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError) {
+        './ComponentDatatype',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './DeveloperError'
+    ], function(
+        ComponentDatatype,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError) {
     'use strict';
 
     /**

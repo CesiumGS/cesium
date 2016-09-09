@@ -1,16 +1,16 @@
 /*global define*/
 define([
-    './Cartesian3',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './Matrix4'
-], function(
-    Cartesian3,
-    defaultValue,
-    defined,
-    defineProperties,
-    Matrix4) {
+        './Cartesian3',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Matrix4'
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        Matrix4) {
     'use strict';
 
     /**
