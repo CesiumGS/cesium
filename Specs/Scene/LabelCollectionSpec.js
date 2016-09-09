@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
+        'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/NearFarScalar',
@@ -25,6 +26,7 @@ defineSuite([
         Cartesian3,
         Color,
         defined,
+        DistanceDisplayCondition,
         Ellipsoid,
         CesiumMath,
         NearFarScalar,
@@ -89,6 +91,7 @@ defineSuite([
         expect(label.id).not.toBeDefined();
         expect(label.translucencyByDistance).not.toBeDefined();
         expect(label.pixelOffsetScaleByDistance).not.toBeDefined();
+        expect(label.distanceDisplayCondition).not.toBeDefined();
     });
 
     it('can add a label with specified values', function() {
@@ -118,6 +121,7 @@ defineSuite([
         var scale = 2.0;
         var translucency = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
         var pixelOffsetScale = new NearFarScalar(1.0e4, 1.0, 1.0e6, 0.0);
+        var distanceDisplayCondition = new DistanceDisplayCondition(10.0, 100.0);
         var label = labels.add({
             show : show,
             position : position,
@@ -134,7 +138,8 @@ defineSuite([
             scale : scale,
             id : 'id',
             translucencyByDistance : translucency,
-            pixelOffsetScaleByDistance : pixelOffsetScale
+            pixelOffsetScaleByDistance : pixelOffsetScale,
+            distanceDisplayCondition : distanceDisplayCondition
         });
 
         expect(label.show).toEqual(show);
@@ -153,6 +158,7 @@ defineSuite([
         expect(label.id).toEqual('id');
         expect(label.translucencyByDistance).toEqual(translucency);
         expect(label.pixelOffsetScaleByDistance).toEqual(pixelOffsetScale);
+        expect(label.distanceDisplayCondition).toEqual(distanceDisplayCondition);
     });
 
     it('can specify font using units other than pixels', function() {
@@ -500,6 +506,44 @@ defineSuite([
 
         camera.position = new Cartesian3(4.0, 0.0, 0.0);
         expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('renders label with distanceDisplayCondition', function() {
+        labels.add({
+            position : Cartesian3.ZERO,
+            text : 'm',
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0),
+            horizontalOrigin : HorizontalOrigin.CENTER,
+            verticalOrigin : VerticalOrigin.CENTER
+        });
+
+        camera.position = new Cartesian3(200.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+
+        camera.position = new Cartesian3(50.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()[0]).toBeGreaterThan(200);
+        expect(scene.renderForSpecs()[1]).toBeGreaterThan(200);
+        expect(scene.renderForSpecs()[2]).toBeGreaterThan(200);
+
+        camera.position = new Cartesian3(5.0, 0.0, 0.0);
+        expect(scene.renderForSpecs()).toEqual([0, 0, 0, 255]);
+    });
+
+    it('throws new label with invalid distanceDisplayCondition (near >= far)', function() {
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            labels.add({
+                distanceDisplayCondition : dc
+            });
+        }).toThrowDeveloperError();
+    });
+
+    it('throws distanceDisplayCondition with near >= far', function() {
+        var l = labels.add();
+        var dc = new DistanceDisplayCondition(100.0, 10.0);
+        expect(function() {
+            l.distanceDisplayCondition = dc;
+        }).toThrowDeveloperError();
     });
 
     it('can pick a label', function() {

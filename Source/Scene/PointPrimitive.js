@@ -45,6 +45,7 @@ define([
      *
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see PointPrimitiveCollection
      * @see PointPrimitiveCollection#add
@@ -62,6 +63,9 @@ define([
         }
         if (defined(options.translucencyByDistance) && options.translucencyByDistance.far <= options.translucencyByDistance.near) {
             throw new DeveloperError('translucencyByDistance.far must be greater than translucencyByDistance.near.');
+        }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
         //>>includeEnd('debug');
 
@@ -348,6 +352,11 @@ define([
                 return this._distanceDisplayCondition;
             },
             set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
                 if (!DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)) {
                     this._distanceDisplayCondition = value;
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);

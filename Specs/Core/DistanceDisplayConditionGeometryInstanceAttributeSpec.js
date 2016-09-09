@@ -19,6 +19,12 @@ defineSuite([
         expect(attribute.value).toEqual(value);
     });
 
+    it('constructor throws with far > near', function() {
+        expect(function() {
+            return new DistanceDisplayConditionGeometryInstanceAttribute(100.0, 10.0);
+        }).toThrowDeveloperError();
+    });
+
     it('fromDistanceDisplayCondition', function() {
         var dc = new DistanceDisplayCondition(10.0, 100.0);
         var attribute = DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(dc);
@@ -33,6 +39,12 @@ defineSuite([
     it('fromDistanceDisplayCondition throws without distanceDisplayCondition', function() {
         expect(function() {
             DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition();
+        }).toThrowDeveloperError();
+    });
+
+    it('fromDistanceDisplayCondition throws with far >= near', function() {
+        expect(function() {
+            DistanceDisplayConditionGeometryInstanceAttribute.fromDistanceDisplayCondition(new DistanceDisplayCondition(100.0, 10.0));
         }).toThrowDeveloperError();
     });
 

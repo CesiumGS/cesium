@@ -22,6 +22,8 @@ define([
      * @param {Number} [near=0.0] The near distance.
      * @param {Number} [far=Number.MAX_VALUE] The far distance.
      *
+     * @exception {DeveloperError} far must be greater than near.
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : new Cesium.BoxGeometry({
@@ -43,6 +45,12 @@ define([
     function DistanceDisplayConditionGeometryInstanceAttribute(near, far) {
         near = defaultValue(near, 0.0);
         far = defaultValue(far, Number.MAX_VALUE);
+
+        //>>includeStart('debug', pragmas.debug);
+        if (far <= near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+        //>>includeEnd('debug');
 
         /**
          * The values for the attributes stored in a typed array.
@@ -113,6 +121,8 @@ define([
      * @param {DistanceDisplayCondition} distanceDisplayCondition The distance display condition.
      * @returns {DistanceDisplayConditionGeometryInstanceAttribute} The new {@link DistanceDisplayConditionGeometryInstanceAttribute} instance.
      *
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
+     *
      * @example
      * var instance = new Cesium.GeometryInstance({
      *   geometry : geometry,
@@ -125,6 +135,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(distanceDisplayCondition)) {
             throw new DeveloperError('distanceDisplayCondition is required.');
+        }
+        if (distanceDisplayCondition.far <= distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far distance must be greater than distanceDisplayCondition.near distance.');
         }
         //>>includeEnd('debug');
 

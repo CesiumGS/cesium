@@ -63,6 +63,7 @@ define([
      * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
+     * @exception {DeveloperError} distanceDisplayCondition.far must be greater than distanceDisplayCondition.near
      *
      * @see BillboardCollection
      * @see BillboardCollection#add
@@ -84,6 +85,9 @@ define([
         }
         if (defined(options.pixelOffsetScaleByDistance) && options.pixelOffsetScaleByDistance.far <= options.pixelOffsetScaleByDistance.near) {
             throw new DeveloperError('pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near.');
+        }
+        if (defined(options.distanceDisplayCondition) && options.distanceDisplayCondition.far <= options.distanceDisplayCondition.near) {
+            throw new DeveloperError('distanceDisplayCondition.far must be greater than distanceDisplayCondition.near');
         }
         //>>includeEnd('debug');
 
@@ -730,6 +734,11 @@ define([
             },
             set : function(value) {
                 if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    //>>includeStart('debug', pragmas.debug);
+                    if (defined(value) && value.far <= value.near) {
+                        throw new DeveloperError('far distance must be greater than near distance.');
+                    }
+                    //>>includeEnd('debug');
                     this._distanceDisplayCondition = value;
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
