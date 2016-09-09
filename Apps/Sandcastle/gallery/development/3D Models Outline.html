@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Create 3D models using glTF.">
-    <meta name="cesium-sandcastle-labels" content="Tutorials,Showcases">
+    <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
@@ -19,10 +19,31 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table>
+    <tbody><tr>
+        <td>Highlight Size</td>
+        <td>
+            <input type="range" min="0" max="0.5" step="0.0001" data-bind="value: highlightSize, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: highlightSize">
+        </td>
+    </tr>
+
+</tbody></table>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -33,6 +54,22 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     shadows : true
 });
 
+var entity = null;
+
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    highlight: false,
+    highlightSize: 0.002
+};
+
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+
 function createModel(url, height) {
     viewer.entities.removeAll();
 
@@ -42,14 +79,16 @@ function createModel(url, height) {
     var roll = 0;
     var orientation = Cesium.Transforms.headingPitchRollQuaternion(position, heading, pitch, roll);
 
-    var entity = viewer.entities.add({
+    entity = viewer.entities.add({
         name : url,
         position : position,
         orientation : orientation,
         model : {
             uri : url,
             minimumPixelSize : 128,
-            maximumScale : 20000
+            maximumScale : 20000,
+            highlight: viewModel.highlight,
+            highlightSize: viewModel.highlightSize
         }
     });
     viewer.trackedEntity = entity;
@@ -83,6 +122,26 @@ var options = [{
 }];
 
 Sandcastle.addToolbarMenu(options);
+
+Sandcastle.addToolbarButton('Toggle Highlight', function() {
+    viewModel.highlight = !viewModel.highlight;
+    entity.model.highlight = new Cesium.ConstantProperty(viewModel.highlight);
+});
+
+Sandcastle.addToolbarButton('Change Highlight Color', function() {
+    entity.model.highlightColor = new Cesium.ConstantProperty(Cesium.Color.fromRandom({
+          alpha : 1.0
+    }));
+});
+
+Cesium.knockout.getObservable(viewModel, "highlightSize").subscribe(
+    function(newValue) {
+        entity.model.highlightSize = newValue;
+    }
+);
+
+
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
