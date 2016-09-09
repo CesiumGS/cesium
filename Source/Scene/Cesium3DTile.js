@@ -77,7 +77,6 @@ define([
      * @constructor
      */
     function Cesium3DTile(tileset, baseUrl, header, parent) {
-        this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
 
