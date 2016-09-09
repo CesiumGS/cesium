@@ -132,14 +132,20 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
-        this._useDynamicScreenSpaceError = defaultValue(options.useDynamicScreenSpaceError, false);
+
+        /**
+         * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
+         * away will be rendered will lower detail that closer tiles. This improves performance by rendering fewer
+         * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
+         *
+         * @see Fog
+         */
+        this.useDynamicScreenSpaceError = defaultValue(options.useDynamicScreenSpaceError, false);
 
         /**
          * A scalar that determines the density used to adjust the dynamic SSE.
          *
          * @see Fog.density
-         *
-         * @private
          */
         this.dynamicScreenSpaceErrorDensity = 0.00278;
 
@@ -147,8 +153,6 @@ define([
          * A factor used to increase the screen space error of tiles for dynamic SSE.
          *
          * @see Fog.screenSpaceErrorFactor
-         *
-         * @private
          */
         this.dynamicScreenSpaceErrorFactor = 4.0;
 
@@ -855,7 +859,7 @@ define([
 
         var error = (geometricError * height) / (distance * sseDenominator);
 
-        if (tileset._useDynamicScreenSpaceError) {
+        if (tileset.useDynamicScreenSpaceError) {
             var density = tileset._dynamicScreenSpaceErrorComputedDensity;
             var factor = tileset.dynamicScreenSpaceErrorFactor;
             var dynamicError = CesiumMath.fog(distance, density) * factor;
@@ -1496,7 +1500,7 @@ define([
             processTiles(this, frameState);
         }
 
-        if (this._useDynamicScreenSpaceError) {
+        if (this.useDynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
         }
 
