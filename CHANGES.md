@@ -5,6 +5,7 @@ Change Log
 
 * Fixed billboard rotation when sized in meters. [#3979](https://github.com/AnalyticalGraphicsInc/cesium/issues/3979)
 * Added `DebugCameraPrimitive` to visualize the view frustum of a camera.
+* Added support for newlines in `Label`s. [#2402](https://github.com/AnalyticalGraphicsInc/cesium/issues/2402)
 
 ### 1.25 - 2016-09-01
 

@@ -1379,6 +1379,23 @@ defineSuite([
             expect(dimensions.height).toBeLessThan(originalDimensions.height);
             expect(dimensions.descent).toBeLessThanOrEqualTo(originalDimensions.descent);
         });
+
+        it('should increase label height and decrease width when adding newlines', function() {
+            var label = labels.add({
+                text : 'apl apl apl',
+            });
+            scene.renderForSpecs();
+
+            var originalDimensions = label._glyphs[0].dimensions;
+
+            label.text = 'apl\napl\napl';
+            scene.renderForSpecs();
+
+            var dimensions = label._glyphs[0].dimensions;
+            expect(dimensions.width).toBeLessThan(originalDimensions.width);
+            expect(dimensions.height).toBeGreaterThan(originalDimensions.height);
+        });
+
     }, 'WebGL');
 
     it('computes bounding sphere in 3D', function() {
