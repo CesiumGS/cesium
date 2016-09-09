@@ -1784,6 +1784,7 @@ define([
 
     function createHighlightVertexShaderSource(vertexShaderSource, projectionMatrixName) {
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
+        // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
         var highlightMain = 'uniform float u_highlightSize;\n' +
             'void main() \n' +
             '{ \n' +
