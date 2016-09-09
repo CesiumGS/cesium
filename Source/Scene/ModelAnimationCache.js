@@ -8,7 +8,7 @@ define([
         '../Core/Quaternion',
         '../Core/QuaternionSpline',
         '../Renderer/WebGLConstants',
-        './getModelAccessor'
+        './getBinaryAccessor'
     ], function(
         Cartesian3,
         defaultValue,
@@ -18,7 +18,7 @@ define([
         Quaternion,
         QuaternionSpline,
         WebGLConstants,
-        getModelAccessor) {
+        getBinaryAccessor) {
     'use strict';
 
     /**
@@ -36,7 +36,7 @@ define([
         var buffer = buffers[bufferView.buffer];
 
         var byteOffset = bufferView.byteOffset + accessor.byteOffset;
-        var byteLength = accessor.count * getModelAccessor(accessor).componentsPerAttribute;
+        var byteLength = accessor.count * getBinaryAccessor(accessor).componentsPerAttribute;
 
         // buffer.path will be undefined when animations are embedded.
         return model.cacheKey + '//' + defaultValue(buffer.path, '') + '/' + byteOffset + '/' + byteLength;
@@ -67,7 +67,7 @@ define([
 
             // Convert typed array to Cesium types
             var buffer = loadResources.getBuffer(bufferView);
-            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
+            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             var i;
 
             if ((componentType === WebGLConstants.FLOAT) && (type === 'SCALAR')) {
@@ -180,7 +180,7 @@ define([
             var type = accessor.type;
             var count = accessor.count;
             var buffer = loadResources.getBuffer(bufferView);
-            var typedArray = getModelAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
+            var typedArray = getBinaryAccessor(accessor).createArrayBufferView(buffer.buffer, buffer.byteOffset + accessor.byteOffset, count);
             matrices =  new Array(count);
 
             if ((componentType === WebGLConstants.FLOAT) && (type === 'MAT4')) {
