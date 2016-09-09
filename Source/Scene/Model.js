@@ -399,6 +399,8 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
+        this.distanceDisplayCondition = options.distanceDisplayCondition;
+
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
          * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -3719,7 +3721,8 @@ define([
             }
         }
 
-        var show = this.show && (this.scale !== 0.0);
+        var displayConditionPassed = defined(this.distanceDisplayCondition) ? this.distanceDisplayCondition.isVisible(this, frameState) : true;
+        var show = this.show && (this.scale !== 0.0) && displayConditionPassed;
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
