@@ -389,6 +389,10 @@ Sandcastle.addToolbarButton('SSE--', function() {
     console.log('New max SSE: ' + tileset.maximumScreenSpaceError);
 });
 
+Sandcastle.addToolbarButton('Dynamic SSE om/off', function() {
+    tileset.useDynamicScreenSpaceError = !tileset.useDynamicScreenSpaceError;
+});
+
 Sandcastle.addToolbarButton('Trim tiles (cache)', function() {
     tileset.trimLoadedTiles();
 });
