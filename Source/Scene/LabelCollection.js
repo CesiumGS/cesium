@@ -258,7 +258,6 @@ define([
 
         var heightOffset = 0;
 
-
         var totalHeight = (maxGlyphHeight * numberOfLines) + (maxGlyphDescent * (numberOfLines-1));
 
         var heightReference = label._heightReference;
@@ -266,13 +265,9 @@ define([
         if (verticalOrigin === VerticalOrigin.CENTER) {
             // Subtract maxGlyphDescent for backwards compatibility
             heightOffset += (totalHeight / 2 * scale) - maxGlyphDescent;
-        }
-        else if (verticalOrigin === VerticalOrigin.BOTTOM) {
+        } else if (verticalOrigin === VerticalOrigin.BOTTOM) {
             // Subtract maxGlyphHeight for backwards compatibility
             heightOffset += (totalHeight * scale) - maxGlyphHeight;
-        }
-        else if (verticalOrigin === VerticalOrigin.TOP) {
-            // Don't modify
         }
 
         glyphPixelOffset.x = widthOffset * resolutionScale;
