@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -26,6 +27,7 @@ define([
         './CullingVolume',
         './SceneMode'
     ], function(
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
@@ -66,6 +68,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
+     * @param {Boolean} [options.useDynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -125,6 +128,27 @@ define([
         this._trimTiles = false;
 
         this._refineToVisible = defaultValue(options.refineToVisible, false);
+        this._useDynamicScreenSpaceError = defaultValue(options.useDynamicScreenSpaceError, false);
+
+        /**
+         * A scalar that determines the density used to adjust the dynamic SSE.
+         *
+         * @see Fog.density
+         *
+         * @private
+         */
+        this.dynamicScreenSpaceErrorDensity = 0.00278;
+
+        /**
+         * A factor used to increase the screen space error of tiles for dynamic SSE.
+         *
+         * @see Fog.screenSpaceErrorFactor
+         *
+         * @private
+         */
+        this.dynamicScreenSpaceErrorFactor = 4.0;
+
+        this._dynamicScreenSpaceErrorComputedDensity = 0.0; // Updated based on the camera position and direction
 
         /**
          * Determines if the tileset will be shown.
@@ -768,7 +792,35 @@ define([
         }
     }
 
-    function getScreenSpaceError(geometricError, tile, frameState) {
+    var scratchPositionNormal = new Cartesian3();
+
+    function updateDynamicScreenSpaceError(tileset, frameState) {
+        var camera = frameState.camera;
+        var positionCartographic = camera.positionCartographic;
+        var height = positionCartographic.height;
+
+        // The range where the density starts to lessen
+        var heightClose = 100.0;
+        var heightFar = 600.0;
+
+        var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
+
+        // Increase density as the camera tilts towards the horizon
+        var positionNormal = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+        var dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
+        var horizonFactor = 1.0 - dot;
+
+        // Weaken the horizontal factor as the camera height increases, implying the camera is further away from the tileset.
+        // The goal is to increase density for the "street view", not when viewing the tileset from a distance.
+        horizonFactor = horizonFactor * (1.0 - t);
+
+        var density = tileset.dynamicScreenSpaceErrorDensity;
+        density *= horizonFactor;
+
+        tileset._dynamicScreenSpaceErrorComputedDensity = density;
+    }
+
+    function getScreenSpaceError(tileset, geometricError, tile, frameState) {
         // TODO: screenSpaceError2D like QuadtreePrimitive.js
         if (geometricError === 0.0) {
             // Leaf nodes do not have any error so save the computation
@@ -776,11 +828,21 @@ define([
         }
 
         // Avoid divide by zero when viewer is inside the tile
+        var camera = frameState.camera;
         var distance = Math.max(tile.distanceToCamera, CesiumMath.EPSILON7);
         var height = frameState.context.drawingBufferHeight;
-        var sseDenominator = frameState.camera.frustum.sseDenominator;
+        var sseDenominator = camera.frustum.sseDenominator;
 
-        return (geometricError * height) / (distance * sseDenominator);
+        var error = (geometricError * height) / (distance * sseDenominator);
+
+        if (tileset._useDynamicScreenSpaceError) {
+            var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+            var factor = tileset.dynamicScreenSpaceErrorFactor;
+            var dynamicError = CesiumMath.fog(distance, density) * factor;
+            error -= dynamicError;
+        }
+
+        return error;
     }
 
     function computeDistanceToCamera(children, frameState) {
@@ -880,7 +942,7 @@ define([
         var root = tileset._root;
         root.distanceToCamera = root.distanceToTile(frameState);
 
-        if (getScreenSpaceError(tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
+        if (getScreenSpaceError(tileset, tileset._geometricError, root, frameState) <= maximumScreenSpaceError) {
             // The SSE of not rendering the tree is small enough that the tree does not need to be rendered
             return;
         }
@@ -915,7 +977,7 @@ define([
             touch(tileset, t, outOfCore);
 
             // Tile is inside/intersects the view frustum.  How many pixels is its geometric error?
-            var sse = getScreenSpaceError(t.geometricError, t, frameState);
+            var sse = getScreenSpaceError(tileset, t.geometricError, t, frameState);
             // PERFORMANCE_IDEA: refine also based on (1) occlusion/VMSSE and/or (2) center of viewport
 
             var children = t.children;
@@ -963,7 +1025,7 @@ define([
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             // Use parent's geometric error with child's box to see if we already meet the SSE
-                            if (getScreenSpaceError(t.geometricError, child, frameState) > maximumScreenSpaceError) {
+                            if (getScreenSpaceError(tileset, t.geometricError, child, frameState) > maximumScreenSpaceError) {
                                 child.visibilityPlaneMask = child.visibility(cullingVolume, visibilityPlaneMask);
                                 if (isVisible(child.visibilityPlaneMask)) {
                                     if (child.contentUnloaded) {
@@ -1375,6 +1437,10 @@ define([
 
         if (outOfCore) {
             processTiles(this, frameState);
+        }
+
+        if (this._useDynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(this, frameState);
         }
 
         selectTiles(this, frameState, outOfCore);

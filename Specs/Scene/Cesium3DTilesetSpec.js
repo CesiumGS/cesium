@@ -427,6 +427,31 @@ defineSuite([
         });
     });
 
+    it('uses dynamic screen space error', function() {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+            scene.renderForSpecs();
+            var stats = tileset._statistics;
+
+            // Horizon view, only root is visible
+            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+            scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, 210.0));
+
+            // Set dynamic SSE to false (default)
+            tileset._useDynamicScreenSpaceError = false;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(1);
+            expect(stats.numberOfCommands).toEqual(1);
+
+            // Set dynamic SSE to true and now farther away tiles should not meet SSE
+            tileset._useDynamicScreenSpaceError = true;
+            tileset.dynamicScreenSpaceErrorDensity = 1.0;
+            tileset.dynamicScreenSpaceErrorFactor = 10.0;
+            scene.renderForSpecs();
+            expect(stats.visited).toEqual(0);
+            expect(stats.numberOfCommands).toEqual(0);
+        });
+    });
+
     it('additive refinement - selects root when sse is met', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
             // Meets screen space error, only root tile is rendered
