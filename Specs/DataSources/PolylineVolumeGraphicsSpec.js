@@ -5,6 +5,7 @@ defineSuite([
         'Core/CornerType',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
@@ -13,6 +14,7 @@ defineSuite([
         CornerType,
         ColorMaterialProperty,
         ConstantProperty,
+        ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
     'use strict';
@@ -28,7 +30,8 @@ defineSuite([
             outline : false,
             outlineColor : Color.RED,
             outlineWidth : 2,
-            cornerType : CornerType.BEVELED
+            cornerType : CornerType.BEVELED,
+            shadows : ShadowMode.DISABLED
         };
 
         var polylineVolume = new PolylineVolumeGraphics(options);
@@ -42,6 +45,7 @@ defineSuite([
         expect(polylineVolume.outlineColor).toBeInstanceOf(ConstantProperty);
         expect(polylineVolume.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(polylineVolume.cornerType).toBeInstanceOf(ConstantProperty);
+        expect(polylineVolume.shadows).toBeInstanceOf(ConstantProperty);
 
         expect(polylineVolume.material.color.getValue()).toEqual(options.material);
         expect(polylineVolume.positions.getValue()).toEqual(options.positions);
@@ -53,6 +57,7 @@ defineSuite([
         expect(polylineVolume.outlineColor.getValue()).toEqual(options.outlineColor);
         expect(polylineVolume.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(polylineVolume.cornerType.getValue()).toEqual(options.cornerType);
+        expect(polylineVolume.shadows.getValue()).toEqual(options.shadows);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -67,6 +72,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.shadows = new ConstantProperty(ShadowMode.ENABLED);
 
         var target = new PolylineVolumeGraphics();
         target.merge(source);
@@ -81,6 +87,7 @@ defineSuite([
         expect(target.outlineColor).toBe(source.outlineColor);
         expect(target.outlineWidth).toBe(source.outlineWidth);
         expect(target.cornerType).toBe(source.cornerType);
+        expect(target.shadows).toBe(source.shadows);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -96,6 +103,7 @@ defineSuite([
         var outlineColor = new ConstantProperty();
         var outlineWidth = new ConstantProperty();
         var cornerType = new ConstantProperty();
+        var shadows = new ConstantProperty();
 
         var target = new PolylineVolumeGraphics();
         target.material = material;
@@ -108,6 +116,7 @@ defineSuite([
         target.outlineColor = outlineColor;
         target.outlineWidth = outlineWidth;
         target.cornerType = cornerType;
+        target.shadows = shadows;
 
         target.merge(source);
 
@@ -121,6 +130,7 @@ defineSuite([
         expect(target.outlineColor).toBe(outlineColor);
         expect(target.outlineWidth).toBe(outlineWidth);
         expect(target.cornerType).toBe(cornerType);
+        expect(target.shadows).toBe(shadows);
     });
 
     it('clone works', function() {
@@ -135,6 +145,7 @@ defineSuite([
         source.outlineColor = new ConstantProperty();
         source.outlineWidth = new ConstantProperty();
         source.cornerType = new ConstantProperty();
+        source.shadows = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -147,6 +158,7 @@ defineSuite([
         expect(result.outlineColor).toBe(source.outlineColor);
         expect(result.outlineWidth).toBe(source.outlineWidth);
         expect(result.cornerType).toBe(source.cornerType);
+        expect(result.shadows).toBe(source.shadows);
     });
 
     it('merge throws if source undefined', function() {
@@ -168,5 +180,6 @@ defineSuite([
         testDefinitionChanged(property, 'outlineColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'outlineWidth', 2, 3);
         testDefinitionChanged(property, 'cornerType', CornerType.BEVELED, CornerType.MITERED);
+        testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
     });
 });
