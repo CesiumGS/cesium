@@ -1075,6 +1075,7 @@ define([
                         }
                     } else {
                         // Tile does not meet SSE and its children are loaded.  Refine to them in front-to-back order.
+                        var anyChildrenVisible = false;
                         for (k = 0; k < childrenLength; ++k) {
                             child = children[k];
                             if (child.insideViewerRequestVolume(frameState)) {
@@ -1085,6 +1086,7 @@ define([
 
                             if (isVisible(child.visibilityPlaneMask)) {
                                 stack.push(child);
+                                anyChildrenVisible = true;
                             } else {
                                 // Touch the child tile even if it is not visible. Since replacement refinement
                                 // requires all child tiles to be loaded to refine to them, we want to keep it in the cache.
@@ -1092,9 +1094,15 @@ define([
                             }
                         }
 
-                        t.replaced = true;
-                        if (defined(t.descendantsWithContent)) {
-                            scratchRefiningTiles.push(t);
+                        if (anyChildrenVisible) {
+                            t.replaced = true;
+                            if (defined(t.descendantsWithContent)) {
+                                scratchRefiningTiles.push(t);
+                            }
+                        } else {
+                            // Even though the children are all loaded they may not be visible if the camera
+                            // is not inside their request volumes.
+                            selectTile(tileset, t, fullyVisible, frameState);
                         }
                     }
                 } else {
@@ -1120,6 +1128,12 @@ define([
                                 allVisibleChildrenLoaded = false;
                             }
                         }
+                    }
+
+                    if (allVisibleChildrenLoaded && !someVisibleChildrenLoaded) {
+                        // No children are visible, select this tile
+                        selectTile(tileset, t, fullyVisible, frameState);
+                        continue;
                     }
 
                     // Only sort children by distance if we are going to refine to them
