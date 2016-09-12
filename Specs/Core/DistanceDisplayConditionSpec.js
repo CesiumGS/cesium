@@ -62,4 +62,25 @@ defineSuite([
         expect(DistanceDisplayCondition.equals(dc, new DistanceDisplayCondition(10.0, 101.0))).toEqual(false);
         expect(DistanceDisplayCondition.equals(dc, undefined)).toEqual(false);
     });
+
+    it('clones', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var result = DistanceDisplayCondition.clone(dc);
+        expect(dc).toEqual(result);
+    });
+
+    it('clone with a result parameter', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var result = new DistanceDisplayCondition();
+        var returnedResult = DistanceDisplayCondition.clone(dc, result);
+        expect(dc).not.toBe(result);
+        expect(result).toBe(returnedResult);
+        expect(dc).toEqual(result);
+    });
+
+    it('clone works with a result parameter that is an input parameter', function() {
+        var dc = new DistanceDisplayCondition(10.0, 100.0);
+        var returnedResult = Cartesian3.clone(dc, dc);
+        expect(dc).toBe(returnedResult);
+    });
 });

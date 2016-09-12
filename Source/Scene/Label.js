@@ -670,7 +670,7 @@ define([
                 }
                 //>>includeEnd('debug');
                 if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
-                    this._distanceDisplayCondition = value;
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
 
                     var glyphs = this._glyphs;
                     for (var i = 0, len = glyphs.length; i < len; i++) {

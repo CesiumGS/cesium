@@ -358,7 +358,7 @@ define([
                 }
                 //>>includeEnd('debug');
                 if (!DistanceDisplayCondition.equals(this._distanceDisplayCondition, value)) {
-                    this._distanceDisplayCondition = value;
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION_INDEX);
                 }
             }

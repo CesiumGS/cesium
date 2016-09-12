@@ -739,7 +739,7 @@ define([
                         throw new DeveloperError('far distance must be greater than near distance.');
                     }
                     //>>includeEnd('debug');
-                    this._distanceDisplayCondition = value;
+                    this._distanceDisplayCondition = DistanceDisplayCondition.clone(value, this._distanceDisplayCondition);
                     makeDirty(this, DISTANCE_DISPLAY_CONDITION);
                 }
             }

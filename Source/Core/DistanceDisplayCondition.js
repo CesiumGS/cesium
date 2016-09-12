@@ -85,5 +85,22 @@ define([
                 left.far === right.far);
     };
 
+    /**
+     * DOC_TBA
+     */
+    DistanceDisplayCondition.clone = function(value, result) {
+        if (!defined(value)) {
+            return undefined;
+        }
+
+        if (!defined(result)) {
+            result = new DistanceDisplayCondition();
+        }
+
+        result.near = value.near;
+        result.far = value.far;
+        return result;
+    };
+
     return DistanceDisplayCondition;
 });
