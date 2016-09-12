@@ -698,7 +698,16 @@ define([
             '{ \n' +
             '    czm_non_distanceDisplayCondition_main(); \n' +
             '    vec4 centerRTE = czm_computeBoundingSphereCenter(); \n' +
-            '    float distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - boundingSphereRadius * boundingSphereRadius; \n' +
+            '    float radiusSq = boundingSphereRadius * boundingSphereRadius; \n' +
+            '    float distanceSq; \n' +
+            '    if (czm_sceneMode == czm_sceneMode2D) \n' +
+            '    { \n' +
+            '        distanceSq = czm_eyeHeight2D.y - radiusSq; \n' +
+            '    } \n' +
+            '    else \n' +
+            '    { \n' +
+            '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
+            '    } \n' +
             '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
             '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
             '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
