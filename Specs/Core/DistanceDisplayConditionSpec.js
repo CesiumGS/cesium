@@ -1,4 +1,4 @@
-/*global definedSuite*/
+/*global defineSuite*/
 defineSuite([
         'Core/DistanceDisplayCondition',
         'Core/Cartesian3',

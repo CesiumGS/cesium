@@ -14,6 +14,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/FeatureDetection',
         '../Core/getAbsoluteUri',
         '../Core/getBaseUri',
@@ -74,6 +75,7 @@ define([
         deprecationWarning,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
@@ -399,8 +401,6 @@ define([
          */
         this.show = defaultValue(options.show, true);
 
-        this.distanceDisplayCondition = options.distanceDisplayCondition;
-
         /**
          * The 4x4 transformation matrix that transforms the model from model to world coordinates.
          * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
@@ -549,6 +549,8 @@ define([
          */
         this.debugWireframe = defaultValue(options.debugWireframe, false);
         this._debugWireframe = false;
+
+        this._distanceDisplayCondition = options.distanceDisplayCondition;
 
         // Undocumented options
         this._precreatedAttributes = options.precreatedAttributes;
@@ -912,6 +914,22 @@ define([
                 var castShadows = ShadowMode.castShadows(this.shadows);
                 var receiveShadows = value;
                 this.shadows = ShadowMode.fromCastReceive(castShadows, receiveShadows);
+            }
+        },
+
+        distanceDisplayCondition : {
+            get : function() {
+                return this._distanceDisplayCondition;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && value.far <= value.near) {
+                    throw new DeveloperError('far must be greater than near');
+                }
+                //>>includeEnd('debug');
+                if (!DistanceDisplayCondition.equals(value, this._distanceDisplayCondition)) {
+                    this._distanceDisplayCondition = value;
+                }
             }
         }
     });
@@ -3722,7 +3740,7 @@ define([
         }
 
         var displayConditionPassed = defined(this.distanceDisplayCondition) ? this.distanceDisplayCondition.isVisible(this, frameState) : true;
-        var show = this.show && (this.scale !== 0.0) && displayConditionPassed;
+        var show = this.show && displayConditionPassed && (this.scale !== 0.0);
 
         if ((show && this._state === ModelState.LOADED) || justLoaded) {
             var animated = this.activeAnimations.update(frameState) || this._cesiumAnimationsDirty;
