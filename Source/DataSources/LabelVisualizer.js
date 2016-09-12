@@ -8,6 +8,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
@@ -25,6 +26,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         HeightReference,
         HorizontalOrigin,
@@ -54,6 +56,7 @@ define([
     var pixelOffset = new Cartesian2();
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
+    var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -165,6 +168,7 @@ define([
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistance);
             label.pixelOffsetScaleByDistance = Property.getValueOrUndefined(labelGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
+            label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
         }
         return true;
     };

@@ -47,6 +47,8 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -131,7 +133,9 @@ define([
          * @type {Property}
          * @default HeightReference.NONE
          */
-        heightReference : createPropertyDescriptor('heightReference')
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
     });
 
     /**
@@ -152,6 +156,7 @@ define([
         result.scaleByDistance = this.scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
         result.heightReference = this.heightReference;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -176,6 +181,7 @@ define([
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return PointGraphics;

@@ -77,6 +77,8 @@ define([
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -249,7 +251,9 @@ define([
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance')
+        pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
+
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
 
     });
 
@@ -278,6 +282,7 @@ define([
         result.pixelOffset = this.pixelOffset;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
 
@@ -309,6 +314,7 @@ define([
         this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 
     return LabelGraphics;

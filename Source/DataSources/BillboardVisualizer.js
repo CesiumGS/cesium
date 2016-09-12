@@ -9,6 +9,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/DistanceDisplayCondition',
         '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/HeightReference',
@@ -26,6 +27,7 @@ define([
         defined,
         destroyObject,
         DeveloperError,
+        DistanceDisplayCondition,
         NearFarScalar,
         BillboardCollection,
         HeightReference,
@@ -54,6 +56,7 @@ define([
     var translucencyByDistance = new NearFarScalar();
     var pixelOffsetScaleByDistance = new NearFarScalar();
     var boundingRectangle = new BoundingRectangle();
+    var distanceDisplayCondition = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -167,6 +170,7 @@ define([
             billboard.translucencyByDistance = Property.getValueOrUndefined(billboardGraphics._translucencyByDistance, time, translucencyByDistance);
             billboard.pixelOffsetScaleByDistance = Property.getValueOrUndefined(billboardGraphics._pixelOffsetScaleByDistance, time, pixelOffsetScaleByDistance);
             billboard.sizeInMeters = Property.getValueOrDefault(billboardGraphics._sizeInMeters, defaultSizeInMeters);
+            billboard.distanceDisplayCondition = Property.getValueOrUndefined(billboardGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
 
             var subRegion = Property.getValueOrUndefined(billboardGraphics._imageSubRegion, time, boundingRectangle);
             if (defined(subRegion)) {
