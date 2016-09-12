@@ -137,7 +137,7 @@ define([
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
-         * away will be rendered will lower detail than closer tiles. This improves performance by rendering fewer
+         * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
          * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
          *
          * @see Fog
