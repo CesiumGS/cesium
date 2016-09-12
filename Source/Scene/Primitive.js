@@ -708,6 +708,7 @@ define([
             '    { \n' +
             '        distanceSq = dot(centerRTE.xyz, centerRTE.xyz) - radiusSq; \n' +
             '    } \n' +
+            '    distanceSq = max(distanceSq, 0.0); \n' +
             '    float nearSq = distanceDisplayCondition.x * distanceDisplayCondition.x; \n' +
             '    float farSq = distanceDisplayCondition.y * distanceDisplayCondition.y; \n' +
             '    float show = (distanceSq >= nearSq && distanceSq <= farSq) ? 1.0 : 0.0; \n' +
