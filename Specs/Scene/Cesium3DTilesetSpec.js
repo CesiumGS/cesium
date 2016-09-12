@@ -437,13 +437,13 @@ defineSuite([
             scene.camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, 210.0));
 
             // Set dynamic SSE to false (default)
-            tileset.useDynamicScreenSpaceError = false;
+            tileset.dynamicScreenSpaceError = false;
             scene.renderForSpecs();
             expect(stats.visited).toEqual(1);
             expect(stats.numberOfCommands).toEqual(1);
 
             // Set dynamic SSE to true, now the root is not rendered
-            tileset.useDynamicScreenSpaceError = true;
+            tileset.dynamicScreenSpaceError = true;
             tileset.dynamicScreenSpaceErrorDensity = 1.0;
             tileset.dynamicScreenSpaceErrorFactor = 10.0;
             scene.renderForSpecs();

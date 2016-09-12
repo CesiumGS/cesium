@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -30,6 +31,7 @@ define([
         './SceneMode'
     ], function(
         Cartesian3,
+        Cartographic,
         Color,
         defaultValue,
         defined,
@@ -72,7 +74,7 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen-space error used to drive level-of-detail refinement.
      * @param {Boolean} [options.refineToVisible=false] Whether replacement refinement should refine when all visible children are ready. An experimental optimization.
-     * @param {Boolean} [options.useDynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
+     * @param {Boolean} [options.dynamicScreenSpaceError=false] Reduce the screen space error for tiles that are further away from the camera.
      * @param {Boolean} [options.debugShowStatistics=false] For debugging only. Determines if rendering statistics are output to the console.
      * @param {Boolean} [options.debugShowPickStatistics=false] For debugging only. Determines if rendering statistics for picking are output to the console.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
@@ -135,22 +137,24 @@ define([
 
         /**
          * Whether the tileset should should refine based on a dynamic screen space error. Tiles that are further
-         * away will be rendered will lower detail that closer tiles. This improves performance by rendering fewer
+         * away will be rendered will lower detail than closer tiles. This improves performance by rendering fewer
          * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
          *
          * @see Fog
          */
-        this.useDynamicScreenSpaceError = defaultValue(options.useDynamicScreenSpaceError, false);
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
-         * A scalar that determines the density used to adjust the dynamic SSE.
+         * A scalar that determines the density used to adjust the dynamic SSE. Similar to {@link Fog}, as this value
+         * approach 1.0 the screen space error of tiles in the distance will increase and less tiles will be rendered.
          *
          * @see Fog.density
          */
         this.dynamicScreenSpaceErrorDensity = 0.00278;
 
         /**
-         * A factor used to increase the screen space error of tiles for dynamic SSE.
+         * A factor used to increase the screen space error of tiles for dynamic SSE. As this value increases less tiles
+         * are requested for rendering and tiles in the distance will have lower detail. If set to zero, the feature will be disabled.
          *
          * @see Fog.screenSpaceErrorFactor
          */
@@ -817,15 +821,21 @@ define([
     }
 
     var scratchPositionNormal = new Cartesian3();
+    var scratchCartographic = new Cartographic();
 
     function updateDynamicScreenSpaceError(tileset, frameState) {
         var camera = frameState.camera;
         var positionCartographic = camera.positionCartographic;
         var height = positionCartographic.height;
 
-        // The range where the density starts to lessen
-        var heightClose = 100.0;
-        var heightFar = 600.0;
+        var boundingSphere = tileset.boundingSphere;
+        var center = boundingSphere.center;
+        var ellipsoid = frameState.mapProjection.ellipsoid;
+        var cartographic = Cartographic.fromCartesian(center, ellipsoid, scratchCartographic);
+
+        // The range where the density starts to lessen. Start at the quarter height of the tileset.
+        var heightClose = cartographic.height / 2.0;
+        var heightFar = heightClose + 500;
 
         var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
 
@@ -859,7 +869,7 @@ define([
 
         var error = (geometricError * height) / (distance * sseDenominator);
 
-        if (tileset.useDynamicScreenSpaceError) {
+        if (tileset.dynamicScreenSpaceError) {
             var density = tileset._dynamicScreenSpaceErrorComputedDensity;
             var factor = tileset.dynamicScreenSpaceErrorFactor;
             var dynamicError = CesiumMath.fog(distance, density) * factor;
@@ -1500,7 +1510,7 @@ define([
             processTiles(this, frameState);
         }
 
-        if (this.useDynamicScreenSpaceError) {
+        if (this.dynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
         }
 
