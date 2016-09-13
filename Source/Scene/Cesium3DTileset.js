@@ -28,7 +28,10 @@ define([
         './Cesium3DTileStyleEngine',
         './CullingVolume',
         './DebugCameraPrimitive',
-        './SceneMode'
+        './SceneMode',
+        './TileBoundingRegion',
+        './TileBoundingSphere',
+        './TileOrientedBoundingBox'
     ], function(
         Cartesian3,
         Cartographic,
@@ -58,7 +61,10 @@ define([
         Cesium3DTileStyleEngine,
         CullingVolume,
         DebugCameraPrimitive,
-        SceneMode) {
+        SceneMode,
+        TileBoundingRegion,
+        TileBoundingSphere,
+        TileOrientedBoundingBox) {
     'use strict';
 
     /**
@@ -822,26 +828,70 @@ define([
 
     var scratchPositionNormal = new Cartesian3();
     var scratchCartographic = new Cartographic();
+    var scratchMatrix = new Matrix4();
+    var scratchCenter = new Cartesian3();
+    var scratchPosition = new Cartesian3();
+    var scratchDirection = new Cartesian3();
 
     function updateDynamicScreenSpaceError(tileset, frameState) {
-        var camera = frameState.camera;
-        var positionCartographic = camera.positionCartographic;
-        var height = positionCartographic.height;
+        var up;
+        var direction;
+        var height;
+        var minimumHeight;
+        var maximumHeight;
 
-        var boundingSphere = tileset.boundingSphere;
-        var center = boundingSphere.center;
-        var ellipsoid = frameState.mapProjection.ellipsoid;
-        var cartographic = Cartographic.fromCartesian(center, ellipsoid, scratchCartographic);
+        var camera = frameState.camera;
+        var root = tileset._root;
+        var tileBoundingVolume = root.contentBoundingVolume;
+
+        if (tileBoundingVolume instanceof TileBoundingRegion) {
+            up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+            direction = camera.directionWC;
+            height = camera.positionCartographic.height;
+            minimumHeight = tileBoundingVolume.minimumHeight;
+            maximumHeight = tileBoundingVolume.maximumHeight;
+        } else {
+            // Transform camera position and direction into the local coordinate system of the tileset
+            var transformLocal = Matrix4.inverseTransformation(root.computedTransform, scratchMatrix);
+            var ellipsoid = frameState.mapProjection.ellipsoid;
+            var boundingVolume = tileBoundingVolume.boundingVolume;
+            var centerLocal = Matrix4.multiplyByPoint(transformLocal, boundingVolume.center, scratchCenter);
+            if (Cartesian3.magnitude(centerLocal) > ellipsoid.minimumRadius) {
+                // The tileset is defined in WGS84. Approximate the minimum and maximum height.
+                var centerCartographic = Cartographic.fromCartesian(centerLocal, ellipsoid, scratchCartographic);
+                up = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
+                direction = camera.directionWC;
+                height = camera.positionCartographic.height;
+                minimumHeight = 0.0;
+                maximumHeight = centerCartographic.height * 2.0;
+            } else {
+                // The tileset is defined in local coordinates (z-up)
+                var positionLocal = Matrix4.multiplyByPoint(transformLocal, camera.positionWC, scratchPosition);
+                up = Cartesian3.UNIT_Z;
+                direction = Matrix4.multiplyByPointAsVector(transformLocal, camera.directionWC, scratchDirection);
+                direction = Cartesian3.normalize(direction, direction);
+                height = positionLocal.z;
+                if (tileBoundingVolume instanceof TileOrientedBoundingBox) {
+                    // Assuming z-up, the last component stores the half-height of the box
+                    var boxHeight = root._header.boundingVolume.box[11];
+                    minimumHeight = centerLocal.z - boxHeight;
+                    maximumHeight = centerLocal.z + boxHeight;
+                } else if (tileBoundingVolume instanceof TileBoundingSphere) {
+                    var radius = boundingVolume.radius;
+                    minimumHeight = centerLocal.z - radius;
+                    maximumHeight = centerLocal.z + radius;
+                }
+            }
+        }
 
         // The range where the density starts to lessen. Start at the quarter height of the tileset.
-        var heightClose = cartographic.height / 2.0;
-        var heightFar = heightClose + 500;
+        var heightClose = minimumHeight + (maximumHeight - minimumHeight) / 4.0;
+        var heightFar = maximumHeight;
 
         var t = CesiumMath.clamp((height - heightClose) / (heightFar - heightClose), 0.0, 1.0);
 
         // Increase density as the camera tilts towards the horizon
-        var positionNormal = Cartesian3.normalize(camera.positionWC, scratchPositionNormal);
-        var dot = Math.abs(Cartesian3.dot(camera.directionWC, positionNormal));
+        var dot = Math.abs(Cartesian3.dot(direction, up));
         var horizonFactor = 1.0 - dot;
 
         // Weaken the horizon factor as the camera height increases, implying the camera is further away from the tileset.
