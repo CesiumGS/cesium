@@ -575,7 +575,7 @@ define([
         var attributes = instance.attributes;
         var newAttributes = {};
         for (var property in attributes) {
-            if (attributes.hasOwnProperty(property)) {
+            if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                 newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
             }
         }
