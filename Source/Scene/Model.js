@@ -1782,7 +1782,7 @@ define([
         return shader;
     }
 
-    function createHighlightVertexShaderSource(vertexShaderSource, projectionMatrixName, viewportName) {
+    function createHighlightVertexShaderSource(vertexShaderSource) {
         var renamedVS = ShaderSource.replaceMain(vertexShaderSource, 'czm_old_main');
         // Modified from http://forum.unity3d.com/threads/toon-outline-but-with-diffuse-surface.24668/
         var highlightMain = 'uniform float u_highlightSize;\n' +
@@ -1790,47 +1790,13 @@ define([
             '{ \n' +
             '  czm_old_main(); \n' +
             '  vec3 n = normalize(v_normal);\n' +
-            '  n.x *= ' + projectionMatrixName + '[0][0];\n' +
-            '  n.y *= ' + projectionMatrixName + '[1][1];\n' +
+            '  n.x *= czm_projection[0][0];\n' +
+            '  n.y *= czm_projection[1][1];\n' +
             '  vec4 clip = gl_Position;\n' +
-            '  clip.xy += n.xy * clip.w * u_highlightSize / ' + viewportName + '.z * 2.0;\n' +
+            '  clip.xy += n.xy * clip.w * u_highlightSize / czm_viewport.z * 2.0;\n' +
             '  gl_Position = clip;\n' +
             '}';
         return renamedVS + '\n' + highlightMain;
-    }
-
-    function getUniformNameForSemantic(model, semantic) {
-        var semanticUniformName = null;
-        for (var techniqueName in model.gltf.techniques) {
-            if (model.gltf.techniques.hasOwnProperty(techniqueName)) {
-                var technique = model.gltf.techniques[techniqueName];
-                var semanticParameterName = "";
-                for (var parameterName in technique.parameters) {
-                    if (technique.parameters.hasOwnProperty(parameterName)) {
-                        var parameter = technique.parameters[parameterName];
-                        if (parameter.semantic === semantic) {
-                            semanticParameterName = parameterName;
-                            break;
-                        }
-                    }
-                }
-
-                for (var uniformName in technique.uniforms) {
-                    if (technique.uniforms.hasOwnProperty(uniformName)) {
-                        var paramName = technique.uniforms[uniformName];
-                        if (paramName === semanticParameterName) {
-                            semanticUniformName = uniformName;
-                            break;
-                        }
-                    }
-                }
-
-                if (semanticUniformName) {
-                    break;
-                }
-            }
-        }
-        return semanticUniformName;
     }
 
     function createProgram(id, model, context) {
@@ -1884,17 +1850,7 @@ define([
             });
         }
 
-        // Get the projection matrix name.  There is probably a better way to do this.
-        var projectionMatrixUniformName = getUniformNameForSemantic(model, "PROJECTION");
-        if (!projectionMatrixUniformName) {
-            projectionMatrixUniformName = "czm_projection";
-        }
-        var viewportUniformName = getUniformNameForSemantic(model, "VIEWPORT");
-        if (!viewportUniformName) {
-            viewportUniformName = "czm_viewport";
-        }
-
-        var highlightVS = createHighlightVertexShaderSource(vs, projectionMatrixUniformName, viewportUniformName);
+        var highlightVS = createHighlightVertexShaderSource(vs);
 
         var highlightFS = 'uniform vec4 u_highlightColor;\n' +
                         'void main() \n' +
