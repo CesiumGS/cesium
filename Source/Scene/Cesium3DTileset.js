@@ -151,8 +151,17 @@ define([
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
-         * A scalar that determines the density used to adjust the dynamic SSE. Similar to {@link Fog}, as this value
-         * approach 1.0 the screen space error of tiles in the distance will increase and less tiles will be rendered.
+         * A scalar that determines the density used to adjust the dynamic SSE, similar to {@link Fog}. Increasing this
+         * value has the effect of increasing the maximum screen space error for all tiles, but in a non-linear fashion.
+         * The error starts at 0.0 and increases exponentially until a midpoint is reached, and then approaches 1.0 asymptotically.
+         * This has the effect of keeping high detail in the closer tiles and lower detail in the further tiles, with all tiles
+         * beyond a certain distance all roughly having an error of 1.0.
+         *
+         * The dynamic error is in the range [0.0, 1.0) and is multiplied by dynamicScreenSpaceErrorFactor to produce the
+         * final dynamic error. This dynamic error is then subtracted from the tile's actual screen space error.
+         *
+         * Increasing dynamicScreenSpaceErrorDensity has the effect of moving the error midpoint closer to the camera.
+         * It is analogous to moving fog closer to the camera.
          *
          * @see Fog.density
          */
